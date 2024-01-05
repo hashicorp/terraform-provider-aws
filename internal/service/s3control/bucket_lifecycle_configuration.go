@@ -9,10 +9,11 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/s3control"
+	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -116,7 +117,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 						"status": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  s3control.ExpirationStatusEnabled,
+							Default:  types.ExpirationStatusEnabled,
 						},
 					},
 				},
@@ -126,7 +127,7 @@ func resourceBucketLifecycleConfiguration() *schema.Resource {
 }
 
 func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	bucket := d.Get("bucket").(string)
 
@@ -143,12 +144,12 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 	input := &s3control.PutBucketLifecycleConfigurationInput{
 		AccountId: aws.String(parsedArn.AccountID),
 		Bucket:    aws.String(bucket),
-		LifecycleConfiguration: &s3control.LifecycleConfiguration{
+		LifecycleConfiguration: &types.LifecycleConfiguration{
 			Rules: expandLifecycleRules(ctx, d.Get("rule").(*schema.Set).List()),
 		},
 	}
 
-	_, err = conn.PutBucketLifecycleConfigurationWithContext(ctx, input)
+	_, err = conn.PutBucketLifecycleConfiguration(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating S3 Control Bucket Lifecycle Configuration (%s): %s", bucket, err)
@@ -160,7 +161,7 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 }
 
 func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	parsedArn, err := arn.Parse(d.Id())
 
@@ -172,7 +173,7 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 		return diag.Errorf("parsing S3 Control Bucket ARN (%s): unknown format", d.Id())
 	}
 
-	output, err := FindBucketLifecycleConfigurationByTwoPartKey(ctx, conn, parsedArn.AccountID, d.Id())
+	output, err := findBucketLifecycleConfigurationByTwoPartKey(ctx, conn, parsedArn.AccountID, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Control Bucket Lifecycle Configuration (%s) not found, removing from state", d.Id())
@@ -194,7 +195,7 @@ func resourceBucketLifecycleConfigurationRead(ctx context.Context, d *schema.Res
 }
 
 func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	parsedArn, err := arn.Parse(d.Id())
 
@@ -209,12 +210,12 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 	input := &s3control.PutBucketLifecycleConfigurationInput{
 		AccountId: aws.String(parsedArn.AccountID),
 		Bucket:    aws.String(d.Id()),
-		LifecycleConfiguration: &s3control.LifecycleConfiguration{
+		LifecycleConfiguration: &types.LifecycleConfiguration{
 			Rules: expandLifecycleRules(ctx, d.Get("rule").(*schema.Set).List()),
 		},
 	}
 
-	_, err = conn.PutBucketLifecycleConfigurationWithContext(ctx, input)
+	_, err = conn.PutBucketLifecycleConfiguration(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("updating S3 Control Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
@@ -224,7 +225,7 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 }
 
 func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	parsedArn, err := arn.Parse(d.Id())
 
@@ -237,7 +238,7 @@ func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.R
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Control Bucket Lifecycle Configuration: %s", d.Id())
-	_, err = conn.DeleteBucketLifecycleConfigurationWithContext(ctx, &s3control.DeleteBucketLifecycleConfigurationInput{
+	_, err = conn.DeleteBucketLifecycleConfiguration(ctx, &s3control.DeleteBucketLifecycleConfigurationInput{
 		AccountId: aws.String(parsedArn.AccountID),
 		Bucket:    aws.String(d.Id()),
 	})
@@ -253,13 +254,13 @@ func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.R
 	return nil
 }
 
-func FindBucketLifecycleConfigurationByTwoPartKey(ctx context.Context, conn *s3control.S3Control, accountID, bucket string) (*s3control.GetBucketLifecycleConfigurationOutput, error) {
+func findBucketLifecycleConfigurationByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, bucket string) (*s3control.GetBucketLifecycleConfigurationOutput, error) {
 	input := &s3control.GetBucketLifecycleConfigurationInput{
 		AccountId: aws.String(accountID),
 		Bucket:    aws.String(bucket),
 	}
 
-	output, err := conn.GetBucketLifecycleConfigurationWithContext(ctx, input)
+	output, err := conn.GetBucketLifecycleConfiguration(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket, errCodeNoSuchLifecycleConfiguration, errCodeNoSuchOutpost) {
 		return nil, &retry.NotFoundError{
@@ -279,7 +280,7 @@ func FindBucketLifecycleConfigurationByTwoPartKey(ctx context.Context, conn *s3c
 	return output, nil
 }
 
-func expandAbortIncompleteMultipartUpload(tfList []interface{}) *s3control.AbortIncompleteMultipartUpload {
+func expandAbortIncompleteMultipartUpload(tfList []interface{}) *types.AbortIncompleteMultipartUpload {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -290,16 +291,16 @@ func expandAbortIncompleteMultipartUpload(tfList []interface{}) *s3control.Abort
 		return nil
 	}
 
-	apiObject := &s3control.AbortIncompleteMultipartUpload{}
+	apiObject := &types.AbortIncompleteMultipartUpload{}
 
 	if v, ok := tfMap["days_after_initiation"].(int); ok && v != 0 {
-		apiObject.DaysAfterInitiation = aws.Int64(int64(v))
+		apiObject.DaysAfterInitiation = int32(v)
 	}
 
 	return apiObject
 }
 
-func expandLifecycleExpiration(tfList []interface{}) *s3control.LifecycleExpiration {
+func expandLifecycleExpiration(tfList []interface{}) *types.LifecycleExpiration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -310,7 +311,7 @@ func expandLifecycleExpiration(tfList []interface{}) *s3control.LifecycleExpirat
 		return nil
 	}
 
-	apiObject := &s3control.LifecycleExpiration{}
+	apiObject := &types.LifecycleExpiration{}
 
 	if v, ok := tfMap["date"].(string); ok && v != "" {
 		parsedDate, err := time.Parse("2006-01-02", v)
@@ -321,18 +322,18 @@ func expandLifecycleExpiration(tfList []interface{}) *s3control.LifecycleExpirat
 	}
 
 	if v, ok := tfMap["days"].(int); ok && v != 0 {
-		apiObject.Days = aws.Int64(int64(v))
+		apiObject.Days = int32(v)
 	}
 
 	if v, ok := tfMap["expired_object_delete_marker"].(bool); ok && v {
-		apiObject.ExpiredObjectDeleteMarker = aws.Bool(v)
+		apiObject.ExpiredObjectDeleteMarker = v
 	}
 
 	return apiObject
 }
 
-func expandLifecycleRules(ctx context.Context, tfList []interface{}) []*s3control.LifecycleRule {
-	var apiObjects []*s3control.LifecycleRule
+func expandLifecycleRules(ctx context.Context, tfList []interface{}) []types.LifecycleRule {
+	var apiObjects []types.LifecycleRule
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -347,18 +348,18 @@ func expandLifecycleRules(ctx context.Context, tfList []interface{}) []*s3contro
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
 }
 
-func expandLifecycleRule(ctx context.Context, tfMap map[string]interface{}) *s3control.LifecycleRule {
+func expandLifecycleRule(ctx context.Context, tfMap map[string]interface{}) *types.LifecycleRule {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
-	apiObject := &s3control.LifecycleRule{}
+	apiObject := &types.LifecycleRule{}
 
 	if v, ok := tfMap["abort_incomplete_multipart_upload"].([]interface{}); ok && len(v) > 0 {
 		apiObject.AbortIncompleteMultipartUpload = expandAbortIncompleteMultipartUpload(v)
@@ -377,21 +378,21 @@ func expandLifecycleRule(ctx context.Context, tfMap map[string]interface{}) *s3c
 	}
 
 	if v, ok := tfMap["status"].(string); ok && v != "" {
-		apiObject.Status = aws.String(v)
+		apiObject.Status = types.ExpirationStatus(v)
 	}
 
 	// Terraform Plugin SDK sometimes sends map with only empty configuration blocks:
 	//   map[abort_incomplete_multipart_upload:[] expiration:[] filter:[] id: status:]
 	// This is to prevent this error: InvalidParameter: 1 validation error(s) found.
 	//  - missing required field, PutBucketLifecycleConfigurationInput.LifecycleConfiguration.Rules[0].Status.
-	if apiObject.ID == nil && apiObject.Status == nil {
+	if apiObject.ID == nil && apiObject.Status == "" {
 		return nil
 	}
 
 	return apiObject
 }
 
-func expandLifecycleRuleFilter(ctx context.Context, tfList []interface{}) *s3control.LifecycleRuleFilter {
+func expandLifecycleRuleFilter(ctx context.Context, tfList []interface{}) *types.LifecycleRuleFilter {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -402,7 +403,7 @@ func expandLifecycleRuleFilter(ctx context.Context, tfList []interface{}) *s3con
 		return nil
 	}
 
-	apiObject := &s3control.LifecycleRuleFilter{}
+	apiObject := &types.LifecycleRuleFilter{}
 
 	if v, ok := tfMap["prefix"].(string); ok && v != "" {
 		apiObject.Prefix = aws.String(v)
@@ -411,11 +412,11 @@ func expandLifecycleRuleFilter(ctx context.Context, tfList []interface{}) *s3con
 	if v, ok := tfMap["tags"].(map[string]interface{}); ok && len(v) > 0 {
 		// See also aws_s3_bucket ReplicationRule.Filter handling
 		if len(v) == 1 {
-			apiObject.Tag = Tags(tftags.New(ctx, v))[0]
+			apiObject.Tag = &tagsS3(tftags.New(ctx, v))[0]
 		} else {
-			apiObject.And = &s3control.LifecycleRuleAndOperator{
+			apiObject.And = &types.LifecycleRuleAndOperator{
 				Prefix: apiObject.Prefix,
-				Tags:   Tags(tftags.New(ctx, v)),
+				Tags:   tagsS3(tftags.New(ctx, v)),
 			}
 			apiObject.Prefix = nil
 		}
@@ -424,62 +425,49 @@ func expandLifecycleRuleFilter(ctx context.Context, tfList []interface{}) *s3con
 	return apiObject
 }
 
-func flattenAbortIncompleteMultipartUpload(apiObject *s3control.AbortIncompleteMultipartUpload) []interface{} {
+func flattenAbortIncompleteMultipartUpload(apiObject *types.AbortIncompleteMultipartUpload) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.DaysAfterInitiation; v != nil {
-		tfMap["days_after_initiation"] = aws.Int64Value(v)
+	tfMap := map[string]interface{}{
+		"days_after_initiation": apiObject.DaysAfterInitiation,
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenLifecycleExpiration(apiObject *s3control.LifecycleExpiration) []interface{} {
+func flattenLifecycleExpiration(apiObject *types.LifecycleExpiration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]interface{}{
+		"days":                         apiObject.Days,
+		"expired_object_delete_marker": apiObject.ExpiredObjectDeleteMarker,
+	}
 
 	if v := apiObject.Date; v != nil {
-		tfMap["date"] = aws.TimeValue(v).Format("2006-01-02")
-	}
-
-	if v := apiObject.Days; v != nil {
-		tfMap["days"] = aws.Int64Value(v)
-	}
-
-	if v := apiObject.ExpiredObjectDeleteMarker; v != nil {
-		tfMap["expired_object_delete_marker"] = aws.BoolValue(v)
+		tfMap["date"] = aws.ToTime(v).Format("2006-01-02")
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenLifecycleRules(ctx context.Context, apiObjects []*s3control.LifecycleRule) []interface{} {
+func flattenLifecycleRules(ctx context.Context, apiObjects []types.LifecycleRule) []interface{} {
 	var tfMaps []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfMaps = append(tfMaps, flattenLifecycleRule(ctx, apiObject))
 	}
 
 	return tfMaps
 }
 
-func flattenLifecycleRule(ctx context.Context, apiObject *s3control.LifecycleRule) map[string]interface{} {
-	if apiObject == nil {
-		return nil
+func flattenLifecycleRule(ctx context.Context, apiObject types.LifecycleRule) map[string]interface{} {
+	tfMap := map[string]interface{}{
+		"status": apiObject.Status,
 	}
-
-	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AbortIncompleteMultipartUpload; v != nil {
 		tfMap["abort_incomplete_multipart_upload"] = flattenAbortIncompleteMultipartUpload(v)
@@ -494,17 +482,13 @@ func flattenLifecycleRule(ctx context.Context, apiObject *s3control.LifecycleRul
 	}
 
 	if v := apiObject.ID; v != nil {
-		tfMap["id"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.Status; v != nil {
-		tfMap["status"] = aws.StringValue(v)
+		tfMap["id"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenLifecycleRuleFilter(ctx context.Context, apiObject *s3control.LifecycleRuleFilter) []interface{} {
+func flattenLifecycleRuleFilter(ctx context.Context, apiObject *types.LifecycleRuleFilter) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -513,19 +497,19 @@ func flattenLifecycleRuleFilter(ctx context.Context, apiObject *s3control.Lifecy
 
 	if apiObject.And != nil {
 		if v := apiObject.And.Prefix; v != nil {
-			tfMap["prefix"] = aws.StringValue(v)
+			tfMap["prefix"] = aws.ToString(v)
 		}
 
 		if v := apiObject.And.Tags; v != nil {
-			tfMap["tags"] = KeyValueTags(ctx, v).IgnoreAWS().Map()
+			tfMap["tags"] = keyValueTagsS3(ctx, v).IgnoreAWS().Map()
 		}
 	} else {
 		if v := apiObject.Prefix; v != nil {
-			tfMap["prefix"] = aws.StringValue(v)
+			tfMap["prefix"] = aws.ToString(v)
 		}
 
 		if v := apiObject.Tag; v != nil {
-			tfMap["tags"] = KeyValueTags(ctx, []*s3control.S3Tag{v}).IgnoreAWS().Map()
+			tfMap["tags"] = keyValueTagsS3(ctx, []types.S3Tag{*v}).IgnoreAWS().Map()
 		}
 	}
 

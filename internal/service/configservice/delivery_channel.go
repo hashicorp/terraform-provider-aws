@@ -152,7 +152,7 @@ func resourceDeliveryChannelRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && len(out.DeliveryChannels) < 1 {
@@ -162,7 +162,7 @@ func resourceDeliveryChannelRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if d.IsNewResource() && len(out.DeliveryChannels) < 1 {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id(), errors.New("not found after creation"))
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id(), errors.New("not found after creation"))
 	}
 
 	if len(out.DeliveryChannels) > 1 {

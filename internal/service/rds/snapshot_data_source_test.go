@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -20,76 +19,74 @@ func TestAccRDSSnapshotDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rInt := sdkacctest.RandInt()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_snapshot.test"
+	ds1Name := "data.aws_db_snapshot.by_id"
+	ds2Name := "data.aws_db_snapshot.by_tags"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSnapshotDataSourceConfig_basic(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotIDDataSource("data.aws_db_snapshot.snapshot"),
+				Config: testAccSnapshotDataSourceConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(ds1Name, "db_instance_identifier", resourceName, "db_instance_identifier"),
+					resource.TestCheckResourceAttrPair(ds1Name, "db_snapshot_arn", resourceName, "db_snapshot_arn"),
+					resource.TestCheckResourceAttrPair(ds1Name, "db_snapshot_identifier", resourceName, "db_snapshot_identifier"),
+					resource.TestCheckResourceAttrPair(ds1Name, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttr(ds1Name, "tags.Name", rName),
+
+					resource.TestCheckResourceAttrPair(ds2Name, "db_instance_identifier", resourceName, "db_instance_identifier"),
+					resource.TestCheckResourceAttrPair(ds2Name, "db_snapshot_arn", resourceName, "db_snapshot_arn"),
+					resource.TestCheckResourceAttrPair(ds2Name, "db_snapshot_identifier", resourceName, "db_snapshot_identifier"),
+					resource.TestCheckResourceAttrPair(ds1Name, "tags.%", resourceName, "tags.%"),
+					resource.TestCheckResourceAttr(ds2Name, "tags.Name", rName),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckSnapshotIDDataSource(n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Can't find Volume data source: %s", n)
-		}
+func testAccSnapshotDataSourceConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccSnapshotConfig_base(rName), fmt.Sprintf(`
+resource "aws_db_snapshot" "test" {
+  db_instance_identifier = aws_db_instance.test.identifier
+  db_snapshot_identifier = %[1]q
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Snapshot data source ID not set")
-		}
-		return nil
-	}
+  tags = {
+    Name = %[1]q
+    Test = "true"
+  }
 }
 
-func testAccSnapshotDataSourceConfig_basic(rInt int) string {
-	return fmt.Sprintf(`
-data "aws_rds_engine_version" "default" {
-  engine = "mysql"
+resource "aws_db_snapshot_copy" "test" {
+  source_db_snapshot_identifier = aws_db_snapshot.test.db_snapshot_arn
+  target_db_snapshot_identifier = "%[1]s-copy"
+
+  tags = {
+    Name = "%[1]s-copy"
+    Test = "true"
+  }
 }
 
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = data.aws_rds_engine_version.default.engine
-  engine_version             = data.aws_rds_engine_version.default.version
-  preferred_instance_classes = [%[1]s]
-}
-
-resource "aws_db_instance" "bar" {
-  allocated_storage   = 10
-  engine              = data.aws_rds_engine_version.default.engine
-  engine_version      = data.aws_rds_engine_version.default.version
-  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name             = "baz"
-  password            = "barbarbarbar"
-  username            = "foo"
-  skip_final_snapshot = true
-
-  # Maintenance Window is stored in lower case in the API, though not strictly
-  # documented. Terraform will downcase this to match (as opposed to throw a
-  # validation error).
-  maintenance_window = "Fri:09:00-Fri:09:30"
-
-  backup_retention_period = 0
-
-  parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
-}
-
-data "aws_db_snapshot" "snapshot" {
+data "aws_db_snapshot" "by_id" {
   most_recent            = "true"
   db_snapshot_identifier = aws_db_snapshot.test.id
+
+  depends_on = [aws_db_snapshot_copy.test]
 }
 
-resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.bar.identifier
-  db_snapshot_identifier = "testsnapshot%[2]d"
+data "aws_db_snapshot" "by_tags" {
+  most_recent = "true"
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_db_snapshot.test, aws_db_snapshot_copy.test]
 }
-`, mySQLPreferredInstanceClasses, rInt)
+
+`, rName))
 }

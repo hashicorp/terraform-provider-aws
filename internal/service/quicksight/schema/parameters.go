@@ -4,9 +4,9 @@
 package schema
 
 import (
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -30,7 +30,7 @@ func ParametersSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"name": stringSchema(true, validation.StringMatch(regexp.MustCompile(`.*\S.*`), "")),
+							"name": stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
 							"values": {
 								Type:     schema.TypeList,
 								MinItems: 1,
@@ -50,7 +50,7 @@ func ParametersSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"name": stringSchema(true, validation.StringMatch(regexp.MustCompile(`.*\S.*`), "")),
+							"name": stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
 							"values": {
 								Type:     schema.TypeList,
 								MinItems: 1,
@@ -69,7 +69,7 @@ func ParametersSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"name": stringSchema(true, validation.StringMatch(regexp.MustCompile(`.*\S.*`), "")),
+							"name": stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
 							"values": {
 								Type:     schema.TypeList,
 								MinItems: 1,
@@ -88,7 +88,7 @@ func ParametersSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"name": stringSchema(true, validation.StringMatch(regexp.MustCompile(`.*\S.*`), "")),
+							"name": stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
 							"values": {
 								Type:     schema.TypeList,
 								MinItems: 1,

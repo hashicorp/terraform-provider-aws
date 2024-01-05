@@ -135,7 +135,7 @@ resource "aws_vpc_peering_connection_options" "accepter" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_peering_connection_id` - (Required) The ID of the requester VPC peering connection.
 * `accepter` (Optional) - An optional configuration block that allows for [VPC Peering Connection](https://docs.aws.amazon.com/vpc/latest/peering/what-is-vpc-peering.html) options to be set for the VPC that acceptsthe peering connection (a maximum of one).
@@ -147,16 +147,25 @@ The following arguments are supported:
 
 * `allow_remote_vpc_dns_resolution` - (Optional) Allow a local VPC to resolve public DNS hostnames to private IP addresses when queried from instances in the peer VPC.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the VPC Peering Connection Options.
 
 ## Import
 
-VPC Peering Connection Options can be imported using the `vpc peering id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Peering Connection Options using the VPC peering `id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_peering_connection_options.foo
+  id = "pcx-111aaa111"
+}
 ```
-$ terraform import aws_vpc_peering_connection_options.foo pcx-111aaa111
+
+Using `terraform import`, import VPC Peering Connection Options using the VPC peering `id`. For example:
+
+```console
+% terraform import aws_vpc_peering_connection_options.foo pcx-111aaa111
 ```

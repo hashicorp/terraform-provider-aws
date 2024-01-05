@@ -171,7 +171,7 @@ resource "aws_budgets_budget" "cost" {
 For more detailed documentation about each argument, refer to the [AWS official
 documentation](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-budget.html).
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `account_id` - (Optional) The ID of the target account for budget. Will use current user's account_id by default if omitted.
 * `auto_adjust_data` - (Optional) Object containing [AutoAdjustData] which determines the budget amount for an auto-adjusting budget.
@@ -188,9 +188,9 @@ The following arguments are supported:
 * `notification` - (Optional) Object containing [Budget Notifications](#budget-notification). Can be used multiple times to define more than one budget notification.
 * `planned_limit` - (Optional) Object containing [Planned Budget Limits](#planned-budget-limits). Can be used multiple times to plan more than one budget limit. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - id of resource.
 * `arn` - The ARN of the budget.
@@ -268,6 +268,17 @@ Valid keys for `planned_limit` parameter.
 
 ## Import
 
-Budgets can be imported using `AccountID:BudgetName`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import budgets using `AccountID:BudgetName`. For example:
 
-`$ terraform import aws_budgets_budget.myBudget 123456789012:myBudget`
+```terraform
+import {
+  to = aws_budgets_budget.myBudget
+  id = "123456789012:myBudget"
+}
+```
+
+Using `terraform import`, import budgets using `AccountID:BudgetName`. For example:
+
+```console
+% terraform import aws_budgets_budget.myBudget 123456789012:myBudget
+```

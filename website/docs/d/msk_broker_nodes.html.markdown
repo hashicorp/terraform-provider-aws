@@ -20,13 +20,13 @@ data "aws_msk_broker_nodes" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `cluster_arn` - (Required) ARN of the cluster the nodes belong to.
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * [`node_info_list`](#nodes) - List of MSK Broker Nodes, sorted by broker ID in ascending order.
 

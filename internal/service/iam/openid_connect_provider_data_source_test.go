@@ -95,52 +95,52 @@ func TestAccIAMOpenidConnectProviderDataSource_tags(t *testing.T) {
 	})
 }
 
-func testAccOpenIDConnectProviderDataSourceConfig_basic(rString string) string {
+func testAccOpenIDConnectProviderDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_openid_connect_provider" "test" {
-  url = "https://accounts.testle.com/%s"
+  url = "https://accounts.testle.com/%[1]s"
 
   client_id_list = [
     "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
   ]
 
-  thumbprint_list = []
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
 }
 
 data "aws_iam_openid_connect_provider" "test" {
   arn = aws_iam_openid_connect_provider.test.arn
 }
-`, rString)
+`, rName)
 }
 
-func testAccOpenIDConnectProviderDataSourceConfig_url(rString string) string {
+func testAccOpenIDConnectProviderDataSourceConfig_url(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_openid_connect_provider" "test" {
-  url = "https://accounts.testle.com/%s"
+  url = "https://accounts.testle.com/%[1]s"
 
   client_id_list = [
     "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
   ]
 
-  thumbprint_list = []
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
 }
 
 data "aws_iam_openid_connect_provider" "test" {
   url = "https://${aws_iam_openid_connect_provider.test.url}"
 }
-`, rString)
+`, rName)
 }
 
-func testAccOpenIDConnectProviderDataSourceConfig_tags(rString string) string {
+func testAccOpenIDConnectProviderDataSourceConfig_tags(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_openid_connect_provider" "test" {
-  url = "https://accounts.testle.com/%s"
+  url = "https://accounts.testle.com/%[1]s"
 
   client_id_list = [
     "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
   ]
 
-  thumbprint_list = []
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
 
   tags = {
     tag1 = "test-value1"
@@ -151,5 +151,5 @@ resource "aws_iam_openid_connect_provider" "test" {
 data "aws_iam_openid_connect_provider" "test" {
   arn = aws_iam_openid_connect_provider.test.arn
 }
-`, rString)
+`, rName)
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -140,6 +141,8 @@ func ResourceEndpointGroup() *schema.Resource {
 }
 
 func resourceEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	input := &globalaccelerator.CreateEndpointGroupInput{
@@ -187,7 +190,7 @@ func resourceEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	resp, err := conn.CreateEndpointGroupWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Global Accelerator Endpoint Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Global Accelerator Endpoint Group: %s", err)
 	}
 
 	d.SetId(aws.StringValue(resp.EndpointGroup.EndpointGroupArn))
@@ -195,17 +198,19 @@ func resourceEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, me
 	acceleratorARN, err := ListenerOrEndpointGroupARNToAcceleratorARN(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if _, err := waitAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Global Accelerator Accelerator (%s) deployment: %s", acceleratorARN, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deployment: %s", acceleratorARN, err)
 	}
 
-	return resourceEndpointGroupRead(ctx, d, meta)
+	return append(diags, resourceEndpointGroupRead(ctx, d, meta)...)
 }
 
 func resourceEndpointGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	endpointGroup, err := FindEndpointGroupByARN(ctx, conn, d.Id())
@@ -213,22 +218,22 @@ func resourceEndpointGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Global Accelerator endpoint group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Global Accelerator Endpoint Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Endpoint Group (%s): %s", d.Id(), err)
 	}
 
 	listenerARN, err := EndpointGroupARNToListenerARN(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("arn", endpointGroup.EndpointGroupArn)
 	if err := d.Set("endpoint_configuration", flattenEndpointDescriptions(endpointGroup.EndpointDescriptions)); err != nil {
-		return diag.Errorf("setting endpoint_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
 	d.Set("endpoint_group_region", endpointGroup.EndpointGroupRegion)
 	d.Set("health_check_interval_seconds", endpointGroup.HealthCheckIntervalSeconds)
@@ -237,15 +242,17 @@ func resourceEndpointGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("health_check_protocol", endpointGroup.HealthCheckProtocol)
 	d.Set("listener_arn", listenerARN)
 	if err := d.Set("port_override", flattenPortOverrides(endpointGroup.PortOverrides)); err != nil {
-		return diag.Errorf("setting port_override: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting port_override: %s", err)
 	}
 	d.Set("threshold_count", endpointGroup.ThresholdCount)
 	d.Set("traffic_dial_percentage", endpointGroup.TrafficDialPercentage)
 
-	return nil
+	return diags
 }
 
 func resourceEndpointGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	input := &globalaccelerator.UpdateEndpointGroupInput{
@@ -291,23 +298,25 @@ func resourceEndpointGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 	_, err := conn.UpdateEndpointGroupWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating Global Accelerator Endpoint Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Endpoint Group (%s): %s", d.Id(), err)
 	}
 
 	acceleratorARN, err := ListenerOrEndpointGroupARNToAcceleratorARN(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if _, err := waitAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return diag.Errorf("waiting for Global Accelerator Accelerator (%s) deployment: %s", acceleratorARN, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deployment: %s", acceleratorARN, err)
 	}
 
-	return resourceEndpointGroupRead(ctx, d, meta)
+	return append(diags, resourceEndpointGroupRead(ctx, d, meta)...)
 }
 
 func resourceEndpointGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Global Accelerator Endpoint Group: %s", d.Id())
@@ -316,24 +325,24 @@ func resourceEndpointGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	})
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeEndpointGroupNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Global Accelerator Endpoint Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Global Accelerator Endpoint Group (%s): %s", d.Id(), err)
 	}
 
 	acceleratorARN, err := ListenerOrEndpointGroupARNToAcceleratorARN(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if _, err := waitAcceleratorDeployed(ctx, conn, acceleratorARN, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Global Accelerator Accelerator (%s) deployment: %s", acceleratorARN, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deployment: %s", acceleratorARN, err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindEndpointGroupByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.EndpointGroup, error) {

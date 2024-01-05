@@ -43,13 +43,25 @@ The following arguments are optional:
 * `session_timeout` - (Optional) Session timeout, in minutes. Minimum is 5 minutes and maximum is 720 minutes (12 hours). Default is 60 minutes.
 * `user_attribute` - (Optional) User attribute for this SAML integration.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `config_version` - Version of the configuration.
 
 ## Import
 
-OpenSearchServerless Access Policy can be imported using the `name` argument prefixed with the string `saml/account_id/` e.g
-$ terraform import aws_opensearchserverless_security_config.example saml/123456789012/example
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import OpenSearchServerless Access Policy using the `name` argument prefixed with the string `saml/account_id/`. For example:
+
+```terraform
+import {
+  to = aws_opensearchserverless_security_config.example
+  id = "saml/123456789012/example"
+}
+```
+
+Using `terraform import`, import OpenSearchServerless Access Policy using the `name` argument prefixed with the string `saml/account_id/`. For example:
+
+```console
+% terraform import aws_opensearchserverless_security_config.example saml/123456789012/example
+```

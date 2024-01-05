@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -103,6 +104,8 @@ func ResourceQuerySuggestionsBlockList() *schema.Resource {
 }
 
 func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	in := &kendra.CreateQuerySuggestionsBlockListInput{
@@ -134,12 +137,12 @@ func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.Reso
 	)
 
 	if err != nil {
-		return diag.Errorf("creating Amazon Kendra QuerySuggestionsBlockList (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra QuerySuggestionsBlockList (%s): %s", d.Get("name").(string), err)
 	}
 
 	out, ok := outputRaw.(*kendra.CreateQuerySuggestionsBlockListOutput)
 	if !ok || out == nil {
-		return diag.Errorf("creating Amazon Kendra QuerySuggestionsBlockList (%s): empty output", d.Get("name").(string))
+		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra QuerySuggestionsBlockList (%s): empty output", d.Get("name").(string))
 	}
 
 	id := aws.ToString(out.Id)
@@ -148,18 +151,20 @@ func resourceQuerySuggestionsBlockListCreate(ctx context.Context, d *schema.Reso
 	d.SetId(fmt.Sprintf("%s/%s", id, indexId))
 
 	if _, err := waitQuerySuggestionsBlockListCreated(ctx, conn, id, indexId, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Amazon Kendra QuerySuggestionsBlockList (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Amazon Kendra QuerySuggestionsBlockList (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceQuerySuggestionsBlockListRead(ctx, d, meta)
+	return append(diags, resourceQuerySuggestionsBlockListRead(ctx, d, meta)...)
 }
 
 func resourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id, indexId, err := QuerySuggestionsBlockListParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	out, err := FindQuerySuggestionsBlockListByID(ctx, conn, id, indexId)
@@ -167,11 +172,11 @@ func resourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.Resour
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kendra QuerySuggestionsBlockList (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Kendra QuerySuggestionsBlockList (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Kendra QuerySuggestionsBlockList (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -191,19 +196,21 @@ func resourceQuerySuggestionsBlockListRead(ctx context.Context, d *schema.Resour
 	d.Set("status", out.Status)
 
 	if err := d.Set("source_s3_path", flattenSourceS3Path(out.SourceS3Path)); err != nil {
-		return diag.Errorf("setting complex argument: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting complex argument: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceQuerySuggestionsBlockListUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		id, indexId, err := QuerySuggestionsBlockListParseResourceID(d.Id())
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input := &kendra.UpdateQuerySuggestionsBlockListInput{
@@ -245,25 +252,27 @@ func resourceQuerySuggestionsBlockListUpdate(ctx context.Context, d *schema.Reso
 		)
 
 		if err != nil {
-			return diag.Errorf("updating Kendra QuerySuggestionsBlockList (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Kendra QuerySuggestionsBlockList (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitQuerySuggestionsBlockListUpdated(ctx, conn, id, indexId, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Kendra QuerySuggestionsBlockList (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Kendra QuerySuggestionsBlockList (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceQuerySuggestionsBlockListRead(ctx, d, meta)
+	return append(diags, resourceQuerySuggestionsBlockListRead(ctx, d, meta)...)
 }
 
 func resourceQuerySuggestionsBlockListDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	log.Printf("[INFO] Deleting Kendra QuerySuggestionsBlockList %s", d.Id())
 
 	id, indexId, err := QuerySuggestionsBlockListParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = conn.DeleteQuerySuggestionsBlockList(ctx, &kendra.DeleteQuerySuggestionsBlockListInput{
@@ -274,18 +283,18 @@ func resourceQuerySuggestionsBlockListDelete(ctx context.Context, d *schema.Reso
 	var notFound *types.ResourceNotFoundException
 
 	if errors.As(err, &notFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Kendra QuerySuggestionsBlockList (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Kendra QuerySuggestionsBlockList (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitQuerySuggestionsBlockListDeleted(ctx, conn, id, indexId, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Kendra QuerySuggestionsBlockList (%s) to be deleted: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Kendra QuerySuggestionsBlockList (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func statusQuerySuggestionsBlockList(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {

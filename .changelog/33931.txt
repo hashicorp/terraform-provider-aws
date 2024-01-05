@@ -1,0 +1,93 @@
+```release-note:bug
+resource/aws_quicksight_analysis: Nested `column_index` and `row_index` arguments now properly handle zero values
+```
+```release-note:bug
+resource/aws_quicksight_dashboard: Nested `column_index` and `row_index` arguments now properly handle zero values
+```
+```release-note:bug
+resource/aws_quicksight_template: Nested `column_index` and `row_index` arguments now properly handle zero values
+```
+
+```release-note:bug
+resource/aws_quicksight_analysis: Fix handling of the nested `rolling_date` argument
+```
+```release-note:bug
+resource/aws_quicksight_dashboard: Fix handling of the nested `rolling_date` argument
+```
+```release-note:bug
+resource/aws_quicksight_template: Fix handling of the nested `rolling_date` argument
+```
+
+```release-note:bug
+resource/aws_quicksight_analysis: Fix handling of the nested `select_all_options` argument
+```
+```release-note:bug
+resource/aws_quicksight_dashboard: Fix handling of the nested `select_all_options` argument
+```
+```release-note:bug
+resource/aws_quicksight_template: Fix handling of the nested `select_all_options` argument
+```
+
+```release-note:bug
+resource/aws_quicksight_analysis: Fix handling of the nested `visual_ids` argument
+```
+```release-note:bug
+resource/aws_quicksight_dashboard: Fix handling of the nested `visual_ids` argument
+```
+```release-note:bug
+resource/aws_quicksight_template: Fix handling of the nested `visual_ids` argument
+```
+
+```release-note:bug
+resource/aws_quicksight_analysis: Fixes to various optional blocks utilizing the shared column schema definition
+```
+```release-note:bug
+resource/aws_quicksight_dashboard: Fixes to various optional blocks utilizing the shared column schema definition
+```
+```release-note:bug
+resource/aws_quicksight_template: Fixes to various optional blocks utilizing the shared column schema definition
+```
+
+```release-note:bug
+resource/aws_quicksight_analysis: Fix handling of the nested `number_scale`, `prefix`, and `suffix` integer arguments
+```
+```release-note:bug
+resource/aws_quicksight_dashboard: Fix handling of the nested `number_scale`, `prefix`, and `suffix` integer arguments
+```
+```release-note:bug
+resource/aws_quicksight_template: Fix handling of the nested `number_scale`, `prefix`, and `suffix` integer arguments
+```
+
+```release-note:enhancement
+resource/aws_quicksight_analysis: Add `number_display_format_configuration` and `percentage_display_format_configuration` to nested `numeric_format_configuration` argument
+```
+```release-note:enhancement
+resource/aws_quicksight_dashboard: Add `number_display_format_configuration` and `percentage_display_format_configuration` to nested `numeric_format_configuration` argument
+```
+```release-note:enhancement
+resource/aws_quicksight_template: Add `number_display_format_configuration` and `percentage_display_format_configuration` to nested `numeric_format_configuration` argument
+```
+
+```release-note:enhancement
+resource/aws_quicksight_analysis: Add `definition.sheets.visuals.kpi_visual.chart_configuration.kpi_options.sparkline` attribute
+```
+```release-note:enhancement
+resource/aws_quicksight_dashboard: Add `definition.sheets.visuals.kpi_visual.chart_configuration.kpi_options.sparkline` attribute
+```
+```release-note:enhancement
+resource/aws_quicksight_template: Add `definition.sheets.visuals.kpi_visual.chart_configuration.kpi_options.sparkline` attribute
+```
+
+```release-note:enhancement
+resource/aws_quicksight_analysis: Add `definition.sheets.visuals.kpi_visual.chart_configuration.kpi_options.visual_layout_options` attribute
+```
+```release-note:enhancement
+resource/aws_quicksight_dashboard: Add `definition.sheets.visuals.kpi_visual.chart_configuration.kpi_options.visual_layout_options` attribute
+```
+```release-note:enhancement
+resource/aws_quicksight_template: Add `definition.sheets.visuals.kpi_visual.chart_configuration.kpi_options.visual_layout_options` attribute
+```
+
+```release-note:bug
+resource/aws_quicksight_data_set: Increase `permissions.actions` maximum item limit to 20, aligning with the AWS API limits
+```

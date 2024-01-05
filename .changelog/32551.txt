@@ -1,0 +1,3 @@
+```release-note:bug
+data-source/aws_dms_replication_instance: Fixed bug that caused `replication_instance_private_ips`, `replication_instance_public_ips`, and `vpc_security_group_ids` to always return `null`
+```

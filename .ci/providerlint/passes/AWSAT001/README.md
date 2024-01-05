@@ -24,7 +24,7 @@ Otherwise, available ARN testing check functions include:
 ## Flagged Code
 
 ```go
-resource.TestMatchResourceAttr("aws_lb_listener.test", "certificate_arn", regexp.MustCompile(`^arn:[^:]+:acm:[^:]+:[^:]+:certificate/.+$`))
+resource.TestMatchResourceAttr("aws_lb_listener.test", "certificate_arn", regexache.MustCompile(`^arn:[^:]+:acm:[^:]+:[^:]+:certificate/.+$`))
 ```
 
 ## Passing Code
@@ -32,7 +32,7 @@ resource.TestMatchResourceAttr("aws_lb_listener.test", "certificate_arn", regexp
 ```go
 resource.TestCheckResourceAttrPair("aws_lb_listener.test", "certificate_arn", "aws_acm_certificate.test", "arn")
 
-acctest.MatchResourceAttrRegionalARN("aws_lb_listener.test", "certificate_arn", "acm", regexp.MustCompile(`certificate/.+`))
+acctest.MatchResourceAttrRegionalARN("aws_lb_listener.test", "certificate_arn", "acm", regexache.MustCompile(`certificate/.+`))
 ```
 
 ## Ignoring Check
@@ -41,5 +41,5 @@ The check can be ignored for a certain line via a `//lintignore:AWSAT001` commen
 
 ```go
 //lintignore:AWSAT001
-resource.TestMatchResourceAttr("aws_lb_listener.test", "certificate_arn", regexp.MustCompile(`^arn:[^:]+:acm:[^:]+:[^:]+:certificate/.+$`))
+resource.TestMatchResourceAttr("aws_lb_listener.test", "certificate_arn", regexache.MustCompile(`^arn:[^:]+:acm:[^:]+:[^:]+:certificate/.+$`))
 ```

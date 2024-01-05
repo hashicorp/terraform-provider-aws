@@ -29,7 +29,7 @@ resource "aws_wafv2_ip_set" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A friendly name of the IP set.
 * `description` - (Optional) A friendly description of the IP set.
@@ -38,9 +38,9 @@ The following arguments are supported:
 * `addresses` - (Required) Contains an array of strings that specifies zero or more IP addresses or blocks of IP addresses. All addresses must be specified using Classless Inter-Domain Routing (CIDR) notation. WAF supports all IPv4 and IPv6 CIDR ranges except for `/0`.
 * `tags` - (Optional) An array of key:value pairs to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A unique identifier for the IP set.
 * `arn` - The Amazon Resource Name (ARN) of the IP set.
@@ -48,8 +48,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-WAFv2 IP Sets can be imported using `ID/name/scope`
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAFv2 IP Sets using `ID/name/scope`. For example:
 
+```terraform
+import {
+  to = aws_wafv2_ip_set.example
+  id = "a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL"
+}
 ```
-$ terraform import aws_wafv2_ip_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
+
+Using `terraform import`, import WAFv2 IP Sets using `ID/name/scope`. For example:
+
+```console
+% terraform import aws_wafv2_ip_set.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```

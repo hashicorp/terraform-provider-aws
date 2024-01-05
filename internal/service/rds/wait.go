@@ -5,7 +5,6 @@ package rds
 
 import (
 	"context"
-	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -226,42 +225,6 @@ func waitDBClusterInstanceDeleted(ctx context.Context, conn *rds.RDS, id string,
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 		Delay:      30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*rds.DBInstance); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitDBInstanceAutomatedBackupCreated(ctx context.Context, conn *rds.RDS, arn string, timeout time.Duration) (*rds.DBInstanceAutomatedBackup, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{InstanceAutomatedBackupStatusPending},
-		Target:  []string{InstanceAutomatedBackupStatusReplicating},
-		Refresh: statusDBInstanceAutomatedBackup(ctx, conn, arn),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*rds.DBInstanceAutomatedBackup); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-// waitDBInstanceAutomatedBackupDeleted waits for a specified automated backup to be deleted from a database instance.
-// The connection must be valid for the database instance's Region.
-func waitDBInstanceAutomatedBackupDeleted(ctx context.Context, conn *rds.RDS, dbInstanceID, dbInstanceAutomatedBackupsARN string, timeout time.Duration) (*rds.DBInstance, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{strconv.FormatBool(true)},
-		Target:  []string{strconv.FormatBool(false)},
-		Refresh: statusDBInstanceHasAutomatedBackup(ctx, conn, dbInstanceID, dbInstanceAutomatedBackupsARN),
-		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

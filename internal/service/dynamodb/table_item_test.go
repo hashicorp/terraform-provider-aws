@@ -6,9 +6,9 @@ package dynamodb_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -164,7 +164,7 @@ func TestAccDynamoDBTableItem_withDuplicateItemsSameRangeKey(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTableItemConfig_multiple(tableName, hashKey, rangeKey, firstItem, firstItem),
-				ExpectError: regexp.MustCompile(`ConditionalCheckFailedException: The conditional request failed`),
+				ExpectError: regexache.MustCompile(`ConditionalCheckFailedException: The conditional request failed`),
 			},
 		},
 	})

@@ -14,10 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_db_cluster_snapshot")
+// @SDKDataSource("aws_db_cluster_snapshot", name="DB Cluster Snapshot")
+// @Tags
 func DataSourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceClusterSnapshotRead,
@@ -33,18 +36,16 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Computed: true,
 			},
 			"db_cluster_identifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				AtLeastOneOf: []string{"db_cluster_identifier", "db_cluster_snapshot_identifier"},
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"db_cluster_snapshot_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"db_cluster_snapshot_identifier": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				AtLeastOneOf: []string{"db_cluster_identifier", "db_cluster_snapshot_identifier"},
+				Type:     schema.TypeString,
+				Optional: true,
 			},
 			"engine": {
 				Type:     schema.TypeString,
@@ -101,7 +102,7 @@ func DataSourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -113,7 +114,6 @@ func DataSourceClusterSnapshot() *schema.Resource {
 func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &rds.DescribeDBClusterSnapshotsInput{
 		IncludePublic: aws.Bool(d.Get("include_public").(bool)),
@@ -132,25 +132,32 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 		input.SnapshotType = aws.String(v.(string))
 	}
 
-	output, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, input)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RDS Cluster Snapshots: %s", err)
+	f := tfslices.PredicateTrue[*rds.DBClusterSnapshot]()
+	if tags := getTagsIn(ctx); len(tags) > 0 {
+		f = func(v *rds.DBClusterSnapshot) bool {
+			return KeyValueTags(ctx, v.TagList).ContainsAll(KeyValueTags(ctx, tags))
+		}
 	}
 
-	if len(output.DBClusterSnapshots) < 1 {
+	snapshots, err := findDBClusterSnapshots(ctx, conn, input, f)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Cluster Snapshots: %s", err)
+	}
+
+	if len(snapshots) < 1 {
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
 	var snapshot *rds.DBClusterSnapshot
-	if len(output.DBClusterSnapshots) > 1 {
+	if len(snapshots) > 1 {
 		if d.Get("most_recent").(bool) {
-			snapshot = mostRecentClusterSnapshot(output.DBClusterSnapshots)
+			snapshot = mostRecentClusterSnapshot(snapshots)
 		} else {
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria.")
 		}
 	} else {
-		snapshot = output.DBClusterSnapshots[0]
+		snapshot = snapshots[0]
 	}
 
 	d.SetId(aws.StringValue(snapshot.DBClusterSnapshotIdentifier))
@@ -173,11 +180,7 @@ func dataSourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("storage_encrypted", snapshot.StorageEncrypted)
 	d.Set("vpc_id", snapshot.VpcId)
 
-	tags := KeyValueTags(ctx, snapshot.TagList)
-
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, snapshot.TagList)
 
 	return diags
 }

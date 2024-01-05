@@ -35,7 +35,7 @@ resource "aws_msk_serverless_cluster" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `client_authentication` - (Required) Specifies client authentication information for the serverless cluster. See below.
 * `cluster_name` - (Required) The name of the serverless cluster.
@@ -59,11 +59,12 @@ The following arguments are supported:
 * `security_group_ids` - (Optional) Specifies up to five security groups that control inbound and outbound traffic for the serverless cluster.
 * `subnet_ids` - (Required) A list of subnets in at least two different Availability Zones that host your client applications.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the serverless cluster.
+* `cluster_uuid` - UUID of the serverless cluster, for use in IAM policies.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
@@ -75,8 +76,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MSK serverless clusters can be imported using the cluster `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MSK serverless clusters using the cluster `arn`. For example:
 
+```terraform
+import {
+  to = aws_msk_serverless_cluster.example
+  id = "arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3"
+}
 ```
-$ terraform import aws_msk_serverless_cluster.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
+
+Using `terraform import`, import MSK serverless clusters using the cluster `arn`. For example:
+
+```console
+% terraform import aws_msk_serverless_cluster.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```

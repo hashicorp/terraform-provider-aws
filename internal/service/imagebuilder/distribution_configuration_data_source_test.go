@@ -102,7 +102,7 @@ resource "aws_imagebuilder_distribution_configuration" "test" {
         launch_template_version = "1"
       }
 
-      max_parallel_launches = 1
+      max_parallel_launches = 6
 
       snapshot_configuration {
         target_resource_count = 1

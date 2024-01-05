@@ -27,9 +27,9 @@ resource "aws_dataexchange_data_set" "example" {
 * `name` - (Required) The name of the data set.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Id of the data set.
 * `arn` - The Amazon Resource Name of this data set.
@@ -37,8 +37,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-DataExchange DataSets can be imported by their arn:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DataExchange DataSets using their ARN. For example:
 
+```terraform
+import {
+  to = aws_dataexchange_data_set.example
+  id = "arn:aws:dataexchange:us-west-2:123456789012:data-sets/4fa784c7-ccb4-4dbf-ba4f-02198320daa1"
+}
 ```
-$ terraform import aws_dataexchange_data_set.example arn:aws:dataexchange:us-west-2:123456789012:data-sets/4fa784c7-ccb4-4dbf-ba4f-02198320daa1
+
+Using `terraform import`, import DataExchange DataSets using their ARN. For example:
+
+```console
+% terraform import aws_dataexchange_data_set.example arn:aws:dataexchange:us-west-2:123456789012:data-sets/4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```

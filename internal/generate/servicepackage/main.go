@@ -13,48 +13,35 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
-	"regexp"
 	"sort"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 	"golang.org/x/exp/slices"
 )
 
 func main() {
 	const (
-		filename      = `service_package_gen.go`
-		namesDataFile = `../../../names/names_data.csv`
+		filename = `service_package_gen.go`
 	)
 	g := common.NewGenerator()
 
-	data, err := common.ReadAllCSVData(namesDataFile)
+	data, err := data.ReadAllServiceData()
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", namesDataFile, err)
+		g.Fatalf("error reading service data: %s", err)
 	}
 
 	servicePackage := os.Getenv("GOPACKAGE")
 
 	g.Infof("Generating internal/service/%s/%s", servicePackage, filename)
 
-	for i, l := range data {
-		if i < 1 { // no header
-			continue
-		}
-
-		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
-			continue
-		}
-
+	for _, l := range data {
 		// See internal/generate/namesconsts/main.go.
-		p := l[names.ColProviderPackageCorrect]
-
-		if l[names.ColProviderPackageActual] != "" {
-			p = l[names.ColProviderPackageActual]
-		}
+		p := l.ProviderPackage()
 
 		if p != servicePackage {
 			continue
@@ -78,23 +65,23 @@ func main() {
 		}
 
 		s := ServiceDatum{
-			SkipClientGenerate:   l[names.ColSkipClientGenerate] != "",
-			GoV1Package:          l[names.ColGoV1Package],
-			GoV2Package:          l[names.ColGoV2Package],
+			SkipClientGenerate:   l.SkipClientGenerate(),
+			GoV1Package:          l.GoV1Package(),
+			GoV2Package:          l.GoV2Package(),
 			ProviderPackage:      p,
-			ProviderNameUpper:    l[names.ColProviderNameUpper],
+			ProviderNameUpper:    l.ProviderNameUpper(),
 			FrameworkDataSources: v.frameworkDataSources,
 			FrameworkResources:   v.frameworkResources,
 			SDKDataSources:       v.sdkDataSources,
 			SDKResources:         v.sdkResources,
 		}
 
-		if l[names.ColClientSDKV1] != "" {
+		if l.ClientSDKV1() != "" {
 			s.SDKVersion = "1"
-			s.GoV1ClientTypeName = l[names.ColGoV1ClientTypeName]
+			s.GoV1ClientTypeName = l.GoV1ClientTypeName()
 		}
-		if l[names.ColClientSDKV2] != "" {
-			if l[names.ColClientSDKV1] != "" {
+		if l.ClientSDKV2() != "" {
+			if l.ClientSDKV1() != "" {
 				s.SDKVersion = "1,2"
 			} else {
 				s.SDKVersion = "2"
@@ -149,7 +136,7 @@ var tmpl string
 
 // Annotation processing.
 var (
-	annotation = regexp.MustCompile(`^//\s*@([a-zA-Z0-9]+)(\(([^)]*)\))?\s*$`)
+	annotation = regexache.MustCompile(`^//\s*@([0-9A-Za-z]+)(\(([^)]*)\))?\s*$`)
 )
 
 type visitor struct {

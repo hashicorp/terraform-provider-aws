@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -80,6 +81,8 @@ func ResourceCustomerGateway() *schema.Resource {
 }
 
 func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateCustomerGatewayInput{
@@ -91,7 +94,7 @@ func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 		v, err := strconv.ParseInt(v.(string), 10, 64)
 
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input.BgpAsn = aws.Int64(v)
@@ -112,19 +115,21 @@ func resourceCustomerGatewayCreate(ctx context.Context, d *schema.ResourceData, 
 	output, err := conn.CreateCustomerGatewayWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating EC2 Customer Gateway: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Customer Gateway: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.CustomerGateway.CustomerGatewayId))
 
 	if _, err := WaitCustomerGatewayCreated(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for EC2 Customer Gateway (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Customer Gateway (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceCustomerGatewayRead(ctx, d, meta)
+	return append(diags, resourceCustomerGatewayRead(ctx, d, meta)...)
 }
 
 func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	customerGateway, err := FindCustomerGatewayByID(ctx, conn, d.Id())
@@ -132,11 +137,11 @@ func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, me
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Customer Gateway (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading EC2 Customer Gateway (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Customer Gateway (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -155,7 +160,7 @@ func resourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, me
 
 	setTagsOut(ctx, customerGateway.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceCustomerGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -164,6 +169,8 @@ func resourceCustomerGatewayUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceCustomerGatewayDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[INFO] Deleting EC2 Customer Gateway: %s", d.Id())
@@ -172,16 +179,16 @@ func resourceCustomerGatewayDelete(ctx context.Context, d *schema.ResourceData, 
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidCustomerGatewayIDNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting EC2 Customer Gateway (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Customer Gateway (%s): %s", d.Id(), err)
 	}
 
 	if _, err := WaitCustomerGatewayDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for EC2 Customer Gateway (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Customer Gateway (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

@@ -8,9 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	"github.com/aws/aws-sdk-go-v2/service/cleanrooms/types"
@@ -49,7 +49,7 @@ func TestAccCleanRoomsCollaboration_basic(t *testing.T) {
 						"allow_joins_on_columns_with_different_names": "true",
 						"preserve_nulls": "false",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cleanrooms", regexp.MustCompile(`collaboration:*`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "cleanrooms", regexache.MustCompile(`collaboration:*`)),
 					testCheckCreatorMember(ctx, resourceName),
 					testAccCollaborationTags(ctx, resourceName, map[string]string{
 						"Project": TEST_TAG,

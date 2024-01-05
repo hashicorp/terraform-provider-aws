@@ -13,11 +13,12 @@ func TestAccConfigService_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
-		"Config": {
+		"ConfigRule": {
 			"basic":            testAccConfigRule_basic,
 			"ownerAws":         testAccConfigRule_ownerAws,
 			"customlambda":     testAccConfigRule_customlambda,
 			"customPolicy":     testAccConfigRule_ownerPolicy,
+			"evaluationMode":   testAccConfigRule_evaluationMode,
 			"scopeTagKey":      testAccConfigRule_Scope_TagKey,
 			"scopeTagKeyEmpty": testAccConfigRule_Scope_TagKey_Empty,
 			"scopeTagValue":    testAccConfigRule_Scope_TagValue,
@@ -38,7 +39,7 @@ func TestAccConfigService_serial(t *testing.T) {
 		"ConformancePack": {
 			"basic":                     testAccConformancePack_basic,
 			"disappears":                testAccConformancePack_disappears,
-			"forceNew":                  testAccConformancePack_forceNew,
+			"updateName":                testAccConformancePack_updateName,
 			"inputParameters":           testAccConformancePack_inputParameters,
 			"S3Delivery":                testAccConformancePack_S3Delivery,
 			"S3Template":                testAccConformancePack_S3Template,
@@ -57,7 +58,7 @@ func TestAccConfigService_serial(t *testing.T) {
 			"basic":                 testAccOrganizationConformancePack_basic,
 			"disappears":            testAccOrganizationConformancePack_disappears,
 			"excludedAccounts":      testAccOrganizationConformancePack_excludedAccounts,
-			"forceNew":              testAccOrganizationConformancePack_forceNew,
+			"updateName":            testAccOrganizationConformancePack_updateName,
 			"inputParameters":       testAccOrganizationConformancePack_inputParameters,
 			"S3Delivery":            testAccOrganizationConformancePack_S3Delivery,
 			"S3Template":            testAccOrganizationConformancePack_S3Template,
