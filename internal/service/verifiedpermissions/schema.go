@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -43,6 +42,7 @@ const (
 
 type resourceSchema struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 }
 
 func (r *resourceSchema) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
@@ -235,10 +235,6 @@ func (r *resourceSchema) Delete(ctx context.Context, request resource.DeleteRequ
 		)
 		return
 	}
-}
-
-func (r *resourceSchema) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
 }
 
 type resourceSchemaData struct {
