@@ -32,7 +32,7 @@ func TestAccCleanRoomsMembership_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			// acctest.PreCheckOrganizationsAccount(ctx, t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
@@ -88,7 +88,7 @@ func TestAccCleanRoomsMembership_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			// acctest.PreCheckOrganizationsAccount(ctx, t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
@@ -127,7 +127,7 @@ func TestAccCleanRoomsMembership_mutableProperties(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			// acctest.PreCheckOrganizationsAccount(ctx, t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
@@ -172,7 +172,7 @@ func TestAccCleanRoomsMembership_defaultOutputConfigurationWithEmptyAdditionalPa
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			// acctest.PreCheckOrganizationsAccount(ctx, t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
@@ -201,7 +201,7 @@ func TestAccCleanRoomsMembership_withoutDefaultOutputConfiguration(t *testing.T)
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			// acctest.PreCheckOrganizationsAccount(ctx, t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
@@ -230,7 +230,7 @@ func TestAccCleanRoomsMembership_addDefaultOutputConfiguration(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			// acctest.PreCheckOrganizationsAccount(ctx, t)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
