@@ -5,9 +5,11 @@ package kinesis
 
 // Exports for use in tests only.
 var (
+	ResourceResourcePolicy = newResourcePolicyResource
 	ResourceStream         = resourceStream
 	ResourceStreamConsumer = resourceStreamConsumer
 
-	FindStreamByName        = findStreamByName
-	FindStreamConsumerByARN = findStreamConsumerByARN
+	FindResourcePolicyByResourceARN = findResourcePolicyByResourceARN
+	FindStreamByName                = findStreamByName
+	FindStreamConsumerByARN         = findStreamConsumerByARN
 )
