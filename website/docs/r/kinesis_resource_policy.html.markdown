@@ -28,9 +28,10 @@ resource "aws_kinesis_resource_policy" "example" {
       "AWS": "123456789456"
     },
     "Action": [
-      "s3:ListAccessGrants",
-      "s3:ListAccessGrantsLocations",
-      "s3:GetDataAccess"
+      "kinesis:DescribeStreamSummary",
+      "kinesis:ListShards",
+      "kinesis:PutRecord",
+      "kinesis:PutRecords"
     ],
     "Resource": "${aws_kinesis_stream.example.arn}"
   }]
