@@ -29,8 +29,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_kinesis_stream",
 		},
 		{
-			Factory:  DataSourceStreamConsumer,
+			Factory:  dataSourceStreamConsumer,
 			TypeName: "aws_kinesis_stream_consumer",
+			Name:     "Stream Consumer",
 		},
 	}
 }
