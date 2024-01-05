@@ -36,7 +36,7 @@ func dataSourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).FirehoseClient(ctx)
 
 	sn := d.Get("name").(string)
-	output, err := FindDeliveryStreamByName(ctx, conn, sn)
+	output, err := findDeliveryStreamByName(ctx, conn, sn)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Kinesis Firehose Delivery Stream (%s): %s", sn, err)
