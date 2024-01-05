@@ -46,6 +46,7 @@ func ResourceResource() *schema.Resource {
 			"with_federation": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 		},
@@ -107,6 +108,8 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if output == nil || output.ResourceInfo == nil {
 		return sdkdiag.AppendErrorf(diags, "reading resource Lake Formation Resource (%s): empty response", d.Id())
 	}
+
+	d.Set("with_federation", output.ResourceInfo.WithFederation)
 
 	// d.Set("arn", output.ResourceInfo.ResourceArn) // output not including resource arn currently
 	d.Set("role_arn", output.ResourceInfo.RoleArn)

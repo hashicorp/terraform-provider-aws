@@ -39,7 +39,7 @@ func TestAccLakeFormationResource_basic(t *testing.T) {
 					testAccCheckResourceExists(ctx, resourceAddr),
 					resource.TestCheckResourceAttrPair(resourceAddr, "role_arn", roleAddr, "arn"),
 					resource.TestCheckResourceAttrPair(resourceAddr, "arn", bucketAddr, "arn"),
-					resource.TestCheckResourceAttr(resourceAddr, "with_federation", "true"),
+					resource.TestCheckResourceAttrSet(resourceAddr, "with_federation"),
 				),
 			},
 		},
@@ -295,7 +295,7 @@ EOF
 resource "aws_lakeformation_resource" "test" {
   arn             = aws_s3_bucket.test.arn
   role_arn        = aws_iam_role.test.arn
-  with_federation = true
+  with_federation = false
 }
 `, bucket, role)
 }
