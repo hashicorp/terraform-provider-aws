@@ -37,8 +37,7 @@ func newResourcePolicyStore(context.Context) (resource.ResourceWithConfigure, er
 }
 
 const (
-	ResNamePolicyStore       = "Policy Store"
-	ResNamePolicyStoreSchema = "Policy Store Schema"
+	ResNamePolicyStore = "Policy Store"
 )
 
 type resourcePolicyStore struct {
@@ -212,7 +211,7 @@ func (r *resourcePolicyStore) Delete(ctx context.Context, request resource.Delet
 		return
 	}
 
-	tflog.Debug(ctx, "deleting TODO", map[string]interface{}{
+	tflog.Debug(ctx, "deleting Verified Permissions Policy Store", map[string]interface{}{
 		"id": state.ID.ValueString(),
 	})
 

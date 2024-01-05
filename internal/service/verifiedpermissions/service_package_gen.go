@@ -29,6 +29,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourcePolicyStore,
 			Name:    "Policy Store",
 		},
+		{
+			Factory: newResourceSchema,
+			Name:    "Schema",
+		},
 	}
 }
 
