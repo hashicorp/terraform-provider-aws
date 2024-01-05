@@ -5,15 +5,14 @@ package verifiedpermissions
 
 import (
 	"context"
-	"encoding/json"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions/types"
+	"github.com/hashicorp/terraform-plugin-framework-jsontypes/jsontypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/objectvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -26,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -44,6 +42,7 @@ const (
 
 type resourceSchema struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 }
 
 func (r *resourceSchema) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
@@ -69,10 +68,8 @@ func (r *resourceSchema) Schema(ctx context.Context, request resource.SchemaRequ
 				},
 				Attributes: map[string]schema.Attribute{
 					"value": schema.StringAttribute{
-						Required: true,
-						Validators: []validator.String{
-							fwvalidators.JSON(),
-						},
+						CustomType: jsontypes.NormalizedType{},
+						Required:   true,
 					},
 				},
 			},
@@ -146,7 +143,7 @@ func (r *resourceSchema) Read(ctx context.Context, request resource.ReadRequest,
 
 	state.PolicyStoreID = flex.StringToFramework(ctx, output.PolicyStoreId)
 	state.Namespaces = flex.FlattenFrameworkStringValueSet(ctx, output.Namespaces)
-	state.Definition = flattenDefinition(ctx, output, &response.Diagnostics)
+	state.Definition = flattenDefinition(ctx, output)
 
 	if response.Diagnostics.HasError() {
 		return
@@ -202,6 +199,7 @@ func (r *resourceSchema) Update(ctx context.Context, request resource.UpdateRequ
 		}
 
 		plan.Namespaces = flex.FlattenFrameworkStringValueSet(ctx, out.Namespaces)
+		plan.Definition = flattenDefinition(ctx, out)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
@@ -239,10 +237,6 @@ func (r *resourceSchema) Delete(ctx context.Context, request resource.DeleteRequ
 	}
 }
 
-func (r *resourceSchema) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
-}
-
 type resourceSchemaData struct {
 	ID            types.String `tfsdk:"id"`
 	Definition    types.Object `tfsdk:"definition"`
@@ -251,7 +245,7 @@ type resourceSchemaData struct {
 }
 
 type definition struct {
-	Value types.String `tfsdk:"value"`
+	Value jsontypes.Normalized `tfsdk:"value"`
 }
 
 func findSchemaByPolicyStoreID(ctx context.Context, conn *verifiedpermissions.Client, id string) (*verifiedpermissions.GetSchemaOutput, error) {
@@ -291,33 +285,14 @@ func expandDefinition(ctx context.Context, object types.Object, diags *diag.Diag
 	return out
 }
 
-func flattenDefinition(ctx context.Context, input *verifiedpermissions.GetSchemaOutput, diags *diag.Diagnostics) types.Object {
+func flattenDefinition(ctx context.Context, input *verifiedpermissions.GetSchemaOutput) types.Object {
 	if input == nil {
-		return fwtypes.NewObjectValueOfNull[definition](ctx).ObjectValue
-	}
-
-	var data any
-	err := json.Unmarshal([]byte(aws.ToString(input.Schema)), &data)
-	if err != nil {
-		diags.AddError(
-			"unable to unmarshal schema",
-			err.Error(),
-		)
-		return fwtypes.NewObjectValueOfNull[definition](ctx).ObjectValue
-	}
-
-	val, err := json.Marshal(data)
-	if err != nil {
-		diags.AddError(
-			"unable to marshal schema",
-			err.Error(),
-		)
 		return fwtypes.NewObjectValueOfNull[definition](ctx).ObjectValue
 	}
 
 	attributeTypes := fwtypes.AttributeTypesMust[definition](ctx)
 	attrs := map[string]attr.Value{}
-	attrs["value"] = flex.StringValueToFramework(ctx, string(val))
+	attrs["value"] = jsontypes.NewNormalizedPointerValue(input.Schema)
 
 	return types.ObjectValueMust(attributeTypes, attrs)
 }

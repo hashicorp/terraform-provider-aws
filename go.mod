@@ -46,6 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.14.7
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.16.6
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.20.1
+	github.com/aws/aws-sdk-go-v2/service/firehose v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/fis v1.21.6
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.19.6
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.23.6
@@ -123,6 +124,7 @@ require (
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/hcl/v2 v2.19.1
 	github.com/hashicorp/terraform-plugin-framework v1.4.2
+	github.com/hashicorp/terraform-plugin-framework-jsontypes v0.1.0
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.4.1
 	github.com/hashicorp/terraform-plugin-framework-validators v0.12.0
 	github.com/hashicorp/terraform-plugin-go v0.20.0
