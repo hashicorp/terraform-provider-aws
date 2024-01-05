@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_elasticache_serverless_cache
 
-Provides an ElastiCache Serverlesss Cache resource which manages memcache or redis.
+Provides an ElastiCache Serverless Cache resource which manages memcached or redis.
 
 ## Example Usage
 
@@ -16,8 +16,8 @@ Provides an ElastiCache Serverlesss Cache resource which manages memcache or red
 
 ```terraform
 resource "aws_elasticache_serverless_cache" "example" {
-  engine                = "memcached"
-  serverless_cache_name = "example"
+  engine = "memcached"
+  name   = "example"
   cache_usage_limits {
     data_storage {
       maximum = 10
@@ -39,8 +39,8 @@ resource "aws_elasticache_serverless_cache" "example" {
 
 ```terraform
 resource "aws_elasticache_serverless_cache" "example" {
-  engine                = "redis"
-  serverless_cache_name = "example"
+  engine = "redis"
+  name   = "example"
   cache_usage_limits {
     data_storage {
       maximum = 10
@@ -123,7 +123,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ElastiCache Serverlesss Cache Clusters using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ElastiCache Serverless Cache using the `name`. For example:
 
 ```terraform
 import {
@@ -132,7 +132,7 @@ import {
 }
 ```
 
-Using `terraform import`, import ElastiCache Serverless Clusters using the `sserverless_cache_name`. For example:
+Using `terraform import`, import ElastiCache Serverless Cache using the `name`. For example:
 
 ```console
 % terraform import aws_elasticache_serverless_cache.my_cluster my_cluster

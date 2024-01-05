@@ -206,7 +206,7 @@ keyspaces,keyspaces,keyspaces,keyspaces,,keyspaces,,,Keyspaces,Keyspaces,,,2,,aw
 kinesis,kinesis,kinesis,kinesis,,kinesis,,,Kinesis,Kinesis,x,,2,aws_kinesis_stream,aws_kinesis_,,kinesis_stream,Kinesis,Amazon,,,,,,,
 kinesisanalytics,kinesisanalytics,kinesisanalytics,kinesisanalytics,,kinesisanalytics,,,KinesisAnalytics,KinesisAnalytics,,1,,aws_kinesis_analytics_,aws_kinesisanalytics_,,kinesis_analytics_,Kinesis Analytics,Amazon,,,,,,,
 kinesisanalyticsv2,kinesisanalyticsv2,kinesisanalyticsv2,kinesisanalyticsv2,,kinesisanalyticsv2,,,KinesisAnalyticsV2,KinesisAnalyticsV2,,1,,,aws_kinesisanalyticsv2_,,kinesisanalyticsv2_,Kinesis Analytics V2,Amazon,,,,,,,
-firehose,firehose,firehose,firehose,,firehose,,,Firehose,Firehose,,1,,aws_kinesis_firehose_,aws_firehose_,,kinesis_firehose_,Kinesis Firehose,Amazon,,,,,,,
+firehose,firehose,firehose,firehose,,firehose,,,Firehose,Firehose,,,2,aws_kinesis_firehose_,aws_firehose_,,kinesis_firehose_,Kinesis Firehose,Amazon,,,,,,,
 kinesisvideo,kinesisvideo,kinesisvideo,kinesisvideo,,kinesisvideo,,,KinesisVideo,KinesisVideo,,1,,,aws_kinesisvideo_,,kinesis_video_,Kinesis Video,Amazon,,,,,,,
 kinesis-video-archived-media,kinesisvideoarchivedmedia,kinesisvideoarchivedmedia,kinesisvideoarchivedmedia,,kinesisvideoarchivedmedia,,,KinesisVideoArchivedMedia,KinesisVideoArchivedMedia,,1,,,aws_kinesisvideoarchivedmedia_,,kinesisvideoarchivedmedia_,Kinesis Video Archived Media,Amazon,,x,,,,,
 kinesis-video-media,kinesisvideomedia,kinesisvideomedia,kinesisvideomedia,,kinesisvideomedia,,,KinesisVideoMedia,KinesisVideoMedia,,1,,,aws_kinesisvideomedia_,,kinesisvideomedia_,Kinesis Video Media,Amazon,,x,,,,,
