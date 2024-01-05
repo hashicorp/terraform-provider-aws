@@ -1512,6 +1512,8 @@ func TestAccFirehoseDeliveryStream_openSearchUpdates(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, nil, nil, nil, nil, nil, nil),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.0.document_id_options.#", "0"),
 				),
 			},
 			{

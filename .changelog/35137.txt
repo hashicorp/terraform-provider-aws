@@ -1,3 +1,7 @@
 ```release-note:bug
 resource/aws_kinesis_firehose_delivery_stream: Fix perpetual `extended_s3_configuration.processing_configuration.processors.parameters` diffs when processor type is `Lambda`
 ```
+
+```release-note:enhancement
+resource/aws_kinesis_firehose_delivery_stream: Add `opensearch_configuration.document_id_options` configuration block
+```

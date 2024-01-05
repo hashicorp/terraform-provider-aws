@@ -873,6 +873,20 @@ func resourceDeliveryStream() *schema.Resource {
 								Optional:      true,
 								ConflictsWith: []string{"opensearch_configuration.0.domain_arn"},
 							},
+							"document_id_options": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"default_document_id_format": {
+											Type:             schema.TypeString,
+											Required:         true,
+											ValidateDiagFunc: enum.Validate[types.DefaultDocumentIdFormat](),
+										},
+									},
+								},
+							},
 							"domain_arn": {
 								Type:          schema.TypeString,
 								Optional:      true,
@@ -2369,6 +2383,10 @@ func expandAmazonopensearchserviceDestinationConfiguration(os map[string]interfa
 		config.VpcConfiguration = expandVPCConfiguration(os)
 	}
 
+	if v, ok := os["document_id_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		config.DocumentIdOptions = expandDocumentIDOptions(v[0].(map[string]interface{}))
+	}
+
 	return config
 }
 
@@ -2401,6 +2419,10 @@ func expandAmazonopensearchserviceDestinationUpdate(os map[string]interface{}) *
 
 	if indexRotationPeriod, ok := os["index_rotation_period"]; ok {
 		update.IndexRotationPeriod = types.AmazonopensearchserviceIndexRotationPeriod(indexRotationPeriod.(string))
+	}
+
+	if v, ok := os["document_id_options"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		update.DocumentIdOptions = expandDocumentIDOptions(v[0].(map[string]interface{}))
 	}
 
 	return update
@@ -2941,6 +2963,10 @@ func flattenAmazonopensearchserviceDestinationDescription(description *types.Ama
 		m["retry_duration"] = int(aws.ToInt32(description.RetryOptions.DurationInSeconds))
 	}
 
+	if v := description.DocumentIdOptions; v != nil {
+		m["document_id_options"] = []interface{}{flattenDocumentIDOptions(v)}
+	}
+
 	return []map[string]interface{}{m}
 }
 
@@ -3443,6 +3469,32 @@ func flattenHTTPEndpointDestinationDescription(description *types.HttpEndpointDe
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func expandDocumentIDOptions(tfMap map[string]interface{}) *types.DocumentIdOptions {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.DocumentIdOptions{}
+
+	if v, ok := tfMap["default_document_id_format"].(string); ok && v != "" {
+		apiObject.DefaultDocumentIdFormat = types.DefaultDocumentIdFormat(v)
+	}
+
+	return apiObject
+}
+
+func flattenDocumentIDOptions(apiObject *types.DocumentIdOptions) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"default_document_id_format": apiObject.DefaultDocumentIdFormat,
+	}
+
+	return tfMap
 }
 
 func isDeliveryStreamOptionDisabled(v interface{}) bool {

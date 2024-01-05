@@ -687,9 +687,10 @@ The `opensearch_configuration` object supports the following:
 * `s3_configuration` - (Required) The S3 Configuration. See [s3_configuration](#s3-configuration) for more details.
 * `s3_backup_mode` - (Optional) Defines how documents should be delivered to Amazon S3.  Valid values are `FailedDocumentsOnly` and `AllDocuments`.  Default value is `FailedDocumentsOnly`.
 * `type_name` - (Optional) The Elasticsearch type name with maximum length of 100 characters. Types are deprecated in OpenSearch_1.1. TypeName must be empty.
-* `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below
-* `vpc_config` - (Optional) The VPC configuration for the delivery stream to connect to OpenSearch associated with the VPC. More details are given below
-* `processing_configuration` - (Optional) The data processing configuration.  More details are given below.
+* `cloudwatch_logging_options` - (Optional) The CloudWatch Logging Options for the delivery stream. More details are given below.
+* `vpc_config` - (Optional) The VPC configuration for the delivery stream to connect to OpenSearch associated with the VPC. More details are given below.
+* `processing_configuration` - (Optional) The data processing configuration. More details are given below.
+* `document_id_options` - (Optional) The method for setting up document ID. More details are given below.
 
 The `opensearchserverless_configuration` object supports the following:
 
@@ -890,12 +891,11 @@ resource "aws_kinesis_firehose_delivery_stream" "example" {
 * `region` - (Optional) If you don't specify an AWS Region, the default is the current region.
 * `version_id` - (Optional) Specifies the table version for the output data schema. Defaults to `LATEST`.
 
-#### dynamic_partitioning_configuration
+### document_id_options
 
-Required when using [dynamic partitioning](https://docs.aws.amazon.com/firehose/latest/dev/dynamic-partitioning.html).
+* `default_document_id_format` - (Required) The method for setting up document ID. Valid values: `FIREHOSE_DEFAULT`, `NO_DOCUMENT_ID`.
 
-* `enabled` - (Optional) Enables or disables dynamic partitioning. Defaults to `false`.
-* `retry_duration` - (Optional) Total amount of seconds Firehose spends on retries. Valid values between 0 and 7200. Default is 300.
+### data_format_conversion_configuration
 
 ~> **NOTE:** You can enable dynamic partitioning only when you create a new delivery stream. Once you enable dynamic partitioning on a delivery stream, it cannot be disabled on this delivery stream. Therefore, Terraform will recreate the resource whenever dynamic partitioning is enabled or disabled.
 
