@@ -16,8 +16,8 @@ Provides a AWS Clean Rooms membership. Memberships are used to join a Clean Room
 
 ```terraform
 resource "aws_cleanrooms_membership" "test_membership" {
-  collaboration_id  = "1234abcd-12ab-34cd-56ef-1234567890ab"
-  query_log_status  = "DISABLED"
+  collaboration_id = "1234abcd-12ab-34cd-56ef-1234567890ab"
+  query_log_status = "DISABLED"
 
   default_result_configuration {
     role_arn = "arn:aws:iam::123456789012:role/role-name"
@@ -43,10 +43,10 @@ This resource supports the following arguments:
 * `collaboration_id` - (Required - Forces new resource) - The ID of the collaboration to which the member was invited.
 * `query_log_status` - (Required) - An indicator as to whether query logging has been enabled or disabled for the membership.
 * `default_result_configuration` - (Optional) - The default configuration for a query result.
-  - `role_arn` - (Optional) - The ARN of the IAM role which will be used to create the cmembership.
-  - `output_configuration.s3.bucket` - (Required) - The name of the S3 bucket where the query results will be stored.
-  - `output_configuration.s3.result_format` - (Required) - The format of the query results. Valid values are `PARQUET` and `CSV`.
-  - `output_configuration.s3.key_prefix` - (Optional) - The prefix used for the query results.
+    - `role_arn` - (Optional) - The ARN of the IAM role which will be used to create the cmembership.
+    - `output_configuration.s3.bucket` - (Required) - The name of the S3 bucket where the query results will be stored.
+    - `output_configuration.s3.result_format` - (Required) - The format of the query results. Valid values are `PARQUET` and `CSV`.
+    - `output_configuration.s3.key_prefix` - (Optional) - The prefix used for the query results.
 * `tags` - (Optional) - Key value pairs which tag the membership.
 
 ## Attribute Reference
