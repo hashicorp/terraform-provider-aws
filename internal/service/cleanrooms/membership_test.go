@@ -343,7 +343,7 @@ const TEST_KEY_PREFIX = "test"
 // into effect immediately.
 func testAccMembershipConfig_initResources(rName string) string {
 	return acctest.ConfigCompose(
-		testAccMembershipConfig_awsPartition(),
+		testAccMembershipConfig_partitionDataSource(),
 		testAccMembershipConfig_iamResources(rName),
 		testAccMembershipConfig_s3Bucket(rName),
 	)
@@ -351,7 +351,7 @@ func testAccMembershipConfig_initResources(rName string) string {
 
 func testAccMembershipConfig_initDoubledResources(rName string, rNameSecond string) string {
 	return acctest.ConfigCompose(
-		testAccMembershipConfig_awsPartition(),
+		testAccMembershipConfig_partitionDataSource(),
 		testAccMembershipConfig_iamResources(rName),
 		testAccMembershipConfig_iamResources(rNameSecond),
 		testAccMembershipConfig_s3Bucket(rName),
@@ -362,7 +362,7 @@ func testAccMembershipConfig_initDoubledResources(rName string, rNameSecond stri
 func testAccMembershipConfig_basic(rName string) string {
 	defaultResultConfiguration := testAccMembershipConfig_defaultOutputConfiguration(rName, true, TEST_RESULT_FORMAT, TEST_KEY_PREFIX)
 	return acctest.ConfigCompose(
-		testAccMembershipConfig_awsPartition(),
+		testAccMembershipConfig_partitionDataSource(),
 		testAccMembershipConfig_iamResources(rName),
 		testAccMembershipConfig_s3Bucket(rName),
 		testAccMembershipConfig_base(rName, TEST_CREATOR_DISPLAY_NAME, TEST_MEMBERSHIP_CREATOR_MEMBER_ABILITIES, TEST_MEMBERSHIP_MEMBER_ABILITIES, TEST_QUERY_LOG_STATUS, defaultResultConfiguration, TEST_TAG),
@@ -373,7 +373,7 @@ func testAccMembershipConfig_basic(rName string) string {
 func testAccMembershipConfig_mutableProperties(rName string, rNameSecond string, rNameToPointTo string, queryLogStatus string, resultFormat string, keyPrefix string, tagValue string) string {
 	defaultResultConfiguration := testAccMembershipConfig_defaultOutputConfiguration(rNameToPointTo, true, resultFormat, keyPrefix)
 	return acctest.ConfigCompose(
-		testAccMembershipConfig_awsPartition(),
+		testAccMembershipConfig_partitionDataSource(),
 		testAccMembershipConfig_iamResources(rName),
 		testAccMembershipConfig_iamResources(rNameSecond),
 		testAccMembershipConfig_s3Bucket(rName),
@@ -417,7 +417,7 @@ func testAccMembershipConfig_defaultOutputConfiguration(rName string, includeRol
   }`, roleArnEntry, rName, resultFormat, keyPrefixEntry)
 }
 
-func testAccMembershipConfig_awsPartition() string {
+func testAccMembershipConfig_partitionDataSource() string {
 	return `
 data "aws_partition" "current" {}`
 }
@@ -438,7 +438,7 @@ data "aws_iam_policy_document" "test_assume_role_policy_%[1]s" {
 data "aws_iam_policy_document" "test_s3_policy_%[1]s" {
   statement {
     actions = [
-      "s3:GetBucketLocation", 
+      "s3:GetBucketLocation",
       "s3:ListBucket",
     ]
     resources = ["arn:${data.aws_partition.current.partition}:s3:::%[1]s"]
