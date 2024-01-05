@@ -207,7 +207,7 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"protocols": schema.ListAttribute{
-													ElementType: types.StringType,
+													ElementType: types.Int64Type,
 													Required:    true,
 												},
 											},
@@ -352,13 +352,13 @@ func (r *resourceTLSInspectionConfiguration) Create(ctx context.Context, req res
 	if !plan.EncryptionConfiguration.IsNull() {
 		// TIP: Use an expander to assign a complex argument. The elements must be
 		// deserialized into the appropriate struct before being passed to the expander.
-		var tfList []complexArgumentData
+		var tfList []encryptionConfigurationData
 		resp.Diagnostics.Append(plan.EncryptionConfiguration.ElementsAs(ctx, &tfList, false)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		in.EncryptionConfiguration = expandEncryptionConfiguration(tfList)
+		in.EncryptionConfiguration = expandTLSEncryptionConfiguration(tfList)
 	}
 	
 	// TIP: -- 4. Call the AWS create function
@@ -515,17 +515,17 @@ func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req res
 	}
 	
 	// TIP: -- 3. Populate a modify input structure and check for changes
-	if !plan.Name.Equal(state.Name) ||
-		!plan.Description.Equal(state.Description) ||
-		!plan.ComplexArgument.Equal(state.ComplexArgument) ||
+	if !plan.Description.Equal(state.Description) ||
+		!plan.TLSInspectionConfiguration.Equal(state.TLSInspectionConfiguration) ||
+		!plan.EncryptionConfiguration.Equal(state.EncryptionConfiguration) ||
 		!plan.Type.Equal(state.Type) {
 
 		in := &networkfirewall.UpdateTLSInspectionConfigurationInput{
 			// TIP: Mandatory or fields that will always be present can be set when
 			// you create the Input structure. (Replace these with real fields.)
-			TLSInspectionConfigurationId:   aws.String(plan.ID.ValueString()),
+			TLSInspectionConfigurationArn:   aws.String(plan.ARN.ValueString()),
 			TLSInspectionConfigurationName: aws.String(plan.Name.ValueString()),
-			TLSInspectionConfigurationType: aws.String(plan.Type.ValueString()),
+			UpdateToken: aws.String(plan.UpdateToken.ValueString()),
 		}
 
 		if !plan.Description.IsNull() {
@@ -533,20 +533,39 @@ func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req res
 			// used.
 			in.Description = aws.String(plan.Description.ValueString())
 		}
-		if !plan.ComplexArgument.IsNull() {
-			// TIP: Use an expander to assign a complex argument. The elements must be
-			// deserialized into the appropriate struct before being passed to the expander.
-			var tfList []complexArgumentData
-			resp.Diagnostics.Append(plan.ComplexArgument.ElementsAs(ctx, &tfList, false)...)
+		// if !plan.ComplexArgument.IsNull() {
+		// 	// TIP: Use an expander to assign a complex argument. The elements must be
+		// 	// deserialized into the appropriate struct before being passed to the expander.
+		// 	var tfList []complexArgumentData
+		// 	resp.Diagnostics.Append(plan.ComplexArgument.ElementsAs(ctx, &tfList, false)...)
+		// 	if resp.Diagnostics.HasError() {
+		// 		return
+		// 	}
+
+		// 	in.ComplexArgument = expandComplexArgument(tfList)
+		// }
+
+		if !plan.TLSInspectionConfiguration.IsNull() {
+			var tfList []tlsInspectionConfigurationData
+			resp.Diagnostics.Append(plan.TLSInspectionConfiguration.ElementsAs(ctx, &tfList, false)...)
 			if resp.Diagnostics.HasError() {
 				return
 			}
-
-			in.ComplexArgument = expandComplexArgument(tfList)
+			in.TLSInspectionConfiguration = expandTLSInspectionConfiguration(tfList)
+		
 		}
 		
+		if !plan.EncryptionConfiguration.IsNull() {
+			var tfList []encryptionConfigurationData
+			resp.Diagnostics.Append(plan.EncryptionConfiguration.ElementsAs(ctx, &tfList, false)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			in.EncryptionConfiguration = expandTLSEncryptionConfiguration(tfList)
+		}
+
 		// TIP: -- 4. Call the AWS modify/update function
-		out, err := conn.UpdateTLSInspectionConfiguration(ctx, in)
+		out, err := conn.UpdateTLSInspectionConfigurationWithContext(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.NetworkFirewall, create.ErrActionUpdating, ResNameTLSInspectionConfiguration, plan.ID.String(), err),
@@ -554,7 +573,7 @@ func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req res
 			)
 			return
 		}
-		if out == nil || out.TLSInspectionConfiguration == nil {
+		if out == nil || out.TLSInspectionConfigurationResponse == nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.NetworkFirewall, create.ErrActionUpdating, ResNameTLSInspectionConfiguration, plan.ID.String(), nil),
 				errors.New("empty output").Error(),
@@ -563,8 +582,13 @@ func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req res
 		}
 		
 		// TIP: Using the output from the update function, re-set any computed attributes
-		plan.ARN = flex.StringToFramework(ctx, out.TLSInspectionConfiguration.Arn)
-		plan.ID = flex.StringToFramework(ctx, out.TLSInspectionConfiguration.TLSInspectionConfigurationId)
+		plan.ARN = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationArn)
+		plan.ID = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationId)
+
+		plan.LastModifiedTime = flex.StringValueToFramework(ctx, out.TLSInspectionConfigurationResponse.LastModifiedTime.Format(time.RFC3339))
+		plan.NumberOfAssociations = flex.Int64ToFramework(ctx, out.TLSInspectionConfigurationResponse.NumberOfAssociations)
+		plan.UpdateToken = flex.StringToFramework(ctx, out.UpdateToken)
+		plan.Status = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationStatus)
 	}
 
 	
@@ -807,7 +831,7 @@ func findTLSInspectionConfigurationByNameAndARN(ctx context.Context, conn *netwo
 
 func flattenCertificates(ctx context.Context, certificateList []*networkfirewall.TlsCertificateData)(types.List, diag.Diagnostics){
 	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: certificateAttrTypes}
+	elemType := types.ObjectType{AttrTypes: certificatesAttrTypes}
 
 	if len(certificateList) == 0 {
 		return types.ListNull(elemType), diags
@@ -831,7 +855,7 @@ func flattenCertificates(ctx context.Context, certificateList []*networkfirewall
 
 func flattenTLSCertificate(ctx context.Context, certificate *networkfirewall.TlsCertificateData)(types.List, diag.Diagnostics){
 	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: certificateAttrTypes}
+	elemType := types.ObjectType{AttrTypes: certificatesAttrTypes}
 
 	if certificate == nil {
 		return types.ListNull(elemType), diags
@@ -843,7 +867,7 @@ func flattenTLSCertificate(ctx context.Context, certificate *networkfirewall.Tls
 		"status": flex.StringToFramework(ctx, certificate.Status),
 		"status_message": flex.StringToFramework(ctx, certificate.StatusMessage),
 	}
-	objVal, d := types.ObjectValue(certificateAttrTypes, obj)
+	objVal, d := types.ObjectValue(certificatesAttrTypes, obj)
 	diags.Append(d...)
 
 	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
@@ -1018,34 +1042,55 @@ func flattenTLSEncryptionConfiguration(ctx context.Context, encryptionConfigurat
 //
 // See more:
 // https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
-func expandComplexArgument(tfList []complexArgumentData) *awstypes.ComplexArgument {
+// func expandComplexArgument(tfList []complexArgumentData) *awstypes.ComplexArgument {
+// 	if len(tfList) == 0 {
+// 		return nil
+// 	}
+
+// 	tfObj := tfList[0]
+// 	apiObject := &awstypes.ComplexArgument{
+// 		NestedRequired: aws.String(tfObj.NestedRequired.ValueString()),
+// 	}
+// 	if !tfObj.NestedOptional.IsNull() {
+// 		apiObject.NestedOptional = aws.String(tfObj.NestedOptional.ValueString())
+// 	}
+
+// 	return apiObject
+// }
+
+// TODO: add note explaining why not using existing expandEncryptionConfiguration()
+func expandTLSEncryptionConfiguration(tfList []encryptionConfigurationData) *networkfirewall.EncryptionConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	tfObj := tfList[0]
-	apiObject := &awstypes.ComplexArgument{
-		NestedRequired: aws.String(tfObj.NestedRequired.ValueString()),
-	}
-	if !tfObj.NestedOptional.IsNull() {
-		apiObject.NestedOptional = aws.String(tfObj.NestedOptional.ValueString())
+	apiObject := &networkfirewall.EncryptionConfiguration{
+		KeyId: aws.String(tfObj.KeyId.ValueString()),
+		Type: aws.String(tfObj.Type.ValueString()),
 	}
 
 	return apiObject
 }
 
-func expandTLSInspectionConfiguration(tfList []tlsInspectionConfigurationData) []networkfirewall.TLSInspectionConfiguration {
-	var apiObject []networkfirewall.TLSInspectionConfiguration
-
-	for _, item := range tfList {
-		conf := networkfirewall.TLSInspectionConfiguration{}
-		if !item.ServerCertificateConfiguration.IsNull() {
-			var serverConfig []serverCertificateConfigurationsData
-			conf.ServerCertificateConfigurations = expandServerCertificateConfigurations(serverConfig)
-		}
-		
-		apiObject = append(apiObject, conf)
+func expandTLSInspectionConfiguration(tfList []tlsInspectionConfigurationData) *networkfirewall.TLSInspectionConfiguration {
+	if len(tfList) == 0 {
+		return nil
 	}
+	
+	// var apiObject []networkfirewall.TLSInspectionConfiguration
+
+	tfObj := tfList[0]
+
+	// for _, item := range tfList {
+	apiObject := &networkfirewall.TLSInspectionConfiguration{}
+	if !tfObj.ServerCertificateConfiguration.IsNull() {
+		var serverConfig []serverCertificateConfigurationsData
+		apiObject.ServerCertificateConfigurations = expandServerCertificateConfigurations(serverConfig)
+	}
+		
+	// apiObject = append(apiObject, conf)
+	
 	return apiObject
 }
 
@@ -1105,7 +1150,7 @@ func expandScopes(tfList []scopeData) []*networkfirewall.ServerCertificateScope 
 
 	for _, tfObj := range tfList {
 		item := &networkfirewall.ServerCertificateScope{
-			// Protocols: 
+			// Protocols: aws.Int64Slice(),
 		}
 		if !tfObj.DestinationPorts.IsNull() {
 			var destinationPorts []portRangeData
@@ -1162,40 +1207,40 @@ func expandSourceDestinations(tfList []sourceDestinationData) []*networkfirewall
 // TIP: Even when you have a list with max length of 1, this plural function
 // works brilliantly. However, if the AWS API takes a structure rather than a
 // slice of structures, you will not need it.
-func expandComplexArguments(tfList []complexArgumentData) []*networkfirewall.ComplexArgument {
-	// TIP: The AWS API can be picky about whether you send a nil or zero-
-	// length for an argument that should be cleared. For example, in some
-	// cases, if you send a nil value, the AWS API interprets that as "make no
-	// changes" when what you want to say is "remove everything." Sometimes
-	// using a zero-length list will cause an error.
-	//
-	// As a result, here are two options. Usually, option 1, nil, will work as
-	// expected, clearing the field. But, test going from something to nothing
-	// to make sure it works. If not, try the second option.
-	// TIP: Option 1: Returning nil for zero-length list
-    if len(tfList) == 0 {
-        return nil
-    }
-    var apiObject []*awstypes.ComplexArgument
-	// TIP: Option 2: Return zero-length list for zero-length list. If option 1 does
-	// not work, after testing going from something to nothing (if that is
-	// possible), uncomment out the next line and remove option 1.
-	//
-	// apiObject := make([]*networkfirewall.ComplexArgument, 0)
+// func expandComplexArguments(tfList []complexArgumentData) []*networkfirewall.ComplexArgument {
+// 	// TIP: The AWS API can be picky about whether you send a nil or zero-
+// 	// length for an argument that should be cleared. For example, in some
+// 	// cases, if you send a nil value, the AWS API interprets that as "make no
+// 	// changes" when what you want to say is "remove everything." Sometimes
+// 	// using a zero-length list will cause an error.
+// 	//
+// 	// As a result, here are two options. Usually, option 1, nil, will work as
+// 	// expected, clearing the field. But, test going from something to nothing
+// 	// to make sure it works. If not, try the second option.
+// 	// TIP: Option 1: Returning nil for zero-length list
+//     if len(tfList) == 0 {
+//         return nil
+//     }
+//     var apiObject []*awstypes.ComplexArgument
+// 	// TIP: Option 2: Return zero-length list for zero-length list. If option 1 does
+// 	// not work, after testing going from something to nothing (if that is
+// 	// possible), uncomment out the next line and remove option 1.
+// 	//
+// 	// apiObject := make([]*networkfirewall.ComplexArgument, 0)
 
-	for _, tfObj := range tfList {
-		item := &networkfirewall.ComplexArgument{
-			NestedRequired: aws.String(tfObj.NestedRequired.ValueString()),
-		}
-		if !tfObj.NestedOptional.IsNull() {
-			item.NestedOptional = aws.String(tfObj.NestedOptional.ValueString())
-		}
+// 	for _, tfObj := range tfList {
+// 		item := &networkfirewall.ComplexArgument{
+// 			NestedRequired: aws.String(tfObj.NestedRequired.ValueString()),
+// 		}
+// 		if !tfObj.NestedOptional.IsNull() {
+// 			item.NestedOptional = aws.String(tfObj.NestedOptional.ValueString())
+// 		}
 
-		apiObject = append(apiObject, item)
-	}
+// 		apiObject = append(apiObject, item)
+// 	}
 
-	return apiObject
-}
+// 	return apiObject
+// }
 
 // TIP: ==== DATA STRUCTURES ====
 // With Terraform Plugin-Framework configurations are deserialized into
