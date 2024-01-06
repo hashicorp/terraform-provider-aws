@@ -86,7 +86,7 @@ func resourceLandingZoneCreate(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(id)
 
 	if _, err := waitLandingZoneOperationSucceeded(ctx, conn, aws.ToString(output.OperationIdentifier), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Control Tower Landing Zone (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Control Tower Landing Zone (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceLandingZoneRead(ctx, d, meta)...)
@@ -136,7 +136,7 @@ func resourceLandingZoneDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if _, err := waitLandingZoneOperationSucceeded(ctx, conn, aws.ToString(output.OperationIdentifier), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Control Tower Landing Zone (%s) delete: %s", d.Id(), err)
+		sdkdiag.AppendErrorf(diags, "waiting for Control Tower Landing Zone (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
