@@ -51,8 +51,8 @@ resource "aws_efs_replication_configuration" "example" {
   source_file_system_id = aws_efs_file_system.example.id
 
   destination {
-    availability_zone_name = "fs-1234567890"
-    region                 = "us-west-2"
+    file_system_id = "fs-1234567890"
+    region        = "us-west-2"
   }
 }
 ```
