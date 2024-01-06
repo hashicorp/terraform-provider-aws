@@ -4,5 +4,5 @@
 package autoscaling
 
 const (
-	ErrCodeValidationError = "ValidationError"
+	errCodeValidationError = "ValidationError"
 )

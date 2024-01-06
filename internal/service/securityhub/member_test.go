@@ -8,23 +8,24 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccMember_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var member securityhub.Member
+	var member types.Member
 	resourceName := "aws_securityhub_member.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMemberDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -49,12 +50,12 @@ func testAccMember_basic(t *testing.T) {
 
 func testAccMember_invite(t *testing.T) {
 	ctx := acctest.Context(t)
-	var member securityhub.Member
+	var member types.Member
 	resourceName := "aws_securityhub_member.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, securityhub.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMemberDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -77,14 +78,14 @@ func testAccMember_invite(t *testing.T) {
 	})
 }
 
-func testAccCheckMemberExists(ctx context.Context, n string, v *securityhub.Member) resource.TestCheckFunc {
+func testAccCheckMemberExists(ctx context.Context, n string, v *types.Member) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
 		output, err := tfsecurityhub.FindMemberByAccountID(ctx, conn, rs.Primary.ID)
 
@@ -100,7 +101,7 @@ func testAccCheckMemberExists(ctx context.Context, n string, v *securityhub.Memb
 
 func testAccCheckMemberDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_member" {

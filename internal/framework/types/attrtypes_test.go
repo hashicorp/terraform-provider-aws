@@ -13,10 +13,6 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-//
-// TODO dedup internal/framework/flex/attrtypes_test.go.
-//
-
 func TestAttributeTypes(t *testing.T) {
 	t.Parallel()
 

@@ -135,7 +135,7 @@ func resourceVPCConnectorRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceVPCConnectorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Tags only.
-	return resourceVPCConnectorRead(ctx, d, meta) // nosemgrep:ci.semgrep.pluginsdk.append-Read-to-diags
+	return resourceVPCConnectorRead(ctx, d, meta)
 }
 
 func resourceVPCConnectorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

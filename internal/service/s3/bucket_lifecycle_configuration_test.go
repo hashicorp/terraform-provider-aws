@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -1028,6 +1029,24 @@ func TestAccS3BucketLifecycleConfiguration_Update_filterWithAndToFilterWithPrefi
 	})
 }
 
+func TestAccS3BucketLifecycleConfiguration_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketLifecycleConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBucketLifecycleConfigurationConfig_directoryBucket(rName),
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
+			},
+		},
+	})
+}
+
 func testAccCheckBucketLifecycleConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
@@ -1733,4 +1752,28 @@ resource "aws_s3_bucket_lifecycle_configuration" "test" {
   }
 }
 `, rName)
+}
+
+func testAccBucketLifecycleConfigurationConfig_directoryBucket(rName string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(rName), fmt.Sprintf(`
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
+}
+
+resource "aws_s3_bucket_lifecycle_configuration" "test" {
+  bucket = aws_s3_directory_bucket.test.bucket
+  rule {
+    id     = %[1]q
+    status = "Enabled"
+
+    expiration {
+      days = 365
+    }
+  }
+}
+`, rName))
 }

@@ -892,7 +892,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return create.DiagError(names.CloudFront, create.ErrActionReading, ResNameDistribution, d.Id(), err)
+		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionReading, ResNameDistribution, d.Id(), err)
 	}
 
 	// Update attributes from DistributionConfig
@@ -984,16 +984,16 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 
 	if v := d.Get("continuous_deployment_policy_id").(string); v != "" {
 		if err := disableContinuousDeploymentPolicy(ctx, conn, v); err != nil {
-			return create.DiagError(names.CloudFront, create.ErrActionDeleting, ResNameDistribution, d.Id(), err)
+			return create.AppendDiagError(diags, names.CloudFront, create.ErrActionDeleting, ResNameDistribution, d.Id(), err)
 		}
 
 		if err := WaitDistributionDeployed(ctx, conn, d.Id()); err != nil && !tfresource.NotFound(err) {
-			return diag.Errorf("waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
 		}
 	}
 
 	if err := disableDistribution(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("disabling CloudFront Distribution (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "disabling CloudFront Distribution (%s): %s", d.Id(), err)
 	}
 
 	if d.Get("retain_on_delete").(bool) {
@@ -1011,7 +1011,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 	// configuration from the Terraform configuration, should other changes have occurred manually.
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeDistributionNotDisabled) {
 		if err = disableDistribution(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("disabling CloudFront Distribution (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "disabling CloudFront Distribution (%s): %s", d.Id(), err)
 		}
 
 		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 3*time.Minute, func() (interface{}, error) {
@@ -1031,7 +1031,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeDistributionNotDisabled) {
 		if err = disableDistribution(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("disabling CloudFront Distribution (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "disabling CloudFront Distribution (%s): %s", d.Id(), err)
 		}
 
 		err = deleteDistribution(ctx, conn, d.Id())

@@ -282,10 +282,10 @@ func testAccCheckCapacityProviderExists(ctx context.Context, resourceName string
 func testAccCapacityProviderConfig_base(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t3.micro"
   name          = %[1]q
 }

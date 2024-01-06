@@ -116,7 +116,7 @@ func resourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Tags only.
-	return resourceConnectionRead(ctx, d, meta) // nosemgrep:ci.semgrep.pluginsdk.append-Read-to-diags
+	return resourceConnectionRead(ctx, d, meta)
 }
 
 func resourceConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

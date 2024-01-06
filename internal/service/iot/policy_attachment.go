@@ -80,7 +80,7 @@ func resourcePolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, m
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IoT Policy Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {

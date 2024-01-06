@@ -76,9 +76,13 @@ func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.Resour
 		},
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutPublicAccessBlock(ctx, input)
 	}, errCodeNoSuchBucket)
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "PublicAccessBlockConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Public Access Block: %s", bucket, err)
@@ -86,7 +90,7 @@ func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.Resour
 
 	d.SetId(bucket)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findPublicAccessBlockConfiguration(ctx, conn, d.Id())
 	})
 
@@ -172,7 +176,7 @@ func resourceBucketPublicAccessBlockDelete(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Public Access Block (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findPublicAccessBlockConfiguration(ctx, conn, d.Id())
 	})
 

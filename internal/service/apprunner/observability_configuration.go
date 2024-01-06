@@ -142,7 +142,7 @@ func resourceObservabilityConfigurationRead(ctx context.Context, d *schema.Resou
 
 func resourceObservabilityConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Tags only.
-	return resourceObservabilityConfigurationRead(ctx, d, meta) // nosemgrep:ci.semgrep.pluginsdk.append-Read-to-diags
+	return resourceObservabilityConfigurationRead(ctx, d, meta)
 }
 
 func resourceObservabilityConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

@@ -146,7 +146,7 @@ func resourceVPCIngressConnectionRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceVPCIngressConnectionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Tags only.
-	return resourceVPCIngressConnectionRead(ctx, d, meta) // nosemgrep:ci.semgrep.pluginsdk.append-Read-to-diags
+	return resourceVPCIngressConnectionRead(ctx, d, meta)
 }
 
 func resourceVPCIngressConnectionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

@@ -14,6 +14,8 @@ Provides an independent configuration resource for S3 bucket [replication config
 
 ~> **NOTE:** S3 Buckets only support a single replication configuration. Declaring multiple `awsS3BucketReplicationConfiguration` resources to the same S3 Bucket will cause a perpetual difference in configuration.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### Using replication configuration
@@ -510,4 +512,4 @@ Using `terraform import`, import S3 bucket replication configuration using the `
 % terraform import aws_s3_bucket_replication_configuration.replication bucket-name
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-fb3dd63caebf8f9a5354d73fe9c5e62bdefe563725f98aa597f6c1c77451e28c -->
+<!-- cache-key: cdktf-0.19.0 input-5484feb2a9dadde056091c90ce1a415b94cf5e3786fb164ffd1c493093f25acb -->

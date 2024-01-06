@@ -80,7 +80,7 @@ func (p *servicePackage) {{ .ListTagsFunc | Title }}(ctx context.Context, meta a
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(tags)
+		inContext.TagsOut = option.Some(tags)
 	}
 
 	return nil

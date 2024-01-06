@@ -48,6 +48,8 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"kernelGatewayAppSettings_lifecycleConfig": testAccDomain_kernelGatewayAppSettings_lifecycleConfig,
 			"kernelGatewayAppSettings_defaultResourceAndCustomImage": testAccDomain_kernelGatewayAppSettings_defaultResourceSpecAndCustomImage,
 			"jupyterServerAppSettings":                               testAccDomain_jupyterServerAppSettings,
+			"codeEditorAppSettings":                                  testAccDomain_codeEditorAppSettings,
+			"jupyterLabAppSettings":                                  testAccDomain_jupyterLabAppSettings,
 			"kms":                                                    testAccDomain_kms,
 			"securityGroup":                                          testAccDomain_securityGroup,
 			"sharingSettings":                                        testAccDomain_sharingSettings,
@@ -63,6 +65,9 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"rStudioServerProAppSettings":                            testAccDomain_rStudioServerProAppSettings,
 			"spaceSettingsKernelGatewayAppSettings":                  testAccDomain_spaceSettingsKernelGatewayAppSettings,
 			"code":                                                   testAccDomain_jupyterServerAppSettings_code,
+			"efs":                                                    testAccDomain_efs,
+			"posix":                                                  testAccDomain_posix,
+			"spaceStorageSettings":                                   testAccDomain_spaceStorageSettings,
 		},
 		"FlowDefinition": {
 			"basic":                          testAccFlowDefinition_basic,

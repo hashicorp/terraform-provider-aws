@@ -168,7 +168,7 @@ func resourceAutoScalingConfigurationRead(ctx context.Context, d *schema.Resourc
 
 func resourceAutoScalingConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	// Tags only.
-	return resourceAutoScalingConfigurationRead(ctx, d, meta) // nosemgrep:ci.semgrep.pluginsdk.append-Read-to-diags
+	return resourceAutoScalingConfigurationRead(ctx, d, meta)
 }
 
 func resourceAutoScalingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

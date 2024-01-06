@@ -10,7 +10,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/ssoadmin"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfssoadmin "github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSSOAdminAccountAssignment_Basic_group(t *testing.T) {
@@ -32,7 +32,7 @@ func TestAccSSOAdminAccountAssignment_Basic_group(t *testing.T) {
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 			testAccPreCheckIdentityStoreGroupName(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -66,7 +66,7 @@ func TestAccSSOAdminAccountAssignment_Basic_user(t *testing.T) {
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 			testAccPreCheckIdentityStoreUserName(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -99,7 +99,7 @@ func TestAccSSOAdminAccountAssignment_MissingPolicy(t *testing.T) {
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 			testAccPreCheckIdentityStoreUserName(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -124,7 +124,7 @@ func TestAccSSOAdminAccountAssignment_disappears(t *testing.T) {
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 			testAccPreCheckIdentityStoreGroupName(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ssoadmin.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -142,7 +142,7 @@ func TestAccSSOAdminAccountAssignment_disappears(t *testing.T) {
 
 func testAccCheckAccountAssignmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ssoadmin_account_assignment" {
@@ -184,7 +184,7 @@ func testAccCheckAccountAssignmentExists(ctx context.Context, n string) resource
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
 
 		idParts, err := tfssoadmin.ParseAccountAssignmentID(rs.Primary.ID)
 		if err != nil {

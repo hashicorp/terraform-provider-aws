@@ -260,7 +260,7 @@ The following arguments are optional:
 * `apply_immediately` - (Optional) Specifies whether any modifications are applied immediately, or during the next maintenance window. Default is `false`.
 * `at_rest_encryption_enabled` - (Optional) Whether to enable encryption at rest.
 * `auth_token` - (Optional) Password used to access a password protected server. Can be specified only if `transit_encryption_enabled = true`.
-* `auth_token_update_strategy` - (Optional) Strategy to use when updating the `auth_token`. Can be specified only if `transit_encryption_enabled = true`. Valid values are `SET`, `ROTATE`, and `DELETE`. Defaults to `ROTATE`.
+* `auth_token_update_strategy` - (Optional) Strategy to use when updating the `auth_token`. Valid values are `SET`, `ROTATE`, and `DELETE`. Defaults to `ROTATE`.
 * `auto_minor_version_upgrade` - (Optional) Specifies whether minor version engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window.
   Only supported for engine type `"redis"` and if the engine version is 6 or higher.
   Defaults to `true`.
@@ -353,4 +353,4 @@ Using `terraform import`, import ElastiCache Replication Groups using the `repli
 % terraform import aws_elasticache_replication_group.my_replication_group replication-group-1
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-e7663492cab5f3830722ee4691fd1687cc0e5eec4db4c7c39bdb7c3c8640c546 -->
+<!-- cache-key: cdktf-0.19.0 input-234dd53b0af899d0509e3656db26320ff4dae85c0a98446443af5aa2214d22c9 -->

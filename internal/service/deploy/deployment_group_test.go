@@ -2241,7 +2241,7 @@ resource "aws_codedeploy_deployment_group" "test" {
 func testAccDeploymentGroupConfig_baseBlueGreenConfigASG(rName string) string {
 	return acctest.ConfigCompose(
 		testAccDeploymentGroupConfig_base(rName),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 data "aws_subnet" "test" {
@@ -2250,7 +2250,7 @@ data "aws_subnet" "test" {
 }
 
 resource "aws_launch_configuration" "test" {
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
   name          = %[1]q
 
