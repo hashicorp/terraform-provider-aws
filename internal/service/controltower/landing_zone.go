@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -195,8 +196,8 @@ func statusLandingZoneOperation(ctx context.Context, conn *controltower.Client, 
 
 func waitLandingZoneOperationSucceeded(ctx context.Context, conn *controltower.Client, id string, timeout time.Duration) (*types.LandingZoneOperationDetail, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(types.LandingZoneOperationStatusInProgress)},
-		Target:  []string{string(types.LandingZoneOperationStatusSucceeded)},
+		Pending: enum.Slice(types.LandingZoneOperationStatusInProgress),
+		Target:  enum.Slice(types.LandingZoneOperationStatusSucceeded),
 		Refresh: statusLandingZoneOperation(ctx, conn, id),
 		Timeout: timeout,
 	}
