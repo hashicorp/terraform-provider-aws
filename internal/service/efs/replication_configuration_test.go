@@ -226,6 +226,7 @@ func testAccReplicationConfigurationConfig_existingDestination(region string) st
 resource "aws_efs_file_system" "source" {}
 
 resource "aws_efs_file_system" "destination" {
+  provider = "awsalternate"
   protection {
     replication_overwrite = "DISABLED"
   }
