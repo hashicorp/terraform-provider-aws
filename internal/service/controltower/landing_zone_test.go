@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/controltower"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -47,7 +46,8 @@ func testAccLandingZone_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLandingZoneConfig_basic("1.0"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLandingZoneExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "version", "1.0"),
 				),
@@ -73,12 +73,28 @@ func testAccLandingZone_disappears(t *testing.T) {
 			{
 				Config: testAccLandingZoneConfig_basic("1.0"),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcontroltower.ResourceControl(), resourceName),
+					testAccCheckLandingZoneExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcontroltower.ResourceLandingZone(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
+}
+
+func testAccCheckLandingZoneExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerClient(ctx)
+
+		_, err := tfcontroltower.FindLandingZoneByID(ctx, conn, rs.Primary.ID)
+
+		return err
+	}
 }
 
 func testAccCheckLandingZoneDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -90,11 +106,7 @@ func testAccCheckLandingZoneDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			input := &controltower.GetLandingZoneInput{
-				LandingZoneIdentifier: &rs.Primary.ID,
-			}
-
-			_, err := conn.GetLandingZone(ctx, input)
+			_, err := tfcontroltower.FindLandingZoneByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -104,7 +116,7 @@ func testAccCheckLandingZoneDestroy(ctx context.Context) resource.TestCheckFunc 
 				return err
 			}
 
-			return fmt.Errorf("Control Tower Landing Zone %s still exists", rs.Primary.ID)
+			return fmt.Errorf("ControlTower Landing Zone %s still exists", rs.Primary.ID)
 		}
 
 		return nil

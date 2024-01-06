@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -76,7 +77,7 @@ func resourceLandingZoneCreate(ctx context.Context, d *schema.ResourceData, meta
 	output, err := conn.CreateLandingZone(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Control Tower Landing Zone: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating ControlTower Landing Zone: %s", err)
 	}
 
 	id, err := landingZoneIDFromARN(aws.ToString(output.Arn))
@@ -87,7 +88,7 @@ func resourceLandingZoneCreate(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(id)
 
 	if _, err := waitLandingZoneOperationSucceeded(ctx, conn, aws.ToString(output.OperationIdentifier), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Control Tower Landing Zone (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ControlTower Landing Zone (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceLandingZoneRead(ctx, d, meta)...)
@@ -95,49 +96,42 @@ func resourceLandingZoneCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
-	input := &controltower.GetLandingZoneInput{
-		LandingZoneIdentifier: aws.String(d.Id()),
-	}
-
-	output, err := conn.GetLandingZone(ctx, input)
+	landingZone, err := findLandingZoneByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Control Tower Landing Zone (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] ControlTower Landing Zone (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Control Tower Landing Zone: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading ControlTower Landing Zone (%s): %s", d.Id(), err)
 	}
 
-	d.Set("manifest", output.LandingZone.Manifest)
-	d.Set("version", output.LandingZone.Version)
-	d.Set("arn", output.LandingZone.Arn)
+	d.Set("arn", landingZone.Arn)
+	d.Set("manifest", landingZone.Manifest)
+	d.Set("version", landingZone.Version)
 
 	return nil
 }
 
 func resourceLandingZoneDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
-	input := &controltower.DeleteLandingZoneInput{
+	log.Printf("[DEBUG] Deleting ControlTower Landing Zone: %s", d.Id())
+	output, err := conn.DeleteLandingZone(ctx, &controltower.DeleteLandingZoneInput{
 		LandingZoneIdentifier: aws.String(d.Id()),
-	}
-
-	output, err := conn.DeleteLandingZone(ctx, input)
+	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Control Tower Landing Zone: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting ControlTower Landing Zone: %s", err)
 	}
 
 	if _, err := waitLandingZoneOperationSucceeded(ctx, conn, aws.ToString(output.OperationIdentifier), d.Timeout(schema.TimeoutDelete)); err != nil {
-		sdkdiag.AppendErrorf(diags, "waiting for Control Tower Landing Zone (%s) delete: %s", d.Id(), err)
+		sdkdiag.AppendErrorf(diags, "waiting for ControlTower Landing Zone (%s) delete: %s", d.Id(), err)
 	}
 
 	return nil
@@ -153,14 +147,39 @@ func landingZoneIDFromARN(arnString string) (string, error) {
 	return strings.TrimPrefix(arn.Resource, "landingzone/"), nil
 }
 
-func findLandingZoneOperationDetailsByID(ctx context.Context, conn *controltower.Client, id string) (*types.LandingZoneOperationDetail, error) {
+func findLandingZoneByID(ctx context.Context, conn *controltower.Client, id string) (*types.LandingZoneDetail, error) {
+	input := &controltower.GetLandingZoneInput{
+		LandingZoneIdentifier: aws.String(id),
+	}
+
+	output, err := conn.GetLandingZone(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.LandingZone == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.LandingZone, nil
+}
+
+func findLandingZoneOperationByID(ctx context.Context, conn *controltower.Client, id string) (*types.LandingZoneOperationDetail, error) {
 	input := &controltower.GetLandingZoneOperationInput{
 		OperationIdentifier: aws.String(id),
 	}
 
 	output, err := conn.GetLandingZoneOperation(ctx, input)
 
-	if tfresource.NotFound(err) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -180,7 +199,7 @@ func findLandingZoneOperationDetailsByID(ctx context.Context, conn *controltower
 
 func statusLandingZoneOperation(ctx context.Context, conn *controltower.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findLandingZoneOperationDetailsByID(ctx, conn, id)
+		output, err := findLandingZoneOperationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
