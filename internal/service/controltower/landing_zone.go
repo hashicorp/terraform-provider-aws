@@ -64,15 +64,12 @@ func resourceLandingZone() *schema.Resource {
 
 func resourceLandingZoneCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
-	manifest := d.Get("manifest").(string)
-	version := d.Get("version").(string)
 	input := &controltower.CreateLandingZoneInput{
-		Manifest: document.NewLazyDocument(manifest),
-		Version:  aws.String(version),
+		Manifest: document.NewLazyDocument(d.Get("manifest").(string)),
 		Tags:     getTagsIn(ctx),
+		Version:  aws.String(d.Get("version").(string)),
 	}
 
 	output, err := conn.CreateLandingZone(ctx, input)
@@ -81,15 +78,15 @@ func resourceLandingZoneCreate(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "creating Control Tower Landing Zone: %s", err)
 	}
 
-	identifier, err := getLandingZoneIdentifierFromARN(*output.Arn)
+	id, err := landingZoneIDFromARN(aws.ToString(output.Arn))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting identifier from ARN: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.SetId(*aws.String(identifier))
+	d.SetId(id)
 
 	if _, err := waitLandingZoneOperationSucceeded(ctx, conn, aws.ToString(output.OperationIdentifier), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for ControlTower Landing Zone (%s) create: %s", d.Id(), err)
+		return diag.Errorf("waiting for Control Tower Landing Zone (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceLandingZoneRead(ctx, d, meta)...)
@@ -145,14 +142,14 @@ func resourceLandingZoneDelete(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-// gets the landing zone identifier from the ARN
-func getLandingZoneIdentifierFromARN(arnString string) (string, error) {
+func landingZoneIDFromARN(arnString string) (string, error) {
 	arn, err := arn.Parse(arnString)
 	if err != nil {
 		return "", err
 	}
-	resourceParts := strings.Split(arn.Resource, "/")
-	return resourceParts[len(resourceParts)-1], nil
+
+	// arn:${Partition}:controltower:${Region}:${Account}:landingzone/${LandingZoneId}
+	return strings.TrimPrefix(arn.Resource, "landingzone/"), nil
 }
 
 func findLandingZoneOperationDetailsByID(ctx context.Context, conn *controltower.Client, id string) (*types.LandingZoneOperationDetail, error) {
