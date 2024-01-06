@@ -163,36 +163,38 @@ func testAccCheckLandingZoneDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-const testAccLandingZoneConfig_basic = `
+const landingZoneVersion = "3.3"
+
+var testAccLandingZoneConfig_basic = fmt.Sprintf(`
 resource "aws_controltower_landing_zone" "test" {
-  manifest = jsondecode(file("${path.module}/fixtures/LandingZoneManifest.json"))
-  version  = "1.0"
+  manifest = file("test-fixtures/LandingZoneManifest.json")
+  version  = %[1]q
 }
-`
+`, landingZoneVersion)
 
 func testAccLandingZoneConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_controltower_landing_zone" "test" {
   manifest = jsondecode(file("${path.module}/fixtures/LandingZoneManifest.json"))
-  version  = "1.0"
+  version  = %[1]q
 
   tags = {
-    %[1]q = %[2]q
+    %[2]q = %[3]q
   }
 }
-`, tagKey1, tagValue1)
+`, landingZoneVersion, tagKey1, tagValue1)
 }
 
 func testAccLandingZoneConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_controltower_landing_zone" "test" {
   manifest = jsondecode(file("${path.module}/fixtures/LandingZoneManifest.json"))
-  version  = "1.0"
+  version  = %[1]q
 
   tags = {
-    %[1]q = %[2]q
-    %[3]q = %[4]q
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, tagKey1, tagValue1, tagKey2, tagValue2)
+`, landingZoneVersion, tagKey1, tagValue1, tagKey2, tagValue2)
 }
