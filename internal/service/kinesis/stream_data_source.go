@@ -96,6 +96,10 @@ func dataSourceStreamRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return !lastPage
 	})
 
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing Kinesis Stream (%s) shards: %s", name, err)
+	}
+
 	// See http://docs.aws.amazon.com/kinesis/latest/dev/kinesis-using-sdk-java-resharding-merge.html.
 	var openShards, closedShards []*string
 	for _, shard := range shards {
