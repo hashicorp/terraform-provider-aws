@@ -119,7 +119,7 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("manifest", landingZone.Manifest)
 	d.Set("version", landingZone.Version)
 
-	return nil
+	return diags
 }
 
 func resourceLandingZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -147,7 +147,7 @@ func resourceLandingZoneDelete(ctx context.Context, d *schema.ResourceData, meta
 		sdkdiag.AppendErrorf(diags, "waiting for ControlTower Landing Zone (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func landingZoneIDFromARN(arnString string) (string, error) {
