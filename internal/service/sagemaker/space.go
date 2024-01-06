@@ -671,7 +671,7 @@ func expandSpaceStorageSettings(l []interface{}) *sagemaker.SpaceStorageSettings
 	config := &sagemaker.SpaceStorageSettings{}
 
 	if v, ok := m["ebs_storage_settings"].([]interface{}); ok && len(v) > 0 {
-		config.EbsStorageSettings = expandEbsStorageSettings(v)
+		config.EbsStorageSettings = expandEBSStorageSettings(v)
 	}
 
 	return config
@@ -685,13 +685,13 @@ func flattenSpaceStorageSettings(config *sagemaker.SpaceStorageSettings) []map[s
 	m := map[string]interface{}{}
 
 	if config.EbsStorageSettings != nil {
-		m["ebs_storage_settings"] = flattenEbsStorageSettings(config.EbsStorageSettings)
+		m["ebs_storage_settings"] = flattenEBSStorageSettings(config.EbsStorageSettings)
 	}
 
 	return []map[string]interface{}{m}
 }
 
-func expandEbsStorageSettings(l []interface{}) *sagemaker.EbsStorageSettings {
+func expandEBSStorageSettings(l []interface{}) *sagemaker.EbsStorageSettings {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -707,7 +707,7 @@ func expandEbsStorageSettings(l []interface{}) *sagemaker.EbsStorageSettings {
 	return config
 }
 
-func flattenEbsStorageSettings(config *sagemaker.EbsStorageSettings) []map[string]interface{} {
+func flattenEBSStorageSettings(config *sagemaker.EbsStorageSettings) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
 	}

@@ -33,8 +33,22 @@ This resource supports the following arguments:
 
 ### Space Settings
 
+* `app_type` - (Optional) The type of app created within the space.
+* `code_editor_app_settings` - (Optional) The Code Editor application settings. See [Code Editor App Settings](#code_editor_app_settings) below.
+* `jupyter_lab_app_settings` - (Optional) The settings for the JupyterLab application. See [Jupyter Lab App Settings](#jupyter_lab_app_settings) below.
 * `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [Jupyter Server App Settings](#jupyter-server-app-settings) below.
 * `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [Kernel Gateway App Settings](#kernel-gateway-app-settings) below.
+
+#### code_editor_app_settings
+
+* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
+* `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
+
+#### jupyter_lab_app_settings
+
+* `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. see [Code Repository](#code-repository) below.
+* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource_spec) below.
+* `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
 #### Kernel Gateway App Settings
 
