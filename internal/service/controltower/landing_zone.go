@@ -24,14 +24,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_controltower_landing_zone", name="Landing Zone")
+// @Tags(identifierAttribute="arn")
 func resourceLandingZone() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLandingZoneCreate,
 		ReadWithoutTimeout:   resourceLandingZoneRead,
+		UpdateWithoutTimeout: resourceLandingZoneUpdate,
 		DeleteWithoutTimeout: resourceLandingZoneDelete,
 
 		Importer: &schema.ResourceImporter{
@@ -61,6 +64,8 @@ func resourceLandingZone() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -115,6 +120,14 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("version", landingZone.Version)
 
 	return nil
+}
+
+func resourceLandingZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	// Tags only.
+
+	return append(diags, resourceLandingZoneRead(ctx, d, meta)...)
 }
 
 func resourceLandingZoneDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

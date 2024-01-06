@@ -17,19 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccControlTower_serial(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]map[string]func(t *testing.T){
-		"LandingZone": {
-			"basic":      testAccLandingZone_basic,
-			"disappears": testAccLandingZone_disappears,
-		},
-	}
-
-	acctest.RunSerialTests2Levels(t, testCases, 0)
-}
-
 func testAccLandingZone_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_controltower_landing_zone.test"
@@ -45,12 +32,17 @@ func testAccLandingZone_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLandingZoneConfig_basic("1.0"),
+				Config: testAccLandingZoneConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLandingZoneExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "version", "1.0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -71,12 +63,60 @@ func testAccLandingZone_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLandingZoneConfig_basic("1.0"),
+				Config: testAccLandingZoneConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLandingZoneExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcontroltower.ResourceLandingZone(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccLandingZone_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_controltower_landing_zone.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerEndpointID),
+		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLandingZoneConfig_tags1("key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLandingZoneExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLandingZoneConfig_tags2("key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLandingZoneExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccLandingZoneConfig_tags1("key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLandingZoneExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -123,11 +163,36 @@ func testAccCheckLandingZoneDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccLandingZoneConfig_basic(version string) string {
+const testAccLandingZoneConfig_basic = `
+resource "aws_controltower_landing_zone" "test" {
+  manifest = jsondecode(file("${path.module}/fixtures/LandingZoneManifest.json"))
+  version  = "1.0"
+}
+`
+
+func testAccLandingZoneConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_controltower_landing_zone" "test" {
   manifest = jsondecode(file("${path.module}/fixtures/LandingZoneManifest.json"))
-  version  = "%[1]s"
+  version  = "1.0"
+
+  tags = {
+    %[1]q = %[2]q
+  }
 }
-`, version)
+`, tagKey1, tagValue1)
+}
+
+func testAccLandingZoneConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_controltower_landing_zone" "test" {
+  manifest = jsondecode(file("${path.module}/fixtures/LandingZoneManifest.json"))
+  version  = "1.0"
+
+  tags = {
+    %[1]q = %[2]q
+    %[3]q = %[4]q
+  }
+}
+`, tagKey1, tagValue1, tagKey2, tagValue2)
 }
