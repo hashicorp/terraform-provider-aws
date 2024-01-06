@@ -16,7 +16,7 @@ Creates a new landing zone using Control Tower. For more information on usage, p
 ```terraform
 resource "aws_controltower_landing_zone" "example" {
   manifest = jsondecode(file("${path.module}/LandingZoneManifest.json"))
-  version = "1.0"
+  version  = "1.0"
 }
 ```
 
