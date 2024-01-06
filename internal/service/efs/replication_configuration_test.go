@@ -239,7 +239,7 @@ resource "aws_efs_replication_configuration" "test" {
 
   destination {
     file_system_id = aws_efs_file_system.destination.id
-    region        = %[1]q
+    region         = %[1]q
   }
 }
 `, region)
