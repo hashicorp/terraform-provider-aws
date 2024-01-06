@@ -43,7 +43,7 @@ This resource supports the following arguments:
 * `collaboration_id` - (Required - Forces new resource) - The ID of the collaboration to which the member was invited.
 * `query_log_status` - (Required) - An indicator as to whether query logging has been enabled or disabled for the membership.
 * `default_result_configuration` - (Optional) - The default configuration for a query result.
-    - `role_arn` - (Optional) - The ARN of the IAM role which will be used to create the cmembership.
+    - `role_arn` - (Optional) - The ARN of the IAM role which will be used to create the membership.
     - `output_configuration.s3.bucket` - (Required) - The name of the S3 bucket where the query results will be stored.
     - `output_configuration.s3.result_format` - (Required) - The format of the query results. Valid values are `PARQUET` and `CSV`.
     - `output_configuration.s3.key_prefix` - (Optional) - The prefix used for the query results.
