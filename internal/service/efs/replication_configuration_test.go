@@ -229,6 +229,9 @@ resource "aws_efs_file_system" "destination" {
   protection {
     replication_overwrite = "DISABLED"
   }
+  lifecycle {
+    ignore_changes = [protection]
+  }
 }
 
 resource "aws_efs_replication_configuration" "test" {
