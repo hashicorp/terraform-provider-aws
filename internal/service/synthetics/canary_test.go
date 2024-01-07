@@ -948,7 +948,7 @@ resource "aws_synthetics_canary" "test" {
 
   run_config {
     environment_variables = {
-      random_env_var = "unrelated"
+      test1 = "value1"
 	}
   }
   schedule {
