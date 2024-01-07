@@ -80,13 +80,13 @@ func dataSourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, me
 		version = versionStage
 	}
 
-	log.Printf("[DEBUG] Reading Secrets Manager Secret Version: %s", input)
+	log.Printf("[DEBUG] Reading Secrets Manager Secret Version: %v", input)
 	output, err := conn.GetSecretValue(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 			return sdkdiag.AppendErrorf(diags, "Secrets Manager Secret %q Version %q not found", secretID, version)
 		}
-		if tfawserr.ErrMessageContains(err, errCodeInvalidRequestException, "You can’t perform this operation on the secret because it was deleted") {
+		if tfawserr.ErrMessageContains(err, errCodeInvalidRequestException, "You can't perform this operation on the secret because it was deleted") {
 			return sdkdiag.AppendErrorf(diags, "Secrets Manager Secret %q Version %q not found", secretID, version)
 		}
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Version: %s", err)

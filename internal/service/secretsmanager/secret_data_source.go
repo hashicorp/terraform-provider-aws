@@ -80,7 +80,7 @@ func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, meta inte
 		SecretId: aws.String(secretID),
 	}
 
-	log.Printf("[DEBUG] Reading Secrets Manager Secret: %s", input)
+	log.Printf("[DEBUG] Reading Secrets Manager Secret: %v", input)
 	output, err := conn.DescribeSecret(ctx, input)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
@@ -103,7 +103,7 @@ func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, meta inte
 	pIn := &secretsmanager.GetResourcePolicyInput{
 		SecretId: aws.String(d.Id()),
 	}
-	log.Printf("[DEBUG] Reading Secrets Manager Secret policy: %s", pIn)
+	log.Printf("[DEBUG] Reading Secrets Manager Secret policy: %v", pIn)
 	pOut, err := conn.GetResourcePolicy(ctx, pIn)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret policy: %s", err)

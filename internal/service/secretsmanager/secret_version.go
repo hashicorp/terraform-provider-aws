@@ -216,7 +216,7 @@ func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, me
 			VersionStage:    aws.String(stage.(string)),
 		}
 
-		log.Printf("[DEBUG] Updating Secrets Manager Secret Version Stage: %s", input)
+		log.Printf("[DEBUG] Updating Secrets Manager Secret Version Stage: %v", input)
 		_, err := conn.UpdateSecretVersionStage(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Secrets Manager Secret %q Version Stage %q: %s", secretID, stage.(string), err)
@@ -234,7 +234,7 @@ func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, me
 			SecretId:            aws.String(secretID),
 			VersionStage:        aws.String(stage.(string)),
 		}
-		log.Printf("[DEBUG] Updating Secrets Manager Secret Version Stage: %s", input)
+		log.Printf("[DEBUG] Updating Secrets Manager Secret Version Stage: %v", input)
 		_, err := conn.UpdateSecretVersionStage(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Secrets Manager Secret %q Version Stage %q: %s", secretID, stage.(string), err)
@@ -265,7 +265,7 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 				SecretId:            aws.String(secretID),
 				VersionStage:        aws.String(stage.(string)),
 			}
-			log.Printf("[DEBUG] Updating Secrets Manager Secret Version Stage: %s", input)
+			log.Printf("[DEBUG] Updating Secrets Manager Secret Version Stage: %v", input)
 			_, err := conn.UpdateSecretVersionStage(ctx, input)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {

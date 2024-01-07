@@ -160,7 +160,7 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.AddReplicaRegions = expandSecretReplicas(v.(*schema.Set).List())
 	}
 
-	log.Printf("[DEBUG] Creating Secrets Manager Secret: %s", input)
+	log.Printf("[DEBUG] Creating Secrets Manager Secret: %v", input)
 
 	// Retry for secret recreation after deletion
 	var output *secretsmanager.CreateSecretOutput
@@ -326,7 +326,7 @@ func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.KmsKeyId = aws.String(v.(string))
 		}
 
-		log.Printf("[DEBUG] Updating Secrets Manager Secret: %s", input)
+		log.Printf("[DEBUG] Updating Secrets Manager Secret: %v", input)
 		_, err := conn.UpdateSecret(ctx, input)
 
 		if err != nil {
@@ -346,7 +346,7 @@ func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				SecretId:       aws.String(d.Id()),
 			}
 
-			log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy: %s", input)
+			log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy: %v", input)
 			_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, PropagationTimeout,
 				func() (interface{}, error) {
 					return conn.PutResourcePolicy(ctx, input)
@@ -439,7 +439,7 @@ func removeSecretReplicas(ctx context.Context, conn *secretsmanager.Client, id s
 
 	input.RemoveReplicaRegions = regions
 
-	log.Printf("[DEBUG] Removing Secrets Manager Secret Replicas: %s", input)
+	log.Printf("[DEBUG] Removing Secrets Manager Secret Replicas: %v", input)
 
 	_, err := conn.RemoveRegionsFromReplication(ctx, input)
 
@@ -465,7 +465,7 @@ func addSecretReplicas(ctx context.Context, conn *secretsmanager.Client, id stri
 		AddReplicaRegions:           expandSecretReplicas(tfList),
 	}
 
-	log.Printf("[DEBUG] Removing Secrets Manager Secret Replica: %s", input)
+	log.Printf("[DEBUG] Removing Secrets Manager Secret Replica: %v", input)
 
 	_, err := conn.ReplicateSecretToRegions(ctx, input)
 
