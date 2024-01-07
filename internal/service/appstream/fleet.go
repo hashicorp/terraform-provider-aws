@@ -138,8 +138,8 @@ func ResourceFleet() *schema.Resource {
 			"idle_disconnect_timeout_in_seconds": {
 				Type:         schema.TypeInt,
 				Optional:     true,
-				Default:      0,
-				ValidateFunc: validation.IntBetween(60, 3600),
+				Default:      60,
+				ValidateFunc: validation.IntBetween(60, 360000),
 			},
 			"image_arn": {
 				Type:     schema.TypeString,
