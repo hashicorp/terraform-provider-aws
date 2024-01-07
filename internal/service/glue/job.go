@@ -381,7 +381,7 @@ func resourceJobUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			jobUpdate.SecurityConfiguration = aws.String(v.(string))
 		}
 
-		if false == isRayJob(d) {
+		if !isRayJob(d) {
 			if v, ok := d.GetOk("timeout"); ok {
 				jobUpdate.Timeout = aws.Int64(int64(v.(int)))
 			}
