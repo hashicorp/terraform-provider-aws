@@ -3,21 +3,29 @@
 
 // This file contains code generation customizations for each AWS Go SDK service.
 
-package namevaluesfilters
+package namevaluesfiltersv2
+
+import "fmt"
 
 // ServiceFilterPackage determines the service filter type package.
 func ServiceFilterPackage(serviceName string) string {
 	switch serviceName {
 	default:
-		return serviceName
+		return fmt.Sprintf("%[1]stypes \"github.com/aws/aws-sdk-go-v2/service/%[1]s/types\"", serviceName)
+	}
+}
+
+// ServiceFilterPackage determines the service filter type package.
+func ServiceFilterPackagePrefix(serviceName string) string {
+	switch serviceName {
+	default:
+		return fmt.Sprintf("%[1]stypes", serviceName)
 	}
 }
 
 // ServiceFilterType determines the service filter type.
 func ServiceFilterType(serviceName string) string {
 	switch serviceName {
-	case "resourcegroupstaggingapi":
-		return "TagFilter"
 	default:
 		return "Filter"
 	}
@@ -26,10 +34,8 @@ func ServiceFilterType(serviceName string) string {
 // ServiceFilterTypeNameField determines the service filter type name field.
 func ServiceFilterTypeNameField(serviceName string) string {
 	switch serviceName {
-	case "resourcegroupstaggingapi", "secretsmanager":
-		return "Key"
 	default:
-		return "Name"
+		return "Key"
 	}
 }
 

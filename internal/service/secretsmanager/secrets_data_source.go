@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfiltersv2"
 )
 
 // @SDKDataSource("aws_secretsmanager_secrets")
@@ -26,7 +26,7 @@ func DataSourceSecrets() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": namevaluesfilters.Schema(),
+			"filter": namevaluesfiltersv2.Schema(),
 			"names": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -43,7 +43,7 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 	input := &secretsmanager.ListSecretsInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = namevaluesfilters.New(v.(*schema.Set)).SecretsmanagerFilters()
+		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).SecretsmanagerFilters()
 	}
 
 	var results []types.SecretListEntry
