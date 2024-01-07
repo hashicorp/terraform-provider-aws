@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/appstream: Updated the max idle timeout for appstream fleet to be 360000, from 3600, to match aws documentation. https://docs.aws.amazon.com/appstream2/latest/APIReference/API_Fleet.html See DisconnectTimeoutInSecond
+```
