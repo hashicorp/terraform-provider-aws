@@ -52,7 +52,7 @@ resource "aws_efs_replication_configuration" "example" {
 
   destination {
     file_system_id = "fs-1234567890"
-    region        = "us-west-2"
+    region         = "us-west-2"
   }
 }
 ```
