@@ -143,9 +143,9 @@ func ResourceCanary() *schema.Resource {
 						},
 						"timeout_in_seconds": {
 							Type:         schema.TypeInt,
+							Computed:     true,
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(3, 14*60),
-							Default:      840,
 						},
 					},
 				},
@@ -692,8 +692,10 @@ func expandCanaryRunConfig(l []interface{}) *synthetics.CanaryRunConfigInput {
 
 	m := l[0].(map[string]interface{})
 
-	codeConfig := &synthetics.CanaryRunConfigInput{
-		TimeoutInSeconds: aws.Int64(int64(m["timeout_in_seconds"].(int))),
+	codeConfig := &synthetics.CanaryRunConfigInput{}
+
+	if v, ok := m["timeout_in_seconds"].(int); ok && v > 3 {
+		codeConfig.TimeoutInSeconds = aws.Int64(int64(v))
 	}
 
 	if v, ok := m["memory_in_mb"].(int); ok && v > 0 {
