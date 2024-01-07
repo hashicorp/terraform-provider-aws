@@ -1270,7 +1270,7 @@ func testAccJobConfig_rayJob(rName string, description string) string {
 resource "aws_glue_job" "test" {
   glue_version      = "4.0"
   name              = %[1]q
-  description  		= %[2]q
+  description       = %[2]q
   role_arn          = aws_iam_role.test.arn
   worker_type       = "Z.2X"
   number_of_workers = 10
