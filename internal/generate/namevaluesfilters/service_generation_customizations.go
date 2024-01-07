@@ -5,11 +5,15 @@
 
 package namevaluesfilters
 
+import "fmt"
+
 // ServiceFilterPackage determines the service filter type package.
 func ServiceFilterPackage(serviceName string) string {
 	switch serviceName {
+	case "secretsmanager":
+		return fmt.Sprintf("github.com/aws/aws-sdk-go-v2/service/%s/types", serviceName)
 	default:
-		return serviceName
+		return "github.com/aws/aws-sdk-go/service/" + serviceName
 	}
 }
 

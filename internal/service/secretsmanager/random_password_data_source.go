@@ -6,8 +6,8 @@ package secretsmanager
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -64,7 +64,7 @@ func DataSourceRandomPassword() *schema.Resource {
 
 func dataSourceRandomPasswordRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	var excludeCharacters string
 	if v, ok := d.GetOk("exclude_characters"); ok {
@@ -110,12 +110,12 @@ func dataSourceRandomPasswordRead(ctx context.Context, d *schema.ResourceData, m
 		RequireEachIncludedType: aws.Bool(requireEachIncludedType),
 	}
 
-	output, err := conn.GetRandomPasswordWithContext(ctx, input)
+	output, err := conn.GetRandomPassword(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Get Random Password: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.RandomPassword))
+	d.SetId(aws.ToString(output.RandomPassword))
 	d.Set("random_password", output.RandomPassword)
 
 	return diags

@@ -7,9 +7,9 @@ import (
 	"context"
 	"log"
 
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
@@ -58,7 +58,7 @@ func DataSourceSecret() *schema.Resource {
 
 func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var secretID string
@@ -81,9 +81,9 @@ func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Reading Secrets Manager Secret: %s", input)
-	output, err := conn.DescribeSecretWithContext(ctx, input)
+	output, err := conn.DescribeSecret(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
+		if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 			return sdkdiag.AppendErrorf(diags, "Secrets Manager Secret %q not found", secretID)
 		}
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret: %s", err)
@@ -104,7 +104,7 @@ func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, meta inte
 		SecretId: aws.String(d.Id()),
 	}
 	log.Printf("[DEBUG] Reading Secrets Manager Secret policy: %s", pIn)
-	pOut, err := conn.GetResourcePolicyWithContext(ctx, pIn)
+	pOut, err := conn.GetResourcePolicy(ctx, pIn)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret policy: %s", err)
 	}

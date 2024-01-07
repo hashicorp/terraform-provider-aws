@@ -7,9 +7,9 @@ import (
 	"context"
 	"log"
 
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -60,7 +60,7 @@ func ResourceSecretPolicy() *schema.Resource {
 
 func resourceSecretPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
@@ -81,8 +81,8 @@ func resourceSecretPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 
 	err = retry.RetryContext(ctx, PropagationTimeout, func() *retry.RetryError {
 		var err error
-		output, err = conn.PutResourcePolicyWithContext(ctx, input)
-		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
+		output, err = conn.PutResourcePolicy(ctx, input)
+		if tfawserr.ErrMessageContains(err, errCodeMalformedPolicyDocumentException,
 			"This resource policy contains an unsupported principal") {
 			return retry.RetryableError(err)
 		}
@@ -92,7 +92,7 @@ func resourceSecretPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		output, err = conn.PutResourcePolicyWithContext(ctx, input)
+		output, err = conn.PutResourcePolicy(ctx, input)
 	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Secrets Manager Secret %q policy: %s", d.Id(), err)
@@ -105,17 +105,17 @@ func resourceSecretPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceSecretPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	input := &secretsmanager.GetResourcePolicyInput{
 		SecretId: aws.String(d.Id()),
 	}
 
 	outputRaw, err := tfresource.RetryWhenNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
-		return conn.GetResourcePolicyWithContext(ctx, input)
+		return conn.GetResourcePolicy(ctx, input)
 	})
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		log.Printf("[WARN] Secrets Manager Secret Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -148,7 +148,7 @@ func resourceSecretPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceSecretPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	if d.HasChanges("policy", "block_public_policy") {
 		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
@@ -163,8 +163,8 @@ func resourceSecretPolicyUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy; %#v", input)
 		err = retry.RetryContext(ctx, PropagationTimeout, func() *retry.RetryError {
-			_, err := conn.PutResourcePolicyWithContext(ctx, input)
-			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
+			_, err := conn.PutResourcePolicy(ctx, input)
+			if tfawserr.ErrMessageContains(err, errCodeMalformedPolicyDocumentException,
 				"This resource policy contains an unsupported principal") {
 				return retry.RetryableError(err)
 			}
@@ -174,7 +174,7 @@ func resourceSecretPolicyUpdate(ctx context.Context, d *schema.ResourceData, met
 			return nil
 		})
 		if tfresource.TimedOut(err) {
-			_, err = conn.PutResourcePolicyWithContext(ctx, input)
+			_, err = conn.PutResourcePolicy(ctx, input)
 		}
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting Secrets Manager Secret %q policy: %s", d.Id(), err)
@@ -186,16 +186,16 @@ func resourceSecretPolicyUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceSecretPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	input := &secretsmanager.DeleteResourcePolicyInput{
 		SecretId: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Removing Secrets Manager Secret policy: %#v", input)
-	_, err := conn.DeleteResourcePolicyWithContext(ctx, input)
+	_, err := conn.DeleteResourcePolicy(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
+		if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "removing Secrets Manager Secret %q policy: %s", d.Id(), err)

@@ -6,8 +6,9 @@ package secretsmanager
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -37,7 +38,7 @@ func DataSourceSecrets() *schema.Resource {
 
 func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	input := &secretsmanager.ListSecretsInput{}
 
@@ -45,26 +46,18 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).SecretsmanagerFilters()
 	}
 
-	var results []*secretsmanager.SecretListEntry
+	var results []types.SecretListEntry
 
-	err := conn.ListSecretsPagesWithContext(ctx, input, func(page *secretsmanager.ListSecretsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	paginator := secretsmanager.NewListSecretsPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing Secrets Manager Secrets: %s", err)
 		}
 
-		for _, secretListEntry := range page.SecretList {
-			if secretListEntry == nil {
-				continue
-			}
-
-			results = append(results, secretListEntry)
+		if page != nil {
+			results = append(results, page.SecretList...)
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing Secrets Manager Secrets: %s", err)
 	}
 
 	var arns, names []string

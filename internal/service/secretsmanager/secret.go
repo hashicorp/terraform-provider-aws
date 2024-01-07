@@ -11,9 +11,10 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -139,13 +141,13 @@ func ResourceSecret() *schema.Resource {
 
 func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	secretName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &secretsmanager.CreateSecretInput{
 		ClientRequestToken:          aws.String(id.UniqueId()), // Needed because we're handling our own retries
 		Description:                 aws.String(d.Get("description").(string)),
-		ForceOverwriteReplicaSecret: aws.Bool(d.Get("force_overwrite_replica_secret").(bool)),
+		ForceOverwriteReplicaSecret: d.Get("force_overwrite_replica_secret").(bool),
 		Name:                        aws.String(secretName),
 		Tags:                        getTagsIn(ctx),
 	}
@@ -164,11 +166,11 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var output *secretsmanager.CreateSecretOutput
 	err := retry.RetryContext(ctx, PropagationTimeout, func() *retry.RetryError {
 		var err error
-		output, err = conn.CreateSecretWithContext(ctx, input)
+		output, err = conn.CreateSecret(ctx, input)
 		// Temporarily retry on these errors to support immediate secret recreation:
 		// InvalidRequestException: You can’t perform this operation on the secret because it was deleted.
 		// InvalidRequestException: You can't create this secret because a secret with this name is already scheduled for deletion.
-		if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "scheduled for deletion") || tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException, "was deleted") {
+		if errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "scheduled for deletion") || errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "was deleted") {
 			return retry.RetryableError(err)
 		}
 		if err != nil {
@@ -177,13 +179,13 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		output, err = conn.CreateSecretWithContext(ctx, input)
+		output, err = conn.CreateSecret(ctx, input)
 	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Secrets Manager Secret: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.ARN))
+	d.SetId(aws.ToString(output.ARN))
 
 	if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
 		policy, err := structure.NormalizeJsonString(v.(string))
@@ -197,8 +199,8 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		err = retry.RetryContext(ctx, PropagationTimeout, func() *retry.RetryError {
-			_, err := conn.PutResourcePolicyWithContext(ctx, input)
-			if tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeMalformedPolicyDocumentException,
+			_, err := conn.PutResourcePolicy(ctx, input)
+			if errs.IsAErrorMessageContains[*types.MalformedPolicyDocumentException](err,
 				"This resource policy contains an unsupported principal") {
 				return retry.RetryableError(err)
 			}
@@ -208,7 +210,7 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 			return nil
 		})
 		if tfresource.TimedOut(err) {
-			_, err = conn.PutResourcePolicyWithContext(ctx, input)
+			_, err = conn.PutResourcePolicy(ctx, input)
 		}
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting Secrets Manager Secret %q policy: %s", d.Id(), err)
@@ -220,7 +222,7 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
 		return FindSecretByID(ctx, conn, d.Id())
@@ -242,7 +244,7 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("description", output.Description)
 	d.Set("kms_key_id", output.KmsKeyId)
 	d.Set("name", output.Name)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
+	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.Name)))
 
 	if err := d.Set("replica", flattenSecretReplicas(output.ReplicationStatus)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting replica: %s", err)
@@ -251,7 +253,7 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var policy *secretsmanager.GetResourcePolicyOutput
 	err = tfresource.Retry(ctx, PropagationTimeout, func() *retry.RetryError {
 		var err error
-		policy, err = conn.GetResourcePolicyWithContext(ctx, &secretsmanager.GetResourcePolicyInput{
+		policy, err = conn.GetResourcePolicy(ctx, &secretsmanager.GetResourcePolicyInput{
 			SecretId: aws.String(d.Id()),
 		})
 		if err != nil {
@@ -259,7 +261,7 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		if policy.ResourcePolicy != nil {
-			valid, err := tfiam.PolicyHasValidAWSPrincipals(aws.StringValue(policy.ResourcePolicy))
+			valid, err := tfiam.PolicyHasValidAWSPrincipals(aws.ToString(policy.ResourcePolicy))
 			if err != nil {
 				return retry.NonRetryableError(err)
 			}
@@ -275,7 +277,7 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s) policy: %s", d.Id(), err)
 	} else if v := policy.ResourcePolicy; v != nil {
-		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.StringValue(v))
+		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(v))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s): %s", d.Id(), err)
 		}
@@ -292,7 +294,7 @@ func resourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	if d.HasChange("replica") {
 		o, n := d.GetChange("replica")
@@ -325,7 +327,7 @@ func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		log.Printf("[DEBUG] Updating Secrets Manager Secret: %s", input)
-		_, err := conn.UpdateSecretWithContext(ctx, input)
+		_, err := conn.UpdateSecret(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Secrets Manager Secret (%s): %s", d.Id(), err)
@@ -347,16 +349,16 @@ func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy: %s", input)
 			_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, PropagationTimeout,
 				func() (interface{}, error) {
-					return conn.PutResourcePolicyWithContext(ctx, input)
+					return conn.PutResourcePolicy(ctx, input)
 				},
-				secretsmanager.ErrCodeMalformedPolicyDocumentException, "This resource policy contains an unsupported principal")
+				errCodeMalformedPolicyDocumentException, "This resource policy contains an unsupported principal")
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting Secrets Manager Secret (%s) policy: %s", d.Id(), err)
 			}
 		} else {
 			log.Printf("[DEBUG] Removing Secrets Manager Secret policy: %s", d.Id())
-			_, err := conn.DeleteResourcePolicyWithContext(ctx, &secretsmanager.DeleteResourcePolicyInput{
+			_, err := conn.DeleteResourcePolicy(ctx, &secretsmanager.DeleteResourcePolicyInput{
 				SecretId: aws.String(d.Id()),
 			})
 
@@ -371,7 +373,7 @@ func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSecretDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	if v, ok := d.GetOk("replica"); ok && v.(*schema.Set).Len() > 0 {
 		err := removeSecretReplicas(ctx, conn, d.Id(), v.(*schema.Set).List())
@@ -393,9 +395,9 @@ func resourceSecretDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	log.Printf("[DEBUG] Deleting Secrets Manager Secret: %s", d.Id())
-	_, err := conn.DeleteSecretWithContext(ctx, input)
+	_, err := conn.DeleteSecret(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return diags
 	}
 
@@ -414,7 +416,7 @@ func resourceSecretDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func removeSecretReplicas(ctx context.Context, conn *secretsmanager.SecretsManager, id string, tfList []interface{}) error {
+func removeSecretReplicas(ctx context.Context, conn *secretsmanager.Client, id string, tfList []interface{}) error {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -435,14 +437,14 @@ func removeSecretReplicas(ctx context.Context, conn *secretsmanager.SecretsManag
 		regions = append(regions, tfMap["region"].(string))
 	}
 
-	input.RemoveReplicaRegions = aws.StringSlice(regions)
+	input.RemoveReplicaRegions = regions
 
 	log.Printf("[DEBUG] Removing Secrets Manager Secret Replicas: %s", input)
 
-	_, err := conn.RemoveRegionsFromReplicationWithContext(ctx, input)
+	_, err := conn.RemoveRegionsFromReplication(ctx, input)
 
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
+		if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 			return nil
 		}
 
@@ -452,30 +454,26 @@ func removeSecretReplicas(ctx context.Context, conn *secretsmanager.SecretsManag
 	return nil
 }
 
-func addSecretReplicas(ctx context.Context, conn *secretsmanager.SecretsManager, id string, forceOverwrite bool, tfList []interface{}) error {
+func addSecretReplicas(ctx context.Context, conn *secretsmanager.Client, id string, forceOverwrite bool, tfList []interface{}) error {
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	input := &secretsmanager.ReplicateSecretToRegionsInput{
 		SecretId:                    aws.String(id),
-		ForceOverwriteReplicaSecret: aws.Bool(forceOverwrite),
+		ForceOverwriteReplicaSecret: forceOverwrite,
 		AddReplicaRegions:           expandSecretReplicas(tfList),
 	}
 
 	log.Printf("[DEBUG] Removing Secrets Manager Secret Replica: %s", input)
 
-	_, err := conn.ReplicateSecretToRegionsWithContext(ctx, input)
+	_, err := conn.ReplicateSecretToRegions(ctx, input)
 
 	return err
 }
 
-func expandSecretReplica(tfMap map[string]interface{}) *secretsmanager.ReplicaRegionType {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &secretsmanager.ReplicaRegionType{}
+func expandSecretReplica(tfMap map[string]interface{}) types.ReplicaRegionType {
+	apiObject := types.ReplicaRegionType{}
 
 	if v, ok := tfMap["kms_key_id"].(string); ok && v != "" {
 		apiObject.KmsKeyId = aws.String(v)
@@ -488,12 +486,12 @@ func expandSecretReplica(tfMap map[string]interface{}) *secretsmanager.ReplicaRe
 	return apiObject
 }
 
-func expandSecretReplicas(tfList []interface{}) []*secretsmanager.ReplicaRegionType {
+func expandSecretReplicas(tfList []interface{}) []types.ReplicaRegionType {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*secretsmanager.ReplicaRegionType
+	var apiObjects []types.ReplicaRegionType
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -502,11 +500,11 @@ func expandSecretReplicas(tfList []interface{}) []*secretsmanager.ReplicaRegionT
 			continue
 		}
 
-		apiObject := expandSecretReplica(tfMap)
-
-		if apiObject == nil {
+		if tfMap == nil {
 			continue
 		}
+
+		apiObject := expandSecretReplica(tfMap)
 
 		apiObjects = append(apiObjects, apiObject)
 	}
@@ -514,37 +512,33 @@ func expandSecretReplicas(tfList []interface{}) []*secretsmanager.ReplicaRegionT
 	return apiObjects
 }
 
-func flattenSecretReplica(apiObject *secretsmanager.ReplicationStatusType) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenSecretReplica(apiObject types.ReplicationStatusType) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.KmsKeyId; v != nil {
-		tfMap["kms_key_id"] = aws.StringValue(v)
+		tfMap["kms_key_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.LastAccessedDate; v != nil {
-		tfMap["last_accessed_date"] = aws.TimeValue(v).Format(time.RFC3339)
+		tfMap["last_accessed_date"] = aws.ToTime(v).Format(time.RFC3339)
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.StringValue(v)
+		tfMap["region"] = aws.ToString(v)
 	}
 
-	if v := apiObject.Status; v != nil {
-		tfMap["status"] = aws.StringValue(v)
+	if v := apiObject.Status; v != "" {
+		tfMap["status"] = v
 	}
 
 	if v := apiObject.StatusMessage; v != nil {
-		tfMap["status_message"] = aws.StringValue(v)
+		tfMap["status_message"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenSecretReplicas(apiObjects []*secretsmanager.ReplicationStatusType) []interface{} {
+func flattenSecretReplicas(apiObjects []types.ReplicationStatusType) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -552,10 +546,6 @@ func flattenSecretReplicas(apiObjects []*secretsmanager.ReplicationStatusType) [
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenSecretReplica(apiObject))
 	}
 
@@ -578,10 +568,10 @@ func secretReplicaHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func findSecret(ctx context.Context, conn *secretsmanager.SecretsManager, input *secretsmanager.DescribeSecretInput) (*secretsmanager.DescribeSecretOutput, error) {
-	output, err := conn.DescribeSecretWithContext(ctx, input)
+func findSecret(ctx context.Context, conn *secretsmanager.Client, input *secretsmanager.DescribeSecretInput) (*secretsmanager.DescribeSecretOutput, error) {
+	output, err := conn.DescribeSecret(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -599,7 +589,7 @@ func findSecret(ctx context.Context, conn *secretsmanager.SecretsManager, input 
 	return output, nil
 }
 
-func FindSecretByID(ctx context.Context, conn *secretsmanager.SecretsManager, id string) (*secretsmanager.DescribeSecretOutput, error) {
+func FindSecretByID(ctx context.Context, conn *secretsmanager.Client, id string) (*secretsmanager.DescribeSecretOutput, error) {
 	input := &secretsmanager.DescribeSecretInput{
 		SecretId: aws.String(id),
 	}

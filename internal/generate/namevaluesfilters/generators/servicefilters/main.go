@@ -97,7 +97,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go/aws"
 {{- range .SliceServiceNames }}
 {{- if eq . (. | FilterPackage) }}
-	"github.com/aws/aws-sdk-go/service/{{ . }}"
+	"{{ . }}"
 {{- end }}
 {{- end }}
 )

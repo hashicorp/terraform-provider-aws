@@ -9,8 +9,9 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -82,7 +83,7 @@ func ResourceSecretRotation() *schema.Resource {
 
 func resourceSecretRotationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 	secretID := d.Get("secret_id").(string)
 
 	input := &secretsmanager.RotateSecretInput{
@@ -97,7 +98,7 @@ func resourceSecretRotationCreate(ctx context.Context, d *schema.ResourceData, m
 
 	// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
-		return conn.RotateSecretWithContext(ctx, input)
+		return conn.RotateSecret(ctx, input)
 	}, "AccessDeniedException")
 
 	if err != nil {
@@ -111,7 +112,7 @@ func resourceSecretRotationCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
 		return FindSecretByID(ctx, conn, d.Id())
@@ -146,7 +147,7 @@ func resourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 	secretID := d.Get("secret_id").(string)
 
 	if d.HasChanges("rotation_lambda_arn", "rotation_rules") {
@@ -162,7 +163,7 @@ func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
-			return conn.RotateSecretWithContext(ctx, input)
+			return conn.RotateSecret(ctx, input)
 		}, "AccessDeniedException")
 
 		if err != nil {
@@ -175,9 +176,9 @@ func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceSecretRotationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
-	_, err := conn.CancelRotateSecretWithContext(ctx, &secretsmanager.CancelRotateSecretInput{
+	_, err := conn.CancelRotateSecret(ctx, &secretsmanager.CancelRotateSecretInput{
 		SecretId: aws.String(d.Get("secret_id").(string)),
 	})
 
@@ -188,11 +189,11 @@ func resourceSecretRotationDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func expandRotationRules(l []interface{}) *secretsmanager.RotationRulesType {
+func expandRotationRules(l []interface{}) *types.RotationRulesType {
 	if len(l) == 0 {
 		return nil
 	}
-	rules := &secretsmanager.RotationRulesType{}
+	rules := &types.RotationRulesType{}
 
 	tfMap := l[0].(map[string]interface{})
 
@@ -211,7 +212,7 @@ func expandRotationRules(l []interface{}) *secretsmanager.RotationRulesType {
 	return rules
 }
 
-func flattenRotationRules(rules *secretsmanager.RotationRulesType) []interface{} {
+func flattenRotationRules(rules *types.RotationRulesType) []interface{} {
 	if rules == nil {
 		return nil
 	}

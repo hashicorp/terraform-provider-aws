@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
@@ -29,7 +30,7 @@ func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 	days := 7
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -64,7 +65,7 @@ func TestAccSecretsManagerSecretRotation_scheduleExpression(t *testing.T) {
 	scheduleExpression02 := "rate(10 days)"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -109,7 +110,7 @@ func TestAccSecretsManagerSecretRotation_scheduleExpressionToDays(t *testing.T) 
 	)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -154,7 +155,7 @@ func TestAccSecretsManagerSecretRotation_scheduleExpressionHours(t *testing.T) {
 	scheduleExpression02 := "rate(10 hours)"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -199,7 +200,7 @@ func TestAccSecretsManagerSecretRotation_duration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -225,7 +226,7 @@ func TestAccSecretsManagerSecretRotation_duration(t *testing.T) {
 
 func testAccCheckSecretRotationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_secretsmanager_secret_rotation" {
@@ -264,7 +265,7 @@ func testAccCheckSecretRotationExists(ctx context.Context, n string, v *secretsm
 			return fmt.Errorf("No Secrets Manager Secret Rotation ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerClient(ctx)
 
 		output, err := tfsecretsmanager.FindSecretByID(ctx, conn, rs.Primary.ID)
 
@@ -284,30 +285,30 @@ func testAccCheckSecretRotationExists(ctx context.Context, n string, v *secretsm
 
 func testSecretValueIsCurrent(ctx context.Context, rName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerClient(ctx)
 		// Write secret value to clear in-rotation state, otherwise updating the secret rotation
 		// will fail with "A previous rotation isn't complete. That rotation will be reattempted."
 		put_secret_input := &secretsmanager.PutSecretValueInput{
 			SecretId:     aws.String(rName),
 			SecretString: aws.String("secret-value"),
 		}
-		_, err := conn.PutSecretValueWithContext(ctx, put_secret_input)
+		_, err := conn.PutSecretValue(ctx, put_secret_input)
 		if err != nil {
 			return err
 		}
 		input := &secretsmanager.DescribeSecretInput{
 			SecretId: aws.String(rName),
 		}
-		output, err := conn.DescribeSecretWithContext(ctx, input)
+		output, err := conn.DescribeSecret(ctx, input)
 		if err != nil {
 			return err
 		} else {
 			// Ensure that the current version of the secret is in the AWSCURRENT stage
 			for _, stage := range output.VersionIdsToStages {
-				if *stage[0] == "AWSCURRENT" {
+				if stage[0] == "AWSCURRENT" {
 					return nil
 				} else {
-					return fmt.Errorf("Secret version is not in AWSCURRENT stage: %s", *stage[0])
+					return fmt.Errorf("Secret version is not in AWSCURRENT stage: %s", stage[0])
 				}
 			}
 			return nil

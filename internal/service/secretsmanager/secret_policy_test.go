@@ -9,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -19,7 +19,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
+	tfsm "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSecretsManagerSecretPolicy_basic(t *testing.T) {
@@ -30,7 +32,7 @@ func TestAccSecretsManagerSecretPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -68,7 +70,7 @@ func TestAccSecretsManagerSecretPolicy_blockPublicPolicy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -111,7 +113,7 @@ func TestAccSecretsManagerSecretPolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, secretsmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -129,7 +131,7 @@ func TestAccSecretsManagerSecretPolicy_disappears(t *testing.T) {
 
 func testAccCheckSecretPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_secretsmanager_secret_policy" {
@@ -144,7 +146,7 @@ func testAccCheckSecretPolicyDestroy(ctx context.Context) resource.TestCheckFunc
 
 			err := retry.RetryContext(ctx, tfsecretsmanager.PropagationTimeout, func() *retry.RetryError {
 				var err error
-				output, err = conn.DescribeSecretWithContext(ctx, secretInput)
+				output, err = conn.DescribeSecret(ctx, secretInput)
 
 				if err != nil {
 					return retry.NonRetryableError(err)
@@ -158,10 +160,10 @@ func testAccCheckSecretPolicyDestroy(ctx context.Context) resource.TestCheckFunc
 			})
 
 			if tfresource.TimedOut(err) {
-				output, err = conn.DescribeSecretWithContext(ctx, secretInput)
+				output, err = conn.DescribeSecret(ctx, secretInput)
 			}
 
-			if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
+			if tfawserr.ErrCodeEquals(err, tfsm.ErrCodeResourceNotFoundException) {
 				continue
 			}
 
@@ -177,10 +179,10 @@ func testAccCheckSecretPolicyDestroy(ctx context.Context) resource.TestCheckFunc
 				SecretId: aws.String(rs.Primary.ID),
 			}
 
-			_, err = conn.GetResourcePolicyWithContext(ctx, input)
+			_, err = conn.GetResourcePolicy(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) ||
-				tfawserr.ErrMessageContains(err, secretsmanager.ErrCodeInvalidRequestException,
+			if tfawserr.ErrCodeEquals(err, tfsm.ErrCodeResourceNotFoundException) ||
+				tfawserr.ErrMessageContains(err, tfsm.ErrCodeInvalidRequestException,
 					"You can't perform this operation on the secret because it was marked for deletion.") {
 				continue
 			}
@@ -201,12 +203,12 @@ func testAccCheckSecretPolicyExists(ctx context.Context, resourceName string, po
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerClient(ctx)
 		input := &secretsmanager.GetResourcePolicyInput{
 			SecretId: aws.String(rs.Primary.ID),
 		}
 
-		output, err := conn.GetResourcePolicyWithContext(ctx, input)
+		output, err := conn.GetResourcePolicy(ctx, input)
 
 		if err != nil {
 			return err
