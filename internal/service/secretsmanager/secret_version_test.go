@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
-	tfsm "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -162,10 +161,10 @@ func testAccCheckSecretVersionDestroy(ctx context.Context) resource.TestCheckFun
 			output, err := conn.GetSecretValue(ctx, input)
 
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, tfsm.ErrCodeResourceNotFoundException) {
+				if tfawserr.ErrCodeEquals(err, tfsecretsmanager.ErrCodeResourceNotFoundException) {
 					return nil
 				}
-				if tfawserr.ErrMessageContains(err, tfsm.ErrCodeInvalidRequestException, "was deleted") || tfawserr.ErrMessageContains(err, tfsm.ErrCodeInvalidRequestException, "was marked for deletion") {
+				if tfawserr.ErrMessageContains(err, tfsecretsmanager.ErrCodeInvalidRequestException, "was deleted") || tfawserr.ErrMessageContains(err, tfsecretsmanager.ErrCodeInvalidRequestException, "was marked for deletion") {
 					return nil
 				}
 				return err

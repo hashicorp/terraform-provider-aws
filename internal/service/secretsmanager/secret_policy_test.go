@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
-	tfsm "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -163,7 +162,7 @@ func testAccCheckSecretPolicyDestroy(ctx context.Context) resource.TestCheckFunc
 				output, err = conn.DescribeSecret(ctx, secretInput)
 			}
 
-			if tfawserr.ErrCodeEquals(err, tfsm.ErrCodeResourceNotFoundException) {
+			if tfawserr.ErrCodeEquals(err, tfsecretsmanager.ErrCodeResourceNotFoundException) {
 				continue
 			}
 
@@ -181,8 +180,8 @@ func testAccCheckSecretPolicyDestroy(ctx context.Context) resource.TestCheckFunc
 
 			_, err = conn.GetResourcePolicy(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, tfsm.ErrCodeResourceNotFoundException) ||
-				tfawserr.ErrMessageContains(err, tfsm.ErrCodeInvalidRequestException,
+			if tfawserr.ErrCodeEquals(err, tfsecretsmanager.ErrCodeResourceNotFoundException) ||
+				tfawserr.ErrMessageContains(err, tfsecretsmanager.ErrCodeInvalidRequestException,
 					"You can't perform this operation on the secret because it was marked for deletion.") {
 				continue
 			}
