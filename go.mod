@@ -59,6 +59,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.47.6
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.7.6
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.49.7
+	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.1.6
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.38.6
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.25.6
@@ -169,7 +170,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.8.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.10.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.16.10 // indirect
-	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.1.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.18.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.21.6 // indirect
 	github.com/aws/smithy-go v1.19.0 // indirect
