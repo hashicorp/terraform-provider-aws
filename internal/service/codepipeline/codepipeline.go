@@ -31,8 +31,7 @@ import (
 )
 
 const (
-	providerGitHub = "GitHub"
-
+	providerGitHub                      = "GitHub"
 	gitHubActionConfigurationOAuthToken = "OAuthToken"
 )
 
@@ -344,7 +343,7 @@ func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta in
 
 	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
-	log.Printf("[INFO] Deleting CodePipeline: %s", d.Id())
+	log.Printf("[INFO] Deleting CodePipeline Pipeline: %s", d.Id())
 	_, err := conn.DeletePipelineWithContext(ctx, &codepipeline.DeletePipelineInput{
 		Name: aws.String(d.Id()),
 	})
@@ -354,7 +353,7 @@ func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting CodePipeline (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CodePipeline Pipeline (%s): %s", d.Id(), err)
 	}
 
 	return diags
