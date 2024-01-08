@@ -308,7 +308,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := d.Set("stage", flattenStageDeclarations(d, pipeline.Stages)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting stage: %s", err)
 	}
-	if err := d.Set("variable", flattenVariableDeclarations(d, pipeline.Variables)); err != nil {
+	if err := d.Set("variable", flattenVariableDeclarations(pipeline.Variables)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting variable: %s", err)
 	}
 
@@ -961,7 +961,7 @@ func flattenOutputArtifacts(apiObjects []types.OutputArtifact) []string {
 	return aws.ToStringSlice(tfList)
 }
 
-func flattenVariableDeclaration(d *schema.ResourceData, i int, apiObject types.PipelineVariableDeclaration) map[string]interface{} {
+func flattenVariableDeclaration(i int, apiObject types.PipelineVariableDeclaration) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DefaultValue; v != nil {
@@ -979,7 +979,7 @@ func flattenVariableDeclaration(d *schema.ResourceData, i int, apiObject types.P
 	return tfMap
 }
 
-func flattenVariableDeclarations(d *schema.ResourceData, apiObjects []types.PipelineVariableDeclaration) []interface{} {
+func flattenVariableDeclarations(apiObjects []types.PipelineVariableDeclaration) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -987,7 +987,7 @@ func flattenVariableDeclarations(d *schema.ResourceData, apiObjects []types.Pipe
 	var tfList []interface{}
 
 	for i, apiObject := range apiObjects {
-		tfList = append(tfList, flattenVariableDeclaration(d, i, apiObject))
+		tfList = append(tfList, flattenVariableDeclaration(i, apiObject))
 	}
 
 	return tfList
