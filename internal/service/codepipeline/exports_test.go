@@ -6,8 +6,10 @@ package codepipeline
 // Exports for use in tests only.
 var (
 	ResourceCustomActionType = resourceCustomActionType
+	ResourcePipeline         = resourcePipeline
 	ResourceWebhook          = resourceWebhook
 
 	FindCustomActionTypeByThreePartKey = findCustomActionTypeByThreePartKey
+	FindPipelineByName                 = findPipelineByName
 	FindWebhookByARN                   = findWebhookByARN
 )
