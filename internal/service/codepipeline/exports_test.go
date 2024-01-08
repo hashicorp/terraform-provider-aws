@@ -5,7 +5,9 @@ package codepipeline
 
 // Exports for use in tests only.
 var (
-	ResourceWebhook = resourceWebhook
+	ResourceCustomActionType = resourceCustomActionType
+	ResourceWebhook          = resourceWebhook
 
-	FindWebhookByARN = findWebhookByARN
+	FindCustomActionTypeByThreePartKey = findCustomActionTypeByThreePartKey
+	FindWebhookByARN                   = findWebhookByARN
 )

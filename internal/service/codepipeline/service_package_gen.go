@@ -37,7 +37,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceCustomActionType,
+			Factory:  resourceCustomActionType,
 			TypeName: "aws_codepipeline_custom_action_type",
 			Name:     "Custom Action Type",
 			Tags: &types.ServicePackageResourceTags{
