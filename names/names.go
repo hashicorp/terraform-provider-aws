@@ -67,6 +67,7 @@ const (
 	LambdaEndpointID                     = "lambda"
 	LexV2ModelsEndpointID                = "models-v2-lex"
 	MediaLiveEndpointID                  = "medialive"
+	MQEndpointID                         = "mq"
 	ObservabilityAccessManagerEndpointID = "oam"
 	OpenSearchServerlessEndpointID       = "aoss"
 	PipesEndpointID                      = "pipes"
