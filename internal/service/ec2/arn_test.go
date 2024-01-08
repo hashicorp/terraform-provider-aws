@@ -1,9 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
@@ -19,27 +23,27 @@ func TestInstanceProfileARNToName(t *testing.T) {
 		{
 			TestName:      "empty ARN",
 			InputARN:      "",
-			ExpectedError: regexp.MustCompile(`parsing ARN`),
+			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "unparsable ARN",
 			InputARN:      "test",
-			ExpectedError: regexp.MustCompile(`parsing ARN`),
+			ExpectedError: regexache.MustCompile(`parsing ARN`),
 		},
 		{
 			TestName:      "invalid ARN service",
 			InputARN:      "arn:aws:ec2:us-east-1:123456789012:instance/i-12345678", //lintignore:AWSAT003,AWSAT005
-			ExpectedError: regexp.MustCompile(`expected service iam`),
+			ExpectedError: regexache.MustCompile(`expected service iam`),
 		},
 		{
 			TestName:      "invalid ARN resource parts",
 			InputARN:      "arn:aws:iam:us-east-1:123456789012:name", //lintignore:AWSAT003,AWSAT005
-			ExpectedError: regexp.MustCompile(`expected at least 2 resource parts`),
+			ExpectedError: regexache.MustCompile(`expected at least 2 resource parts`),
 		},
 		{
 			TestName:      "invalid ARN resource prefix",
 			InputARN:      "arn:aws:iam:us-east-1:123456789012:role/name", //lintignore:AWSAT003,AWSAT005
-			ExpectedError: regexp.MustCompile(`expected resource prefix instance-profile`),
+			ExpectedError: regexache.MustCompile(`expected resource prefix instance-profile`),
 		},
 		{
 			TestName:     "valid ARN",

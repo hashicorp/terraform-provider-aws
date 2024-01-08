@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -69,7 +73,7 @@ func ResourceConnectAttachment() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 50),
-					validation.StringMatch(regexp.MustCompile(`^core-network-([0-9a-f]{8,17})$`), "Must start with core-network and then have 8 to 17 characters"),
+					validation.StringMatch(regexache.MustCompile(`^core-network-([0-9a-f]{8,17})$`), "Must start with core-network and then have 8 to 17 characters"),
 				),
 			},
 			"edge_location": {
@@ -78,7 +82,7 @@ func ResourceConnectAttachment() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`[\s\S]*`), "Anything but whitespace"),
+					validation.StringMatch(regexache.MustCompile(`[\s\S]*`), "Anything but whitespace"),
 				),
 			},
 			"options": {
@@ -90,7 +94,7 @@ func ResourceConnectAttachment() *schema.Resource {
 						"protocol": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringInSlice([]string{"GRE"}, false),
+							ValidateFunc: validation.StringInSlice(networkmanager.TunnelProtocol_Values(), false),
 						},
 					},
 				},
@@ -119,7 +123,7 @@ func ResourceConnectAttachment() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 50),
-					validation.StringMatch(regexp.MustCompile(`^attachment-([0-9a-f]{8,17})$`), "Must start with attachment- and then have 8 to 17 characters"),
+					validation.StringMatch(regexache.MustCompile(`^attachment-([0-9a-f]{8,17})$`), "Must start with attachment- and then have 8 to 17 characters"),
 				),
 			},
 		},
@@ -127,6 +131,8 @@ func ResourceConnectAttachment() *schema.Resource {
 }
 
 func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	coreNetworkID := d.Get("core_network_id").(string)
@@ -175,19 +181,21 @@ func resourceConnectAttachmentCreate(ctx context.Context, d *schema.ResourceData
 		})
 
 	if err != nil {
-		return diag.Errorf("creating Network Manager Connect Attachment (%s) (%s): %s", transportAttachmentID, coreNetworkID, err)
+		return sdkdiag.AppendErrorf(diags, "creating Network Manager Connect Attachment (%s) (%s): %s", transportAttachmentID, coreNetworkID, err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*networkmanager.CreateConnectAttachmentOutput).ConnectAttachment.Attachment.AttachmentId))
 
 	if _, err := waitConnectAttachmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Network Manager Connect Attachment (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Connect Attachment (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceConnectAttachmentRead(ctx, d, meta)
+	return append(diags, resourceConnectAttachmentRead(ctx, d, meta)...)
 }
 
 func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	connectAttachment, err := FindConnectAttachmentByID(ctx, conn, d.Id())
@@ -195,11 +203,11 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager Connect Attachment %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Connect Attachment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Connect Attachment (%s): %s", d.Id(), err)
 	}
 
 	a := connectAttachment.Attachment
@@ -218,7 +226,7 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("edge_location", a.EdgeLocation)
 	if connectAttachment.Options != nil {
 		if err := d.Set("options", []interface{}{flattenConnectOptions(connectAttachment.Options)}); err != nil {
-			return diag.Errorf("setting options: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting options: %s", err)
 		}
 	} else {
 		d.Set("options", nil)
@@ -231,7 +239,7 @@ func resourceConnectAttachmentRead(ctx context.Context, d *schema.ResourceData, 
 
 	setTagsOut(ctx, a.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceConnectAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -240,6 +248,8 @@ func resourceConnectAttachmentUpdate(ctx context.Context, d *schema.ResourceData
 }
 
 func resourceConnectAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	// If ResourceAttachmentAccepter is used, then Connect Attachment state
@@ -247,15 +257,15 @@ func resourceConnectAttachmentDelete(ctx context.Context, d *schema.ResourceData
 	output, err := FindConnectAttachmentByID(ctx, conn, d.Id())
 
 	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Connect Attachment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Connect Attachment (%s): %s", d.Id(), err)
 	}
 
 	if state := aws.StringValue(output.Attachment.State); state == networkmanager.AttachmentStatePendingAttachmentAcceptance || state == networkmanager.AttachmentStatePendingTagAcceptance {
-		return diag.Errorf("cannot delete Network Manager Connect Attachment (%s) in state: %s", d.Id(), state)
+		return sdkdiag.AppendErrorf(diags, "cannot delete Network Manager Connect Attachment (%s) in state: %s", d.Id(), state)
 	}
 
 	log.Printf("[DEBUG] Deleting Network Manager Connect Attachment: %s", d.Id())
@@ -264,18 +274,18 @@ func resourceConnectAttachmentDelete(ctx context.Context, d *schema.ResourceData
 	})
 
 	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Network Manager Connect Attachment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Network Manager Connect Attachment (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitConnectAttachmentDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Network Manager Connect Attachment (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Connect Attachment (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindConnectAttachmentByID(ctx context.Context, conn *networkmanager.NetworkManager, id string) (*networkmanager.ConnectAttachment, error) {

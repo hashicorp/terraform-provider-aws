@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kendra_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strconv"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -40,7 +43,7 @@ func TestAccKendraDataSource_basic(t *testing.T) {
 				Config: testAccDataSourceConfig_basic(rName, rName2, rName3, rName4),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kendra", regexp.MustCompile(`index/.+/data-source/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kendra", regexache.MustCompile(`index/.+/data-source/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "language_code", "en"),
@@ -155,7 +158,7 @@ func TestAccKendraDataSource_description(t *testing.T) {
 				Config: testAccDataSourceConfig_description(rName, rName2, rName3, rName4, originalDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kendra", regexp.MustCompile(`index/.+/data-source/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kendra", regexache.MustCompile(`index/.+/data-source/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", "id"),
@@ -175,7 +178,7 @@ func TestAccKendraDataSource_description(t *testing.T) {
 				Config: testAccDataSourceConfig_description(rName, rName2, rName3, rName4, updatedDescription),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataSourceExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kendra", regexp.MustCompile(`index/.+/data-source/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kendra", regexache.MustCompile(`index/.+/data-source/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "index_id", "aws_kendra_index.test", "id"),
@@ -398,15 +401,15 @@ func TestAccKendraDataSource_typeCustomCustomizeDiff(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataSourceConfig_typeCustomConflictRoleARN(rName, rName2, rName3, rName4, rName5),
-				ExpectError: regexp.MustCompile(`role_arn must not be set when type is CUSTOM`),
+				ExpectError: regexache.MustCompile(`role_arn must not be set when type is CUSTOM`),
 			},
 			{
 				Config:      testAccDataSourceConfig_typeCustomConflictConfiguration(rName, rName2, rName3, rName4, rName5),
-				ExpectError: regexp.MustCompile(`configuration must not be set when type is CUSTOM`),
+				ExpectError: regexache.MustCompile(`configuration must not be set when type is CUSTOM`),
 			},
 			{
 				Config:      testAccDataSourceConfig_typeCustomConflictSchedule(rName, rName2, rName3, rName4, rName5),
-				ExpectError: regexp.MustCompile(`schedule must not be set when type is CUSTOM`),
+				ExpectError: regexache.MustCompile(`schedule must not be set when type is CUSTOM`),
 			},
 		},
 	})

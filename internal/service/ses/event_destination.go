@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -47,7 +50,7 @@ func ResourceEventDestination() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 256),
-								validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_\-\.@]+$`), "must contain only alphanumeric, underscore, hyphen, period, and at signs characters"),
+								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.@-]+$`), "must contain only alphanumeric, underscore, hyphen, period, and at signs characters"),
 							),
 						},
 						"dimension_name": {
@@ -55,7 +58,7 @@ func ResourceEventDestination() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 256),
-								validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_:-]+$`), "must contain only alphanumeric, underscore, and hyphen characters"),
+								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_:-]+$`), "must contain only alphanumeric, underscore, and hyphen characters"),
 							),
 						},
 						"value_source": {
@@ -114,7 +117,7 @@ func ResourceEventDestination() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z_-]+$`), "must contain only alphanumeric, underscore, and hyphen characters"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric, underscore, and hyphen characters"),
 				),
 			},
 			"sns_destination": {

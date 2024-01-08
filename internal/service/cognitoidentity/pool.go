@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidentity
 
 import (
@@ -178,7 +181,7 @@ func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return create.DiagError(names.CognitoIdentity, create.ErrActionReading, ResNamePool, d.Id(), err)
+		return create.AppendDiagError(diags, names.CognitoIdentity, create.ErrActionReading, ResNamePool, d.Id(), err)
 	}
 
 	arn := arn.ARN{

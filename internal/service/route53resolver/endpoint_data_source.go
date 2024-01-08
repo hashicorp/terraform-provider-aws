@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53resolver
 
 import (
@@ -51,9 +54,18 @@ func DataSourceEndpoint() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"protocols": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+			},
 			"resolver_endpoint_id": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"resolver_endpoint_type": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -112,7 +124,9 @@ func dataSourceEndpointRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("arn", ep.Arn)
 	d.Set("direction", ep.Direction)
 	d.Set("name", ep.Name)
+	d.Set("protocols", aws.StringValueSlice(ep.Protocols))
 	d.Set("resolver_endpoint_id", ep.Id)
+	d.Set("resolver_endpoint_type", ep.ResolverEndpointType)
 	d.Set("status", ep.Status)
 	d.Set("vpc_id", ep.HostVPCId)
 

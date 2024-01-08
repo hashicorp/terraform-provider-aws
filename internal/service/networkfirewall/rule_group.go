@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkfirewall
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -15,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -92,8 +96,8 @@ func ResourceRuleGroup() *schema.Resource {
 													Required: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 32),
-														validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-														validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_]+$`), "must contain only alphanumeric and underscore characters"),
+														validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+														validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]+$`), "must contain only alphanumeric and underscore characters"),
 													),
 												},
 											},
@@ -355,8 +359,8 @@ func ResourceRuleGroup() *schema.Resource {
 													Required: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 32),
-														validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-														validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_]+$`), "must contain only alphanumeric and underscore characters"),
+														validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+														validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]+$`), "must contain only alphanumeric and underscore characters"),
 													),
 												},
 												"ip_set": {
@@ -386,8 +390,8 @@ func ResourceRuleGroup() *schema.Resource {
 													Required: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 32),
-														validation.StringMatch(regexp.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
-														validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_]+$`), "must contain only alphanumeric and underscore characters"),
+														validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+														validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_]+$`), "must contain only alphanumeric and underscore characters"),
 													),
 												},
 												"port_set": {
@@ -456,6 +460,8 @@ func ResourceRuleGroup() *schema.Resource {
 }
 
 func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	name := d.Get("name").(string)
@@ -485,15 +491,17 @@ func resourceRuleGroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 	output, err := conn.CreateRuleGroupWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating NetworkFirewall Rule Group (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating NetworkFirewall Rule Group (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.RuleGroupResponse.RuleGroupArn))
 
-	return resourceRuleGroupRead(ctx, d, meta)
+	return append(diags, resourceRuleGroupRead(ctx, d, meta)...)
 }
 
 func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	output, err := FindRuleGroupByARN(ctx, conn, d.Id())
@@ -505,11 +513,11 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] NetworkFirewall Rule Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading NetworkFirewall Rule Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Rule Group (%s): %s", d.Id(), err)
 	}
 
 	response := output.RuleGroupResponse
@@ -519,17 +527,19 @@ func resourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("encryption_configuration", flattenEncryptionConfiguration(response.EncryptionConfiguration))
 	d.Set("name", response.RuleGroupName)
 	if err := d.Set("rule_group", flattenRuleGroup(output.RuleGroup)); err != nil {
-		return diag.Errorf("setting rule_group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting rule_group: %s", err)
 	}
 	d.Set("type", response.Type)
 	d.Set("update_token", output.UpdateToken)
 
 	setTagsOut(ctx, response.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	if d.HasChanges("description", "encryption_configuration", "rule_group", "rules", "type") {
@@ -570,14 +580,16 @@ func resourceRuleGroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		_, err := conn.UpdateRuleGroupWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating NetworkFirewall Rule Group (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating NetworkFirewall Rule Group (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceRuleGroupRead(ctx, d, meta)
+	return append(diags, resourceRuleGroupRead(ctx, d, meta)...)
 }
 
 func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	const (
 		timeout = 10 * time.Minute
 	)
@@ -591,18 +603,18 @@ func resourceRuleGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}, networkfirewall.ErrCodeInvalidOperationException, "Unable to delete the object because it is still in use")
 
 	if tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting NetworkFirewall Rule Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting NetworkFirewall Rule Group (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitRuleGroupDeleted(ctx, conn, d.Id(), timeout); err != nil {
-		return diag.Errorf("waiting for NetworkFirewall Rule Group (%s) delete : %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for NetworkFirewall Rule Group (%s) delete : %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindRuleGroupByARN(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.DescribeRuleGroupOutput, error) {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
@@ -6,6 +9,7 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/go-version"
 )
 
@@ -299,87 +303,85 @@ type mockGetChangeDiffer struct {
 	old, new string
 }
 
-func (d *mockGetChangeDiffer) GetChange(key string) (interface{}, interface{}) {
+func (d *mockGetChangeDiffer) GetChange(key string) (any, any) {
 	return d.old, d.new
+}
+
+func (d *mockGetChangeDiffer) Get(key string) any {
+	return ""
 }
 
 func TestCustomizeDiffEngineVersionIsDowngrade(t *testing.T) {
 	t.Parallel()
 
 	testcases := map[string]struct {
-		old, new string
-		expected bool
+		old, new    string
+		isDowngrade bool
 	}{
 		"no change": {
-			old:      "1.2.3",
-			new:      "1.2.3",
-			expected: false,
+			old:         "1.2.3",
+			new:         "1.2.3",
+			isDowngrade: false,
 		},
 
 		"upgrade minor versions": {
-			old:      "1.2.3",
-			new:      "1.3.5",
-			expected: false,
+			old:         "1.2.3",
+			new:         "1.3.5",
+			isDowngrade: false,
 		},
 
 		"upgrade major versions": {
-			old:      "1.2.3",
-			new:      "2.4.6",
-			expected: false,
+			old:         "1.2.3",
+			new:         "2.4.6",
+			isDowngrade: false,
 		},
 
 		"upgrade major 6.x": {
-			old:      "5.0.6",
-			new:      "6.x",
-			expected: false,
+			old:         "5.0.6",
+			new:         "6.x",
+			isDowngrade: false,
 		},
 
 		"upgrade major 6.digit": {
-			old:      "5.0.6",
-			new:      "6.0",
-			expected: false,
+			old:         "5.0.6",
+			new:         "6.0",
+			isDowngrade: false,
 		},
 
 		"downgrade minor versions": {
-			old:      "1.3.5",
-			new:      "1.2.3",
-			expected: true,
+			old:         "1.3.5",
+			new:         "1.2.3",
+			isDowngrade: true,
 		},
 
 		"downgrade major versions": {
-			old:      "2.4.6",
-			new:      "1.2.3",
-			expected: true,
-		},
-
-		"downgrade from major 6.x": {
-			old:      "6.x",
-			new:      "5.0.6",
-			expected: true,
+			old:         "2.4.6",
+			new:         "1.2.3",
+			isDowngrade: true,
 		},
 
 		"downgrade major 6.digit": {
-			old:      "6.2",
-			new:      "6.0",
-			expected: true,
+			old:         "6.2",
+			new:         "6.0",
+			isDowngrade: true,
 		},
 
 		"switch major 6.digit to 6.x": {
-			old:      "6.2",
-			new:      "6.x",
-			expected: false,
+			old:         "6.2",
+			new:         "6.x",
+			isDowngrade: false,
 		},
 
 		"downgrade from major 7.digit to 6.x": {
-			old:      "7.2",
-			new:      "6.x",
-			expected: true,
+			old:         "7.2",
+			new:         "6.x",
+			isDowngrade: true,
 		},
 
 		"downgrade from major 7.digit to 6.digit": {
-			old:      "7.2",
-			new:      "6.2",
-			expected: true,
+			old:         "7.2",
+			new:         "6.2",
+			isDowngrade: true,
 		},
 	}
 
@@ -399,8 +401,84 @@ func TestCustomizeDiffEngineVersionIsDowngrade(t *testing.T) {
 				t.Fatalf("no error expected, got %s", err)
 			}
 
-			if testcase.expected != actual {
-				t.Errorf("expected %t, got %t", testcase.expected, actual)
+			if testcase.isDowngrade != actual {
+				t.Errorf("expected %t, got %t", testcase.isDowngrade, actual)
+			}
+		})
+	}
+}
+
+func TestCustomizeDiffEngineVersionIsDowngrade_6xTo6digit(t *testing.T) {
+	t.Parallel()
+
+	// Version 6.x currently maps to v6.2. In case that changes, we need to check
+	testcases := map[string]struct {
+		versionOld       string
+		actualVersionOld string
+		versionNew       string
+		isDowngrade      bool
+	}{
+		"minor downgrade to 6.0": {
+			versionOld:       "6.x",
+			actualVersionOld: "6.2.1",
+			versionNew:       "6.0",
+			isDowngrade:      true,
+		},
+
+		"same version": {
+			versionOld:       "6.x",
+			actualVersionOld: "6.2.1",
+			versionNew:       "6.2",
+			isDowngrade:      false,
+		},
+
+		"minor upgrade": {
+			versionOld:       "6.x",
+			actualVersionOld: "6.2.1",
+			versionNew:       "6.4",
+			isDowngrade:      false,
+		},
+
+		"major downgrade from 6.x": {
+			versionOld:       "6.x",
+			actualVersionOld: "6.2.1",
+			versionNew:       "5.0.6",
+			isDowngrade:      true,
+		},
+
+		"major upgrade from 6.x": {
+			versionOld:       "6.x",
+			actualVersionOld: "6.2.1",
+			versionNew:       "7.0",
+			isDowngrade:      false,
+		},
+	}
+
+	for name, testcase := range testcases {
+		testcase := testcase
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			diff := mockChangesDiffer{
+				values: map[string]mockDiff{
+					"engine_version": {
+						old: testcase.versionOld,
+						new: testcase.versionNew,
+					},
+					"engine_version_actual": {
+						old: testcase.actualVersionOld,
+					},
+				},
+			}
+
+			actual, err := engineVersionIsDowngrade(&diff)
+
+			if err != nil {
+				t.Fatalf("no error expected, got %s", err)
+			}
+
+			if testcase.isDowngrade != actual {
+				t.Errorf("expected %t, got %t", testcase.isDowngrade, actual)
 			}
 		})
 	}
@@ -417,11 +495,15 @@ func (d *mockForceNewDiffer) Id() string {
 	return d.id
 }
 
+func (d *mockForceNewDiffer) Get(key string) any {
+	return d.old
+}
+
 func (d *mockForceNewDiffer) HasChange(key string) bool {
 	return d.hasChange || d.old != d.new
 }
 
-func (d *mockForceNewDiffer) GetChange(key string) (interface{}, interface{}) {
+func (d *mockForceNewDiffer) GetChange(key string) (any, any) {
 	return d.old, d.new
 }
 
@@ -483,7 +565,7 @@ func TestCustomizeDiffEngineVersionForceNewOnDowngrade(t *testing.T) {
 		},
 
 		"upgrade major 7.digit": {
-			old:            "6.x",
+			old:            "6.2",
 			new:            "7.0",
 			expectForceNew: false,
 		},
@@ -497,12 +579,6 @@ func TestCustomizeDiffEngineVersionForceNewOnDowngrade(t *testing.T) {
 		"downgrade major versions": {
 			old:            "2.4.6",
 			new:            "1.2.3",
-			expectForceNew: true,
-		},
-
-		"downgrade from major 6.x": {
-			old:            "6.x",
-			new:            "5.0.6",
 			expectForceNew: true,
 		},
 
@@ -674,11 +750,15 @@ type mockDiff struct {
 	hasChange bool // force HasChange() to return true
 }
 
+func (d mockDiff) Get() any {
+	return d.old
+}
+
 func (d mockDiff) HasChange() bool {
 	return d.hasChange || d.old != d.new
 }
 
-func (d mockDiff) GetChange() (interface{}, interface{}) {
+func (d mockDiff) GetChange() (any, any) {
 	return d.old, d.new
 }
 
@@ -691,11 +771,15 @@ func (d *mockChangesDiffer) Id() string {
 	return d.id
 }
 
+func (d *mockChangesDiffer) Get(key string) any {
+	return d.values[key].Get()
+}
+
 func (d *mockChangesDiffer) HasChange(key string) bool {
 	return d.values[key].HasChange()
 }
 
-func (d *mockChangesDiffer) GetChange(key string) (interface{}, interface{}) {
+func (d *mockChangesDiffer) GetChange(key string) (any, any) {
 	return d.values[key].GetChange()
 }
 
@@ -727,7 +811,7 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 			isNew:       true,
 			paramOld:    "old",
 			paramNew:    "",
-			expectError: regexp.MustCompile(`cannot change parameter group name without upgrading major engine version`),
+			expectError: regexache.MustCompile(`cannot change parameter group name without upgrading major engine version`),
 		},
 
 		// new resource with version changes can only be verified at apply-time
@@ -748,7 +832,7 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 			paramNew:    "new",
 			versionOld:  "6.0",
 			versionNew:  "6.0",
-			expectError: regexp.MustCompile(`cannot change parameter group name without upgrading major engine version`),
+			expectError: regexache.MustCompile(`cannot change parameter group name without upgrading major engine version`),
 		},
 
 		"update, param group change, version spurious diff": {
@@ -757,7 +841,7 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 			versionOld:       "6.0",
 			versionNew:       "6.0",
 			versionHasChange: true,
-			expectError:      regexp.MustCompile(`cannot change parameter group name without upgrading major engine version`),
+			expectError:      regexache.MustCompile(`cannot change parameter group name without upgrading major engine version`),
 		},
 
 		"update, param group change, minor version change": {
@@ -765,7 +849,7 @@ func TestParamGroupNameRequiresMajorVersionUpgrade(t *testing.T) {
 			paramNew:    "new",
 			versionOld:  "6.0",
 			versionNew:  "6.2",
-			expectError: regexp.MustCompile(`cannot change parameter group name on minor engine version upgrade, upgrading from 6\.0\.[[:digit:]]+ to 6\.2\.[[:digit:]]+`),
+			expectError: regexache.MustCompile(`cannot change parameter group name on minor engine version upgrade, upgrading from 6\.0\.[[:digit:]]+ to 6\.2\.[[:digit:]]+`),
 		},
 
 		"update, param group change, major version change": {

@@ -37,17 +37,26 @@ The following arguments are required:
 * `account_name` - (Required) User name of the account. This account must have the following privileges: create computer objects, join computers to the domain, and change/reset the password on descendant computer objects for the organizational units specified.
 * `account_password` - (Required) Password for the account.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique identifier (ID) of the appstream directory config.
 * `created_time` -  Date and time, in UTC and extended RFC 3339 format, when the directory config was created.
 
 ## Import
 
-`aws_appstream_directory_config` can be imported using the id, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appstream_directory_config` using the id. For example:
 
+```terraform
+import {
+  to = aws_appstream_directory_config.example
+  id = "directoryNameExample"
+}
 ```
-$ terraform import aws_appstream_directory_config.example directoryNameExample
+
+Using `terraform import`, import `aws_appstream_directory_config` using the id. For example:
+
+```console
+% terraform import aws_appstream_directory_config.example directoryNameExample
 ```

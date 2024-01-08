@@ -3,63 +3,29 @@ package conns
 
 import (
 	"context"
-	"net/http"
 
 {{ range .Services }}
-	{{- if eq .SDKVersion "1" }}
-	"github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
-	{{- else if eq .SDKVersion "2" }}
-	"github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
-	{{- else if eq .SDKVersion "1,2" }}
-	"github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
-	{{ .GoV2PackageOverride }} "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
+	{{- if eq .SDKVersion "1" "1,2" }}
+	{{ .GoV1Package }}_sdkv1 "github.com/aws/aws-sdk-go/service/{{ .GoV1Package }}"
+	{{- end }}
+	{{- if eq .SDKVersion "2" "1,2" }}
+	{{ .GoV2Package }}_sdkv2 "github.com/aws/aws-sdk-go-v2/service/{{ .GoV2Package }}"
 	{{- end }}
 {{- end }}
-	"github.com/aws/aws-sdk-go/aws/session"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-type AWSClient struct {
-	AccountID                 string
-	DefaultTagsConfig         *tftags.DefaultConfig
-	DNSSuffix                 string
-	IgnoreTagsConfig          *tftags.IgnoreConfig
-	MediaConvertAccountConn   *mediaconvert.MediaConvert
-	Partition                 string
-	Region                    string
-	ReverseDNSPrefix          string
-	ServicePackages           map[string]ServicePackage
-	Session                   *session.Session
-	TerraformVersion          string
-
-	httpClient                *http.Client
-
 {{ range .Services }}
-	{{- if ne .SDKVersion "1,2" }}{{continue}}{{- end }}
-	{{ .ProviderPackage }}Client lazyClient[*{{ .GoV2PackageOverride }}.{{ .ClientTypeName }}]
-{{- end }}
-
-{{ range .Services }}
-	{{- if eq .SDKVersion "1" }}
-	{{ .ProviderPackage }}Conn *{{ .GoV1Package }}.{{ .ClientTypeName }}
-	{{- else if eq .SDKVersion "2" }}
-	{{ .ProviderPackage }}Client *{{ .GoV2Package }}.{{ .ClientTypeName }}
+	{{if eq .SDKVersion "1" "1,2" }}
+func (c *AWSClient) {{ .ProviderNameUpper }}Conn(ctx context.Context) *{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }} {
+	return errs.Must(conn[*{{ .GoV1Package }}_sdkv1.{{ .GoV1ClientTypeName }}](ctx, c, names.{{ .ProviderNameUpper }}, make(map[string]any)))
+}
 	{{- end }}
-{{- end }}
-}
 
-{{ range .Services }}
-	{{- if eq .SDKVersion "1" }}
-func (client *AWSClient) {{ .ProviderNameUpper }}Conn(context.Context) *{{ .GoV1Package }}.{{ .ClientTypeName }} {
-	return client.{{ .ProviderPackage }}Conn
-}
-	{{- else if eq .SDKVersion "2" }}
-func (client *AWSClient) {{ .ProviderNameUpper }}Client(context.Context) *{{ .GoV2Package }}.{{ .ClientTypeName }} {
-	return client.{{ .ProviderPackage }}Client
-}
-	{{- else if eq .SDKVersion "1,2" }}
-func (client *AWSClient) {{ .ProviderNameUpper }}Client(context.Context) *{{ .GoV2PackageOverride }}.{{ .ClientTypeName }} {
-	return client.{{ .ProviderPackage }}Client.Client()
+	{{if eq .SDKVersion "2" "1,2" }}
+func (c *AWSClient) {{ .ProviderNameUpper }}Client(ctx context.Context) *{{ .GoV2Package }}_sdkv2.Client {
+	return errs.Must(client[*{{ .GoV2Package }}_sdkv2.Client](ctx, c, names.{{ .ProviderNameUpper }}, make(map[string]any)))
 }
 	{{- end }}
 {{ end }}

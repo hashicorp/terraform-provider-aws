@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -379,7 +382,7 @@ func TestAccIAMRole_badJSON(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRoleConfig_badJSON(rName),
-				ExpectError: regexp.MustCompile(`.*contains an invalid JSON:.*`),
+				ExpectError: regexache.MustCompile(`.*contains an invalid JSON policy:.*`),
 			},
 		},
 	})
@@ -453,11 +456,11 @@ func TestAccIAMRole_maxSessionDuration(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRoleConfig_maxSessionDuration(rName, 3599),
-				ExpectError: regexp.MustCompile(`expected max_session_duration to be in the range`),
+				ExpectError: regexache.MustCompile(`expected max_session_duration to be in the range`),
 			},
 			{
 				Config:      testAccRoleConfig_maxSessionDuration(rName, 43201),
-				ExpectError: regexp.MustCompile(`expected max_session_duration to be in the range`),
+				ExpectError: regexache.MustCompile(`expected max_session_duration to be in the range`),
 			},
 			{
 				Config: testAccRoleConfig_maxSessionDuration(rName, 3700),
@@ -542,6 +545,27 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 			// Test addition
 			{
 				Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
+					testAccCheckRolePermissionsBoundary(&role, permissionsBoundary1),
+				),
+			},
+			// Test drift detection
+			{
+				PreConfig: func() {
+					// delete the boundary manually
+					conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+					input := &iam.DeleteRolePermissionsBoundaryInput{
+						RoleName: role.RoleName,
+					}
+					_, err := conn.DeleteRolePermissionsBoundaryWithContext(ctx, input)
+					if err != nil {
+						t.Fatalf("Failed to delete permission_boundary from role (%s): %s", aws.StringValue(role.RoleName), err)
+					}
+				},
+				Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
+				// check the boundary was restored
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),

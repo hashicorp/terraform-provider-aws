@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -10,7 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_api_gateway_account")
@@ -26,9 +31,19 @@ func ResourceAccount() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"cloudwatch_role_arn": {
+			"api_key_version": {
 				Type:     schema.TypeString,
-				Optional: true,
+				Computed: true,
+			},
+			"cloudwatch_role_arn": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"features": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
 			},
 			"throttle_settings": {
 				Type:     schema.TypeList,
@@ -56,9 +71,6 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	input := &apigateway.UpdateAccountInput{}
 
-	// Unfortunately AWS API doesn't allow empty ARNs,
-	// even though that's default settings for new AWS accounts
-	// BadRequestException: The role ARN is not well formed
 	if v, ok := d.GetOk("cloudwatch_role_arn"); ok {
 		input.PatchOperations = []*apigateway.PatchOperation{{
 			Op:    aws.String(apigateway.OpReplace),
@@ -66,7 +78,11 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			Value: aws.String(v.(string)),
 		}}
 	} else {
-		input.PatchOperations = []*apigateway.PatchOperation{}
+		input.PatchOperations = []*apigateway.PatchOperation{{
+			Op:    aws.String(apigateway.OpReplace),
+			Path:  aws.String("/cloudwatchRoleArn"),
+			Value: aws.String(""),
+		}}
 	}
 
 	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
@@ -107,13 +123,9 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Account: %s", err)
 	}
 
-	if _, ok := d.GetOk("cloudwatch_role_arn"); ok {
-		// Backwards compatibility:
-		// CloudwatchRoleArn cannot be empty nor made empty via API
-		// This resource can however be useful w/out defining cloudwatch_role_arn
-		// (e.g. for referencing throttle_settings)
-		d.Set("cloudwatch_role_arn", account.CloudwatchRoleArn)
-	}
+	d.Set("api_key_version", account.ApiKeyVersion)
+	d.Set("cloudwatch_role_arn", account.CloudwatchRoleArn)
+	d.Set("features", flex.FlattenStringSet(account.Features))
 	if err := d.Set("throttle_settings", flattenThrottleSettings(account.ThrottleSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting throttle_settings: %s", err)
 	}

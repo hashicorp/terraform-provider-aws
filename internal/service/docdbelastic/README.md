@@ -6,5 +6,5 @@ This area is primarily for AWS provider contributors and maintainers. For inform
 
 * [Find out about contributing](https://hashicorp.github.io/terraform-provider-aws/#contribute) to the AWS provider!
 * AWS Provider Docs: [Home](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
-* AWS Provider Docs: [One of the DocDB resources](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/docdb_cluster)
-* AWS Docs: [AWS SDK for Go DocDB](https://docs.aws.amazon.com/sdk-for-go/api/service/docdb/)
+* AWS Provider Docs: [One of the DocDB Elastic resources](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/docdbelastic_cluster)
+* AWS Docs: [AWS SDK for Go v2 DocDB Elastic](https://pkg.go.dev/github.com/aws/aws-sdk-go/service/docdbelastic)

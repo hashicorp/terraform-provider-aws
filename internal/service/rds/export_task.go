@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -20,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -369,7 +372,7 @@ func (rd *resourceExportTaskData) refreshFromOutput(ctx context.Context, out *aw
 	rd.FailureCause = flex.StringToFramework(ctx, out.FailureCause)
 	rd.IAMRoleArn = flex.StringToFramework(ctx, out.IamRoleArn)
 	rd.KMSKeyID = flex.StringToFramework(ctx, out.KmsKeyId)
-	rd.PercentProgress = types.Int64Value(int64(out.PercentProgress))
+	rd.PercentProgress = types.Int64Value(int64(aws.ToInt32(out.PercentProgress)))
 	rd.S3BucketName = flex.StringToFramework(ctx, out.S3Bucket)
 	rd.S3Prefix = flex.StringToFramework(ctx, out.S3Prefix)
 	rd.SnapshotTime = timeToFramework(ctx, out.SnapshotTime)

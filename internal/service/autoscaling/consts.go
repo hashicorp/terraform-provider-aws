@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling
 
 import (
@@ -82,3 +85,31 @@ const (
 	TrafficSourceStateRemoving  = "Removing"
 	TrafficSourceStateRemoved   = "Removed"
 )
+
+const (
+	launchTemplateIDUnknown = "unknown"
+)
+
+const (
+	lifecycleHookDefaultResultAbandon  = "ABANDON"
+	lifecycleHookDefaultResultContinue = "CONTINUE"
+)
+
+func lifecycleHookDefaultResult_Values() []string {
+	return []string{
+		lifecycleHookDefaultResultAbandon,
+		lifecycleHookDefaultResultContinue,
+	}
+}
+
+const (
+	lifecycleHookLifecycleTransitionInstanceLaunching   = "autoscaling:EC2_INSTANCE_LAUNCHING"
+	lifecycleHookLifecycleTransitionInstanceTerminating = "autoscaling:EC2_INSTANCE_TERMINATING"
+)
+
+func lifecycleHookLifecycleTransition_Values() []string {
+	return []string{
+		lifecycleHookLifecycleTransitionInstanceLaunching,
+		lifecycleHookLifecycleTransitionInstanceTerminating,
+	}
+}

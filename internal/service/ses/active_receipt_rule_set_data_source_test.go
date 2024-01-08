@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ses"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -52,7 +55,7 @@ func testAccActiveReceiptRuleSetDataSource_noActiveRuleSet(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccActiveReceiptRuleSetDataSourceConfig_noActiveRuleSet(),
-				ExpectError: regexp.MustCompile("empty result"),
+				ExpectError: regexache.MustCompile("empty result"),
 			},
 		},
 	})

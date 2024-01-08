@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -159,7 +162,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		iamPolicy := &policyWithVersion{}
 
-		if v, err := FindPolicyByARN(ctx, conn, d.Id()); err == nil {
+		if v, err := findPolicyByARN(ctx, conn, d.Id()); err == nil {
 			iamPolicy.policy = v
 		} else {
 			return nil, err
@@ -345,7 +348,7 @@ func policyDeleteVersion(ctx context.Context, conn *iam.IAM, arn, versionID stri
 	return nil
 }
 
-func FindPolicyByARN(ctx context.Context, conn *iam.IAM, arn string) (*iam.Policy, error) {
+func findPolicyByARN(ctx context.Context, conn *iam.IAM, arn string) (*iam.Policy, error) {
 	input := &iam.GetPolicyInput{
 		PolicyArn: aws.String(arn),
 	}

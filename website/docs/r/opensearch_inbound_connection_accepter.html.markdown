@@ -40,21 +40,37 @@ resource "aws_opensearch_inbound_connection_accepter" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `connection_id` - (Required, Forces new resource) Specifies the ID of the connection to accept.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The Id of the connection to accept.
 * `connection_status` - Status of the connection request.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
+
 ## Import
 
-AWS Opensearch Inbound Connection Accepters can be imported by using the Inbound Connection ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS Opensearch Inbound Connection Accepters using the Inbound Connection ID. For example:
 
+```terraform
+import {
+  to = aws_opensearch_inbound_connection_accepter.foo
+  id = "connection-id"
+}
 ```
-$ terraform import aws_opensearch_inbound_connection_accepter.foo connection-id
+
+Using `terraform import`, import AWS Opensearch Inbound Connection Accepters using the Inbound Connection ID. For example:
+
+```console
+% terraform import aws_opensearch_inbound_connection_accepter.foo connection-id
 ```

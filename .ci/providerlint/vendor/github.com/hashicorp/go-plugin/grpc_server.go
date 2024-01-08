@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package plugin
 
 import (
@@ -9,6 +12,7 @@ import (
 	"net"
 
 	hclog "github.com/hashicorp/go-hclog"
+	"github.com/hashicorp/go-plugin/internal/grpcmux"
 	"github.com/hashicorp/go-plugin/internal/plugin"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
@@ -58,6 +62,8 @@ type GRPCServer struct {
 	stdioServer *grpcStdioServer
 
 	logger hclog.Logger
+
+	muxer *grpcmux.GRPCServerMuxer
 }
 
 // ServerProtocol impl.
@@ -81,7 +87,7 @@ func (s *GRPCServer) Init() error {
 	// Register the broker service
 	brokerServer := newGRPCBrokerServer()
 	plugin.RegisterGRPCBrokerServer(s.server, brokerServer)
-	s.broker = newGRPCBroker(brokerServer, s.TLS)
+	s.broker = newGRPCBroker(brokerServer, s.TLS, unixSocketConfigFromEnv(), nil, s.muxer)
 	go s.broker.Run()
 
 	// Register the controller

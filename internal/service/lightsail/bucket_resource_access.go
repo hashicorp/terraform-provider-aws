@@ -1,9 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail
 
 import (
 	"context"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
@@ -38,19 +41,21 @@ func ResourceBucketResourceAccess() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-z0-9][a-z0-9-]{1,52}[a-z0-9]$`), "Invalid Bucket name. Must match regex: ^[a-z0-9][a-z0-9-]{1,52}[a-z0-9]$"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z][0-9a-z-]{1,52}[0-9a-z]$`), "Invalid Bucket name. Must match regex: ^[0-9a-z][0-9a-z-]{1,52}[0-9a-z]$"),
 			},
 			"resource_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`\w[\w\-]*\w`), "Invalid resource name. Must match regex: \\w[\\w\\-]*\\w"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`\w[\w\-]*\w`), "Invalid resource name. Must match regex: \\w[\\w\\-]*\\w"),
 			},
 		},
 	}
 }
 
 func resourceBucketResourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	in := lightsail.SetResourceAccessForBucketInput{
@@ -62,7 +67,7 @@ func resourceBucketResourceAccessCreate(ctx context.Context, d *schema.ResourceD
 	out, err := conn.SetResourceAccessForBucket(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeSetResourceAccessForBucket), ResBucketResourceAccess, d.Get("bucket_name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeSetResourceAccessForBucket), ResBucketResourceAccess, d.Get("bucket_name").(string), err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeSetResourceAccessForBucket, ResBucketResourceAccess, d.Get("bucket_name").(string))
@@ -75,15 +80,17 @@ func resourceBucketResourceAccessCreate(ctx context.Context, d *schema.ResourceD
 	id, err := flex.FlattenResourceId(idParts, BucketResourceAccessIdPartsCount, false)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionFlatteningResourceId, ResBucketResourceAccess, d.Get("bucket_name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionFlatteningResourceId, ResBucketResourceAccess, d.Get("bucket_name").(string), err)
 	}
 
 	d.SetId(id)
 
-	return resourceBucketResourceAccessRead(ctx, d, meta)
+	return append(diags, resourceBucketResourceAccessRead(ctx, d, meta)...)
 }
 
 func resourceBucketResourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindBucketResourceAccessById(ctx, conn, d.Id())
@@ -91,31 +98,33 @@ func resourceBucketResourceAccessRead(ctx context.Context, d *schema.ResourceDat
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResBucketResourceAccess, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResBucketResourceAccess, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResBucketResourceAccess, d.Id(), err)
 	}
 
 	parts, err := flex.ExpandResourceId(d.Id(), BucketResourceAccessIdPartsCount, false)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionExpandingResourceId, ResBucketResourceAccess, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionExpandingResourceId, ResBucketResourceAccess, d.Id(), err)
 	}
 
 	d.Set("bucket_name", parts[0])
 	d.Set("resource_name", out.Name)
 
-	return nil
+	return diags
 }
 
 func resourceBucketResourceAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	parts, err := flex.ExpandResourceId(d.Id(), BucketResourceAccessIdPartsCount, false)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionExpandingResourceId, ResBucketResourceAccess, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionExpandingResourceId, ResBucketResourceAccess, d.Id(), err)
 	}
 
 	out, err := conn.SetResourceAccessForBucket(ctx, &lightsail.SetResourceAccessForBucketInput{
@@ -125,11 +134,11 @@ func resourceBucketResourceAccessDelete(ctx context.Context, d *schema.ResourceD
 	})
 
 	if err != nil && errs.IsA[*types.NotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeSetResourceAccessForBucket), ResBucketResourceAccess, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeSetResourceAccessForBucket), ResBucketResourceAccess, d.Id(), err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeSetResourceAccessForBucket, ResBucketResourceAccess, d.Id())
@@ -138,7 +147,7 @@ func resourceBucketResourceAccessDelete(ctx context.Context, d *schema.ResourceD
 		return diag
 	}
 
-	return nil
+	return diags
 }
 
 func FindBucketResourceAccessById(ctx context.Context, conn *lightsail.Client, id string) (*types.ResourceReceivingAccess, error) {

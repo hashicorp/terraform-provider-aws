@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lambda
 
 import (
@@ -161,7 +164,7 @@ func ResourceEventSourceMapping() *schema.Resource {
 						"filter": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							MaxItems: 5,
+							MaxItems: 10,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"pattern": {
@@ -232,9 +235,10 @@ func ResourceEventSourceMapping() *schema.Resource {
 				Computed:     true,
 			},
 			"queues": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				ForceNew: true,
+				MaxItems: 1,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringLenBetween(1, 1000),
@@ -426,8 +430,8 @@ func resourceEventSourceMappingCreate(ctx context.Context, d *schema.ResourceDat
 		input.ParallelizationFactor = aws.Int64(int64(v.(int)))
 	}
 
-	if v, ok := d.GetOk("queues"); ok && v.(*schema.Set).Len() > 0 {
-		input.Queues = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := d.GetOk("queues"); ok && len(v.([]interface{})) > 0 {
+		input.Queues = flex.ExpandStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("scaling_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {

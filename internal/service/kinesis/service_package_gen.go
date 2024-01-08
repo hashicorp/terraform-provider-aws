@@ -5,6 +5,7 @@ package kinesis
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -16,7 +17,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourcePolicyResource,
+			Name:    "Resource Policy",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -26,8 +32,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_kinesis_stream",
 		},
 		{
-			Factory:  DataSourceStreamConsumer,
+			Factory:  dataSourceStreamConsumer,
 			TypeName: "aws_kinesis_stream_consumer",
+			Name:     "Stream Consumer",
 		},
 	}
 }
@@ -35,7 +42,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceStream,
+			Factory:  resourceStream,
 			TypeName: "aws_kinesis_stream",
 			Name:     "Stream",
 			Tags: &types.ServicePackageResourceTags{
@@ -43,8 +50,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceStreamConsumer,
+			Factory:  resourceStreamConsumer,
 			TypeName: "aws_kinesis_stream_consumer",
+			Name:     "Stream Consumer",
 		},
 	}
 }
@@ -53,4 +61,6 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.Kinesis
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

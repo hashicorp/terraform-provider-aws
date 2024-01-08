@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -43,298 +46,301 @@ func ResourceTheme() *schema.Resource {
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"aws_account_id": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidAccountID,
-			},
-			"base_theme_id": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ThemeConfiguration.html
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"data_color_palette": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataColorPalette.html
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"colors": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 8, // Colors size needs to be in the range between 8 and 20
-										MaxItems: 20,
-										Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"aws_account_id": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					Computed:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidAccountID,
+				},
+				"base_theme_id": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ThemeConfiguration.html
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"data_color_palette": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataColorPalette.html
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"colors": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 8, // Colors size needs to be in the range between 8 and 20
+											MaxItems: 20,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
+											},
+										},
+										"empty_fill_color": {
 											Type:         schema.TypeString,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
+										},
+										"min_max_gradient": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 2, // MinMaxGradient size needs to be 2
+											MaxItems: 2,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
+											},
 										},
 									},
-									"empty_fill_color": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+								},
+							},
+							"sheet": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetStyle.html
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"tile": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TileStyle.html
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"border": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BorderStyle.html
+														Type:     schema.TypeList,
+														MaxItems: 1,
+														Optional: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"show": {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
+										"tile_layout": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TileLayoutStyle.html
+											Type:     schema.TypeList,
+											MaxItems: 1,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"gutter": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GutterStyle.html
+														Type:     schema.TypeList,
+														MaxItems: 1,
+														Optional: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"show": {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																},
+															},
+														},
+													},
+													"margin": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MarginStyle.html
+														Type:     schema.TypeList,
+														MaxItems: 1,
+														Optional: true,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"show": {
+																	Type:     schema.TypeBool,
+																	Optional: true,
+																},
+															},
+														},
+													},
+												},
+											},
+										},
 									},
-									"min_max_gradient": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MinItems: 2, // MinMaxGradient size needs to be 2
-										MaxItems: 2,
-										Elem: &schema.Schema{
+								},
+							},
+							"typography": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Typography.html
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"font_families": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Font.html
+											Type:     schema.TypeList,
+											MaxItems: 5,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"font_family": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+												},
+											},
+										},
+									},
+								},
+							},
+							"ui_color_palette": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_UIColorPalette.html
+								Type:     schema.TypeList,
+								MaxItems: 1,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"accent": {
 											Type:         schema.TypeString,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
-									},
-								},
-							},
-						},
-						"sheet": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetStyle.html
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"tile": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TileStyle.html
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"border": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_BorderStyle.html
-													Type:     schema.TypeList,
-													MaxItems: 1,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"show": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-														},
-													},
-												},
-											},
+										"accent_foreground": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
-									},
-									"tile_layout": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TileLayoutStyle.html
-										Type:     schema.TypeList,
-										MaxItems: 1,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"gutter": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_GutterStyle.html
-													Type:     schema.TypeList,
-													MaxItems: 1,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"show": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-														},
-													},
-												},
-												"margin": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MarginStyle.html
-													Type:     schema.TypeList,
-													MaxItems: 1,
-													Optional: true,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"show": {
-																Type:     schema.TypeBool,
-																Optional: true,
-															},
-														},
-													},
-												},
-											},
+										"danger": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
-									},
-								},
-							},
-						},
-						"typography": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Typography.html
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"font_families": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Font.html
-										Type:     schema.TypeList,
-										MaxItems: 5,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"font_family": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-											},
+										"danger_foreground": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
 										},
-									},
-								},
-							},
-						},
-						"ui_color_palette": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_UIColorPalette.html
-							Type:     schema.TypeList,
-							MaxItems: 1,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"accent": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
-									},
-									"accent_foreground": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
-									},
-									"danger": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
-									},
-									"danger_foreground": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
-									},
-									"dimension": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
-									},
-									"dimension_foreground": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
-									},
-									"measure": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
-									},
-									"measure_foreground": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
-									},
-									"primary_background": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
-									},
-									"primary_foreground": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
-									},
-									"secondary_background": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
-									},
-									"secondary_foreground": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
-									},
-									"success": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
-									},
-									"success_foreground": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
-									},
-									"warning": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
-									},
-									"warning_foreground": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^#[A-F0-9]{6}$`), ""),
+										"dimension": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
+										},
+										"dimension_foreground": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
+										},
+										"measure": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
+										},
+										"measure_foreground": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
+										},
+										"primary_background": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
+										},
+										"primary_foreground": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
+										},
+										"secondary_background": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
+										},
+										"secondary_foreground": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
+										},
+										"success": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
+										},
+										"success_foreground": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
+										},
+										"warning": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
+										},
+										"warning_foreground": {
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"created_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"theme_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"last_updated_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringLenBetween(1, 2048),
-			},
-			"permissions": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MinItems: 1,
-				MaxItems: 64,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"actions": {
-							Type:     schema.TypeSet,
-							Required: true,
-							MinItems: 1,
-							MaxItems: 16,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"principal": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 256),
+				"created_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"theme_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+				"last_updated_time": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringLenBetween(1, 2048),
+				},
+				"permissions": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 64,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"actions": {
+								Type:     schema.TypeSet,
+								Required: true,
+								MinItems: 1,
+								MaxItems: 16,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"principal": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 256),
+							},
 						},
 					},
 				},
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"version_description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 512),
-			},
-			"version_number": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
+				"status": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"version_description": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringLenBetween(1, 512),
+				},
+				"version_number": {
+					Type:     schema.TypeInt,
+					Computed: true,
+				},
+			}
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }

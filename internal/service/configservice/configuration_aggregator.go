@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
@@ -166,7 +169,7 @@ func resourceConfigurationAggregatorRead(ctx context.Context, d *schema.Resource
 	}
 
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameConfigurationAggregator, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameConfigurationAggregator, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && (res == nil || len(res.ConfigurationAggregators) == 0) {
@@ -176,7 +179,7 @@ func resourceConfigurationAggregatorRead(ctx context.Context, d *schema.Resource
 	}
 
 	if d.IsNewResource() && (res == nil || len(res.ConfigurationAggregators) == 0) {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameConfigurationAggregator, d.Id(), errors.New("not found after creation"))
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameConfigurationAggregator, d.Id(), errors.New("not found after creation"))
 	}
 
 	aggregator := res.ConfigurationAggregators[0]

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codeartifact
 
 import (
@@ -106,7 +109,7 @@ func resourceDomainPermissionsPolicyRead(ctx context.Context, d *schema.Resource
 
 	domainOwner, domainName, err := DecodeDomainID(d.Id())
 	if err != nil {
-		return create.DiagError(names.CodeArtifact, create.ErrActionReading, ResNameDomainPermissionsPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeArtifact, create.ErrActionReading, ResNameDomainPermissionsPolicy, d.Id(), err)
 	}
 
 	dm, err := conn.GetDomainPermissionsPolicyWithContext(ctx, &codeartifact.GetDomainPermissionsPolicyInput{
@@ -120,7 +123,7 @@ func resourceDomainPermissionsPolicyRead(ctx context.Context, d *schema.Resource
 	}
 
 	if err != nil {
-		return create.DiagError(names.CodeArtifact, create.ErrActionReading, ResNameDomainPermissionsPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeArtifact, create.ErrActionReading, ResNameDomainPermissionsPolicy, d.Id(), err)
 	}
 
 	d.Set("domain", domainName)

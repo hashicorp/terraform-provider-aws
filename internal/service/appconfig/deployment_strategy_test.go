@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -32,7 +35,7 @@ func TestAccAppConfigDeploymentStrategy_basic(t *testing.T) {
 				Config: testAccDeploymentStrategyConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentStrategyExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexp.MustCompile(`deploymentstrategy/[a-z0-9]{4,7}`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appconfig", regexache.MustCompile(`deploymentstrategy/[0-9a-z]{4,7}`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_duration_in_minutes", "3"),
 					resource.TestCheckResourceAttr(resourceName, "growth_factor", "10"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),

@@ -1,7 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"time"
@@ -12,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -42,6 +46,15 @@ func ResourceRule() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceRuleV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: resourceRuleUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -65,14 +78,22 @@ func ResourceRule() *schema.Resource {
 				ValidateFunc: validateEventPatternValue(),
 				AtLeastOneOf: []string{"schedule_expression", "event_pattern"},
 				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v.(string))
+					json, _ := RuleEventPatternJSONDecoder(v.(string))
 					return json
 				},
 			},
 			"is_enabled": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
+				Type:       schema.TypeBool,
+				Optional:   true,
+				Deprecated: `Use "state" instead`,
+				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+					rawPlan := d.GetRawPlan()
+					rawIsEnabled := rawPlan.GetAttr("is_enabled")
+					return rawIsEnabled.IsKnown() && rawIsEnabled.IsNull()
+				},
+				ConflictsWith: []string{
+					"state",
+				},
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -100,6 +121,23 @@ func ResourceRule() *schema.Resource {
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 				AtLeastOneOf: []string{"schedule_expression", "event_pattern"},
+			},
+			"state": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.StringInSlice(
+					eventbridge.RuleState_Values(),
+					false,
+				),
+				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+					if oldValue != "" && newValue == "" {
+						return true
+					}
+					return false
+				},
+				ConflictsWith: []string{
+					"is_enabled",
+				},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -185,13 +223,20 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("description", output.Description)
 	d.Set("event_bus_name", eventBusName) // Use event bus name from resource ID as API response may collapse any ARN.
 	if output.EventPattern != nil {
-		pattern, err := structure.NormalizeJsonString(aws.StringValue(output.EventPattern))
+		pattern, err := RuleEventPatternJSONDecoder(aws.StringValue(output.EventPattern))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "event pattern contains an invalid JSON: %s", err)
 		}
 		d.Set("event_pattern", pattern)
 	}
-	d.Set("is_enabled", aws.StringValue(output.State) == eventbridge.RuleStateEnabled)
+	switch aws.StringValue(output.State) {
+	case eventbridge.RuleStateEnabled,
+		eventbridge.RuleStateEnabledWithAllCloudtrailManagementEvents:
+		d.Set("is_enabled", true)
+	default:
+		d.Set("is_enabled", false)
+	}
+	d.Set("state", output.State)
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
 	d.Set("role_arn", output.RoleArn)
@@ -295,6 +340,34 @@ func FindRuleByTwoPartKey(ctx context.Context, conn *eventbridge.EventBridge, ev
 	return output, nil
 }
 
+// RuleEventPatternJSONDecoder decodes unicode translation of <,>,&
+func RuleEventPatternJSONDecoder(jsonString interface{}) (string, error) {
+	var j interface{}
+
+	if jsonString == nil || jsonString.(string) == "" {
+		return "", nil
+	}
+
+	s := jsonString.(string)
+
+	err := json.Unmarshal([]byte(s), &j)
+	if err != nil {
+		return s, err
+	}
+
+	b, err := json.Marshal(j)
+	if err != nil {
+		return "", err
+	}
+
+	if bytes.Contains(b, []byte("\\u003c")) || bytes.Contains(b, []byte("\\u003e")) || bytes.Contains(b, []byte("\\u0026")) {
+		b = bytes.Replace(b, []byte("\\u003c"), []byte("<"), -1)
+		b = bytes.Replace(b, []byte("\\u003e"), []byte(">"), -1)
+		b = bytes.Replace(b, []byte("\\u0026"), []byte("&"), -1)
+	}
+	return string(b[:]), nil
+}
+
 func expandPutRuleInput(d *schema.ResourceData, name string) *eventbridge.PutRuleInput {
 	apiObject := &eventbridge.PutRuleInput{
 		Name: aws.String(name),
@@ -309,7 +382,7 @@ func expandPutRuleInput(d *schema.ResourceData, name string) *eventbridge.PutRul
 	}
 
 	if v, ok := d.GetOk("event_pattern"); ok {
-		json, _ := structure.NormalizeJsonString(v)
+		json, _ := RuleEventPatternJSONDecoder(v.(string))
 		apiObject.EventPattern = aws.String(json)
 	}
 
@@ -321,18 +394,27 @@ func expandPutRuleInput(d *schema.ResourceData, name string) *eventbridge.PutRul
 		apiObject.ScheduleExpression = aws.String(v.(string))
 	}
 
-	state := eventbridge.RuleStateDisabled
-	if d.Get("is_enabled").(bool) {
-		state = eventbridge.RuleStateEnabled
+	rawConfig := d.GetRawConfig()
+	rawState := rawConfig.GetAttr("state")
+	if rawState.IsKnown() && !rawState.IsNull() {
+		apiObject.State = aws.String(rawState.AsString())
+	} else {
+		rawIsEnabled := rawConfig.GetAttr("is_enabled")
+		if rawIsEnabled.IsKnown() && !rawIsEnabled.IsNull() {
+			if rawIsEnabled.True() {
+				apiObject.State = aws.String(eventbridge.RuleStateEnabled)
+			} else {
+				apiObject.State = aws.String(eventbridge.RuleStateDisabled)
+			}
+		}
 	}
-	apiObject.State = aws.String(state)
 
 	return apiObject
 }
 
 func validateEventPatternValue() schema.SchemaValidateFunc {
 	return func(v interface{}, k string) (ws []string, errors []error) {
-		json, err := structure.NormalizeJsonString(v)
+		json, err := RuleEventPatternJSONDecoder(v.(string))
 		if err != nil {
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON: %w", k, err))
 
@@ -343,7 +425,7 @@ func validateEventPatternValue() schema.SchemaValidateFunc {
 		}
 
 		// Check whether the normalized JSON is within the given length.
-		const maxJSONLength = 2048
+		const maxJSONLength = 4096
 		if len(json) > maxJSONLength {
 			errors = append(errors, fmt.Errorf("%q cannot be longer than %d characters: %q", k, maxJSONLength, json))
 		}

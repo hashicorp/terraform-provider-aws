@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package enum
 
 import (
@@ -7,10 +10,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
-func Validate[T valueser[T]]() schema.SchemaValidateDiagFunc {
+func Validate[T Valueser[T]]() schema.SchemaValidateDiagFunc {
 	return validation.ToDiagFunc(validation.StringInSlice(Values[T](), false))
 }
 
-func FrameworkValidate[T valueser[T]]() validator.String {
+// TODO Move to internal/framework/validators or replace with custom types.
+func FrameworkValidate[T Valueser[T]]() validator.String {
 	return stringvalidator.OneOf(Values[T]()...)
 }

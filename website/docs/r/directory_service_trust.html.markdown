@@ -92,7 +92,7 @@ resource "aws_directory_service_directory" "two" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `conditional_forwarder_ip_addrs` - (Optional) Set of IPv4 addresses for the DNS server associated with the remote Directory.
   Can contain between 1 and 4 values.
@@ -112,9 +112,9 @@ The following arguments are supported:
   Valid values are `Forest` and `External`.
   Default value is `Forest`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `created_date_time` - Date and time when the Trust was created.
 * `id` - The Trust identifier.
@@ -126,8 +126,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-The Trust relationsiop can be imported using the directory ID and remote domain name, separated by a `/`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the Trust relationship using the directory ID and remote domain name, separated by a `/`. For example:
 
+```terraform
+import {
+  to = aws_directory_service_trust.example
+  id = "d-926724cf57/directory.example.com"
+}
 ```
-$ terraform import aws_directory_service_trust.example d-926724cf57/directory.example.com
+
+Using `terraform import`, import the Trust relationship using the directory ID and remote domain name, separated by a `/`. For example:
+
+```console
+% terraform import aws_directory_service_trust.example d-926724cf57/directory.example.com
 ```

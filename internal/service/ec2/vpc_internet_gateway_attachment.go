@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -72,7 +75,7 @@ func resourceInternetGatewayAttachmentRead(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Internet Gateway Attachment (%s): %s", d.Id(), err)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindInternetGatewayAttachment(ctx, conn, igwID, vpcID)
 	}, d.IsNewResource())
 

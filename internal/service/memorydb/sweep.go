@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package memorydb
 
@@ -11,11 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/memorydb"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_memorydb_acl", &resource.Sweeper{
 		Name: "aws_memorydb_acl",
 		F:    sweepACLs,
@@ -64,11 +64,11 @@ func init() {
 
 func sweepACLs(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := client.MemoryDBConn(ctx)
 	input := &memorydb.DescribeACLsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -94,7 +94,7 @@ func sweepACLs(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping MemoryDB ACL sweep for %s: %s", region, err)
 		return nil
 	}
@@ -103,7 +103,7 @@ func sweepACLs(region string) error {
 		return fmt.Errorf("error listing MemoryDB ACLs (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB ACLs (%s): %w", region, err)
@@ -114,11 +114,11 @@ func sweepACLs(region string) error {
 
 func sweepClusters(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := client.MemoryDBConn(ctx)
 	input := &memorydb.DescribeClustersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -138,7 +138,7 @@ func sweepClusters(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping MemoryDB Cluster sweep for %s: %s", region, err)
 		return nil
 	}
@@ -147,7 +147,7 @@ func sweepClusters(region string) error {
 		return fmt.Errorf("error listing MemoryDB Clusters (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB Clusters (%s): %w", region, err)
@@ -158,11 +158,11 @@ func sweepClusters(region string) error {
 
 func sweepParameterGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := client.MemoryDBConn(ctx)
 	input := &memorydb.DescribeParameterGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -188,7 +188,7 @@ func sweepParameterGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping MemoryDB Parameter Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -197,7 +197,7 @@ func sweepParameterGroups(region string) error {
 		return fmt.Errorf("error listing MemoryDB Parameter Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB Parameter Groups (%s): %w", region, err)
@@ -208,11 +208,11 @@ func sweepParameterGroups(region string) error {
 
 func sweepSnapshots(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := client.MemoryDBConn(ctx)
 	input := &memorydb.DescribeSnapshotsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -232,7 +232,7 @@ func sweepSnapshots(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping MemoryDB Snapshot sweep for %s: %s", region, err)
 		return nil
 	}
@@ -241,7 +241,7 @@ func sweepSnapshots(region string) error {
 		return fmt.Errorf("error listing MemoryDB Snapshots (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB Snapshots (%s): %w", region, err)
@@ -252,11 +252,11 @@ func sweepSnapshots(region string) error {
 
 func sweepSubnetGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := client.MemoryDBConn(ctx)
 	input := &memorydb.DescribeSubnetGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -282,7 +282,7 @@ func sweepSubnetGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping MemoryDB Subnet Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -291,7 +291,7 @@ func sweepSubnetGroups(region string) error {
 		return fmt.Errorf("error listing MemoryDB Subnet Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB Subnet Groups (%s): %w", region, err)
@@ -302,11 +302,11 @@ func sweepSubnetGroups(region string) error {
 
 func sweepUsers(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).MemoryDBConn(ctx)
+	conn := client.MemoryDBConn(ctx)
 	input := &memorydb.DescribeUsersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -332,7 +332,7 @@ func sweepUsers(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping MemoryDB User sweep for %s: %s", region, err)
 		return nil
 	}
@@ -341,7 +341,7 @@ func sweepUsers(region string) error {
 		return fmt.Errorf("error listing MemoryDB Users (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping MemoryDB Users (%s): %w", region, err)

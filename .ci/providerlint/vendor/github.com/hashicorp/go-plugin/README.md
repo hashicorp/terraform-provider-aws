@@ -4,8 +4,9 @@
 that has been in use by HashiCorp tooling for over 4 years. While initially
 created for [Packer](https://www.packer.io), it is additionally in use by
 [Terraform](https://www.terraform.io), [Nomad](https://www.nomadproject.io),
-[Vault](https://www.vaultproject.io), and
-[Boundary](https://www.boundaryproject.io).
+[Vault](https://www.vaultproject.io),
+[Boundary](https://www.boundaryproject.io),
+and [Waypoint](https://www.waypointproject.io).
 
 While the plugin system is over RPC, it is currently only designed to work
 over a local [reliable] network. Plugins over a real network are not supported

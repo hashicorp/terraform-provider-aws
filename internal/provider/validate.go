@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
 	"fmt"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
@@ -27,10 +30,10 @@ func validAssumeRoleDuration(v interface{}, k string) (ws []string, errors []err
 
 var validAssumeRoleSessionName = validation.All(
 	validation.StringLenBetween(2, 64),
-	validation.StringMatch(regexp.MustCompile(`[\w+=,.@\-]*`), ""),
+	validation.StringMatch(regexache.MustCompile(`[\w+=,.@\-]*`), ""),
 )
 
 var validAssumeRoleSourceIdentity = validation.All(
 	validation.StringLenBetween(2, 64),
-	validation.StringMatch(regexp.MustCompile(`[\w+=,.@\-]*`), ""),
+	validation.StringMatch(regexache.MustCompile(`[\w+=,.@\-]*`), ""),
 )

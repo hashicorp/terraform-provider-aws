@@ -1,13 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms
 
 import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -15,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -32,6 +38,10 @@ func ResourceKey() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(2 * time.Minute),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -111,6 +121,13 @@ func ResourceKey() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"xks_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				RequiredWith: []string{"custom_key_store_id"},
+				ValidateFunc: validation.StringLenBetween(1, 128),
+			},
 		},
 	}
 }
@@ -148,11 +165,16 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.CustomKeyStoreId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("xks_key_id"); ok {
+		input.Origin = aws.String(kms.OriginTypeExternalKeyStore)
+		input.XksKeyId = aws.String(v.(string))
+	}
+
 	// AWS requires any principal in the policy to exist before the key is created.
 	// The KMS service's awareness of principals is limited by "eventual consistency".
 	// They acknowledge this here:
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
-	output, err := WaitIAMPropagation(ctx, func() (*kms.CreateKeyOutput, error) {
+	output, err := WaitIAMPropagation(ctx, d.Timeout(schema.TimeoutCreate), func() (*kms.CreateKeyOutput, error) {
 		return conn.CreateKeyWithContext(ctx, input)
 	})
 
@@ -161,6 +183,8 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.SetId(aws.StringValue(output.KeyMetadata.KeyId))
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
 	if enableKeyRotation := d.Get("enable_key_rotation").(bool); enableKeyRotation {
 		if err := updateKeyRotationEnabled(ctx, conn, d.Id(), enableKeyRotation); err != nil {
@@ -182,7 +206,7 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if tags := KeyValueTags(ctx, getTagsIn(ctx)); len(tags) > 0 {
-		if err := WaitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
+		if err := waitTagsPropagated(ctx, conn, d.Id(), tags); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for KMS Key (%s) tag propagation: %s", d.Id(), err)
 		}
 	}
@@ -193,6 +217,8 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSConn(ctx)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
 	key, err := findKey(ctx, conn, d.Id(), d.IsNewResource())
 
@@ -220,6 +246,12 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("key_usage", key.metadata.KeyUsage)
 	d.Set("multi_region", key.metadata.MultiRegion)
 
+	if key.metadata.XksKeyConfiguration != nil {
+		d.Set("xks_key_id", key.metadata.XksKeyConfiguration.Id)
+	} else {
+		d.Set("xks_key_id", nil)
+	}
+
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), key.policy)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", key.policy, err)
@@ -235,6 +267,8 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface
 func resourceKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSConn(ctx)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
 	if hasChange, enabled := d.HasChange("is_enabled"), d.Get("is_enabled").(bool); hasChange && enabled {
 		// Enable before any attributes are modified.
@@ -268,18 +302,14 @@ func resourceKeyUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		if err := WaitTagsPropagated(ctx, conn, d.Id(), tftags.New(ctx, d.Get("tags_all").(map[string]interface{}))); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for KMS Key (%s) tag propagation: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceKeyRead(ctx, d, meta)...)
 }
 
 func resourceKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSConn(ctx)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
 	input := &kms.ScheduleKeyDeletionInput{
 		KeyId: aws.String(d.Id()),

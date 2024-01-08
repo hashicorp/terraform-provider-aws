@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package scheduler_test
 
 import (
@@ -8,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
@@ -42,7 +46,7 @@ func TestAccSchedulerScheduleGroup_basic(t *testing.T) {
 				Config: testAccScheduleGroupConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckScheduleGroupExists(ctx, resourceName, &scheduleGroup),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "scheduler", regexp.MustCompile(regexp.QuoteMeta(`schedule-group/`+rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "scheduler", regexache.MustCompile(regexp.QuoteMeta(`schedule-group/`+rName))),
 					resource.TestCheckResourceAttrWith(resourceName, "creation_date", func(actual string) error {
 						expect := scheduleGroup.CreationDate.Format(time.RFC3339)
 						if actual != expect {

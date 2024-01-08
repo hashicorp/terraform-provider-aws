@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -13,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -57,6 +61,8 @@ func ResourceGlobalNetwork() *schema.Resource {
 }
 
 func resourceGlobalNetworkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	input := &networkmanager.CreateGlobalNetworkInput{
@@ -71,19 +77,21 @@ func resourceGlobalNetworkCreate(ctx context.Context, d *schema.ResourceData, me
 	output, err := conn.CreateGlobalNetworkWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Network Manager Global Network: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Network Manager Global Network: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.GlobalNetwork.GlobalNetworkId))
 
 	if _, err := waitGlobalNetworkCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Network Manager Global Network (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Global Network (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceGlobalNetworkRead(ctx, d, meta)
+	return append(diags, resourceGlobalNetworkRead(ctx, d, meta)...)
 }
 
 func resourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetwork, err := FindGlobalNetworkByID(ctx, conn, d.Id())
@@ -91,11 +99,11 @@ func resourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager Global Network %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Global Network (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Global Network (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", globalNetwork.GlobalNetworkArn)
@@ -103,10 +111,12 @@ func resourceGlobalNetworkRead(ctx context.Context, d *schema.ResourceData, meta
 
 	setTagsOut(ctx, globalNetwork.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceGlobalNetworkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -119,18 +129,20 @@ func resourceGlobalNetworkUpdate(ctx context.Context, d *schema.ResourceData, me
 		_, err := conn.UpdateGlobalNetworkWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Network Manager Global Network (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Network Manager Global Network (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitGlobalNetworkUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Network Manager Global Network (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Global Network (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceGlobalNetworkRead(ctx, d, meta)
+	return append(diags, resourceGlobalNetworkRead(ctx, d, meta)...)
 }
 
 func resourceGlobalNetworkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	if diags := disassociateCustomerGateways(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); diags.HasError() {
@@ -162,21 +174,23 @@ func resourceGlobalNetworkDelete(ctx context.Context, d *schema.ResourceData, me
 	)
 
 	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Network Manager Global Network (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Network Manager Global Network (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitGlobalNetworkDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Network Manager Global Network (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Global Network (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func deregisterTransitGateways(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID string, timeout time.Duration) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	output, err := FindTransitGatewayRegistrations(ctx, conn, &networkmanager.GetTransitGatewayRegistrationsInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
 	})
@@ -186,16 +200,14 @@ func deregisterTransitGateways(ctx context.Context, conn *networkmanager.Network
 	}
 
 	if err != nil {
-		return diag.Errorf("listing Network Manager Transit Gateway Registrations (%s): %s", globalNetworkID, err)
+		return sdkdiag.AppendErrorf(diags, "listing Network Manager Transit Gateway Registrations (%s): %s", globalNetworkID, err)
 	}
-
-	var diags diag.Diagnostics
 
 	for _, v := range output {
 		err := deregisterTransitGateway(ctx, conn, globalNetworkID, aws.StringValue(v.TransitGatewayArn), timeout)
 
 		if err != nil {
-			diags = append(diags, diag.FromErr(err)...)
+			diags = sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -203,10 +215,12 @@ func deregisterTransitGateways(ctx context.Context, conn *networkmanager.Network
 		return diags
 	}
 
-	return nil
+	return diags
 }
 
 func disassociateCustomerGateways(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID string, timeout time.Duration) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	output, err := FindCustomerGatewayAssociations(ctx, conn, &networkmanager.GetCustomerGatewayAssociationsInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
 	})
@@ -216,16 +230,14 @@ func disassociateCustomerGateways(ctx context.Context, conn *networkmanager.Netw
 	}
 
 	if err != nil {
-		return diag.Errorf("listing Network Manager Customer Gateway Associations (%s): %s", globalNetworkID, err)
+		return sdkdiag.AppendErrorf(diags, "listing Network Manager Customer Gateway Associations (%s): %s", globalNetworkID, err)
 	}
-
-	var diags diag.Diagnostics
 
 	for _, v := range output {
 		err := disassociateCustomerGateway(ctx, conn, globalNetworkID, aws.StringValue(v.CustomerGatewayArn), timeout)
 
 		if err != nil {
-			diags = append(diags, diag.FromErr(err)...)
+			diags = sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -233,10 +245,12 @@ func disassociateCustomerGateways(ctx context.Context, conn *networkmanager.Netw
 		return diags
 	}
 
-	return nil
+	return diags
 }
 
 func disassociateTransitGatewayConnectPeers(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID string, timeout time.Duration) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	output, err := FindTransitGatewayConnectPeerAssociations(ctx, conn, &networkmanager.GetTransitGatewayConnectPeerAssociationsInput{
 		GlobalNetworkId: aws.String(globalNetworkID),
 	})
@@ -246,16 +260,14 @@ func disassociateTransitGatewayConnectPeers(ctx context.Context, conn *networkma
 	}
 
 	if err != nil {
-		return diag.Errorf("listing Network Manager Transit Gateway Connect Peer Associations (%s): %s", globalNetworkID, err)
+		return sdkdiag.AppendErrorf(diags, "listing Network Manager Transit Gateway Connect Peer Associations (%s): %s", globalNetworkID, err)
 	}
-
-	var diags diag.Diagnostics
 
 	for _, v := range output {
 		err := disassociateTransitGatewayConnectPeer(ctx, conn, globalNetworkID, aws.StringValue(v.TransitGatewayConnectPeerArn), timeout)
 
 		if err != nil {
-			diags = append(diags, diag.FromErr(err)...)
+			diags = sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -263,7 +275,7 @@ func disassociateTransitGatewayConnectPeers(ctx context.Context, conn *networkma
 		return diags
 	}
 
-	return nil
+	return diags
 }
 
 func globalNetworkIDNotFoundError(err error) bool {

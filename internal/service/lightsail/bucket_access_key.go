@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail
 
 import (
 	"context"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
@@ -43,7 +46,7 @@ func ResourceBucketAccessKey() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-z0-9][a-z0-9-]{1,52}[a-z0-9]$`), "Invalid Bucket name. Must match regex: ^[a-z0-9][a-z0-9-]{1,52}[a-z0-9]$"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z][0-9a-z-]{1,52}[0-9a-z]$`), "Invalid Bucket name. Must match regex: ^[0-9a-z][0-9a-z-]{1,52}[0-9a-z]$"),
 			},
 			"created_at": {
 				Type:     schema.TypeString,
@@ -62,6 +65,8 @@ func ResourceBucketAccessKey() *schema.Resource {
 }
 
 func resourceBucketAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	in := lightsail.CreateBucketAccessKeyInput{
@@ -71,7 +76,7 @@ func resourceBucketAccessKeyCreate(ctx context.Context, d *schema.ResourceData, 
 	out, err := conn.CreateBucketAccessKey(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeCreateBucketAccessKey), ResBucketAccessKey, d.Get("bucket_name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeCreateBucketAccessKey), ResBucketAccessKey, d.Get("bucket_name").(string), err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeCreateBucketAccessKey, ResBucketAccessKey, d.Get("bucket_name").(string))
@@ -84,16 +89,18 @@ func resourceBucketAccessKeyCreate(ctx context.Context, d *schema.ResourceData, 
 	id, err := flex.FlattenResourceId(idParts, BucketAccessKeyIdPartsCount, false)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionFlatteningResourceId, ResBucketAccessKey, d.Get("bucket_name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionFlatteningResourceId, ResBucketAccessKey, d.Get("bucket_name").(string), err)
 	}
 
 	d.SetId(id)
 	d.Set("secret_access_key", out.AccessKey.SecretAccessKey)
 
-	return resourceBucketAccessKeyRead(ctx, d, meta)
+	return append(diags, resourceBucketAccessKeyRead(ctx, d, meta)...)
 }
 
 func resourceBucketAccessKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindBucketAccessKeyById(ctx, conn, d.Id())
@@ -101,11 +108,11 @@ func resourceBucketAccessKeyRead(ctx context.Context, d *schema.ResourceData, me
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResBucketAccessKey, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResBucketAccessKey, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResBucketAccessKey, d.Id(), err)
 	}
 
 	d.Set("access_key_id", out.AccessKeyId)
@@ -113,15 +120,17 @@ func resourceBucketAccessKeyRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("created_at", out.CreatedAt.Format(time.RFC3339))
 	d.Set("status", out.Status)
 
-	return nil
+	return diags
 }
 
 func resourceBucketAccessKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	parts, err := flex.ExpandResourceId(d.Id(), BucketAccessKeyIdPartsCount, false)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionExpandingResourceId, ResBucketAccessKey, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionExpandingResourceId, ResBucketAccessKey, d.Id(), err)
 	}
 
 	out, err := conn.DeleteBucketAccessKey(ctx, &lightsail.DeleteBucketAccessKeyInput{
@@ -130,11 +139,11 @@ func resourceBucketAccessKeyDelete(ctx context.Context, d *schema.ResourceData, 
 	})
 
 	if err != nil && errs.IsA[*types.NotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionDeleting, ResBucketAccessKey, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionDeleting, ResBucketAccessKey, d.Id(), err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeDeleteBucketAccessKey, ResBucketAccessKey, d.Id())
@@ -143,7 +152,7 @@ func resourceBucketAccessKeyDelete(ctx context.Context, d *schema.ResourceData, 
 		return diag
 	}
 
-	return nil
+	return diags
 }
 
 func FindBucketAccessKeyById(ctx context.Context, conn *lightsail.Client, id string) (*types.AccessKey, error) {

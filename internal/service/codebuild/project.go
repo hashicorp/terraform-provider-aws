@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codebuild
 
 import (
@@ -5,9 +8,9 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -264,7 +267,7 @@ func ResourceProject() *schema.Resource {
 						"certificate": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringMatch(regexp.MustCompile(`\.(pem|zip)$`), "must end in .pem or .zip"),
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`\.(pem|zip)$`), "must end in .pem or .zip"),
 						},
 						"registry_credential": {
 							Type:     schema.TypeList,
@@ -626,12 +629,30 @@ func ResourceProject() *schema.Resource {
 				Optional:     true,
 				Default:      60,
 				ValidateFunc: validation.IntBetween(5, 480),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if d.Get("environment.0.type") == codebuild.EnvironmentTypeArmLambdaContainer {
+						return true
+					}
+					if d.Get("environment.0.type") == codebuild.EnvironmentTypeLinuxLambdaContainer {
+						return true
+					}
+					return false
+				},
 			},
 			"queued_timeout": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      480,
 				ValidateFunc: validation.IntBetween(5, 480),
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					if d.Get("environment.0.type") == codebuild.EnvironmentTypeArmLambdaContainer {
+						return true
+					}
+					if d.Get("environment.0.type") == codebuild.EnvironmentTypeLinuxLambdaContainer {
+						return true
+					}
+					return false
+				},
 			},
 			"badge_enabled": {
 				Type:     schema.TypeBool,
@@ -1945,12 +1966,12 @@ func environmentVariablesToMap(environmentVariables []*codebuild.EnvironmentVari
 
 func ValidProjectName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexp.MustCompile(`^[A-Za-z0-9]`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9A-Za-z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"first character of %q must be a letter or number", value))
 	}
 
-	if !regexp.MustCompile(`^[A-Za-z0-9\-_]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"only alphanumeric characters, hyphens and underscores allowed in %q", value))
 	}
@@ -1971,8 +1992,8 @@ func validProjectS3LogsLocation(v interface{}, k string) (ws []string, errors []
 		return
 	}
 
-	simplePattern := `^[a-z0-9][^/]*\/(.+)$`
-	if !regexp.MustCompile(simplePattern).MatchString(value) {
+	simplePattern := `^[0-9a-z][^/]*\/(.+)$`
+	if !regexache.MustCompile(simplePattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q does not match pattern (%q): %q",
 			k, simplePattern, value))

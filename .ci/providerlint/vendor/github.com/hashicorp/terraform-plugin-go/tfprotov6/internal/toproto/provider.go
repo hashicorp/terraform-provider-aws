@@ -7,6 +7,45 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/tfplugin6"
 )
 
+func GetMetadata_Request(in *tfprotov6.GetMetadataRequest) (*tfplugin6.GetMetadata_Request, error) {
+	return &tfplugin6.GetMetadata_Request{}, nil
+}
+
+func GetMetadata_Response(in *tfprotov6.GetMetadataResponse) (*tfplugin6.GetMetadata_Response, error) {
+	if in == nil {
+		return nil, nil
+	}
+
+	resp := &tfplugin6.GetMetadata_Response{
+		DataSources:        make([]*tfplugin6.GetMetadata_DataSourceMetadata, 0, len(in.DataSources)),
+		Functions:          make([]*tfplugin6.GetMetadata_FunctionMetadata, 0, len(in.Functions)),
+		Resources:          make([]*tfplugin6.GetMetadata_ResourceMetadata, 0, len(in.Resources)),
+		ServerCapabilities: ServerCapabilities(in.ServerCapabilities),
+	}
+
+	for _, datasource := range in.DataSources {
+		resp.DataSources = append(resp.DataSources, GetMetadata_DataSourceMetadata(&datasource))
+	}
+
+	for _, function := range in.Functions {
+		resp.Functions = append(resp.Functions, GetMetadata_FunctionMetadata(&function))
+	}
+
+	for _, resource := range in.Resources {
+		resp.Resources = append(resp.Resources, GetMetadata_ResourceMetadata(&resource))
+	}
+
+	diags, err := Diagnostics(in.Diagnostics)
+
+	if err != nil {
+		return resp, err
+	}
+
+	resp.Diagnostics = diags
+
+	return resp, nil
+}
+
 func GetProviderSchema_Request(in *tfprotov6.GetProviderSchemaRequest) (*tfplugin6.GetProviderSchema_Request, error) {
 	return &tfplugin6.GetProviderSchema_Request{}, nil
 }
@@ -16,7 +55,10 @@ func GetProviderSchema_Response(in *tfprotov6.GetProviderSchemaResponse) (*tfplu
 		return nil, nil
 	}
 	resp := tfplugin6.GetProviderSchema_Response{
-		ServerCapabilities: GetProviderSchema_ServerCapabilities(in.ServerCapabilities),
+		DataSourceSchemas:  make(map[string]*tfplugin6.Schema, len(in.DataSourceSchemas)),
+		Functions:          make(map[string]*tfplugin6.Function, len(in.Functions)),
+		ResourceSchemas:    make(map[string]*tfplugin6.Schema, len(in.ResourceSchemas)),
+		ServerCapabilities: ServerCapabilities(in.ServerCapabilities),
 	}
 	if in.Provider != nil {
 		schema, err := Schema(in.Provider)
@@ -32,7 +74,7 @@ func GetProviderSchema_Response(in *tfprotov6.GetProviderSchemaResponse) (*tfplu
 		}
 		resp.ProviderMeta = schema
 	}
-	resp.ResourceSchemas = make(map[string]*tfplugin6.Schema, len(in.ResourceSchemas))
+
 	for k, v := range in.ResourceSchemas {
 		if v == nil {
 			resp.ResourceSchemas[k] = nil
@@ -44,7 +86,7 @@ func GetProviderSchema_Response(in *tfprotov6.GetProviderSchemaResponse) (*tfplu
 		}
 		resp.ResourceSchemas[k] = schema
 	}
-	resp.DataSourceSchemas = make(map[string]*tfplugin6.Schema, len(in.DataSourceSchemas))
+
 	for k, v := range in.DataSourceSchemas {
 		if v == nil {
 			resp.DataSourceSchemas[k] = nil
@@ -56,6 +98,22 @@ func GetProviderSchema_Response(in *tfprotov6.GetProviderSchemaResponse) (*tfplu
 		}
 		resp.DataSourceSchemas[k] = schema
 	}
+
+	for name, functionPtr := range in.Functions {
+		if functionPtr == nil {
+			resp.Functions[name] = nil
+			continue
+		}
+
+		function, err := Function(functionPtr)
+
+		if err != nil {
+			return &resp, fmt.Errorf("error marshaling function definition for %q: %w", name, err)
+		}
+
+		resp.Functions[name] = function
+	}
+
 	diags, err := Diagnostics(in.Diagnostics)
 	if err != nil {
 		return &resp, err

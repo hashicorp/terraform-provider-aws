@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -222,6 +225,10 @@ func DataSourceInstance() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"http_endpoint": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"http_protocol_ipv6": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},

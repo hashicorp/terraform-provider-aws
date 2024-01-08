@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/appconfig"
@@ -39,7 +42,7 @@ func ResourceDeployment() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9]{4,7}`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -49,7 +52,7 @@ func ResourceDeployment() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9]{4,7}`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
 			"configuration_version": {
 				Type:         schema.TypeString,
@@ -65,7 +68,7 @@ func ResourceDeployment() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`(^[a-z0-9]{4,7}$|^AppConfig\.[A-Za-z0-9]{9,40}$)`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`(^[0-9a-z]{4,7}$|^AppConfig\.[0-9A-Za-z]{9,40}$)`), ""),
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -77,7 +80,19 @@ func ResourceDeployment() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9]{4,7}`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
+			},
+			"kms_key_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"kms_key_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.Any(
+					verify.ValidARN,
+					validation.StringLenBetween(1, 256)),
 			},
 			"state": {
 				Type:     schema.TypeString,
@@ -102,6 +117,10 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		DeploymentStrategyId:   aws.String(d.Get("deployment_strategy_id").(string)),
 		Description:            aws.String(d.Get("description").(string)),
 		Tags:                   getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("kms_key_identifier"); ok {
+		input.KmsKeyIdentifier = aws.String(v.(string))
 	}
 
 	output, err := conn.StartDeploymentWithContext(ctx, input)
@@ -171,6 +190,8 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("deployment_strategy_id", output.DeploymentStrategyId)
 	d.Set("description", output.Description)
 	d.Set("environment_id", output.EnvironmentId)
+	d.Set("kms_key_arn", output.KmsKeyArn)
+	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
 	d.Set("state", output.State)
 
 	return diags

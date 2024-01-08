@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package globalaccelerator
 
@@ -11,11 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_globalaccelerator_accelerator", &resource.Sweeper{
 		Name: "aws_globalaccelerator_accelerator",
 		F:    sweepAccelerators,
@@ -61,11 +61,11 @@ func init() {
 
 func sweepAccelerators(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+	conn := client.GlobalAcceleratorConn(ctx)
 	input := &globalaccelerator.ListAcceleratorsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -85,7 +85,7 @@ func sweepAccelerators(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Global Accelerator Accelerator sweep for %s: %s", region, err)
 		return nil
 	}
@@ -94,7 +94,7 @@ func sweepAccelerators(region string) error {
 		return fmt.Errorf("error listing Global Accelerator Accelerators (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Global Accelerator Accelerators (%s): %w", region, err)
@@ -105,11 +105,11 @@ func sweepAccelerators(region string) error {
 
 func sweepEndpointGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+	conn := client.GlobalAcceleratorConn(ctx)
 	input := &globalaccelerator.ListAcceleratorsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -150,7 +150,7 @@ func sweepEndpointGroups(region string) error {
 						return !lastPage
 					})
 
-					if sweep.SkipSweepError(err) {
+					if awsv1.SkipSweepError(err) {
 						continue
 					}
 
@@ -162,7 +162,7 @@ func sweepEndpointGroups(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -174,7 +174,7 @@ func sweepEndpointGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Global Accelerator Endpoint Group sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -183,7 +183,7 @@ func sweepEndpointGroups(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Global Accelerator Accelerators (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Global Accelerator Endpoint Groups (%s): %w", region, err))
@@ -194,11 +194,11 @@ func sweepEndpointGroups(region string) error {
 
 func sweepListeners(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+	conn := client.GlobalAcceleratorConn(ctx)
 	input := &globalaccelerator.ListAcceleratorsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -229,7 +229,7 @@ func sweepListeners(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -241,7 +241,7 @@ func sweepListeners(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Global Accelerator Listener sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -250,7 +250,7 @@ func sweepListeners(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Global Accelerator Accelerators (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Global Accelerator Listeners (%s): %w", region, err))
@@ -261,11 +261,11 @@ func sweepListeners(region string) error {
 
 func sweepCustomRoutingAccelerators(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+	conn := client.GlobalAcceleratorConn(ctx)
 	input := &globalaccelerator.ListCustomRoutingAcceleratorsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -285,7 +285,7 @@ func sweepCustomRoutingAccelerators(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Global Accelerator Custom Routing Accelerator sweep for %s: %s", region, err)
 		return nil
 	}
@@ -294,7 +294,7 @@ func sweepCustomRoutingAccelerators(region string) error {
 		return fmt.Errorf("error listing Global Accelerator Custom Routing Accelerators (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Global Accelerator Custom Routing Accelerators (%s): %w", region, err)
@@ -305,11 +305,11 @@ func sweepCustomRoutingAccelerators(region string) error {
 
 func sweepCustomRoutingEndpointGroups(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+	conn := client.GlobalAcceleratorConn(ctx)
 	input := &globalaccelerator.ListCustomRoutingAcceleratorsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -350,7 +350,7 @@ func sweepCustomRoutingEndpointGroups(region string) error {
 						return !lastPage
 					})
 
-					if sweep.SkipSweepError(err) {
+					if awsv1.SkipSweepError(err) {
 						continue
 					}
 
@@ -362,7 +362,7 @@ func sweepCustomRoutingEndpointGroups(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -374,7 +374,7 @@ func sweepCustomRoutingEndpointGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Global AcceleratorCustom Routing Endpoint Group sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -383,7 +383,7 @@ func sweepCustomRoutingEndpointGroups(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Global Accelerator Custom Routing Accelerators (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Global Accelerator Custom Routing Endpoint Groups (%s): %w", region, err))
@@ -394,11 +394,11 @@ func sweepCustomRoutingEndpointGroups(region string) error {
 
 func sweepCustomRoutingListeners(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+	conn := client.GlobalAcceleratorConn(ctx)
 	input := &globalaccelerator.ListCustomRoutingAcceleratorsInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -429,7 +429,7 @@ func sweepCustomRoutingListeners(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -441,7 +441,7 @@ func sweepCustomRoutingListeners(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Global Accelerator Custom Routing Listener sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -450,7 +450,7 @@ func sweepCustomRoutingListeners(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing Global Accelerator Custom Routing Accelerators (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping Global Accelerator Custom Routing Listeners (%s): %w", region, err))

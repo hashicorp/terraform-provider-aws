@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -39,7 +42,7 @@ func TestAccRedshiftCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_nodes.0.public_ip_address"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_type", "single-node"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
-					resource.TestMatchResourceAttr(resourceName, "dns_name", regexp.MustCompile(fmt.Sprintf("^%s.*\\.redshift\\..*", rName))),
+					resource.TestMatchResourceAttr(resourceName, "dns_name", regexache.MustCompile(fmt.Sprintf("^%s.*\\.redshift\\..*", rName))),
 					resource.TestCheckResourceAttr(resourceName, "availability_zone_relocation_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "aqua_configuration_status", "auto"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_track_name", "current"),
@@ -629,7 +632,7 @@ func TestAccRedshiftCluster_changeAvailabilityZone_availabilityZoneRelocationNot
 			},
 			{
 				Config:      testAccClusterConfig_updateAvailabilityZoneAvailabilityZoneRelocationNotSet(rName, 1),
-				ExpectError: regexp.MustCompile("cannot change `availability_zone` if `availability_zone_relocation_enabled` is not true"),
+				ExpectError: regexache.MustCompile("cannot change `availability_zone` if `availability_zone_relocation_enabled` is not true"),
 			},
 		},
 	})
@@ -765,35 +768,20 @@ func TestAccRedshiftCluster_availabilityZoneRelocation_publiclyAccessible(t *tes
 func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v redshift.Cluster
-	resourceName := "aws_redshift_cluster.test"
+	resourceName := "aws_redshift_cluster.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterTestSnapshotDestroy(ctx, rName),
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterConfig_createSnapshot(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.0"),
-					resource.TestCheckResourceAttr(resourceName, "node_type", "dc2.8xlarge"),
-					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "2"),
-				),
-			},
-			// Apply a configuration without the source cluster to ensure final snapshot creation.
-			{ // nosemgrep:ci.test-config-funcs-correct-form
-				Config: acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
-			},
 			{
 				Config: testAccClusterConfig_restoreFromSnapshot(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.1"),
-					resource.TestCheckResourceAttr(resourceName, "node_type", "dc2.large"),
-					resource.TestCheckResourceAttr(resourceName, "number_of_nodes", "8"),
+					resource.TestCheckResourceAttrPair(resourceName, "snapshot_identifier", "aws_redshift_cluster_snapshot.test", "id"),
 				),
 			},
 			{
@@ -805,6 +793,77 @@ func TestAccRedshiftCluster_restoreFromSnapshot(t *testing.T) {
 					"master_password",
 					"skip_final_snapshot",
 					"snapshot_identifier",
+					"apply_immediately",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRedshiftCluster_restoreFromSnapshotARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v redshift.Cluster
+	resourceName := "aws_redshift_cluster.test2"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_restoreFromSnapshotARN(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "snapshot_arn", "aws_redshift_cluster_snapshot.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_snapshot_identifier",
+					"master_password",
+					"skip_final_snapshot",
+					"snapshot_arn",
+					"apply_immediately",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRedshiftCluster_manageMasterPassword(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v redshift.Cluster
+	resourceName := "aws_redshift_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_manageMasterPassword(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "availability_zone", "data.aws_availability_zones.available", "names.0"),
+					resource.TestCheckResourceAttr(resourceName, "manage_master_password", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "master_password_secret_arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"final_snapshot_identifier",
+					"manage_master_password",
+					"skip_final_snapshot",
 					"apply_immediately",
 				},
 			},
@@ -1672,33 +1731,59 @@ resource "aws_redshift_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterConfig_createSnapshot(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
-resource "aws_redshift_cluster" "test" {
-  cluster_identifier        = %[1]q
-  availability_zone         = data.aws_availability_zones.available.names[0]
-  database_name             = "mydb"
-  master_username           = "foo_test"
-  master_password           = "Mustbe8characters"
-  node_type                 = "dc2.8xlarge"
-  number_of_nodes           = 2
-  final_snapshot_identifier = %[1]q
-}
-`, rName))
+func testAccClusterConfig_restoreFromSnapshot(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), fmt.Sprintf(`
+resource "aws_redshift_cluster_snapshot" "test" {
+  cluster_identifier  = aws_redshift_cluster.test.cluster_identifier
+  snapshot_identifier = %[1]q
 }
 
-func testAccClusterConfig_restoreFromSnapshot(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
-resource "aws_redshift_cluster" "test" {
-  cluster_identifier  = %[1]q
-  snapshot_identifier = %[1]q
-  availability_zone   = data.aws_availability_zones.available.names[1]
+resource "aws_redshift_cluster" "test2" {
+  cluster_identifier  = "%[1]s-2"
+  snapshot_identifier = aws_redshift_cluster_snapshot.test.id
+  availability_zone   = data.aws_availability_zones.available.names[0]
   database_name       = "mydb"
   master_username     = "foo_test"
   master_password     = "Mustbe8characters"
   node_type           = "dc2.large"
-  number_of_nodes     = 8
   skip_final_snapshot = true
+}
+`, rName))
+}
+
+func testAccClusterConfig_restoreFromSnapshotARN(rName string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), fmt.Sprintf(`
+resource "aws_redshift_cluster_snapshot" "test" {
+  cluster_identifier  = aws_redshift_cluster.test.cluster_identifier
+  snapshot_identifier = %[1]q
+}
+
+resource "aws_redshift_cluster" "test2" {
+  cluster_identifier  = "%[1]s-2"
+  snapshot_arn        = aws_redshift_cluster_snapshot.test.arn
+  availability_zone   = data.aws_availability_zones.available.names[0]
+  database_name       = "mydb"
+  master_username     = "foo_test"
+  master_password     = "Mustbe8characters"
+  node_type           = "dc2.large"
+  skip_final_snapshot = true
+}
+`, rName))
+}
+
+func testAccClusterConfig_manageMasterPassword(rName string) string {
+	// "InvalidVPCNetworkStateFault: The requested AZ us-west-2a is not a valid AZ."
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"), fmt.Sprintf(`
+resource "aws_redshift_cluster" "test" {
+  cluster_identifier                  = %[1]q
+  availability_zone                   = data.aws_availability_zones.available.names[0]
+  database_name                       = "mydb"
+  master_username                     = "foo_test"
+  manage_master_password              = true
+  node_type                           = "dc2.large"
+  automated_snapshot_retention_period = 0
+  allow_version_upgrade               = false
+  skip_final_snapshot                 = true
 }
 `, rName))
 }

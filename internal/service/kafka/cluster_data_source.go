@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafka
 
 import (
@@ -55,6 +58,10 @@ func DataSourceCluster() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
+			},
+			"cluster_uuid": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"kafka_version": {
 				Type:     schema.TypeString,
@@ -122,7 +129,8 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s) bootstrap brokers: %s", aws.StringValue(cluster.ClusterArn), err)
 	}
 
-	d.Set("arn", cluster.ClusterArn)
+	clusterARN := aws.StringValue(cluster.ClusterArn)
+	d.Set("arn", clusterARN)
 	d.Set("bootstrap_brokers", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerString)))
 	d.Set("bootstrap_brokers_public_sasl_iam", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringPublicSaslIam)))
 	d.Set("bootstrap_brokers_public_sasl_scram", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringPublicSaslScram)))
@@ -131,6 +139,8 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("bootstrap_brokers_sasl_scram", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringSaslScram)))
 	d.Set("bootstrap_brokers_tls", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringTls)))
 	d.Set("cluster_name", cluster.ClusterName)
+	clusterUUID, _ := clusterUUIDFromARN(clusterARN)
+	d.Set("cluster_uuid", clusterUUID)
 	d.Set("kafka_version", cluster.CurrentBrokerSoftwareInfo.KafkaVersion)
 	d.Set("number_of_broker_nodes", cluster.NumberOfBrokerNodes)
 

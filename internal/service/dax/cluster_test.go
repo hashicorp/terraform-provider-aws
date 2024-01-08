@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dax_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dax"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -33,11 +36,11 @@ func TestAccDAXCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rString),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dc),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dax", regexp.MustCompile("cache/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dax", regexache.MustCompile("cache/.+")),
 					resource.TestCheckResourceAttr(
 						resourceName, "cluster_endpoint_encryption_type", "NONE"),
 					resource.TestMatchResourceAttr(
-						resourceName, "cluster_name", regexp.MustCompile(`^tf-\w+$`)),
+						resourceName, "cluster_name", regexache.MustCompile(`^tf-\w+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(
 						resourceName, "node_type", "dax.t2.small"),
@@ -46,19 +49,19 @@ func TestAccDAXCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(
 						resourceName, "description", "test cluster"),
 					resource.TestMatchResourceAttr(
-						resourceName, "parameter_group_name", regexp.MustCompile(`^default.dax`)),
+						resourceName, "parameter_group_name", regexache.MustCompile(`^default.dax`)),
 					resource.TestMatchResourceAttr(
-						resourceName, "maintenance_window", regexp.MustCompile(`^\w{3}:\d{2}:\d{2}-\w{3}:\d{2}:\d{2}$`)),
+						resourceName, "maintenance_window", regexache.MustCompile(`^\w{3}:\d{2}:\d{2}-\w{3}:\d{2}:\d{2}$`)),
 					resource.TestCheckResourceAttr(
 						resourceName, "subnet_group_name", "default"),
 					resource.TestMatchResourceAttr(
-						resourceName, "nodes.0.id", regexp.MustCompile(`^tf-[\w-]+$`)),
+						resourceName, "nodes.0.id", regexache.MustCompile(`^tf-[\w-]+$`)),
 					resource.TestMatchResourceAttr(
-						resourceName, "configuration_endpoint", regexp.MustCompile(`:\d+$`)),
+						resourceName, "configuration_endpoint", regexache.MustCompile(`:\d+$`)),
 					resource.TestCheckResourceAttrSet(
 						resourceName, "cluster_address"),
 					resource.TestMatchResourceAttr(
-						resourceName, "port", regexp.MustCompile(`^\d+$`)),
+						resourceName, "port", regexache.MustCompile(`^\d+$`)),
 					resource.TestCheckResourceAttr(
 						resourceName, "server_side_encryption.#", "1"),
 					resource.TestCheckResourceAttr(

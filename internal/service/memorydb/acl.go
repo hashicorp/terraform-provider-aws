@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package memorydb
 
 import (
@@ -13,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -75,6 +79,8 @@ func ResourceACL() *schema.Resource {
 }
 
 func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
@@ -91,19 +97,21 @@ func resourceACLCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	_, err := conn.CreateACLWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating MemoryDB ACL (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating MemoryDB ACL (%s): %s", name, err)
 	}
 
 	if err := waitACLActive(ctx, conn, name); err != nil {
-		return diag.Errorf("waiting for MemoryDB ACL (%s) to be created: %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB ACL (%s) to be created: %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceACLRead(ctx, d, meta)
+	return append(diags, resourceACLRead(ctx, d, meta)...)
 }
 
 func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -127,7 +135,7 @@ func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 		initialState, err := FindACLByName(ctx, conn, d.Id())
 		if err != nil {
-			return diag.Errorf("getting MemoryDB ACL (%s) current state: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "getting MemoryDB ACL (%s) current state: %s", d.Id(), err)
 		}
 
 		initialUserNames := map[string]struct{}{}
@@ -149,19 +157,21 @@ func resourceACLUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 			_, err := conn.UpdateACLWithContext(ctx, input)
 			if err != nil {
-				return diag.Errorf("updating MemoryDB ACL (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "updating MemoryDB ACL (%s): %s", d.Id(), err)
 			}
 
 			if err := waitACLActive(ctx, conn, d.Id()); err != nil {
-				return diag.Errorf("waiting for MemoryDB ACL (%s) to be modified: %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB ACL (%s) to be modified: %s", d.Id(), err)
 			}
 		}
 	}
 
-	return resourceACLRead(ctx, d, meta)
+	return append(diags, resourceACLRead(ctx, d, meta)...)
 }
 
 func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	acl, err := FindACLByName(ctx, conn, d.Id())
@@ -169,11 +179,11 @@ func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta interface
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MemoryDB ACL (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading MemoryDB ACL (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MemoryDB ACL (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", acl.ARN)
@@ -182,10 +192,12 @@ func resourceACLRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(acl.Name)))
 	d.Set("user_names", flex.FlattenStringSet(acl.UserNames))
 
-	return nil
+	return diags
 }
 
 func resourceACLDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	log.Printf("[DEBUG] Deleting MemoryDB ACL: (%s)", d.Id())
@@ -194,16 +206,16 @@ func resourceACLDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	})
 
 	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeACLNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting MemoryDB ACL (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting MemoryDB ACL (%s): %s", d.Id(), err)
 	}
 
 	if err := waitACLDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for MemoryDB ACL (%s) to be deleted: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB ACL (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

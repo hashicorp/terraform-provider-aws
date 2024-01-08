@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkfirewall
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -12,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -149,7 +153,7 @@ func DataSourceFirewall() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				AtLeastOneOf: []string{"arn", "name"},
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]{1,128}$`), "Must have 1-128 valid characters: a-z, A-Z, 0-9 and -(hyphen)"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), "Must have 1-128 valid characters: a-z, A-Z, 0-9 and -(hyphen)"),
 			},
 			"subnet_change_protection": {
 				Type:     schema.TypeBool,
@@ -181,6 +185,8 @@ func DataSourceFirewall() *schema.Resource {
 }
 
 func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -195,22 +201,22 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if input.FirewallArn == nil && input.FirewallName == nil {
-		return diag.Errorf("must specify either arn, name, or both")
+		return sdkdiag.AppendErrorf(diags, "must specify either arn, name, or both")
 	}
 
 	output, err := conn.DescribeFirewallWithContext(ctx, input)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, networkfirewall.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] NetworkFirewall Firewall (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading NetworkFirewall Firewall (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Firewall (%s): %s", d.Id(), err)
 	}
 
 	if output == nil || output.Firewall == nil {
-		return diag.Errorf("reading NetworkFirewall Firewall (%s): empty output", d.Id())
+		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Firewall (%s): empty output", d.Id())
 	}
 
 	firewall := output.Firewall
@@ -228,16 +234,16 @@ func dataSourceFirewallResourceRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("vpc_id", firewall.VpcId)
 
 	if err := d.Set("subnet_mapping", flattenDataSourceSubnetMappings(firewall.SubnetMappings)); err != nil {
-		return diag.Errorf("setting subnet_mappings: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting subnet_mappings: %s", err)
 	}
 
 	if err := d.Set("tags", KeyValueTags(ctx, firewall.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	d.SetId(aws.StringValue(firewall.FirewallArn))
 
-	return nil
+	return diags
 }
 
 func flattenDataSourceFirewallStatus(status *networkfirewall.FirewallStatus) []interface{} {

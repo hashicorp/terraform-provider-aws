@@ -31,7 +31,7 @@ data "aws_ebs_snapshot" "ebs_volume" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `most_recent` - (Optional) If more than one result is returned, use the most recent snapshot.
 
@@ -45,9 +45,9 @@ The following arguments are supported:
 several valid keys, for a full reference, check out
 [describe-snapshots in the AWS CLI reference][1].
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the EBS Snapshot.
 * `id` - Snapshot ID (e.g., snap-59fcb34e).

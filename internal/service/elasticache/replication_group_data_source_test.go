@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -117,7 +120,7 @@ func TestAccElastiCacheReplicationGroupDataSource_nonExistent(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccReplicationGroupDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`couldn't find resource`),
+				ExpectError: regexache.MustCompile(`couldn't find resource`),
 			},
 		},
 	})

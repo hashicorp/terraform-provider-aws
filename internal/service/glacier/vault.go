@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glacier
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/glacier"
 	"github.com/aws/aws-sdk-go-v2/service/glacier/types"
@@ -63,7 +66,7 @@ func resourceVault() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 255),
-					validation.StringMatch(regexp.MustCompile(`^[.0-9A-Za-z-_]+$`),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`),
 						"only alphanumeric characters, hyphens, underscores, and periods are allowed"),
 				),
 			},

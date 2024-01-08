@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -14,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -87,6 +91,8 @@ func ResourceTransitGatewayPeering() *schema.Resource {
 }
 
 func resourceTransitGatewayPeeringCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	coreNetworkID := d.Get("core_network_id").(string)
@@ -101,19 +107,21 @@ func resourceTransitGatewayPeeringCreate(ctx context.Context, d *schema.Resource
 	output, err := conn.CreateTransitGatewayPeeringWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Network Manager Transit Gateway (%s) Peering (%s): %s", transitGatewayARN, coreNetworkID, err)
+		return sdkdiag.AppendErrorf(diags, "creating Network Manager Transit Gateway (%s) Peering (%s): %s", transitGatewayARN, coreNetworkID, err)
 	}
 
 	d.SetId(aws.StringValue(output.TransitGatewayPeering.Peering.PeeringId))
 
 	if _, err := waitTransitGatewayPeeringCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Network Manager Transit Gateway Peering (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Transit Gateway Peering (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceTransitGatewayPeeringRead(ctx, d, meta)
+	return append(diags, resourceTransitGatewayPeeringRead(ctx, d, meta)...)
 }
 
 func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	transitGatewayPeering, err := FindTransitGatewayPeeringByID(ctx, conn, d.Id())
@@ -121,11 +129,11 @@ func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceDa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager Transit Gateway Peering %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Transit Gateway Peering (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Transit Gateway Peering (%s): %s", d.Id(), err)
 	}
 
 	p := transitGatewayPeering.Peering
@@ -147,7 +155,7 @@ func resourceTransitGatewayPeeringRead(ctx context.Context, d *schema.ResourceDa
 
 	setTagsOut(ctx, p.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceTransitGatewayPeeringUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -156,6 +164,8 @@ func resourceTransitGatewayPeeringUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceTransitGatewayPeeringDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Network Manager Transit Gateway Peering: %s", d.Id())
@@ -164,18 +174,18 @@ func resourceTransitGatewayPeeringDelete(ctx context.Context, d *schema.Resource
 	})
 
 	if tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Network Manager Transit Gateway Peering (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Network Manager Transit Gateway Peering (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitTransitGatewayPeeringDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Network Manager Transit Gateway Peering (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Transit Gateway Peering (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindTransitGatewayPeeringByID(ctx context.Context, conn *networkmanager.NetworkManager, id string) (*networkmanager.TransitGatewayPeering, error) {

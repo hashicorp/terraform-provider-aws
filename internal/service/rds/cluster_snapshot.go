@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -15,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -23,7 +27,7 @@ import (
 
 const clusterSnapshotCreateTimeout = 2 * time.Minute
 
-// @SDKResource("aws_db_cluster_snapshot", name="Cluster Snapshot")
+// @SDKResource("aws_db_cluster_snapshot", name="DB Cluster Snapshot")
 // @Tags(identifierAttribute="db_cluster_snapshot_arn")
 func ResourceClusterSnapshot() *schema.Resource {
 	return &schema.Resource{
@@ -65,10 +69,10 @@ func ResourceClusterSnapshot() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
-					validation.StringMatch(regexp.MustCompile(`^[a-z]`), "must begin with a lowercase letter"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-					validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]+$`), "must contain only lowercase alphanumeric characters and hyphens"),
+					validation.StringMatch(regexache.MustCompile(`^[a-z]`), "must begin with a lowercase letter"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
 				),
 			},
 			"engine": {
@@ -216,8 +220,48 @@ func FindDBClusterSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*
 	input := &rds.DescribeDBClusterSnapshotsInput{
 		DBClusterSnapshotIdentifier: aws.String(id),
 	}
+	output, err := findDBClusterSnapshot(ctx, conn, input, tfslices.PredicateTrue[*rds.DBClusterSnapshot]())
 
-	output, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.DBClusterSnapshotIdentifier) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findDBClusterSnapshot(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBClusterSnapshotsInput, filter tfslices.Predicate[*rds.DBClusterSnapshot]) (*rds.DBClusterSnapshot, error) {
+	output, err := findDBClusterSnapshots(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findDBClusterSnapshots(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBClusterSnapshotsInput, filter tfslices.Predicate[*rds.DBClusterSnapshot]) ([]*rds.DBClusterSnapshot, error) {
+	var output []*rds.DBClusterSnapshot
+
+	err := conn.DescribeDBClusterSnapshotsPagesWithContext(ctx, input, func(page *rds.DescribeDBClusterSnapshotsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBClusterSnapshots {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
 		return nil, &retry.NotFoundError{
@@ -230,24 +274,7 @@ func FindDBClusterSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*
 		return nil, err
 	}
 
-	if output == nil || len(output.DBClusterSnapshots) == 0 || output.DBClusterSnapshots[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.DBClusterSnapshots); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	dbClusterSnapshot := output.DBClusterSnapshots[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(dbClusterSnapshot.DBClusterSnapshotIdentifier) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return dbClusterSnapshot, nil
+	return output, nil
 }
 
 func statusDBClusterSnapshot(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {

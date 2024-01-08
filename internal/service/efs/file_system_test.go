@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/efs"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -31,14 +34,17 @@ func TestAccEFSFileSystem_basic(t *testing.T) {
 				Config: testAccFileSystemConfig_basic,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticfilesystem", regexp.MustCompile(`file-system/fs-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticfilesystem", regexache.MustCompile(`file-system/fs-.+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_token"),
-					acctest.MatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexp.MustCompile(`fs-[^.]+`)),
+					acctest.MatchResourceAttrRegionalHostname(resourceName, "dns_name", "efs", regexache.MustCompile(`fs-[^.]+`)),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "false"),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", ""),
 					resource.TestCheckResourceAttr(resourceName, "number_of_mount_targets", "0"),
 					acctest.MatchResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "performance_mode", "generalPurpose"),
+					resource.TestCheckResourceAttr(resourceName, "protection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protection.0.replication_overwrite", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "size_in_bytes.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "size_in_bytes.0.value"),
 					resource.TestCheckResourceAttrSet(resourceName, "size_in_bytes.0.value_in_ia"),
@@ -101,6 +107,41 @@ func TestAccEFSFileSystem_performanceMode(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccEFSFileSystem_protection(t *testing.T) {
+	ctx := acctest.Context(t)
+	var desc efs.FileSystemDescription
+	resourceName := "aws_efs_file_system.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFileSystemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFileSystemConfig_protection("DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileSystem(ctx, resourceName, &desc),
+					resource.TestCheckResourceAttr(resourceName, "protection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "protection.0.replication_overwrite", "DISABLED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFileSystemConfig_protection("ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileSystem(ctx, resourceName, &desc),
+					resource.TestCheckResourceAttr(resourceName, "protection.0.replication_overwrite", "ENABLED"),
+				),
 			},
 		},
 	})
@@ -215,8 +256,11 @@ func TestAccEFSFileSystem_kmsKey(t *testing.T) {
 				Config: testAccFileSystemConfig_kmsKey(rName, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
-					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "encrypted", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", kmsKeyResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
 			{
@@ -240,7 +284,7 @@ func TestAccEFSFileSystem_kmsWithoutEncryption(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccFileSystemConfig_kmsKey(rName, false),
-				ExpectError: regexp.MustCompile(`encrypted must be set to true when kms_key_id is specified`),
+				ExpectError: regexache.MustCompile(`encrypted must be set to true when kms_key_id is specified`),
 			},
 		},
 	})
@@ -334,7 +378,7 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 					"transition_to_ia",
 					"invalid_value",
 				),
-				ExpectError: regexp.MustCompile(`got invalid_value`),
+				ExpectError: regexache.MustCompile(`got invalid_value`),
 			},
 			{
 				Config: testAccFileSystemConfig_lifecyclePolicy(
@@ -344,7 +388,9 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_archive", ""),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_ia", efs.TransitionToIARulesAfter30Days),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_primary_storage_class", ""),
 				),
 			},
 			{
@@ -360,6 +406,8 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_archive", ""),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_ia", ""),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_primary_storage_class", efs.TransitionToPrimaryStorageClassRulesAfter1Access),
 				),
 			},
@@ -380,8 +428,30 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystem(ctx, resourceName, &desc),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_archive", ""),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_ia", ""),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_primary_storage_class", efs.TransitionToPrimaryStorageClassRulesAfter1Access),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.1.transition_to_archive", ""),
 					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.1.transition_to_ia", efs.TransitionToIARulesAfter30Days),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.1.transition_to_primary_storage_class", ""),
+				),
+			},
+			{
+				Config: testAccFileSystemConfig_lifecyclePolicyTransitionToArchive(
+					"transition_to_ia",
+					efs.TransitionToIARulesAfter30Days,
+					"transition_to_archive",
+					efs.TransitionToArchiveRulesAfter60Days,
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileSystem(ctx, resourceName, &desc),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_archive", ""),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_ia", efs.TransitionToIARulesAfter30Days),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_primary_storage_class", ""),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.1.transition_to_archive", efs.TransitionToArchiveRulesAfter60Days),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.1.transition_to_ia", ""),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.1.transition_to_primary_storage_class", ""),
 				),
 			},
 		},
@@ -419,9 +489,6 @@ func testAccCheckFileSystem(ctx context.Context, n string, v *efs.FileSystemDesc
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EFS file system ID is set")
-		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn(ctx)
 
@@ -446,6 +513,16 @@ resource "aws_efs_file_system" "test" {
   performance_mode = "maxIO"
 }
 `
+
+func testAccFileSystemConfig_protection(replicationOverwwrite string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  protection {
+    replication_overwrite = %[1]q
+  }
+}
+`, replicationOverwwrite)
+}
 
 func testAccFileSystemConfig_availabilityZoneName(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
@@ -568,6 +645,10 @@ resource "aws_kms_key" "test" {
 resource "aws_efs_file_system" "test" {
   encrypted  = %[2]t
   kms_key_id = aws_kms_key.test.arn
+
+  tags = {
+    Name = %[1]q
+  }
 }
 `, rName, enable)
 }
@@ -602,6 +683,22 @@ resource "aws_efs_file_system" "test" {
 func testAccFileSystemConfig_lifecyclePolicyMulti(lpName1, lpVal1, lpName2, lpVal2 string) string {
 	return fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
+  lifecycle_policy {
+    %[1]s = %[2]q
+  }
+
+  lifecycle_policy {
+    %[3]s = %[4]q
+  }
+}
+`, lpName1, lpVal1, lpName2, lpVal2)
+}
+
+func testAccFileSystemConfig_lifecyclePolicyTransitionToArchive(lpName1, lpVal1, lpName2, lpVal2 string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  throughput_mode = "elastic"
+
   lifecycle_policy {
     %[1]s = %[2]q
   }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codebuild
 
 import (
@@ -145,7 +148,7 @@ func resourceReportGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if err != nil {
-		return create.DiagError(names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && reportGroup == nil {
@@ -155,7 +158,7 @@ func resourceReportGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if reportGroup == nil {
-		return create.DiagError(names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id(), errors.New("not found after creation"))
+		return create.AppendDiagError(diags, names.CodeBuild, create.ErrActionReading, ResNameReportGroup, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("arn", reportGroup.Arn)

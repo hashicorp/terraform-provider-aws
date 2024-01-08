@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
@@ -50,7 +53,7 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+				ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
 			},
 			"domain_validation_records": {
 				Type:     schema.TypeSet,
@@ -83,8 +86,8 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 255),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with an alphabetic character"),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+[^._\-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with an alphabetic character"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
 				),
 			},
 			"name": {
@@ -93,8 +96,8 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 255),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with an alphabetic character"),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+[^._\-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with an alphabetic character"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
 				),
 			},
 			"subject_alternative_names": {
@@ -106,7 +109,7 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 253),
-						validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
 					),
 				},
 				Set: schema.HashString,
@@ -141,6 +144,8 @@ func ResourceLoadBalancerCertificate() *schema.Resource {
 }
 
 func resourceLoadBalancerCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	certName := d.Get("name").(string)
 	in := lightsail.CreateLoadBalancerTlsCertificateInput{
@@ -156,7 +161,7 @@ func resourceLoadBalancerCertificateCreate(ctx context.Context, d *schema.Resour
 	out, err := conn.CreateLoadBalancerTlsCertificate(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeCreateLoadBalancerTlsCertificate), ResLoadBalancerCertificate, certName, err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeCreateLoadBalancerTlsCertificate), ResLoadBalancerCertificate, certName, err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeCreateLoadBalancerTlsCertificate, ResLoadBalancerCertificate, certName)
@@ -173,10 +178,12 @@ func resourceLoadBalancerCertificateCreate(ctx context.Context, d *schema.Resour
 
 	d.SetId(strings.Join(vars, ","))
 
-	return resourceLoadBalancerCertificateRead(ctx, d, meta)
+	return append(diags, resourceLoadBalancerCertificateRead(ctx, d, meta)...)
 }
 
 func resourceLoadBalancerCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindLoadBalancerCertificateById(ctx, conn, d.Id())
@@ -184,11 +191,11 @@ func resourceLoadBalancerCertificateRead(ctx context.Context, d *schema.Resource
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResLoadBalancerCertificate, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResLoadBalancerCertificate, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResLoadBalancerCertificate, d.Id(), err)
 	}
 
 	d.Set("arn", out.Arn)
@@ -200,10 +207,12 @@ func resourceLoadBalancerCertificateRead(ctx context.Context, d *schema.Resource
 	d.Set("subject_alternative_names", out.SubjectAlternativeNames)
 	d.Set("support_code", out.SupportCode)
 
-	return nil
+	return diags
 }
 
 func resourceLoadBalancerCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	id_parts := strings.SplitN(d.Id(), ",", -1)
@@ -216,7 +225,7 @@ func resourceLoadBalancerCertificateDelete(ctx context.Context, d *schema.Resour
 	})
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeDeleteLoadBalancerTlsCertificate), ResLoadBalancerCertificate, certName, err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeDeleteLoadBalancerTlsCertificate), ResLoadBalancerCertificate, certName, err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeDeleteLoadBalancerTlsCertificate, ResLoadBalancerCertificate, certName)
@@ -225,7 +234,7 @@ func resourceLoadBalancerCertificateDelete(ctx context.Context, d *schema.Resour
 		return diag
 	}
 
-	return nil
+	return diags
 }
 
 func flattenLoadBalancerDomainValidationRecords(domainValidationRecords []types.LoadBalancerTlsCertificateDomainValidationRecord) []map[string]interface{} {

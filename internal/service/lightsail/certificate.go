@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
@@ -53,7 +56,7 @@ func ResourceCertificate() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+				ValidateFunc: validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
 			},
 			"domain_validation_options": {
 				Type:     schema.TypeSet,
@@ -86,8 +89,8 @@ func ResourceCertificate() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 255),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with an alphabetic character"),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]+[^._\-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with an alphabetic character"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
 				),
 			},
 			"subject_alternative_names": {
@@ -99,7 +102,7 @@ func ResourceCertificate() *schema.Resource {
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 253),
-						validation.StringDoesNotMatch(regexp.MustCompile(`\.$`), "cannot end with a period"),
+						validation.StringDoesNotMatch(regexache.MustCompile(`\.$`), "cannot end with a period"),
 					),
 				},
 				Set: schema.HashString,
@@ -131,6 +134,8 @@ func ResourceCertificate() *schema.Resource {
 }
 
 func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	req := lightsail.CreateCertificateInput{
@@ -146,7 +151,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	resp, err := conn.CreateCertificate(ctx, &req)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeCreateCertificate), ResCertificate, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeCreateCertificate), ResCertificate, d.Get("name").(string), err)
 	}
 
 	id := d.Get("name").(string)
@@ -158,10 +163,12 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(id)
 
-	return resourceCertificateRead(ctx, d, meta)
+	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
 func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	certificate, err := FindCertificateById(ctx, conn, d.Id())
@@ -169,11 +176,11 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResCertificate, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResCertificate, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResCertificate, d.Id(), err)
 	}
 
 	d.Set("arn", certificate.Arn)
@@ -185,7 +192,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	setTagsOut(ctx, certificate.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -194,6 +201,8 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	resp, err := conn.DeleteCertificate(ctx, &lightsail.DeleteCertificateInput{
@@ -201,11 +210,11 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if err != nil && errs.IsA[*types.NotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionDeleting, ResCertificate, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionDeleting, ResCertificate, d.Id(), err)
 	}
 
 	diag := expandOperations(ctx, conn, resp.Operations, types.OperationTypeDeleteCertificate, ResCertificate, d.Id())
@@ -214,7 +223,7 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 		return diag
 	}
 
-	return nil
+	return diags
 }
 
 func domainValidationOptionsHash(v interface{}) int {

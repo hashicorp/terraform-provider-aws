@@ -1,9 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package outposts_test
 
 import (
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,11 +24,11 @@ func TestAccOutpostsAssetDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOutpostAssetDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "outposts", regexp.MustCompile(`outpost/.+`)),
-					resource.TestMatchResourceAttr(dataSourceName, "asset_id", regexp.MustCompile(`^(\w+)$`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "outposts", regexache.MustCompile(`outpost/.+`)),
+					resource.TestMatchResourceAttr(dataSourceName, "asset_id", regexache.MustCompile(`^(\w+)$`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "asset_type"),
-					resource.TestMatchResourceAttr(dataSourceName, "rack_elevation", regexp.MustCompile(`^[\S \n]+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "rack_id", regexp.MustCompile(`^[\S \n]+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "rack_elevation", regexache.MustCompile(`^[\S \n]+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "rack_id", regexache.MustCompile(`^[\S \n]+$`)),
 				),
 			},
 		},

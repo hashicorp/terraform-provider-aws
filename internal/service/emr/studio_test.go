@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/emr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -33,7 +36,7 @@ func TestAccEMRStudio_sso(t *testing.T) {
 				Config: testAccStudioConfig_sso(rName1, rName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioExists(ctx, resourceName, &studio),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticmapreduce", regexp.MustCompile(`studio/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticmapreduce", regexache.MustCompile(`studio/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "SSO"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),
@@ -55,7 +58,7 @@ func TestAccEMRStudio_sso(t *testing.T) {
 				Config: testAccStudioConfig_sso(rName1, rName2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStudioExists(ctx, resourceName, &studio),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticmapreduce", regexp.MustCompile(`studio/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticmapreduce", regexache.MustCompile(`studio/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 					resource.TestCheckResourceAttr(resourceName, "auth_mode", "SSO"),
 					resource.TestCheckResourceAttrSet(resourceName, "url"),

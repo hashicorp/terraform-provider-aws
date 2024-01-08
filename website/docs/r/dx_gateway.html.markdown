@@ -21,14 +21,14 @@ resource "aws_dx_gateway" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the connection.
 * `amazon_side_asn` - (Required) The ASN to be configured on the Amazon side of the connection. The ASN must be in the private range of 64,512 to 65,534 or 4,200,000,000 to 4,294,967,294.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the gateway.
 * `owner_account_id` - AWS Account ID of the gateway.
@@ -42,8 +42,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Direct Connect Gateways can be imported using the `gateway id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Direct Connect Gateways using the gateway `id`. For example:
 
+```terraform
+import {
+  to = aws_dx_gateway.test
+  id = "abcd1234-dcba-5678-be23-cdef9876ab45"
+}
 ```
-$ terraform import aws_dx_gateway.test abcd1234-dcba-5678-be23-cdef9876ab45
+
+Using `terraform import`, import Direct Connect Gateways using the gateway `id`. For example:
+
+```console
+% terraform import aws_dx_gateway.test abcd1234-dcba-5678-be23-cdef9876ab45
 ```

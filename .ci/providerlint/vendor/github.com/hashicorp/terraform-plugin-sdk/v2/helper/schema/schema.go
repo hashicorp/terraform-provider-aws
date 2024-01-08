@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // schema is a high-level framework for easily writing new providers
 // for Terraform. Usage of schema is recommended over attempting to write
 // to the low-level plugin interfaces manually.
@@ -88,10 +91,6 @@ type Schema struct {
 	// Optional indicates whether the practitioner can choose to not enter
 	// a value in the configuration for this attribute. Optional cannot be used
 	// with Required.
-	//
-	// If also using Default or DefaultFunc, Computed should also be enabled,
-	// otherwise Terraform can output warning logs or "inconsistent result
-	// after apply" errors.
 	Optional bool
 
 	// Computed indicates whether the provider may return its own value for
@@ -940,7 +939,7 @@ func (m schemaMap) internalValidate(topSchemaMap schemaMap, attrsOnly bool) erro
 			case *Resource:
 				attrsOnly := attrsOnly || v.ConfigMode == SchemaConfigModeAttr
 
-				if err := schemaMap(t.Schema).internalValidate(topSchemaMap, attrsOnly); err != nil {
+				if err := schemaMap(t.SchemaMap()).internalValidate(topSchemaMap, attrsOnly); err != nil {
 					return err
 				}
 			case *Schema:
@@ -1070,7 +1069,7 @@ func checkKeysAgainstSchemaFlags(k string, keys []string, topSchemaMap schemaMap
 				return fmt.Errorf("%s configuration block reference (%s) can only be used with TypeList and MaxItems: 1 configuration blocks", k, key)
 			}
 
-			sm = schemaMap(subResource.Schema)
+			sm = subResource.SchemaMap()
 		}
 
 		if target == nil {
@@ -1260,7 +1259,7 @@ func (m schemaMap) diffList(
 	case *Resource:
 		// This is a complex resource
 		for i := 0; i < maxLen; i++ {
-			for k2, schema := range t.Schema {
+			for k2, schema := range t.SchemaMap() {
 				subK := fmt.Sprintf("%s.%d.%s", k, i, k2)
 				err := m.diff(ctx, subK, schema, diff, d, all)
 				if err != nil {
@@ -1507,7 +1506,7 @@ func (m schemaMap) diffSet(
 			switch t := schema.Elem.(type) {
 			case *Resource:
 				// This is a complex resource
-				for k2, schema := range t.Schema {
+				for k2, schema := range t.SchemaMap() {
 					subK := fmt.Sprintf("%s.%s.%s", k, code, k2)
 					err := m.diff(ctx, subK, schema, diff, d, true)
 					if err != nil {
@@ -1974,7 +1973,7 @@ func (m schemaMap) validateList(
 		switch t := schema.Elem.(type) {
 		case *Resource:
 			// This is a sub-resource
-			diags = append(diags, m.validateObject(key, t.Schema, c, p)...)
+			diags = append(diags, m.validateObject(key, t.SchemaMap(), c, p)...)
 		case *Schema:
 			diags = append(diags, m.validateType(key, raw, t, c, p)...)
 		}

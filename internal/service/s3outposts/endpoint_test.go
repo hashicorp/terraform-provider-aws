@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3outposts_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/s3outposts"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -32,7 +35,7 @@ func TestAccS3OutpostsEndpoint_basic(t *testing.T) {
 				Config: testAccEndpointConfig_basic(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexp.MustCompile(`outpost/[^/]+/endpoint/[a-z0-9]+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexache.MustCompile(`outpost/[^/]+/endpoint/[0-9a-z]+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttrPair(resourceName, "cidr_block", "aws_vpc.test", "cidr_block"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "4"),
@@ -68,7 +71,7 @@ func TestAccS3OutpostsEndpoint_private(t *testing.T) {
 				Config: testAccEndpointConfig_private(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexp.MustCompile(`outpost/[^/]+/endpoint/[a-z0-9]+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexache.MustCompile(`outpost/[^/]+/endpoint/[0-9a-z]+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttrPair(resourceName, "cidr_block", "aws_vpc.test", "cidr_block"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "4"),
@@ -104,7 +107,7 @@ func TestAccS3OutpostsEndpoint_customerOwnedIPv4Pool(t *testing.T) {
 				Config: testAccEndpointConfig_customerOwnedIPv4Pool(rName, rInt),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexp.MustCompile(`outpost/[^/]+/endpoint/[a-z0-9]+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "s3-outposts", regexache.MustCompile(`outpost/[^/]+/endpoint/[0-9a-z]+`)),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttrPair(resourceName, "cidr_block", "aws_vpc.test", "cidr_block"),
 					resource.TestCheckResourceAttr(resourceName, "network_interfaces.#", "4"),
@@ -112,7 +115,7 @@ func TestAccS3OutpostsEndpoint_customerOwnedIPv4Pool(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "security_group_id", "aws_security_group.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", "aws_subnet.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "access_type", "CustomerOwnedIp"),
-					resource.TestMatchResourceAttr(resourceName, "customer_owned_ipv4_pool", regexp.MustCompile(`^ipv4pool-coip-.+$`)),
+					resource.TestMatchResourceAttr(resourceName, "customer_owned_ipv4_pool", regexache.MustCompile(`^ipv4pool-coip-.+$`)),
 				),
 			},
 			{

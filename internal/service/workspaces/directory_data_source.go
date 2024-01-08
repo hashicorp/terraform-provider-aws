@@ -1,9 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package workspaces
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -168,7 +171,7 @@ func DataSourceDirectory() *schema.Resource {
 
 func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
+	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	directoryID := d.Get("directory_id").(string)
@@ -177,13 +180,13 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting WorkSpaces Directory (%s): %s", directoryID, err)
 	}
-	if state == workspaces.WorkspaceDirectoryStateDeregistered {
+	if state == string(types.WorkspaceDirectoryStateDeregistered) {
 		return sdkdiag.AppendErrorf(diags, "WorkSpaces directory %s was not found", directoryID)
 	}
 
 	d.SetId(directoryID)
 
-	directory := rawOutput.(*workspaces.WorkspaceDirectory)
+	directory := rawOutput.(*types.WorkspaceDirectory)
 	d.Set("directory_id", directory.DirectoryId)
 	d.Set("workspace_security_group_id", directory.WorkspaceSecurityGroupId)
 	d.Set("iam_role_id", directory.IamRoleId)
@@ -192,7 +195,7 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("directory_type", directory.DirectoryType)
 	d.Set("alias", directory.Alias)
 
-	if err := d.Set("subnet_ids", flex.FlattenStringSet(directory.SubnetIds)); err != nil {
+	if err := d.Set("subnet_ids", flex.FlattenStringValueSet(directory.SubnetIds)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting subnet_ids: %s", err)
 	}
 
@@ -208,11 +211,11 @@ func dataSourceDirectoryRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting workspace_creation_properties: %s", err)
 	}
 
-	if err := d.Set("ip_group_ids", flex.FlattenStringSet(directory.IpGroupIds)); err != nil {
+	if err := d.Set("ip_group_ids", flex.FlattenStringValueSet(directory.IpGroupIds)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ip_group_ids: %s", err)
 	}
 
-	if err := d.Set("dns_ip_addresses", flex.FlattenStringSet(directory.DnsIpAddresses)); err != nil {
+	if err := d.Set("dns_ip_addresses", flex.FlattenStringValueSet(directory.DnsIpAddresses)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting dns_ip_addresses: %s", err)
 	}
 

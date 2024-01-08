@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package signer
 
 import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/signer"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/signer"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -148,10 +151,10 @@ func DataSourceSigningJob() *schema.Resource {
 
 func dataSourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SignerConn(ctx)
+	conn := meta.(*conns.AWSClient).SignerClient(ctx)
 	jobId := d.Get("job_id").(string)
 
-	describeSigningJobOutput, err := conn.DescribeSigningJobWithContext(ctx, &signer.DescribeSigningJobInput{
+	describeSigningJobOutput, err := conn.DescribeSigningJob(ctx, &signer.DescribeSigningJobInput{
 		JobId: aws.String(jobId),
 	})
 
@@ -159,11 +162,11 @@ func dataSourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Signer signing job (%s): %s", d.Id(), err)
 	}
 
-	if err := d.Set("completed_at", aws.TimeValue(describeSigningJobOutput.CompletedAt).Format(time.RFC3339)); err != nil {
+	if err := d.Set("completed_at", aws.ToTime(describeSigningJobOutput.CompletedAt).Format(time.RFC3339)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job completed at: %s", err)
 	}
 
-	if err := d.Set("created_at", aws.TimeValue(describeSigningJobOutput.CreatedAt).Format(time.RFC3339)); err != nil {
+	if err := d.Set("created_at", aws.ToTime(describeSigningJobOutput.CreatedAt).Format(time.RFC3339)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job created at: %s", err)
 	}
 
@@ -201,7 +204,7 @@ func dataSourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	signatureExpiresAt := ""
 	if describeSigningJobOutput.SignatureExpiresAt != nil {
-		signatureExpiresAt = aws.TimeValue(describeSigningJobOutput.SignatureExpiresAt).Format(time.RFC3339)
+		signatureExpiresAt = aws.ToTime(describeSigningJobOutput.SignatureExpiresAt).Format(time.RFC3339)
 	}
 	if err := d.Set("signature_expires_at", signatureExpiresAt); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job requested by: %s", err)
@@ -223,7 +226,7 @@ func dataSourceSigningJobRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting signer signing job status reason: %s", err)
 	}
 
-	d.SetId(aws.StringValue(describeSigningJobOutput.JobId))
+	d.SetId(aws.ToString(describeSigningJobOutput.JobId))
 
 	return diags
 }

@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -33,7 +36,7 @@ func testAccResolver_basic(t *testing.T) {
 				Config: testAccResolverConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResolverExists(ctx, resourceName, &resolver1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexp.MustCompile("apis/.+/types/.+/resolvers/.+")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appsync", regexache.MustCompile("apis/.+/types/.+/resolvers/.+")),
 					resource.TestCheckResourceAttr(resourceName, "data_source", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "request_template"),
 					resource.TestCheckResourceAttr(resourceName, "max_batch_size", "0"),
@@ -216,7 +219,7 @@ func testAccResolver_requestTemplate(t *testing.T) {
 				Config: testAccResolverConfig_requestTemplate(rName, "/"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResolverExists(ctx, resourceName, &resolver1),
-					resource.TestMatchResourceAttr(resourceName, "request_template", regexp.MustCompile("resourcePath\": \"/\"")),
+					resource.TestMatchResourceAttr(resourceName, "request_template", regexache.MustCompile("resourcePath\": \"/\"")),
 				),
 			},
 			{
@@ -228,7 +231,7 @@ func testAccResolver_requestTemplate(t *testing.T) {
 				Config: testAccResolverConfig_requestTemplate(rName, "/test"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResolverExists(ctx, resourceName, &resolver2),
-					resource.TestMatchResourceAttr(resourceName, "request_template", regexp.MustCompile("resourcePath\": \"/test\"")),
+					resource.TestMatchResourceAttr(resourceName, "request_template", regexache.MustCompile("resourcePath\": \"/test\"")),
 				),
 			},
 		},
@@ -251,7 +254,7 @@ func testAccResolver_responseTemplate(t *testing.T) {
 				Config: testAccResolverConfig_responseTemplate(rName, 200),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResolverExists(ctx, resourceName, &resolver1),
-					resource.TestMatchResourceAttr(resourceName, "response_template", regexp.MustCompile(`ctx\.result\.statusCode == 200`)),
+					resource.TestMatchResourceAttr(resourceName, "response_template", regexache.MustCompile(`ctx\.result\.statusCode == 200`)),
 				),
 			},
 			{
@@ -263,7 +266,7 @@ func testAccResolver_responseTemplate(t *testing.T) {
 				Config: testAccResolverConfig_responseTemplate(rName, 201),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResolverExists(ctx, resourceName, &resolver2),
-					resource.TestMatchResourceAttr(resourceName, "response_template", regexp.MustCompile(`ctx\.result\.statusCode == 201`)),
+					resource.TestMatchResourceAttr(resourceName, "response_template", regexache.MustCompile(`ctx\.result\.statusCode == 201`)),
 				),
 			},
 		},

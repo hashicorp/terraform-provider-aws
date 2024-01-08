@@ -55,8 +55,8 @@ The following arguments are optional:
 * `cidrs` - (Optional) Set of CIDR blocks.
 * `cidr_list_aliases` - (Optional) Set of CIDR aliases that define access for a preconfigured range of IP addresses.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the resource.

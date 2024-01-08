@@ -1,17 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kendra
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -42,7 +46,7 @@ func DataSourceFaq() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 100),
 					validation.StringMatch(
-						regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_-]*`),
+						regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
 						"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens.",
 					),
 				),
@@ -55,7 +59,7 @@ func DataSourceFaq() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringMatch(
-					regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9-]{35}`),
+					regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]{35}`),
 					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
 				),
 			},
@@ -101,6 +105,8 @@ func DataSourceFaq() *schema.Resource {
 }
 
 func dataSourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -110,11 +116,11 @@ func dataSourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	resp, err := FindFaqByID(ctx, conn, id, indexId)
 
 	if err != nil {
-		return diag.Errorf("getting Kendra Faq (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Kendra Faq (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil {
-		return diag.Errorf("getting Kendra Faq (%s): empty response", id)
+		return sdkdiag.AppendErrorf(diags, "getting Kendra Faq (%s): empty response", id)
 	}
 
 	arn := arn.ARN{
@@ -139,20 +145,20 @@ func dataSourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
 	if err := d.Set("s3_path", flattenS3Path(resp.S3Path)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	tags, err := listTags(ctx, conn, arn)
 	if err != nil {
-		return diag.Errorf("listing tags for resource (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for resource (%s): %s", arn, err)
 	}
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", id, indexId))
 
-	return nil
+	return diags
 }

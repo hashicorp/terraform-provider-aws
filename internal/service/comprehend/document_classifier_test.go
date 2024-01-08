@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package comprehend_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
@@ -46,7 +49,7 @@ func TestAccComprehendDocumentClassifier_basic(t *testing.T) {
 					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", "arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.DocumentClassifierDataFormatComprehendCsv)),
@@ -140,7 +143,7 @@ func TestAccComprehendDocumentClassifier_versionName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "version_name", vName1),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, vName1))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, vName1))),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key", "value1"),
 				),
@@ -158,7 +161,7 @@ func TestAccComprehendDocumentClassifier_versionName(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "version_name", vName2),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, vName2))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, vName2))),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key", "value2"),
 				),
@@ -200,7 +203,7 @@ func TestAccComprehendDocumentClassifier_versionNameEmpty(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "version_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", ""),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s$`, rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s$`, rName))),
 				),
 			},
 			{
@@ -239,7 +242,7 @@ func TestAccComprehendDocumentClassifier_versionNameGenerated(t *testing.T) {
 					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					acctest.CheckResourceAttrNameGenerated(resourceName, "version_name"),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", id.UniqueIdPrefix),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
 				),
 			},
 			{
@@ -278,7 +281,7 @@ func TestAccComprehendDocumentClassifier_versionNamePrefix(t *testing.T) {
 					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					acctest.CheckResourceAttrNameFromPrefix(resourceName, "version_name", "tf-acc-test-prefix-"),
 					resource.TestCheckResourceAttr(resourceName, "version_name_prefix", "tf-acc-test-prefix-"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, prefixedUniqueIDPattern("tf-acc-test-prefix-")))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, prefixedUniqueIDPattern("tf-acc-test-prefix-")))),
 				),
 			},
 			{
@@ -316,7 +319,7 @@ func TestAccComprehendDocumentClassifier_testDocuments(t *testing.T) {
 					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
 					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.DocumentClassifierDataFormatComprehendCsv)),
@@ -360,19 +363,19 @@ func TestAccComprehendDocumentClassifier_SingleLabel_ValidateNoDelimiterSet(t *t
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDocumentClassifierConfig_modeDefault_ValidateNoDelimiterSet(rName, tfcomprehend.DocumentClassifierLabelSeparatorDefault),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`input_data_config.label_delimiter must not be set when mode is %s`, types.DocumentClassifierModeMultiClass)),
+				ExpectError: regexache.MustCompile(fmt.Sprintf(`input_data_config.label_delimiter must not be set when mode is %s`, types.DocumentClassifierModeMultiClass)),
 			},
 			{
 				Config:      testAccDocumentClassifierConfig_modeDefault_ValidateNoDelimiterSet(rName, ">"),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`input_data_config.label_delimiter must not be set when mode is %s`, types.DocumentClassifierModeMultiClass)),
+				ExpectError: regexache.MustCompile(fmt.Sprintf(`input_data_config.label_delimiter must not be set when mode is %s`, types.DocumentClassifierModeMultiClass)),
 			},
 			{
 				Config:      testAccDocumentClassifierConfig_modeSingleLabel_ValidateNoDelimiterSet(rName, tfcomprehend.DocumentClassifierLabelSeparatorDefault),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`input_data_config.label_delimiter must not be set when mode is %s`, types.DocumentClassifierModeMultiClass)),
+				ExpectError: regexache.MustCompile(fmt.Sprintf(`input_data_config.label_delimiter must not be set when mode is %s`, types.DocumentClassifierModeMultiClass)),
 			},
 			{
 				Config:      testAccDocumentClassifierConfig_modeSingleLabel_ValidateNoDelimiterSet(rName, ">"),
-				ExpectError: regexp.MustCompile(fmt.Sprintf(`input_data_config.label_delimiter must not be set when mode is %s`, types.DocumentClassifierModeMultiClass)),
+				ExpectError: regexache.MustCompile(fmt.Sprintf(`input_data_config.label_delimiter must not be set when mode is %s`, types.DocumentClassifierModeMultiClass)),
 			},
 		},
 	})
@@ -405,7 +408,7 @@ func TestAccComprehendDocumentClassifier_multiLabel_basic(t *testing.T) {
 					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", "arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.DocumentClassifierDataFormatComprehendCsv)),
@@ -460,8 +463,8 @@ func TestAccComprehendDocumentClassifier_outputDataConfig_basic(t *testing.T) {
 					testAccCheckDocumentClassifierExists(ctx, resourceName, &documentclassifier),
 					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.s3_uri", regexp.MustCompile(`s3://.+/outputs`)),
-					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.output_s3_uri", regexp.MustCompile(`s3://.+/outputs/[-A-Za-z0-9]+/output/output.tar.gz`)),
+					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.s3_uri", regexache.MustCompile(`s3://.+/outputs`)),
+					resource.TestMatchResourceAttr(resourceName, "output_data_config.0.output_s3_uri", regexache.MustCompile(`s3://.+/outputs/[0-9A-Za-z-]+/output/output.tar.gz`)),
 				),
 			},
 			{
@@ -815,7 +818,7 @@ func TestAccComprehendDocumentClassifier_multiLabel_labelDelimiter(t *testing.T)
 					testAccCheckDocumentClassifierPublishedVersions(ctx, resourceName, 1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "data_access_role_arn", "aws_iam_role.test", "arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexp.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "comprehend", regexache.MustCompile(fmt.Sprintf(`document-classifier/%s/version/%s$`, rName, uniqueIDPattern()))),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.augmented_manifests.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "input_data_config.0.data_format", string(types.DocumentClassifierDataFormatComprehendCsv)),

@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -73,7 +76,7 @@ func ResourceMonitoringSchedule() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 										ValidateFunc: validation.All(
-											validation.StringMatch(regexp.MustCompile(`^cron`), ""),
+											validation.StringMatch(regexache.MustCompile(`^cron`), ""),
 											validation.StringLenBetween(1, 512),
 										),
 									},

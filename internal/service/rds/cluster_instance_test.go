@@ -1,12 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
-	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -39,14 +41,17 @@ func TestAccRDSClusterInstance_basic(t *testing.T) {
 				Config: testAccClusterInstanceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexp.MustCompile(`db:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "rds", regexache.MustCompile(`db:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttrSet(resourceName, "availability_zone"),
 					resource.TestCheckResourceAttr(resourceName, "cluster_identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "copy_tags_to_snapshot", "false"),
+					resource.TestCheckResourceAttr(resourceName, "custom_iam_instance_profile", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "dbi_resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "engine", "aurora-mysql"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "network_type", "IPV4"),
 					resource.TestCheckResourceAttrSet(resourceName, "preferred_backup_window"),
 					resource.TestCheckResourceAttrSet(resourceName, "preferred_maintenance_window"),
@@ -58,7 +63,6 @@ func TestAccRDSClusterInstance_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
-					"identifier_prefix",
 				},
 			},
 			{
@@ -100,6 +104,78 @@ func TestAccRDSClusterInstance_disappears(t *testing.T) {
 	})
 }
 
+func TestAccRDSClusterInstance_identifierGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterInstanceConfig_identifierGenerated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameGeneratedWithPrefix(resourceName, "identifier", "tf-"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", "tf-"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSClusterInstance_identifierPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterInstanceConfig_identifierPrefix(rName, "tf-acc-test-prefix-"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "identifier", "tf-acc-test-prefix-"),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", "tf-acc-test-prefix-"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
+			},
+		},
+	})
+}
+
 func TestAccRDSClusterInstance_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -130,7 +206,6 @@ func TestAccRDSClusterInstance_tags(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
-					"identifier_prefix",
 				},
 			},
 			{
@@ -226,87 +301,6 @@ func TestAccRDSClusterInstance_az(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
-					"identifier_prefix",
-				},
-			},
-		},
-	})
-}
-
-func TestAccRDSClusterInstance_identifierPrefix(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var v rds.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rds_cluster_instance.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterInstanceConfig_identifierPrefix(rName, "tf-acc-test-prefix-"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", rName),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "identifier", "tf-acc-test-prefix-"),
-					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", "tf-acc-test-prefix-"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"identifier_prefix",
-				},
-			},
-		},
-	})
-}
-
-func TestAccRDSClusterInstance_identifierGenerated(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var v rds.DBInstance
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rds_cluster_instance.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterInstanceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterInstanceConfig_identifierGenerated(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttrWith(resourceName, "identifier", func(value string) error {
-						if !strings.HasPrefix(value, "tf-") {
-							return fmt.Errorf("incorrect format: %s", value)
-						}
-						return nil
-					}),
-					resource.TestCheckNoResourceAttr(resourceName, "identifier_prefix"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"identifier_prefix",
 				},
 			},
 		},
@@ -343,7 +337,6 @@ func TestAccRDSClusterInstance_kmsKey(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
-					"identifier_prefix",
 				},
 			},
 		},
@@ -379,7 +372,6 @@ func TestAccRDSClusterInstance_publiclyAccessible(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
-					"identifier_prefix",
 				},
 			},
 			{
@@ -387,6 +379,21 @@ func TestAccRDSClusterInstance_publiclyAccessible(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+				},
+			},
+			{
+				Config: testAccClusterInstanceConfig_publiclyAccessible(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
 				),
 			},
 		},
@@ -422,7 +429,6 @@ func TestAccRDSClusterInstance_copyTagsToSnapshot(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
-					"identifier_prefix",
 				},
 			},
 			{
@@ -466,7 +472,6 @@ func TestAccRDSClusterInstance_caCertificateIdentifier(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
-					"identifier_prefix",
 				},
 			},
 		},
@@ -502,7 +507,6 @@ func TestAccRDSClusterInstance_monitoringInterval(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
-					"identifier_prefix",
 				},
 			},
 			{
@@ -560,7 +564,6 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_enabledToDisabled(t *testing.T)
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
-					"identifier_prefix",
 				},
 			},
 			{
@@ -604,7 +607,6 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_enabledToRemoved(t *testing.T) 
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
-					"identifier_prefix",
 				},
 			},
 			{
@@ -646,7 +648,6 @@ func TestAccRDSClusterInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) 
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
-					"identifier_prefix",
 				},
 			},
 			{
@@ -690,7 +691,6 @@ func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraMySQL1(t *testin
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
-					"identifier_prefix",
 				},
 			},
 		},
@@ -727,7 +727,6 @@ func TestAccRDSClusterInstance_PerformanceInsightsEnabled_auroraPostgresql(t *te
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
-					"identifier_prefix",
 				},
 			},
 		},
@@ -766,7 +765,6 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraMySQL1(t *testi
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
-					"identifier_prefix",
 				},
 			},
 		},
@@ -803,12 +801,11 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraMySQL1_defaultKe
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
-					"identifier_prefix",
 				},
 			},
 			{
 				Config:      testAccClusterInstanceConfig_performanceInsightsKMSKeyIDAuroraMySQL1(rName, engine),
-				ExpectError: regexp.MustCompile(`InvalidParameterCombination: You .* change your Performance Insights KMS key`),
+				ExpectError: regexache.MustCompile(`InvalidParameterCombination: You .* change your Performance Insights KMS key`),
 			},
 		},
 	})
@@ -847,7 +844,6 @@ func TestAccRDSClusterInstance_performanceInsightsRetentionPeriod(t *testing.T) 
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
-					"identifier_prefix",
 				},
 			},
 			{
@@ -902,7 +898,6 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyID_auroraPostgresql(t *t
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
-					"identifier_prefix",
 				},
 			},
 		},
@@ -939,12 +934,11 @@ func TestAccRDSClusterInstance_PerformanceInsightsKMSKeyIDAuroraPostgresql_defau
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"apply_immediately",
-					"identifier_prefix",
 				},
 			},
 			{
 				Config:      testAccClusterInstanceConfig_performanceInsightsKMSKeyIDAuroraPostgresql(rName, engine),
-				ExpectError: regexp.MustCompile(`InvalidParameterCombination: You .* change your Performance Insights KMS key`),
+				ExpectError: regexache.MustCompile(`InvalidParameterCombination: You .* change your Performance Insights KMS key`),
 			},
 		},
 	})
@@ -1131,29 +1125,61 @@ resource "aws_db_parameter_group" "test" {
 `, rName))
 }
 
-func testAccClusterInstanceConfig_modified(rName string) string {
-	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
-resource "aws_rds_cluster_instance" "test" {
-  identifier                 = %[1]q
-  engine                     = data.aws_rds_engine_version.default.engine
-  cluster_identifier         = aws_rds_cluster.test.id
-  instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
-  db_parameter_group_name    = aws_db_parameter_group.test.name
-  auto_minor_version_upgrade = false
-  promotion_tier             = "3"
+func testAccClusterInstanceConfig_identifierGenerated(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		testAccClusterInstanceConfig_orderableEngineBase("aurora-mysql", false),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier   = %[1]q
+  master_username      = "root"
+  master_password      = "password"
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  skip_final_snapshot  = true
+  engine               = data.aws_rds_engine_version.default.engine
+  engine_version       = data.aws_rds_engine_version.default.version
 }
 
-resource "aws_db_parameter_group" "test" {
-  name   = %[1]q
-  family = data.aws_rds_engine_version.default.parameter_group_family
+resource "aws_rds_cluster_instance" "test" {
+  cluster_identifier = aws_rds_cluster.test.id
+  engine             = data.aws_rds_engine_version.default.engine
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
+}
 
-  parameter {
-    name         = "back_log"
-    value        = "32767"
-    apply_method = "pending-reboot"
-  }
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 }
 `, rName))
+}
+
+func testAccClusterInstanceConfig_identifierPrefix(rName, identifierPrefix string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		testAccClusterInstanceConfig_orderableEngineBase("aurora-mysql", false),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier   = %[1]q
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  engine               = data.aws_rds_engine_version.default.engine
+  engine_version       = data.aws_rds_engine_version.default.version
+  master_password      = "password"
+  master_username      = "root"
+  skip_final_snapshot  = true
+}
+
+resource "aws_rds_cluster_instance" "test" {
+  identifier_prefix  = %[2]q
+  engine             = data.aws_rds_engine_version.default.engine
+  cluster_identifier = aws_rds_cluster.test.id
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+`, rName, identifierPrefix))
 }
 
 func testAccClusterInstanceConfig_tags1(rName, tagKey1, tagValue1 string) string {
@@ -1213,6 +1239,31 @@ resource "aws_db_parameter_group" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
+func testAccClusterInstanceConfig_modified(rName string) string {
+	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
+resource "aws_rds_cluster_instance" "test" {
+  identifier                 = %[1]q
+  engine                     = data.aws_rds_engine_version.default.engine
+  cluster_identifier         = aws_rds_cluster.test.id
+  instance_class             = data.aws_rds_orderable_db_instance.test.instance_class
+  db_parameter_group_name    = aws_db_parameter_group.test.name
+  auto_minor_version_upgrade = false
+  promotion_tier             = "3"
+}
+
+resource "aws_db_parameter_group" "test" {
+  name   = %[1]q
+  family = data.aws_rds_engine_version.default.parameter_group_family
+
+  parameter {
+    name         = "back_log"
+    value        = "32767"
+    apply_method = "pending-reboot"
+  }
+}
+`, rName))
+}
+
 func testAccClusterInstanceConfig_az(rName string) string {
 	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
 resource "aws_rds_cluster_instance" "test" {
@@ -1238,68 +1289,14 @@ resource "aws_db_parameter_group" "test" {
 `, rName))
 }
 
-func testAccClusterInstanceConfig_identifierPrefix(rName, identifierPrefix string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigVPCWithSubnets(rName, 2),
-		testAccClusterInstanceConfig_orderableEngineBase("aurora-mysql", false),
-		fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  cluster_identifier   = %[1]q
-  db_subnet_group_name = aws_db_subnet_group.test.name
-  engine               = data.aws_rds_engine_version.default.engine
-  engine_version       = data.aws_rds_engine_version.default.version
-  master_password      = "password"
-  master_username      = "root"
-  skip_final_snapshot  = true
-}
-
-resource "aws_rds_cluster_instance" "test" {
-  identifier_prefix  = %[2]q
-  engine             = data.aws_rds_engine_version.default.engine
-  cluster_identifier = aws_rds_cluster.test.id
-  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
-}
-
-resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-}
-`, rName, identifierPrefix))
-}
-
-func testAccClusterInstanceConfig_identifierGenerated(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigVPCWithSubnets(rName, 2),
-		testAccClusterInstanceConfig_orderableEngineBase("aurora-mysql", false),
-		fmt.Sprintf(`
-resource "aws_rds_cluster" "test" {
-  cluster_identifier   = %[1]q
-  master_username      = "root"
-  master_password      = "password"
-  db_subnet_group_name = aws_db_subnet_group.test.name
-  skip_final_snapshot  = true
-  engine               = data.aws_rds_engine_version.default.engine
-  engine_version       = data.aws_rds_engine_version.default.version
-}
-
-resource "aws_rds_cluster_instance" "test" {
-  cluster_identifier = aws_rds_cluster.test.id
-  engine             = data.aws_rds_engine_version.default.engine
-  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
-}
-
-resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-}
-`, rName))
-}
-
 func testAccClusterInstanceConfig_kmsKey(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAvailableAZsNoOptIn(),
 		testAccClusterInstanceConfig_orderableEngineBase("aurora-mysql", false),
 		fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
 resource "aws_kms_key" "test" {
   description = %[1]q
 
@@ -1312,7 +1309,7 @@ resource "aws_kms_key" "test" {
       "Sid": "Enable IAM User Permissions",
       "Effect": "Allow",
       "Principal": {
-        "AWS": "*"
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
       },
       "Action": "kms:*",
       "Resource": "*"
@@ -1361,14 +1358,53 @@ resource "aws_db_parameter_group" "test" {
 }
 
 func testAccClusterInstanceConfig_publiclyAccessible(rName string, publiclyAccessible bool) string {
-	return acctest.ConfigCompose(testAccClusterInstanceConfig_base(rName, "aurora-mysql"), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+}
+
+resource "aws_subnet" "test" {
+  count = %[2]d
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+}
+`, rName, 2),
+		testAccClusterInstanceConfig_orderableEngineBase("aurora-mysql", false),
+		fmt.Sprintf(`
 resource "aws_rds_cluster_instance" "test" {
   apply_immediately   = true
-  engine              = data.aws_rds_engine_version.default.engine
   cluster_identifier  = aws_rds_cluster.test.id
   identifier          = %[1]q
+  engine              = aws_rds_cluster.test.engine
   instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
   publicly_accessible = %[2]t
+
+  depends_on = [aws_internet_gateway.test]
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+}
+
+resource "aws_rds_cluster" "test" {
+  cluster_identifier   = %[1]q
+  engine               = data.aws_rds_engine_version.default.engine
+  engine_version       = data.aws_rds_engine_version.default.version
+  database_name        = "mydb"
+  master_username      = "foo"
+  master_password      = "mustbeeightcharacters"
+  skip_final_snapshot  = true
+  db_subnet_group_name = aws_db_subnet_group.test.name
+}
+
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
 }
 `, rName, publiclyAccessible))
 }

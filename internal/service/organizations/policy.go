@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package organizations
 
 import (
@@ -169,12 +172,10 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return nil
 	}
 
-	input := &organizations.DeletePolicyInput{
-		PolicyId: aws.String(d.Id()),
-	}
-
 	log.Printf("[DEBUG] Deleting Organizations Policy: %s", d.Id())
-	_, err := conn.DeletePolicyWithContext(ctx, input)
+	_, err := conn.DeletePolicyWithContext(ctx, &organizations.DeletePolicyInput{
+		PolicyId: aws.String(d.Id()),
+	})
 
 	if tfawserr.ErrCodeEquals(err, organizations.ErrCodePolicyNotFoundException) {
 		return nil

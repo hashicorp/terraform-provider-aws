@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/route53"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -32,7 +35,7 @@ func TestAccRoute53CIDRCollection_basic(t *testing.T) {
 				Config: testAccCIDRCollection_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCIDRCollectionExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexp.MustCompile(`cidrcollection/.+`)),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "route53", regexache.MustCompile(`cidrcollection/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},

@@ -5,6 +5,9 @@ package finspace
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	finspace_sdkv2 "github.com/aws/aws-sdk-go-v2/service/finspace"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -42,9 +45,25 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceKxDataview,
+			TypeName: "aws_finspace_kx_dataview",
+			Name:     "Kx Dataview",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceKxEnvironment,
 			TypeName: "aws_finspace_kx_environment",
 			Name:     "Kx Environment",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceKxScalingGroup,
+			TypeName: "aws_finspace_kx_scaling_group",
+			Name:     "Kx Scaling Group",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
@@ -57,6 +76,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 				IdentifierAttribute: "arn",
 			},
 		},
+		{
+			Factory:  ResourceKxVolume,
+			TypeName: "aws_finspace_kx_volume",
+			Name:     "Kx Volume",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
 	}
 }
 
@@ -64,4 +91,17 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.FinSpace
 }
 
-var ServicePackage = &servicePackage{}
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*finspace_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return finspace_sdkv2.NewFromConfig(cfg, func(o *finspace_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

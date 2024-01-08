@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_medialive_channel: Adds schemas for `caption_descriptions`, `global_configuration`, `motion_graphics_configuration`, and `nielsen_configuration` support to `encoder settings`
+```

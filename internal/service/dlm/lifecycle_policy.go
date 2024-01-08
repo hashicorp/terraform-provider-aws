@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dlm
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dlm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -42,7 +45,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile("^[0-9A-Za-z _-]+$"), "see https://docs.aws.amazon.com/cli/latest/reference/dlm/create-lifecycle-policy.html"),
+					validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z _-]+$"), "see https://docs.aws.amazon.com/cli/latest/reference/dlm/create-lifecycle-policy.html"),
 					validation.StringLenBetween(1, 500),
 				),
 			},
@@ -113,7 +116,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 												"target": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[\w:\-\/\*]+$`), ""),
+													ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w:\-\/\*]+$`), ""),
 												},
 											},
 										},
@@ -123,7 +126,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 										Required: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 120),
-											validation.StringMatch(regexp.MustCompile("^[0-9A-Za-z _-]+$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_Action.html"),
+											validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z _-]+$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_Action.html"),
 										),
 									},
 								},
@@ -235,7 +238,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 												"cron_expression": {
 													Type:         schema.TypeString,
 													Optional:     true,
-													ValidateFunc: validation.StringMatch(regexp.MustCompile("^cron\\([^\n]{11,100}\\)$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html"),
+													ValidateFunc: validation.StringMatch(regexache.MustCompile("^cron\\([^\n]{11,100}\\)$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html"),
 												},
 												"interval": {
 													Type:         schema.TypeInt,
@@ -261,7 +264,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 													MaxItems: 1,
 													Elem: &schema.Schema{
 														Type:         schema.TypeString,
-														ValidateFunc: validation.StringMatch(regexp.MustCompile("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html#dlm-Type-CreateRule-Times"),
+														ValidateFunc: validation.StringMatch(regexache.MustCompile("^(0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$"), "see https://docs.aws.amazon.com/dlm/latest/APIReference/API_CreateRule.html#dlm-Type-CreateRule-Times"),
 													},
 												},
 											},
@@ -333,7 +336,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 												"target": {
 													Type:         schema.TypeString,
 													Required:     true,
-													ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[\w:\-\/\*]+$`), ""),
+													ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[\w:\-\/\*]+$`), ""),
 												},
 											},
 										},

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2
 
 import (
@@ -270,11 +273,11 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("integration_uri", resp.IntegrationUri)
 	d.Set("passthrough_behavior", resp.PassthroughBehavior)
 	d.Set("payload_format_version", resp.PayloadFormatVersion)
-	err = d.Set("request_parameters", flex.PointersMapToStringList(resp.RequestParameters))
+	err = d.Set("request_parameters", flex.FlattenStringMap(resp.RequestParameters))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting request_parameters: %s", err)
 	}
-	err = d.Set("request_templates", flex.PointersMapToStringList(resp.RequestTemplates))
+	err = d.Set("request_templates", flex.FlattenStringMap(resp.RequestTemplates))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting request_templates: %s", err)
 	}
@@ -334,7 +337,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 	if d.HasChange("request_parameters") {
 		o, n := d.GetChange("request_parameters")
-		add, del, nop := verify.DiffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
+		add, del, nop := flex.DiffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
 
 		// Parameters are removed by setting the associated value to "".
 		for k := range del {

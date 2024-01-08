@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses_test
 
 import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ses"
@@ -59,7 +62,7 @@ func TestAccSESDomainIdentityVerification_timeout(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDomainIdentityVerificationConfig_timeout(domain),
-				ExpectError: regexp.MustCompile("Expected domain verification Success, but was in state Pending"),
+				ExpectError: regexache.MustCompile("Expected domain verification Success, but was in state Pending"),
 			},
 		},
 	})
@@ -77,7 +80,7 @@ func TestAccSESDomainIdentityVerification_nonexistent(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDomainIdentityVerificationConfig_nonexistent(domain),
-				ExpectError: regexp.MustCompile(fmt.Sprintf("SES Domain Identity %s not found in AWS", domain)),
+				ExpectError: regexache.MustCompile(fmt.Sprintf("SES Domain Identity %s not found in AWS", domain)),
 			},
 		},
 	})

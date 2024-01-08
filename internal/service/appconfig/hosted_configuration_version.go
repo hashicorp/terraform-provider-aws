@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/appconfig"
@@ -34,7 +37,7 @@ func ResourceHostedConfigurationVersion() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9]{4,7}`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -44,7 +47,7 @@ func ResourceHostedConfigurationVersion() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9]{4,7}`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
 			"content": {
 				Type:      schema.TypeString,
@@ -158,18 +161,16 @@ func resourceHostedConfigurationVersionDelete(ctx context.Context, d *schema.Res
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	appID, confProfID, versionNumber, err := HostedConfigurationVersionParseID(d.Id())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Appconfig Hosted Configuration Version (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &appconfig.DeleteHostedConfigurationVersionInput{
+	log.Printf("[INFO] Deleting AppConfig Hosted Configuration Version: %s", d.Id())
+	_, err = conn.DeleteHostedConfigurationVersionWithContext(ctx, &appconfig.DeleteHostedConfigurationVersionInput{
 		ApplicationId:          aws.String(appID),
 		ConfigurationProfileId: aws.String(confProfID),
 		VersionNumber:          aws.Int64(int64(versionNumber)),
-	}
-
-	_, err = conn.DeleteHostedConfigurationVersionWithContext(ctx, input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
 		return diags

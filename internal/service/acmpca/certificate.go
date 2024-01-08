@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acmpca
 
 import (
@@ -8,11 +11,11 @@ import (
 	"fmt"
 	"log"
 	"math/big"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/acmpca"
@@ -42,7 +45,7 @@ func ResourceCertificate() *schema.Resource {
 		// arn:aws:acm-pca:eu-west-1:555885746124:certificate-authority/08322ede-92f9-4200-8f21-c7d12b2b6edb/certificate/a4e9c2aa2ccfab625b1b9136464cd3a6
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				re := regexp.MustCompile(`arn:.+:certificate-authority/[^/]+`)
+				re := regexache.MustCompile(`arn:.+:certificate-authority/[^/]+`)
 				authorityARN := re.FindString(d.Id())
 				if authorityARN == "" {
 					return nil, fmt.Errorf("Unexpected format for ID (%q), expected ACM PCA Certificate ARN", d.Id())

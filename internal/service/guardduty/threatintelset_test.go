@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package guardduty_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -27,7 +30,10 @@ func testAccThreatIntelSet_basic(t *testing.T) {
 	resourceName := "aws_guardduty_threatintelset.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThreatIntelSetDestroy(ctx),
@@ -36,10 +42,10 @@ func testAccThreatIntelSet_basic(t *testing.T) {
 				Config: testAccThreatIntelSetConfig_basic(bucketName, keyName1, threatintelsetName1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckThreatIntelSetExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexp.MustCompile("detector/.+/threatintelset/.+$")),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "guardduty", regexache.MustCompile("detector/.+/threatintelset/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "name", threatintelsetName1),
 					resource.TestCheckResourceAttr(resourceName, "activate", "true"),
-					resource.TestMatchResourceAttr(resourceName, "location", regexp.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName1))),
+					resource.TestMatchResourceAttr(resourceName, "location", regexache.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName1))),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -54,7 +60,7 @@ func testAccThreatIntelSet_basic(t *testing.T) {
 					testAccCheckThreatIntelSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", threatintelsetName2),
 					resource.TestCheckResourceAttr(resourceName, "activate", "false"),
-					resource.TestMatchResourceAttr(resourceName, "location", regexp.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName2))),
+					resource.TestMatchResourceAttr(resourceName, "location", regexache.MustCompile(fmt.Sprintf("%s/%s$", bucketName, keyName2))),
 				),
 			},
 		},
@@ -67,7 +73,10 @@ func testAccThreatIntelSet_tags(t *testing.T) {
 	resourceName := "aws_guardduty_threatintelset.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, guardduty.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThreatIntelSetDestroy(ctx),
@@ -175,11 +184,6 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_s3_object" "test" {
   acl     = "public-read"
   content = "10.0.0.0/8\n"
@@ -204,11 +208,6 @@ resource "aws_guardduty_detector" "test" {}
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_object" "test" {
@@ -239,11 +238,6 @@ resource "aws_guardduty_detector" "test" {}
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_object" "test" {

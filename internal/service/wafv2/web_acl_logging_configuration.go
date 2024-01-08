@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2
 
 import (
@@ -5,8 +8,8 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -34,135 +37,137 @@ func ResourceWebACLLoggingConfiguration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"log_destination_configs": {
-				Type:     schema.TypeSet,
-				Required: true,
-				ForceNew: true,
-				MinItems: 1,
-				MaxItems: 100,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: verify.ValidARN,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"log_destination_configs": {
+					Type:     schema.TypeSet,
+					Required: true,
+					ForceNew: true,
+					MinItems: 1,
+					MaxItems: 100,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: verify.ValidARN,
+					},
+					Description: "AWS Kinesis Firehose Delivery Stream ARNs",
 				},
-				Description: "AWS Kinesis Firehose Delivery Stream ARNs",
-			},
-			"logging_filter": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"default_behavior": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(wafv2.FilterBehavior_Values(), false),
-						},
-						"filter": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"behavior": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(wafv2.FilterBehavior_Values(), false),
-									},
-									"condition": {
-										Type:     schema.TypeSet,
-										Required: true,
-										MinItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"action_condition": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"action": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringInSlice(wafv2.ActionValue_Values(), false),
+				"logging_filter": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"default_behavior": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice(wafv2.FilterBehavior_Values(), false),
+							},
+							"filter": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"behavior": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringInSlice(wafv2.FilterBehavior_Values(), false),
+										},
+										"condition": {
+											Type:     schema.TypeSet,
+											Required: true,
+											MinItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"action_condition": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"action": {
+																	Type:         schema.TypeString,
+																	Required:     true,
+																	ValidateFunc: validation.StringInSlice(wafv2.ActionValue_Values(), false),
+																},
 															},
 														},
 													},
-												},
-												"label_name_condition": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"label_name": {
-																Type:     schema.TypeString,
-																Required: true,
-																ValidateFunc: validation.All(
-																	validation.StringLenBetween(1, 1024),
-																	validation.StringMatch(regexp.MustCompile(`^[0-9A-Za-z_\-:]+$`), "must contain only alphanumeric characters, underscores, hyphens, and colons"),
-																),
+													"label_name_condition": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"label_name": {
+																	Type:     schema.TypeString,
+																	Required: true,
+																	ValidateFunc: validation.All(
+																		validation.StringLenBetween(1, 1024),
+																		validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_\-:]+$`), "must contain only alphanumeric characters, underscores, hyphens, and colons"),
+																	),
+																},
 															},
 														},
 													},
 												},
 											},
 										},
-									},
-									"requirement": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(wafv2.FilterRequirement_Values(), false),
+										"requirement": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ValidateFunc: validation.StringInSlice(wafv2.FilterRequirement_Values(), false),
+										},
 									},
 								},
 							},
 						},
 					},
 				},
-			},
-			"redacted_fields": {
-				// To allow this argument and its nested fields with Empty Schemas (e.g. "method")
-				// to be correctly interpreted, this argument must be of type List,
-				// otherwise, at apply-time a field configured as an empty block
-				// (e.g. body {}) will result in a nil redacted_fields attribute
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 100,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"method":       emptySchema(),
-						"query_string": emptySchema(),
-						"single_header": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"name": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 40),
-											// The value is returned in lower case by the API.
-											// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
-											validation.StringMatch(regexp.MustCompile(`^[a-z0-9-_]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
-										),
+				"redacted_fields": {
+					// To allow this argument and its nested fields with Empty Schemas (e.g. "method")
+					// to be correctly interpreted, this argument must be of type List,
+					// otherwise, at apply-time a field configured as an empty block
+					// (e.g. body {}) will result in a nil redacted_fields attribute
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 100,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"method":       emptySchema(),
+							"query_string": emptySchema(),
+							"single_header": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"name": {
+											Type:     schema.TypeString,
+											Required: true,
+											ValidateFunc: validation.All(
+												validation.StringLenBetween(1, 40),
+												// The value is returned in lower case by the API.
+												// Trying to solve it with StateFunc and/or DiffSuppressFunc resulted in hash problem of the rule field or didn't work.
+												validation.StringMatch(regexache.MustCompile(`^[0-9a-z_-]+$`), "must contain only lowercase alphanumeric characters, underscores, and hyphens"),
+											),
+										},
 									},
 								},
 							},
+							"uri_path": emptySchema(),
 						},
-						"uri_path": emptySchema(),
 					},
+					Description:      "Parts of the request to exclude from logs",
+					DiffSuppressFunc: suppressRedactedFieldsDiff,
 				},
-				Description:      "Parts of the request to exclude from logs",
-				DiffSuppressFunc: suppressRedactedFieldsDiff,
-			},
-			"resource_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-				Description:  "AWS WebACL ARN",
-			},
+				"resource_arn": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ForceNew:     true,
+					ValidateFunc: verify.ValidARN,
+					Description:  "AWS WebACL ARN",
+				},
+			}
 		},
 	}
 }

@@ -1,19 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -78,6 +83,12 @@ func ResourceClusterInstance() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"custom_iam_instance_profile": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^AWSRDSCustom.*$`), "must begin with AWSRDSCustom"),
+			},
 			"db_parameter_group_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -98,10 +109,13 @@ func ResourceClusterInstance() *schema.Resource {
 				Computed: true,
 			},
 			"engine": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validClusterEngine(),
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.Any(
+					validation.StringMatch(regexache.MustCompile(fmt.Sprintf(`^%s.*$`, InstanceEngineCustomPrefix)), fmt.Sprintf("must begin with %s", InstanceEngineCustomPrefix)),
+					validation.StringInSlice(ClusterInstanceEngine_Values(), false),
+				),
 			},
 			"engine_version": {
 				Type:     schema.TypeString,
@@ -205,7 +219,7 @@ func ResourceClusterInstance() *schema.Resource {
 			"publicly_accessible": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
+				Computed: true,
 			},
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
@@ -228,16 +242,11 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	clusterID := d.Get("cluster_identifier").(string)
-	var identifier string
-	if v, ok := d.GetOk("identifier"); ok {
-		identifier = v.(string)
-	} else {
-		if v, ok := d.GetOk("identifier_prefix"); ok {
-			identifier = id.PrefixedUniqueId(v.(string))
-		} else {
-			identifier = id.PrefixedUniqueId("tf-")
-		}
-	}
+	identifier := create.NewNameGenerator(
+		create.WithConfiguredName(d.Get("identifier").(string)),
+		create.WithConfiguredPrefix(d.Get("identifier_prefix").(string)),
+		create.WithDefaultPrefix("tf-"),
+	).Generate()
 	input := &rds.CreateDBInstanceInput{
 		AutoMinorVersionUpgrade: aws.Bool(d.Get("auto_minor_version_upgrade").(bool)),
 		CopyTagsToSnapshot:      aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
@@ -260,6 +269,10 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 
 	if v, ok := d.GetOk("db_subnet_group_name"); ok {
 		input.DBSubnetGroupName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("custom_iam_instance_profile"); ok {
+		input.CustomIamInstanceProfile = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("engine_version"); ok {
@@ -294,7 +307,6 @@ func resourceClusterInstanceCreate(ctx context.Context, d *schema.ResourceData, 
 		input.PreferredMaintenanceWindow = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating RDS Cluster Instance: %s", input)
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateDBInstanceWithContext(ctx, input)
@@ -388,6 +400,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("ca_cert_identifier", db.CACertificateIdentifier)
 	d.Set("cluster_identifier", db.DBClusterIdentifier)
 	d.Set("copy_tags_to_snapshot", db.CopyTagsToSnapshot)
+	d.Set("custom_iam_instance_profile", db.CustomIamInstanceProfile)
 	if len(db.DBParameterGroups) > 0 && db.DBParameterGroups[0] != nil {
 		d.Set("db_parameter_group_name", db.DBParameterGroups[0].DBParameterGroupName)
 	}
@@ -397,6 +410,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("dbi_resource_id", db.DbiResourceId)
 	d.Set("engine", db.Engine)
 	d.Set("identifier", db.DBInstanceIdentifier)
+	d.Set("identifier_prefix", create.NamePrefixFromName(aws.StringValue(db.DBInstanceIdentifier)))
 	d.Set("instance_class", db.DBInstanceClass)
 	d.Set("kms_key_id", db.KmsKeyId)
 	d.Set("monitoring_interval", db.MonitoringInterval)
@@ -507,6 +521,12 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 
 	input := &rds.DeleteDBInstanceInput{
 		DBInstanceIdentifier: aws.String(d.Id()),
+	}
+
+	// Automatically set skip_final_snapshot = true for RDS Custom instances
+	if strings.HasPrefix(d.Get("engine").(string), InstanceEngineCustomPrefix) {
+		log.Printf("[DEBUG] RDS Custom engine detected (%s) applying SkipFinalSnapshot: %s", d.Get("engine").(string), "true")
+		input.SkipFinalSnapshot = aws.Bool(true)
 	}
 
 	log.Printf("[DEBUG] Deleting RDS Cluster Instance: %s", d.Id())

@@ -152,7 +152,7 @@ resource "aws_route53_record" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain_name` - (Required) Fully-qualified domain name to register.
 * `endpoint_configuration` - (Optional) Configuration block defining API endpoint information including type. See below.
@@ -183,9 +183,9 @@ When uploading a certificate, the following arguments are supported:
 * `truststore_uri` - (Required) Amazon S3 URL that specifies the truststore for mutual TLS authentication, for example, `s3://bucket-name/key-name`. The truststore can contain certificates from public or private certificate authorities. To update the truststore, upload a new version to S3, and then update your custom domain name to use the new version.
 * `truststore_version` - (Optional) Version of the S3 object that contains the truststore. To specify a version, you must have versioning enabled for the S3 bucket.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of domain name.
 * `certificate_upload_date` - Upload date associated with the domain certificate.
@@ -198,8 +198,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-API Gateway domain names can be imported using their `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Gateway domain names using their `name`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_domain_name.example
+  id = "dev.example.com"
+}
 ```
-$ terraform import aws_api_gateway_domain_name.example dev.example.com
+
+Using `terraform import`, import API Gateway domain names using their `name`. For example:
+
+```console
+% terraform import aws_api_gateway_domain_name.example dev.example.com
 ```

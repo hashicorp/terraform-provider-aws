@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ivs_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ivs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -45,7 +48,7 @@ func TestAccIVSRecordingConfiguration_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "destination_configuration.0.s3.0.bucket_name", bucketName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ivs", regexp.MustCompile(`recording-configuration/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ivs", regexache.MustCompile(`recording-configuration/.+`)),
 				),
 			},
 			{

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder
 
 import (
@@ -47,6 +50,37 @@ func DataSourceImage() *schema.Resource {
 			"image_recipe_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"image_scanning_configuration": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ecr_configuration": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"container_tags": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"repository_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"image_scanning_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"image_tests_configuration": {
 				Type:     schema.TypeList,
@@ -188,6 +222,12 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if image.ImageRecipe != nil {
 		d.Set("image_recipe_arn", image.ImageRecipe.Arn)
+	}
+
+	if image.ImageScanningConfiguration != nil {
+		d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(image.ImageScanningConfiguration)})
+	} else {
+		d.Set("image_scanning_configuration", nil)
 	}
 
 	if image.ImageTestsConfiguration != nil {

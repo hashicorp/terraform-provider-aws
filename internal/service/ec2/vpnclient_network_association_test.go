@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,7 +38,7 @@ func testAccClientVPNNetworkAssociation_basic(t *testing.T) {
 				Config: testAccClientVPNNetworkAssociationConfig_basic(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNNetworkAssociationExists(ctx, resourceName, &assoc),
-					resource.TestMatchResourceAttr(resourceName, "association_id", regexp.MustCompile("^cvpn-assoc-[a-z0-9]+$")),
+					resource.TestMatchResourceAttr(resourceName, "association_id", regexache.MustCompile("^cvpn-assoc-[0-9a-z]+$")),
 					resource.TestCheckResourceAttrPair(resourceName, "id", resourceName, "association_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "client_vpn_endpoint_id", endpointResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_id", subnetResourceName, "id"),
@@ -71,8 +74,8 @@ func testAccClientVPNNetworkAssociation_multipleSubnets(t *testing.T) {
 				Config: testAccClientVPNNetworkAssociationConfig_multipleSubnets(t, rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClientVPNNetworkAssociationExists(ctx, resourceNames[0], &assoc),
-					resource.TestMatchResourceAttr(resourceNames[0], "association_id", regexp.MustCompile("^cvpn-assoc-[a-z0-9]+$")),
-					resource.TestMatchResourceAttr(resourceNames[1], "association_id", regexp.MustCompile("^cvpn-assoc-[a-z0-9]+$")),
+					resource.TestMatchResourceAttr(resourceNames[0], "association_id", regexache.MustCompile("^cvpn-assoc-[0-9a-z]+$")),
+					resource.TestMatchResourceAttr(resourceNames[1], "association_id", regexache.MustCompile("^cvpn-assoc-[0-9a-z]+$")),
 					resource.TestCheckResourceAttrPair(resourceNames[0], "id", resourceNames[0], "association_id"),
 					resource.TestCheckResourceAttrPair(resourceNames[0], "client_vpn_endpoint_id", endpointResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceNames[0], "subnet_id", subnetResourceNames[0], "id"),

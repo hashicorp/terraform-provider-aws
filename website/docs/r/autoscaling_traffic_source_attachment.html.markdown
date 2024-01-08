@@ -29,7 +29,7 @@ resource "aws_autoscaling_traffic_source_attachment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 - `autoscaling_group_name` - (Required) The name of the Auto Scaling group.
 - `traffic_source` - (Required) The unique identifiers of a traffic sources.
@@ -43,6 +43,6 @@ The following arguments are supported:
   `elbv2` if `identifier` is the ARN of an Application Load Balancer, Gateway Load Balancer, or Network Load Balancer target group.
   `vpc-lattice` if `identifier` is the ARN of a VPC Lattice target group.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.

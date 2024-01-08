@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kendra
 
 import (
@@ -5,10 +8,10 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
@@ -21,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -106,7 +110,7 @@ func ResourceDataSource() *schema.Resource {
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(3, 63),
 											validation.StringMatch(
-												regexp.MustCompile(`[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9]`),
+												regexache.MustCompile(`[0-9a-z][0-9a-z.-]{1,61}[0-9a-z]`),
 												"Must be a valid bucket name",
 											),
 										),
@@ -287,7 +291,7 @@ func ResourceDataSource() *schema.Resource {
 																	Type: schema.TypeString,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 2048),
-																		validation.StringMatch(regexp.MustCompile(`^(https?):\/\/([^\s]*)`), "must provide a valid url"),
+																		validation.StringMatch(regexache.MustCompile(`^(https?):\/\/([^\s]*)`), "must provide a valid url"),
 																	),
 																},
 															},
@@ -314,7 +318,7 @@ func ResourceDataSource() *schema.Resource {
 																	Type: schema.TypeString,
 																	ValidateFunc: validation.All(
 																		validation.StringLenBetween(1, 2048),
-																		validation.StringMatch(regexp.MustCompile(`^(https?):\/\/([^\s]*)`), "must provide a valid url"),
+																		validation.StringMatch(regexache.MustCompile(`^(https?):\/\/([^\s]*)`), "must provide a valid url"),
 																	),
 																},
 															},
@@ -363,7 +367,7 @@ func ResourceDataSource() *schema.Resource {
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 200),
 														validation.StringMatch(
-															regexp.MustCompile(`[a-zA-Z0-9_][a-zA-Z0-9_-]*`),
+															regexache.MustCompile(`[0-9A-Za-z_][0-9A-Za-z_-]*`),
 															"Starts with an alphanumeric character or underscore. Subsequently, can contain alphanumeric characters, underscores and hyphens.",
 														),
 													),
@@ -420,7 +424,7 @@ func ResourceDataSource() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringMatch(
-					regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9-]{35}`),
+					regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]{35}`),
 					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
 				),
 			},
@@ -431,7 +435,7 @@ func ResourceDataSource() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 10),
 					validation.StringMatch(
-						regexp.MustCompile(`[a-zA-Z-]*`),
+						regexache.MustCompile(`[A-Za-z-]*`),
 						"Must have alphanumeric characters or hyphens.",
 					),
 				),
@@ -442,7 +446,7 @@ func ResourceDataSource() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1000),
 					validation.StringMatch(
-						regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_-]*`),
+						regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
 						"Starts with an alphanumeric character. Subsequently, the name must consist of alphanumerics, hyphens or underscores.",
 					),
 				),
@@ -499,7 +503,7 @@ func hookConfigurationSchema() *schema.Schema {
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(3, 63),
 						validation.StringMatch(
-							regexp.MustCompile(`[a-z0-9][\.\-a-z0-9]{1,61}[a-z0-9]`),
+							regexache.MustCompile(`[0-9a-z][0-9a-z.-]{1,61}[0-9a-z]`),
 							"Must be a valid bucket name",
 						),
 					),
@@ -522,7 +526,7 @@ func documentAttributeConditionSchema() *schema.Schema {
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 200),
 						validation.StringMatch(
-							regexp.MustCompile(`[a-zA-Z0-9_][a-zA-Z0-9_-]*`),
+							regexache.MustCompile(`[0-9A-Za-z_][0-9A-Za-z_-]*`),
 							"Starts with an alphanumeric character or underscore. Subsequently, can contain alphanumeric characters, underscores and hyphens.",
 						),
 					),
@@ -588,6 +592,8 @@ func documentAttributeValueSchema() *schema.Schema {
 }
 
 func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	name := d.Get("name").(string)
@@ -639,11 +645,11 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	)
 
 	if err != nil {
-		return diag.Errorf("creating Kendra Data Source (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Kendra Data Source (%s): %s", name, err)
 	}
 
 	if outputRaw == nil {
-		return diag.Errorf("creating Kendra Data Source (%s): empty output", name)
+		return sdkdiag.AppendErrorf(diags, "creating Kendra Data Source (%s): empty output", name)
 	}
 
 	output := outputRaw.(*kendra.CreateDataSourceOutput)
@@ -654,18 +660,20 @@ func resourceDataSourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	d.SetId(fmt.Sprintf("%s/%s", id, indexId))
 
 	if _, err := waitDataSourceCreated(ctx, conn, id, indexId, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Data Source (%s) creation: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Data Source (%s) creation: %s", d.Id(), err)
 	}
 
-	return resourceDataSourceRead(ctx, d, meta)
+	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
 }
 
 func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id, indexId, err := DataSourceParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	resp, err := FindDataSourceByID(ctx, conn, id, indexId)
@@ -673,11 +681,11 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kendra Data Source (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("getting Kendra Data Source (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Kendra Data Source (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -703,23 +711,25 @@ func resourceDataSourceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
 	if err := d.Set("configuration", flattenDataSourceConfiguration(resp.Configuration)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := d.Set("custom_document_enrichment_configuration", flattenCustomDocumentEnrichmentConfiguration(resp.CustomDocumentEnrichmentConfiguration)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	if d.HasChanges("configuration", "custom_document_enrichment_configuration", "description", "language_code", "name", "role_arn", "schedule") {
 		id, indexId, err := DataSourceParseResourceID(d.Id())
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input := &kendra.UpdateDataSourceInput{
@@ -773,25 +783,27 @@ func resourceDataSourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		)
 
 		if err != nil {
-			return diag.Errorf("updating Kendra Data Source(%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Kendra Data Source(%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitDataSourceUpdated(ctx, conn, id, indexId, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Kendra Data Source (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Kendra Data Source (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceDataSourceRead(ctx, d, meta)
+	return append(diags, resourceDataSourceRead(ctx, d, meta)...)
 }
 
 func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	log.Printf("[INFO] Deleting Kendra Data Source %s", d.Id())
 
 	id, indexId, err := DataSourceParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = conn.DeleteDataSource(ctx, &kendra.DeleteDataSourceInput{
@@ -801,18 +813,18 @@ func resourceDataSourceDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	var resourceNotFoundException *types.ResourceNotFoundException
 	if errors.As(err, &resourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Kendra Data Source (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Kendra Data Source (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitDataSourceDeleted(ctx, conn, id, indexId, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Kendra Data Source (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Kendra Data Source (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func waitDataSourceCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeDataSourceOutput, error) {

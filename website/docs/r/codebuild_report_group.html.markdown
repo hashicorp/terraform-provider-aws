@@ -59,7 +59,7 @@ resource "aws_codebuild_report_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of a Report Group.
 * `type` - (Required) The type of the Report Group. Valid value are `TEST` and `CODE_COVERAGE`.
@@ -81,9 +81,9 @@ The following arguments are supported:
 * `packaging` - (Optional) The type of build output artifact to create. Valid values are: `NONE` (default) and `ZIP`.
 * `path` - (Optional) The path to the exported report's raw data results.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of Report Group.
 * `arn` - The ARN of Report Group.
@@ -92,8 +92,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeBuild Report Group can be imported using the CodeBuild Report Group arn, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeBuild Report Group using the CodeBuild Report Group arn. For example:
 
+```terraform
+import {
+  to = aws_codebuild_report_group.example
+  id = "arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name"
+}
 ```
-$ terraform import aws_codebuild_report_group.example arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name
+
+Using `terraform import`, import CodeBuild Report Group using the CodeBuild Report Group arn. For example:
+
+```console
+% terraform import aws_codebuild_report_group.example arn:aws:codebuild:us-west-2:123456789:report-group/report-group-name
 ```

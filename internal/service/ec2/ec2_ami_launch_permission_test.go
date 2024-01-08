@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -264,7 +267,7 @@ func testAccCheckAMILaunchPermissionDestroy(ctx context.Context) resource.TestCh
 }
 
 func testAccAMILaunchPermissionConfig_accountID(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {}
@@ -272,7 +275,7 @@ data "aws_region" "current" {}
 resource "aws_ami_copy" "test" {
   description       = %[1]q
   name              = %[1]q
-  source_ami_id     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  source_ami_id     = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   source_ami_region = data.aws_region.current.name
 }
 
@@ -284,15 +287,15 @@ resource "aws_ami_launch_permission" "test" {
 }
 
 func testAccAMILaunchPermissionConfig_group(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 data "aws_region" "current" {}
 
 resource "aws_ami_copy" "test" {
   description       = %[1]q
   name              = %[1]q
-  source_ami_id     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  source_ami_id     = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   source_ami_region = data.aws_region.current.name
-  deprecation_time  = data.aws_ami.amzn-ami-minimal-hvm-ebs.deprecation_time
+  deprecation_time  = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.deprecation_time
 }
 
 resource "aws_ami_launch_permission" "test" {
@@ -303,7 +306,7 @@ resource "aws_ami_launch_permission" "test" {
 }
 
 func testAccAMILaunchPermissionConfig_organizationARN(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 data "aws_organizations_organization" "current" {}
 
 data "aws_region" "current" {}
@@ -311,7 +314,7 @@ data "aws_region" "current" {}
 resource "aws_ami_copy" "test" {
   description       = %[1]q
   name              = %[1]q
-  source_ami_id     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  source_ami_id     = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   source_ami_region = data.aws_region.current.name
 }
 
@@ -323,7 +326,7 @@ resource "aws_ami_launch_permission" "test" {
 }
 
 func testAccAMILaunchPermissionConfig_organizationalUnitARN(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_organizations_organization" "test" {}
 
 resource "aws_organizations_organizational_unit" "test" {
@@ -336,7 +339,7 @@ data "aws_region" "current" {}
 resource "aws_ami_copy" "test" {
   description       = %[1]q
   name              = %[1]q
-  source_ami_id     = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  source_ami_id     = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   source_ami_region = data.aws_region.current.name
 }
 

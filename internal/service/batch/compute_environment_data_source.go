@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package batch
 
 import (
@@ -59,6 +62,22 @@ func DataSourceComputeEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"update_policy": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"job_execution_timeout_minutes": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"terminate_jobs_on_update": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -93,6 +112,10 @@ func dataSourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("status", computeEnvironment.Status)
 	d.Set("status_reason", computeEnvironment.StatusReason)
 	d.Set("state", computeEnvironment.State)
+
+	if err := d.Set("update_policy", flattenComputeEnvironmentUpdatePolicy(computeEnvironment.UpdatePolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting update_policy: %s", err)
+	}
 
 	if err := d.Set("tags", KeyValueTags(ctx, computeEnvironment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)

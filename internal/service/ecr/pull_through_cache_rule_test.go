@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ecr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -88,7 +91,31 @@ func TestAccECRPullThroughCacheRule_failWhenAlreadyExists(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPullThroughCacheRuleExists(ctx, resourceName),
 				),
-				ExpectError: regexp.MustCompile(`PullThroughCacheRuleAlreadyExistsException`),
+				ExpectError: regexache.MustCompile(`PullThroughCacheRuleAlreadyExistsException`),
+			},
+		},
+	})
+}
+
+func TestAccECRPullThroughCacheRule_repositoryPrefixWithSlash(t *testing.T) {
+	ctx := acctest.Context(t)
+	repositoryPrefix := "tf-test/" + sdkacctest.RandString(22)
+	resourceName := "aws_ecr_pull_through_cache_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPullThroughCacheRuleConfig_basic(repositoryPrefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPullThroughCacheRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "ecr_repository_prefix", repositoryPrefix),
+					testAccCheckPullThroughCacheRuleRegistryID(resourceName),
+					resource.TestCheckResourceAttr(resourceName, "upstream_registry_url", "public.ecr.aws"),
+				),
 			},
 		},
 	})

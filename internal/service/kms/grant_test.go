@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms_test
 
 import (
@@ -274,6 +277,41 @@ func TestAccKMSGrant_crossAccountARN(t *testing.T) {
 	})
 }
 
+func TestAccKMSGrant_service(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_kms_grant.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	servicePrincipal := "dynamodb.us-west-1.amazonaws.com" //lintignore:AWSAT003
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGrantDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGrantConfig_service(rName, "\"Encrypt\", \"Decrypt\"", servicePrincipal),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGrantExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "grantee_principal", servicePrincipal),
+					resource.TestCheckResourceAttr(resourceName, "retiring_principal", servicePrincipal),
+					resource.TestCheckResourceAttr(resourceName, "operations.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Encrypt"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "operations.*", "Decrypt"),
+					resource.TestCheckResourceAttrPair(resourceName, "key_id", "aws_kms_key.test", "key_id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"grant_token", "retire_on_delete"},
+			},
+		},
+	})
+}
+
 func testAccCheckGrantDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KMSConn(ctx)
@@ -492,4 +530,16 @@ resource "aws_kms_grant" "test" {
   operations        = [%[2]s]
 }
 `, rName, operations))
+}
+
+func testAccGrantConfig_service(rName string, operations string, servicePrincipal string) string {
+	return acctest.ConfigCompose(testAccGrantConfig_base(rName), fmt.Sprintf(`
+resource "aws_kms_grant" "test" {
+  name               = %[1]q
+  key_id             = aws_kms_key.test.key_id
+  operations         = [%[2]s]
+  grantee_principal  = %[3]q
+  retiring_principal = %[3]q
+}
+`, rName, operations, servicePrincipal))
 }
