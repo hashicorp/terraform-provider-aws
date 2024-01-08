@@ -223,15 +223,14 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
-	name := d.Get("name").(string)
 
-	input := codepipeline.DeleteWebhookInput{
-		Name: &name,
-	}
-	_, err := conn.DeleteWebhookWithContext(ctx, &input)
+	log.Printf("[INFO] Deleting CodePipeline Webhook: %s", d.Id())
+	_, err := conn.DeleteWebhookWithContext(ctx, &codepipeline.DeleteWebhookInput{
+		Name: aws.String(d.Get("name").(string)),
+	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Could not delete webhook: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting CodePipeline Webhook (%s): %s", d.Id(), err)
 	}
 
 	return diags
