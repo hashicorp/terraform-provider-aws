@@ -746,7 +746,7 @@ func resourceUserHash(v interface{}) int {
 		buf.WriteString("false-")
 	}
 	if g, ok := m["groups"]; ok {
-		buf.WriteString(fmt.Sprintf("%v-", g.(*schema.Set).List()))
+		buf.WriteString(fmt.Sprintf("%v-", g.([]string)))
 	}
 	if p, ok := m["password"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", p.(string)))
