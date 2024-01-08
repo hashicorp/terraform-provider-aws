@@ -119,17 +119,13 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s): no results found", clusterName)
 	}
 
-	bootstrapBrokersInput := &kafka.GetBootstrapBrokersInput{
-		ClusterArn: cluster.ClusterArn,
-	}
-
-	bootstrapBrokersOutput, err := conn.GetBootstrapBrokersWithContext(ctx, bootstrapBrokersInput)
+	clusterARN := aws.StringValue(cluster.ClusterArn)
+	bootstrapBrokersOutput, err := findBootstrapBrokersByARN(ctx, conn, clusterARN)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s) bootstrap brokers: %s", aws.StringValue(cluster.ClusterArn), err)
+		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s) bootstrap brokers: %s", clusterARN, err)
 	}
 
-	clusterARN := aws.StringValue(cluster.ClusterArn)
 	d.Set("arn", clusterARN)
 	d.Set("bootstrap_brokers", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerString)))
 	d.Set("bootstrap_brokers_public_sasl_iam", SortEndpointsString(aws.StringValue(bootstrapBrokersOutput.BootstrapBrokerStringPublicSaslIam)))

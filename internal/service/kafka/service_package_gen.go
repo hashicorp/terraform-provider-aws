@@ -28,6 +28,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
+			Factory:  dataSourceBootstrapBrokers,
+			TypeName: "aws_msk_bootstrap_brokers",
+			Name:     "Bootstrap Brokers",
+		},
+		{
 			Factory:  DataSourceBrokerNodes,
 			TypeName: "aws_msk_broker_nodes",
 		},

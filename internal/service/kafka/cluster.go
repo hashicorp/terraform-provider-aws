@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -641,9 +642,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s): %s", d.Id(), err)
 	}
 
-	output, err := conn.GetBootstrapBrokersWithContext(ctx, &kafka.GetBootstrapBrokersInput{
-		ClusterArn: aws.String(d.Id()),
-	})
+	output, err := findBootstrapBrokersByARN(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s) bootstrap brokers: %s", d.Id(), err)
@@ -994,6 +993,31 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return diags
+}
+
+func findBootstrapBrokersByARN(ctx context.Context, conn *kafka.Kafka, arn string) (*kafka.GetBootstrapBrokersOutput, error) {
+	input := &kafka.GetBootstrapBrokersInput{
+		ClusterArn: aws.String(arn),
+	}
+
+	output, err := conn.GetBootstrapBrokersWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, kafka.ErrCodeNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func expandBrokerNodeGroupInfo(tfMap map[string]interface{}) *kafka.BrokerNodeGroupInfo {
