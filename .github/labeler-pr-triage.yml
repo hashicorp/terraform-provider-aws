@@ -631,6 +631,8 @@ service/lakeformation:
 service/lambda:
   - 'internal/service/lambda/**/*'
   - 'website/**/lambda_*'
+service/launchwizard:
+  - 'internal/service/launchwizard/**/*'
 service/lexmodels:
   - 'internal/service/lexmodels/**/*'
   - 'website/**/lex_*'
