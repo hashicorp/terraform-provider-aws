@@ -76,7 +76,7 @@ func ResourceManagedPrefixList() *schema.Resource {
 			"max_entries": {
 				Type:         schema.TypeInt,
 				Required:     true,
-				ValidateFunc: validation.IntAtLeast(1),
+				ValidateFunc: validation.IntAtLeast(0),
 			},
 			"name": {
 				Type:         schema.TypeString,
