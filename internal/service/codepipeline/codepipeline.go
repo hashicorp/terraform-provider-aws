@@ -961,7 +961,7 @@ func flattenOutputArtifacts(apiObjects []types.OutputArtifact) []string {
 	return aws.ToStringSlice(tfList)
 }
 
-func flattenVariableDeclaration(i int, apiObject types.PipelineVariableDeclaration) map[string]interface{} {
+func flattenVariableDeclaration(apiObject types.PipelineVariableDeclaration) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DefaultValue; v != nil {
@@ -986,8 +986,8 @@ func flattenVariableDeclarations(apiObjects []types.PipelineVariableDeclaration)
 
 	var tfList []interface{}
 
-	for i, apiObject := range apiObjects {
-		tfList = append(tfList, flattenVariableDeclaration(i, apiObject))
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenVariableDeclaration(apiObject))
 	}
 
 	return tfList
