@@ -134,10 +134,12 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta int
 		Tags: getTagsIn(ctx),
 		Webhook: &types.WebhookDefinition{
 			Authentication: authType,
-			Filters:        expandWebhookFilterRules(d.Get("filter").(*schema.Set)),
-			Name:           aws.String(name),
-			TargetAction:   aws.String(d.Get("target_action").(string)),
-			TargetPipeline: aws.String(d.Get("target_pipeline").(string)),
+			// "missing required field, PutWebhookInput.Webhook.AuthenticationConfiguration".
+			AuthenticationConfiguration: &types.WebhookAuthConfiguration{},
+			Filters:                     expandWebhookFilterRules(d.Get("filter").(*schema.Set)),
+			Name:                        aws.String(name),
+			TargetAction:                aws.String(d.Get("target_action").(string)),
+			TargetPipeline:              aws.String(d.Get("target_pipeline").(string)),
 		},
 	}
 
@@ -200,10 +202,12 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		input := &codepipeline.PutWebhookInput{
 			Webhook: &types.WebhookDefinition{
 				Authentication: authType,
-				Filters:        expandWebhookFilterRules(d.Get("filter").(*schema.Set)),
-				Name:           aws.String(d.Get("name").(string)),
-				TargetAction:   aws.String(d.Get("target_action").(string)),
-				TargetPipeline: aws.String(d.Get("target_pipeline").(string)),
+				// "missing required field, PutWebhookInput.Webhook.AuthenticationConfiguration".
+				AuthenticationConfiguration: &types.WebhookAuthConfiguration{},
+				Filters:                     expandWebhookFilterRules(d.Get("filter").(*schema.Set)),
+				Name:                        aws.String(d.Get("name").(string)),
+				TargetAction:                aws.String(d.Get("target_action").(string)),
+				TargetPipeline:              aws.String(d.Get("target_pipeline").(string)),
 			},
 		}
 
