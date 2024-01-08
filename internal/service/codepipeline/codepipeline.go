@@ -248,7 +248,6 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	pipeline, err := expandPipelineDeclaration(d)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -264,7 +263,7 @@ func resourcePipelineCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}, codepipeline.ErrCodeInvalidStructureException, "not authorized")
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CodePipeline (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating CodePipeline Pipeline (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*codepipeline.CreatePipelineOutput).Pipeline.Name))
@@ -280,18 +279,19 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	output, err := FindPipelineByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] CodePipeline %s not found, removing from state", d.Id())
+		log.Printf("[WARN] CodePipeline Pipeline %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading CodePipeline (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CodePipeline Pipeline (%s): %s", d.Id(), err)
 	}
 
 	metadata := output.Metadata
 	pipeline := output.Pipeline
-
+	arn := aws.StringValue(metadata.PipelineArn)
+	d.Set("arn", arn)
 	if pipeline.ArtifactStore != nil {
 		if err := d.Set("artifact_store", []interface{}{flattenArtifactStore(pipeline.ArtifactStore)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting artifact_store: %s", err)
@@ -301,18 +301,12 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "setting artifact_store: %s", err)
 		}
 	}
-
+	d.Set("name", pipeline.Name)
+	d.Set("pipeline_type", pipeline.PipelineType)
+	d.Set("role_arn", pipeline.RoleArn)
 	if err := d.Set("stage", flattenStageDeclarations(d, pipeline.Stages)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting stage: %s", err)
 	}
-
-	arn := aws.StringValue(metadata.PipelineArn)
-	d.Set("arn", arn)
-	d.Set("name", pipeline.Name)
-	d.Set("role_arn", pipeline.RoleArn)
-
-	d.Set("pipeline_type", pipeline.PipelineType)
-
 	if err := d.Set("variable", flattenVariableDeclarations(d, pipeline.Variables)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting variable: %s", err)
 	}
