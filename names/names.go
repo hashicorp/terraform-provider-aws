@@ -62,6 +62,7 @@ const (
 	IVSChatEndpointID                    = "ivschat"
 	KendraEndpointID                     = "kendra"
 	KeyspacesEndpointID                  = "keyspaces"
+	KinesisEndpointID                    = "kinesis"
 	LambdaEndpointID                     = "lambda"
 	LexV2ModelsEndpointID                = "models-v2-lex"
 	MediaLiveEndpointID                  = "medialive"

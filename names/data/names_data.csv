@@ -203,7 +203,7 @@ ivs,ivs,ivs,ivs,,ivs,,,IVS,IVS,,1,,,aws_ivs_,,ivs_,IVS (Interactive Video),Amazo
 ivschat,ivschat,ivschat,ivschat,,ivschat,,,IVSChat,Ivschat,,,2,,aws_ivschat_,,ivschat_,IVS (Interactive Video) Chat,Amazon,,,,,,,
 kendra,kendra,kendra,kendra,,kendra,,,Kendra,Kendra,,,2,,aws_kendra_,,kendra_,Kendra,Amazon,,,,,,,
 keyspaces,keyspaces,keyspaces,keyspaces,,keyspaces,,,Keyspaces,Keyspaces,,,2,,aws_keyspaces_,,keyspaces_,Keyspaces (for Apache Cassandra),Amazon,,,,,,,
-kinesis,kinesis,kinesis,kinesis,,kinesis,,,Kinesis,Kinesis,,1,,aws_kinesis_stream,aws_kinesis_,,kinesis_stream,Kinesis,Amazon,,,,,,,
+kinesis,kinesis,kinesis,kinesis,,kinesis,,,Kinesis,Kinesis,x,,2,aws_kinesis_stream,aws_kinesis_,,kinesis_stream;kinesis_resource_policy,Kinesis,Amazon,,,,,,,
 kinesisanalytics,kinesisanalytics,kinesisanalytics,kinesisanalytics,,kinesisanalytics,,,KinesisAnalytics,KinesisAnalytics,,1,,aws_kinesis_analytics_,aws_kinesisanalytics_,,kinesis_analytics_,Kinesis Analytics,Amazon,,,,,,,
 kinesisanalyticsv2,kinesisanalyticsv2,kinesisanalyticsv2,kinesisanalyticsv2,,kinesisanalyticsv2,,,KinesisAnalyticsV2,KinesisAnalyticsV2,,1,,,aws_kinesisanalyticsv2_,,kinesisanalyticsv2_,Kinesis Analytics V2,Amazon,,,,,,,
 firehose,firehose,firehose,firehose,,firehose,,,Firehose,Firehose,,,2,aws_kinesis_firehose_,aws_firehose_,,kinesis_firehose_,Kinesis Firehose,Amazon,,,,,,,
