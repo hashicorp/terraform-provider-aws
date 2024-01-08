@@ -52,7 +52,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceConfiguration,
+			Factory:  resourceConfiguration,
 			TypeName: "aws_mq_configuration",
 			Name:     "Configuration",
 			Tags: &types.ServicePackageResourceTags{
