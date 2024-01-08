@@ -115,18 +115,3 @@ func (filters NameValuesFilters) {{ . | Title }}Filters() []*{{ . | FilterPackag
 }
 {{- end }}
 `
-
-
-	result := make([]secretsmanagertypes.Filter, 0, len(m))
-
-	for k, v := range m {
-		filter := secretsmanagertypes.Filter{
-			Key:    secretsmanagertypes.FilterNameStringType(k),
-			Values: v,
-		}
-
-		result = append(result, filter)
-	}
-
-	return result
-}
