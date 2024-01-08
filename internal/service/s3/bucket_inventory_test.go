@@ -125,6 +125,25 @@ func TestAccS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketInventory_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	inventoryName := t.Name()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketInventoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBucketInventoryConfig_directoryBucket(rName, inventoryName),
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
+			},
+		},
+	})
+}
+
 func testAccCheckBucketInventoryExists(ctx context.Context, n string, v *types.InventoryConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -282,4 +301,47 @@ resource "aws_s3_bucket_inventory" "test" {
   }
 }
 `, bucketName, inventoryName))
+}
+
+func testAccBucketInventoryConfig_directoryBucket(bucketName, inventoryName string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(bucketName), fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
+}
+
+resource "aws_s3_bucket_inventory" "test" {
+  bucket = aws_s3_directory_bucket.test.id
+  name   = %[1]q
+
+  included_object_versions = "All"
+
+  optional_fields = [
+    "Size",
+    "LastModifiedDate",
+  ]
+
+  filter {
+    prefix = "documents/"
+  }
+
+  schedule {
+    frequency = "Weekly"
+  }
+
+  destination {
+    bucket {
+      format     = "ORC"
+      bucket_arn = aws_s3_directory_bucket.test.arn
+      account_id = data.aws_caller_identity.current.account_id
+      prefix     = "inventory"
+    }
+  }
+}
+`, inventoryName))
 }

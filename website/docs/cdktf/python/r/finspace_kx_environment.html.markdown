@@ -213,7 +213,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `create` - (Default `30m`)
 * `update` - (Default `30m`)
-* `delete` - (Default `45m`)
+* `delete` - (Default `75m`)
 
 ## Import
 
@@ -234,4 +234,4 @@ Using `terraform import`, import an AWS FinSpace Kx Environment using the `id`. 
 % terraform import aws_finspace_kx_environment.example n3ceo7wqxoxcti5tujqwzs
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-66ff5897d5ab2c91b6931ad3c3dac3ade7477821d5c997374b18bd09ac1f1dd9 -->
+<!-- cache-key: cdktf-0.19.0 input-d97c22abd7224cef7df912e8bd43d2d4e6a61fc878245515c1d2fff4f7189646 -->

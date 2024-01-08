@@ -111,7 +111,7 @@ func (r *resourceBotLocale) Schema(ctx context.Context, req resource.SchemaReque
 							Optional: true,
 							Computed: true,
 							Validators: []validator.String{
-								enum.FrameworkValidate[awstypes.BotType](),
+								enum.FrameworkValidate[awstypes.VoiceEngine](),
 							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.UseStateForUnknown(),
@@ -513,7 +513,7 @@ type resourceBotLocaleData struct {
 
 type voiceSettingsData struct {
 	VoiceId types.String `tfsdk:"voice_id"`
-	Engine  types.String `tfsdk:"voice_engine"`
+	Engine  types.String `tfsdk:"engine"`
 }
 
 var voiceSettingsAttrTypes = map[string]attr.Type{

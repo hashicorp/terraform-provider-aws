@@ -5,6 +5,7 @@ package lexv2models
 
 // Exports for use in tests only.
 var (
-	ResourceBot       = newResourceBot
-	ResourceBotLocale = newResourceBotLocale
+	ResourceBot        = newResourceBot
+	ResourceBotLocale  = newResourceBotLocale
+	ResourceBotVersion = newResourceBotVersion
 )

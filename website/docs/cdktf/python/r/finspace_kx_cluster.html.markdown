@@ -56,6 +56,11 @@ class MyConvertedCode(TerraformStack):
             environment_id=Token.as_string(aws_finspace_kx_environment_example.id),
             name="my-tf-kx-cluster",
             release_label="1.0",
+            timeouts=[{
+                "create": "18h",
+                "update": "18h"
+            }
+            ],
             type="HDB",
             vpc_configuration=FinspaceKxClusterVpcConfiguration(
                 ip_address_type="IP_V4",
@@ -134,6 +139,9 @@ The cache_storage_configuration block supports the following arguments:
     * CACHE_12 - This type provides 12 MB/s disk access throughput.
 * `size` - (Required) Size of cache in Gigabytes.
 
+Please note that create/update timeouts may have to be adjusted from the default 4 hours depending upon the
+volume of data being cached, as noted in the example configuration.
+
 ### code
 
 The code block supports the following arguments:
@@ -188,8 +196,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `45m`)
-* `update` - (Default `30m`)
+* `create` - (Default `4h`)
+* `update` - (Default `4h`)
 * `delete` - (Default `60m`)
 
 ## Import
@@ -211,4 +219,4 @@ Using `terraform import`, import an AWS FinSpace Kx Cluster using the `id` (envi
 % terraform import aws_finspace_kx_cluster.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-cluster
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-f49ba79f2242b84e16df5a6a714b26006f2a9639ede46db32bec275901e7661a -->
+<!-- cache-key: cdktf-0.19.0 input-a62354273cd0579ac96ba9caa797f616e648f46241c8907e9d1077a7877ab7f0 -->

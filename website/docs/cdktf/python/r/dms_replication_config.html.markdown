@@ -40,7 +40,7 @@ class MyConvertedCode(TerraformStack):
             resource_identifier="test-dms-serverless-replication-tf",
             source_endpoint_arn=source.endpoint_arn,
             start_replication=True,
-            table_mappings="  {\n    \"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\", \"rule-action\":\"include\"}]\n  }\n\n",
+            table_mappings="  {\n    \"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"rule-action\":\"include\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"}}]\n  }\n\n",
             target_endpoint_arn=target.endpoint_arn
         )
 ```
@@ -113,4 +113,4 @@ Using `terraform import`, import a replication config using the `arn`. For examp
 % terraform import aws_dms_replication_config.example arn:aws:dms:us-east-1:123456789012:replication-config:UX6OL6MHMMJKFFOXE3H7LLJCMEKBDUG4ZV7DRSI
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-d8fd85468f8a4bdafb679d4023f27b854c796261291e1127611bbb9de03be1ef -->
+<!-- cache-key: cdktf-0.19.0 input-86e6d3f65d28d35f34f5f46f6277a3024fd2ee92daeca5d7b43d0b122aa9b265 -->

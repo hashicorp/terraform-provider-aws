@@ -7,21 +7,32 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 const (
-	allRegions                = "ALL_REGIONS"
-	allRegionsExceptSpecified = "ALL_REGIONS_EXCEPT_SPECIFIED"
-	specifiedRegions          = "SPECIFIED_REGIONS"
+	linkingModeAllRegions                = "ALL_REGIONS"
+	linkingModeAllRegionsExceptSpecified = "ALL_REGIONS_EXCEPT_SPECIFIED"
+	linkingModeSpecifiedRegions          = "SPECIFIED_REGIONS"
 )
+
+func linkingMode_Values() []string {
+	return []string{
+		linkingModeAllRegions,
+		linkingModeAllRegionsExceptSpecified,
+		linkingModeSpecifiedRegions,
+	}
+}
 
 // @SDKResource("aws_securityhub_finding_aggregator")
 func ResourceFindingAggregator() *schema.Resource {
@@ -30,19 +41,16 @@ func ResourceFindingAggregator() *schema.Resource {
 		ReadWithoutTimeout:   resourceFindingAggregatorRead,
 		UpdateWithoutTimeout: resourceFindingAggregatorUpdate,
 		DeleteWithoutTimeout: resourceFindingAggregatorDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
 			"linking_mode": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					allRegions,
-					allRegionsExceptSpecified,
-					specifiedRegions,
-				}, false),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(linkingMode_Values(), false),
 			},
 			"specified_regions": {
 				Type:     schema.TypeSet,
@@ -58,129 +66,116 @@ func ResourceFindingAggregator() *schema.Resource {
 
 func resourceFindingAggregatorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	linkingMode := d.Get("linking_mode").(string)
-
-	req := &securityhub.CreateFindingAggregatorInput{
-		RegionLinkingMode: &linkingMode,
+	input := &securityhub.CreateFindingAggregatorInput{
+		RegionLinkingMode: aws.String(linkingMode),
 	}
 
-	if v, ok := d.GetOk("specified_regions"); ok && (linkingMode == allRegionsExceptSpecified || linkingMode == specifiedRegions) {
-		req.Regions = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := d.GetOk("specified_regions"); ok && v.(*schema.Set).Len() > 0 && (linkingMode == linkingModeAllRegionsExceptSpecified || linkingMode == linkingModeSpecifiedRegions) {
+		input.Regions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	log.Printf("[DEBUG] Creating Security Hub finding aggregator")
-
-	resp, err := conn.CreateFindingAggregatorWithContext(ctx, req)
+	output, err := conn.CreateFindingAggregator(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating finding aggregator for Security Hub: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Security Hub Finding Aggregator: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.FindingAggregatorArn))
+	d.SetId(aws.ToString(output.FindingAggregatorArn))
 
 	return append(diags, resourceFindingAggregatorRead(ctx, d, meta)...)
 }
 
 func resourceFindingAggregatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	aggregatorArn := d.Id()
+	output, err := FindFindingAggregatorByARN(ctx, conn, d.Id())
 
-	log.Printf("[DEBUG] Reading Security Hub finding aggregator to find %s", aggregatorArn)
-
-	aggregator, err := FindingAggregatorCheckExists(ctx, conn, aggregatorArn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Security Hub finding aggregator to find %s: %s", aggregatorArn, err)
-	}
-
-	if aggregator == nil {
-		log.Printf("[WARN] Security Hub finding aggregator (%s) not found, removing from state", aggregatorArn)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Security Hub Finding Aggregator (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
-	d.Set("linking_mode", aggregator.RegionLinkingMode)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Security Hub finding aggregator to find %s: %s", d.Id(), err)
+	}
 
-	if len(aggregator.Regions) > 0 {
-		d.Set("specified_regions", flex.FlattenStringList(aggregator.Regions))
+	d.Set("linking_mode", output.RegionLinkingMode)
+	if len(output.Regions) > 0 {
+		d.Set("specified_regions", flex.FlattenStringValueList(output.Regions))
 	}
 
 	return diags
 }
 
-func FindingAggregatorCheckExists(ctx context.Context, conn *securityhub.SecurityHub, findingAggregatorArn string) (*securityhub.GetFindingAggregatorOutput, error) {
-	input := &securityhub.ListFindingAggregatorsInput{}
-
-	var found *securityhub.GetFindingAggregatorOutput
-	var err error
-
-	err = conn.ListFindingAggregatorsPagesWithContext(ctx, input, func(page *securityhub.ListFindingAggregatorsOutput, lastPage bool) bool {
-		for _, aggregator := range page.FindingAggregators {
-			if aws.StringValue(aggregator.FindingAggregatorArn) == findingAggregatorArn {
-				getInput := &securityhub.GetFindingAggregatorInput{
-					FindingAggregatorArn: &findingAggregatorArn,
-				}
-				found, err = conn.GetFindingAggregatorWithContext(ctx, getInput)
-				return false
-			}
-		}
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	return found, nil
-}
-
 func resourceFindingAggregatorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
-
-	aggregatorArn := d.Id()
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
 	linkingMode := d.Get("linking_mode").(string)
-
-	req := &securityhub.UpdateFindingAggregatorInput{
-		FindingAggregatorArn: &aggregatorArn,
-		RegionLinkingMode:    &linkingMode,
+	input := &securityhub.UpdateFindingAggregatorInput{
+		FindingAggregatorArn: aws.String(d.Id()),
+		RegionLinkingMode:    aws.String(linkingMode),
 	}
 
-	if v, ok := d.GetOk("specified_regions"); ok && (linkingMode == allRegionsExceptSpecified || linkingMode == specifiedRegions) {
-		req.Regions = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := d.GetOk("specified_regions"); ok && v.(*schema.Set).Len() > 0 && (linkingMode == linkingModeAllRegionsExceptSpecified || linkingMode == linkingModeSpecifiedRegions) {
+		input.Regions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	resp, err := conn.UpdateFindingAggregatorWithContext(ctx, req)
+	_, err := conn.UpdateFindingAggregator(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Security Hub finding aggregator (%s): %s", aggregatorArn, err)
+		return sdkdiag.AppendErrorf(diags, "updating Security Hub Finding Aggregator (%s): %s", d.Id(), err)
 	}
-
-	d.SetId(aws.StringValue(resp.FindingAggregatorArn))
 
 	return append(diags, resourceFindingAggregatorRead(ctx, d, meta)...)
 }
 
 func resourceFindingAggregatorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubConn(ctx)
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	aggregatorArn := d.Id()
-
-	log.Printf("[DEBUG] Disabling Security Hub finding aggregator %s", aggregatorArn)
-
-	_, err := conn.DeleteFindingAggregatorWithContext(ctx, &securityhub.DeleteFindingAggregatorInput{
-		FindingAggregatorArn: &aggregatorArn,
+	log.Printf("[DEBUG] Deleting Security Hub Finding Aggregator: %s", d.Id())
+	_, err := conn.DeleteFindingAggregator(ctx, &securityhub.DeleteFindingAggregatorInput{
+		FindingAggregatorArn: aws.String(d.Id()),
 	})
 
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
+		return diags
+	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "disabling Security Hub finding aggregator %s: %s", aggregatorArn, err)
+		return sdkdiag.AppendErrorf(diags, "deleting Security Hub Finding Aggregator (%s): %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func FindFindingAggregatorByARN(ctx context.Context, conn *securityhub.Client, arn string) (*securityhub.GetFindingAggregatorOutput, error) {
+	input := &securityhub.GetFindingAggregatorInput{
+		FindingAggregatorArn: aws.String(arn),
+	}
+
+	output, err := conn.GetFindingAggregator(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

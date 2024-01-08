@@ -83,6 +83,7 @@ The `primaryContainer` and `container` block both support:
 * `mode` - (Optional) The container hosts value `SingleModel/MultiModel`. The default value is `SingleModel`.
 * `modelDataUrl` - (Optional) The URL for the S3 location where model artifacts are stored.
 * `modelPackageName` - (Optional) The Amazon Resource Name (ARN) of the model package to use to create the model.
+* `modelDataSource` - (Optional) The location of model data to deploy. Use this for uncompressed model deployment. For information about how to deploy an uncompressed model, see [Deploying uncompressed models](https://docs.aws.amazon.com/sagemaker/latest/dg/large-model-inference-uncompressed.html) in the _AWS SageMaker Developer Guide_.
 * `containerHostname` - (Optional) The DNS host name for the container.
 * `environment` - (Optional) Environment variables for the Docker container.
    A list of key value pairs.
@@ -96,6 +97,16 @@ The `primaryContainer` and `container` block both support:
 #### Repository Auth Config
 
 * `repositoryCredentialsProviderArn` - (Required) The Amazon Resource Name (ARN) of an AWS Lambda function that provides credentials to authenticate to the private Docker registry where your model image is hosted. For information about how to create an AWS Lambda function, see [Create a Lambda function with the console](https://docs.aws.amazon.com/lambda/latest/dg/getting-started-create-function.html) in the _AWS Lambda Developer Guide_.
+
+### Model Data Source
+
+* `s3DataSource` - (Required) The S3 location of model data to deploy.
+
+#### S3 Data Source
+
+* `compressionType` - (Required) How the model data is prepared. Allowed values are: `None` and `Gzip`.
+* `s3DataType` - (Required) The type of model data to deploy. Allowed values are: `S3Object` and `S3Prefix`.
+* `s3Uri` - (Required) The S3 path of model data to deploy.
 
 ## Inference Execution Config
 
@@ -131,4 +142,4 @@ Using `terraform import`, import models using the `name`. For example:
 % terraform import aws_sagemaker_model.test_model model-foo
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-53d6c468eddd1f29a98ecc8fc36ce24bea38081a6d6c05a93d9d1f563dbc5e78 -->
+<!-- cache-key: cdktf-0.19.0 input-19ce3f053fc0e6fa1af2c28c5e497e97fb4890e3cc71a468a66b19f56cd52592 -->

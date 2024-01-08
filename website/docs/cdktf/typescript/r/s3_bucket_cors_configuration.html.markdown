@@ -14,6 +14,8 @@ Provides an S3 bucket CORS configuration resource. For more information about CO
 
 ~> **NOTE:** S3 Buckets only support a single CORS configuration. Declaring multiple `awsS3BucketCorsConfiguration` resources to the same S3 Bucket will cause a perpetual difference in configuration.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ```typescript
@@ -130,4 +132,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_cors_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-c6297f41c25d6847931e27891b8cdabf38a1ff8d7e24e15087330868928e32e8 -->
+<!-- cache-key: cdktf-0.19.0 input-46d05f4edffda026c1ba9028dbaf7808b8d38daf8758aaa695e27c27b121e258 -->

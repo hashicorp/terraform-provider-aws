@@ -35,7 +35,10 @@ class MyConvertedCode(TerraformStack):
             ],
             idle_session_ttl_in_seconds=10,
             name="example",
-            role_arn="bot_example_arn"
+            role_arn="bot_example_arn",
+            tags={
+                "foo": "bar"
+            }
         )
 ```
 
@@ -51,8 +54,8 @@ The following arguments are required:
 The following arguments are optional:
 
 * `members` - List of bot members in a network to be created. See [`bot_members`](#bot-members).
-* `bot_tags` - List of tags to add to the bot. You can only add tags when you create a bot.
-* `bot_type` - Type of a bot to create.
+* `tags` - List of tags to add to the bot. You can only add tags when you create a bot.
+* `type` - Type of a bot to create. Possible values are `"Bot"` and `"BotNetwork"`.
 * `description` - Description of the bot. It appears in lists to help you identify a particular bot.
 * `test_bot_alias_tags` - List of tags to add to the test alias for a bot. You can only add tags when you create a bot.
 
@@ -101,4 +104,4 @@ Using `terraform import`, import Lex V2 Models Bot using the `example_id_arg`. F
 % terraform import aws_lexv2models_bot.example bot-id-12345678
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-7e4e7c49f1d8375bbd057208e9ba1b16a7f2a964f4ba619719401e55ba5eb370 -->
+<!-- cache-key: cdktf-0.19.0 input-5386adc0cc13bc1463567ac5ac825eb0a0b2fbb55320d73cc9d695a8791dcb48 -->

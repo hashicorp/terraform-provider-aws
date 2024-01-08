@@ -12,6 +12,8 @@ description: |-
 
 Provides an IoT policy.
 
+~> **NOTE on policy versions:** Updating this resource creates a new, default policy version. If updating the resource would exceed the maximum number of versions (5), the oldest non-default version of the policy is deleted before the new policy version is created.
+
 ## Example Usage
 
 ```python
@@ -57,6 +59,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `default_version_id` - The default version of this policy.
 * `policy` - The policy document.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `update` - (Default `1m`)
+* `delete` - (Default `5m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IoT policies using the `name`. For example:
@@ -76,4 +85,4 @@ Using `terraform import`, import IoT policies using the `name`. For example:
 % terraform import aws_iot_policy.pubsub PubSubToAnyTopic
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-aa26a18211ca20b7caee0ba0c439dfec03ce858e13ea7c24d060deccb352d0d2 -->
+<!-- cache-key: cdktf-0.19.0 input-1b0d664d5bf3d3536a5c1a80aabbe1a73845a950396b67970aa3fd1248e2b360 -->

@@ -14,6 +14,8 @@ Provides an S3 bucket ACL resource.
 
 ~> **Note:** `terraform destroy` does not delete the S3 Bucket ACL but does remove the resource from Terraform state.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### With `private` ACL
@@ -283,4 +285,4 @@ If the owner (account ID) of the source bucket _differs_ from the account used t
 
 [1]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl
 
-<!-- cache-key: cdktf-0.19.0 input-7e8c0c7d553a8dc18f376cb79615d94086a2767d34d0f7c570f4a8267a6021d2 -->
+<!-- cache-key: cdktf-0.19.0 input-06b39c820f5c4f9171593b6ae58155d7343e0494406cf4c1b165f7b639765773 -->

@@ -127,6 +127,7 @@ This resource exports the following attributes in addition to the arguments abov
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `5m`)
+- `read` - (Default `5m`)
 - `update` - (Default `5m`)
 - `delete` - (Default `5m`)
 
@@ -152,4 +153,4 @@ Using `terraform import`, import ElastiCache users using the `userId`. For examp
 % terraform import aws_elasticache_user.my_user userId1
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-c37a7a3d6865b0708a24bc5e37568bc382a09c2d006a5a45f7b5eac613f84ed1 -->
+<!-- cache-key: cdktf-0.19.0 input-87b0ec5515f9f28ca247cfa029873c8c947e12874fa62d10b3b525c5e12add62 -->

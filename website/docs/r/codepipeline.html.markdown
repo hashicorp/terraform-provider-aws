@@ -95,9 +95,13 @@ resource "aws_s3_bucket" "codepipeline_bucket" {
   bucket = "test-bucket"
 }
 
-resource "aws_s3_bucket_acl" "codepipeline_bucket_acl" {
+resource "aws_s3_bucket_public_access_block" "codepipeline_bucket_pab" {
   bucket = aws_s3_bucket.codepipeline_bucket.id
-  acl    = "private"
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 data "aws_iam_policy_document" "assume_role" {

@@ -28,6 +28,14 @@ func TimestampValue(value string) Timestamp {
 	}
 }
 
+func TimestampZero() Timestamp {
+	var t time.Time
+	return Timestamp{
+		StringValue: basetypes.NewStringValue(t.Format(time.RFC3339)),
+		value:       t,
+	}
+}
+
 var (
 	_ basetypes.StringValuable = (*Timestamp)(nil)
 )
@@ -53,4 +61,14 @@ func (v Timestamp) Type(_ context.Context) attr.Type {
 
 func (v Timestamp) ValueTimestamp() time.Time {
 	return v.value
+}
+
+// ValueStringPointer returns a pointer to the known string value, nil for a
+// null value, or a pointer to "" for an unknown value.
+func (v Timestamp) ValueTimestampPointer() *time.Time {
+	if v.IsNull() {
+		return nil
+	}
+
+	return &v.value
 }

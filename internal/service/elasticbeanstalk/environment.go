@@ -314,7 +314,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Elastic Beanstalk Environment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -595,7 +595,7 @@ func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "No Environment found") {
-		return nil
+		return diags
 	}
 
 	if err != nil {

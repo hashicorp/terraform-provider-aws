@@ -103,8 +103,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The internal ID assigned to this certificate.
 * `arn` - The ARN of the created certificate.
+* `caCertificateId` - The certificate ID of the CA certificate used to sign the certificate.
 * `certificatePem` - The certificate data, in PEM format.
 * `publicKey` - When neither CSR nor certificate is provided, the public key.
 * `privateKey` - When neither CSR nor certificate is provided, the private key.
 
-<!-- cache-key: cdktf-0.19.0 input-18d65d2043d283d5d12c775ce5c1b04cb6470c6818ca20175568246ddcc6c9cd -->
+<!-- cache-key: cdktf-0.19.0 input-cd4ec9a7a491e894c7c1bf387191cc12633a4113cd2e7bf2fe6ecc7c3615caa6 -->

@@ -92,7 +92,8 @@ The following arguments are required:
 
 * `auth_mode` - (Required) The mode of authentication that members use to access the domain. Valid values are `IAM` and `SSO`.
 * `default_space_settings` - (Required) The default space settings. See [Default Space Settings](#default_space_settings) below.
-* `default_user_settings` - (Required) The default user settings. See [Default User Settings](#default_user_settings) below.* `domain_name` - (Required) The domain name.
+* `default_user_settings` - (Required) The default user settings. See [Default User Settings](#default_user_settings) below.
+* `domain_name` - (Required) The domain name.
 * `subnet_ids` - (Required) The VPC subnets that Studio uses for communication.
 * `vpc_id` - (Required) The ID of the Amazon Virtual Private Cloud (VPC) that Studio uses for communication.
 
@@ -115,15 +116,35 @@ The following arguments are optional:
 
 ### default_user_settings
 
-* `execution_role` - (Required) The execution role ARN for the user.
 * `canvas_app_settings` - (Optional) The Canvas app settings. See [Canvas App Settings](#canvas_app_settings) below.
+* `code_editor_app_settings` - (Optional) The Code Editor application settings. See [Code Editor App Settings](#code_editor_app_settings) below.
+* `custom_file_system_config` - (Optional) The settings for assigning a custom file system to a user profile. Permitted users can access this file system in Amazon SageMaker Studio. See [Custom File System Config](#custom_file_system_config) below.
+* `custom_posix_user_config` - (Optional) Details about the POSIX identity that is used for file system operations. See [Custom Posix User Config](#custom_posix_user_config) below.
+* `default_landing_uri` - (Optional) The default experience that the user is directed to when accessing the domain. The supported values are: `studio::`: Indicates that Studio is the default experience. This value can only be passed if StudioWebPortal is set to ENABLED. `app:JupyterServer:`: Indicates that Studio Classic is the default experience.
+* `execution_role` - (Required) The execution role ARN for the user.
+* `jupyter_lab_app_settings` - (Optional) The settings for the JupyterLab application. See [Jupyter Lab App Settings](#jupyter_lab_app_settings) below.
 * `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [Jupyter Server App Settings](#jupyter_server_app_settings) below.
 * `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [Kernel Gateway App Settings](#kernel_gateway_app_settings) below.
 * `r_session_app_settings` - (Optional) The RSession app settings. See [RSession App Settings](#r_session_app_settings) below.
 * `r_studio_server_pro_app_settings` - (Optional) A collection of settings that configure user interaction with the RStudioServerPro app. See [RStudioServerProAppSettings](#r_studio_server_pro_app_settings) below.
 * `security_groups` - (Optional) A list of security group IDs that will be attached to the user.
 * `sharing_settings` - (Optional) The sharing settings. See [Sharing Settings](#sharing_settings) below.
+* `space_storage_settings` - (Optional) The storage settings for a private space. See [Space Storage Settings](#space_storage_settings) below.
+* `studio_web_portal` - (Optional) Whether the user can access Studio. If this value is set to `DISABLED`, the user cannot access Studio, even if that is the default experience for the domain. Valid values are `ENABLED` and `DISABLED`.
 * `tensor_board_app_settings` - (Optional) The TensorBoard app settings. See [TensorBoard App Settings](#tensor_board_app_settings) below.
+
+#### space_storage_settings
+
+* `default_ebs_storage_settings` - (Optional) The default EBS storage settings for a private space. See [Default EBS Storage Settings](#default_ebs_storage_settings) below.
+
+#### custom_file_system_config
+
+* `efs_file_system_config` - (Optional) The default EBS storage settings for a private space. See [EFS File System Config](#efs_file_system_config) below.
+
+#### custom_posix_user_config
+
+* `gid` - (Optional) The POSIX group ID.
+* `uid` - (Optional) The POSIX user ID.
 
 #### r_studio_server_pro_app_settings
 
@@ -133,15 +154,15 @@ The following arguments are optional:
 #### canvas_app_settings
 
 * `direct_deploy_settings` - (Optional)The model deployment settings for the SageMaker Canvas application. See [Direct Deploy Settings](#direct_deploy_settings) below.
-* `kendra_settings` - (Optional) The settings for document querying. See [Kendra Settings](#kendra_settings) below.
 * `identity_provider_oauth_settings` - (Optional) The settings for connecting to an external data source with OAuth. See [Identity Provider OAuth Settings](#identity_provider_oauth_settings) below.
+* `kendra_settings` - (Optional) The settings for document querying. See [Kendra Settings](#kendra_settings) below.
 * `model_register_settings` - (Optional) The model registry settings for the SageMaker Canvas application. See [Model Register Settings](#model_register_settings) below.
 * `time_series_forecasting_settings` - (Optional) Time series forecast settings for the Canvas app. See [Time Series Forecasting Settings](#time_series_forecasting_settings) below.
 * `workspace_settings` - (Optional) The workspace settings for the SageMaker Canvas application. See [Workspace Settings](#workspace_settings) below.
 
 ##### identity_provider_oauth_settings
 
-* `data_source_name` - (Optional)The name of the data source that you're connecting to. Canvas currently supports OAuth for Snowflake and Salesforce Data Cloud. Valid values are `SalesforceGenie` and `Snowflake`.
+* `data_source_name` - (Optional) The name of the data source that you're connecting to. Canvas currently supports OAuth for Snowflake and Salesforce Data Cloud. Valid values are `SalesforceGenie` and `Snowflake`.
 * `secret_arn` - (Optional) The ARN of an Amazon Web Services Secrets Manager secret that stores the credentials from your identity provider, such as the client ID and secret, authorization URL, and token URL.
 * `status` - (Optional) Describes whether OAuth for a data source is enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
 
@@ -190,6 +211,17 @@ The following arguments are optional:
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
 * `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
+#### jupyter_lab_app_settings
+
+* `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. see [Code Repository](#code_repository) below.
+* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
+* `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
+
+#### code_editor_app_settings
+
+* `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default_resource_spec) below.
+* `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
+
 ##### code_repository
 
 * `repository_url` - (Optional) The URL of the Git repository.
@@ -199,6 +231,7 @@ The following arguments are optional:
 * `instance_type` - (Optional) The instance type that the image version runs on.. For valid values see [SageMaker Instance Types](https://docs.aws.amazon.com/sagemaker/latest/dg/notebooks-available-instance-types.html).
 * `lifecycle_config_arn` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configuration attached to the Resource.
 * `sagemaker_image_arn` - (Optional) The ARN of the SageMaker image that the image version belongs to.
+* `sagemaker_image_version_alias` - (Optional) The SageMaker Image Version Alias.
 * `sagemaker_image_version_arn` - (Optional) The ARN of the image version created on the instance.
 
 #### r_session_app_settings
@@ -211,6 +244,16 @@ The following arguments are optional:
 * `app_image_config_name` - (Required) The name of the App Image Config.
 * `image_name` - (Required) The name of the Custom Image.
 * `image_version_number` - (Optional) The version number of the Custom Image.
+
+##### default_ebs_storage_settings
+
+* `default_ebs_volume_size_in_gb` - (Required) The default size of the EBS storage volume for a private space.
+* `maximum_ebs_volume_size_in_gb` - (Required) The maximum size of the EBS storage volume for a private space.
+
+##### efs_file_system_config
+
+* `file_system_id` - (Required) The ID of your Amazon EFS file system.
+* `file_system_path` - (Required) The path to the file system directory that is accessible in Amazon SageMaker Studio. Permitted users can access only this directory and below.
 
 ### domain_settings
 
@@ -233,13 +276,14 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the Domain.
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Domain.
-* `url` - The domain's URL.
-* `single_sign_on_managed_application_instance_id` - The SSO managed application instance ID.
-* `security_group_id_for_domain_boundary` - The ID of the security group that authorizes traffic between the RSessionGateway apps and the RStudioServerPro app.
 * `home_efs_file_system_id` - The ID of the Amazon Elastic File System (EFS) managed by this Domain.
+* `id` - The ID of the Domain.
+* `security_group_id_for_domain_boundary` - The ID of the security group that authorizes traffic between the RSessionGateway apps and the RStudioServerPro app.
+* `single_sign_on_application_arn` - The ARN of the application managed by SageMaker in IAM Identity Center. This value is only returned for domains created after September 19, 2023.
+* `single_sign_on_managed_application_instance_id` - The SSO managed application instance ID.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `url` - The domain's URL.
 
 ## Import
 

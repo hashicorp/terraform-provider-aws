@@ -12,6 +12,8 @@ description: |-
 
 Provides an S3 bucket accelerate configuration resource. See the [Requirements for using Transfer Acceleration](https://docs.aws.amazon.com/AmazonS3/latest/userguide/transfer-acceleration.html#transfer-acceleration-requirements) for more details.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ```typescript
@@ -99,4 +101,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_accelerate_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-d5969f8a31c3a0cabfdc95aa5af8e4294acf1e21e3704ef66fc529acc0c176b8 -->
+<!-- cache-key: cdktf-0.19.0 input-b8d2eb8976f9eb67b7e44985d08d6df0a0c35907c6a6a2a51239045804765fc1 -->

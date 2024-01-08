@@ -52,6 +52,9 @@ interpolation.
 * `healthCheckGracePeriod` - The amount of time, in seconds, that Amazon EC2 Auto Scaling waits before checking the health status of an EC2 instance that has come into service.
 * `healthCheckType` - Service to use for the health checks. The valid values are EC2 and ELB.
 * `id` - Name of the Auto Scaling Group.
+* `instanceMaintenancePolicy` - Instance maintenance policy for the group.
+    * `min_healthy_percentage` - Specifies the lower limit on the number of instances that must be in the InService state with a healthy status during an instance replacement activity.
+    * `max_healthy_percentage` - Specifies the upper limit on the number of instances that are in the InService or Pending state with a healthy status during an instance replacement activity.
 * `launchConfiguration` - The name of the associated launch configuration.
 * `launchTemplate` - List of launch templates for the group.
     * `id` - ID of the launch template.
@@ -144,4 +147,4 @@ interpolation.
     * `pool_state` - Instance state to transition to after the lifecycle actions are complete.
 * `warmPoolSize` - Current size of the warm pool.
 
-<!-- cache-key: cdktf-0.19.0 input-99dec3ec98ed7de1189a2c55151981d1b50b501480be637bbbe4a2b5d7102172 -->
+<!-- cache-key: cdktf-0.19.0 input-26572cc32b6838affc843d4557992ced62698f925facebdb8877cf21be04699b -->

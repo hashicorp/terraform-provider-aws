@@ -10,6 +10,7 @@ Amplify
 App Mesh
 App Runner
 AppConfig
+AppFabric
 AppFlow
 AppIntegrations
 AppStream 2.0
@@ -47,6 +48,7 @@ CodeBuild
 CodeCatalyst
 CodeCommit
 CodeDeploy
+CodeGuru Profiler
 CodeGuru Reviewer
 CodePipeline
 CodeStar Connections
@@ -57,6 +59,8 @@ Comprehend
 Compute Optimizer
 Config
 Connect
+Connect Cases
+Connect Customer Profiles
 Control Tower
 Cost and Usage Report
 DLM (Data Lifecycle Manager)
@@ -93,6 +97,7 @@ Elemental MediaConnect
 Elemental MediaConvert
 Elemental MediaLive
 Elemental MediaPackage
+Elemental MediaPackage Version 2
 Elemental MediaStore
 EventBridge
 EventBridge Pipes
@@ -105,6 +110,7 @@ FinSpace
 GameLift
 Global Accelerator
 Glue
+Ground Station
 GuardDuty
 HealthLake
 IAM (Identity & Access Management)
@@ -132,6 +138,7 @@ Lex V2 Models
 License Manager
 Lightsail
 Location
+Lookout for Metrics
 MQ
 MWAA (Managed Workflows for Apache Airflow)
 Macie
@@ -151,7 +158,9 @@ Organizations
 Outposts
 Outposts (EC2)
 Pinpoint
+Polly
 Pricing Calculator
+Private CA Connector for Active Directory
 QLDB (Quantum Ledger Database)
 QuickSight
 RAM (Resource Access Manager)
@@ -192,10 +201,12 @@ Security Hub
 Security Lake
 Serverless Application Repository
 Service Catalog
+Service Catalog AppRegistry
 Service Quotas
 Shield
 Signer
 Storage Gateway
+Systems Manager for SAP
 Timestream Write
 Transcribe
 Transfer Family
@@ -212,6 +223,7 @@ WAF Classic
 WAF Classic Regional
 Wavelength
 Web Services Budgets
+Well-Architected Tool
 WorkLink
 WorkSpaces
 X-Ray

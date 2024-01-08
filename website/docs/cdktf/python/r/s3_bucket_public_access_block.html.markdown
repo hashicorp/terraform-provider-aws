@@ -12,6 +12,8 @@ description: |-
 
 Manages S3 bucket-level Public Access Block configuration. For more information about these settings, see the [AWS S3 Block Public Access documentation](https://docs.aws.amazon.com/AmazonS3/latest/dev/access-control-block-public-access.html).
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ```python
@@ -81,4 +83,4 @@ Using `terraform import`, import `aws_s3_bucket_public_access_block` using the b
 % terraform import aws_s3_bucket_public_access_block.example my-bucket
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-2e16c719c6f0cfe951257236cc5f5c735596db2bb7566ee8238215516c15c3f7 -->
+<!-- cache-key: cdktf-0.19.0 input-57aca43437d3baccafd0295a3b17a5e714bee976d7cb3f139b488240cf5b921a -->

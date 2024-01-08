@@ -62,6 +62,9 @@ This resource supports the following arguments:
 
 #### Canvas App Settings
 
+* `directDeploySettings` - (Optional)The model deployment settings for the SageMaker Canvas application. See [Direct Deploy Settings](#direct-deploy-settings) below.
+* `kendraSettings` - (Optional) The settings for document querying. See [Kendra Settings](#kendra-settings) below.
+* `identityProviderOauthSettings` - (Optional) The settings for connecting to an external data source with OAuth. See [Identity Provider OAuth Settings](#identity-provider-oauth-settings) below.
 * `modelRegisterSettings` - (Optional) The model registry settings for the SageMaker Canvas application. See [Model Register Settings](#model-register-settings) below.
 * `timeSeriesForecastingSettings` - (Optional) Time series forecast settings for the Canvas app. see [Time Series Forecasting Settings](#time-series-forecasting-settings) below.
 * `workspaceSettings` - (Optional) The workspace settings for the SageMaker Canvas application. See [Workspace Settings](#workspace-settings) below.
@@ -115,6 +118,20 @@ This resource supports the following arguments:
 * `imageName` - (Required) The name of the Custom Image.
 * `imageVersionNumber` - (Optional) The version number of the Custom Image.
 
+##### Identity Provider OAuth Settings
+
+* `dataSourceName` - (Optional)The name of the data source that you're connecting to. Canvas currently supports OAuth for Snowflake and Salesforce Data Cloud. Valid values are `SalesforceGenie` and `Snowflake`.
+* `secretArn` - (Optional) The ARN of an Amazon Web Services Secrets Manager secret that stores the credentials from your identity provider, such as the client ID and secret, authorization URL, and token URL.
+* `status` - (Optional) Describes whether OAuth for a data source is enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
+
+##### Direct Deploy Settings
+
+* `status` - (Optional)Describes whether model deployment permissions are enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
+
+##### Kendra Settings
+
+* `status` - (Optional) Describes whether the document querying feature is enabled or disabled in the Canvas application. Valid values are `ENABLED` and `DISABLED`.
+
 ##### Time Series Forecasting Settings
 
 * `amazonForecastRoleArn` - (Optional)  The IAM role that Canvas passes to Amazon Forecast for time series forecasting. By default, Canvas uses the execution role specified in the UserProfile that launches the Canvas app. If an execution role is not specified in the UserProfile, Canvas uses the execution role specified in the Domain that owns the UserProfile. To allow time series forecasting, this IAM role should have the [AmazonSageMakerCanvasForecastAccess](https://docs.aws.amazon.com/sagemaker/latest/dg/security-iam-awsmanpol-canvas.html#security-iam-awsmanpol-AmazonSageMakerCanvasForecastAccess) policy attached and forecast.amazonaws.com added in the trust relationship as a service principal.
@@ -161,4 +178,4 @@ Using `terraform import`, import SageMaker User Profiles using the `arn`. For ex
 % terraform import aws_sagemaker_user_profile.test_user_profile arn:aws:sagemaker:us-west-2:123456789012:user-profile/domain-id/profile-name
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-1492833bb8413e9155281273553ca4896e7889971ba95eee58026c164fc0fdb7 -->
+<!-- cache-key: cdktf-0.19.0 input-67896f5caa4502b1b5376b6f0e148a3cd75f2a32fd0d6e9626f74d797253abf2 -->

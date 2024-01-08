@@ -14,6 +14,8 @@ Provides a S3 bucket server-side encryption configuration resource.
 
 ~> **NOTE:** Destroying an `aws_s3_bucket_server_side_encryption_configuration` resource resets the bucket to [Amazon S3 bucket default encryption](https://docs.aws.amazon.com/AmazonS3/latest/userguide/default-encryption-faq.html).
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ```python
@@ -117,4 +119,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_server_side_encryption_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-20fc65b1b77aa12edd3562b565214ad5b0b456226cc87c90a6ba2cfb792b9ea9 -->
+<!-- cache-key: cdktf-0.19.0 input-0f2b5c00fdb36021724b5cf6e2f95468af67a66699a83e2391341ea5211d952d -->

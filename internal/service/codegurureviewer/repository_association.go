@@ -269,6 +269,8 @@ const (
 )
 
 func resourceRepositoryAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CodeGuruReviewerConn(ctx)
 
 	in := &codegurureviewer.AssociateRepositoryInput{
@@ -284,23 +286,25 @@ func resourceRepositoryAssociationCreate(ctx context.Context, d *schema.Resource
 	out, err := conn.AssociateRepositoryWithContext(ctx, in)
 
 	if err != nil {
-		return create.DiagError(names.CodeGuruReviewer, create.ErrActionCreating, ResNameRepositoryAssociation, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.CodeGuruReviewer, create.ErrActionCreating, ResNameRepositoryAssociation, d.Get("name").(string), err)
 	}
 
 	if out == nil || out.RepositoryAssociation == nil {
-		return create.DiagError(names.CodeGuruReviewer, create.ErrActionCreating, ResNameRepositoryAssociation, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.CodeGuruReviewer, create.ErrActionCreating, ResNameRepositoryAssociation, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.StringValue(out.RepositoryAssociation.AssociationArn))
 
 	if _, err := waitRepositoryAssociationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.CodeGuruReviewer, create.ErrActionWaitingForCreation, ResNameRepositoryAssociation, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeGuruReviewer, create.ErrActionWaitingForCreation, ResNameRepositoryAssociation, d.Id(), err)
 	}
 
-	return resourceRepositoryAssociationRead(ctx, d, meta)
+	return append(diags, resourceRepositoryAssociationRead(ctx, d, meta)...)
 }
 
 func resourceRepositoryAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CodeGuruReviewerConn(ctx)
 
 	out, err := findRepositoryAssociationByID(ctx, conn, d.Id())
@@ -308,10 +312,10 @@ func resourceRepositoryAssociationRead(ctx context.Context, d *schema.ResourceDa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CodeGuruReviewer RepositoryAssociation (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return create.DiagError(names.CodeGuruReviewer, create.ErrActionReading, ResNameRepositoryAssociation, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeGuruReviewer, create.ErrActionReading, ResNameRepositoryAssociation, d.Id(), err)
 	}
 
 	d.Set("arn", out.AssociationArn)
@@ -319,7 +323,7 @@ func resourceRepositoryAssociationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("connection_arn", out.ConnectionArn)
 
 	if err := d.Set("kms_key_details", flattenKMSKeyDetails(out.KMSKeyDetails)); err != nil {
-		return create.DiagError(names.CodeGuruReviewer, create.ErrActionSetting, ResNameRepositoryAssociation, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeGuruReviewer, create.ErrActionSetting, ResNameRepositoryAssociation, d.Id(), err)
 	}
 
 	d.Set("name", out.Name)
@@ -327,13 +331,13 @@ func resourceRepositoryAssociationRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("provider_type", out.ProviderType)
 
 	if err := d.Set("s3_repository_details", flattenS3RepositoryDetails(out.S3RepositoryDetails)); err != nil {
-		return create.DiagError(names.CodeGuruReviewer, create.ErrActionSetting, ResNameRepositoryAssociation, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeGuruReviewer, create.ErrActionSetting, ResNameRepositoryAssociation, d.Id(), err)
 	}
 
 	d.Set("state", out.State)
 	d.Set("state_reason", out.StateReason)
 
-	return nil
+	return diags
 }
 
 func resourceRepositoryAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -345,6 +349,8 @@ func resourceRepositoryAssociationUpdate(ctx context.Context, d *schema.Resource
 }
 
 func resourceRepositoryAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CodeGuruReviewerConn(ctx)
 
 	log.Printf("[INFO] Deleting CodeGuruReviewer RepositoryAssociation %s", d.Id())
@@ -354,18 +360,18 @@ func resourceRepositoryAssociationDelete(ctx context.Context, d *schema.Resource
 	})
 
 	if tfawserr.ErrCodeEquals(err, codegurureviewer.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.CodeGuruReviewer, create.ErrActionDeleting, ResNameRepositoryAssociation, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeGuruReviewer, create.ErrActionDeleting, ResNameRepositoryAssociation, d.Id(), err)
 	}
 
 	if _, err := waitRepositoryAssociationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.CodeGuruReviewer, create.ErrActionWaitingForDeletion, ResNameRepositoryAssociation, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeGuruReviewer, create.ErrActionWaitingForDeletion, ResNameRepositoryAssociation, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func waitRepositoryAssociationCreated(ctx context.Context, conn *codegurureviewer.CodeGuruReviewer, id string, timeout time.Duration) (*codegurureviewer.RepositoryAssociation, error) {

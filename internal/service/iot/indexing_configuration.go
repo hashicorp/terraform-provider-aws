@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
@@ -176,6 +177,8 @@ func ResourceIndexingConfiguration() *schema.Resource {
 }
 
 func resourceIndexingConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	input := &iot.UpdateIndexingConfigurationInput{}
@@ -191,39 +194,41 @@ func resourceIndexingConfigurationPut(ctx context.Context, d *schema.ResourceDat
 	_, err := conn.UpdateIndexingConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating IoT Indexing Configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating IoT Indexing Configuration: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	return resourceIndexingConfigurationRead(ctx, d, meta)
+	return append(diags, resourceIndexingConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceIndexingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	output, err := conn.GetIndexingConfigurationWithContext(ctx, &iot.GetIndexingConfigurationInput{})
 
 	if err != nil {
-		return diag.Errorf("reading IoT Indexing Configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading IoT Indexing Configuration: %s", err)
 	}
 
 	if output.ThingGroupIndexingConfiguration != nil {
 		if err := d.Set("thing_group_indexing_configuration", []interface{}{flattenThingGroupIndexingConfiguration(output.ThingGroupIndexingConfiguration)}); err != nil {
-			return diag.Errorf("setting thing_group_indexing_configuration: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting thing_group_indexing_configuration: %s", err)
 		}
 	} else {
 		d.Set("thing_group_indexing_configuration", nil)
 	}
 	if output.ThingIndexingConfiguration != nil {
 		if err := d.Set("thing_indexing_configuration", []interface{}{flattenThingIndexingConfiguration(output.ThingIndexingConfiguration)}); err != nil {
-			return diag.Errorf("setting thing_indexing_configuration: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting thing_indexing_configuration: %s", err)
 		}
 	} else {
 		d.Set("thing_indexing_configuration", nil)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenThingGroupIndexingConfiguration(apiObject *iot.ThingGroupIndexingConfiguration) map[string]interface{} {

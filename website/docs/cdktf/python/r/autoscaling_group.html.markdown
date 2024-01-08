@@ -55,6 +55,10 @@ class MyConvertedCode(TerraformStack):
                 role_arn="arn:aws:iam::123456789012:role/S3Access"
             )
             ],
+            instance_maintenance_policy=AutoscalingGroupInstanceMaintenancePolicy(
+                max_healthy_percentage=120,
+                min_healthy_percentage=90
+            ),
             launch_configuration=foobar.name,
             max_size=5,
             min_size=2,
@@ -515,6 +519,7 @@ This resource supports the following arguments:
   a new Auto Scaling Group. For all other use-cases, please use `aws_autoscaling_lifecycle_hook` resource.
 - `health_check_grace_period` - (Optional, Default: 300) Time (in seconds) after instance comes into service before checking health.
 - `health_check_type` - (Optional) "EC2" or "ELB". Controls how health checking is done.
+- `instance_maintenance_policy` - (Optional) If this block is configured, add a instance maintenance policy to the specified Auto Scaling group. Defined [below](#instance_maintenance_policy).
 - `desired_capacity` - (Optional) Number of Amazon EC2 instances that
   should be running in the group. (See also [Waiting for
   Capacity](#waiting-for-capacity) below.)
@@ -777,6 +782,13 @@ This configuration block supports the following:
 - `min_size` - (Optional) Minimum number of instances to maintain in the warm pool. This helps you to ensure that there is always a certain number of warmed instances available to handle traffic spikes. Defaults to 0 if not specified.
 - `pool_state` - (Optional) Sets the instance state to transition to after the lifecycle hooks finish. Valid values are: Stopped (default), Running or Hibernated.
 
+### instance_maintenance_policy
+
+This configuration block supports the following:
+
+- `min_healthy_percentage` - (Required) Specifies the lower limit on the number of instances that must be in the InService state with a healthy status during an instance replacement activity.
+- `max_healthy_percentage` - (Required) Specifies the upper limit on the number of instances that are in the InService or Pending state with a healthy status during an instance replacement activity.
+
 ### traffic_source
 
 - `identifier` - Identifies the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the Amazon Resource Name (ARN) for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
@@ -912,4 +924,4 @@ Using `terraform import`, import Auto Scaling Groups using the `name`. For examp
 % terraform import aws_autoscaling_group.web web-asg
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-3da2a4d87e9afc9a8343b46ace677bb510573f4ec59c44873e7937ada49f61a8 -->
+<!-- cache-key: cdktf-0.19.0 input-7ef5c88a0b3150992e9093055b45e7bdeeb666a8a46ee3371462b8b1b84aaf9d -->

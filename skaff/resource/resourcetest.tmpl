@@ -45,7 +45,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-{{ if .AWSGoSDKV2 }}
+{{- if .AWSGoSDKV2 }}
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types"

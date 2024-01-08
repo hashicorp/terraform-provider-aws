@@ -523,7 +523,7 @@ A rule statement used to search web request components for a match against a sin
 
 The `regexMatchStatement` block supports the following arguments:
 
-* `regexString` - (Required) The string representing the regular expression. Minimum of `1` and maximum of `512` characters.
+* `regexString` - (Required) The string representing the regular expression. **Note:** The fixed quota for the maximum number of characters in each regex pattern is 200, which can't be changed. See [AWS WAF quotas](https://docs.aws.amazon.com/waf/latest/developerguide/limits.html) for details.
 * `fieldToMatch` - (Required) The part of a web request that you want AWS WAF to inspect. See [Field to Match](#field-to-match) below for details.
 * `textTransformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
   At least one required.
@@ -809,4 +809,4 @@ Using `terraform import`, import WAFv2 Rule Group using `id/name/scope`. For exa
 % terraform import aws_wafv2_rule_group.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-d2bb4de24461011d76bbc3333d69c2766c8e9c558c45b18a7db45691e9d58825 -->
+<!-- cache-key: cdktf-0.19.0 input-5ad818d569e90a291b2931bc9f839421af7a5d4bbec442c14b320a69e106236c -->
