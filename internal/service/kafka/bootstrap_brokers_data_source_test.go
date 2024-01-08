@@ -6,13 +6,14 @@ package kafka_test
 import (
 	"fmt"
 	"testing"
+
 	"github.com/aws/aws-sdk-go/service/kafka"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccKafkaBootstrapBrokersDataSourcebasic(t *testing.T) {
+func TestAccKafkaBootstrapBrokersDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_msk_bootstrap_brokers.test"
@@ -30,14 +31,13 @@ func TestAccKafkaBootstrapBrokersDataSourcebasic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_name", resourceName, "cluster_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bootstrap_brokers_string_sasl_iam", resourceName, "bootstrap_brokers_string_sasl_iam"),
-
 				),
 			},
 		},
 	})
 }
 
-func testAccBootstrapBrokersataSourceConfig_basic(rName string) string {
+func testAccBootstrapBrokersDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_serverless_cluster" "test" {
   cluster_name = %[1]q
@@ -53,10 +53,6 @@ resource "aws_msk_serverless_cluster" "test" {
         enabled = true
       }
     }
-  }
-
-  tags = {
-    foo = "bar"
   }
 }
 
