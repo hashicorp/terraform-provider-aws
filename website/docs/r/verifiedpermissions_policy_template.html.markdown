@@ -16,8 +16,7 @@ Terraform resource for managing an AWS Verified Permissions Policy Template.
 ```terraform
 resource "aws_verifiedpermissions_policy_template" "example" {
   policy_store_id = aws_verifiedpermissions_policy_store.example.id
-  
-  statement = "permit (principal in ?principal, action in PhotoFlash::Action::\"FullPhotoAccess\", resource == ?resource) unless { resource.IsPrivate };"
+  statement       = "permit (principal in ?principal, action in PhotoFlash::Action::\"FullPhotoAccess\", resource == ?resource) unless { resource.IsPrivate };"
 }
 ```
 
