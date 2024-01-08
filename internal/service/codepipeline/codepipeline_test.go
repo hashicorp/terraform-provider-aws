@@ -1121,7 +1121,7 @@ resource "aws_codepipeline" "test" {
     }
   }
 
-	pipeline_type = "V1"
+  pipeline_type = "V1"
 }
 
 resource "aws_codestarconnections_connection" "test" {
@@ -1187,19 +1187,19 @@ resource "aws_codepipeline" "test" {
     }
   }
 
-	pipeline_type = "V2"
+  pipeline_type = "V2"
 
-	variable {
-		name          = "test_var1"
-		description   = "This is test pipeline variable 1."
-		default_value = "value1"
-	}
+  variable {
+    name          = "test_var1"
+    description   = "This is test pipeline variable 1."
+    default_value = "value1"
+  }
 
-	variable {
-		name          = "test_var2"
-		description   = "This is test pipeline variable 2."
-		default_value = "value2"
-	}
+  variable {
+    name          = "test_var2"
+    description   = "This is test pipeline variable 2."
+    default_value = "value2"
+  }
 }
 
 resource "aws_codestarconnections_connection" "test" {
