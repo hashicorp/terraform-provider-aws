@@ -5,9 +5,9 @@ package appconfig_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/appconfig"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -34,8 +34,9 @@ func TestAccAppConfigConfigurationProfileDataSource_basic(t *testing.T) {
 				Config: testAccConfigurationProfileDataSourceConfig_basic(appName, rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "application_id", appResourceName, "id"),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "appconfig", regexp.MustCompile(`application/([a-z\d]{4,7})/configurationprofile/+.`)),
-					resource.TestMatchResourceAttr(dataSourceName, "configuration_profile_id", regexp.MustCompile(`[a-z\d]{4,7}`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "appconfig", regexache.MustCompile(`application/([a-z\d]{4,7})/configurationprofile/+.`)),
+					resource.TestMatchResourceAttr(dataSourceName, "configuration_profile_id", regexache.MustCompile(`[a-z\d]{4,7}`)),
+					resource.TestCheckResourceAttr(dataSourceName, "kms_key_identifier", "alias/"+rName),
 					resource.TestCheckResourceAttr(dataSourceName, "location_uri", "hosted"),
 					resource.TestCheckResourceAttr(dataSourceName, "name", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "retrieval_role_arn", ""),
@@ -56,10 +57,21 @@ func testAccConfigurationProfileDataSourceConfig_basic(appName, rName string) st
 	return acctest.ConfigCompose(
 		testAccApplicationConfig_name(appName),
 		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_alias" "test" {
+  name          = "alias/%[1]s"
+  target_key_id = aws_kms_key.test.id
+}
+
 resource "aws_appconfig_configuration_profile" "test" {
-  application_id = aws_appconfig_application.test.id
-  name           = %[1]q
-  location_uri   = "hosted"
+  application_id     = aws_appconfig_application.test.id
+  name               = %[1]q
+  kms_key_identifier = aws_kms_alias.test.name
+  location_uri       = "hosted"
 
   validator {
     content = jsonencode({

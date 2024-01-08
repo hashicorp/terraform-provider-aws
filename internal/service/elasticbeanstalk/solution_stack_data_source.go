@@ -6,8 +6,8 @@ package elasticbeanstalk
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -59,7 +59,7 @@ func dataSourceSolutionStackRead(ctx context.Context, d *schema.ResourceData, me
 
 	var filteredSolutionStacks []*string
 
-	r := regexp.MustCompile(nameRegex.(string))
+	r := regexache.MustCompile(nameRegex.(string))
 	for _, solutionStack := range resp.SolutionStacks {
 		if r.MatchString(*solutionStack) {
 			filteredSolutionStacks = append(filteredSolutionStacks, solutionStack)

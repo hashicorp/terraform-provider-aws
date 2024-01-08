@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_quicksight_analysis: Adjust max length of `definition.*.calculated_fields.*.expression` to 32000 characters
+```
+
+```release-note:bug
+resource/aws_quicksight_dashboard: Adjust max length of `definition.*.calculated_fields.*.expression` to 32000 characters
+```
+
+```release-note:bug
+resource/aws_quicksight_template: Adjust max length of `definition.*.calculated_fields.*.expression` to 32000 characters
+```
+
+```release-note:bug
+resource/aws_quicksight_template: Adjust max items of `definition.*.calculated_fields` to 500
+```

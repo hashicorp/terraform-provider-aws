@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package codebuild
 
 import (
@@ -15,9 +12,10 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_codebuild_report_group", &resource.Sweeper{
 		Name: "aws_codebuild_report_group",
 		F:    sweepReportGroups,
@@ -63,7 +61,7 @@ func sweepReportGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CodeBuild Report Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -72,7 +70,7 @@ func sweepReportGroups(region string) error {
 		return fmt.Errorf("error retrieving CodeBuild ReportGroups: %w", err)
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		return fmt.Errorf("error sweeping CodeBuild ReportGroups: %w", err)
 	}
 
@@ -107,7 +105,7 @@ func sweepProjects(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CodeBuild Project sweep for %s: %s", region, err)
 		return nil
 	}
@@ -115,7 +113,7 @@ func sweepProjects(region string) error {
 		return fmt.Errorf("error retrieving CodeBuild Projects: %w", err)
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		return fmt.Errorf("error sweeping CodeBuild Projects: %w", err)
 	}
 
@@ -145,7 +143,7 @@ func sweepSourceCredentials(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping CodeBuild Source Credential sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil()
 	}
@@ -153,7 +151,7 @@ func sweepSourceCredentials(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving CodeBuild Source Credentials: %w", err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping CodeBuild Source Credentials: %w", err))
 	}
 

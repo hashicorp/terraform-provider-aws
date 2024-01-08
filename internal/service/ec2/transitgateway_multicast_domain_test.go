@@ -6,9 +6,9 @@ package ec2_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -35,7 +35,7 @@ func testAccTransitGatewayMulticastDomain_basic(t *testing.T) {
 				Config: testAccTransitGatewayMulticastDomainConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTransitGatewayMulticastDomainExists(ctx, resourceName, &v),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexp.MustCompile(`transit-gateway-multicast-domain/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`transit-gateway-multicast-domain/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_accept_shared_associations", "disable"),
 					resource.TestCheckResourceAttr(resourceName, "igmpv2_support", "disable"),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),

@@ -297,3 +297,37 @@ const (
 	gatewayIDLocal      = "local"
 	gatewayIDVPCLattice = "VpcLattice"
 )
+
+const (
+	verifiedAccessAttachmentTypeVPC = "vpc"
+)
+
+func verifiedAccessAttachmentType_Values() []string {
+	return []string{
+		verifiedAccessAttachmentTypeVPC,
+	}
+}
+
+const (
+	verifiedAccessEndpointTypeLoadBalancer     = "load-balancer"
+	verifiedAccessEndpointTypeNetworkInterface = "network-interface"
+)
+
+func verifiedAccessEndpointType_Values() []string {
+	return []string{
+		verifiedAccessEndpointTypeLoadBalancer,
+		verifiedAccessEndpointTypeNetworkInterface,
+	}
+}
+
+const (
+	verifiedAccessEndpointProtocolHTTP  = "http"
+	verifiedAccessEndpointProtocolHTTPS = "https"
+)
+
+func verifiedAccessEndpointProtocol_Values() []string {
+	return []string{
+		verifiedAccessEndpointProtocolHTTP,
+		verifiedAccessEndpointProtocolHTTPS,
+	}
+}

@@ -44,28 +44,6 @@ func StatusStackSetOperation(ctx context.Context, conn *cloudformation.CloudForm
 	}
 }
 
-const (
-	stackStatusError    = "Error"
-	stackStatusNotFound = "NotFound"
-)
-
-func StatusStack(ctx context.Context, conn *cloudformation.CloudFormation, stackName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeStacksWithContext(ctx, &cloudformation.DescribeStacksInput{
-			StackName: aws.String(stackName),
-		})
-		if err != nil {
-			return nil, stackStatusError, err
-		}
-
-		if resp.Stacks == nil || len(resp.Stacks) == 0 {
-			return nil, stackStatusNotFound, nil
-		}
-
-		return resp.Stacks[0], aws.StringValue(resp.Stacks[0].StackStatus), err
-	}
-}
-
 func StatusTypeRegistrationProgress(ctx context.Context, conn *cloudformation.CloudFormation, registrationToken string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindTypeRegistrationByToken(ctx, conn, registrationToken)

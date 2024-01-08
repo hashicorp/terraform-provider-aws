@@ -26,9 +26,9 @@ The following arguments are required:
 
 - `arn` - Amazon Resource Name (ARN) of the contact channel.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 - `activation_status` - Whether the contact channel is activated.
 

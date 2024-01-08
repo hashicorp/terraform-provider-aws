@@ -25,7 +25,7 @@ resource "aws_redshift_hsm_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Required, Forces new resource) A text description of the HSM configuration to be created.
 * `hsm_configuration_identifier` - (Required, Forces new resource) The identifier to be assigned to the new Amazon Redshift HSM configuration.
@@ -35,9 +35,9 @@ The following arguments are supported:
 * `hsm_server_public_certificate` - (Required, Forces new resource) The HSMs public certificate file. When using Cloud HSM, the file name is server.pem.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the Hsm Client Certificate.
 * `hsm_configuration_public_key` - The public key that the Amazon Redshift cluster will use to connect to the HSM. You must register the public key in the HSM.
@@ -45,8 +45,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Redshift Hsm Client Certificates support import by `hsm_configuration_identifier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift HSM Client Certificates using `hsm_configuration_identifier`. For example:
+
+```terraform
+import {
+  to = aws_redshift_hsm_configuration.test
+  id = "example"
+}
+```
+
+Using `terraform import`, import Redshift HSM Client Certificates using `hsm_configuration_identifier`. For example:
 
 ```console
-$ terraform import aws_redshift_hsm_configuration.example example
+% terraform import aws_redshift_hsm_configuration.example example
 ```

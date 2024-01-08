@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -289,12 +290,14 @@ func ResourceBudget() *schema.Resource {
 }
 
 func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
 
 	budget, err := expandBudgetUnmarshal(d)
 
 	if err != nil {
-		return diag.Errorf("expandBudgetUnmarshal: %s", err)
+		return sdkdiag.AppendErrorf(diags, "expandBudgetUnmarshal: %s", err)
 	}
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
@@ -311,7 +314,7 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if err != nil {
-		return diag.Errorf("creating Budget (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Budget (%s): %s", name, err)
 	}
 
 	d.SetId(BudgetCreateResourceID(accountID, aws.StringValue(budget.BudgetName)))
@@ -322,19 +325,21 @@ func resourceBudgetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	err = createBudgetNotifications(ctx, conn, notifications, subscribers, *budget.BudgetName, accountID)
 
 	if err != nil {
-		return diag.Errorf("creating Budget (%s) notifications: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating Budget (%s) notifications: %s", d.Id(), err)
 	}
 
-	return resourceBudgetRead(ctx, d, meta)
+	return append(diags, resourceBudgetRead(ctx, d, meta)...)
 }
 
 func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
 
 	accountID, budgetName, err := BudgetParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	budget, err := FindBudgetByTwoPartKey(ctx, conn, accountID, budgetName)
@@ -342,11 +347,11 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Budget (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Budget (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Budget (%s): %s", d.Id(), err)
 	}
 
 	d.Set("account_id", accountID)
@@ -360,13 +365,13 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("budget_type", budget.BudgetType)
 
 	if err := d.Set("cost_filter", convertCostFiltersToMap(budget.CostFilters)); err != nil {
-		return diag.Errorf("setting cost_filter: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting cost_filter: %s", err)
 	}
 	if err := d.Set("cost_types", flattenCostTypes(budget.CostTypes)); err != nil {
-		return diag.Errorf("setting cost_types: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting cost_types: %s", err)
 	}
 	if err := d.Set("auto_adjust_data", flattenAutoAdjustData(budget.AutoAdjustData)); err != nil {
-		return diag.Errorf("setting auto_adjust_data: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting auto_adjust_data: %s", err)
 	}
 
 	if budget.BudgetLimit != nil {
@@ -378,7 +383,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(budget.BudgetName)))
 
 	if err := d.Set("planned_limit", convertPlannedBudgetLimitsToSet(budget.PlannedBudgetLimits)); err != nil {
-		return diag.Errorf("setting planned_limit: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting planned_limit: %s", err)
 	}
 
 	if budget.TimePeriod != nil {
@@ -391,11 +396,11 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	notifications, err := findNotifications(ctx, conn, accountID, budgetName)
 
 	if tfresource.NotFound(err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Budget (%s) notifications: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Budget (%s) notifications: %s", d.Id(), err)
 	}
 
 	var tfList []interface{}
@@ -423,7 +428,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 
 		if err != nil {
-			return diag.Errorf("reading Budget (%s) subscribers: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "reading Budget (%s) subscribers: %s", d.Id(), err)
 		}
 
 		var emailSubscribers []string
@@ -444,25 +449,27 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err := d.Set("notification", tfList); err != nil {
-		return diag.Errorf("setting notification: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting notification: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceBudgetUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
 
 	accountID, _, err := BudgetParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	budget, err := expandBudgetUnmarshal(d)
 
 	if err != nil {
-		return diag.Errorf("expandBudgetUnmarshal: %s", err)
+		return sdkdiag.AppendErrorf(diags, "expandBudgetUnmarshal: %s", err)
 	}
 
 	_, err = conn.UpdateBudgetWithContext(ctx, &budgets.UpdateBudgetInput{
@@ -471,25 +478,27 @@ func resourceBudgetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if err != nil {
-		return diag.Errorf("updating Budget (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Budget (%s): %s", d.Id(), err)
 	}
 
 	err = updateBudgetNotifications(ctx, conn, d)
 
 	if err != nil {
-		return diag.Errorf("updating Budget (%s) notifications: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Budget (%s) notifications: %s", d.Id(), err)
 	}
 
-	return resourceBudgetRead(ctx, d, meta)
+	return append(diags, resourceBudgetRead(ctx, d, meta)...)
 }
 
 func resourceBudgetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).BudgetsConn(ctx)
 
 	accountID, budgetName, err := BudgetParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting Budget: %s", d.Id())
@@ -499,14 +508,14 @@ func resourceBudgetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Budget (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Budget (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const budgetResourceIDSeparator = ":"

@@ -6,7 +6,7 @@ description: |-
   Use this data source to retrieve information about a CloudFront response headers policy.
 ---
 
-# Data source: aws_cloudfront_response_headers_policy
+# Data Source: aws_cloudfront_response_headers_policy
 
 Use this data source to retrieve information about a CloudFront cache policy.
 
@@ -32,14 +32,14 @@ data "aws_cloudfront_response_headers_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Optional) Unique name to identify the response headers policy.
 * `id` - (Optional) Identifier for the response headers policy.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `comment` - Comment to describe the response headers policy. The comment cannot be longer than 128 characters.
 * `etag` - Current version of the response headers policy.

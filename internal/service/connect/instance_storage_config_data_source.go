@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // @SDKDataSource("aws_connect_instance_storage_config")
@@ -140,6 +141,8 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 }
 
 func dataSourceInstanceStorageConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	associationId := d.Get("association_id").(string)
@@ -155,20 +158,20 @@ func dataSourceInstanceStorageConfigRead(ctx context.Context, d *schema.Resource
 	resp, err := conn.DescribeInstanceStorageConfigWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("getting Connect Instance Storage Config for Connect Instance (%s,%s,%s): %s", associationId, instanceId, resourceType, err)
+		return sdkdiag.AppendErrorf(diags, "getting Connect Instance Storage Config for Connect Instance (%s,%s,%s): %s", associationId, instanceId, resourceType, err)
 	}
 
 	if resp == nil || resp.StorageConfig == nil {
-		return diag.Errorf("getting Connect Instance Storage Config: empty response")
+		return sdkdiag.AppendErrorf(diags, "getting Connect Instance Storage Config: empty response")
 	}
 
 	storageConfig := resp.StorageConfig
 
 	if err := d.Set("storage_config", flattenStorageConfig(storageConfig)); err != nil {
-		return diag.Errorf("setting storage_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting storage_config: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s:%s", instanceId, associationId, resourceType))
 
-	return nil
+	return diags
 }

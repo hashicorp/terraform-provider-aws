@@ -70,7 +70,7 @@ resource "aws_iam_policy_attachment" "test-attach" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name`    (Required) - The name of the attachment. This cannot be an empty string.
 * `users`   (Optional) - The user(s) the policy should be applied to
@@ -78,9 +78,9 @@ The following arguments are supported:
 * `groups`  (Optional) - The group(s) the policy should be applied to
 * `policy_arn`  (Required) - The ARN of the policy you want to apply
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The policy's ID.
 * `name` - The name of the attachment.

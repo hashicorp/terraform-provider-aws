@@ -296,26 +296,6 @@ func StatusProvisioningArtifact(ctx context.Context, conn *servicecatalog.Servic
 	}
 }
 
-func StatusPrincipalPortfolioAssociation(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindPrincipalPortfolioAssociation(ctx, conn, acceptLanguage, principalARN, portfolioID)
-
-		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
-			return nil, StatusNotFound, err
-		}
-
-		if err != nil {
-			return nil, servicecatalog.StatusFailed, fmt.Errorf("describing principal portfolio association: %w", err)
-		}
-
-		if output == nil {
-			return nil, StatusNotFound, err
-		}
-
-		return output, servicecatalog.StatusAvailable, err
-	}
-}
-
 func StatusLaunchPaths(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, productID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &servicecatalog.ListLaunchPathsInput{

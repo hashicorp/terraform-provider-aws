@@ -9,5 +9,8 @@ var (
 	ResourceSecurityGroupEgressRule  = newResourceSecurityGroupEgressRule
 	ResourceSecurityGroupIngressRule = newResourceSecurityGroupIngressRule
 
-	UpdateTags = updateTags
+	UpdateTags   = updateTags
+	UpdateTagsV2 = updateTagsV2
+
+	StopInstance = stopInstance
 )

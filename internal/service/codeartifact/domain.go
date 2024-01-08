@@ -6,6 +6,7 @@ package codeartifact
 import (
 	"context"
 	"log"
+	"strconv"
 	"strings"
 	"time"
 
@@ -62,7 +63,7 @@ func ResourceDomain() *schema.Resource {
 				Computed: true,
 			},
 			"asset_size_bytes": {
-				Type:     schema.TypeInt,
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"repository_count": {
@@ -109,7 +110,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	domainOwner, domainName, err := DecodeDomainID(d.Id())
 	if err != nil {
-		return create.DiagError(names.CodeArtifact, create.ErrActionReading, ResNameDomain, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeArtifact, create.ErrActionReading, ResNameDomain, d.Id(), err)
 	}
 
 	sm, err := conn.DescribeDomainWithContext(ctx, &codeartifact.DescribeDomainInput{
@@ -123,7 +124,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return create.DiagError(names.CodeArtifact, create.ErrActionReading, ResNameDomain, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeArtifact, create.ErrActionReading, ResNameDomain, d.Id(), err)
 	}
 
 	arn := aws.StringValue(sm.Domain.Arn)
@@ -131,7 +132,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("arn", arn)
 	d.Set("encryption_key", sm.Domain.EncryptionKey)
 	d.Set("owner", sm.Domain.Owner)
-	d.Set("asset_size_bytes", sm.Domain.AssetSizeBytes)
+	d.Set("asset_size_bytes", strconv.FormatInt(aws.Int64Value(sm.Domain.AssetSizeBytes), 10))
 	d.Set("repository_count", sm.Domain.RepositoryCount)
 	d.Set("created_time", sm.Domain.CreatedTime.Format(time.RFC3339))
 

@@ -5,6 +5,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/tfplugin6"
 )
 
+func GetMetadata_DataSourceMetadata(in *tfprotov6.DataSourceMetadata) *tfplugin6.GetMetadata_DataSourceMetadata {
+	if in == nil {
+		return nil
+	}
+
+	return &tfplugin6.GetMetadata_DataSourceMetadata{
+		TypeName: in.TypeName,
+	}
+}
+
 func ValidateDataResourceConfig_Request(in *tfprotov6.ValidateDataResourceConfigRequest) (*tfplugin6.ValidateDataResourceConfig_Request, error) {
 	resp := &tfplugin6.ValidateDataResourceConfig_Request{
 		TypeName: in.TypeName,

@@ -53,7 +53,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return glacier_sdkv2.NewFromConfig(cfg, func(o *glacier_sdkv2.Options) {
 		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.EndpointResolver = glacier_sdkv2.EndpointResolverFromURL(endpoint)
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil
 }

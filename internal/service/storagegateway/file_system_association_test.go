@@ -6,9 +6,9 @@ package storagegateway_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -40,7 +40,7 @@ func TestAccStorageGatewayFileSystemAssociation_basic(t *testing.T) {
 				Config: testAccFileSystemAssociationConfig_required(rName, domainName, username),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemAssociationExists(ctx, resourceName, &fileSystemAssociation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`fs-association/fsa-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexache.MustCompile(`fs-association/fsa-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "gateway_arn", gatewayResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "location_arn", fsxResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "username", username),
@@ -76,7 +76,7 @@ func TestAccStorageGatewayFileSystemAssociation_tags(t *testing.T) {
 				Config: testAccFileSystemAssociationConfig_tags1(rName, domainName, username, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemAssociationExists(ctx, resourceName, &fileSystemAssociation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`fs-association/fsa-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexache.MustCompile(`fs-association/fsa-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -91,7 +91,7 @@ func TestAccStorageGatewayFileSystemAssociation_tags(t *testing.T) {
 				Config: testAccFileSystemAssociationConfig_tags2(rName, domainName, username, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemAssociationExists(ctx, resourceName, &fileSystemAssociation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`fs-association/fsa-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexache.MustCompile(`fs-association/fsa-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -101,7 +101,7 @@ func TestAccStorageGatewayFileSystemAssociation_tags(t *testing.T) {
 				Config: testAccFileSystemAssociationConfig_tags1(rName, domainName, username, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFileSystemAssociationExists(ctx, resourceName, &fileSystemAssociation),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexp.MustCompile(`fs-association/fsa-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "storagegateway", regexache.MustCompile(`fs-association/fsa-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),

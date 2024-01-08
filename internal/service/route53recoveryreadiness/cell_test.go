@@ -6,9 +6,9 @@ package route53recoveryreadiness_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/route53recoveryreadiness"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -34,7 +34,7 @@ func TestAccRoute53RecoveryReadinessCell_basic(t *testing.T) {
 				Config: testAccCellConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCellExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexp.MustCompile(`cell/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexache.MustCompile(`cell/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cells.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parent_readiness_scopes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -89,18 +89,18 @@ func TestAccRoute53RecoveryReadinessCell_nestedCell(t *testing.T) {
 				Config: testAccCellConfig_child(rNameChild),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCellExists(ctx, resourceNameChild),
-					acctest.MatchResourceAttrGlobalARN(resourceNameChild, "arn", "route53-recovery-readiness", regexp.MustCompile(`cell/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceNameChild, "arn", "route53-recovery-readiness", regexache.MustCompile(`cell/.+`)),
 				),
 			},
 			{
 				Config: testAccCellConfig_parent(rNameChild, rNameParent),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCellExists(ctx, resourceNameParent),
-					acctest.MatchResourceAttrGlobalARN(resourceNameParent, "arn", "route53-recovery-readiness", regexp.MustCompile(`cell/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceNameParent, "arn", "route53-recovery-readiness", regexache.MustCompile(`cell/.+`)),
 					resource.TestCheckResourceAttr(resourceNameParent, "cells.#", "1"),
 					resource.TestCheckResourceAttr(resourceNameParent, "parent_readiness_scopes.#", "0"),
 					testAccCheckCellExists(ctx, resourceNameChild),
-					acctest.MatchResourceAttrGlobalARN(resourceNameChild, "arn", "route53-recovery-readiness", regexp.MustCompile(`cell/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceNameChild, "arn", "route53-recovery-readiness", regexache.MustCompile(`cell/.+`)),
 					resource.TestCheckResourceAttr(resourceNameChild, "cells.#", "0"),
 				),
 			},
@@ -184,7 +184,7 @@ func TestAccRoute53RecoveryReadinessCell_timeout(t *testing.T) {
 				Config: testAccCellConfig_timeout(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCellExists(ctx, resourceName),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexp.MustCompile(`cell/.+`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "route53-recovery-readiness", regexache.MustCompile(`cell/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "cells.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "parent_readiness_scopes.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),

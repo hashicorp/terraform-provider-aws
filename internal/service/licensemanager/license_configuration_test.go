@@ -6,9 +6,9 @@ package licensemanager_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -45,7 +45,7 @@ func TestAccLicenseManagerLicenseConfiguration_basic(t *testing.T) {
 				Config: testAccLicenseConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "license-manager", regexp.MustCompile(`license-configuration:lic-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "license-manager", regexache.MustCompile(`license-configuration:lic-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "license_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "license_count_hard_limit", "false"),
@@ -152,7 +152,7 @@ func TestAccLicenseManagerLicenseConfiguration_update(t *testing.T) {
 				Config: testAccLicenseConfigurationConfig_allAttributes(rName1),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "license-manager", regexp.MustCompile(`license-configuration:lic-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "license-manager", regexache.MustCompile(`license-configuration:lic-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "test1"),
 					resource.TestCheckResourceAttr(resourceName, "license_count", "10"),
 					resource.TestCheckResourceAttr(resourceName, "license_count_hard_limit", "true"),
@@ -173,7 +173,7 @@ func TestAccLicenseManagerLicenseConfiguration_update(t *testing.T) {
 				Config: testAccLicenseConfigurationConfig_allAttributesUpdated(rName2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLicenseConfigurationExists(ctx, resourceName, &licenseConfiguration),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "license-manager", regexp.MustCompile(`license-configuration:lic-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "license-manager", regexache.MustCompile(`license-configuration:lic-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "test2"),
 					resource.TestCheckResourceAttr(resourceName, "license_count", "99"),
 					resource.TestCheckResourceAttr(resourceName, "license_count_hard_limit", "false"),

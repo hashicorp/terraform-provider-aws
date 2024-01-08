@@ -4,9 +4,9 @@
 package outposts_test
 
 import (
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -25,7 +25,7 @@ func TestAccOutpostsOutpostInstanceTypeDataSource_instanceType(t *testing.T) {
 			{
 				Config: testAccOutpostInstanceTypeDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "instance_type", regexp.MustCompile(`^.+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "instance_type", regexache.MustCompile(`^.+$`)),
 				),
 			},
 		},
@@ -45,7 +45,7 @@ func TestAccOutpostsOutpostInstanceTypeDataSource_preferredInstanceTypes(t *test
 			{
 				Config: testAccOutpostInstanceTypeDataSourceConfig_preferreds(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "instance_type", regexp.MustCompile(`^.+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "instance_type", regexache.MustCompile(`^.+$`)),
 				),
 			},
 		},

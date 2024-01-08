@@ -48,7 +48,7 @@ resource "aws_redshift_event_subscription" "default" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Redshift event subscription.
 * `sns_topic_arn` - (Required) The ARN of the SNS topic to send events to.
@@ -59,9 +59,9 @@ The following arguments are supported:
 * `enabled` - (Optional) A boolean flag to enable/disable the subscription. Defaults to `true`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the Redshift event notification subscription
 * `id` - The name of the Redshift event notification subscription
@@ -70,8 +70,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Redshift Event Subscriptions can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Redshift Event Subscriptions using the `name`. For example:
 
+```terraform
+import {
+  to = aws_redshift_event_subscription.default
+  id = "redshift-event-sub"
+}
 ```
-$ terraform import aws_redshift_event_subscription.default redshift-event-sub
+
+Using `terraform import`, import Redshift Event Subscriptions using the `name`. For example:
+
+```console
+% terraform import aws_redshift_event_subscription.default redshift-event-sub
 ```

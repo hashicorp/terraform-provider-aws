@@ -54,23 +54,32 @@ resource "aws_backup_vault_notifications" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `backup_vault_name` - (Required) Name of the backup vault to add notifications for.
 * `sns_topic_arn` - (Required) The Amazon Resource Name (ARN) that specifies the topic for a backup vault’s events
 * `backup_vault_events` - (Required) An array of events that indicate the status of jobs to back up resources to the backup vault.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the vault.
 * `backup_vault_arn` - The ARN of the vault.
 
 ## Import
 
-Backup vault notifications can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Backup vault notifications using the `name`. For example:
 
+```terraform
+import {
+  to = aws_backup_vault_notifications.test
+  id = "TestVault"
+}
 ```
-$ terraform import aws_backup_vault_notifications.test TestVault
+
+Using `terraform import`, import Backup vault notifications using the `name`. For example:
+
+```console
+% terraform import aws_backup_vault_notifications.test TestVault
 ```

@@ -5,11 +5,11 @@ package iam_test
 
 import (
 	"fmt"
-	"regexp"
 	"sort"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -64,7 +64,7 @@ func TestAccIAMServerCertificateDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", "path"),
 					resource.TestCheckResourceAttrSet("data.aws_iam_server_certificate.test", "upload_date"),
 					resource.TestCheckResourceAttr("data.aws_iam_server_certificate.test", "certificate_chain", ""),
-					resource.TestMatchResourceAttr("data.aws_iam_server_certificate.test", "certificate_body", regexp.MustCompile("^-----BEGIN CERTIFICATE-----")),
+					resource.TestMatchResourceAttr("data.aws_iam_server_certificate.test", "certificate_body", regexache.MustCompile("^-----BEGIN CERTIFICATE-----")),
 				),
 			},
 		},
@@ -81,7 +81,7 @@ func TestAccIAMServerCertificateDataSource_matchNamePrefix(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccServerCertificateDataSourceConfig_certMatchNamePrefix,
-				ExpectError: regexp.MustCompile(`Search for AWS IAM server certificate returned no results`),
+				ExpectError: regexache.MustCompile(`Search for AWS IAM server certificate returned no results`),
 			},
 		},
 	})

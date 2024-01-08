@@ -13,11 +13,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/kms"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -149,7 +151,7 @@ func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceDat
 
 	replicateConn := kms.New(session)
 
-	output, err := WaitIAMPropagation(ctx, func() (*kms.ReplicateKeyOutput, error) {
+	output, err := WaitIAMPropagation(ctx, propagationTimeout, func() (*kms.ReplicateKeyOutput, error) {
 		return replicateConn.ReplicateKeyWithContext(ctx, input)
 	})
 
@@ -158,6 +160,8 @@ func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	d.SetId(aws.StringValue(output.ReplicaKeyMetadata.KeyId))
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
 	if _, err := WaitReplicaExternalKeyCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for KMS Replica External Key (%s) create: %s", d.Id(), err)
@@ -206,6 +210,8 @@ func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceDat
 func resourceReplicaExternalKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSConn(ctx)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
 	key, err := findKey(ctx, conn, d.Id(), d.IsNewResource())
 
@@ -263,6 +269,8 @@ func resourceReplicaExternalKeyUpdate(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
+
 	if hasChange, enabled, state := d.HasChange("enabled"), d.Get("enabled").(bool), d.Get("key_state").(string); hasChange && enabled && state != kms.KeyStatePendingImport {
 		// Enable before any attributes are modified.
 		if err := updateKeyEnabled(ctx, conn, d.Id(), enabled); err != nil {
@@ -311,6 +319,8 @@ func resourceReplicaExternalKeyUpdate(ctx context.Context, d *schema.ResourceDat
 func resourceReplicaExternalKeyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KMSConn(ctx)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
 	input := &kms.ScheduleKeyDeletionInput{
 		KeyId: aws.String(d.Id()),

@@ -23,10 +23,11 @@ resource "aws_sagemaker_space" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `space_name` - (Required) The name of the space.
 * `domain_id` - (Required) The ID of the associated Domain.
+* `space_display_name` - (Optional) The name of the space that appears in the SageMaker Studio UI.
+* `space_name` - (Required) The name of the space.
 * `space_settings` - (Required) A collection of space settings. See [Space Settings](#space-settings) below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -56,6 +57,7 @@ The following arguments are supported:
 * `instance_type` - (Optional) The instance type.
 * `lifecycle_config_arn` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configuration attached to the Resource.
 * `sagemaker_image_arn` - (Optional) The Amazon Resource Name (ARN) of the SageMaker image created on the instance.
+* `sagemaker_image_version_alias` - (Optional) The SageMaker Image Version Alias.
 * `sagemaker_image_version_arn` - (Optional) The ARN of the image version created on the instance.
 
 ##### Custom Image
@@ -64,19 +66,29 @@ The following arguments are supported:
 * `image_name` - (Required) The name of the Custom Image.
 * `image_version_number` - (Optional) The version number of the Custom Image.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The space's Amazon Resource Name (ARN).
 * `arn` - The space's Amazon Resource Name (ARN).
 * `home_efs_file_system_uid` - The ID of the space's profile in the Amazon Elastic File System volume.
+* `id` - The space's Amazon Resource Name (ARN).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `url` - Returns the URL of the space. If the space is created with Amazon Web Services IAM Identity Center (Successor to Amazon Web Services Single Sign-On) authentication, users can navigate to the URL after appending the respective redirect parameter for the application type to be federated through Amazon Web Services IAM Identity Center.
 
 ## Import
 
-SageMaker Spaces can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Spaces using the `id`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_space.test_space
+  id = "arn:aws:sagemaker:us-west-2:123456789012:space/domain-id/space-name"
+}
 ```
-$ terraform import aws_sagemaker_space.test_space arn:aws:sagemaker:us-west-2:123456789012:space/domain-id/space-name
+
+Using `terraform import`, import SageMaker Spaces using the `id`. For example:
+
+```console
+% terraform import aws_sagemaker_space.test_space arn:aws:sagemaker:us-west-2:123456789012:space/domain-id/space-name
 ```

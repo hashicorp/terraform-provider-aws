@@ -92,7 +92,7 @@ func ResourceAnalysis() *schema.Resource {
 				},
 				"parameters": quicksightschema.ParametersSchema(),
 				"permissions": {
-					Type:     schema.TypeList,
+					Type:     schema.TypeSet,
 					Optional: true,
 					MinItems: 1,
 					MaxItems: 64,
@@ -174,8 +174,8 @@ func resourceAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Parameters = quicksightschema.ExpandParameters(d.Get("parameters").([]interface{}))
 	}
 
-	if v, ok := d.GetOk("permissions"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Permissions = expandResourcePermissions(v.([]interface{}))
+	if v, ok := d.Get("permissions").(*schema.Set); ok && v.Len() > 0 {
+		input.Permissions = expandResourcePermissions(v.List())
 	}
 
 	_, err := conn.CreateAnalysisWithContext(ctx, input)
@@ -293,10 +293,10 @@ func resourceAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if d.HasChange("permissions") {
 		oraw, nraw := d.GetChange("permissions")
-		o := oraw.([]interface{})
-		n := nraw.([]interface{})
+		o := oraw.(*schema.Set)
+		n := nraw.(*schema.Set)
 
-		toGrant, toRevoke := DiffPermissions(o, n)
+		toGrant, toRevoke := DiffPermissions(o.List(), n.List())
 
 		params := &quicksight.UpdateAnalysisPermissionsInput{
 			AwsAccountId: aws.String(awsAccountId),

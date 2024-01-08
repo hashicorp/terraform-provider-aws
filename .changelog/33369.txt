@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_db_instance_automated_backups_replication: Fix `unexpected state` errors on resource Create
+```

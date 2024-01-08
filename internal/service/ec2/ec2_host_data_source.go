@@ -33,6 +33,10 @@ func DataSourceHost() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"asset_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"auto_placement": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -45,7 +49,7 @@ func DataSourceHost() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"host_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -90,7 +94,7 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeHostsInput{
-		Filter: BuildFiltersDataSource(d.Get("filter").(*schema.Set)),
+		Filter: BuildCustomFilterList(d.Get("filter").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("host_id"); ok {
@@ -118,6 +122,7 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 		Resource:  fmt.Sprintf("dedicated-host/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
+	d.Set("asset_id", host.AssetId)
 	d.Set("auto_placement", host.AutoPlacement)
 	d.Set("availability_zone", host.AvailabilityZone)
 	d.Set("cores", host.HostProperties.Cores)

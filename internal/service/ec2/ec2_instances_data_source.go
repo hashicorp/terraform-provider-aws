@@ -28,7 +28,7 @@ func DataSourceInstances() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": CustomFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -84,7 +84,7 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 		Tags(tftags.New(ctx, d.Get("instance_tags").(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, BuildFiltersDataSource(
+	input.Filters = append(input.Filters, BuildCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

@@ -5,7 +5,6 @@ package rds
 
 import (
 	"context"
-	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
@@ -66,46 +65,6 @@ func statusDBClusterRole(ctx context.Context, conn *rds.RDS, dbClusterID, roleAR
 		}
 
 		return output, aws.StringValue(output.Status), nil
-	}
-}
-
-func statusDBInstanceAutomatedBackup(ctx context.Context, conn *rds.RDS, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindDBInstanceAutomatedBackupByARN(ctx, conn, arn)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Status), nil
-	}
-}
-
-// statusDBInstanceHasAutomatedBackup returns whether or not a database instance has a specified automated backup.
-// The connection must be valid for the database instance's Region.
-func statusDBInstanceHasAutomatedBackup(ctx context.Context, conn *rds.RDS, dbInstanceID, dbInstanceAutomatedBackupsARN string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findDBInstanceByIDSDKv1(ctx, conn, dbInstanceID)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		for _, v := range output.DBInstanceAutomatedBackupsReplications {
-			if aws.StringValue(v.DBInstanceAutomatedBackupsArn) == dbInstanceAutomatedBackupsARN {
-				return output, strconv.FormatBool(true), nil
-			}
-		}
-
-		return output, strconv.FormatBool(false), nil
 	}
 }
 

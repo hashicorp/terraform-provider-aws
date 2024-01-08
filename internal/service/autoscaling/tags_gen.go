@@ -8,11 +8,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/autoscaling/autoscalingiface"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -82,7 +84,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(tags)
+		inContext.TagsOut = option.Some(tags)
 	}
 
 	return nil
@@ -234,7 +236,7 @@ func getTagsIn(ctx context.Context) []*autoscaling.Tag {
 // setTagsOut sets autoscaling service tags in Context.
 func setTagsOut(ctx context.Context, tags any, identifier, resourceType string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags, identifier, resourceType))
+		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags, identifier, resourceType))
 	}
 }
 
@@ -244,6 +246,8 @@ func setTagsOut(ctx context.Context, tags any, identifier, resourceType string) 
 func updateTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identifier, resourceType string, oldTagsSet, newTagsSet any) error {
 	oldTags := KeyValueTags(ctx, oldTagsSet, identifier, resourceType)
 	newTags := KeyValueTags(ctx, newTagsSet, identifier, resourceType)
+
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
 
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.AutoScaling)

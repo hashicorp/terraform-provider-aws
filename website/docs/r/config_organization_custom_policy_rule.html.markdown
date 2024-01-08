@@ -62,9 +62,9 @@ The following arguments are optional:
 * `tag_key_scope` - (Optional, Required if `tag_value_scope` is configured) Tag key of AWS resources to evaluate
 * `tag_value_scope` - (Optional) Tag value of AWS resources to evaluate
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the rule
 
@@ -78,8 +78,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-A Config Organization Custom Policy Rule can be imported using the `name` argument, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a Config Organization Custom Policy Rule using the `name` argument. For example:
 
+```terraform
+import {
+  to = aws_config_organization_custom_policy_rule.example
+  id = "example_rule_name"
+}
 ```
-$ terraform import aws_config_organization_custom_policy_rule.example example_rule_name
+
+Using `terraform import`, import a Config Organization Custom Policy Rule using the `name` argument. For example:
+
+```console
+% terraform import aws_config_organization_custom_policy_rule.example example_rule_name
 ```

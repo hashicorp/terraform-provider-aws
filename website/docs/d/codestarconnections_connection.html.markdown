@@ -30,16 +30,16 @@ data "aws_codestarconnections_connection" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `arn` - (Optional) CodeStar Connection ARN.
 * `name` - (Optional) CodeStar Connection name.
 
 ~> **NOTE:** When both `arn` and `name` are specified, `arn` takes precedence.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `connection_status` - CodeStar Connection status. Possible values are `PENDING`, `AVAILABLE` and `ERROR`.
 * `id` - CodeStar Connection ARN.

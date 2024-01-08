@@ -20,6 +20,10 @@ resource "aws_iot_indexing_configuration" "example" {
     device_defender_indexing_mode    = "VIOLATIONS"
     named_shadow_indexing_mode       = "ON"
 
+    filter {
+      named_shadow_names = ["thing1shadow"]
+    }
+
     custom_field {
       name = "shadow.desired.power"
       type = "Boolean"
@@ -61,6 +65,7 @@ The `thing_indexing_configuration` configuration block supports the following:
 * `device_defender_indexing_mode` - (Optional) Device Defender indexing mode. Valid values: `VIOLATIONS`, `OFF`. Default: `OFF`.
 * `managed_field` - (Optional) Contains fields that are indexed and whose types are already known by the Fleet Indexing service. See below.
 * `named_shadow_indexing_mode` - (Optional) [Named shadow](https://docs.aws.amazon.com/iot/latest/developerguide/iot-device-shadows.html) indexing mode. Valid values: `ON`, `OFF`. Default: `OFF`.
+* `filter` - (Optional) Required if `named_shadow_indexing_mode` is `ON`. Enables to add named shadows filtered by `filter` to fleet indexing configuration.
 * `thing_connectivity_indexing_mode` - (Optional) Thing connectivity indexing mode. Valid values: `STATUS`, `OFF`. Default: `OFF`.
 * `thing_indexing_mode` - (Required) Thing indexing mode. Valid values: `REGISTRY`, `REGISTRY_AND_SHADOW`, `OFF`.
 
@@ -71,6 +76,12 @@ The `custom_field` and `managed_field` configuration blocks supports the followi
 * `name` - (Optional) The name of the field.
 * `type` - (Optional) The data type of the field. Valid values: `Number`, `String`, `Boolean`.
 
-## Attributes Reference
+### filter
 
-No additional attributes are exported.
+The `filter` configuration block supports the following:
+
+* `named_shadow_names` - (Optional) List of shadow names that you select to index.
+
+## Attribute Reference
+
+This resource exports no additional attributes.

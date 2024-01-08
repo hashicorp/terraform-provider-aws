@@ -50,6 +50,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceDomainSAMLOptions,
 			TypeName: "aws_elasticsearch_domain_saml_options",
 		},
+		{
+			Factory:  ResourceVPCEndpoint,
+			TypeName: "aws_elasticsearch_vpc_endpoint",
+		},
 	}
 }
 

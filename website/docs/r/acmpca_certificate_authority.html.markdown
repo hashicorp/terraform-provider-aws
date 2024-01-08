@@ -51,7 +51,8 @@ resource "aws_acmpca_certificate_authority" "example" {
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "example"
+  bucket        = "example"
+  force_destroy = true
 }
 
 data "aws_iam_policy_document" "acmpca_bucket_access" {
@@ -96,6 +97,7 @@ resource "aws_acmpca_certificate_authority" "example" {
       enabled            = true
       expiration_in_days = 7
       s3_bucket_name     = aws_s3_bucket.example.id
+      s3_object_acl      = "BUCKET_OWNER_FULL_CONTROL"
     }
   }
 
@@ -105,7 +107,7 @@ resource "aws_acmpca_certificate_authority" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `certificate_authority_configuration` - (Required) Nested argument containing algorithms and certificate subject information. Defined below.
 * `enabled` - (Optional) Whether the certificate authority is enabled or disabled. Defaults to `true`. Can only be disabled if the CA is in an `ACTIVE` state.
@@ -159,9 +161,9 @@ the custom OCSP responder endpoint. Defined below.
 * `enabled` - (Required) Boolean value that specifies whether a custom OCSP responder is enabled.
 * `ocsp_custom_cname` - (Optional) CNAME specifying a customized OCSP domain. Note: The value of the CNAME must not include a protocol prefix such as "http://" or "https://".
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ARN of the certificate authority.
 * `arn` - ARN of the certificate authority.
@@ -181,8 +183,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_acmpca_certificate_authority` can be imported by using the certificate authority ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_acmpca_certificate_authority` using the certificate authority ARN. For example:
 
+```terraform
+import {
+  to = aws_acmpca_certificate_authority.example
+  id = "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012"
+}
 ```
-$ terraform import aws_acmpca_certificate_authority.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012
+
+Using `terraform import`, import `aws_acmpca_certificate_authority` using the certificate authority ARN. For example:
+
+```console
+% terraform import aws_acmpca_certificate_authority.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012
 ```
