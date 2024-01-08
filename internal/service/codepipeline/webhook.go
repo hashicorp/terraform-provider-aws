@@ -10,6 +10,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -226,6 +227,10 @@ func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta int
 	_, err := conn.DeleteWebhookWithContext(ctx, &codepipeline.DeleteWebhookInput{
 		Name: aws.String(d.Get("name").(string)),
 	})
+
+	if tfawserr.ErrCodeEquals(err, codepipeline.ErrCodeWebhookNotFoundException) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting CodePipeline Webhook (%s): %s", d.Id(), err)
