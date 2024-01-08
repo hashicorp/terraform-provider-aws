@@ -5,18 +5,17 @@ package codepipeline
 
 import (
 	"context"
-	"fmt"
+	"log"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codepipeline"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -158,40 +157,31 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
-	arn := d.Id()
-	webhook, err := GetWebhook(ctx, conn, arn)
+	webhook, err := FindWebhookByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.CodePipeline, create.ErrActionReading, ResNameWebhook, d.Id())
+		log.Printf("[WARN] CodePipeline Webhook %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.CodePipeline, create.ErrActionReading, ResNameWebhook, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CodePipeline Webhook (%s): %s", d.Id(), err)
 	}
 
 	webhookDef := webhook.Definition
-
-	name := aws.StringValue(webhookDef.Name)
-	if name == "" {
-		return sdkdiag.AppendErrorf(diags, "Webhook not found: %s", arn)
-	}
-
-	d.Set("name", name)
-	d.Set("url", webhook.Url)
-	d.Set("target_action", webhookDef.TargetAction)
-	d.Set("target_pipeline", webhookDef.TargetPipeline)
-	d.Set("authentication", webhookDef.Authentication)
 	d.Set("arn", webhook.Arn)
-
+	d.Set("authentication", webhookDef.Authentication)
 	if err := d.Set("authentication_configuration", flattenWebhookAuthConfiguration(webhookDef.AuthenticationConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting authentication_configuration: %s", err)
 	}
-
 	if err := d.Set("filter", flattenWebhookFilterRules(webhookDef.Filters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting filter: %s", err)
 	}
+	d.Set("name", webhookDef.Name)
+	d.Set("target_action", webhookDef.TargetAction)
+	d.Set("target_pipeline", webhookDef.TargetPipeline)
+	d.Set("url", webhook.Url)
 
 	setTagsOut(ctx, webhook.Tags)
 
@@ -247,38 +237,46 @@ func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func GetWebhook(ctx context.Context, conn *codepipeline.CodePipeline, arn string) (*codepipeline.ListWebhookItem, error) {
-	var nextToken string
+func FindWebhookByARN(ctx context.Context, conn *codepipeline.CodePipeline, arn string) (*codepipeline.ListWebhookItem, error) {
+	input := &codepipeline.ListWebhooksInput{}
 
-	for {
-		input := &codepipeline.ListWebhooksInput{
-			MaxResults: aws.Int64(60),
-		}
-		if nextToken != "" {
-			input.NextToken = aws.String(nextToken)
+	return findWebhook(ctx, conn, input, func(v *codepipeline.ListWebhookItem) bool {
+		return arn == aws.StringValue(v.Arn)
+	})
+}
+
+func findWebhook(ctx context.Context, conn *codepipeline.CodePipeline, input *codepipeline.ListWebhooksInput, filter tfslices.Predicate[*codepipeline.ListWebhookItem]) (*codepipeline.ListWebhookItem, error) {
+	output, err := findWebhooks(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findWebhooks(ctx context.Context, conn *codepipeline.CodePipeline, input *codepipeline.ListWebhooksInput, filter tfslices.Predicate[*codepipeline.ListWebhookItem]) ([]*codepipeline.ListWebhookItem, error) {
+	var output []*codepipeline.ListWebhookItem
+
+	err := conn.ListWebhooksPagesWithContext(ctx, input, func(page *codepipeline.ListWebhooksOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		out, err := conn.ListWebhooksWithContext(ctx, input)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, w := range out.Webhooks {
-			if arn == aws.StringValue(w.Arn) {
-				return w, nil
+		for _, v := range page.Webhooks {
+			if v != nil && filter(v) {
+				output = append(output, v)
 			}
 		}
 
-		if out.NextToken == nil {
-			break
-		}
+		return !lastPage
+	})
 
-		nextToken = aws.StringValue(out.NextToken)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, &retry.NotFoundError{
-		Message: fmt.Sprintf("No webhook with ARN %s found", arn),
-	}
+	return output, nil
 }
 
 func flattenWebhookFilterRules(filters []*codepipeline.WebhookFilterRule) []interface{} {

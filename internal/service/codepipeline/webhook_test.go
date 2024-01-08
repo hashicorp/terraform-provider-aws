@@ -318,7 +318,7 @@ func testAccCheckWebhookExists(ctx context.Context, n string, webhook *codepipel
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CodePipelineConn(ctx)
 
-		resp, err := tfcodepipeline.GetWebhook(ctx, conn, rs.Primary.ID)
+		resp, err := tfcodepipeline.FindWebhookByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
