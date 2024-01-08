@@ -192,28 +192,26 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all", "register_with_third_party") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		authType := d.Get("authentication").(string)
-
-		var authConfig map[string]interface{}
-		if v, ok := d.GetOk("authentication_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			authConfig = v.([]interface{})[0].(map[string]interface{})
-		}
-
-		request := &codepipeline.PutWebhookInput{
+		input := &codepipeline.PutWebhookInput{
 			Webhook: &codepipeline.WebhookDefinition{
-				Authentication:              aws.String(authType),
-				Filters:                     expandWebhookFilterRules(d.Get("filter").(*schema.Set)),
-				Name:                        aws.String(d.Get("name").(string)),
-				TargetAction:                aws.String(d.Get("target_action").(string)),
-				TargetPipeline:              aws.String(d.Get("target_pipeline").(string)),
-				AuthenticationConfiguration: expandWebhookAuthConfiguration(authType, authConfig),
+				Authentication: aws.String(authType),
+				Filters:        expandWebhookFilterRules(d.Get("filter").(*schema.Set)),
+				Name:           aws.String(d.Get("name").(string)),
+				TargetAction:   aws.String(d.Get("target_action").(string)),
+				TargetPipeline: aws.String(d.Get("target_pipeline").(string)),
 			},
 		}
 
-		_, err := conn.PutWebhookWithContext(ctx, request)
+		if v, ok := d.GetOk("authentication_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.Webhook.AuthenticationConfiguration = expandWebhookAuthConfiguration(authType, v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		_, err := conn.PutWebhookWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating webhook: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating CodePipeline Webhook (%s): %s", d.Id(), err)
 		}
 	}
 
