@@ -45,7 +45,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceWebhook,
+			Factory:  resourceWebhook,
 			TypeName: "aws_codepipeline_webhook",
 			Name:     "Webhook",
 			Tags: &types.ServicePackageResourceTags{
