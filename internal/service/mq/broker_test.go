@@ -12,6 +12,8 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mq"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -138,8 +140,8 @@ func TestDiffUsers(t *testing.T) {
 					ReplicationUser: aws.Bool(false),
 				},
 			},
-			Deletions: []*mq.DeleteUserInput{},
-			Updates:   []*mq.UpdateUserInput{},
+			Deletions: nil,
+			Updates:   nil,
 		},
 		{
 			OldUsers: []interface{}{
@@ -170,7 +172,7 @@ func TestDiffUsers(t *testing.T) {
 			Deletions: []*mq.DeleteUserInput{
 				{BrokerId: aws.String("test"), Username: aws.String("first")},
 			},
-			Updates: []*mq.UpdateUserInput{},
+			Updates: nil,
 		},
 		{
 			OldUsers: []interface{}{
@@ -196,7 +198,7 @@ func TestDiffUsers(t *testing.T) {
 					"replication_user": false,
 				},
 			},
-			Creations: []*mq.CreateUserInput{},
+			Creations: nil,
 			Deletions: []*mq.DeleteUserInput{
 				{BrokerId: aws.String("test"), Username: aws.String("first")},
 			},
@@ -219,22 +221,19 @@ func TestDiffUsers(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		expectedCreations := fmt.Sprintf("%v", tc.Creations)
-		creationsString := fmt.Sprintf("%v", creations)
-		if creationsString != expectedCreations {
-			t.Fatalf("Expected creations: %s\nGiven: %s", expectedCreations, creationsString)
+		var got, want any = creations, tc.Creations
+		if diff := cmp.Diff(got, want, cmpopts.IgnoreUnexported(mq.CreateUserInput{})); diff != "" {
+			t.Fatalf("unexpected CreateUserInput diff (+wanted, -got): %s", diff)
 		}
 
-		expectedDeletions := fmt.Sprintf("%v", tc.Deletions)
-		deletionsString := fmt.Sprintf("%v", deletions)
-		if deletionsString != expectedDeletions {
-			t.Fatalf("Expected deletions: %s\nGiven: %s", expectedDeletions, deletionsString)
+		got, want = deletions, tc.Deletions
+		if diff := cmp.Diff(got, want, cmpopts.IgnoreUnexported(mq.DeleteUserInput{})); diff != "" {
+			t.Fatalf("unexpected DeleteUserInput diff (+wanted, -got): %s", diff)
 		}
 
-		expectedUpdates := fmt.Sprintf("%v", tc.Updates)
-		updatesString := fmt.Sprintf("%v", updates)
-		if updatesString != expectedUpdates {
-			t.Fatalf("Expected updates: %s\nGiven: %s", expectedUpdates, updatesString)
+		got, want = updates, tc.Updates
+		if diff := cmp.Diff(got, want, cmpopts.IgnoreUnexported(mq.UpdateUserInput{})); diff != "" {
+			t.Fatalf("unexpected UpdateUserInput diff (+wanted, -got): %s", diff)
 		}
 	}
 }
