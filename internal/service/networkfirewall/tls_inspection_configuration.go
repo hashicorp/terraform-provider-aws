@@ -472,6 +472,10 @@ func (r *resourceTLSInspectionConfiguration) Read(ctx context.Context, req resou
 	certificates, d := flattenCertificates(ctx, out.TLSInspectionConfigurationResponse.Certificates)
 	resp.Diagnostics.Append(d...)
 	state.Certificates = certificates
+
+	tlsInspectionConfiguration, d := flattenTLSInspectionConfiguration(ctx, out.TLSInspectionConfiguration)
+	resp.Diagnostics.Append(d...)
+	state.TLSInspectionConfiguration = tlsInspectionConfiguration
 	
 	// TIP: Setting a complex type.
 	// complexArgument, d := flattenComplexArgument(ctx, out.ComplexArgument)
@@ -828,6 +832,115 @@ func findTLSInspectionConfigurationByNameAndARN(ctx context.Context, conn *netwo
 // 	return listVal, diags
 // }
 
+func flattenTLSInspectionConfiguration(ctx context.Context, apiObject *networkfirewall.TLSInspectionConfiguration)(types.List, diag.Diagnostics){
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: tlsInspectionConfigurationAttrTypes}
+
+	if apiObject == nil {
+		return types.ListNull(elemType), diags
+	}
+
+	serverCertConfig, d := flattenServerCertificateConfigurations(ctx, apiObject.ServerCertificateConfigurations)
+	diags.Append(d...)
+
+	obj := map[string]attr.Value{
+		"server_certificate_configurations": serverCertConfig,
+	}
+	objVal, d := types.ObjectValue(serverCertificateConfigurationAttrTypes, obj)
+	diags.Append(d...)
+
+	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+	diags.Append(d...)
+
+	return listVal, diags
+
+}
+
+func flattenServerCertificateConfigurations(ctx context.Context, serverCertificateConfigurations []*networkfirewall.ServerCertificateConfiguration)(types.List, diag.Diagnostics){
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: serverCertificateConfigurationAttrTypes}
+
+	if len(serverCertificateConfigurations) == 0 {
+		return types.ListNull(elemType), diags
+	}
+
+	elems := []attr.Value{}
+	for _, serverCertificateConfiguration := range serverCertificateConfigurations {
+		checkCertRevocationStatus, d := flattenCheckCertificateRevocationStatus(ctx, serverCertificateConfiguration.CheckCertificateRevocationStatus)
+		diags.Append(d...)
+		scopes, d := flattenScopes(ctx, serverCertificateConfiguration.Scopes)
+		diags.Append(d...)
+		serverCertificates, d := flattenServerCertificates(ctx, serverCertificateConfiguration.ServerCertificates)
+		diags.Append(d...)
+
+		obj := map[string]attr.Value{
+			"certificate_authority_arn": flex.StringToFramework(ctx, serverCertificateConfiguration.CertificateAuthorityArn),
+			"check_certificate_revocation_status": checkCertRevocationStatus,
+			"scopes": scopes,
+			"server_certificates": serverCertificates,
+		}
+
+		flattenedServerCertificateConfiguration, d := types.ObjectValue(serverCertificateConfigurationAttrTypes, obj)
+		diags.Append(d...)
+		elems = append(elems, flattenedServerCertificateConfiguration)
+	}
+
+	listVal, d := types.ListValue(elemType, elems)
+	diags.Append(d...)
+
+	return listVal, diags
+}
+
+func flattenCheckCertificateRevocationStatus(ctx context.Context, checkCertificateRevocationStatus *networkfirewall.CheckCertificateRevocationStatusActions)(types.List, diag.Diagnostics){
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: checkCertificateRevocationStatusAttrTypes}
+
+	if checkCertificateRevocationStatus == nil {
+		return types.ListNull(elemType), diags
+	}
+
+	obj := map[string]attr.Value{
+		"revoked_status_action": flex.StringToFramework(ctx, checkCertificateRevocationStatus.RevokedStatusAction),
+		"unknown_status_action": flex.StringToFramework(ctx, checkCertificateRevocationStatus.UnknownStatusAction),
+	}
+
+	flattenedCheckCertificateRevocationStatus, d := types.ObjectValue(checkCertificateRevocationStatusAttrTypes, obj)
+	diags.Append(d...)
+
+	listVal, d := types.ListValue(elemType, []attr.Value{flattenedCheckCertificateRevocationStatus})
+	diags.Append(d...)
+
+	return listVal, diags
+}
+
+func flattenServerCertificates(ctx context.Context, serverCertificateList []*networkfirewall.ServerCertificate) (types.List, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: serverCertificatesAttrTypes}
+
+	if len(serverCertificateList) == 0 {
+		return types.ListNull(elemType), diags
+	}
+
+	elems := []attr.Value{}
+	for _, serverCertificate := range serverCertificateList {
+		if serverCertificate == nil {
+			continue
+		}
+		obj := map[string]attr.Value{
+			"resource_arn": flex.StringToFramework(ctx, serverCertificate.ResourceArn),
+		}
+
+		flattenedServerCertificate, d:= types.ObjectValue(serverCertificatesAttrTypes, obj)
+			
+		diags.Append(d...)
+		elems = append(elems, flattenedServerCertificate)
+	}
+
+	listVal, d := types.ListValue(elemType, elems)
+	diags.Append(d...)
+
+	return listVal, diags
+}
 
 func flattenCertificates(ctx context.Context, certificateList []*networkfirewall.TlsCertificateData)(types.List, diag.Diagnostics){
 	var diags diag.Diagnostics
@@ -893,15 +1006,21 @@ func flattenScopes(ctx context.Context, scopes []*networkfirewall.ServerCertific
 		}
 
 		destinationPorts, d := flattenPortRange(ctx, scope.DestinationPorts)
+		diags.Append(d...)
 		destinations, d := flattenSourceDestinations(ctx, scope.Destinations)
+		diags.Append(d...)
+		protocols, d := flattenProtocols(ctx, scope.Protocols)
+		diags.Append(d...)
 		sourcePorts, d := flattenPortRange(ctx, scope.SourcePorts)
+		diags.Append(d...)
 		sources, d := flattenSourceDestinations(ctx, scope.Sources)
+		diags.Append(d...)
 
 
 		obj := map[string]attr.Value{
 			"destination_ports": destinationPorts,
 			"destinations": destinations,
-			// "protocols": flex.
+			"protocols": protocols,
 			"source_ports": sourcePorts,
 			"sources": sources,
 		}
@@ -918,6 +1037,30 @@ func flattenScopes(ctx context.Context, scopes []*networkfirewall.ServerCertific
 
 }
 
+func flattenProtocols(ctx context.Context, list []*int64)(types.List, diag.Diagnostics){
+	var diags diag.Diagnostics
+	elemType := types.Int64Type
+
+	if len(list) == 0 {
+		return types.ListNull(elemType), diags
+	}
+
+	elems := []attr.Value{}
+	for _, item := range list {
+		if item == nil {
+			continue
+		}
+
+		objVal := types.Int64Value(*item)
+
+		elems = append(elems, objVal)
+	}
+
+	listVal, d := types.ListValue(elemType, elems)
+	diags.Append(d...)
+
+	return listVal, diags
+}
 
 func flattenSourceDestinations(ctx context.Context, destinations []*networkfirewall.Address) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
@@ -977,8 +1120,6 @@ func flattenPortRange(ctx context.Context, ranges []*networkfirewall.PortRange) 
 
 	return listVal, diags
 }
-
-func flattenCheckCertificateRevocationStatus(){}
 
 func flattenTLSEncryptionConfiguration(ctx context.Context, encryptionConfiguration *networkfirewall.EncryptionConfiguration) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
@@ -1201,7 +1342,15 @@ func expandSourceDestinations(tfList []sourceDestinationData) []*networkfirewall
 	return apiObject
 }
 
-
+// func expandTLSCertificateData(tfObj certificatesData) *networkfirewall.TlsCertificateData {
+// 	item := &networkfirewall.TlsCertificateData{
+// 		CertificateArn: aws.String(tfObj.CertificateArn.ValueString()),
+// 		CertificateSerial: aws.String(tfObj.CertificateSerial.ValueString()),
+// 		Status: aws.String(tfObj.Status.ValueString()),
+// 		StatusMessage: aws.String(tfObj.StatusMessage.ValueString()),
+// 	}
+// 	return item
+// }
 
 
 // TIP: Even when you have a list with max length of 1, this plural function
@@ -1277,12 +1426,12 @@ type encryptionConfigurationData struct {
 	KeyId types.String `tfsdk:"key_id"`
 }
 
-type certificatesData struct {
-	CertificateArn types.String `tfsdk:"certificate_arn"`
-	CertificateSerial types.String `tfsdk:"certificate_serial"`
-	Status types.String `tfsdk:"status"`
-	StatusMessage types.String `tfsdk:"status_message"`
-}
+// type certificatesData struct {
+// 	CertificateArn types.String `tfsdk:"certificate_arn"`
+// 	CertificateSerial types.String `tfsdk:"certificate_serial"`
+// 	Status types.String `tfsdk:"status"`
+// 	StatusMessage types.String `tfsdk:"status_message"`
+// }
 
 type tlsInspectionConfigurationData struct {
 	ServerCertificateConfiguration types.List `tfsdk:"server_certificate_configuration"`
@@ -1295,10 +1444,10 @@ type serverCertificateConfigurationsData struct {
 	ServerCertificates types.List `tfsdk:"server_certificates"`
 }
 
-type complexArgumentData struct {
-	NestedRequired types.String `tfsdk:"nested_required"`
-	NestedOptional types.String `tfsdk:"nested_optional"`
-}
+// type complexArgumentData struct {
+// 	NestedRequired types.String `tfsdk:"nested_required"`
+// 	NestedOptional types.String `tfsdk:"nested_optional"`
+// }
 
 type scopeData struct {
 	DestinationPorts types.List `tfsdk:"destination_ports"`
