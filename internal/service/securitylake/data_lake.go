@@ -175,13 +175,13 @@ func (r *dataLakeResource) Schema(ctx context.Context, req resource.SchemaReques
 }
 
 func (r *dataLakeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().SecurityLakeClient(ctx)
+
 	var data dataLakeResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	conn := r.Meta().SecurityLakeClient(ctx)
 
 	input := &securitylake.CreateDataLakeInput{}
 	resp.Diagnostics.Append(flex.Expand(ctx, data, input)...)
@@ -252,7 +252,7 @@ func (r *dataLakeResource) Read(ctx context.Context, req resource.ReadRequest, r
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionSetting, ResNameDataLake, data.ID.String(), err),
+			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionReading, ResNameDataLake, data.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -279,6 +279,8 @@ func (r *dataLakeResource) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (r *dataLakeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	conn := r.Meta().SecurityLakeClient(ctx)
+
 	var old, new dataLakeResourceModel
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
 	if resp.Diagnostics.HasError() {
@@ -288,8 +290,6 @@ func (r *dataLakeResource) Update(ctx context.Context, req resource.UpdateReques
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	conn := r.Meta().SecurityLakeClient(ctx)
 
 	if !new.Configurations.Equal(old.Configurations) {
 		input := &securitylake.UpdateDataLakeInput{}
@@ -356,8 +356,8 @@ func (r *dataLakeResource) Delete(ctx context.Context, req resource.DeleteReques
 	}
 }
 
-func (r *dataLakeResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, request, response)
+func (r *dataLakeResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, req, resp)
 }
 
 func waitDataLakeCreated(ctx context.Context, conn *securitylake.Client, arn string, timeout time.Duration) (*awstypes.DataLakeResource, error) {

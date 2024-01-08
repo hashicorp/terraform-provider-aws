@@ -230,6 +230,7 @@ variable "service_labels" {
     "osis",
     "outposts",
     "panorama",
+    "pcaconnectorad",
     "personalize",
     "personalizeevents",
     "personalizeruntime",
