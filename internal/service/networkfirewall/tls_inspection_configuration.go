@@ -15,12 +15,14 @@ import (
 	// awstypes.<Type Name>.
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
+	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+
 	// "github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -29,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+
 	// "github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -39,6 +42,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
 // TIP: ==== FILE STRUCTURE ====
 // All resources should follow this basic outline. Improve this resource's
 // maintainability by sticking to it.
@@ -53,7 +57,7 @@ import (
 // @FrameworkResource(name="TLS Inspection Configuration")
 func newResourceTLSInspectionConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceTLSInspectionConfiguration{}
-	
+
 	// TIP: ==== CONFIGURABLE TIMEOUTS ====
 	// Users can configure timeout lengths but you need to use the times they
 	// provide. Access the timeout they configure (or the defaults) using,
@@ -88,28 +92,31 @@ func (r *resourceTLSInspectionConfiguration) Metadata(_ context.Context, req res
 // * Do not add a blank line between attributes.
 //
 // Attribute basics:
-// * If a user can provide a value ("configure a value") for an
-//   attribute (e.g., instances = 5), we call the attribute an
-//   "argument."
-// * You change the way users interact with attributes using:
-//     - Required
-//     - Optional
-//     - Computed
-// * There are only four valid combinations:
+//   - If a user can provide a value ("configure a value") for an
+//     attribute (e.g., instances = 5), we call the attribute an
+//     "argument."
+//   - You change the way users interact with attributes using:
+//   - Required
+//   - Optional
+//   - Computed
+//   - There are only four valid combinations:
 //
 // 1. Required only - the user must provide a value
 // Required: true,
 //
-// 2. Optional only - the user can configure or omit a value; do not
-//    use Default or DefaultFunc
+//  2. Optional only - the user can configure or omit a value; do not
+//     use Default or DefaultFunc
+//
 // Optional: true,
 //
-// 3. Computed only - the provider can provide a value but the user
-//    cannot, i.e., read-only
+//  3. Computed only - the provider can provide a value but the user
+//     cannot, i.e., read-only
+//
 // Computed: true,
 //
-// 4. Optional AND Computed - the provider or user can provide a value;
-//    use this combination if you are using Default
+//  4. Optional AND Computed - the provider or user can provide a value;
+//     use this combination if you are using Default
+//
 // Optional: true,
 // Computed: true,
 //
@@ -134,8 +141,8 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 				// TIP: ==== PLAN MODIFIERS ====
 				// Plan modifiers were introduced with Plugin-Framework to provide a mechanism
 				// for adjusting planned changes prior to apply. The planmodifier subpackage
-				// provides built-in modifiers for many common use cases such as 
-				// requiring replacement on a value change ("ForceNew: true" in Plugin-SDK 
+				// provides built-in modifiers for many common use cases such as
+				// requiring replacement on a value change ("ForceNew: true" in Plugin-SDK
 				// resources).
 				//
 				// See more:
@@ -158,6 +165,42 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 			},
 		},
 		Blocks: map[string]schema.Block{
+			"certificate_authority": schema.ListNestedBlock{
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"certificate_arn": schema.StringAttribute{
+							Computed: true,
+						},
+						"certificate_serial": schema.StringAttribute{
+							Computed: true,
+						},
+						"status": schema.StringAttribute{
+							Computed: true,
+						},
+						"status_message": schema.StringAttribute{
+							Computed: true,
+						},
+					},
+				},
+			},
+			"certificates": schema.ListNestedBlock{
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"certificate_arn": schema.StringAttribute{
+							Computed: true,
+						},
+						"certificate_serial": schema.StringAttribute{
+							Computed: true,
+						},
+						"status": schema.StringAttribute{
+							Computed: true,
+						},
+						"status_message": schema.StringAttribute{
+							Computed: true,
+						},
+					},
+				},
+			},
 			"encryption_configuration": schema.ListNestedBlock{
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -177,7 +220,7 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"certificate_authority_arn": schema.StringAttribute{
-										Required: true,
+										Optional: true,
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -257,20 +300,20 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 											},
 										},
 									},
-									},
 								},
 							},
 						},
+					},
 				},
 			},
 			// "complex_argument": schema.ListNestedBlock{
 			// 	// TIP: ==== LIST VALIDATORS ====
-			// 	// List and set validators take the place of MaxItems and MinItems in 
+			// 	// List and set validators take the place of MaxItems and MinItems in
 			// 	// Plugin-Framework based resources. Use listvalidator.SizeAtLeast(1) to
-			// 	// make a nested object required. Similar to Plugin-SDK, complex objects 
+			// 	// make a nested object required. Similar to Plugin-SDK, complex objects
 			// 	// can be represented as lists or sets with listvalidator.SizeAtMost(1).
 			// 	//
-			// 	// For a complete mapping of Plugin-SDK to Plugin-Framework schema fields, 
+			// 	// For a complete mapping of Plugin-SDK to Plugin-Framework schema fields,
 			// 	// see:
 			// 	// https://developer.hashicorp.com/terraform/plugin/framework/migrating/attributes-blocks/blocks
 			// 	Validators: []validator.List{
@@ -289,7 +332,7 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 			// 			},
 			// 		},
 			// 	},
-			// }, 
+			// },
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -310,20 +353,20 @@ func (r *resourceTLSInspectionConfiguration) Create(ctx context.Context, req res
 	// 4. Call the AWS create/put function
 	// 5. Using the output from the create function, set the minimum arguments
 	//    and attributes for the Read function to work, as well as any computed
-	//    only attributes. 
+	//    only attributes.
 	// 6. Use a waiter to wait for create to complete
 	// 7. Save the request plan to response state
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().NetworkFirewallConn(ctx)
-	
+
 	// TIP: -- 2. Fetch the plan
 	var plan resourceTLSInspectionConfigurationData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	// TIP: -- 3. Populate a create input structure
 	in := &networkfirewall.CreateTLSInspectionConfigurationInput{
 		// NOTE: Name is mandatory
@@ -346,7 +389,7 @@ func (r *resourceTLSInspectionConfiguration) Create(ctx context.Context, req res
 		}
 
 		// in.TLSInspectionConfiguration = expandComplexArgument(tfList)
-		in.TLSInspectionConfiguration = expandTLSInspectionConfiguration(tfList)
+		in.TLSInspectionConfiguration = expandTLSInspectionConfiguration(ctx, tfList)
 	}
 
 	if !plan.EncryptionConfiguration.IsNull() {
@@ -360,7 +403,7 @@ func (r *resourceTLSInspectionConfiguration) Create(ctx context.Context, req res
 
 		in.EncryptionConfiguration = expandTLSEncryptionConfiguration(tfList)
 	}
-	
+
 	// TIP: -- 4. Call the AWS create function
 	out, err := conn.CreateTLSInspectionConfiguration(in)
 	if err != nil {
@@ -379,12 +422,12 @@ func (r *resourceTLSInspectionConfiguration) Create(ctx context.Context, req res
 		)
 		return
 	}
-	
+
 	// TIP: -- 5. Using the output from the create function, set the minimum attributes
 	// Output consists only of TLSInspectionConfigurationResponse
 	plan.ARN = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationArn)
 	plan.ID = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationId)
-	
+
 	// TIP: -- 6. Use a waiter to wait for create to complete
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitTLSInspectionConfigurationCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
@@ -395,7 +438,7 @@ func (r *resourceTLSInspectionConfiguration) Create(ctx context.Context, req res
 		)
 		return
 	}
-	
+
 	// TIP: -- 7. Save the request plan to response state
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -414,14 +457,14 @@ func (r *resourceTLSInspectionConfiguration) Read(ctx context.Context, req resou
 
 	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().NetworkFirewallConn(ctx)
-	
+
 	// TIP: -- 2. Fetch the state
 	var state resourceTLSInspectionConfigurationData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
 	// type function, or, better yet, using a finder.
 	out, err := findTLSInspectionConfigurationByNameAndARN(ctx, conn, state.ARN.ValueString())
@@ -437,24 +480,24 @@ func (r *resourceTLSInspectionConfiguration) Read(ctx context.Context, req resou
 		)
 		return
 	}
-	
+
 	// TIP: -- 5. Set the arguments and attributes
 	//
 	// For simple data types (i.e., schema.StringAttribute, schema.BoolAttribute,
-	// schema.Int64Attribute, and schema.Float64Attribue), simply setting the  
+	// schema.Int64Attribute, and schema.Float64Attribue), simply setting the
 	// appropriate data struct field is sufficient. The flex package implements
-	// helpers for converting between Go and Plugin-Framework types seamlessly. No 
+	// helpers for converting between Go and Plugin-Framework types seamlessly. No
 	// error or nil checking is necessary.
 	//
 	// However, there are some situations where more handling is needed such as
-	// complex data types (e.g., schema.ListAttribute, schema.SetAttribute). In 
+	// complex data types (e.g., schema.ListAttribute, schema.SetAttribute). In
 	// these cases the flatten function may have a diagnostics return value, which
 	// should be appended to resp.Diagnostics.
 	state.ARN = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationArn)
 	state.Description = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.Description)
 	state.ID = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationId)
 	state.Name = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationName)
-	
+
 	state.LastModifiedTime = flex.StringValueToFramework(ctx, out.TLSInspectionConfigurationResponse.LastModifiedTime.Format(time.RFC3339))
 	state.NumberOfAssociations = flex.Int64ToFramework(ctx, out.TLSInspectionConfigurationResponse.NumberOfAssociations)
 	state.UpdateToken = flex.StringToFramework(ctx, out.UpdateToken)
@@ -464,11 +507,11 @@ func (r *resourceTLSInspectionConfiguration) Read(ctx context.Context, req resou
 	encryptionConfiguration, d := flattenTLSEncryptionConfiguration(ctx, out.TLSInspectionConfigurationResponse.EncryptionConfiguration)
 	resp.Diagnostics.Append(d...)
 	state.EncryptionConfiguration = encryptionConfiguration
-	
+
 	certificateAuthority, d := flattenTLSCertificate(ctx, out.TLSInspectionConfigurationResponse.CertificateAuthority)
 	resp.Diagnostics.Append(d...)
 	state.CertificateAuthority = certificateAuthority
-	
+
 	certificates, d := flattenCertificates(ctx, out.TLSInspectionConfigurationResponse.Certificates)
 	resp.Diagnostics.Append(d...)
 	state.Certificates = certificates
@@ -476,12 +519,12 @@ func (r *resourceTLSInspectionConfiguration) Read(ctx context.Context, req resou
 	tlsInspectionConfiguration, d := flattenTLSInspectionConfiguration(ctx, out.TLSInspectionConfiguration)
 	resp.Diagnostics.Append(d...)
 	state.TLSInspectionConfiguration = tlsInspectionConfiguration
-	
+
 	// TIP: Setting a complex type.
 	// complexArgument, d := flattenComplexArgument(ctx, out.ComplexArgument)
 	// resp.Diagnostics.Append(d...)
 	// state.ComplexArgument = complexArgument
-	
+
 	// TIP: -- 6. Set the state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -509,7 +552,7 @@ func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req res
 	// 6. Save the request plan to response state
 	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().NetworkFirewallConn(ctx)
-	
+
 	// TIP: -- 2. Fetch the plan
 	var plan, state resourceTLSInspectionConfigurationData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -517,19 +560,18 @@ func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req res
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	// TIP: -- 3. Populate a modify input structure and check for changes
 	if !plan.Description.Equal(state.Description) ||
 		!plan.TLSInspectionConfiguration.Equal(state.TLSInspectionConfiguration) ||
-		!plan.EncryptionConfiguration.Equal(state.EncryptionConfiguration) ||
-		!plan.Type.Equal(state.Type) {
+		!plan.EncryptionConfiguration.Equal(state.EncryptionConfiguration) {
 
 		in := &networkfirewall.UpdateTLSInspectionConfigurationInput{
 			// TIP: Mandatory or fields that will always be present can be set when
 			// you create the Input structure. (Replace these with real fields.)
-			TLSInspectionConfigurationArn:   aws.String(plan.ARN.ValueString()),
+			TLSInspectionConfigurationArn:  aws.String(plan.ARN.ValueString()),
 			TLSInspectionConfigurationName: aws.String(plan.Name.ValueString()),
-			UpdateToken: aws.String(plan.UpdateToken.ValueString()),
+			UpdateToken:                    aws.String(plan.UpdateToken.ValueString()),
 		}
 
 		if !plan.Description.IsNull() {
@@ -555,10 +597,10 @@ func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req res
 			if resp.Diagnostics.HasError() {
 				return
 			}
-			in.TLSInspectionConfiguration = expandTLSInspectionConfiguration(tfList)
-		
+			in.TLSInspectionConfiguration = expandTLSInspectionConfiguration(ctx, tfList)
+
 		}
-		
+
 		if !plan.EncryptionConfiguration.IsNull() {
 			var tfList []encryptionConfigurationData
 			resp.Diagnostics.Append(plan.EncryptionConfiguration.ElementsAs(ctx, &tfList, false)...)
@@ -584,7 +626,7 @@ func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req res
 			)
 			return
 		}
-		
+
 		// TIP: Using the output from the update function, re-set any computed attributes
 		plan.ARN = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationArn)
 		plan.ID = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationId)
@@ -595,7 +637,6 @@ func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req res
 		plan.Status = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationStatus)
 	}
 
-	
 	// TIP: -- 5. Use a waiter to wait for update to complete
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 	_, err := waitTLSInspectionConfigurationUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
@@ -607,7 +648,6 @@ func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req res
 		return
 	}
 
-	
 	// TIP: -- 6. Save the request plan to response state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -615,19 +655,19 @@ func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req res
 func (r *resourceTLSInspectionConfiguration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().NetworkFirewallConn(ctx)
-	
+
 	// TIP: -- 2. Fetch the state
 	var state resourceTLSInspectionConfigurationData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
-	
+
 	// TIP: -- 3. Populate a delete input structure
 	in := &networkfirewall.DeleteTLSInspectionConfigurationInput{
 		TLSInspectionConfigurationArn: aws.String(state.ARN.ValueString()),
 	}
-	
+
 	// TIP: -- 4. Call the AWS delete function
 	_, err := conn.DeleteTLSInspectionConfigurationWithContext(ctx, in)
 	// TIP: On rare occassions, the API returns a not found error after deleting a
@@ -642,7 +682,7 @@ func (r *resourceTLSInspectionConfiguration) Delete(ctx context.Context, req res
 		)
 		return
 	}
-	
+
 	// TIP: -- 5. Use a waiter to wait for delete to complete
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitTLSInspectionConfigurationDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
@@ -665,7 +705,6 @@ func (r *resourceTLSInspectionConfiguration) Delete(ctx context.Context, req res
 func (r *resourceTLSInspectionConfiguration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
-
 
 // TIP: ==== STATUS CONSTANTS ====
 // Create constants for states and statuses if the service does not
@@ -735,10 +774,10 @@ func waitTLSInspectionConfigurationUpdated(ctx context.Context, conn *networkfir
 // be additional pending states, however.
 func waitTLSInspectionConfigurationDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, id string, timeout time.Duration) (*networkfirewall.TLSInspectionConfiguration, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusDeleting, statusNormal},
-		Target:                    []string{},
-		Refresh:                   statusTLSInspectionConfiguration(ctx, conn, id),
-		Timeout:                   timeout,
+		Pending: []string{statusDeleting, statusNormal},
+		Target:  []string{},
+		Refresh: statusTLSInspectionConfiguration(ctx, conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -780,7 +819,7 @@ func findTLSInspectionConfigurationByNameAndARN(ctx context.Context, conn *netwo
 	in := &networkfirewall.DescribeTLSInspectionConfigurationInput{
 		TLSInspectionConfigurationArn: aws.String(arn),
 	}
-	
+
 	out, err := conn.DescribeTLSInspectionConfigurationWithContext(ctx, in)
 	if err != nil {
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -802,7 +841,7 @@ func findTLSInspectionConfigurationByNameAndARN(ctx context.Context, conn *netwo
 
 // TIP: ==== FLEX ====
 // Flatteners and expanders ("flex" functions) help handle complex data
-// types. Flatteners take an API data type and return the equivalent Plugin-Framework 
+// types. Flatteners take an API data type and return the equivalent Plugin-Framework
 // type. In other words, flatteners translate from AWS -> Terraform.
 //
 // On the other hand, expanders take a Terraform data structure and return
@@ -832,7 +871,7 @@ func findTLSInspectionConfigurationByNameAndARN(ctx context.Context, conn *netwo
 // 	return listVal, diags
 // }
 
-func flattenTLSInspectionConfiguration(ctx context.Context, apiObject *networkfirewall.TLSInspectionConfiguration)(types.List, diag.Diagnostics){
+func flattenTLSInspectionConfiguration(ctx context.Context, apiObject *networkfirewall.TLSInspectionConfiguration) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: tlsInspectionConfigurationAttrTypes}
 
@@ -856,7 +895,7 @@ func flattenTLSInspectionConfiguration(ctx context.Context, apiObject *networkfi
 
 }
 
-func flattenServerCertificateConfigurations(ctx context.Context, serverCertificateConfigurations []*networkfirewall.ServerCertificateConfiguration)(types.List, diag.Diagnostics){
+func flattenServerCertificateConfigurations(ctx context.Context, serverCertificateConfigurations []*networkfirewall.ServerCertificateConfiguration) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: serverCertificateConfigurationAttrTypes}
 
@@ -874,10 +913,10 @@ func flattenServerCertificateConfigurations(ctx context.Context, serverCertifica
 		diags.Append(d...)
 
 		obj := map[string]attr.Value{
-			"certificate_authority_arn": flex.StringToFramework(ctx, serverCertificateConfiguration.CertificateAuthorityArn),
+			"certificate_authority_arn":           flex.StringToFramework(ctx, serverCertificateConfiguration.CertificateAuthorityArn),
 			"check_certificate_revocation_status": checkCertRevocationStatus,
-			"scopes": scopes,
-			"server_certificates": serverCertificates,
+			"scopes":                              scopes,
+			"server_certificates":                 serverCertificates,
 		}
 
 		flattenedServerCertificateConfiguration, d := types.ObjectValue(serverCertificateConfigurationAttrTypes, obj)
@@ -891,7 +930,7 @@ func flattenServerCertificateConfigurations(ctx context.Context, serverCertifica
 	return listVal, diags
 }
 
-func flattenCheckCertificateRevocationStatus(ctx context.Context, checkCertificateRevocationStatus *networkfirewall.CheckCertificateRevocationStatusActions)(types.List, diag.Diagnostics){
+func flattenCheckCertificateRevocationStatus(ctx context.Context, checkCertificateRevocationStatus *networkfirewall.CheckCertificateRevocationStatusActions) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: checkCertificateRevocationStatusAttrTypes}
 
@@ -930,8 +969,8 @@ func flattenServerCertificates(ctx context.Context, serverCertificateList []*net
 			"resource_arn": flex.StringToFramework(ctx, serverCertificate.ResourceArn),
 		}
 
-		flattenedServerCertificate, d:= types.ObjectValue(serverCertificatesAttrTypes, obj)
-			
+		flattenedServerCertificate, d := types.ObjectValue(serverCertificatesAttrTypes, obj)
+
 		diags.Append(d...)
 		elems = append(elems, flattenedServerCertificate)
 	}
@@ -942,7 +981,7 @@ func flattenServerCertificates(ctx context.Context, serverCertificateList []*net
 	return listVal, diags
 }
 
-func flattenCertificates(ctx context.Context, certificateList []*networkfirewall.TlsCertificateData)(types.List, diag.Diagnostics){
+func flattenCertificates(ctx context.Context, certificateList []*networkfirewall.TlsCertificateData) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: certificatesAttrTypes}
 
@@ -966,7 +1005,7 @@ func flattenCertificates(ctx context.Context, certificateList []*networkfirewall
 	return listVal, diags
 }
 
-func flattenTLSCertificate(ctx context.Context, certificate *networkfirewall.TlsCertificateData)(types.List, diag.Diagnostics){
+func flattenTLSCertificate(ctx context.Context, certificate *networkfirewall.TlsCertificateData) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: certificatesAttrTypes}
 
@@ -975,10 +1014,10 @@ func flattenTLSCertificate(ctx context.Context, certificate *networkfirewall.Tls
 	}
 
 	obj := map[string]attr.Value{
-		"certificate_arn": flex.StringToFramework(ctx, certificate.CertificateArn),
+		"certificate_arn":    flex.StringToFramework(ctx, certificate.CertificateArn),
 		"certificate_serial": flex.StringToFramework(ctx, certificate.CertificateSerial),
-		"status": flex.StringToFramework(ctx, certificate.Status),
-		"status_message": flex.StringToFramework(ctx, certificate.StatusMessage),
+		"status":             flex.StringToFramework(ctx, certificate.Status),
+		"status_message":     flex.StringToFramework(ctx, certificate.StatusMessage),
 	}
 	objVal, d := types.ObjectValue(certificatesAttrTypes, obj)
 	diags.Append(d...)
@@ -990,8 +1029,7 @@ func flattenTLSCertificate(ctx context.Context, certificate *networkfirewall.Tls
 
 }
 
-
-func flattenScopes(ctx context.Context, scopes []*networkfirewall.ServerCertificateScope)(types.List, diag.Diagnostics){
+func flattenScopes(ctx context.Context, scopes []*networkfirewall.ServerCertificateScope) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: scopeAttrTypes}
 
@@ -1016,13 +1054,12 @@ func flattenScopes(ctx context.Context, scopes []*networkfirewall.ServerCertific
 		sources, d := flattenSourceDestinations(ctx, scope.Sources)
 		diags.Append(d...)
 
-
 		obj := map[string]attr.Value{
 			"destination_ports": destinationPorts,
-			"destinations": destinations,
-			"protocols": protocols,
-			"source_ports": sourcePorts,
-			"sources": sources,
+			"destinations":      destinations,
+			"protocols":         protocols,
+			"source_ports":      sourcePorts,
+			"sources":           sources,
 		}
 		objVal, d := types.ObjectValue(scopeAttrTypes, obj)
 		diags.Append(d...)
@@ -1037,7 +1074,7 @@ func flattenScopes(ctx context.Context, scopes []*networkfirewall.ServerCertific
 
 }
 
-func flattenProtocols(ctx context.Context, list []*int64)(types.List, diag.Diagnostics){
+func flattenProtocols(ctx context.Context, list []*int64) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.Int64Type
 
@@ -1107,7 +1144,7 @@ func flattenPortRange(ctx context.Context, ranges []*networkfirewall.PortRange) 
 
 		obj := map[string]attr.Value{
 			"from_port": flex.Int64ToFramework(ctx, portRange.FromPort),
-			"to_port": flex.Int64ToFramework(ctx, portRange.ToPort),
+			"to_port":   flex.Int64ToFramework(ctx, portRange.ToPort),
 		}
 		objVal, d := types.ObjectValue(portRangeAttrTypes, obj)
 		diags.Append(d...)
@@ -1131,7 +1168,7 @@ func flattenTLSEncryptionConfiguration(ctx context.Context, encryptionConfigurat
 
 	obj := map[string]attr.Value{
 		"key_id": flex.StringToFramework(ctx, encryptionConfiguration.KeyId),
-		"type": flex.StringToFramework(ctx, encryptionConfiguration.Type),
+		"type":   flex.StringToFramework(ctx, encryptionConfiguration.Type),
 	}
 	objVal, d := types.ObjectValue(encryptionConfigurationAttrTypes, obj)
 	diags.Append(d...)
@@ -1208,59 +1245,71 @@ func expandTLSEncryptionConfiguration(tfList []encryptionConfigurationData) *net
 	tfObj := tfList[0]
 	apiObject := &networkfirewall.EncryptionConfiguration{
 		KeyId: aws.String(tfObj.KeyId.ValueString()),
-		Type: aws.String(tfObj.Type.ValueString()),
+		Type:  aws.String(tfObj.Type.ValueString()),
 	}
 
 	return apiObject
 }
 
-func expandTLSInspectionConfiguration(tfList []tlsInspectionConfigurationData) *networkfirewall.TLSInspectionConfiguration {
+func expandTLSInspectionConfiguration(ctx context.Context, tfList []tlsInspectionConfigurationData) *networkfirewall.TLSInspectionConfiguration {
+	var diags diag.Diagnostics
+
 	if len(tfList) == 0 {
 		return nil
 	}
-	
-	// var apiObject []networkfirewall.TLSInspectionConfiguration
 
 	tfObj := tfList[0]
 
-	// for _, item := range tfList {
-	apiObject := &networkfirewall.TLSInspectionConfiguration{}
-	if !tfObj.ServerCertificateConfiguration.IsNull() {
-		var serverConfig []serverCertificateConfigurationsData
-		apiObject.ServerCertificateConfigurations = expandServerCertificateConfigurations(serverConfig)
+	var serverCertConfig []serverCertificateConfigurationsData
+	diags.Append(tfObj.ServerCertificateConfiguration.ElementsAs(ctx, &serverCertConfig, false)...)
+
+	fmt.Printf("diags: %v\n", diags)
+
+	apiObject := &networkfirewall.TLSInspectionConfiguration{
+		ServerCertificateConfigurations: expandServerCertificateConfigurations(ctx, serverCertConfig),
 	}
-		
-	// apiObject = append(apiObject, conf)
-	
+
 	return apiObject
 }
 
-func expandServerCertificateConfigurations(tfList []serverCertificateConfigurationsData) []*networkfirewall.ServerCertificateConfiguration {
+func expandServerCertificateConfigurations(ctx context.Context, tfList []serverCertificateConfigurationsData) []*networkfirewall.ServerCertificateConfiguration {
+	var diags diag.Diagnostics
+
 	var apiObject []*networkfirewall.ServerCertificateConfiguration
 
 	for _, item := range tfList {
-		conf := &networkfirewall.ServerCertificateConfiguration{
-			CertificateAuthorityArn: aws.String(item.CertificateAuthorityArn.ValueString()),
+		conf := &networkfirewall.ServerCertificateConfiguration{}
+
+		// Configure CertificateAuthorityArn for outbound SSL/TLS inspection
+		if !item.CertificateAuthorityArn.IsNull() {
+			conf.CertificateAuthorityArn = aws.String(item.CertificateAuthorityArn.ValueString())
 		}
 		if !item.CheckCertificateRevocationsStatus.IsNull() {
 			var certificateRevocationStatus []checkCertificateRevocationStatusData
-			conf.CheckCertificateRevocationStatus = expandCheckCertificateRevocationStatus(certificateRevocationStatus)
+			diags.Append(item.CheckCertificateRevocationsStatus.ElementsAs(ctx, &certificateRevocationStatus, false)...)
+			conf.CheckCertificateRevocationStatus = expandCheckCertificateRevocationStatus(ctx, certificateRevocationStatus)
 		}
 		if !item.Scope.IsNull() {
 			var scopesList []scopeData
-			conf.Scopes = expandScopes(scopesList)
+			diags.Append(item.Scope.ElementsAs(ctx, &scopesList, false)...)
+			conf.Scopes = expandScopes(ctx, scopesList)
 		}
+		// Configure ServerCertificates for inbound SSL/TLS inspection
 		if !item.ServerCertificates.IsNull() {
 			var serverCertificates []serverCertificatesData
+			diags.Append(item.ServerCertificates.ElementsAs(ctx, &serverCertificates, false)...)
 			conf.ServerCertificates = expandServerCertificates(serverCertificates)
 		}
 
 		apiObject = append(apiObject, conf)
 	}
+
+	fmt.Printf("diags: %v\n", diags)
+
 	return apiObject
 }
 
-func expandCheckCertificateRevocationStatus(tfList []checkCertificateRevocationStatusData) *networkfirewall.CheckCertificateRevocationStatusActions{
+func expandCheckCertificateRevocationStatus(ctx context.Context, tfList []checkCertificateRevocationStatusData) *networkfirewall.CheckCertificateRevocationStatusActions {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1286,7 +1335,8 @@ func expandServerCertificates(tfList []serverCertificatesData) []*networkfirewal
 	return apiObject
 }
 
-func expandScopes(tfList []scopeData) []*networkfirewall.ServerCertificateScope {
+func expandScopes(ctx context.Context, tfList []scopeData) []*networkfirewall.ServerCertificateScope {
+	var diags diag.Diagnostics
 	var apiObject []*networkfirewall.ServerCertificateScope
 
 	for _, tfObj := range tfList {
@@ -1295,33 +1345,39 @@ func expandScopes(tfList []scopeData) []*networkfirewall.ServerCertificateScope 
 		}
 		if !tfObj.DestinationPorts.IsNull() {
 			var destinationPorts []portRangeData
-			item.DestinationPorts = expandPortRange(destinationPorts)
+			diags.Append(tfObj.DestinationPorts.ElementsAs(ctx, &destinationPorts, false)...)
+			item.DestinationPorts = expandPortRange(ctx, destinationPorts)
 		}
 		if !tfObj.Destinations.IsNull() {
 			var destinations []sourceDestinationData
-			item.Destinations = expandSourceDestinations(destinations)
+			diags.Append(tfObj.Destinations.ElementsAs(ctx, &destinations, false)...)
+			item.Destinations = expandSourceDestinations(ctx, destinations)
 		}
 		if !tfObj.SourcePorts.IsNull() {
 			var sourcePorts []portRangeData
-			item.SourcePorts = expandPortRange(sourcePorts)
+			diags.Append(tfObj.SourcePorts.ElementsAs(ctx, &sourcePorts, false)...)
+			item.SourcePorts = expandPortRange(ctx, sourcePorts)
 		}
 		if !tfObj.Sources.IsNull() {
 			var sources []sourceDestinationData
-			item.Sources = expandSourceDestinations(sources)
+			diags.Append(tfObj.Sources.ElementsAs(ctx, &sources, false)...)
+			item.Sources = expandSourceDestinations(ctx, sources)
 		}
 		apiObject = append(apiObject, item)
 	}
 
+	fmt.Printf("diags: %v\n", diags)
+
 	return apiObject
 }
 
-func expandPortRange(tfList []portRangeData) []*networkfirewall.PortRange {
+func expandPortRange(ctx context.Context, tfList []portRangeData) []*networkfirewall.PortRange {
 	var apiObject []*networkfirewall.PortRange
 
 	for _, tfObj := range tfList {
 		item := &networkfirewall.PortRange{
 			FromPort: aws.Int64(tfObj.FromPort.ValueInt64()),
-			ToPort: aws.Int64(tfObj.ToPort.ValueInt64()),
+			ToPort:   aws.Int64(tfObj.ToPort.ValueInt64()),
 		}
 		apiObject = append(apiObject, item)
 	}
@@ -1329,7 +1385,7 @@ func expandPortRange(tfList []portRangeData) []*networkfirewall.PortRange {
 	return apiObject
 }
 
-func expandSourceDestinations(tfList []sourceDestinationData) []*networkfirewall.Address {
+func expandSourceDestinations(ctx context.Context, tfList []sourceDestinationData) []*networkfirewall.Address {
 	var apiObject []*networkfirewall.Address
 
 	for _, tfObj := range tfList {
@@ -1351,7 +1407,6 @@ func expandSourceDestinations(tfList []sourceDestinationData) []*networkfirewall
 // 	}
 // 	return item
 // }
-
 
 // TIP: Even when you have a list with max length of 1, this plural function
 // works brilliantly. However, if the AWS API takes a structure rather than a
@@ -1395,19 +1450,19 @@ func expandSourceDestinations(tfList []sourceDestinationData) []*networkfirewall
 // With Terraform Plugin-Framework configurations are deserialized into
 // Go types, providing type safety without the need for type assertions.
 // These structs should match the schema definition exactly, and the `tfsdk`
-// tag value should match the attribute name. 
+// tag value should match the attribute name.
 //
-// Nested objects are represented in their own data struct. These will 
+// Nested objects are represented in their own data struct. These will
 // also have a corresponding attribute type mapping for use inside flex
 // functions.
 //
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type resourceTLSInspectionConfigurationData struct {
-	ARN                        types.String   `tfsdk:"arn"`
-	EncryptionConfiguration    types.List     `tfsdk:"encryption_configuration"`
-	Certificates               types.List     `tfsdk:"certificates"`
-	CertificateAuthority       types.List     `tfsdk:"certificate_authority"`
+	ARN                     types.String `tfsdk:"arn"`
+	EncryptionConfiguration types.List   `tfsdk:"encryption_configuration"`
+	Certificates            types.List   `tfsdk:"certificates"`
+	CertificateAuthority    types.List   `tfsdk:"certificate_authority"`
 	// ComplexArgument            types.List     `tfsdk:"complex_argument"`
 	Description                types.String   `tfsdk:"description"`
 	ID                         types.String   `tfsdk:"id"`
@@ -1417,8 +1472,8 @@ type resourceTLSInspectionConfigurationData struct {
 	Status                     types.String   `tfsdk:"status"`
 	TLSInspectionConfiguration types.List     `tfsdk:"tls_inspection_configuration"`
 	Timeouts                   timeouts.Value `tfsdk:"timeouts"`
-	Type                       types.String   `tfsdk:"type"`
-	UpdateToken                types.String   `tfsdk:"update_token"`
+	// Type                       types.String   `tfsdk:"type"`
+	UpdateToken types.String `tfsdk:"update_token"`
 }
 
 type encryptionConfigurationData struct {
@@ -1434,14 +1489,14 @@ type encryptionConfigurationData struct {
 // }
 
 type tlsInspectionConfigurationData struct {
-	ServerCertificateConfiguration types.List `tfsdk:"server_certificate_configuration"`
+	ServerCertificateConfiguration types.List `tfsdk:"server_certificate_configurations"`
 }
 
 type serverCertificateConfigurationsData struct {
-	CertificateAuthorityArn types.String `tfsdk:"certificate_authority_arn"`
-	CheckCertificateRevocationsStatus types.List `tfsdk:"check_certificate_revocations_status"`
-	Scope types.List `tfsdk:"scope"`
-	ServerCertificates types.List `tfsdk:"server_certificates"`
+	CertificateAuthorityArn           types.String `tfsdk:"certificate_authority_arn"`
+	CheckCertificateRevocationsStatus types.List   `tfsdk:"check_certificate_revocation_status"`
+	Scope                             types.List   `tfsdk:"scope"`
+	ServerCertificates                types.List   `tfsdk:"server_certificates"`
 }
 
 // type complexArgumentData struct {
@@ -1451,10 +1506,10 @@ type serverCertificateConfigurationsData struct {
 
 type scopeData struct {
 	DestinationPorts types.List `tfsdk:"destination_ports"`
-	Destinations types.List `tfsdk:"destinations"`
-	Protocols types.List `tfsdk:"protocols"`
-	SourcePorts types.List `tfsdk:"source_ports"`
-	Sources types.List `tfsdk:"sources"`
+	Destinations     types.List `tfsdk:"destinations"`
+	Protocols        types.List `tfsdk:"protocols"`
+	SourcePorts      types.List `tfsdk:"source_ports"`
+	Sources          types.List `tfsdk:"sources"`
 }
 
 type sourceDestinationData struct {
@@ -1463,7 +1518,7 @@ type sourceDestinationData struct {
 
 type portRangeData struct {
 	FromPort types.Int64 `tfsdk:"from_port"`
-	ToPort types.Int64 `tfsdk:"to_port"`
+	ToPort   types.Int64 `tfsdk:"to_port"`
 }
 
 type checkCertificateRevocationStatusData struct {
@@ -1478,10 +1533,10 @@ type serverCertificatesData struct {
 //////////////
 
 var certificatesAttrTypes = map[string]attr.Type{
-	"certificate_arn": types.StringType,
+	"certificate_arn":    types.StringType,
 	"certificate_serial": types.StringType,
-	"status": types.StringType,
-	"status_message": types.StringType,
+	"status":             types.StringType,
+	"status_message":     types.StringType,
 }
 
 // var complexArgumentAttrTypes = map[string]attr.Type{
@@ -1490,19 +1545,19 @@ var certificatesAttrTypes = map[string]attr.Type{
 // }
 
 var encryptionConfigurationAttrTypes = map[string]attr.Type{
-	"type": types.StringType,
+	"type":   types.StringType,
 	"key_id": types.StringType,
 }
 
 var tlsInspectionConfigurationAttrTypes = map[string]attr.Type{
-	"server_certificate_configuration": types.ListType{ElemType: types.ObjectType{AttrTypes: serverCertificateConfigurationAttrTypes}},
+	"server_certificate_configurations": types.ListType{ElemType: types.ObjectType{AttrTypes: serverCertificateConfigurationAttrTypes}},
 }
 
-var	serverCertificateConfigurationAttrTypes = map[string]attr.Type{
-	"certificate_authority_arn": types.StringType,
-	"check_certificate_revocations_status": types.ListType{ElemType: types.ObjectType{AttrTypes: checkCertificateRevocationStatusAttrTypes}},
-	"scope": types.ListType{ElemType: types.ObjectType{AttrTypes: scopeAttrTypes}},
-	"server_certificates": types.ListType{ElemType: types.ObjectType{AttrTypes: serverCertificatesAttrTypes}},
+var serverCertificateConfigurationAttrTypes = map[string]attr.Type{
+	"certificate_authority_arn":           types.StringType,
+	"check_certificate_revocation_status": types.ListType{ElemType: types.ObjectType{AttrTypes: checkCertificateRevocationStatusAttrTypes}},
+	"scope":                               types.ListType{ElemType: types.ObjectType{AttrTypes: scopeAttrTypes}},
+	"server_certificates":                 types.ListType{ElemType: types.ObjectType{AttrTypes: serverCertificatesAttrTypes}},
 }
 
 var checkCertificateRevocationStatusAttrTypes = map[string]attr.Type{
@@ -1513,10 +1568,10 @@ var checkCertificateRevocationStatusAttrTypes = map[string]attr.Type{
 var (
 	scopeAttrTypes = map[string]attr.Type{
 		"destination_ports": types.ListType{ElemType: types.ObjectType{AttrTypes: portRangeAttrTypes}},
-		"destinations": types.ListType{ElemType: types.ObjectType{AttrTypes: sourceDestinationAttrTypes}},
-		"protocols": types.ListType{ElemType: types.Int64Type},
-		"source_ports": types.ListType{ElemType: types.ObjectType{AttrTypes: portRangeAttrTypes}},
-		"sources": types.ListType{ElemType: types.ObjectType{AttrTypes: sourceDestinationAttrTypes}},
+		"destinations":      types.ListType{ElemType: types.ObjectType{AttrTypes: sourceDestinationAttrTypes}},
+		"protocols":         types.ListType{ElemType: types.Int64Type},
+		"source_ports":      types.ListType{ElemType: types.ObjectType{AttrTypes: portRangeAttrTypes}},
+		"sources":           types.ListType{ElemType: types.ObjectType{AttrTypes: sourceDestinationAttrTypes}},
 	}
 
 	sourceDestinationAttrTypes = map[string]attr.Type{
@@ -1525,7 +1580,7 @@ var (
 
 	portRangeAttrTypes = map[string]attr.Type{
 		"from_port": types.Int64Type,
-		"to_port": types.Int64Type,
+		"to_port":   types.Int64Type,
 	}
 )
 

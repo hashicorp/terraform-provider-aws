@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -66,55 +67,55 @@ import (
 // Cut and dry functions using well-used patterns, like typical flatteners and
 // expanders, don't need unit testing. However, if they are complex or
 // intricate, they should be unit tested.
-func TestTLSInspectionConfigurationExampleUnitTest(t *testing.T) {
-	t.Parallel()
+// func TestTLSInspectionConfigurationExampleUnitTest(t *testing.T) {
+// 	t.Parallel()
 
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
-		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
+// 	testCases := []struct {
+// 		TestName string
+// 		Input    string
+// 		Expected string
+// 		Error    bool
+// 	}{
+// 		{
+// 			TestName: "empty",
+// 			Input:    "",
+// 			Expected: "",
+// 			Error:    true,
+// 		},
+// 		{
+// 			TestName: "descriptive name",
+// 			Input:    "some input",
+// 			Expected: "some output",
+// 			Error:    false,
+// 		},
+// 		{
+// 			TestName: "another descriptive name",
+// 			Input:    "more input",
+// 			Expected: "more output",
+// 			Error:    false,
+// 		},
+// 	}
 
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-			got, err := tfnetworkfirewall.FunctionFromResource(testCase.Input)
+// 	for _, testCase := range testCases {
+// 		testCase := testCase
+// 		t.Run(testCase.TestName, func(t *testing.T) {
+// 			t.Parallel()
+// 			got, err := tfnetworkfirewall.FunctionFromResource(testCase.Input)
 
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
+// 			if err != nil && !testCase.Error {
+// 				t.Errorf("got error (%s), expected no error", err)
+// 			}
 
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
+// 			if err == nil && testCase.Error {
+// 				t.Errorf("got (%s) and no error, expected error", got)
+// 			}
 
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
+// 			if got != testCase.Expected {
+// 				t.Errorf("got %s, expected %s", got, testCase.Expected)
+// 			}
+// 		})
+// 	}
+// }
 
 // TIP: ==== ACCEPTANCE TESTS ====
 // This is an example of a basic acceptance test. This should test as much of
@@ -123,6 +124,10 @@ func TestTLSInspectionConfigurationExampleUnitTest(t *testing.T) {
 // resource name.
 //
 // Acceptance test access AWS and cost money to run.
+
+// NOTE: acceptance tests require environment variable ACM_CERTIFICATE_ARN
+// to be set and the ACM certificate to be validated during testing.
+
 func TestAccNetworkFirewallTLSInspectionConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	// TIP: This is a long-running test guard for tests that run longer than
@@ -132,13 +137,15 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_basic(t *testing.T) {
 	}
 
 	var tlsinspectionconfiguration networkfirewall.DescribeTLSInspectionConfigurationOutput
+	// domainName := acctest.ACMCertificateDomainFromEnv(t)
+	certificateArn := os.Getenv("ACM_CERTIFICATE_ARN")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.NetworkFirewall)
+			// acctest.PreCheckPartitionHasService(t, names.NetworkFirewall)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
@@ -146,7 +153,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTLSInspectionConfigurationConfig_basic(rName),
+				Config: testAccTLSInspectionConfigurationConfig_basic(rName, certificateArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &tlsinspectionconfiguration),
 					// resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
@@ -161,10 +168,10 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
 			},
 		},
 	})
@@ -176,22 +183,23 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var tlsinspectionconfiguration networkfirewall.DescribeTLSInspectionConfigurationResponse
+	var tlsinspectionconfiguration networkfirewall.DescribeTLSInspectionConfigurationOutput
+	domainName := acctest.ACMCertificateDomainFromEnv(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.NetworkFirewallEndpointID)
-			testAccPreCheck(t)
+			acctest.PreCheckPartitionHasService(t, names.NetworkFirewall)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewallEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTLSInspectionConfigurationConfig_basic(rName, testAccTLSInspectionConfigurationVersionNewer),
+				Config: testAccTLSInspectionConfigurationConfig_basic(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &tlsinspectionconfiguration),
 					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
@@ -210,7 +218,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_disappears(t *testing.T) {
 
 func testAccCheckTLSInspectionConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_networkfirewall_tls_inspection_configuration" {
@@ -218,11 +226,9 @@ func testAccCheckTLSInspectionConfigurationDestroy(ctx context.Context) resource
 			}
 
 			input := &networkfirewall.DescribeTLSInspectionConfigurationInput{
-				TLSInspectionConfigurationId: aws.String(rs.Primary.ID),
+				TLSInspectionConfigurationArn: aws.String(rs.Primary.Attributes["arn"]),
 			}
-			_, err := conn.DescribeTLSInspectionConfiguration(ctx, &networkfirewall.DescribeTLSInspectionConfigurationInput{
-				TLSInspectionConfigurationId: aws.String(rs.Primary.ID),
-			})
+			_, err := conn.DescribeTLSInspectionConfigurationWithContext(ctx, input)
 			if errs.IsA[*types.ResourceNotFoundException](err) {
 				return nil
 			}
@@ -277,94 +283,102 @@ func testAccCheckTLSInspectionConfigurationExists(ctx context.Context, name stri
 // 	}
 // }
 
-func testAccCheckTLSInspectionConfigurationNotRecreated(before, after *networkfirewall.DescribeTLSInspectionConfigurationResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.TLSInspectionConfigurationId), aws.ToString(after.TLSInspectionConfigurationId); before != after {
-			return create.Error(names.NetworkFirewall, create.ErrActionCheckingNotRecreated, tfnetworkfirewall.ResNameTLSInspectionConfiguration, aws.ToString(before.TLSInspectionConfigurationId), errors.New("recreated"))
-		}
+// func testAccCheckTLSInspectionConfigurationNotRecreated(before, after *networkfirewall.DescribeTLSInspectionConfigurationOutput) resource.TestCheckFunc {
+// 	return func(s *terraform.State) error {
+// 		if before, after := aws.ToString(before.TLSInspectionConfigurationResponse.TLSInspectionConfigurationId), aws.ToString(after.TLSInspectionConfigurationResponse.TLSInspectionConfigurationId); before != after {
+// 			return create.Error(names.NetworkFirewall, create.ErrActionCheckingNotRecreated, tfnetworkfirewall.ResNameTLSInspectionConfiguration, aws.ToString(before.TLSInspectionConfigurationId), errors.New("recreated"))
+// 		}
 
-		return nil
-	}
+// 		return nil
+// 	}
+// }
+
+func testAccTLSInspectionConfigurationConfig_base(domainName string) string {
+	return fmt.Sprintf(`
+resource "aws_acm_certificate" "cert" {
+  domain_name = %[1]q
+  validation_method = "DNS"
+}
+`, domainName)
 }
 
-func testAccTLSInspectionConfigurationConfig_basic(rName string) string {
+func testAccTLSInspectionConfigurationConfig_basic(rName, certificateARN string) string {
+	//	return acctest.ConfigCompose(testAccTLSInspectionConfigurationConfig_base(domainName), fmt.Sprintf(`
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_tls_inspection_configuration" "test" {
   name = %[1]q
+  description = "test"
   tls_inspection_configuration {
     server_certificate_configurations {
-	  certificate_authority_arn =
-			check_certificate_revocation_status {
-				revoked_status_action = "PASS"
-				unknown_status_action = "PASS"
-			}
-			server_certificates {
-				resource_arn =
-			}
-			scopes {
-				protocols = [ 6 ]
-				destination_ports {
-						from_port = 443
-						to_port = 443
-				}
-				destinations {
-					address_definition = "0.0.0.0/0"
-				}	
-				source_ports {
-					from_port = 0
-					to_port = 65535
-				}
-				sources {
-					address_definition = "0.0.0.0/0"
-				}
-			}
-		}
-	}
+      server_certificates {
+        resource_arn = %[2]q
+      }
+      scope {
+        protocols = [ 6 ]
+        destination_ports {
+            from_port = 443
+            to_port = 443
+        }
+        destinations {
+          address_definition = "0.0.0.0/0"
+        }  
+        source_ports {
+          from_port = 0
+          to_port = 65535
+        }
+        sources {
+          address_definition = "0.0.0.0/0"
+        }
+      }
+    }
+  }
 }
-`, rName)
+`, rName, certificateARN)
 }
 
 func testAccTLSInspectionConfigurationConfig_withEncryptionConfiguration(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-	description             = "test"
-	deletion_window_in_days = 10
-  }
+  description             = "test"
+  deletion_window_in_days = 10
+}
 
 resource "aws_networkfirewall_tls_inspection_configuration" "test" {
-	name = %[1]q
-	description = "test"
-	encryption_configuration {
-		key_id = aws_kms_key.test.key_id
-		type = "CUSTOMER_KMS"
-	}
-	tls_inspection_configuration {
-		server_certificate_configurations {
-			certificate_authority_arn =
-			check_certificate_revocation_status {
-				revoked_status_action = "PASS"
-				unknown_status_action = "PASS"
-			}
-			server_certificates {
-				resource_arn =
-			}
-			scopes {
-				protocols = [ 6 ]
-				destination_ports {
-					from_port = 443
-					to_port = 443
-				}
-				destinations {
-					address_definition = "0.0.0.0/0"
-				}	
-				source_ports {
-					from_port = 0
-					to_port = 65535
-				}
-				sources {
-					address_definition = "0.0.0.0/0"
-				}
-
+  name = %[1]q
+  description = "test"
+  encryption_configuration {
+    key_id = aws_kms_key.test.key_id
+    type = "CUSTOMER_KMS"
+  }
+  tls_inspection_configuration {
+    server_certificate_configurations {
+      certificate_authority_arn =
+      check_certificate_revocation_status {
+        revoked_status_action = "PASS"
+        unknown_status_action = "PASS"
+      }
+      server_certificates {
+        resource_arn =
+      }
+      scope {
+        protocols = [ 6 ]
+        destination_ports {
+          from_port = 443
+          to_port = 443
+        }
+        destinations {
+          address_definition = "0.0.0.0/0"
+        }  
+        source_ports {
+          from_port = 0
+          to_port = 65535
+        }
+        sources {
+          address_definition = "0.0.0.0/0"
+        }
+      }
+    }
+  }
 }
 `, rName)
 }
