@@ -604,6 +604,7 @@ service/keyspaces:
 service/kinesis:
   - 'internal/service/kinesis/**/*'
   - 'website/**/kinesis_stream*'
+  - 'website/**/kinesis_resource_policy*'
 service/kinesisanalytics:
   - 'internal/service/kinesisanalytics/**/*'
   - 'website/**/kinesis_analytics_*'
@@ -794,6 +795,9 @@ service/outposts:
 service/panorama:
   - 'internal/service/panorama/**/*'
   - 'website/**/panorama_*'
+service/pcaconnectorad:
+  - 'internal/service/pcaconnectorad/**/*'
+  - 'website/**/pcaconnectorad_*'
 service/personalize:
   - 'internal/service/personalize/**/*'
   - 'website/**/personalize_*'
@@ -1013,6 +1017,9 @@ service/ssmcontacts:
 service/ssmincidents:
   - 'internal/service/ssmincidents/**/*'
   - 'website/**/ssmincidents_*'
+service/ssmsap:
+  - 'internal/service/ssmsap/**/*'
+  - 'website/**/ssmsap_*'
 service/sso:
   - 'internal/service/sso/**/*'
   - 'website/**/sso_*'
