@@ -5,7 +5,9 @@ package mq
 
 // Exports for use in tests only.
 var (
+	ResourceBroker        = resourceBroker
 	ResourceConfiguration = resourceConfiguration
 
+	FindBrokerByID        = findBrokerByID
 	FindConfigurationByID = findConfigurationByID
 )
