@@ -14,11 +14,11 @@ import (
 	"github.com/aws/aws-sdk-go/service/codepipeline"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -183,7 +183,6 @@ func ResourceCustomActionType() *schema.Resource {
 
 func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	category := d.Get("category").(string)
@@ -226,11 +225,9 @@ func resourceCustomActionTypeCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	category, provider, version, err := CustomActionTypeParseResourceID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -290,17 +287,18 @@ func resourceCustomActionTypeRead(ctx context.Context, d *schema.ResourceData, m
 }
 
 func resourceCustomActionTypeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	// Tags only.
-	return resourceCustomActionTypeRead(ctx, d, meta)
+
+	return append(diags, resourceCustomActionTypeRead(ctx, d, meta)...)
 }
 
 func resourceCustomActionTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).CodePipelineConn(ctx)
 
 	category, provider, version, err := CustomActionTypeParseResourceID(d.Id())
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -346,7 +344,24 @@ func FindCustomActionTypeByThreePartKey(ctx context.Context, conn *codepipeline.
 	input := &codepipeline.ListActionTypesInput{
 		ActionOwnerFilter: aws.String(codepipeline.ActionOwnerCustom),
 	}
-	var output *codepipeline.ActionType
+
+	return findActionType(ctx, conn, input, func(v *codepipeline.ActionType) bool {
+		return aws.StringValue(v.Id.Category) == category && aws.StringValue(v.Id.Provider) == provider && aws.StringValue(v.Id.Version) == version
+	})
+}
+
+func findActionType(ctx context.Context, conn *codepipeline.CodePipeline, input *codepipeline.ListActionTypesInput, filter tfslices.Predicate[*codepipeline.ActionType]) (*codepipeline.ActionType, error) {
+	output, err := findActionTypes(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findActionTypes(ctx context.Context, conn *codepipeline.CodePipeline, input *codepipeline.ListActionTypesInput, filter tfslices.Predicate[*codepipeline.ActionType]) ([]*codepipeline.ActionType, error) {
+	var output []*codepipeline.ActionType
 
 	err := conn.ListActionTypesPagesWithContext(ctx, input, func(page *codepipeline.ListActionTypesOutput, lastPage bool) bool {
 		if page == nil {
@@ -354,14 +369,8 @@ func FindCustomActionTypeByThreePartKey(ctx context.Context, conn *codepipeline.
 		}
 
 		for _, v := range page.ActionTypes {
-			if v == nil || v.Id == nil {
-				continue
-			}
-
-			if aws.StringValue(v.Id.Category) == category && aws.StringValue(v.Id.Provider) == provider && aws.StringValue(v.Id.Version) == version {
-				output = v
-
-				return false
+			if v != nil && filter(v) {
+				output = append(output, v)
 			}
 		}
 
@@ -370,12 +379,6 @@ func FindCustomActionTypeByThreePartKey(ctx context.Context, conn *codepipeline.
 
 	if err != nil {
 		return nil, err
-	}
-
-	if output == nil {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
 	}
 
 	return output, nil
