@@ -66,7 +66,7 @@ func resourceConfiguration() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.AuthenticationStrategy](),
+				ValidateDiagFunc: enum.ValidateIgnoreCase[types.AuthenticationStrategy](),
 			},
 			"data": {
 				Type:                  schema.TypeString,
@@ -82,7 +82,7 @@ func resourceConfiguration() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.EngineType](),
+				ValidateDiagFunc: enum.ValidateIgnoreCase[types.EngineType](),
 			},
 			"engine_version": {
 				Type:     schema.TypeString,

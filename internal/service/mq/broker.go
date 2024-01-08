@@ -71,7 +71,7 @@ func resourceBroker() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.AuthenticationStrategy](),
+				ValidateDiagFunc: enum.ValidateIgnoreCase[types.AuthenticationStrategy](),
 			},
 			"auto_minor_version_upgrade": {
 				Type:     schema.TypeBool,
@@ -109,7 +109,7 @@ func resourceBroker() *schema.Resource {
 				Optional:         true,
 				ForceNew:         true,
 				Default:          types.DeploymentModeSingleInstance,
-				ValidateDiagFunc: enum.Validate[types.DeploymentMode](),
+				ValidateDiagFunc: enum.ValidateIgnoreCase[types.DeploymentMode](),
 			},
 			"encryption_options": {
 				Type:             schema.TypeList,
@@ -139,7 +139,7 @@ func resourceBroker() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.EngineType](),
+				ValidateDiagFunc: enum.ValidateIgnoreCase[types.EngineType](),
 			},
 			"engine_version": {
 				Type:     schema.TypeString,
@@ -256,7 +256,7 @@ func resourceBroker() *schema.Resource {
 						"day_of_week": {
 							Type:             schema.TypeString,
 							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.DayOfWeek](),
+							ValidateDiagFunc: enum.ValidateIgnoreCase[types.DayOfWeek](),
 						},
 						"time_of_day": {
 							Type:     schema.TypeString,
@@ -285,7 +285,7 @@ func resourceBroker() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.BrokerStorageType](),
+				ValidateDiagFunc: enum.ValidateIgnoreCase[types.BrokerStorageType](),
 			},
 			"subnet_ids": {
 				Type:     schema.TypeSet,
