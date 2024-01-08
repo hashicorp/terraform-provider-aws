@@ -214,6 +214,8 @@ func ResourcePipeline() *schema.Resource {
 					},
 				},
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"variable": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -234,8 +236,6 @@ func ResourcePipeline() *schema.Resource {
 					},
 				},
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
