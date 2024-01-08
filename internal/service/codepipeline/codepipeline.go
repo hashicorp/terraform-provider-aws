@@ -321,17 +321,18 @@ func resourcePipelineUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		pipeline, err := expandPipelineDeclaration(d)
-
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		_, err = conn.UpdatePipelineWithContext(ctx, &codepipeline.UpdatePipelineInput{
+		input := &codepipeline.UpdatePipelineInput{
 			Pipeline: pipeline,
-		})
+		}
+
+		_, err = conn.UpdatePipelineWithContext(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating CodePipeline (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating CodePipeline Pipeline (%s): %s", d.Id(), err)
 		}
 	}
 
