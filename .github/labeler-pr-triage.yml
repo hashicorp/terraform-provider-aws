@@ -633,6 +633,7 @@ service/lambda:
   - 'website/**/lambda_*'
 service/launchwizard:
   - 'internal/service/launchwizard/**/*'
+  - 'website/**/launchwizard_*'
 service/lexmodels:
   - 'internal/service/lexmodels/**/*'
   - 'website/**/lex_*'
