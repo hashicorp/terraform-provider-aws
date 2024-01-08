@@ -31,6 +31,7 @@ func ResourceWebhook() *schema.Resource {
 		ReadWithoutTimeout:   resourceWebhookRead,
 		UpdateWithoutTimeout: resourceWebhookUpdate,
 		DeleteWithoutTimeout: resourceWebhookDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -54,18 +55,18 @@ func ResourceWebhook() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"allowed_ip_range": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IsCIDRNetwork(0, 32),
+						},
 						"secret_token": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ForceNew:     true,
 							Sensitive:    true,
 							ValidateFunc: validation.StringLenBetween(1, 100),
-						},
-						"allowed_ip_range": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IsCIDRNetwork(0, 32),
 						},
 					},
 				},
@@ -82,7 +83,6 @@ func ResourceWebhook() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 150),
 						},
-
 						"match_equals": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -100,10 +100,8 @@ func ResourceWebhook() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
 				),
 			},
-			"url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"target_action": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -114,8 +112,10 @@ func ResourceWebhook() *schema.Resource {
 				ForceNew: true,
 				Required: true,
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
