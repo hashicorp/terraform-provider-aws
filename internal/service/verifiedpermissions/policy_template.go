@@ -3,196 +3,284 @@
 
 package verifiedpermissions
 
-//import (
-//	"context"
-//	"errors"
-//	"fmt"
-//	"log"
-//	"time"
-//
-//	"github.com/aws/aws-sdk-go-v2/aws"
-//	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
-//	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions/types"
-//	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-//	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
-//	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-//	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-//	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-//	"github.com/hashicorp/terraform-provider-aws/internal/create"
-//	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-//	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-//	"github.com/hashicorp/terraform-provider-aws/names"
-//)
-//
-//// @SDKResource("aws_verifiedpermissions_policy_template", name="Policy Template")
-//func ResourcePolicyTemplate() *schema.Resource {
-//	return &schema.Resource{
-//		CreateWithoutTimeout: resourcePolicyTemplateCreate,
-//		ReadWithoutTimeout:   resourcePolicyTemplateRead,
-//		UpdateWithoutTimeout: resourcePolicyTemplateUpdate,
-//		DeleteWithoutTimeout: resourcePolicyTemplateDelete,
-//
-//		Importer: &schema.ResourceImporter{
-//			StateContext: schema.ImportStatePassthroughContext,
-//		},
-//
-//		Timeouts: &schema.ResourceTimeout{
-//			Create: schema.DefaultTimeout(30 * time.Minute),
-//			Update: schema.DefaultTimeout(30 * time.Minute),
-//			Delete: schema.DefaultTimeout(30 * time.Minute),
-//		},
-//
-//		Schema: map[string]*schema.Schema{
-//			"policy_template_id": {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			"policy_store_id": {
-//				Type:     schema.TypeString,
-//				ForceNew: true,
-//				Required: true,
-//			},
-//			"description": {
-//				Type:     schema.TypeString,
-//				Optional: true,
-//			},
-//			"statement": {
-//				Type:     schema.TypeString,
-//				Required: true,
-//			},
-//			"created_date": {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//			"last_updated_date": {
-//				Type:     schema.TypeString,
-//				Computed: true,
-//			},
-//		},
-//	}
-//}
-//
-//func resourcePolicyTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-//	var diags diag.Diagnostics
-//	conn := meta.(*conns.AWSClient).VerifiedPermissionsClient(ctx)
-//
-//	in := &verifiedpermissions.CreatePolicyTemplateInput{
-//		PolicyStoreId: aws.String(d.Get("policy_store_id").(string)),
-//		Statement:     aws.String(d.Get("statement").(string)),
-//		ClientToken:   aws.String(id.UniqueId()),
-//	}
-//
-//	if description, ok := d.GetOk("description"); ok {
-//		in.Description = aws.String(description.(string))
-//	}
-//
-//	out, err := conn.CreatePolicyTemplate(ctx, in)
-//	if err != nil {
-//		return append(diags, create.DiagError(names.VerifiedPermissions, create.ErrActionCreating, ResNamePolicyTemplate, d.Get("policy_store_id").(string), err)...)
-//	}
-//
-//	if out == nil || out.PolicyStoreId == nil {
-//		return append(diags, create.DiagError(names.VerifiedPermissions, create.ErrActionCreating, ResNamePolicyTemplate, d.Get("policy_store_id").(string), errors.New("empty output"))...)
-//	}
-//
-//	d.SetId(fmt.Sprintf("%s:%s", aws.ToString(out.PolicyStoreId), aws.ToString(out.PolicyTemplateId)))
-//
-//	return append(diags, resourcePolicyTemplateRead(ctx, d, meta)...)
-//}
-//
-//func resourcePolicyTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-//	var diags diag.Diagnostics
-//	conn := meta.(*conns.AWSClient).VerifiedPermissionsClient(ctx)
-//
-//	policyStoreID, policyTemplateID, err := policyTemplateParseID(d.Id())
-//	if err != nil {
-//		return append(diags, create.DiagError(names.VerifiedPermissions, create.ErrActionReading, ResNamePolicyTemplate, d.Id(), err)...)
-//	}
-//
-//	out, err := findPolicyTemplateByID(ctx, conn, policyStoreID, policyTemplateID)
-//
-//	if !d.IsNewResource() && tfresource.NotFound(err) {
-//		log.Printf("[WARN] VerifiedPermissions PolicyTemplate (%s) not found, removing from state", d.Id())
-//		d.SetId("")
-//		return diags
-//	}
-//
-//	if err != nil {
-//		return append(diags, create.DiagError(names.VerifiedPermissions, create.ErrActionReading, ResNamePolicyTemplate, d.Id(), err)...)
-//	}
-//
-//	d.Set("policy_store_id", out.PolicyStoreId)
-//	d.Set("created_date", out.CreatedDate.Format(time.RFC3339Nano))
-//	d.Set("last_updated_date", out.LastUpdatedDate.Format(time.RFC3339Nano))
-//	d.Set("description", out.Description)
-//	d.Set("statement", out.Statement)
-//	d.Set("policy_template_id", out.PolicyTemplateId)
-//
-//	return diags
-//}
-//
-//func resourcePolicyTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-//	var diags diag.Diagnostics
-//	conn := meta.(*conns.AWSClient).VerifiedPermissionsClient(ctx)
-//
-//	update := false
-//
-//	policyStoreId, policyTemplateID, err := policyTemplateParseID(d.Id())
-//	if err != nil {
-//		return append(diags, create.DiagError(names.VerifiedPermissions, create.ErrActionUpdating, ResNamePolicyTemplate, d.Id(), err)...)
-//	}
-//
-//	in := &verifiedpermissions.UpdatePolicyTemplateInput{
-//		PolicyStoreId:    aws.String(policyStoreId),
-//		PolicyTemplateId: aws.String(policyTemplateID),
-//	}
-//
-//	if d.HasChanges("statement") {
-//		in.Statement = aws.String(d.Get("statement").(string))
-//		update = true
-//	}
-//
-//	if d.HasChanges("description") {
-//		in.Description = aws.String(d.Get("description").(string))
-//		update = true
-//	}
-//
-//	if !update {
-//		return diags
-//	}
-//
-//	log.Printf("[DEBUG] Updating VerifiedPermissions PolicyTemplate (%s): %#v", d.Id(), in)
-//	_, err = conn.UpdatePolicyTemplate(ctx, in)
-//	if err != nil {
-//		return append(diags, create.DiagError(names.VerifiedPermissions, create.ErrActionUpdating, ResNamePolicyTemplate, d.Id(), err)...)
-//	}
-//
-//	return append(diags, resourcePolicyTemplateRead(ctx, d, meta)...)
-//}
-//
-//func resourcePolicyTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-//	var diags diag.Diagnostics
-//	conn := meta.(*conns.AWSClient).VerifiedPermissionsClient(ctx)
-//
-//	log.Printf("[INFO] Deleting VerifiedPermissions PolicyTemplate %s", d.Id())
-//
-//	policyStoreId, policyTemplateID, err := policyTemplateParseID(d.Id())
-//	if err != nil {
-//		return append(diags, create.DiagError(names.VerifiedPermissions, create.ErrActionDeleting, ResNamePolicyTemplate, d.Id(), err)...)
-//	}
-//
-//	_, err = conn.DeletePolicyTemplate(ctx, &verifiedpermissions.DeletePolicyTemplateInput{
-//		PolicyStoreId:    aws.String(policyStoreId),
-//		PolicyTemplateId: aws.String(policyTemplateID),
-//	})
-//
-//	if errs.IsA[*types.ResourceNotFoundException](err) {
-//		return diags
-//	}
-//	if err != nil {
-//		return append(diags, create.DiagError(names.VerifiedPermissions, create.ErrActionDeleting, ResNamePolicyTemplate, d.Id(), err)...)
-//	}
-//
-//	return diags
-//}
-//
+import (
+	"context"
+	"fmt"
+	"strings"
+
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions/types"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
+
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+)
+
+// @FrameworkResource(name="Policy Template")
+func newResourcePolicyTemplate(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourcePolicyTemplate{}
+
+	return r, nil
+}
+
+const (
+	ResNamePolicyTemplate = "Policy Template"
+)
+
+type resourcePolicyTemplate struct {
+	framework.ResourceWithConfigure
+	framework.WithImportByID
+}
+
+func (r *resourcePolicyTemplate) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_verifiedpermissions_policy_template"
+}
+
+// Schema returns the schema for this resource.
+func (r *resourcePolicyTemplate) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	s := schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"created_date": schema.StringAttribute{
+				CustomType: fwtypes.TimestampType,
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"description": schema.StringAttribute{
+				Optional: true,
+			},
+			"id": framework.IDAttribute(),
+			"policy_store_id": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"policy_template_id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"statement": schema.StringAttribute{
+				Required: true,
+			},
+		},
+	}
+
+	response.Schema = s
+}
+
+func (r *resourcePolicyTemplate) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	conn := r.Meta().VerifiedPermissionsClient(ctx)
+	var plan resourcePolicyTemplateData
+
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	input := &verifiedpermissions.CreatePolicyTemplateInput{}
+	response.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	input.ClientToken = aws.String(id.UniqueId())
+
+	output, err := conn.CreatePolicyTemplate(ctx, input)
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionCreating, ResNamePolicyTemplate, plan.PolicyStoreID.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	state := plan
+	state.ID = flex.StringValueToFramework(ctx, fmt.Sprintf("%s:%s", aws.ToString(output.PolicyStoreId), aws.ToString(output.PolicyTemplateId)))
+
+	response.Diagnostics.Append(flex.Flatten(ctx, output, &state)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
+}
+
+func (r *resourcePolicyTemplate) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	conn := r.Meta().VerifiedPermissionsClient(ctx)
+	var state resourcePolicyTemplateData
+
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	policyStoreID, policyTemplateID, err := policyTemplateParseID(state.ID.ValueString())
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionReading, ResNamePolicyTemplate, state.ID.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	output, err := findPolicyTemplateByID(ctx, conn, policyStoreID, policyTemplateID)
+
+	if tfresource.NotFound(err) {
+		response.State.RemoveResource(ctx)
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionReading, ResNamePolicyTemplate, state.ID.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	response.Diagnostics.Append(flex.Flatten(ctx, output, &state)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
+}
+
+func (r *resourcePolicyTemplate) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	conn := r.Meta().VerifiedPermissionsClient(ctx)
+	var state, plan resourcePolicyTemplateData
+
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if !plan.Description.Equal(state.Description) || !plan.Statement.Equal(state.Statement) {
+		input := &verifiedpermissions.UpdatePolicyTemplateInput{}
+		response.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		output, err := conn.UpdatePolicyTemplate(ctx, input)
+
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionUpdating, ResNamePolicyTemplate, state.ID.ValueString(), err),
+				err.Error(),
+			)
+			return
+		}
+
+		response.Diagnostics.Append(flex.Flatten(ctx, output, &plan)...)
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
+}
+
+func (r *resourcePolicyTemplate) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	conn := r.Meta().VerifiedPermissionsClient(ctx)
+	var state resourcePolicyTemplateData
+
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	tflog.Debug(ctx, "deleting Verified Permissions Policy Template", map[string]interface{}{
+		"id": state.ID.ValueString(),
+	})
+
+	input := &verifiedpermissions.DeletePolicyTemplateInput{
+		PolicyStoreId:    aws.String(state.PolicyStoreID.ValueString()),
+		PolicyTemplateId: aws.String(state.PolicyTemplateID.ValueString()),
+	}
+
+	_, err := conn.DeletePolicyTemplate(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionDeleting, ResNamePolicyTemplate, state.ID.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+}
+
+type resourcePolicyTemplateData struct {
+	CreatedDate      fwtypes.Timestamp `tfsdk:"created_date"`
+	Description      types.String      `tfsdk:"description"`
+	ID               types.String      `tfsdk:"id"`
+	PolicyStoreID    types.String      `tfsdk:"policy_store_id"`
+	PolicyTemplateID types.String      `tfsdk:"policy_template_id"`
+	Statement        types.String      `tfsdk:"statement"`
+}
+
+func findPolicyTemplateByID(ctx context.Context, conn *verifiedpermissions.Client, policyStoreId, id string) (*verifiedpermissions.GetPolicyTemplateOutput, error) {
+	in := &verifiedpermissions.GetPolicyTemplateInput{
+		PolicyStoreId:    aws.String(policyStoreId),
+		PolicyTemplateId: aws.String(id),
+	}
+	out, err := conn.GetPolicyTemplate(ctx, in)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.PolicyStoreId == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
+}
+
+func policyTemplateParseID(id string) (string, string, error) {
+	parts := strings.Split(id, ":")
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%s), expected POLICY-STORE-ID:POLICY-TEMPLATE-ID", id)
+}
