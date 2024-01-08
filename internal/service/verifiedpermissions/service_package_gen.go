@@ -30,6 +30,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Policy Store",
 		},
 		{
+			Factory: newResourcePolicyTemplate,
+			Name:    "Policy Template",
+		},
+		{
 			Factory: newResourceSchema,
 			Name:    "Schema",
 		},
@@ -41,13 +45,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
-	return []*types.ServicePackageSDKResource{
-		{
-			Factory:  ResourcePolicyTemplate,
-			TypeName: "aws_verifiedpermissions_policy_template",
-			Name:     "Policy Template",
-		},
-	}
+	return []*types.ServicePackageSDKResource{}
 }
 
 func (p *servicePackage) ServicePackageName() string {
