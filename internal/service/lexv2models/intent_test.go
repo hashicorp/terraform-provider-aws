@@ -1138,34 +1138,35 @@ resource "aws_lexv2models_intent" "test" {
       message_selection_strategy = "Ordered"
 
       prompt_attempts_specification {
-        Attempt1 {
-          allowed_input_types {
-            allow_audio_input = true
-            allow_dtmf_input  = true
+        map_block_key = "Initial"
+        
+        allowed_input_types {
+          allow_audio_input = true
+          allow_dtmf_input  = true
+        }
+
+        allow_interrupt = true
+
+        audio_and_dtmf_input_specification {
+          start_timeout_ms = 1
+
+          audio_specification {
+            end_timeout_ms = 1
+            max_length_ms = 1
           }
 
-          allow_interrupt = true
-
-          audio_and_dtmf_input_specification {
-            start_timeout_ms = 1
-
-            audio_specification {
-              end_timeout_ms = 1
-              max_length_ms = 1
-            }
-
-            dtmf_specification {
-              deletion_character = "#"
-              end_character      = "#"
-              end_timeout_ms     = 1
-              max_length         = 1
-            }
-          }
-
-          text_input_specification {
-            start_timeout_ms = 1
+          dtmf_specification {
+            deletion_character = "#"
+            end_character      = "#"
+            end_timeout_ms     = 1
+            max_length         = 1
           }
         }
+
+        text_input_specification {
+          start_timeout_ms = 1
+        }
+      
       }
     }
   }

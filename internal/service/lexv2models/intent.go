@@ -34,8 +34,10 @@ import (
 // todo:
 //  x invalid result object
 //  x get basic test working
+//  x disappears
 //  x import/ID
-//  - test all attributes
+//  x update autoflex for StringEnum map keys
+//  - test all (reasonable number) attributes
 //  x tags (no tags on intents)
 //  - slot_priority on create
 //  x prompt_attempts_specification schema
@@ -43,10 +45,10 @@ import (
 //  x prompt_attempts_specification test
 //  x intent-slots-slot-value-override schema
 //  x intent-slots-slot-value-override model
-//  - intent-slots-slot-value-override test
+//  x intent-slots-slot-value-override test
 //  x timeouts
+//  - get config with confirmation_setting.prompt_specification.prompt_attempts_specification working
 //  - updates
-//  x disappears
 
 // @FrameworkResource(name="Intent")
 func newResourceIntent(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -178,7 +180,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[SlotValueOverride](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				flex.MapBlockKey: schema.StringAttribute{
+				"map_block_key": schema.StringAttribute{
 					Required: true,
 					// pattern: ^([0-9a-zA-Z][_-]?){1,100}$
 				},
@@ -378,7 +380,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[PromptAttemptsSpecification](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				flex.MapBlockKey: schema.StringAttribute{
+				"map_block_key": schema.StringAttribute{
 					Required:   true,
 					CustomType: fwtypes.StringEnumType[PromptAttemptsType](),
 				},
