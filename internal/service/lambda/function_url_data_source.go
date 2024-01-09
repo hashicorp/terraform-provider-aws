@@ -131,7 +131,7 @@ func dataSourceFunctionURLRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("qualifier", qualifier)
 
 	// Function URL endpoints have the following format:
-	// https://<url-id>.lambda-url.<region>.on.aws
+	// https://<url-id>.lambda-url.<region>.on.aws/
 	if v, err := url.Parse(functionURL); err != nil {
 		return sdkdiag.AppendErrorf(diags, "parsing URL (%s): %s", functionURL, err)
 	} else if v := strings.Split(v.Host, "."); len(v) > 0 {
