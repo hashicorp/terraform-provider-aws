@@ -7,21 +7,21 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/kafka"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccKafkaBootstrapBrokersDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_msk_bootstrap_brokers.test"
-	resourceName := "aws_msk_serverless_cluster.test"
+	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kafka.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -45,25 +45,30 @@ func TestAccKafkaBootstrapBrokersDataSource_basic(t *testing.T) {
 
 func testAccBootstrapBrokersDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
-resource "aws_msk_serverless_cluster" "test" {
-  cluster_name = %[1]q
+resource "aws_msk_cluster" "test" {
+  cluster_name           = %[1]q
+  kafka_version          = "2.8.1"
+  number_of_broker_nodes = 3
 
-  vpc_config {
-    subnet_ids      = aws_subnet.test[*].id
+  broker_node_group_info {
+    client_subnets  = aws_subnet.test[*].id
+    instance_type   = "kafka.t3.small"
     security_groups = [aws_security_group.test.id]
-  }
 
-  client_authentication {
-    sasl {
-      iam {
-        enabled = true
+    storage_info {
+      ebs_storage_info {
+        volume_size = 10
       }
     }
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
 data "aws_msk_bootstrap_brokers" "test" {
-  cluster_arn = aws_msk_serverless_cluster.test.arn
+  cluster_arn = aws_msk_cluster.test.arn
 }
 `, rName))
 }
