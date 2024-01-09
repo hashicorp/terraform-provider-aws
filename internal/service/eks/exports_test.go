@@ -5,6 +5,7 @@ package eks
 
 // Exports for use in tests only.
 var (
+	ResourceAccessEntry            = resourceAccessEntry
 	ResourceAddon                  = resourceAddon
 	ResourceCluster                = resourceCluster
 	ResourceFargateProfile         = resourceFargateProfile

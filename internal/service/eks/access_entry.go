@@ -25,7 +25,7 @@ import (
 
 // @SDKResource("aws_eks_access_entry", name="Access Entry")
 // @Tags(identifierAttribute="arn")
-func ResourceAccessEntry() *schema.Resource {
+func resourceAccessEntry() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessEntryCreate,
 		ReadWithoutTimeout:   resourceAccessEntryRead,

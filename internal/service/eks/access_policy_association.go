@@ -15,13 +15,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_eks_access_policy_association", name="Access Policy Association")
-func ResourceAccessPolicyAssociation() *schema.Resource {
+func resourceAccessPolicyAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessPolicyAssociationCreate,
 		ReadWithoutTimeout:   resourceAccessPolicyAssociationRead,
@@ -36,30 +40,16 @@ func ResourceAccessPolicyAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"associated_access_policy": {
-				Type:     schema.TypeList,
-				MinItems: 1,
-				MaxItems: 1,
+			"associated_at": {
+				Type:     schema.TypeString,
 				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"associated_at": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"modified_at": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
 			},
-
 			"access_scope": {
 				Type:     schema.TypeList,
 				MinItems: 1,
 				MaxItems: 1,
 				Required: true,
+				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
@@ -82,7 +72,10 @@ func ResourceAccessPolicyAssociation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validClusterName,
 			},
-
+			"modified_at": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"policy_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -95,6 +88,8 @@ func ResourceAccessPolicyAssociation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			names.AttrTags:    tftags.TagsSchemaComputed(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -111,7 +106,7 @@ func resourceAccessPolicyAssociationCreate(ctx context.Context, d *schema.Resour
 		ClusterName:  aws.String(clusterName),
 		PrincipalArn: aws.String(principal_arn),
 		PolicyArn:    aws.String(policy_arn),
-		AccessScope:  expandAccessScope(d.Get("access_Scope").([]interface{})),
+		AccessScope:  expandAccessScope(d.Get("access_scope").([]interface{})),
 	}
 
 	_, err := conn.AssociateAccessPolicy(ctx, input)
@@ -154,6 +149,13 @@ func resourceAccessPolicyAssociationRead(ctx context.Context, d *schema.Resource
 		return diags
 	}
 
+	d.Set("access_scope", flattenAccessScope(output.AccessScope))
+	d.Set("associated_at", aws.ToTime(output.AssociatedAt).String())
+	d.Set("cluster_name", clusterName)
+	d.Set("modified_at", aws.ToTime(output.ModifiedAt).String())
+	d.Set("policy_arn", policy_arn)
+	d.Set("principal_arn", principal_arn)
+
 	return diags
 }
 
@@ -176,9 +178,9 @@ func resourceAccessPolicyAssociationDelete(ctx context.Context, d *schema.Resour
 	}
 	_, err = conn.DisassociateAccessPolicy(ctx, input)
 
-	// if tfawserr.ErrCodeEquals(err, eks.ErrCodeResourceNotFoundException) {
-	// 	return diags
-	// }
+	if errs.IsAErrorMessageContains[*types.ResourceNotFoundException](err, "The specified resource could not be found") {
+		return nil
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EKS Policy Associattion (%s): %s", d.Id(), err)
@@ -192,28 +194,41 @@ func expandAccessScope(l []interface{}) *types.AccessScope {
 		return nil
 	}
 
-	// m := l[0].(map[string]interface{})
+	m := l[0].(map[string]interface{})
 
 	accessScope := &types.AccessScope{}
 
-	// if v, ok := m["type"].(string); ok && v != "" {
-	// 	accessScope.Type = types.AccessScopeType(aws.String(v))
-	// }
+	if v, ok := m["type"].(string); ok && v != "" {
+		accessScope.Type = types.AccessScopeType(*aws.String(v))
+	}
 
-	// if v, ok := m["namespaces"].(*schema.Set); ok && v.Len() > 0 {
-	// 	accessScope.Namespaces = flex.ExpandStringSet(v)
-	// }
+	if v, ok := m["namespaces"]; ok {
+		accessScope.Namespaces = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
 
 	return accessScope
 }
 
-func FindAccessPolicyByID(ctx context.Context, conn *eks.Client, clusterName string, principal_arn string, policy_arn string) (types.AssociatedAccessPolicy, error) {
+func flattenAccessScope(apiObject *types.AccessScope) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"type":       (*string)(&apiObject.Type),
+		"namespaces": apiObject.Namespaces,
+	}
+
+	return []interface{}{tfMap}
+}
+
+func FindAccessPolicyByID(ctx context.Context, conn *eks.Client, clusterName string, principal_arn string, policy_arn string) (*types.AssociatedAccessPolicy, error) {
 	input := &eks.ListAssociatedAccessPoliciesInput{
 		ClusterName:  aws.String(clusterName),
 		PrincipalArn: aws.String(principal_arn),
 	}
 
-	var result types.AssociatedAccessPolicy
+	var result *types.AssociatedAccessPolicy
 
 	output, err := conn.ListAssociatedAccessPolicies(ctx, input)
 
@@ -230,7 +245,7 @@ func FindAccessPolicyByID(ctx context.Context, conn *eks.Client, clusterName str
 
 	for _, accessPolicy := range output.AssociatedAccessPolicies {
 		if aws.ToString(accessPolicy.PolicyArn) == policy_arn {
-			result = accessPolicy
+			result = &accessPolicy
 		}
 	}
 

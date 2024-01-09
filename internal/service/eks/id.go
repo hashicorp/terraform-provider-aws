@@ -46,7 +46,7 @@ func AccessEntryParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected cluster-name%[2]sprincipal_arn", id, accessEntryResourceIDSeparator)
 }
 
-const associatePolicyResourceIDSeparator = ":"
+const associatePolicyResourceIDSeparator = "#"
 
 func AssociatePolicyCreateResourceID(clusterName, principal_arn, policy_arn string) string {
 	parts := []string{clusterName, principal_arn, policy_arn}
@@ -56,7 +56,7 @@ func AssociatePolicyCreateResourceID(clusterName, principal_arn, policy_arn stri
 }
 
 func AssociatePolicyParseResourceID(id string) (string, string, string, error) {
-	parts := strings.Split(id, associatePolicyResourceIDSeparator)
+	parts := strings.SplitN(id, associatePolicyResourceIDSeparator, 3)
 
 	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
 		return parts[0], parts[1], parts[2], nil

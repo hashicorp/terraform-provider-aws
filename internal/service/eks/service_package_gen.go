@@ -69,12 +69,17 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAccessEntry,
+			Factory:  resourceAccessEntry,
 			TypeName: "aws_eks_access_entry",
 			Name:     "Access Entry",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
+		},
+		{
+			Factory:  resourceAccessPolicyAssociation,
+			TypeName: "aws_eks_access_policy_association",
+			Name:     "Access Policy Association",
 		},
 		{
 			Factory:  resourceAddon,
