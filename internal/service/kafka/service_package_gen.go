@@ -28,8 +28,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Bootstrap Brokers",
 		},
 		{
-			Factory:  DataSourceBrokerNodes,
+			Factory:  dataSourceBrokerNodes,
 			TypeName: "aws_msk_broker_nodes",
+			Name:     "Broker Nodes",
 		},
 		{
 			Factory:  dataSourceCluster,
