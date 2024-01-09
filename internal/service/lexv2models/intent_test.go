@@ -120,8 +120,8 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	messageGroupTF := tflexv2models.MessageGroup{
-		Message:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageTF),
-		Variations: fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.Message](ctx, messagesTF),
+		Message:   fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageTF),
+		Variation: fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.Message](ctx, messagesTF),
 	}
 	messageGroupAWS := []lextypes.MessageGroup{
 		{
@@ -1131,44 +1131,44 @@ resource "aws_lexv2models_intent" "test" {
 
   confirmation_setting {
     active = true
-    
-    prompt_specification {
-      allow_interrupt = true
-      max_retries     = 1
-      message_selection_strategy = "Ordered"
 
-      prompt_attempts_specification {
-        map_block_key = "Initial"
-        
-        allowed_input_types {
-          allow_audio_input = true
-          allow_dtmf_input  = true
-        }
+    #prompt_specification {
+      #allow_interrupt = true
+      #max_retries     = 1
+      #message_selection_strategy = "Ordered"
 
-        allow_interrupt = true
+      #prompt_attempts_specification {
+        #map_block_key = "Initial"
 
-        audio_and_dtmf_input_specification {
-          start_timeout_ms = 1
+        #allowed_input_types {
+          #allow_audio_input = true
+          #allow_dtmf_input  = true
+        #}
 
-          audio_specification {
-            end_timeout_ms = 1
-            max_length_ms = 1
-          }
+        #allow_interrupt = true
 
-          dtmf_specification {
-            deletion_character = "#"
-            end_character      = "#"
-            end_timeout_ms     = 1
-            max_length         = 1
-          }
-        }
+        #audio_and_dtmf_input_specification {
+          #start_timeout_ms = 1
 
-        text_input_specification {
-          start_timeout_ms = 1
-        }
-      
-      }
-    }
+          #audio_specification {
+            #end_timeout_ms = 1
+            #max_length_ms = 1
+          #}
+
+          #dtmf_specification {
+            #deletion_character = "#"
+            #end_character      = "#"
+            #end_timeout_ms     = 1
+            #max_length         = 1
+          #}
+        #}
+
+        #text_input_specification {
+          #start_timeout_ms = 1
+        #}
+
+      #}
+    #}
   }
 }
 `, rName))

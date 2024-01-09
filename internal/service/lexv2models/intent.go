@@ -79,84 +79,159 @@ func (r *resourceIntent) Metadata(_ context.Context, req resource.MetadataReques
 }
 
 func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	// building blocks for the schema
-	messageNBO := schema.NestedBlockObject{
-		Blocks: map[string]schema.Block{
-			"custom_playload": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
+	slotPriorityLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[SlotPriority](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"priority": schema.Int64Attribute{
+					Required: true,
 				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[CustomPayload](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"value": schema.StringAttribute{
-							Required: true,
-						},
-					},
-				},
-			},
-			"image_response_card": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[ImageResponseCard](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"image_url": schema.StringAttribute{
-							Optional: true,
-						},
-						"subtitle": schema.StringAttribute{
-							Optional: true,
-						},
-						"title": schema.StringAttribute{
-							Required: true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"button": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[Button](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"text": schema.StringAttribute{
-										Required: true,
-									},
-									"value": schema.StringAttribute{
-										Required: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"plain_text_message": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[PlainTextMessage](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"value": schema.StringAttribute{
-							Required: true,
-						},
-					},
-				},
-			},
-			"ssml_message": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[SSMLMessage](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"value": schema.StringAttribute{
-							Required: true,
-						},
-					},
+				"slot_id": schema.StringAttribute{
+					Required: true,
 				},
 			},
 		},
 	}
+
+	sampleUtteranceLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[SampleUtterance](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"utterance": schema.StringAttribute{
+					Required: true,
+				},
+			},
+		},
+	}
+
+	outputContextLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(10),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[OutputContext](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"name": schema.StringAttribute{
+					Required: true,
+				},
+				"time_to_live_in_seconds": schema.Int64Attribute{
+					Required: true,
+				},
+				"turns_to_live": schema.Int64Attribute{
+					Required: true,
+				},
+			},
+		},
+	}
+
+	kendraConfigurationLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[KendraConfiguration](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"kendra_index": schema.StringAttribute{
+					Required: true,
+				},
+				"query_filter_string": schema.StringAttribute{
+					Optional: true,
+				},
+				"query_filter_string_enabled": schema.BoolAttribute{
+					Optional: true,
+				},
+			},
+		},
+	}
+
+	customPayloadLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[CustomPayload](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"value": schema.StringAttribute{
+					Required: true,
+				},
+			},
+		},
+	}
+
+	buttonLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[Button](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"text": schema.StringAttribute{
+					Required: true,
+				},
+				"value": schema.StringAttribute{
+					Required: true,
+				},
+			},
+		},
+	}
+
+	imageResponseCardLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[ImageResponseCard](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"image_url": schema.StringAttribute{
+					Optional: true,
+				},
+				"subtitle": schema.StringAttribute{
+					Optional: true,
+				},
+				"title": schema.StringAttribute{
+					Required: true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"button": buttonLNB,
+			},
+		},
+	}
+
+	plainTextMessageLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[PlainTextMessage](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"value": schema.StringAttribute{
+					Required: true,
+				},
+			},
+		},
+	}
+
+	ssmlMessageLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[SSMLMessage](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"value": schema.StringAttribute{
+					Required: true,
+				},
+			},
+		},
+	}
+
+	messageNBO := schema.NestedBlockObject{
+		Blocks: map[string]schema.Block{
+			"custom_playload":     customPayloadLNB,
+			"image_response_card": imageResponseCardLNB,
+			"plain_text_message":  plainTextMessageLNB,
+			"ssml_message":        ssmlMessageLNB,
+		},
+	}
+
 	messageGroupLNB := schema.ListNestedBlock{
 		Validators: []validator.List{
 			listvalidator.SizeAtLeast(1),
@@ -171,9 +246,26 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 					CustomType:   fwtypes.NewListNestedObjectTypeOf[Message](ctx),
 					NestedObject: messageNBO,
 				},
-				"variations": schema.ListNestedBlock{
+				"variation": schema.ListNestedBlock{
 					CustomType:   fwtypes.NewListNestedObjectTypeOf[Message](ctx),
 					NestedObject: messageNBO,
+				},
+			},
+		},
+	}
+
+	slotValueLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[SlotValue](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"interpreted_value": schema.StringAttribute{
+					Optional: true,
+					Validators: []validator.String{
+						stringvalidator.LengthAtLeast(1),
+					},
 				},
 			},
 		},
@@ -198,27 +290,50 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"value": schema.ListNestedBlock{
-					Validators: []validator.List{
-						listvalidator.SizeAtMost(1),
-					},
-					CustomType: fwtypes.NewListNestedObjectTypeOf[SlotValue](ctx),
-					NestedObject: schema.NestedBlockObject{
-						Attributes: map[string]schema.Attribute{
-							"interpreted_value": schema.StringAttribute{
-								Optional: true,
-								Validators: []validator.String{
-									stringvalidator.LengthAtLeast(1),
-								},
-							},
-						},
-					},
-				},
+				"value": slotValueLNB,
 			},
 		},
 	}
 
 	// slotValueOverrideLNB.NestedObject.Blocks["values"] = slotValueOverrideLNB // recursive type, purposely left out, future feature
+
+	dialogActionLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[DialogAction](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"type": schema.StringAttribute{
+					Required:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.DialogActionType](),
+				},
+				"slot_to_elicit": schema.StringAttribute{
+					Optional: true,
+				},
+				"suppress_next_message": schema.BoolAttribute{
+					Optional: true,
+				},
+			},
+		},
+	}
+
+	intentOverrideLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[IntentOverride](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"name": schema.StringAttribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"slot": slotValueOverrideLNB,
+			},
+		},
+	}
 
 	dialogStateNBO := schema.NestedBlockObject{
 		Attributes: map[string]schema.Attribute{
@@ -228,44 +343,11 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"dialog_action": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[DialogAction](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"type": schema.StringAttribute{
-							Required:   true,
-							CustomType: fwtypes.StringEnumType[awstypes.DialogActionType](),
-						},
-						"slot_to_elicit": schema.StringAttribute{
-							Optional: true,
-						},
-						"suppress_next_message": schema.StringAttribute{
-							Optional: true,
-						},
-					},
-				},
-			},
-			"intent": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[IntentOverride](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
-							Optional: true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"slot": slotValueOverrideLNB,
-					},
-				},
-			},
+			"dialog_action": dialogActionLNB,
+			"intent":        intentOverrideLNB,
 		},
 	}
+
 	responseSpecificationLNB := schema.ListNestedBlock{
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
@@ -282,6 +364,65 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 			},
 		},
 	}
+
+	conditionLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeBetween(1, 1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[Condition](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"expression_string": schema.StringAttribute{
+					Required: true,
+				},
+			},
+		},
+	}
+
+	conditionalBranchLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtLeast(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[ConditionalBranch](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"name": schema.StringAttribute{
+					Required: true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"condition": conditionLNB,
+				"next_step": schema.ListNestedBlock{
+					Validators: []validator.List{
+						listvalidator.SizeBetween(1, 1),
+					},
+					CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
+					NestedObject: dialogStateNBO,
+				},
+				"response": responseSpecificationLNB,
+			},
+		},
+	}
+
+	defaultBranchLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeBetween(1, 1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[DefaultConditionalBranch](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"next_step": schema.ListNestedBlock{
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
+					NestedObject: dialogStateNBO,
+				},
+				"response": responseSpecificationLNB,
+			},
+		},
+	}
+
 	conditionalSpecificationLNB := schema.ListNestedBlock{
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
@@ -294,92 +435,167 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"conditional_branch": schema.ListNestedBlock{
-					Validators: []validator.List{
-						listvalidator.SizeAtLeast(1),
-					},
-					CustomType: fwtypes.NewListNestedObjectTypeOf[ConditionalBranch](ctx),
-					NestedObject: schema.NestedBlockObject{
-						Attributes: map[string]schema.Attribute{
-							"name": schema.StringAttribute{
-								Required: true,
-							},
-						},
-						Blocks: map[string]schema.Block{
-							"condition": schema.ListNestedBlock{
-								Validators: []validator.List{
-									listvalidator.SizeBetween(1, 1),
-								},
-								CustomType: fwtypes.NewListNestedObjectTypeOf[Condition](ctx),
-								NestedObject: schema.NestedBlockObject{
-									Attributes: map[string]schema.Attribute{
-										"expression_string": schema.StringAttribute{
-											Required: true,
-										},
-									},
-								},
-							},
-							"next_step": schema.ListNestedBlock{
-								Validators: []validator.List{
-									listvalidator.SizeBetween(1, 1),
-								},
-								CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
-								NestedObject: dialogStateNBO,
-							},
-							"response": responseSpecificationLNB,
-						},
+				"conditional_branch": conditionalBranchLNB,
+				"default_branch":     defaultBranchLNB,
+			},
+		},
+	}
+
+	nextStepLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
+		NestedObject: dialogStateNBO,
+	}
+
+	closingSettingLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[IntentClosingSetting](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"active": schema.BoolAttribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"closing_response": responseSpecificationLNB,
+				"conditional":      conditionalSpecificationLNB,
+				"next_step":        nextStepLNB,
+			},
+		},
+	}
+
+	inputContextLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(5),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[InputContext](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"name": schema.StringAttribute{
+					Required: true,
+				},
+			},
+		},
+	}
+
+	allowedInputTypesLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeBetween(1, 1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[AllowedInputTypes](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"allow_audio_input": schema.BoolAttribute{
+					Required: true,
+				},
+				"allow_dtmf_input": schema.BoolAttribute{
+					Required: true,
+				},
+			},
+		},
+	}
+
+	audioSpecificationLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[AudioSpecification](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"end_timeout_ms": schema.Int64Attribute{
+					Required: true,
+					Validators: []validator.Int64{
+						int64validator.AtLeast(1),
 					},
 				},
-				"default_branch": schema.ListNestedBlock{
-					Validators: []validator.List{
-						listvalidator.SizeBetween(1, 1),
-					},
-					CustomType: fwtypes.NewListNestedObjectTypeOf[DefaultConditionalBranch](ctx),
-					NestedObject: schema.NestedBlockObject{
-						Blocks: map[string]schema.Block{
-							"next_step": schema.ListNestedBlock{
-								Validators: []validator.List{
-									listvalidator.SizeAtMost(1),
-								},
-								CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
-								NestedObject: dialogStateNBO,
-							},
-							"response": responseSpecificationLNB,
-						},
+				"max_length_ms": schema.Int64Attribute{
+					Required: true,
+					Validators: []validator.Int64{
+						int64validator.AtLeast(1),
 					},
 				},
 			},
 		},
 	}
-	failureSuccessTimeoutNBO := schema.NestedBlockObject{
-		Blocks: map[string]schema.Block{
-			"failure_conditional": conditionalSpecificationLNB,
-			"failure_next_step": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
+
+	dtmfSpecificationLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[DTMFSpecification](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"deletion_character": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.RegexMatches(
+							regexp.MustCompile(`^[A-D0-9#*]{1}$`),
+							"alphanumeric characters",
+						),
+					},
 				},
-				CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
-				NestedObject: dialogStateNBO,
-			},
-			"failure_response":    responseSpecificationLNB,
-			"success_conditional": conditionalSpecificationLNB,
-			"success_next_step": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
+				"end_character": schema.StringAttribute{
+					Required: true,
+					Validators: []validator.String{
+						stringvalidator.RegexMatches(
+							regexp.MustCompile(`^[A-D0-9#*]{1}$`),
+							"alphanumeric characters",
+						),
+					},
 				},
-				CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
-				NestedObject: dialogStateNBO,
-			},
-			"success_response":    responseSpecificationLNB,
-			"timeout_conditional": conditionalSpecificationLNB,
-			"timeout_next_step": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
+				"end_timeout_ms": schema.Int64Attribute{
+					Required: true,
+					Validators: []validator.Int64{
+						int64validator.AtLeast(1),
+					},
 				},
-				CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
-				NestedObject: dialogStateNBO,
+				"max_length": schema.Int64Attribute{
+					Required: true,
+					Validators: []validator.Int64{
+						int64validator.Between(1, 1024),
+					},
+				},
 			},
-			"timeout_response": responseSpecificationLNB,
+		},
+	}
+
+	audioAndDTMFInputSpecificationLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[AudioAndDTMFInputSpecification](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"start_timeout_ms": schema.Int64Attribute{
+					Required: true,
+					Validators: []validator.Int64{
+						int64validator.AtLeast(1),
+					},
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"audio_specification": audioSpecificationLNB,
+				"dtmf_specification":  dtmfSpecificationLNB,
+			},
+		},
+	}
+
+	textInputSpecificationLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[TextInputSpecification](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"start_timeout_ms": schema.Int64Attribute{
+					Required: true,
+					//Min:       1,
+				},
+			},
 		},
 	}
 
@@ -399,121 +615,245 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"allowed_input_types": schema.ListNestedBlock{
-					Validators: []validator.List{
-						listvalidator.SizeBetween(1, 1),
-					},
-					CustomType: fwtypes.NewListNestedObjectTypeOf[AllowedInputTypes](ctx),
-					NestedObject: schema.NestedBlockObject{
-						Attributes: map[string]schema.Attribute{
-							"allow_audio_input": schema.BoolAttribute{
-								Required: true,
-							},
-							"allow_dtmf_input": schema.BoolAttribute{
-								Required: true,
-							},
-						},
-					},
+				"allowed_input_types":                allowedInputTypesLNB,
+				"audio_and_dtmf_input_specification": audioAndDTMFInputSpecificationLNB,
+				"text_input_specification":           textInputSpecificationLNB,
+			},
+		},
+	}
+
+	promptSpecificationLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeBetween(1, 1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[PromptSpecification](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"allow_interrupt": schema.BoolAttribute{
+					Optional: true,
 				},
-				"audio_and_dtmf_input_specification": schema.ListNestedBlock{
-					Validators: []validator.List{
-						listvalidator.SizeAtMost(1),
-					},
-					CustomType: fwtypes.NewListNestedObjectTypeOf[AudioAndDTMFInputSpecification](ctx),
-					NestedObject: schema.NestedBlockObject{
-						Attributes: map[string]schema.Attribute{
-							"start_timeout_ms": schema.Int64Attribute{
-								Required: true,
-								Validators: []validator.Int64{
-									int64validator.AtLeast(1),
-								},
-							},
-						},
-						Blocks: map[string]schema.Block{
-							"audio_specification": schema.ListNestedBlock{
-								Validators: []validator.List{
-									listvalidator.SizeAtMost(1),
-								},
-								CustomType: fwtypes.NewListNestedObjectTypeOf[AudioSpecification](ctx),
-								NestedObject: schema.NestedBlockObject{
-									Attributes: map[string]schema.Attribute{
-										"end_timeout_ms": schema.Int64Attribute{
-											Required: true,
-											Validators: []validator.Int64{
-												int64validator.AtLeast(1),
-											},
-										},
-										"max_length_ms": schema.Int64Attribute{
-											Required: true,
-											Validators: []validator.Int64{
-												int64validator.AtLeast(1),
-											},
-										},
-									},
-								},
-							},
-							"dtmf_specification": schema.ListNestedBlock{
-								Validators: []validator.List{
-									listvalidator.SizeAtMost(1),
-								},
-								CustomType: fwtypes.NewListNestedObjectTypeOf[DTMFSpecification](ctx),
-								NestedObject: schema.NestedBlockObject{
-									Attributes: map[string]schema.Attribute{
-										"deletion_character": schema.StringAttribute{
-											Required: true,
-											Validators: []validator.String{
-												stringvalidator.RegexMatches(
-													regexp.MustCompile(`^[A-D0-9#*]{1}$`),
-													"alphanumeric characters",
-												),
-											},
-										},
-										"end_character": schema.StringAttribute{
-											Required: true,
-											Validators: []validator.String{
-												stringvalidator.RegexMatches(
-													regexp.MustCompile(`^[A-D0-9#*]{1}$`),
-													"alphanumeric characters",
-												),
-											},
-										},
-										"end_timeout_ms": schema.Int64Attribute{
-											Required: true,
-											Validators: []validator.Int64{
-												int64validator.AtLeast(1),
-											},
-										},
-										"max_length": schema.Int64Attribute{
-											Required: true,
-											Validators: []validator.Int64{
-												int64validator.Between(1, 1024),
-											},
-										},
-									},
-								},
-							},
-						},
-					},
+				"max_retries": schema.Int64Attribute{
+					Required: true,
 				},
-				"text_input_specification": schema.ListNestedBlock{
-					Validators: []validator.List{
-						listvalidator.SizeAtMost(1),
-					},
-					CustomType: fwtypes.NewListNestedObjectTypeOf[TextInputSpecification](ctx),
-					NestedObject: schema.NestedBlockObject{
-						Attributes: map[string]schema.Attribute{
-							"start_timeout_ms": schema.Int64Attribute{
-								Required: true,
-								//Min:       1,
-							},
-						},
-					},
+				"message_selection_strategy": schema.StringAttribute{
+					Optional:   true,
+					CustomType: fwtypes.StringEnumType[awstypes.MessageSelectionStrategy](),
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"message_group":                 messageGroupLNB,
+				"prompt_attempts_specification": promptAttemptsSpecificationLNB,
+			},
+		},
+	}
+
+	failureSuccessTimeoutNBO := schema.NestedBlockObject{
+		Blocks: map[string]schema.Block{
+			"failure_conditional": conditionalSpecificationLNB,
+			"failure_next_step":   nextStepLNB,
+			"failure_response":    responseSpecificationLNB,
+			"success_conditional": conditionalSpecificationLNB,
+			"success_next_step":   nextStepLNB,
+			"success_response":    responseSpecificationLNB,
+			"timeout_conditional": conditionalSpecificationLNB,
+			"timeout_next_step":   nextStepLNB,
+			"timeout_response":    responseSpecificationLNB,
+		},
+	}
+
+	postCodeHookSpecificationLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeBetween(1, 1),
+		},
+		CustomType:   fwtypes.NewListNestedObjectTypeOf[FailureSuccessTimeout](ctx),
+		NestedObject: failureSuccessTimeoutNBO,
+	}
+
+	codeHookLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[DialogCodeHookInvocationSetting](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"active": schema.BoolAttribute{
+					Required: true,
+				},
+				"enable_code_hook_invocation": schema.BoolAttribute{
+					Required: true,
+				},
+				"invocation_label": schema.StringAttribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"post_code_hook_specification": postCodeHookSpecificationLNB,
+			},
+		},
+	}
+
+	elicitationCodeHookInvocationSettingLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[FulfillmentStartResponseSpecification](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"enable_code_hook_invocation": schema.BoolAttribute{
+					Optional: true,
+				},
+				"invocation_label": schema.StringAttribute{
+					Optional: true,
 				},
 			},
 		},
 	}
 
-	// start of schema proper
+	confirmationSettingLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[IntentConfirmationSetting](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"active": schema.BoolAttribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"code_hook":                codeHookLNB,
+				"confirmation_conditional": conditionalSpecificationLNB,
+				"confirmation_next_step":   nextStepLNB,
+				"confirmation_response":    responseSpecificationLNB,
+				"declination_conditional":  conditionalSpecificationLNB,
+				"declination_next_step":    nextStepLNB,
+				"declination_response":     responseSpecificationLNB,
+				"elicitation_code_hook":    elicitationCodeHookInvocationSettingLNB,
+				"failure_conditional":      conditionalSpecificationLNB,
+				"failure_next_step":        nextStepLNB,
+				"failure_response":         responseSpecificationLNB,
+				"prompt_specification":     promptSpecificationLNB,
+			},
+		},
+	}
+
+	initialResponseSettingLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[InitialResponseSetting](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Blocks: map[string]schema.Block{
+				"code_hook":        codeHookLNB,
+				"conditional":      conditionalSpecificationLNB,
+				"initial_response": responseSpecificationLNB,
+				"next_step":        nextStepLNB,
+			},
+		},
+	}
+
+	updateResponseLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[FulfillmentUpdateResponseSpecification](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"allow_interrupt": schema.BoolAttribute{
+					Optional: true,
+				},
+				"frequency_in_seconds": schema.Int64Attribute{
+					Required: true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"message_group": messageGroupLNB,
+			},
+		},
+	}
+
+	startResponseLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[FulfillmentStartResponseSpecification](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"allow_interrupt": schema.BoolAttribute{
+					Optional: true,
+				},
+				"delay_in_seconds": schema.Int64Attribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"message_group": messageGroupLNB,
+			},
+		},
+	}
+
+	fulfillmentUpdatesSpecificationLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[FulfillmentUpdatesSpecification](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"active": schema.BoolAttribute{
+					Required: true,
+				},
+				"timeout_in_seconds": schema.Int64Attribute{
+					Optional: true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"start_response":  startResponseLNB,
+				"update_response": updateResponseLNB,
+			},
+		},
+	}
+
+	fulfillmentCodeHookLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[FulfillmentCodeHookSettings](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"active": schema.BoolAttribute{
+					Computed: true,
+				},
+				"enabled": schema.BoolAttribute{
+					Required: true,
+				},
+			},
+			Blocks: map[string]schema.Block{
+				"fulfillment_updates_specification": fulfillmentUpdatesSpecificationLNB,
+				"post_fulfillment_status_specification": schema.ListNestedBlock{
+					Validators: []validator.List{
+						listvalidator.SizeAtMost(1),
+					},
+					CustomType:   fwtypes.NewListNestedObjectTypeOf[FailureSuccessTimeout](ctx),
+					NestedObject: failureSuccessTimeoutNBO,
+				},
+			},
+		},
+	}
+
+	dialogCodeHookLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[DialogCodeHookSettings](ctx),
+		NestedObject: schema.NestedBlockObject{
+			Attributes: map[string]schema.Attribute{
+				"enabled": schema.BoolAttribute{
+					Required: true,
+				},
+			},
+		},
+	}
+
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"bot_id": schema.StringAttribute{
@@ -554,312 +894,16 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"dialog_code_hook": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[DialogCodeHookSettings](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"enabled": schema.BoolAttribute{
-							Required: true,
-						},
-					},
-				},
-			},
-			"fulfillment_code_hook": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[FulfillmentCodeHookSettings](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"enabled": schema.BoolAttribute{
-							Required: true,
-						},
-						"active": schema.BoolAttribute{
-							Computed: true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"fulfillment_updates_specification": schema.ListNestedBlock{
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							CustomType: fwtypes.NewListNestedObjectTypeOf[FulfillmentUpdatesSpecification](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"active": schema.BoolAttribute{
-										Required: true,
-									},
-									"timeout_in_seconds": schema.Int64Attribute{
-										Optional: true,
-									},
-								},
-								Blocks: map[string]schema.Block{
-									"start_response": schema.ListNestedBlock{
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										CustomType: fwtypes.NewListNestedObjectTypeOf[FulfillmentStartResponseSpecification](ctx),
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"allow_interrupt": schema.BoolAttribute{
-													Optional: true,
-												},
-												"delay_in_seconds": schema.Int64Attribute{
-													Optional: true,
-												},
-											},
-											Blocks: map[string]schema.Block{
-												"message_group": schema.ListNestedBlock{
-													Validators: []validator.List{
-														listvalidator.SizeBetween(1, 5),
-													},
-													CustomType: fwtypes.NewListNestedObjectTypeOf[MessageGroup](ctx),
-													NestedObject: schema.NestedBlockObject{
-														Blocks: map[string]schema.Block{
-															"message": schema.ListNestedBlock{
-																Validators: []validator.List{
-																	listvalidator.SizeBetween(1, 1),
-																},
-																CustomType:   fwtypes.NewListNestedObjectTypeOf[Message](ctx),
-																NestedObject: messageNBO,
-															},
-															"variations": schema.ListNestedBlock{
-																CustomType:   fwtypes.NewListNestedObjectTypeOf[Message](ctx),
-																NestedObject: messageNBO,
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-									"update_response": schema.ListNestedBlock{
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										CustomType: fwtypes.NewListNestedObjectTypeOf[FulfillmentUpdateResponseSpecification](ctx),
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"allow_interrupt": schema.BoolAttribute{
-													Optional: true,
-												},
-												"frequency_in_seconds": schema.Int64Attribute{
-													Required: true,
-												},
-											},
-											Blocks: map[string]schema.Block{
-												"message_group": messageGroupLNB,
-											},
-										},
-									},
-								},
-							},
-						},
-						"post_fulfillment_status_specification": schema.ListNestedBlock{
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							CustomType:   fwtypes.NewListNestedObjectTypeOf[FailureSuccessTimeout](ctx),
-							NestedObject: failureSuccessTimeoutNBO,
-						},
-					},
-				},
-			},
-			"initial_response_setting": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[InitialResponseSetting](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Blocks: map[string]schema.Block{
-						"code_hook": schema.ListNestedBlock{
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							CustomType: fwtypes.NewListNestedObjectTypeOf[DialogCodeHookInvocationSetting](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"active": schema.BoolAttribute{
-										Required: true,
-									},
-									"enable_code_hook_invocation": schema.BoolAttribute{
-										Required: true,
-									},
-									"invocation_label": schema.StringAttribute{
-										Optional: true,
-									},
-								},
-								Blocks: map[string]schema.Block{
-									"post_code_hook_specification": schema.ListNestedBlock{
-										Validators: []validator.List{
-											listvalidator.SizeBetween(1, 1),
-										},
-										CustomType:   fwtypes.NewListNestedObjectTypeOf[FailureSuccessTimeout](ctx),
-										NestedObject: failureSuccessTimeoutNBO,
-									},
-								},
-							},
-						},
-						"conditional":      conditionalSpecificationLNB,
-						"initial_response": responseSpecificationLNB,
-						"next_step": schema.ListNestedBlock{
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
-							NestedObject: dialogStateNBO,
-						},
-					},
-				},
-			},
-			"input_context": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(5),
-				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[InputContext](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
-							Required: true,
-						},
-					},
-				},
-			},
-			"closing_setting": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[IntentClosingSetting](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"active": schema.BoolAttribute{
-							Optional: true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"closing_response": responseSpecificationLNB,
-						"conditional":      conditionalSpecificationLNB,
-						"next_step": schema.ListNestedBlock{
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
-							NestedObject: dialogStateNBO,
-						},
-					},
-				},
-			},
-			"confirmation_setting": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[IntentConfirmationSetting](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"active": schema.BoolAttribute{
-							Optional: true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"prompt_specification": schema.ListNestedBlock{
-							Validators: []validator.List{
-								listvalidator.SizeBetween(1, 1),
-							},
-							CustomType: fwtypes.NewListNestedObjectTypeOf[PromptSpecification](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"allow_interrupt": schema.BoolAttribute{
-										Optional: true,
-									},
-									"max_retries": schema.Int64Attribute{
-										Required: true,
-									},
-									"message_selection_strategy": schema.StringAttribute{
-										Optional:   true,
-										CustomType: fwtypes.StringEnumType[awstypes.MessageSelectionStrategy](),
-									},
-								},
-								Blocks: map[string]schema.Block{
-									"message_group":                 messageGroupLNB,
-									"prompt_attempts_specification": promptAttemptsSpecificationLNB,
-								},
-							},
-						},
-						"conditional": conditionalSpecificationLNB,
-						"next_step": schema.ListNestedBlock{
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
-							NestedObject: dialogStateNBO,
-						},
-					},
-				},
-			},
-			"kendra_configuration": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[KendraConfiguration](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"index": schema.StringAttribute{
-							Required: true,
-						},
-						"query_filter_string": schema.StringAttribute{
-							Optional: true,
-						},
-						"query_filter_string_enabled": schema.BoolAttribute{
-							Optional: true,
-						},
-					},
-				},
-			},
-			"output_context": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(10),
-				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[OutputContext](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"name": schema.StringAttribute{
-							Required: true,
-						},
-						"time_to_live_in_seconds": schema.Int64Attribute{
-							Required: true,
-						},
-						"turns_to_live": schema.Int64Attribute{
-							Required: true,
-						},
-					},
-				},
-			},
-			"sample_utterance": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[SampleUtterance](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"utterance": schema.StringAttribute{
-							Required: true,
-						},
-					},
-				},
-			},
-			"slot_priority": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[SlotPriority](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"priority": schema.Int64Attribute{
-							Required: true,
-						},
-						"slot_id": schema.StringAttribute{
-							Required: true,
-						},
-					},
-				},
-			},
+			"dialog_code_hook":         dialogCodeHookLNB,
+			"fulfillment_code_hook":    fulfillmentCodeHookLNB,
+			"initial_response_setting": initialResponseSettingLNB,
+			"input_context":            inputContextLNB,
+			"closing_setting":          closingSettingLNB,
+			"confirmation_setting":     confirmationSettingLNB,
+			"kendra_configuration":     kendraConfigurationLNB,
+			"output_context":           outputContextLNB,
+			"sample_utterance":         sampleUtteranceLNB,
+			"slot_priority":            slotPriorityLNB,
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -1194,6 +1238,249 @@ func (PromptAttemptsType) Values() []PromptAttemptsType {
 	}
 }
 
+type SlotPriority struct {
+	Priority types.Int64  `tfsdk:"priority"`
+	SlotID   types.String `tfsdk:"slot_id"`
+}
+
+type SampleUtterance struct {
+	Utterance types.String `tfsdk:"utterance"`
+}
+
+type OutputContext struct {
+	Name                types.String `tfsdk:"name"`
+	TimeToLiveInSeconds types.Int64  `tfsdk:"time_to_live_in_seconds"`
+	TurnsToLive         types.Int64  `tfsdk:"turns_to_live"`
+}
+
+type KendraConfiguration struct {
+	KendraIndex              types.String `tfsdk:"kendra_index"`
+	QueryFilterString        types.String `tfsdk:"query_filter_string"`
+	QueryFilterStringEnabled types.Bool   `tfsdk:"query_filter_string_enabled"`
+}
+
+type CustomPayload struct {
+	Value types.String `tfsdk:"value"`
+}
+
+type Button struct {
+	Text  types.String `tfsdk:"text"`
+	Value types.String `tfsdk:"value"`
+}
+
+type ImageResponseCard struct {
+	Button   fwtypes.ListNestedObjectValueOf[Button] `tfsdk:"button"`
+	ImageURL types.String                            `tfsdk:"image_url"`
+	Subtitle types.String                            `tfsdk:"subtitle"`
+	Title    types.String                            `tfsdk:"title"`
+}
+
+type PlainTextMessage struct {
+	Value types.String `tfsdk:"value"`
+}
+
+type SSMLMessage struct {
+	Value types.String `tfsdk:"value"`
+}
+
+type Message struct {
+	CustomPayload     fwtypes.ListNestedObjectValueOf[CustomPayload]     `tfsdk:"custom_payload"`
+	ImageResponseCard fwtypes.ListNestedObjectValueOf[ImageResponseCard] `tfsdk:"image_response_card"`
+	PlainTextMessage  fwtypes.ListNestedObjectValueOf[PlainTextMessage]  `tfsdk:"plain_text_message"`
+	SSMLMessage       fwtypes.ListNestedObjectValueOf[SSMLMessage]       `tfsdk:"ssml_message"`
+}
+
+type MessageGroup struct {
+	Message   fwtypes.ListNestedObjectValueOf[Message] `tfsdk:"message"`
+	Variation fwtypes.ListNestedObjectValueOf[Message] `tfsdk:"variation"`
+}
+
+type SlotValue struct {
+	InterpretedValue types.String `tfsdk:"interpreted_value"`
+}
+
+type SlotValueOverride struct {
+	MapBlockKey types.String                               `tfsdk:"map_block_key"`
+	Shape       fwtypes.StringEnum[awstypes.SlotShape]     `tfsdk:"shape"`
+	Value       fwtypes.ListNestedObjectValueOf[SlotValue] `tfsdk:"value"`
+	//Values fwtypes.ListNestedObjectValueOf[SlotValueOverride] `tfsdk:"values"` // recursive type, future support, needs additional development
+}
+
+type DialogAction struct {
+	Type                fwtypes.StringEnum[awstypes.DialogActionType] `tfsdk:"type"`
+	SlotToElicit        types.String                                  `tfsdk:"slot_to_elicit"`
+	SuppressNextMessage types.Bool                                    `tfsdk:"suppress_next_message"`
+}
+
+type IntentOverride struct {
+	Name types.String                                       `tfsdk:"name"`
+	Slot fwtypes.ListNestedObjectValueOf[SlotValueOverride] `tfsdk:"slot"`
+}
+
+type DialogState struct {
+	DialogAction      fwtypes.ListNestedObjectValueOf[DialogAction]   `tfsdk:"dialog_action"`
+	Intent            fwtypes.ListNestedObjectValueOf[IntentOverride] `tfsdk:"intent"`
+	SessionAttributes fwtypes.MapValueOf[basetypes.StringValue]       `tfsdk:"session_attributes"`
+}
+
+type ResponseSpecification struct {
+	AllowInterrupt types.Bool                                    `tfsdk:"allow_interrupt"`
+	MessageGroup   fwtypes.ListNestedObjectValueOf[MessageGroup] `tfsdk:"message_group"`
+}
+
+type Condition struct {
+	ExpressionString types.String `tfsdk:"expression_string"`
+}
+
+type ConditionalBranch struct {
+	Condition fwtypes.ListNestedObjectValueOf[Condition]             `tfsdk:"condition"`
+	Name      types.String                                           `tfsdk:"name"`
+	NextStep  fwtypes.ListNestedObjectValueOf[DialogState]           `tfsdk:"next_step"`
+	Response  fwtypes.ListNestedObjectValueOf[ResponseSpecification] `tfsdk:"response"`
+}
+
+type DefaultConditionalBranch struct {
+	NextStep fwtypes.ListNestedObjectValueOf[DialogState]           `tfsdk:"next_step"`
+	Response fwtypes.ListNestedObjectValueOf[ResponseSpecification] `tfsdk:"response"`
+}
+
+type ConditionalSpecification struct {
+	Active            types.Bool                                                `tfsdk:"active"`
+	ConditionalBranch fwtypes.ListNestedObjectValueOf[ConditionalBranch]        `tfsdk:"conditional_branch"`
+	DefaultBranch     fwtypes.ListNestedObjectValueOf[DefaultConditionalBranch] `tfsdk:"default_branch"`
+}
+
+type IntentClosingSetting struct {
+	Active          types.Bool                                                `tfsdk:"active"`
+	ClosingResponse fwtypes.ListNestedObjectValueOf[ResponseSpecification]    `tfsdk:"closing_response"`
+	Conditional     fwtypes.ListNestedObjectValueOf[ConditionalSpecification] `tfsdk:"conditional"`
+	NextStep        fwtypes.ListNestedObjectValueOf[DialogState]              `tfsdk:"next_step"`
+}
+
+type InputContext struct {
+	Name types.String `tfsdk:"name"`
+}
+
+type AllowedInputTypes struct {
+	AllowAudioInput types.Bool `tfsdk:"allow_audio_input"`
+	AllowDTMFInput  types.Bool `tfsdk:"allow_dtmf_input"`
+}
+
+type AudioSpecification struct {
+	EndTimeoutMs types.Int64 `tfsdk:"end_timeout_ms"`
+	MaxLengthMs  types.Int64 `tfsdk:"max_length_ms"`
+}
+
+type DTMFSpecification struct {
+	DeletionCharacter types.String `tfsdk:"deletion_character"`
+	EndCharacter      types.String `tfsdk:"end_character"`
+	EndTimeoutMs      types.Int64  `tfsdk:"end_timeout_ms"`
+	MaxLength         types.Int64  `tfsdk:"max_length"`
+}
+
+type AudioAndDTMFInputSpecification struct {
+	StartTimeoutMs     types.Int64                                         `tfsdk:"start_timeout_ms"`
+	AudioSpecification fwtypes.ListNestedObjectValueOf[AudioSpecification] `tfsdk:"audio_specification"`
+	DTMFSpecification  fwtypes.ListNestedObjectValueOf[DTMFSpecification]  `tfsdk:"dtmf_specification"`
+}
+
+type TextInputSpecification struct {
+	StartTimeoutMs types.Int64 `tfsdk:"start_timeout_ms"`
+}
+
+type PromptAttemptsSpecification struct {
+	AllowedInputTypes              fwtypes.ListNestedObjectValueOf[AllowedInputTypes]              `tfsdk:"allowed_input_types"`
+	AllowInterrupt                 types.Bool                                                      `tfsdk:"allow_interrupt"`
+	AudioAndDTMFInputSpecification fwtypes.ListNestedObjectValueOf[AudioAndDTMFInputSpecification] `tfsdk:"audio_and_dtmf_input_specification"`
+	MapBlockKey                    fwtypes.StringEnum[PromptAttemptsType]                          `tfsdk:"map_block_key"`
+	TextInputSpecification         fwtypes.ListNestedObjectValueOf[TextInputSpecification]         `tfsdk:"text_input_specification"`
+}
+
+type PromptSpecification struct {
+	AllowInterrupt              types.Bool                                                   `tfsdk:"allow_interrupt"`
+	MaxRetries                  types.Int64                                                  `tfsdk:"max_retries"`
+	MessageGroup                fwtypes.ListNestedObjectValueOf[MessageGroup]                `tfsdk:"message_groups"`
+	MessageSelectionStrategy    fwtypes.StringEnum[awstypes.MessageSelectionStrategy]        `tfsdk:"message_selection_strategy"`
+	PromptAttemptsSpecification fwtypes.ListNestedObjectValueOf[PromptAttemptsSpecification] `tfsdk:"prompt_attempts_specification"`
+}
+
+type FailureSuccessTimeout struct {
+	FailureConditional fwtypes.ListNestedObjectValueOf[ConditionalSpecification] `tfsdk:"failure_conditional"`
+	FailureNextStep    fwtypes.ListNestedObjectValueOf[DialogState]              `tfsdk:"failure_next_step"`
+	FailureResponse    fwtypes.ListNestedObjectValueOf[ResponseSpecification]    `tfsdk:"failure_response"`
+	SuccessConditional fwtypes.ListNestedObjectValueOf[ConditionalSpecification] `tfsdk:"success_conditional"`
+	SuccessNextStep    fwtypes.ListNestedObjectValueOf[DialogState]              `tfsdk:"success_next_step"`
+	SuccessResponse    fwtypes.ListNestedObjectValueOf[ResponseSpecification]    `tfsdk:"success_response"`
+	TimeoutConditional fwtypes.ListNestedObjectValueOf[ConditionalSpecification] `tfsdk:"timeout_conditional"`
+	TimeoutNextStep    fwtypes.ListNestedObjectValueOf[DialogState]              `tfsdk:"timeout_next_step"`
+	TimeoutResponse    fwtypes.ListNestedObjectValueOf[ResponseSpecification]    `tfsdk:"timeout_response"`
+}
+
+type DialogCodeHookInvocationSetting struct {
+	Active                    types.Bool                                             `tfsdk:"active"`
+	EnableCodeHookInvocation  types.Bool                                             `tfsdk:"enable_code_hook_invocation"`
+	InvocationLabel           types.String                                           `tfsdk:"invocation_label"`
+	PostCodeHookSpecification fwtypes.ListNestedObjectValueOf[FailureSuccessTimeout] `tfsdk:"post_code_hook_specification"`
+}
+
+type ElicitationCodeHookInvocationSetting struct {
+	EnableCodeHookInvocation types.Bool   `tfsdk:"enable_code_hook_invocation"`
+	InvocationLabel          types.String `tfsdk:"invocation_label"`
+}
+
+type IntentConfirmationSetting struct {
+	Active                  types.Bool                                                            `tfsdk:"active"`
+	CodeHook                fwtypes.ListNestedObjectValueOf[DialogCodeHookInvocationSetting]      `tfsdk:"code_hook"`
+	ConfirmationConditional fwtypes.ListNestedObjectValueOf[ConditionalSpecification]             `tfsdk:"confirmation_conditional"`
+	ConfirmationNextStep    fwtypes.ListNestedObjectValueOf[DialogState]                          `tfsdk:"confirmation_next_step"`
+	ConfirmationResponse    fwtypes.ListNestedObjectValueOf[ResponseSpecification]                `tfsdk:"confirmation_response"`
+	DeclinationConditional  fwtypes.ListNestedObjectValueOf[ConditionalSpecification]             `tfsdk:"declination_conditional"`
+	DeclinationNextStep     fwtypes.ListNestedObjectValueOf[DialogState]                          `tfsdk:"declination_next_step"`
+	DeclinationResponse     fwtypes.ListNestedObjectValueOf[ResponseSpecification]                `tfsdk:"declination_response"`
+	ElicitationCodeHook     fwtypes.ListNestedObjectValueOf[ElicitationCodeHookInvocationSetting] `tfsdk:"elicitation_code_hook"`
+	FailureConditional      fwtypes.ListNestedObjectValueOf[ConditionalSpecification]             `tfsdk:"failure_conditional"`
+	FailureNextStep         fwtypes.ListNestedObjectValueOf[DialogState]                          `tfsdk:"failure_next_step"`
+	FailureResponse         fwtypes.ListNestedObjectValueOf[ResponseSpecification]                `tfsdk:"failure_response"`
+	PromptSpecification     fwtypes.ListNestedObjectValueOf[PromptSpecification]                  `tfsdk:"prompt_specification"`
+}
+
+type InitialResponseSetting struct {
+	CodeHook        fwtypes.ListNestedObjectValueOf[DialogCodeHookInvocationSetting] `tfsdk:"code_hook"`
+	Conditional     fwtypes.ListNestedObjectValueOf[ConditionalSpecification]        `tfsdk:"conditional"`
+	InitialResponse fwtypes.ListNestedObjectValueOf[ResponseSpecification]           `tfsdk:"initial_response"`
+	NextStep        fwtypes.ListNestedObjectValueOf[DialogState]                     `tfsdk:"next_step"`
+}
+
+type FulfillmentUpdateResponseSpecification struct {
+	AllowInterrupt     types.Bool                                    `tfsdk:"allow_interrupt"`
+	FrequencyInSeconds types.Int64                                   `tfsdk:"frequency_in_seconds"`
+	MessageGroup       fwtypes.ListNestedObjectValueOf[MessageGroup] `tfsdk:"message_group"`
+}
+
+type FulfillmentStartResponseSpecification struct {
+	AllowInterrupt types.Bool                                    `tfsdk:"allow_interrupt"`
+	DelayInSeconds types.Int64                                   `tfsdk:"delay_in_seconds"`
+	MessageGroup   fwtypes.ListNestedObjectValueOf[MessageGroup] `tfsdk:"message_group"`
+}
+
+type FulfillmentUpdatesSpecification struct {
+	Active           types.Bool                                                              `tfsdk:"active"`
+	StartResponse    fwtypes.ListNestedObjectValueOf[FulfillmentStartResponseSpecification]  `tfsdk:"start_response"`
+	TimeoutInSeconds types.Int64                                                             `tfsdk:"timeout_in_seconds"`
+	UpdateResponse   fwtypes.ListNestedObjectValueOf[FulfillmentUpdateResponseSpecification] `tfsdk:"update_response"`
+}
+
+type FulfillmentCodeHookSettings struct {
+	Active                             types.Bool                                                       `tfsdk:"active"`
+	Enabled                            types.Bool                                                       `tfsdk:"enabled"`
+	FulfillmentUpdatesSpecification    fwtypes.ListNestedObjectValueOf[FulfillmentUpdatesSpecification] `tfsdk:"fulfillment_updates_specification"`
+	PostFulfillmentStatusSpecification fwtypes.ListNestedObjectValueOf[FailureSuccessTimeout]           `tfsdk:"post_fulfillment_status_specification"`
+}
+
+type DialogCodeHookSettings struct {
+	Enabled types.Bool `tfsdk:"enabled"`
+}
+
 type ResourceIntentData struct {
 	BotID                  types.String                                                 `tfsdk:"bot_id"`
 	BotVersion             types.String                                                 `tfsdk:"bot_version"`
@@ -1216,247 +1503,4 @@ type ResourceIntentData struct {
 	SampleUtterance        fwtypes.ListNestedObjectValueOf[SampleUtterance]             `tfsdk:"sample_utterance"`
 	SlotPriority           fwtypes.ListNestedObjectValueOf[SlotPriority]                `tfsdk:"slot_priority"`
 	Timeouts               timeouts.Value                                               `tfsdk:"timeouts"`
-}
-
-type IntentClosingSetting struct {
-	Active          types.Bool                                                `tfsdk:"active"`
-	ClosingResponse fwtypes.ListNestedObjectValueOf[ResponseSpecification]    `tfsdk:"closing_response"`
-	Conditional     fwtypes.ListNestedObjectValueOf[ConditionalSpecification] `tfsdk:"conditional"`
-	NextStep        fwtypes.ListNestedObjectValueOf[DialogState]              `tfsdk:"next_step"`
-}
-
-type ResponseSpecification struct {
-	MessageGroup   fwtypes.ListNestedObjectValueOf[MessageGroup] `tfsdk:"message_group"`
-	AllowInterrupt types.Bool                                    `tfsdk:"allow_interrupt"`
-}
-
-type MessageGroup struct {
-	Message    fwtypes.ListNestedObjectValueOf[Message] `tfsdk:"message"`
-	Variations fwtypes.ListNestedObjectValueOf[Message] `tfsdk:"variations"`
-}
-
-type Message struct {
-	CustomPayload     fwtypes.ListNestedObjectValueOf[CustomPayload]     `tfsdk:"custom_payload"`
-	ImageResponseCard fwtypes.ListNestedObjectValueOf[ImageResponseCard] `tfsdk:"image_response_card"`
-	PlainTextMessage  fwtypes.ListNestedObjectValueOf[PlainTextMessage]  `tfsdk:"plain_text_message"`
-	SSMLMessage       fwtypes.ListNestedObjectValueOf[SSMLMessage]       `tfsdk:"ssml_message"`
-}
-
-type CustomPayload struct {
-	Value types.String `tfsdk:"value"`
-}
-
-type ImageResponseCard struct {
-	Title    types.String                            `tfsdk:"title"`
-	Button   fwtypes.ListNestedObjectValueOf[Button] `tfsdk:"buttons"`
-	ImageURL types.String                            `tfsdk:"image_url"`
-	Subtitle types.String                            `tfsdk:"subtitle"`
-}
-
-type Button struct {
-	Text  types.String `tfsdk:"text"`
-	Value types.String `tfsdk:"value"`
-}
-
-type PlainTextMessage struct {
-	Value types.String `tfsdk:"value"`
-}
-
-type SSMLMessage struct {
-	Value types.String `tfsdk:"value"`
-}
-
-type ConditionalSpecification struct {
-	Active            types.Bool                                                `tfsdk:"active"`
-	ConditionalBranch fwtypes.ListNestedObjectValueOf[ConditionalBranch]        `tfsdk:"conditional_branch"`
-	DefaultBranch     fwtypes.ListNestedObjectValueOf[DefaultConditionalBranch] `tfsdk:"default_branch"`
-}
-
-type ConditionalBranch struct {
-	Condition fwtypes.ListNestedObjectValueOf[Condition]             `tfsdk:"condition"`
-	Name      types.String                                           `tfsdk:"name"`
-	NextStep  fwtypes.ListNestedObjectValueOf[DialogState]           `tfsdk:"next_step"`
-	Response  fwtypes.ListNestedObjectValueOf[ResponseSpecification] `tfsdk:"response"`
-}
-
-type Condition struct {
-	ExpressionString types.String `tfsdk:"expression_string"`
-}
-
-type DialogState struct {
-	DialogAction      fwtypes.ListNestedObjectValueOf[DialogAction]   `tfsdk:"dialog_action"`
-	Intent            fwtypes.ListNestedObjectValueOf[IntentOverride] `tfsdk:"intent"`
-	SessionAttributes fwtypes.MapValueOf[basetypes.StringValue]       `tfsdk:"session_attributes"`
-}
-
-type DialogAction struct {
-	Type                fwtypes.StringEnum[awstypes.DialogActionType] `tfsdk:"type"`
-	SlotToElicit        types.String                                  `tfsdk:"slot_to_elicit"`
-	SuppressNextMessage types.Bool                                    `tfsdk:"suppress_next_message"`
-}
-
-type IntentOverride struct {
-	Name types.String                                       `tfsdk:"name"`
-	Slot fwtypes.ListNestedObjectValueOf[SlotValueOverride] `tfsdk:"slot"`
-}
-
-type SlotValueOverride struct {
-	MapBlockKey types.String                               `tfsdk:"map_block_key"`
-	Shape       fwtypes.StringEnum[awstypes.SlotShape]     `tfsdk:"shape"`
-	Value       fwtypes.ListNestedObjectValueOf[SlotValue] `tfsdk:"value"`
-	//Values fwtypes.ListNestedObjectValueOf[SlotValueOverride] `tfsdk:"values"` // recursive type, future support, needs additional development
-}
-
-type SlotValue struct {
-	InterpretedValue types.String `tfsdk:"interpreted_value"`
-}
-
-type DefaultConditionalBranch struct {
-	NextStep fwtypes.ListNestedObjectValueOf[DialogState]           `tfsdk:"next_step"`
-	Response fwtypes.ListNestedObjectValueOf[ResponseSpecification] `tfsdk:"response"`
-}
-
-type IntentConfirmationSetting struct {
-	PromptSpecification     fwtypes.ListNestedObjectValueOf[PromptSpecification]                  `tfsdk:"prompt_specification"`
-	Active                  types.Bool                                                            `tfsdk:"active"`
-	CodeHook                fwtypes.ListNestedObjectValueOf[DialogCodeHookInvocationSetting]      `tfsdk:"code_hook"`
-	ConfirmationConditional fwtypes.ListNestedObjectValueOf[ConditionalSpecification]             `tfsdk:"confirmation_conditional"`
-	ConfirmationNextStep    fwtypes.ListNestedObjectValueOf[DialogState]                          `tfsdk:"confirmation_next_step"`
-	ConfirmationResponse    fwtypes.ListNestedObjectValueOf[ResponseSpecification]                `tfsdk:"confirmation_response"`
-	DeclinationConditional  fwtypes.ListNestedObjectValueOf[ConditionalSpecification]             `tfsdk:"declination_conditional"`
-	DeclinationNextStep     fwtypes.ListNestedObjectValueOf[DialogState]                          `tfsdk:"declination_next_step"`
-	DeclinationResponse     fwtypes.ListNestedObjectValueOf[ResponseSpecification]                `tfsdk:"declination_response"`
-	ElicitationCodeHook     fwtypes.ListNestedObjectValueOf[ElicitationCodeHookInvocationSetting] `tfsdk:"elicitation_code_hook"`
-	FailureConditional      fwtypes.ListNestedObjectValueOf[ConditionalSpecification]             `tfsdk:"failure_conditional"`
-	FailureNextStep         fwtypes.ListNestedObjectValueOf[DialogState]                          `tfsdk:"failure_next_step"`
-	FailureResponse         fwtypes.ListNestedObjectValueOf[ResponseSpecification]                `tfsdk:"failure_response"`
-}
-
-type PromptSpecification struct {
-	MaxRetries                  types.Int64                                                  `tfsdk:"max_retries"`
-	MessageGroup                fwtypes.ListNestedObjectValueOf[MessageGroup]                `tfsdk:"message_groups"`
-	AllowInterrupt              types.Bool                                                   `tfsdk:"allow_interrupt"`
-	MessageSelectionStrategy    fwtypes.StringEnum[awstypes.MessageSelectionStrategy]        `tfsdk:"message_selection_strategy"`
-	PromptAttemptsSpecification fwtypes.ListNestedObjectValueOf[PromptAttemptsSpecification] `tfsdk:"prompt_attempts_specification"`
-}
-
-type PromptAttemptsSpecification struct {
-	MapBlockKey                    fwtypes.StringEnum[PromptAttemptsType]                          `tfsdk:"map_block_key"`
-	AllowedInputTypes              fwtypes.ListNestedObjectValueOf[AllowedInputTypes]              `tfsdk:"allowed_input_types"`
-	AllowInterrupt                 types.Bool                                                      `tfsdk:"allow_interrupt"`
-	AudioAndDTMFInputSpecification fwtypes.ListNestedObjectValueOf[AudioAndDTMFInputSpecification] `tfsdk:"audio_and_dtmf_input_specification"`
-	TextInputSpecification         fwtypes.ListNestedObjectValueOf[TextInputSpecification]         `tfsdk:"text_input_specification"`
-}
-
-type AllowedInputTypes struct {
-	AllowAudioInput types.Bool `tfsdk:"allow_audio_input"`
-	AllowDTMFInput  types.Bool `tfsdk:"allow_dtmf_input"`
-}
-
-type AudioAndDTMFInputSpecification struct {
-	StartTimeoutMs     types.Int64                                         `tfsdk:"start_timeout_ms"`
-	AudioSpecification fwtypes.ListNestedObjectValueOf[AudioSpecification] `tfsdk:"audio_specification"`
-	DTMFSpecification  fwtypes.ListNestedObjectValueOf[DTMFSpecification]  `tfsdk:"dtmf_specification"`
-}
-
-type AudioSpecification struct {
-	EndTimeoutMs types.Int64 `tfsdk:"end_timeout_ms"`
-	MaxLengthMs  types.Int64 `tfsdk:"max_length_ms"`
-}
-
-type DTMFSpecification struct {
-	DeletionCharacter types.String `tfsdk:"deletion_character"`
-	EndCharacter      types.String `tfsdk:"end_character"`
-	EndTimeoutMs      types.Int64  `tfsdk:"end_timeout_ms"`
-	MaxLength         types.Int64  `tfsdk:"max_length"`
-}
-
-type TextInputSpecification struct {
-	StartTimeoutMs types.Int64 `tfsdk:"start_timeout_ms"`
-}
-
-type DialogCodeHookInvocationSetting struct {
-	Active                    types.Bool                                             `tfsdk:"active"`
-	EnableCodeHookInvocation  types.Bool                                             `tfsdk:"enable_code_hook_invocation"`
-	PostCodeHookSpecification fwtypes.ListNestedObjectValueOf[FailureSuccessTimeout] `tfsdk:"post_code_hook_specification"`
-	InvocationLabel           types.String                                           `tfsdk:"invocation_label"`
-}
-
-type FailureSuccessTimeout struct {
-	FailureConditional fwtypes.ListNestedObjectValueOf[ConditionalSpecification] `tfsdk:"failure_conditional"`
-	FailureNextStep    fwtypes.ListNestedObjectValueOf[DialogState]              `tfsdk:"failure_next_step"`
-	FailureResponse    fwtypes.ListNestedObjectValueOf[ResponseSpecification]    `tfsdk:"failure_response"`
-	SuccessConditional fwtypes.ListNestedObjectValueOf[ConditionalSpecification] `tfsdk:"success_conditional"`
-	SuccessNextStep    fwtypes.ListNestedObjectValueOf[DialogState]              `tfsdk:"success_next_step"`
-	SuccessResponse    fwtypes.ListNestedObjectValueOf[ResponseSpecification]    `tfsdk:"success_response"`
-	TimeoutConditional fwtypes.ListNestedObjectValueOf[ConditionalSpecification] `tfsdk:"timeout_conditional"`
-	TimeoutNextStep    fwtypes.ListNestedObjectValueOf[DialogState]              `tfsdk:"timeout_next_step"`
-	TimeoutResponse    fwtypes.ListNestedObjectValueOf[ResponseSpecification]    `tfsdk:"timeout_response"`
-}
-
-type ElicitationCodeHookInvocationSetting struct {
-	EnableCodeHookInvocation types.Bool   `tfsdk:"enable_code_hook_invocation"`
-	InvocationLabel          types.String `tfsdk:"invocation_label"`
-}
-
-type DialogCodeHookSettings struct {
-	Enabled types.Bool `tfsdk:"enabled"`
-}
-
-type FulfillmentCodeHookSettings struct {
-	Enabled                            types.Bool                                                       `tfsdk:"enabled"`
-	Active                             types.Bool                                                       `tfsdk:"active"`
-	FulfillmentUpdatesSpecification    fwtypes.ListNestedObjectValueOf[FulfillmentUpdatesSpecification] `tfsdk:"fulfillment_updates_specification"`
-	PostFulfillmentStatusSpecification fwtypes.ListNestedObjectValueOf[FailureSuccessTimeout]           `tfsdk:"post_fulfillment_status_specification"`
-}
-
-type FulfillmentUpdatesSpecification struct {
-	Active           types.Bool                                                              `tfsdk:"active"`
-	StartResponse    fwtypes.ListNestedObjectValueOf[FulfillmentStartResponseSpecification]  `tfsdk:"start_response"`
-	TimeoutInSeconds types.Int64                                                             `tfsdk:"timeout_in_seconds"`
-	UpdateResponse   fwtypes.ListNestedObjectValueOf[FulfillmentUpdateResponseSpecification] `tfsdk:"update_response"`
-}
-
-type FulfillmentStartResponseSpecification struct {
-	DelayInSeconds types.Int64                                   `tfsdk:"delay_in_seconds"`
-	MessageGroup   fwtypes.ListNestedObjectValueOf[MessageGroup] `tfsdk:"message_group"`
-	AllowInterrupt types.Bool                                    `tfsdk:"allow_interrupt"`
-}
-
-type FulfillmentUpdateResponseSpecification struct {
-	FrequencyInSeconds types.Int64                                   `tfsdk:"frequency_in_seconds"`
-	MessageGroup       fwtypes.ListNestedObjectValueOf[MessageGroup] `tfsdk:"message_group"`
-	AllowInterrupt     types.Bool                                    `tfsdk:"allow_interrupt"`
-}
-
-type InitialResponseSetting struct {
-	CodeHook        fwtypes.ListNestedObjectValueOf[DialogCodeHookInvocationSetting] `tfsdk:"code_hook"`
-	Conditional     fwtypes.ListNestedObjectValueOf[ConditionalSpecification]        `tfsdk:"conditional"`
-	InitialResponse fwtypes.ListNestedObjectValueOf[ResponseSpecification]           `tfsdk:"initial_response"`
-	NextStep        fwtypes.ListNestedObjectValueOf[DialogState]                     `tfsdk:"next_step"`
-}
-
-type InputContext struct {
-	Name types.String `tfsdk:"name"`
-}
-
-type KendraConfiguration struct {
-	KendraIndex              types.String `tfsdk:"kendra_index"`
-	QueryFilterString        types.String `tfsdk:"query_filter_string"`
-	QueryFilterStringEnabled types.Bool   `tfsdk:"query_filter_string_enabled"`
-}
-
-type OutputContext struct {
-	Name                types.String `tfsdk:"name"`
-	TimeToLiveInSeconds types.Int64  `tfsdk:"time_to_live_in_seconds"`
-	TurnsToLive         types.Int64  `tfsdk:"turns_to_live"`
-}
-
-type SampleUtterance struct {
-	Utterance types.String `tfsdk:"utterance"`
-}
-
-type SlotPriority struct {
-	Priority types.Int64  `tfsdk:"priority"`
-	SlotID   types.String `tfsdk:"slot_id"`
 }
