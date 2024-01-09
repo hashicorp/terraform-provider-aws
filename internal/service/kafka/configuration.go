@@ -6,6 +6,7 @@ package kafka
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kafka"
@@ -238,11 +239,14 @@ func statusConfigurationState(ctx context.Context, conn *kafka.Client, arn strin
 }
 
 func waitConfigurationDeleted(ctx context.Context, conn *kafka.Client, arn string) (*kafka.DescribeConfigurationOutput, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.ConfigurationStateDeleting),
 		Target:  []string{},
 		Refresh: statusConfigurationState(ctx, conn, arn),
-		Timeout: configurationDeletedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
