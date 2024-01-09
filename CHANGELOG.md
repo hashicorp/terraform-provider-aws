@@ -11,6 +11,7 @@ FEATURES:
 * **New Resource:** `aws_securitylake_aws_log_source` ([#34974](https://github.com/hashicorp/terraform-provider-aws/issues/34974))
 * **New Resource:** `aws_ssoadmin_application_access_scope` ([#34811](https://github.com/hashicorp/terraform-provider-aws/issues/34811))
 * **New Resource:** `aws_verifiedpermissions_policy_store` ([#32204](https://github.com/hashicorp/terraform-provider-aws/issues/32204))
+* **New Resource:** `aws_verifiedpermissions_policy_template` ([#32205](https://github.com/hashicorp/terraform-provider-aws/issues/32205))
 * **New Resource:** `aws_verifiedpermissions_schema` ([#32204](https://github.com/hashicorp/terraform-provider-aws/issues/32204))
 
 ENHANCEMENTS:
