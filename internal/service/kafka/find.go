@@ -88,24 +88,6 @@ func FindClusterOperationByARN(ctx context.Context, conn *kafka.Kafka, arn strin
 	return output.ClusterOperationInfo, nil
 }
 
-// FindScramSecrets returns the matching MSK Cluster's associated secrets
-func FindScramSecrets(ctx context.Context, conn *kafka.Kafka, clusterArn string) ([]*string, error) {
-	input := &kafka.ListScramSecretsInput{
-		ClusterArn: aws.String(clusterArn),
-	}
-
-	var scramSecrets []*string
-	err := conn.ListScramSecretsPagesWithContext(ctx, input, func(page *kafka.ListScramSecretsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-		scramSecrets = append(scramSecrets, page.SecretArnList...)
-		return !lastPage
-	})
-
-	return scramSecrets, err
-}
-
 func FindServerlessClusterByARN(ctx context.Context, conn *kafka.Kafka, arn string) (*kafka.Cluster, error) {
 	output, err := findClusterV2ByARN(ctx, conn, arn)
 

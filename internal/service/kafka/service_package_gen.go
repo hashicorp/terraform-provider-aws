@@ -83,8 +83,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceScramSecretAssociation,
+			Factory:  resourceSCRAMSecretAssociation,
 			TypeName: "aws_msk_scram_secret_association",
+			Name:     "SCRAM Secret Association",
 		},
 		{
 			Factory:  ResourceServerlessCluster,

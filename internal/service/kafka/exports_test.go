@@ -8,6 +8,7 @@ var (
 	ResourceConfiguration = resourceConfiguration
 	ResourceVPCConnection = resourceVPCConnection
 
-	FindConfigurationByARN = findConfigurationByARN
-	FindVPCConnectionByARN = findVPCConnectionByARN
+	FindConfigurationByARN       = findConfigurationByARN
+	FindSCRAMSecretsByClusterARN = findSCRAMSecretsByClusterARN
+	FindVPCConnectionByARN       = findVPCConnectionByARN
 )
