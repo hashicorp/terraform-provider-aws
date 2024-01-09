@@ -570,7 +570,7 @@ func flattenTopicReplication(apiObject *types.TopicReplication) map[string]inter
 	return tfMap
 }
 
-func flattenKafkaClusterDescriptions(apiObjects []types.KafkaClusterDescription) []interface{} {
+func flattenKafkaClusterDescriptions(apiObjects []types.KafkaClusterDescription) []interface{} { // nosemgrep:ci.kafka-in-func-name
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -584,7 +584,7 @@ func flattenKafkaClusterDescriptions(apiObjects []types.KafkaClusterDescription)
 	return tfList
 }
 
-func flattenKafkaClusterDescription(apiObject types.KafkaClusterDescription) map[string]interface{} {
+func flattenKafkaClusterDescription(apiObject types.KafkaClusterDescription) map[string]interface{} { // nosemgrep:ci.kafka-in-func-name
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AmazonMskCluster; v != nil {
@@ -598,7 +598,7 @@ func flattenKafkaClusterDescription(apiObject types.KafkaClusterDescription) map
 	return tfMap
 }
 
-func flattenKafkaClusterClientVPCConfig(apiObject *types.KafkaClusterClientVpcConfig) map[string]interface{} {
+func flattenKafkaClusterClientVPCConfig(apiObject *types.KafkaClusterClientVpcConfig) map[string]interface{} { // nosemgrep:ci.kafka-in-func-name
 	if apiObject == nil {
 		return nil
 	}
@@ -772,7 +772,7 @@ func expandTopicReplication(tfMap map[string]interface{}) *types.TopicReplicatio
 	return apiObject
 }
 
-func expandKafkaClusters(tfList []interface{}) []types.KafkaCluster {
+func expandKafkaClusters(tfList []interface{}) []types.KafkaCluster { // nosemgrep:ci.kafka-in-func-name
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -794,7 +794,7 @@ func expandKafkaClusters(tfList []interface{}) []types.KafkaCluster {
 	return apiObjects
 }
 
-func expandKafkaCluster(tfMap map[string]interface{}) types.KafkaCluster {
+func expandKafkaCluster(tfMap map[string]interface{}) types.KafkaCluster { // nosemgrep:ci.kafka-in-func-name
 	apiObject := types.KafkaCluster{}
 
 	if v, ok := tfMap["vpc_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -808,7 +808,7 @@ func expandKafkaCluster(tfMap map[string]interface{}) types.KafkaCluster {
 	return apiObject
 }
 
-func expandKafkaClusterClientVPCConfig(tfMap map[string]interface{}) *types.KafkaClusterClientVpcConfig {
+func expandKafkaClusterClientVPCConfig(tfMap map[string]interface{}) *types.KafkaClusterClientVpcConfig { // nosemgrep:ci.kafka-in-func-name
 	apiObject := &types.KafkaClusterClientVpcConfig{}
 
 	if v, ok := tfMap["security_groups_ids"].(*schema.Set); ok && v.Len() > 0 {

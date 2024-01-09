@@ -20,7 +20,7 @@ import (
 )
 
 // @SDKDataSource("aws_msk_kafka_version", name="Kafka Version")
-func dataSourceKafkaVersion() *schema.Resource {
+func dataSourceKafkaVersion() *schema.Resource { // nosemgrep:ci.kafka-in-func-name
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceKafkaVersionRead,
 
@@ -45,7 +45,7 @@ func dataSourceKafkaVersion() *schema.Resource {
 	}
 }
 
-func dataSourceKafkaVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func dataSourceKafkaVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.kafka-in-func-name
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
@@ -73,7 +73,7 @@ func dataSourceKafkaVersionRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func findKafkaVersion(ctx context.Context, conn *kafka.Client, input *kafka.ListKafkaVersionsInput, filter tfslices.Predicate[*types.KafkaVersion]) (*types.KafkaVersion, error) {
+func findKafkaVersion(ctx context.Context, conn *kafka.Client, input *kafka.ListKafkaVersionsInput, filter tfslices.Predicate[*types.KafkaVersion]) (*types.KafkaVersion, error) { // nosemgrep:ci.kafka-in-func-name
 	output, err := findKafkaVersions(ctx, conn, input, filter)
 
 	if err != nil {
@@ -83,7 +83,7 @@ func findKafkaVersion(ctx context.Context, conn *kafka.Client, input *kafka.List
 	return tfresource.AssertFirstValueResult(output)
 }
 
-func findKafkaVersions(ctx context.Context, conn *kafka.Client, input *kafka.ListKafkaVersionsInput, filter tfslices.Predicate[*types.KafkaVersion]) ([]types.KafkaVersion, error) {
+func findKafkaVersions(ctx context.Context, conn *kafka.Client, input *kafka.ListKafkaVersionsInput, filter tfslices.Predicate[*types.KafkaVersion]) ([]types.KafkaVersion, error) { // nosemgrep:ci.kafka-in-func-name
 	var output []types.KafkaVersion
 
 	pages := kafka.NewListKafkaVersionsPaginator(conn, input)
