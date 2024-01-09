@@ -9,11 +9,13 @@ var (
 	ResourceConfiguration          = resourceConfiguration
 	ResourceReplicator             = resourceReplicator
 	ResourceSCRAMSecretAssociation = resourceSCRAMSecretAssociation
+	ResourceServerlessCluster      = resourceServerlessCluster
 	ResourceVPCConnection          = resourceVPCConnection
 
 	FindClusterByARN             = findClusterByARN
 	FindConfigurationByARN       = findConfigurationByARN
 	FindReplicatorByARN          = findReplicatorByARN
 	FindSCRAMSecretsByClusterARN = findSCRAMSecretsByClusterARN
+	FindServerlessClusterByARN   = findServerlessClusterByARN
 	FindVPCConnectionByARN       = findVPCConnectionByARN
 )
