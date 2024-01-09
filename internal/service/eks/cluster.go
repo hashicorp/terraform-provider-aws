@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -74,6 +75,17 @@ func resourceCluster() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							ForceNew: true,
+							// When value is -1, instance maintenance policy is removed, state file will not contain any value.
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								var bootstrapClusterAdminPermissions bool
+								if _, ok := d.GetOk("access_config"); ok {
+									tfMap := d.Get("access_config").([]interface{})[0].(map[string]interface{})
+									if v, ok := tfMap["bootstrap_cluster_creator_admin_permissions"].(bool); ok {
+										bootstrapClusterAdminPermissions = v
+									}
+								}
+								return old == strconv.FormatBool(bootstrapClusterAdminPermissions)
+							},
 						},
 					},
 				},
@@ -404,8 +416,13 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err != nil {
 		return diag.Errorf("reading EKS Cluster (%s): %s", d.Id(), err)
 	}
+	//Can check if
+	accessConfig := &types.CreateAccessConfigRequest{}
+	if v, ok := d.GetOk("access_config"); ok {
+		accessConfig = expandAccessConfigForCreate(v.([]interface{}))
+	}
 
-	if err := d.Set("access_config", flattenAccessConfigResponse(cluster.AccessConfig)); err != nil {
+	if err := d.Set("access_config", flattenAccessConfigResponse(cluster.AccessConfig, accessConfig.BootstrapClusterCreatorAdminPermissions)); err != nil {
 		return diag.Errorf("setting access_config: %s", err)
 	}
 	/*
@@ -810,7 +827,6 @@ func expandAccessConfigForCreate(l []interface{}) *types.CreateAccessConfigReque
 	}
 
 	if v, ok := tfMap["bootstrap_cluster_creator_admin_permissions"].(bool); ok {
-		//accessConfigRequest.BootstrapClusterCreatorAdminPermissions = aws.Bool(tfMap["bootstrap_cluster_creator_admin_permissions"].(bool))
 		accessConfigRequest.BootstrapClusterCreatorAdminPermissions = aws.Bool(v)
 	}
 	return accessConfigRequest
@@ -1012,7 +1028,7 @@ func flattenOIDC(oidc *types.OIDC) []map[string]interface{} {
 	return []map[string]interface{}{m}
 }
 
-func flattenAccessConfigResponse(apiObject *types.AccessConfigResponse) []interface{} {
+func flattenAccessConfigResponse(apiObject *types.AccessConfigResponse, bootstrap *bool) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1020,8 +1036,9 @@ func flattenAccessConfigResponse(apiObject *types.AccessConfigResponse) []interf
 	tfMap := map[string]interface{}{
 		"authentication_mode": apiObject.AuthenticationMode,
 	}
-
-	print(aws.ToBool(apiObject.BootstrapClusterCreatorAdminPermissions))
+	if bootstrap != nil {
+		tfMap["bootstrap_cluster_creator_admin_permissions"] = aws.ToBool(bootstrap)
+	}
 
 	return []interface{}{tfMap}
 }

@@ -16,7 +16,7 @@ Access Entry Configurations for an EKS Cluster.
 resource "aws_eks_access_entry" "example" {
   cluster_name     = aws_eks_cluster.example.name
   principal_arn    = aws_iam_role.example.arn
-  kubernetes_group = ["group-1", "group-2"]
+  kubernetes_groups = ["group-1", "group-2"]
 }
 ```
 
@@ -29,7 +29,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `kubernetes_group` – (Optional) List of string which can optionally specify the Kubernetes groups the user would belong to when creating an access entry.
+* `kubernetes_groups` – (Optional) List of string which can optionally specify the Kubernetes groups the user would belong to when creating an access entry.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 

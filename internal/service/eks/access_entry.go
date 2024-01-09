@@ -57,7 +57,7 @@ func ResourceAccessEntry() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kubernetes_group": {
+			"kubernetes_groups": {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
@@ -96,10 +96,13 @@ func resourceAccessEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 	principal_arn := d.Get("principal_arn").(string)
 	accessID := AccessEntryCreateResourceID(clusterName, principal_arn)
 	input := &eks.CreateAccessEntryInput{
-		ClusterName:      aws.String(clusterName),
-		PrincipalArn:     aws.String(principal_arn),
-		KubernetesGroups: flex.ExpandStringValueSet(d.Get("kubernetes_groups").(*schema.Set)),
-		Tags:             getTagsIn(ctx),
+		ClusterName:  aws.String(clusterName),
+		PrincipalArn: aws.String(principal_arn),
+		Tags:         getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("kubernetes_groups"); ok {
+		input.KubernetesGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	_, err := conn.CreateAccessEntry(ctx, input)
@@ -134,12 +137,9 @@ func resourceAccessEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.Set("access_entry_arn", output.AccessEntryArn)
 	d.Set("cluster_name", output.ClusterName)
-	d.Set("created_at", output.CreatedAt)
-	// if err := d.Set("kubernetes_groups", aws.StringValueSlice(output.KubernetesGroups)); err != nil {
-	// 	return sdkdiag.AppendErrorf(diags, "setting kubernetes_groups: %s", err)
-	// }
+	d.Set("created_at", aws.ToTime(output.CreatedAt).String())
 	d.Set("kubernetes_groups", output.KubernetesGroups)
-	d.Set("modified_at", output.ModifiedAt)
+	d.Set("modified_at", aws.ToTime(output.ModifiedAt).String())
 	d.Set("principal_arn", output.PrincipalArn)
 	d.Set("user_name", output.Username)
 	d.Set("type", output.Type)
@@ -163,7 +163,7 @@ func resourceAccessEntryUpdate(ctx context.Context, d *schema.ResourceData, meta
 			PrincipalArn: aws.String(principal_arn),
 		}
 
-		if d.HasChange("kubernetes_group") {
+		if d.HasChange("kubernetes_groups") {
 			input.KubernetesGroups = flex.ExpandStringValueSet(d.Get("kubernetes_groups").(*schema.Set))
 		}
 
@@ -193,7 +193,7 @@ func resourceAccessEntryDelete(ctx context.Context, d *schema.ResourceData, meta
 		PrincipalArn: aws.String(principal_arn),
 	})
 
-	if errs.IsAErrorMessageContains[*types.ResourceNotFoundException](err, "No Access Entry found for Id:") {
+	if errs.IsAErrorMessageContains[*types.ResourceNotFoundException](err, "The specified resource could not be found") {
 		return nil
 	}
 

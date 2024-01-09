@@ -37,7 +37,7 @@ func AccessEntryCreateResourceID(clusterName, principal_arn string) string {
 }
 
 func AccessEntryParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, accessEntryResourceIDSeparator)
+	parts := strings.SplitN(id, accessEntryResourceIDSeparator, 2)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], nil

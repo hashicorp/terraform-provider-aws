@@ -7,6 +7,7 @@ import (
 	"context"
 	"log"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,7 +19,7 @@ import (
 )
 
 // @SDKDataSource("aws_eks_access_entry")
-func DataSourceAccessEntry() *schema.Resource {
+func dataSourceAccessEntry() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAccessEntryRead,
 
@@ -36,7 +37,7 @@ func DataSourceAccessEntry() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kubernetes_group": {
+			"kubernetes_groups": {
 				Type:     schema.TypeSet,
 				Computed: true,
 				Elem: &schema.Schema{
@@ -70,30 +71,25 @@ func dataSourceAccessEntryRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	clusterName, principal_arn, err := AccessEntryParseResourceID(d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EKS Access Entry (%s): %s", d.Id(), err)
-	}
-	output, err := FindAccessEntryByID(ctx, conn, clusterName, principal_arn)
+	principalArn := d.Get("principal_arn").(string)
+	clusterName := d.Get("cluster_name").(string)
+	id := AccessEntryCreateResourceID(clusterName, principalArn)
+	output, err := FindAccessEntryByID(ctx, conn, clusterName, principalArn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] EKS Access Entry (%s) not found, removing from state", d.Id())
-		d.SetId("")
+		log.Printf("[WARN] EKS Access Entry (%s) not found, removing from state", id)
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EKS EKS Access Entry (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EKS Access Entry (%s): %s", id, err)
 	}
-
+	d.SetId(id)
 	d.Set("access_entry_arn", output.AccessEntryArn)
 	d.Set("cluster_name", output.ClusterName)
-	d.Set("created_at", output.CreatedAt)
-	// if err := d.Set("kubernetes_groups", aws.StringValueSlice(output.KubernetesGroups)); err != nil {
-	// 	return sdkdiag.AppendErrorf(diags, "setting kubernetes_groups: %s", err)
-	// }
+	d.Set("created_at", aws.ToTime(output.CreatedAt).String())
 	d.Set("kubernetes_groups", output.KubernetesGroups)
-	d.Set("modified_at", output.ModifiedAt)
+	d.Set("modified_at", aws.ToTime(output.ModifiedAt).String())
 	d.Set("principal_arn", output.PrincipalArn)
 	d.Set("user_name", output.Username)
 	d.Set("type", output.Type)
