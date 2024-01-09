@@ -41,8 +41,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Configuration",
 		},
 		{
-			Factory:  DataSourceVersion,
+			Factory:  dataSourceKafkaVersion,
 			TypeName: "aws_msk_kafka_version",
+			Name:     "Kafka Version",
 		},
 		{
 			Factory:  dataSourceVPCConnection,
