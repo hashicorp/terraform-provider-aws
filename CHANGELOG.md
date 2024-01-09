@@ -78,6 +78,7 @@ BUG FIXES:
 * resource/aws_dms_replication_task: Prevent erroneous diffs on `replication_task_settings` ([#34356](https://github.com/hashicorp/terraform-provider-aws/issues/34356))
 * resource/aws_dynamodb_table: Fix error when waiting for snapshot to be created ([#34848](https://github.com/hashicorp/terraform-provider-aws/issues/34848))
 * resource/aws_finspace_kx_dataview: Properly set `arn` attribute on read, resolving persistent differences when `tags` are configured ([#34998](https://github.com/hashicorp/terraform-provider-aws/issues/34998))
+* resource/aws_glue_catalog_database: Properly handle out-of-band resource deletion ([#35195](https://github.com/hashicorp/terraform-provider-aws/issues/35195))
 * resource/aws_kinesis_firehose_delivery_stream: Fix `InvalidArgumentException: Both BufferSizeInMBs and BufferIntervalInSeconds are required to configure buffering for lambda processor` errors on resource Update ([#26964](https://github.com/hashicorp/terraform-provider-aws/issues/26964))
 * resource/aws_kinesis_firehose_delivery_stream: Fix perpetual `extended_s3_configuration.processing_configuration.processors.parameters` diffs when processor type is `Lambda` ([#35137](https://github.com/hashicorp/terraform-provider-aws/issues/35137))
 * resource/aws_lambda_function: Ensure lambda does not get deployed if `source_code_hash` does not change. ([#29921](https://github.com/hashicorp/terraform-provider-aws/issues/29921))
