@@ -88,31 +88,6 @@ func FindClusterOperationByARN(ctx context.Context, conn *kafka.Kafka, arn strin
 	return output.ClusterOperationInfo, nil
 }
 
-func FindConfigurationByARN(ctx context.Context, conn *kafka.Kafka, arn string) (*kafka.DescribeConfigurationOutput, error) {
-	input := &kafka.DescribeConfigurationInput{
-		Arn: aws.String(arn),
-	}
-
-	output, err := conn.DescribeConfigurationWithContext(ctx, input)
-
-	if tfawserr.ErrMessageContains(err, kafka.ErrCodeBadRequestException, "Configuration ARN does not exist") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 // FindScramSecrets returns the matching MSK Cluster's associated secrets
 func FindScramSecrets(ctx context.Context, conn *kafka.Kafka, clusterArn string) ([]*string, error) {
 	input := &kafka.ListScramSecretsInput{

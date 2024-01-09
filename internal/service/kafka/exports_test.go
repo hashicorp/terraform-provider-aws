@@ -5,7 +5,9 @@ package kafka
 
 // Exports for use in tests only.
 var (
+	ResourceConfiguration = resourceConfiguration
 	ResourceVPCConnection = resourceVPCConnection
 
+	FindConfigurationByARN = findConfigurationByARN
 	FindVPCConnectionByARN = findVPCConnectionByARN
 )

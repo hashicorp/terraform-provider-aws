@@ -221,7 +221,7 @@ func findVPCConnectionByARN(ctx context.Context, conn *kafka.Client, arn string)
 		Arn: aws.String(arn),
 	}
 
-	out, err := conn.DescribeVpcConnection(ctx, input)
+	output, err := conn.DescribeVpcConnection(ctx, input)
 
 	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
@@ -234,9 +234,9 @@ func findVPCConnectionByARN(ctx context.Context, conn *kafka.Client, arn string)
 		return nil, err
 	}
 
-	if out == nil {
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
+	return output, nil
 }

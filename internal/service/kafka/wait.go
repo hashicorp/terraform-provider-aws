@@ -80,20 +80,3 @@ func waitClusterOperationCompleted(ctx context.Context, conn *kafka.Kafka, arn s
 
 	return nil, err
 }
-
-func waitConfigurationDeleted(ctx context.Context, conn *kafka.Kafka, arn string) (*kafka.DescribeConfigurationOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{kafka.ConfigurationStateDeleting},
-		Target:  []string{},
-		Refresh: statusConfigurationState(ctx, conn, arn),
-		Timeout: configurationDeletedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*kafka.DescribeConfigurationOutput); ok {
-		return output, err
-	}
-
-	return nil, err
-}

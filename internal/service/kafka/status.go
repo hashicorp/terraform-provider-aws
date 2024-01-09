@@ -43,19 +43,3 @@ func statusClusterOperationState(ctx context.Context, conn *kafka.Kafka, arn str
 		return output, aws.StringValue(output.OperationState), nil
 	}
 }
-
-func statusConfigurationState(ctx context.Context, conn *kafka.Kafka, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindConfigurationByARN(ctx, conn, arn)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.State), nil
-	}
-}
