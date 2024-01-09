@@ -26,6 +26,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newResourceExportTask,
 		},
+		{
+			Factory: newResourceIntegration,
+			Name:    "Integration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
 	}
 }
 
