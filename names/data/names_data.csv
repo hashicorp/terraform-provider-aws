@@ -229,7 +229,7 @@ lookoutvision,lookoutvision,lookoutforvision,lookoutvision,,lookoutvision,,looko
 machinelearning,machinelearning,machinelearning,machinelearning,,machinelearning,,,MachineLearning,MachineLearning,,1,,,aws_machinelearning_,,machinelearning_,Machine Learning,Amazon,,x,,,,,
 macie2,macie2,macie2,macie2,,macie2,,,Macie2,Macie2,,1,,,aws_macie2_,,macie2_,Macie,Amazon,,,,,,,
 macie,macie,macie,macie,,macie,,,Macie,Macie,,1,,,aws_macie_,,macie_,Macie Classic,Amazon,,x,,,,,
-,,,,,,,,,,,,,,,,,Mainframe Modernization,AWS,x,,,,,,No SDK support
+m2,m2,m2,m2,,m2,,,M2,M2,,,2,,aws_m2_,,m2_,Mainframe Modernization,AWS,,,,,,,
 managedblockchain,managedblockchain,managedblockchain,managedblockchain,,managedblockchain,,,ManagedBlockchain,ManagedBlockchain,,1,,,aws_managedblockchain_,,managedblockchain_,Managed Blockchain,Amazon,,x,,,,,
 grafana,grafana,managedgrafana,grafana,,grafana,,managedgrafana;amg,Grafana,ManagedGrafana,,1,,,aws_grafana_,,grafana_,Managed Grafana,Amazon,,,,,,,
 kafka,kafka,kafka,kafka,,kafka,,msk,Kafka,Kafka,,1,2,aws_msk_,aws_kafka_,,msk_,Managed Streaming for Kafka,Amazon,,,,,,,

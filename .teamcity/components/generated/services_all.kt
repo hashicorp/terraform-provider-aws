@@ -130,6 +130,7 @@ val services = mapOf(
     "location" to ServiceSpec("Location"),
     "logs" to ServiceSpec("CloudWatch Logs"),
     "lookoutmetrics" to ServiceSpec("Lookout for Metrics"),
+    "m2" to ServiceSpec("Mainframe Modernization"),
     "macie2" to ServiceSpec("Macie"),
     "mediaconnect" to ServiceSpec("Elemental MediaConnect"),
     "mediaconvert" to ServiceSpec("Elemental MediaConvert"),
