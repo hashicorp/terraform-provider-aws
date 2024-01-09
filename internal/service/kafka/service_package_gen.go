@@ -36,8 +36,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_msk_cluster",
 		},
 		{
-			Factory:  DataSourceConfiguration,
+			Factory:  dataSourceConfiguration,
 			TypeName: "aws_msk_configuration",
+			Name:     "Configuration",
 		},
 		{
 			Factory:  DataSourceVersion,
