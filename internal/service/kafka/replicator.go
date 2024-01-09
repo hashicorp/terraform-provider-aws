@@ -616,7 +616,7 @@ func flattenKafkaClusterClientVPCConfig(apiObject *types.KafkaClusterClientVpcCo
 	return tfMap
 }
 
-func flattenAmazonMSKCluster(apiObject *types.AmazonMskCluster) map[string]interface{} {
+func flattenAmazonMSKCluster(apiObject *types.AmazonMskCluster) map[string]interface{} { // nosemgrep:ci.msk-in-func-name
 	if apiObject == nil {
 		return nil
 	}
@@ -822,7 +822,7 @@ func expandKafkaClusterClientVPCConfig(tfMap map[string]interface{}) *types.Kafk
 	return apiObject
 }
 
-func expandAmazonMSKCluster(tfMap map[string]interface{}) *types.AmazonMskCluster {
+func expandAmazonMSKCluster(tfMap map[string]interface{}) *types.AmazonMskCluster { // nosemgrep:ci.msk-in-func-name
 	apiObject := &types.AmazonMskCluster{}
 
 	if v, ok := tfMap["msk_cluster_arn"].(string); ok && v != "" {
