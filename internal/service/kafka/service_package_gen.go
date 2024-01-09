@@ -75,7 +75,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Configuration",
 		},
 		{
-			Factory:  ResourceReplicator,
+			Factory:  resourceReplicator,
 			TypeName: "aws_msk_replicator",
 			Name:     "Replicator",
 			Tags: &types.ServicePackageResourceTags{

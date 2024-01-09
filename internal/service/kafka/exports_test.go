@@ -5,10 +5,13 @@ package kafka
 
 // Exports for use in tests only.
 var (
-	ResourceConfiguration = resourceConfiguration
-	ResourceVPCConnection = resourceVPCConnection
+	ResourceConfiguration          = resourceConfiguration
+	ResourceReplicator             = resourceReplicator
+	ResourceSCRAMSecretAssociation = resourceSCRAMSecretAssociation
+	ResourceVPCConnection          = resourceVPCConnection
 
 	FindConfigurationByARN       = findConfigurationByARN
+	FindReplicatorByARN          = findReplicatorByARN
 	FindSCRAMSecretsByClusterARN = findSCRAMSecretsByClusterARN
 	FindVPCConnectionByARN       = findVPCConnectionByARN
 )
