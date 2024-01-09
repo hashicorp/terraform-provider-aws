@@ -6,10 +6,12 @@ package kafka
 import (
 	"context"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKDataSource("aws_msk_bootstrap_brokers", name="Bootstrap Brokers")
@@ -18,45 +20,50 @@ func dataSourceBootstrapBrokers() *schema.Resource {
 		ReadWithoutTimeout: dataSourceBootstrapBrokersRead,
 
 		Schema: map[string]*schema.Schema{
-			"bootstrap_broker_string": {
+			"bootstrap_brokers": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bootstrap_broker_string_tls": {
+			"bootstrap_brokers_public_sasl_iam": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bootstrap_broker_string_sasl_scram": {
+			"bootstrap_brokers_public_sasl_scram": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bootstrap_broker_string_sasl_iam": {
+			"bootstrap_brokers_public_tls": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bootstrap_broker_string_public_tls": {
+			"bootstrap_brokers_sasl_iam": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bootstrap_broker_string_public_sasl_scram": {
+			"bootstrap_brokers_sasl_scram": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bootstrap_broker_string_public_sasl_iam": {
+			"bootstrap_brokers_tls": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bootstrap_broker_string_vpc_connectivity_tls": {
+			"bootstrap_brokers_vpc_connectivity_sasl_iam": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bootstrap_broker_string_vpc_connectivity_sasl_scram": {
+			"bootstrap_brokers_vpc_connectivity_sasl_scram": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"bootstrap_broker_string_vpc_connectivity_sasl_iam": {
+			"bootstrap_brokers_vpc_connectivity_tls": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"cluster_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 		},
 	}
@@ -73,16 +80,17 @@ func dataSourceBootstrapBrokersRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s) bootstrap brokers: %s", clusterARN, err)
 	}
 
-	d.Set("bootstrap_broker_string", output.BootstrapBrokerString)
-	d.Set("bootstrap_broker_string_tls", output.BootstrapBrokerStringTls)
-	d.Set("bootstrap_broker_string_sasl_scram", output.BootstrapBrokerStringSaslScram)
-	d.Set("bootstrap_broker_string_sasl_iam", output.BootstrapBrokerStringSaslIam)
-	d.Set("bootstrap_broker_string_public_tls", output.BootstrapBrokerStringPublicTls)
-	d.Set("bootstrap_broker_string_public_sasl_scram", output.BootstrapBrokerStringPublicSaslScram)
-	d.Set("bootstrap_broker_string_public_sasl_iam", output.BootstrapBrokerStringPublicSaslIam)
-	d.Set("bootstrap_broker_string_vpc_connectivity_tls", output.BootstrapBrokerStringVpcConnectivityTls)
-	d.Set("bootstrap_broker_string_vpc_connectivity_sasl_scram", output.BootstrapBrokerStringVpcConnectivitySaslScram)
-	d.Set("bootstrap_broker_string_vpc_connectivity_sasl_iam", output.BootstrapBrokerStringVpcConnectivitySaslIam)
+	d.SetId(clusterARN)
+	d.Set("bootstrap_brokers", SortEndpointsString(aws.StringValue(output.BootstrapBrokerString)))
+	d.Set("bootstrap_brokers_public_sasl_iam", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringPublicSaslIam)))
+	d.Set("bootstrap_brokers_public_sasl_scram", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringPublicSaslScram)))
+	d.Set("bootstrap_brokers_public_tls", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringPublicTls)))
+	d.Set("bootstrap_brokers_sasl_iam", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringSaslIam)))
+	d.Set("bootstrap_brokers_sasl_scram", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringSaslScram)))
+	d.Set("bootstrap_brokers_tls", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringTls)))
+	d.Set("bootstrap_brokers_vpc_connectivity_sasl_iam", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringVpcConnectivitySaslIam)))
+	d.Set("bootstrap_brokers_vpc_connectivity_sasl_scram", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringVpcConnectivitySaslScram)))
+	d.Set("bootstrap_brokers_vpc_connectivity_tls", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringVpcConnectivityTls)))
 
 	return diags
 }
