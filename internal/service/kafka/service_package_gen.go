@@ -67,7 +67,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceClusterPolicy,
+			Factory:  resourceClusterPolicy,
 			TypeName: "aws_msk_cluster_policy",
 			Name:     "Cluster Policy",
 		},

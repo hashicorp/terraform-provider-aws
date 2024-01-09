@@ -6,6 +6,7 @@ package kafka
 // Exports for use in tests only.
 var (
 	ResourceCluster                = resourceCluster
+	ResourceClusterPolicy          = resourceClusterPolicy
 	ResourceConfiguration          = resourceConfiguration
 	ResourceReplicator             = resourceReplicator
 	ResourceSCRAMSecretAssociation = resourceSCRAMSecretAssociation
@@ -13,6 +14,7 @@ var (
 	ResourceVPCConnection          = resourceVPCConnection
 
 	FindClusterByARN             = findClusterByARN
+	FindClusterPolicyByARN       = findClusterPolicyByARN
 	FindConfigurationByARN       = findConfigurationByARN
 	FindReplicatorByARN          = findReplicatorByARN
 	FindSCRAMSecretsByClusterARN = findSCRAMSecretsByClusterARN
