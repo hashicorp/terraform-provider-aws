@@ -5,9 +5,9 @@ package function_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
@@ -37,7 +37,7 @@ func TestARNParseFunction_invalid(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testARNParseFunctionConfig("invalid"),
-				ExpectError: regexp.MustCompile("arn parsing failed"),
+				ExpectError: regexache.MustCompile("arn parsing failed"),
 			},
 		},
 	})
