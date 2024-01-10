@@ -86,9 +86,9 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "skip_final_snapshot", "true"),
 					resource.TestCheckNoResourceAttr(resourceName, "snapshot_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "standard"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "standard"),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -649,14 +649,39 @@ func TestAccNeptuneCluster_restoreFromSnapshot(t *testing.T) {
 	})
 }
 
-func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		return testAccCheckClusterDestroyWithProvider(ctx)(s, acctest.Provider)
-	}
+func TestAccNeptuneCluster_storageType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v neptune.DBCluster
+	resourceName := "aws_neptune_cluster.test"
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_storageType(rName, "standard"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "storage_types", "standard"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+			{
+				Config: testAccClusterConfig_storageType(rName, "iopt1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "storage_types", "iopt1"),
+				),
+			},
+		},
+	})
 }
 
-func testAccCheckClusterDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
-	return func(s *terraform.State, provider *schema.Provider) error {
+func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
@@ -1453,4 +1478,18 @@ resource "aws_neptune_cluster" "test" {
   }
 }
 `, rName)
+}
+
+func testAccClusterConfig_storageType(rName, storageType string) string {
+	return acctest.ConfigCompose(testAccClusterConfig_base(), fmt.Sprintf(`
+resource "aws_neptune_cluster" "test" {
+  cluster_identifier                   = %[1]q
+  availability_zones                   = local.availability_zone_names
+  engine                               = "neptune"
+  neptune_cluster_parameter_group_name = "default.neptune1.3"
+  skip_final_snapshot                  = true
+  storage_type                         = %[1]q
+  apply_immediately                    = true
+}
+`, rName, storageType))
 }
