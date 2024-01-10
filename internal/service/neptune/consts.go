@@ -22,13 +22,13 @@ func engine_Values() []string {
 }
 
 const (
-	storageTypeNeptune = "standard"
-	storageTypeIopt1   = "iopt1"
+	storageTypeStandard = "standard"
+	storageTypeIopt1    = "iopt1"
 )
 
 func storageType_Values() []string {
 	return []string{
-		storageTypeNeptune,
+		storageTypeStandard,
 		storageTypeIopt1,
 	}
 }

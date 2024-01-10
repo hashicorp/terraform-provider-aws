@@ -74,7 +74,7 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "iam_database_authentication_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "iam_roles.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_arn", ""),
-					resource.TestCheckResourceAttr(resourceName, "neptune_cluster_parameter_group_name", "default.neptune1.2"),
+					resource.TestCheckResourceAttr(resourceName, "neptune_cluster_parameter_group_name", "default.neptune1.3"),
 					resource.TestCheckNoResourceAttr(resourceName, "neptune_instance_parameter_group_name"),
 					resource.TestCheckResourceAttr(resourceName, "neptune_subnet_group_name", "default"),
 					resource.TestCheckResourceAttr(resourceName, "port", "8182"),
@@ -86,7 +86,7 @@ func TestAccNeptuneCluster_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "skip_final_snapshot", "true"),
 					resource.TestCheckNoResourceAttr(resourceName, "snapshot_identifier"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
-					resource.TestCheckResourceAttr(resourceName, "storage_type", "standard"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_security_group_ids.#", "1"),
 				),
@@ -665,7 +665,7 @@ func TestAccNeptuneCluster_storageType(t *testing.T) {
 				Config: testAccClusterConfig_storageType(rName, "standard"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "storage_types", "standard"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", ""),
 				),
 			},
 			testAccClusterImportStep(resourceName),
@@ -673,7 +673,7 @@ func TestAccNeptuneCluster_storageType(t *testing.T) {
 				Config: testAccClusterConfig_storageType(rName, "iopt1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "storage_types", "iopt1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "iopt1"),
 				),
 			},
 		},
@@ -790,7 +790,7 @@ resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
   engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  neptune_cluster_parameter_group_name = "default.neptune1.3"
   skip_final_snapshot                  = true
 }
 `, rName))
@@ -1486,9 +1486,10 @@ resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
   engine                               = "neptune"
+  engine_version                       = "1.3.0.0"
   neptune_cluster_parameter_group_name = "default.neptune1.3"
   skip_final_snapshot                  = true
-  storage_type                         = %[1]q
+  storage_type                         = %[2]q
   apply_immediately                    = true
 }
 `, rName, storageType))
