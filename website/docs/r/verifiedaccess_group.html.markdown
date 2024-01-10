@@ -30,7 +30,7 @@ The following arguments are optional:
 
 * `description` - (Optional) Description of the verified access group.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `policy_docment` - (Optional) The policy document that is associated with this resource.
+* `policy_document` - (Optional) The policy document that is associated with this resource.
 
 ## Attribute Reference
 

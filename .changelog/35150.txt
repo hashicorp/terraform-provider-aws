@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_datasync_agent: Fix import of agents created with `activation_key` by removing requirement for one of `ip_address` or `activation_key` to be set
+```
