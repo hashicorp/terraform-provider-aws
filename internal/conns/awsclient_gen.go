@@ -55,6 +55,7 @@ import (
 	keyspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/keyspaces"
 	kinesis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kinesis"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
+	launchwizard_sdkv2 "github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	lexmodelsv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
 	lookoutmetrics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lookoutmetrics"
@@ -768,6 +769,10 @@ func (c *AWSClient) LambdaConn(ctx context.Context) *lambda_sdkv1.Lambda {
 
 func (c *AWSClient) LambdaClient(ctx context.Context) *lambda_sdkv2.Client {
 	return errs.Must(client[*lambda_sdkv2.Client](ctx, c, names.Lambda, make(map[string]any)))
+}
+
+func (c *AWSClient) LaunchWizardClient(ctx context.Context) *launchwizard_sdkv2.Client {
+	return errs.Must(client[*launchwizard_sdkv2.Client](ctx, c, names.LaunchWizard, make(map[string]any)))
 }
 
 func (c *AWSClient) LexModelsConn(ctx context.Context) *lexmodelbuildingservice_sdkv1.LexModelBuildingService {

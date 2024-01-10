@@ -127,6 +127,7 @@ const (
 	KinesisVideo                 = "kinesisvideo"
 	LakeFormation                = "lakeformation"
 	Lambda                       = "lambda"
+	LaunchWizard                 = "launchwizard"
 	LexModels                    = "lexmodels"
 	LexV2Models                  = "lexv2models"
 	LicenseManager               = "licensemanager"

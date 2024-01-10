@@ -195,6 +195,7 @@ provider "aws" {
   <li><code>kms</code></li>
   <li><code>lakeformation</code></li>
   <li><code>lambda</code></li>
+  <li><code>launchwizard</code></li>
   <li><code>lexmodels</code> (or <code>lexmodelbuilding</code> or <code>lexmodelbuildingservice</code> or <code>lex</code>)</li>
   <li><code>lexv2models</code> (or <code>lexmodelsv2</code>)</li>
   <li><code>licensemanager</code></li>
