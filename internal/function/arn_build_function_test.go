@@ -28,15 +28,7 @@ func TestARNBuildFunction_known(t *testing.T) {
 
 func testARNBuildFunctionConfig() string {
 	return `
-terraform {
-	required_providers {
-		aws = {
-			source = "hashicorp/aws"
-		}
-	}
-}
-
 output "test" {
-	value = provider::aws::arn_build("aws", "iam", "", "444455556666", "role/example")
+  value = provider::aws::arn_build("aws", "iam", "", "444455556666", "role/example")
 }`
 }

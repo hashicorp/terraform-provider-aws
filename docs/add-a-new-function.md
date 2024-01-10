@@ -116,15 +116,8 @@ func TestExampleFunction_basic(t *testing.T) {
 
 func testExampleFunctionConfig() string {
 	return `
-terraform {
-	required_providers {
-		aws = {
-			source = "hashicorp/aws"
-		}
-	}
-}
 output "test" {
-	value = provider::aws::example("foo")
+  value = provider::aws::example("foo")
 }`
 }
 ```

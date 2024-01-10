@@ -45,16 +45,8 @@ func TestARNParseFunction_invalid(t *testing.T) {
 
 func testARNParseFunctionConfig(arg string) string {
 	return fmt.Sprintf(`
-terraform {
-	required_providers {
-		aws = {
-			source = "hashicorp/aws"
-		}
-	}
-}
-
 output "test" {
-	value = provider::aws::arn_parse(%[1]q)
+  value = provider::aws::arn_parse(%[1]q)
 }
 `, arg)
 }
