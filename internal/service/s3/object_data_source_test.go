@@ -441,6 +441,52 @@ func TestAccS3ObjectDataSource_singleSlashAsKey(t *testing.T) {
 	})
 }
 
+func TestAccS3ObjectDataSource_leadingDotSlash(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rObj s3.GetObjectOutput
+	var dsObj1, dsObj2 s3.GetObjectOutput
+
+	resourceName := "aws_s3_object.object"
+	dataSourceName1 := "data.aws_s3_object.obj1"
+	dataSourceName2 := "data.aws_s3_object.obj2"
+
+	rInt := sdkacctest.RandInt()
+	resourceOnlyConf, conf := testAccObjectDataSourceConfig_leadingDotSlash(rInt)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                  func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:                acctest.ErrorCheck(t, s3.EndpointsID),
+		ProtoV5ProviderFactories:  acctest.ProtoV5ProviderFactories,
+		PreventPostDestroyRefresh: true,
+		Steps: []resource.TestStep{
+			{ // nosemgrep:ci.test-config-funcs-correct-form
+				Config: resourceOnlyConf,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &rObj),
+				),
+			},
+			{ // nosemgrep:ci.test-config-funcs-correct-form
+				Config: conf,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExistsDataSource(ctx, dataSourceName1, &dsObj1),
+					resource.TestCheckResourceAttr(dataSourceName1, "content_length", "3"),
+					resource.TestCheckResourceAttrPair(dataSourceName1, "content_type", resourceName, "content_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName1, "etag", resourceName, "etag"),
+					resource.TestMatchResourceAttr(dataSourceName1, "last_modified", regexp.MustCompile(rfc1123RegexPattern)),
+					resource.TestCheckResourceAttr(dataSourceName1, "body", "yes"),
+
+					testAccCheckObjectExistsDataSource(ctx, dataSourceName2, &dsObj2),
+					resource.TestCheckResourceAttr(dataSourceName2, "content_length", "3"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "content_type", resourceName, "content_type"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "etag", resourceName, "etag"),
+					resource.TestMatchResourceAttr(dataSourceName2, "last_modified", regexp.MustCompile(rfc1123RegexPattern)),
+					resource.TestCheckResourceAttr(dataSourceName2, "body", "yes"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckObjectExistsDataSource(ctx context.Context, n string, obj *s3.GetObjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -781,4 +827,35 @@ data "aws_s3_object" "test" {
   key    = "/"
 }
 `, rName)
+}
+
+func testAccObjectDataSourceConfig_leadingDotSlash(randInt int) (string, string) {
+	resources := fmt.Sprintf(`
+resource "aws_s3_bucket" "object_bucket" {
+  bucket = "tf-object-test-bucket-%[1]d"
+}
+
+resource "aws_s3_object" "object" {
+  bucket       = aws_s3_bucket.object_bucket.bucket
+  key          = "./tf-testing-obj-%[1]d-readable"
+  content      = "yes"
+  content_type = "text/plain"
+}
+`, randInt)
+
+	both := fmt.Sprintf(`
+%[1]s
+
+data "aws_s3_object" "obj1" {
+  bucket = aws_s3_bucket.object_bucket.bucket
+  key    = "tf-testing-obj-%[2]d-readable"
+}
+
+data "aws_s3_object" "obj2" {
+  bucket = aws_s3_bucket.object_bucket.bucket
+  key    = "./tf-testing-obj-%[2]d-readable"
+}
+`, resources, randInt)
+
+	return resources, both
 }
