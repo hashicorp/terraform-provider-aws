@@ -1,12 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmincidents_test
 
 import (
-	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -16,8 +18,7 @@ func testReplicationSetDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ssmincidents_replication_set.test"
 	resourceName := "aws_ssmincidents_replication_set.test"
 
@@ -28,12 +29,10 @@ func testReplicationSetDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationSetDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationSetDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationSetExists(dataSourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_by", dataSourceName, "created_by"),
 					resource.TestCheckResourceAttrPair(resourceName, "deletion_protected", dataSourceName, "deletion_protected"),
@@ -47,7 +46,7 @@ func testReplicationSetDataSource_basic(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "region.0.status", dataSourceName, "region.0.status"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "region.0.status_message", dataSourceName, "region.0.status_message"),
 
-					acctest.MatchResourceAttrGlobalARN(dataSourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(dataSourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 		},

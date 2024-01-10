@@ -37,9 +37,9 @@ The following arguments are optional:
 
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the link.
 * `label` - Label that is assigned to this link.
@@ -56,8 +56,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudWatch Observability Access Manager Link can be imported using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Observability Access Manager Link using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_oam_link.example
+  id = "arn:aws:oam:us-west-2:123456789012:link/link-id"
+}
 ```
-$ terraform import aws_oam_link.example arn:aws:oam:us-west-2:123456789012:link/link-id
+
+Using `terraform import`, import CloudWatch Observability Access Manager Link using the `arn`. For example:
+
+```console
+% terraform import aws_oam_link.example arn:aws:oam:us-west-2:123456789012:link/link-id
 ```

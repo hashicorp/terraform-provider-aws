@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds
 
 import (
@@ -10,44 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
-
-func waitDirectoryCreated(ctx context.Context, conn *directoryservice.DirectoryService, id string, timeout time.Duration) (*directoryservice.DirectoryDescription, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{directoryservice.DirectoryStageRequested, directoryservice.DirectoryStageCreating, directoryservice.DirectoryStageCreated},
-		Target:  []string{directoryservice.DirectoryStageActive},
-		Refresh: statusDirectoryStage(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*directoryservice.DirectoryDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StageReason)))
-
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitDirectoryDeleted(ctx context.Context, conn *directoryservice.DirectoryService, id string, timeout time.Duration) (*directoryservice.DirectoryDescription, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{directoryservice.DirectoryStageActive, directoryservice.DirectoryStageDeleting},
-		Target:  []string{},
-		Refresh: statusDirectoryStage(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*directoryservice.DirectoryDescription); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StageReason)))
-
-		return output, err
-	}
-
-	return nil, err
-}
 
 func waitDomainControllerCreated(ctx context.Context, conn *directoryservice.DirectoryService, directoryID, domainControllerID string, timeout time.Duration) (*directoryservice.DomainController, error) {
 	stateConf := &retry.StateChangeConf{

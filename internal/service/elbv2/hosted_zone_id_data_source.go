@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2
 
 import (
@@ -28,6 +31,7 @@ var HostedZoneIdPerRegionALBMap = map[string]string{
 	endpoints.ApSoutheast3RegionID: "Z08888821HLRG5A9ZRTER",
 	endpoints.ApSoutheast4RegionID: "Z09517862IB2WZLPXG76F",
 	endpoints.CaCentral1RegionID:   "ZQSVJUPU6J1EY",
+	endpoints.CaWest1RegionID:      "Z06473681N0SF6OS049SD",
 	endpoints.CnNorth1RegionID:     "Z1GDH35T77C1KE",
 	endpoints.CnNorthwest1RegionID: "ZM7IZAIOVVDZF",
 	endpoints.EuCentral1RegionID:   "Z215JYRZR1TBD5",
@@ -38,6 +42,7 @@ var HostedZoneIdPerRegionALBMap = map[string]string{
 	endpoints.EuWest1RegionID:      "Z32O12XQLNTSW2",
 	endpoints.EuWest2RegionID:      "ZHURV8PSTC4K8",
 	endpoints.EuWest3RegionID:      "Z3Q77PNBQS71R4",
+	endpoints.IlCentral1RegionID:   "Z09170902867EHPV2DABU",
 	endpoints.MeCentral1RegionID:   "Z08230872XQRWHG2XF6I",
 	endpoints.MeSouth1RegionID:     "ZS929ML54UICD",
 	endpoints.SaEast1RegionID:      "Z2P70J7HTTTPLU",
@@ -64,6 +69,7 @@ var HostedZoneIdPerRegionNLBMap = map[string]string{
 	endpoints.ApSoutheast3RegionID: "Z01971771FYVNCOVWJU1G",
 	endpoints.ApSoutheast4RegionID: "Z01156963G8MIIL7X90IV",
 	endpoints.CaCentral1RegionID:   "Z2EPGBW3API2WT",
+	endpoints.CaWest1RegionID:      "Z02754302KBB00W2LKWZ9",
 	endpoints.CnNorth1RegionID:     "Z3QFB96KMJ7ED6",
 	endpoints.CnNorthwest1RegionID: "ZQEIKTCZ8352D",
 	endpoints.EuCentral1RegionID:   "Z3F0SRJ5LGBH90",
@@ -74,6 +80,7 @@ var HostedZoneIdPerRegionNLBMap = map[string]string{
 	endpoints.EuWest1RegionID:      "Z2IFOLAFXWLO4F",
 	endpoints.EuWest2RegionID:      "ZD4D7Y8KGAS4G",
 	endpoints.EuWest3RegionID:      "Z1CMS0P5QUZ6D5",
+	endpoints.IlCentral1RegionID:   "Z0313266YDI6ZRHTGQY4",
 	endpoints.MeCentral1RegionID:   "Z00282643NTTLPANJJG2P",
 	endpoints.MeSouth1RegionID:     "Z3QSRYVP46NYYV",
 	endpoints.SaEast1RegionID:      "ZTK26PT1VY4CU",

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
@@ -56,13 +59,13 @@ func ResourceHSMClientCertificate() *schema.Resource {
 
 func resourceHSMClientCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	certIdentifier := d.Get("hsm_client_certificate_identifier").(string)
 
 	input := redshift.CreateHsmClientCertificateInput{
 		HsmClientCertificateIdentifier: aws.String(certIdentifier),
-		Tags:                           GetTagsIn(ctx),
+		Tags:                           getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateHsmClientCertificateWithContext(ctx, &input)
@@ -77,7 +80,7 @@ func resourceHSMClientCertificateCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceHSMClientCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	out, err := FindHSMClientCertificateByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -103,7 +106,7 @@ func resourceHSMClientCertificateRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("hsm_client_certificate_identifier", out.HsmClientCertificateIdentifier)
 	d.Set("hsm_client_certificate_public_key", out.HsmClientCertificatePublicKey)
 
-	SetTagsOut(ctx, out.Tags)
+	setTagsOut(ctx, out.Tags)
 
 	return diags
 }
@@ -118,7 +121,7 @@ func resourceHSMClientCertificateUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceHSMClientCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RedshiftConn()
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	deleteInput := redshift.DeleteHsmClientCertificateInput{
 		HsmClientCertificateIdentifier: aws.String(d.Id()),

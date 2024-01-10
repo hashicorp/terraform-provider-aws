@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
@@ -78,7 +81,7 @@ func ResourceDeliveryChannel() *schema.Resource {
 
 func resourceDeliveryChannelPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	name := d.Get("name").(string)
 	channel := configservice.DeliveryChannel{
@@ -135,7 +138,7 @@ func resourceDeliveryChannelPut(ctx context.Context, d *schema.ResourceData, met
 
 func resourceDeliveryChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 
 	input := configservice.DescribeDeliveryChannelsInput{
 		DeliveryChannelNames: []*string{aws.String(d.Id())},
@@ -149,7 +152,7 @@ func resourceDeliveryChannelRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id(), err)
 	}
 
 	if !d.IsNewResource() && len(out.DeliveryChannels) < 1 {
@@ -159,7 +162,7 @@ func resourceDeliveryChannelRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if d.IsNewResource() && len(out.DeliveryChannels) < 1 {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id(), errors.New("not found after creation"))
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameDeliveryChannel, d.Id(), errors.New("not found after creation"))
 	}
 
 	if len(out.DeliveryChannels) > 1 {
@@ -184,7 +187,7 @@ func resourceDeliveryChannelRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceDeliveryChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn()
+	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
 	input := configservice.DeleteDeliveryChannelInput{
 		DeliveryChannelName: aws.String(d.Id()),
 	}

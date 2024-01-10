@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_security_group" "default" {
   name        = "main_rds_sg"
   description = "Allow all inbound traffic"

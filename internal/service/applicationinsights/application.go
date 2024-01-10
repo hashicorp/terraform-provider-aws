@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package applicationinsights
 
 import (
@@ -78,7 +81,7 @@ func ResourceApplication() *schema.Resource {
 
 func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ApplicationInsightsConn()
+	conn := meta.(*conns.AWSClient).ApplicationInsightsConn(ctx)
 
 	input := &applicationinsights.CreateApplicationInput{
 		AutoConfigEnabled: aws.Bool(d.Get("auto_config_enabled").(bool)),
@@ -86,7 +89,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 		CWEMonitorEnabled: aws.Bool(d.Get("cwe_monitor_enabled").(bool)),
 		OpsCenterEnabled:  aws.Bool(d.Get("ops_center_enabled").(bool)),
 		ResourceGroupName: aws.String(d.Get("resource_group_name").(string)),
-		Tags:              GetTagsIn(ctx),
+		Tags:              getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("grouping_type"); ok {
@@ -99,7 +102,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	out, err := conn.CreateApplicationWithContext(ctx, input)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Error creating ApplicationInsights Application: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating ApplicationInsights Application: %s", err)
 	}
 
 	d.SetId(aws.StringValue(out.ApplicationInfo.ResourceGroupName))
@@ -113,7 +116,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ApplicationInsightsConn()
+	conn := meta.(*conns.AWSClient).ApplicationInsightsConn(ctx)
 
 	application, err := FindApplicationByName(ctx, conn, d.Id())
 
@@ -147,7 +150,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ApplicationInsightsConn()
+	conn := meta.(*conns.AWSClient).ApplicationInsightsConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &applicationinsights.UpdateApplicationInput{
@@ -178,7 +181,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		log.Printf("[DEBUG] Updating ApplicationInsights Application: %s", d.Id())
 		_, err := conn.UpdateApplicationWithContext(ctx, input)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Error Updating ApplicationInsights Application: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating ApplicationInsights Application (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -187,7 +190,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ApplicationInsightsConn()
+	conn := meta.(*conns.AWSClient).ApplicationInsightsConn(ctx)
 
 	input := &applicationinsights.DeleteApplicationInput{
 		ResourceGroupName: aws.String(d.Id()),
@@ -199,7 +202,7 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta
 		if tfawserr.ErrCodeEquals(err, applicationinsights.ErrCodeResourceNotFoundException) {
 			return diags
 		}
-		return sdkdiag.AppendErrorf(diags, "Error deleting ApplicationInsights Application: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting ApplicationInsights Application: %s", err)
 	}
 
 	if _, err := waitApplicationTerminated(ctx, conn, d.Id()); err != nil {

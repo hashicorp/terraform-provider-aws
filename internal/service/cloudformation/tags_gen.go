@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
 // []*SERVICE.Tag handling
@@ -39,9 +39,9 @@ func KeyValueTags(ctx context.Context, tags []*cloudformation.Tag) tftags.KeyVal
 	return tftags.New(ctx, m)
 }
 
-// GetTagsIn returns cloudformation service tags from Context.
+// getTagsIn returns cloudformation service tags from Context.
 // nil is returned if there are no input tags.
-func GetTagsIn(ctx context.Context) []*cloudformation.Tag {
+func getTagsIn(ctx context.Context) []*cloudformation.Tag {
 	if inContext, ok := tftags.FromContext(ctx); ok {
 		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
@@ -51,9 +51,9 @@ func GetTagsIn(ctx context.Context) []*cloudformation.Tag {
 	return nil
 }
 
-// SetTagsOut sets cloudformation service tags in Context.
-func SetTagsOut(ctx context.Context, tags []*cloudformation.Tag) {
+// setTagsOut sets cloudformation service tags in Context.
+func setTagsOut(ctx context.Context, tags []*cloudformation.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
 }

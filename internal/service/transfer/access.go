@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transfer
 
 import (
@@ -124,7 +127,7 @@ func ResourceAccess() *schema.Resource {
 
 func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	externalID := d.Get("external_id").(string)
 	serverID := d.Get("server_id").(string)
@@ -177,7 +180,7 @@ func resourceAccessCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	serverID, externalID, err := AccessParseResourceID(d.Id())
 
@@ -185,7 +188,7 @@ func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "parsing Transfer Access ID: %s", err)
 	}
 
-	access, err := FindAccessByServerIDAndExternalID(ctx, conn, serverID, externalID)
+	access, err := FindAccessByTwoPartKey(ctx, conn, serverID, externalID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transfer Access (%s) not found, removing from state", d.Id())
@@ -224,7 +227,7 @@ func resourceAccessRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	serverID, externalID, err := AccessParseResourceID(d.Id())
 
@@ -278,7 +281,7 @@ func resourceAccessUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceAccessDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).TransferConn()
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
 	serverID, externalID, err := AccessParseResourceID(d.Id())
 

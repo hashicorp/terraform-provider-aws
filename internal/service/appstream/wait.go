@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream
 
 import (
@@ -13,9 +16,6 @@ import (
 )
 
 const (
-	// stackOperationTimeout Maximum amount of time to wait for Stack operation eventual consistency
-	stackOperationTimeout = 4 * time.Minute
-
 	// fleetStateTimeout Maximum amount of time to wait for the statusFleetState to be RUNNING or STOPPED
 	fleetStateTimeout = 180 * time.Minute
 	// fleetOperationTimeout Maximum amount of time to wait for Fleet operation eventual consistency
@@ -29,33 +29,6 @@ const (
 	iamPropagationTimeout = 2 * time.Minute
 	userAvailable         = "AVAILABLE"
 )
-
-// waitStackStateDeleted waits for a deleted stack
-func waitStackStateDeleted(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Stack, error) {
-	stateConf := &retry.StateChangeConf{
-		Target:  []string{"NotFound", "Unknown"},
-		Refresh: statusStackState(ctx, conn, name),
-		Timeout: stackOperationTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*appstream.Stack); ok {
-		if errors := output.StackErrors; len(errors) > 0 {
-			var errs *multierror.Error
-
-			for _, err := range errors {
-				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.ErrorMessage)))
-			}
-
-			tfresource.SetLastError(err, errs.ErrorOrNil())
-		}
-
-		return output, err
-	}
-
-	return nil, err
-}
 
 // waitFleetStateRunning waits for a fleet running
 func waitFleetStateRunning(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) { //nolint:unparam

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling_test
 
 import (
@@ -5,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -41,8 +44,6 @@ func TestAccAutoScalingLaunchConfigurationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "spot_price", resourceName, "spot_price"),
 					// Resource and data source user_data have differing representations in state.
 					resource.TestCheckResourceAttrSet(datasourceName, "user_data"),
-					resource.TestCheckResourceAttrPair(datasourceName, "vpc_classic_link_id", resourceName, "vpc_classic_link_id"),
-					resource.TestCheckResourceAttrPair(datasourceName, "vpc_classic_link_security_groups.#", resourceName, "vpc_classic_link_security_groups.#"),
 				),
 			},
 		},
@@ -116,10 +117,10 @@ func TestAccAutoScalingLaunchConfigurationDataSource_metadataOptions(t *testing.
 }
 
 func testAccLaunchConfigurationDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name                        = %[1]q
-  image_id                    = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id                    = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type               = "m1.small"
   associate_public_ip_address = true
   user_data                   = "test-user-data"
@@ -155,7 +156,7 @@ data "aws_launch_configuration" "test" {
 }
 
 func testAccLaunchConfigurationDataSourceConfig_securityGroups(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.1.0.0/16"
 
@@ -175,7 +176,7 @@ resource "aws_security_group" "test" {
 
 resource "aws_launch_configuration" "test" {
   name            = %[1]q
-  image_id        = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id        = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type   = "m1.small"
   security_groups = [aws_security_group.test.id]
 }
@@ -187,9 +188,9 @@ data "aws_launch_configuration" "test" {
 }
 
 func testAccLaunchConfigurationDataSourceConfig_metaOptions(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t3.nano"
   name          = %[1]q
 
@@ -207,10 +208,10 @@ data "aws_launch_configuration" "test" {
 }
 
 func testAccLaunchConfigurationDataSourceConfig_ebsNoDevice(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "m1.small"
 
   ebs_block_device {

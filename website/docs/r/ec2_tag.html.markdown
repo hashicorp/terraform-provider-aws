@@ -40,22 +40,31 @@ resource "aws_ec2_tag" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `resource_id` - (Required) The ID of the EC2 resource to manage the tag for.
 * `key` - (Required) The tag name.
 * `value` - (Required) The value of the tag.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - EC2 resource identifier and key, separated by a comma (`,`)
 
 ## Import
 
-`aws_ec2_tag` can be imported by using the EC2 resource identifier and key, separated by a comma (`,`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_tag` using the EC2 resource identifier and key, separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_ec2_tag.example
+  id = "tgw-attach-1234567890abcdef,Name"
+}
 ```
-$ terraform import aws_ec2_tag.example tgw-attach-1234567890abcdef,Name
+
+Using `terraform import`, import `aws_ec2_tag` using the EC2 resource identifier and key, separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_ec2_tag.example tgw-attach-1234567890abcdef,Name
 ```

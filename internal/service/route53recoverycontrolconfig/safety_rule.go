@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53recoverycontrolconfig
 
 import (
@@ -126,7 +129,7 @@ func resourceSafetyRuleCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceSafetyRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	input := &r53rcc.DescribeSafetyRuleInput{
 		SafetyRuleArn: aws.String(d.Id()),
@@ -210,7 +213,7 @@ func resourceSafetyRuleUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceSafetyRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	log.Printf("[INFO] Deleting Route53 Recovery Control Config Safety Rule: %s", d.Id())
 	_, err := conn.DeleteSafetyRuleWithContext(ctx, &r53rcc.DeleteSafetyRuleInput{
@@ -240,7 +243,7 @@ func resourceSafetyRuleDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 func createAssertionRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	assertionRule := &r53rcc.NewAssertionRule{
 		Name:             aws.String(d.Get("name").(string)),
@@ -277,7 +280,7 @@ func createAssertionRule(ctx context.Context, d *schema.ResourceData, meta inter
 
 func createGatingRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	gatingRule := &r53rcc.NewGatingRule{
 		Name:            aws.String(d.Get("name").(string)),
@@ -315,7 +318,7 @@ func createGatingRule(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func updateAssertionRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	assertionRuleUpdate := &r53rcc.AssertionRuleUpdate{
 		SafetyRuleArn: aws.String(d.Get("arn").(string)),
@@ -344,7 +347,7 @@ func updateAssertionRule(ctx context.Context, d *schema.ResourceData, meta inter
 
 func updateGatingRule(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn()
+	conn := meta.(*conns.AWSClient).Route53RecoveryControlConfigConn(ctx)
 
 	gatingRuleUpdate := &r53rcc.GatingRuleUpdate{
 		SafetyRuleArn: aws.String(d.Get("arn").(string)),

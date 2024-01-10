@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package diag
 
 import (
@@ -48,6 +51,10 @@ func (d Diagnostics) Log(ctx context.Context) {
 
 		if diagnostic.Attribute != nil {
 			diagnosticFields[logging.KeyDiagnosticAttribute] = diagnostic.Attribute.String()
+		}
+
+		if diagnostic.FunctionArgument != nil {
+			diagnosticFields[logging.KeyDiagnosticFunctionArgument] = *diagnostic.FunctionArgument
 		}
 
 		switch diagnostic.Severity {

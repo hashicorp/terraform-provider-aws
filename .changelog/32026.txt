@@ -1,0 +1,7 @@
+```release-note:new-data-source
+aws_sesv2_email_identity
+```
+
+```release-note:new-data-source
+aws_sesv2_email_identity_mail_from_attributes
+```

@@ -116,9 +116,89 @@ resource "aws_appautoscaling_policy" "replicas" {
 }
 ```
 
+### Create target tracking scaling policy using metric math
+
+```terraform
+resource "aws_appautoscaling_target" "ecs_target" {
+  max_capacity       = 4
+  min_capacity       = 1
+  resource_id        = "service/clusterName/serviceName"
+  scalable_dimension = "ecs:service:DesiredCount"
+  service_namespace  = "ecs"
+}
+
+resource "aws_appautoscaling_policy" "example" {
+  name               = "foo"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.ecs_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.ecs_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.ecs_target.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    target_value = 100
+
+    customized_metric_specification {
+      metrics {
+        label = "Get the queue size (the number of messages waiting to be processed)"
+        id    = "m1"
+
+        metric_stat {
+          metric {
+            metric_name = "ApproximateNumberOfMessagesVisible"
+            namespace   = "AWS/SQS"
+
+            dimensions {
+              name  = "QueueName"
+              value = "my-queue"
+            }
+          }
+
+          stat = "Sum"
+        }
+
+        return_data = false
+      }
+
+      metrics {
+        label = "Get the ECS running task count (the number of currently running tasks)"
+        id    = "m2"
+
+        metric_stat {
+          metric {
+            metric_name = "RunningTaskCount"
+            namespace   = "ECS/ContainerInsights"
+
+            dimensions {
+              name  = "ClusterName"
+              value = "default"
+            }
+
+            dimensions {
+              name  = "ServiceName"
+              value = "web-app"
+            }
+          }
+
+          stat = "Average"
+        }
+
+        return_data = false
+      }
+
+      metrics {
+        label       = "Calculate the backlog per instance"
+        id          = "e1"
+        expression  = "m1 / m2"
+        return_data = true
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name of the policy. Must be between 1 and 255 characters in length.
 * `policy_type` - (Optional) Policy type. Valid values are `StepScaling` and `TargetTrackingScaling`. Defaults to `StepScaling`. Certain services only support only one policy type. For more information see the [Target Tracking Scaling Policies](https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-target-tracking.html) and [Step Scaling Policies](https://docs.aws.amazon.com/autoscaling/application/userguide/application-auto-scaling-step-scaling-policies.html) documentation.
@@ -208,14 +288,48 @@ resource "aws_appautoscaling_policy" "example" {
 The `target_tracking_scaling_policy_configuration` `customized_metric_specification` configuration block supports the following arguments:
 
 * `dimensions` - (Optional) Configuration block(s) with the dimensions of the metric if the metric was published with dimensions. Detailed below.
-* `metric_name` - (Required) Name of the metric.
-* `namespace` - (Required) Namespace of the metric.
-* `statistic` - (Required) Statistic of the metric. Valid values: `Average`, `Minimum`, `Maximum`, `SampleCount`, and `Sum`.
+* `metric_name` - (Optional) Name of the metric.
+* `namespace` - (Optional) Namespace of the metric.
+* `statistic` - (Optional) Statistic of the metric. Valid values: `Average`, `Minimum`, `Maximum`, `SampleCount`, and `Sum`.
 * `unit` - (Optional) Unit of the metric.
+* `metrics` - (Optional) Metrics to include, as a metric data query.
 
 ### target_tracking_scaling_policy_configuration customized_metric_specification dimensions
 
 The `target_tracking_scaling_policy_configuration` `customized_metric_specification` `dimensions` configuration block supports the following arguments:
+
+* `name` - (Required) Name of the dimension.
+* `value` - (Required) Value of the dimension.
+
+### target_tracking_scaling_policy_configuration customized_metric_specification metrics
+
+The `target_tracking_scaling_policy_configuration` `customized_metric_specification` `metrics` configuration block supports the following arguments:
+
+* `expression` - (Optional) Math expression used on the returned metric. You must specify either `expression` or `metric_stat`, but not both.
+* `id` - (Required) Short name for the metric used in target tracking scaling policy.
+* `label` - (Optional) Human-readable label for this metric or expression.
+* `metric_stat` - (Optional) Structure that defines CloudWatch metric to be used in target tracking scaling policy. You must specify either `expression` or `metric_stat`, but not both.
+* `return_data` - (Optional) Boolean that indicates whether to return the timestamps and raw data values of this metric, the default is true
+
+### target_tracking_scaling_policy_configuration customized_metric_specification metrics metric_stat
+
+The `target_tracking_scaling_policy_configuration` `customized_metric_specification` `metrics` `metric_stat` configuration block supports the following arguments:
+
+* `metric` - (Required) Structure that defines the CloudWatch metric to return, including the metric name, namespace, and dimensions.
+* `stat` - (Required) Statistic of the metrics to return.
+* `unit` - (Optional) Unit of the metrics to return.
+
+### target_tracking_scaling_policy_configuration customized_metric_specification metrics metric
+
+The `target_tracking_scaling_policy_configuration` `customized_metric_specification` `metrics` `metric` configuration block supports the following arguments:
+
+* `dimensions` - (Optional) Dimensions of the metric.
+* `metric_name` - (Required) Name of the metric.
+* `namespace` - (Required) Namespace of the metric.
+
+### target_tracking_scaling_policy_configuration customized_metric_specification metrics dimensions
+
+The `target_tracking_scaling_policy_configuration` `customized_metric_specification` `metrics` `dimensions` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the dimension.
 * `value` - (Required) Value of the dimension.
@@ -227,9 +341,9 @@ The `target_tracking_scaling_policy_configuration` `predefined_metric_specificat
 * `predefined_metric_type` - (Required) Metric type.
 * `resource_label` - (Optional) Reserved for future use if the `predefined_metric_type` is not `ALBRequestCountPerTarget`. If the `predefined_metric_type` is `ALBRequestCountPerTarget`, you must specify this argument. Documentation can be found at: [AWS Predefined Scaling Metric Specification](https://docs.aws.amazon.com/autoscaling/plans/APIReference/API_PredefinedScalingMetricSpecification.html). Must be less than or equal to 1023 characters in length.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `alarm_arns` - List of CloudWatch alarm ARNs associated with the scaling policy.
 * `arn` - ARN assigned by AWS to the scaling policy.
@@ -238,8 +352,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Application AutoScaling Policy can be imported using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Application AutoScaling Policy using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_appautoscaling_policy.test-policy
+  id = "service-namespace/resource-id/scalable-dimension/policy-name"
+}
 ```
-$ terraform import aws_appautoscaling_policy.test-policy service-namespace/resource-id/scalable-dimension/policy-name
+
+Using `terraform import`, import Application AutoScaling Policy using the `service-namespace` , `resource-id`, `scalable-dimension` and `policy-name` separated by `/`. For example:
+
+```console
+% terraform import aws_appautoscaling_policy.test-policy service-namespace/resource-id/scalable-dimension/policy-name
 ```

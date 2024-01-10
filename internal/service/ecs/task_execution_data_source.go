@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs
 
 import (
@@ -272,7 +275,7 @@ const (
 
 func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECSConn()
+	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	cluster := d.Get("cluster").(string)
 	taskDefinition := d.Get("task_definition").(string)
@@ -316,14 +319,14 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 	if v, ok := d.GetOk("placement_constraints"); ok {
 		pc, err := expandPlacementConstraints(v.(*schema.Set).List())
 		if err != nil {
-			return create.DiagError(names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), err)
+			return create.AppendDiagError(diags, names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), err)
 		}
 		input.PlacementConstraints = pc
 	}
 	if v, ok := d.GetOk("placement_strategy"); ok {
 		ps, err := expandPlacementStrategy(v.([]interface{}))
 		if err != nil {
-			return create.DiagError(names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), err)
+			return create.AppendDiagError(diags, names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), err)
 		}
 		input.PlacementStrategy = ps
 	}
@@ -342,10 +345,10 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 
 	out, err := conn.RunTaskWithContext(ctx, &input)
 	if err != nil {
-		return create.DiagError(names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), err)
+		return create.AppendDiagError(diags, names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), err)
 	}
 	if out == nil || len(out.Tasks) == 0 {
-		return create.DiagError(names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), tfresource.NewEmptyResultError(input))
+		return create.AppendDiagError(diags, names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), tfresource.NewEmptyResultError(input))
 	}
 
 	var taskArns []*string
@@ -430,7 +433,7 @@ func expandContainerOverride(tfList []interface{}) []*ecs.ContainerOverride {
 			co.Memory = aws.Int64(int64(v.(int)))
 		}
 		if v, ok := tfMap["memory_reservation"]; ok {
-			co.Memory = aws.Int64(int64(v.(int)))
+			co.MemoryReservation = aws.Int64(int64(v.(int)))
 		}
 		if v, ok := tfMap["resource_requirements"]; ok {
 			co.ResourceRequirements = expandResourceRequirements(v.(*schema.Set))

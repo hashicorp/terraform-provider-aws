@@ -1,0 +1,19 @@
+```release-note:bug
+resource/aws_ec2_network_insights_analysis: Fix `setting forward_path_components: Invalid address to set` errors
+```
+
+```release-note:enhancement
+resource/aws_ec2_network_insights_path: Add `destination_arn` and `source_arn` attributes
+```
+
+```release-note:enhancement
+data-source/aws_ec2_network_insights_path: Add `destination_arn` and `source_arn` attributes
+```
+
+```release-note:bug
+resource/aws_ec2_network_insights_path: Avoid recreating resource when passing an ARN as `source` or `destination`
+```
+
+```release-note:bug
+resource/aws_ec2_network_insights_path: Retry `AnalysisExistsForNetworkInsightsPath` errors on resource Delete
+```

@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package transcribe
 
@@ -9,13 +9,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/transcribe"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_transcribe_language_model", &resource.Sweeper{
 		Name: "aws_transcribe_language_model",
 		F:    sweepLanguageModels,
@@ -52,23 +51,22 @@ func init() {
 
 func sweepLanguageModels(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).TranscribeClient()
+	conn := client.TranscribeClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &transcribe.ListLanguageModelsInput{}
-	var errs *multierror.Error
 
 	pages := transcribe.NewListLanguageModelsPaginator(conn, in)
 
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if sweep.SkipSweepError(err) {
-			log.Println("[WARN] Skipping Transcribe Language Models sweep for %s: %s", region, err)
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Transcribe Language Models sweep for %s: %s", region, err)
 			return nil
 		}
 
@@ -88,34 +86,28 @@ func sweepLanguageModels(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Transcribe Language Models for %s: %w", region, err))
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping Transcribe Language Models for %s: %w", region, err)
 	}
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Transcribe Language Models sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }
 
 func sweepMedicalVocabularies(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).TranscribeClient()
+	conn := client.TranscribeClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &transcribe.ListMedicalVocabulariesInput{}
-	var errs *multierror.Error
 
 	for {
 		out, err := conn.ListMedicalVocabularies(ctx, in)
-		if sweep.SkipSweepError(err) {
-			log.Println("[WARN] Skipping Transcribe Medical Vocabularies sweep for %s: %s", region, err)
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Transcribe Medical Vocabularies sweep for %s: %s", region, err)
 			return nil
 		}
 		if err != nil {
@@ -139,34 +131,28 @@ func sweepMedicalVocabularies(region string) error {
 		in.NextToken = out.NextToken
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Transcribe Medical Vocabularies for %s: %w", region, err))
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping Transcribe Medical Vocabularies for %s: %w", region, err)
 	}
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Transcribe Medical Vocabularies sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }
 
 func sweepVocabularies(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).TranscribeClient()
+	conn := client.TranscribeClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &transcribe.ListVocabulariesInput{}
-	var errs *multierror.Error
 
 	for {
 		out, err := conn.ListVocabularies(ctx, in)
-		if sweep.SkipSweepError(err) {
-			log.Println("[WARN] Skipping Transcribe Vocabularies sweep for %s: %s", region, err)
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Transcribe Vocabularies sweep for %s: %s", region, err)
 			return nil
 		}
 		if err != nil {
@@ -190,41 +176,34 @@ func sweepVocabularies(region string) error {
 		in.NextToken = out.NextToken
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Transcribe Vocabularies for %s: %w", region, err))
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping Transcribe Vocabularies for %s: %w", region, err)
 	}
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Transcribe Vocabularies sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }
 
 func sweepVocabularyFilters(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).TranscribeClient()
+	conn := client.TranscribeClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	in := &transcribe.ListVocabularyFiltersInput{}
-	var errs *multierror.Error
 
 	for {
 		out, err := conn.ListVocabularyFilters(ctx, in)
-		if sweep.SkipSweepError(err) {
-			log.Println("[WARN] Skipping Transcribe Vocabulary Filter sweep for %s: %s", region, err)
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Transcribe Vocabulary Filter sweep for %s: %s", region, err)
 			return nil
 		}
 		if err != nil {
 			return fmt.Errorf("error retrieving Transcribe Vocabulary Filters: %w", err)
 		}
 
-		log.Println(out)
 		for _, filter := range out.VocabularyFilters {
 			name := aws.ToString(filter.VocabularyFilterName)
 			log.Printf("[INFO] Deleting Transcribe Vocabulary Filter: %s", name)
@@ -242,14 +221,9 @@ func sweepVocabularyFilters(region string) error {
 		in.NextToken = out.NextToken
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Transcribe Vocabulary Filters for %s: %w", region, err))
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping Transcribe Vocabulary Filters for %s: %w", region, err)
 	}
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Transcribe Vocabulary Filters sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }

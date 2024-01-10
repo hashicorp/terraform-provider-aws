@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cur
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	cur "github.com/aws/aws-sdk-go/service/costandusagereportservice"
@@ -39,7 +42,7 @@ func ResourceReportDefinition() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 256),
-					validation.StringMatch(regexp.MustCompile(`[0-9A-Za-z!\-_.*\'()]+`), "The name must be unique, is case sensitive, and can't include spaces."),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z!\-_.*\'()]+`), "The name must be unique, is case sensitive, and can't include spaces."),
 				),
 			},
 			"time_unit": {
@@ -106,7 +109,7 @@ func ResourceReportDefinition() *schema.Resource {
 
 func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CURConn()
+	conn := meta.(*conns.AWSClient).CURConn(ctx)
 
 	reportName := d.Get("report_name").(string)
 	additionalArtifacts := flex.ExpandStringSet(d.Get("additional_artifacts").(*schema.Set))
@@ -163,7 +166,7 @@ func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CURConn()
+	conn := meta.(*conns.AWSClient).CURConn(ctx)
 
 	reportDefinition, err := FindReportDefinitionByName(ctx, conn, d.Id())
 
@@ -209,7 +212,7 @@ func resourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceReportDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CURConn()
+	conn := meta.(*conns.AWSClient).CURConn(ctx)
 
 	additionalArtifacts := flex.ExpandStringSet(d.Get("additional_artifacts").(*schema.Set))
 	compression := d.Get("compression").(string)
@@ -266,7 +269,7 @@ func resourceReportDefinitionUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceReportDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CURConn()
+	conn := meta.(*conns.AWSClient).CURConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Cost And Usage Report Definition: %s", d.Id())
 	_, err := conn.DeleteReportDefinitionWithContext(ctx, &cur.DeleteReportDefinitionInput{

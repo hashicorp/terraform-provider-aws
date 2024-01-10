@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package outposts
 
 import (
@@ -49,7 +52,7 @@ func DataSourceOutpostAsset() *schema.Resource {
 
 func DataSourceOutpostAssetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).OutpostsConn()
+	conn := meta.(*conns.AWSClient).OutpostsConn(ctx)
 	outpost_id := aws.String(d.Get("arn").(string))
 
 	input := &outposts.ListAssetsInput{

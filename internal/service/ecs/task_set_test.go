@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
@@ -32,7 +35,7 @@ func TestAccECSTaskSet_basic(t *testing.T) {
 				Config: testAccTaskSetConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskSetExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexp.MustCompile(fmt.Sprintf("task-set/%[1]s/%[1]s/ecs-svc/.+", rName))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexache.MustCompile(fmt.Sprintf("task-set/%[1]s/%[1]s/ecs-svc/.+", rName))),
 					resource.TestCheckResourceAttr(resourceName, "service_registries.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", "0"),
 				),
@@ -198,36 +201,6 @@ func TestAccECSTaskSet_withCapacityProviderStrategy(t *testing.T) {
 	})
 }
 
-func TestAccECSTaskSet_withMultipleCapacityProviderStrategies(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ecs_task_set.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTaskSetDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccTaskSetConfig_multipleCapacityProviderStrategies(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTaskSetExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "capacity_provider_strategy.#", "2"),
-				),
-			},
-			{
-				ResourceName: resourceName,
-				ImportState:  true,
-				ImportStateVerifyIgnore: []string{
-					"wait_until_stable",
-					"wait_until_stable_timeout",
-				},
-			},
-		},
-	})
-}
-
 func TestAccECSTaskSet_withAlb(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -368,7 +341,7 @@ func TestAccECSTaskSet_withServiceRegistries(t *testing.T) {
 	})
 }
 
-func TestAccECSTaskSet_Tags(t *testing.T) {
+func TestAccECSTaskSet_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecs_task_set.test"
@@ -416,11 +389,82 @@ func TestAccECSTaskSet_Tags(t *testing.T) {
 	})
 }
 
-//////////////
-// Fixtures //
-//////////////
+func testAccCheckTaskSetExists(ctx context.Context, name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return fmt.Errorf("Not found: %s", name)
+		}
 
-func testAccTaskSetBaseConfig(rName string) string {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
+
+		taskSetId, service, cluster, err := tfecs.TaskSetParseID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		input := &ecs.DescribeTaskSetsInput{
+			TaskSets: aws.StringSlice([]string{taskSetId}),
+			Cluster:  aws.String(cluster),
+			Service:  aws.String(service),
+		}
+
+		output, err := conn.DescribeTaskSetsWithContext(ctx, input)
+
+		if err != nil {
+			return err
+		}
+
+		if output == nil || len(output.TaskSets) == 0 {
+			return fmt.Errorf("ECS TaskSet (%s) not found", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckTaskSetDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ecs_task_set" {
+				continue
+			}
+
+			taskSetId, service, cluster, err := tfecs.TaskSetParseID(rs.Primary.ID)
+
+			if err != nil {
+				return err
+			}
+
+			input := &ecs.DescribeTaskSetsInput{
+				TaskSets: aws.StringSlice([]string{taskSetId}),
+				Cluster:  aws.String(cluster),
+				Service:  aws.String(service),
+			}
+
+			output, err := conn.DescribeTaskSetsWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException, ecs.ErrCodeServiceNotFoundException, ecs.ErrCodeTaskSetNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			if output != nil && len(output.TaskSets) == 1 {
+				return fmt.Errorf("ECS TaskSet (%s) still exists", rs.Primary.ID)
+			}
+		}
+
+		return nil
+	}
+}
+
+func testAccTaskSetConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -453,9 +497,7 @@ resource "aws_ecs_service" "test" {
 }
 
 func testAccTaskSetConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccTaskSetBaseConfig(rName),
-		`
+	return acctest.ConfigCompose(testAccTaskSetConfig_base(rName), `
 resource "aws_ecs_task_set" "test" {
   service         = aws_ecs_service.test.id
   cluster         = aws_ecs_cluster.test.id
@@ -465,9 +507,7 @@ resource "aws_ecs_task_set" "test" {
 }
 
 func testAccTaskSetConfig_externalID(rName string) string {
-	return acctest.ConfigCompose(
-		testAccTaskSetBaseConfig(rName),
-		`
+	return acctest.ConfigCompose(testAccTaskSetConfig_base(rName), `
 resource "aws_ecs_task_set" "test" {
   service         = aws_ecs_service.test.id
   cluster         = aws_ecs_cluster.test.id
@@ -478,9 +518,7 @@ resource "aws_ecs_task_set" "test" {
 }
 
 func testAccTaskSetConfig_scale(rName string, scale float64) string {
-	return acctest.ConfigCompose(
-		testAccTaskSetBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTaskSetConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_task_set" "test" {
   service         = aws_ecs_service.test.id
   cluster         = aws_ecs_cluster.test.id
@@ -493,10 +531,7 @@ resource "aws_ecs_task_set" "test" {
 }
 
 func testAccTaskSetConfig_capacityProviderStrategy(rName string, weight, base int) string {
-	return acctest.ConfigCompose(
-		testAccCapacityProviderConfig_base(rName),
-		testAccTaskSetBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccCapacityProviderConfig_base(rName), testAccTaskSetConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
   auto_scaling_group_provider {
@@ -517,123 +552,8 @@ resource "aws_ecs_task_set" "test" {
 `, rName, weight, base))
 }
 
-func testAccTaskSetConfig_multipleCapacityProviderStrategies(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-  tags = {
-    Name = "tf-acc-ecs-service-with-multiple-capacity-providers"
-  }
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.test.id
-  ingress {
-    protocol    = "tcp"
-    from_port   = 80
-    to_port     = 8000
-    cidr_blocks = [aws_vpc.test.cidr_block]
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = cidrsubnet(aws_vpc.test.cidr_block, 8, 1)
-  vpc_id     = aws_vpc.test.id
-  tags = {
-    Name = "tf-acc-ecs-service-with-multiple-capacity-providers"
-  }
-}
-
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-
-  capacity_providers = ["FARGATE_SPOT", "FARGATE"]
-
-  default_capacity_provider_strategy {
-    capacity_provider = "FARGATE_SPOT"
-    weight            = 1
-    base              = 1
-  }
-
-  default_capacity_provider_strategy {
-    capacity_provider = "FARGATE"
-    weight            = 1
-  }
-}
-
-resource "aws_ecs_service" "test" {
-  name          = %[1]q
-  cluster       = aws_ecs_cluster.test.id
-  desired_count = 1
-  deployment_controller {
-    type = "EXTERNAL"
-  }
-}
-
-resource "aws_ecs_task_definition" "test" {
-  family                   = %[1]q
-  network_mode             = "awsvpc"
-  requires_compatibilities = ["FARGATE"]
-  cpu                      = "256"
-  memory                   = "512"
-  container_definitions    = <<DEFINITION
-[
-  {
-    "cpu": 256,
-    "essential": true,
-    "image": "mongo:latest",
-    "memory": 512,
-    "name": "mongodb",
-    "networkMode": "awsvpc"
-  }
-]
-DEFINITION
-}
-
-resource "aws_ecs_task_set" "test" {
-  service         = aws_ecs_service.test.id
-  cluster         = aws_ecs_cluster.test.id
-  task_definition = aws_ecs_task_definition.test.arn
-  network_configuration {
-    security_groups  = [aws_security_group.test.id]
-    subnets          = [aws_subnet.test.id]
-    assign_public_ip = false
-  }
-  capacity_provider_strategy {
-    capacity_provider = "FARGATE"
-    weight            = 1
-  }
-  capacity_provider_strategy {
-    capacity_provider = "FARGATE_SPOT"
-    weight            = 1
-  }
-}
-`, rName)
-}
-
 func testAccTaskSetConfig_alb(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-  tags = {
-    Name = "terraform-testacc-ecs-service-with-alb"
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  vpc_id            = aws_vpc.test.id
-  tags = {
-    Name = "tf-acc-ecs-service-with-alb"
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
 }
@@ -705,9 +625,7 @@ resource "aws_ecs_task_set" "test" {
 }
 
 func testAccTaskSetConfig_tags1(rName, tag1Key, tag1Value string) string {
-	return acctest.ConfigCompose(
-		testAccTaskSetBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTaskSetConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_task_set" "test" {
   service         = aws_ecs_service.test.id
   cluster         = aws_ecs_cluster.test.id
@@ -720,9 +638,7 @@ resource "aws_ecs_task_set" "test" {
 }
 
 func testAccTaskSetConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return acctest.ConfigCompose(
-		testAccTaskSetBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTaskSetConfig_base(rName), fmt.Sprintf(`
 resource "aws_ecs_task_set" "test" {
   service         = aws_ecs_service.test.id
   cluster         = aws_ecs_cluster.test.id
@@ -736,34 +652,20 @@ resource "aws_ecs_task_set" "test" {
 }
 
 func testAccTaskSetConfig_serviceRegistries(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-  tags = {
-    Name = "tf-acc-with-svc-reg"
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  vpc_id            = aws_vpc.test.id
-  tags = {
-    Name = "tf-acc-with-svc-reg"
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
+
   ingress {
     protocol    = "-1"
     from_port   = 0
     to_port     = 0
     cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -830,26 +732,7 @@ resource "aws_ecs_task_set" "test" {
 }
 
 func testAccTaskSetConfig_launchTypeFargate(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-  tags = {
-    Name = "terraform-testacc-ecs-service-with-launch-type-fargate"
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  vpc_id            = aws_vpc.test.id
-  tags = {
-    Name = "tf-acc-ecs-service-with-launch-type-fargate"
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   count = 2
 
@@ -861,6 +744,10 @@ resource "aws_security_group" "test" {
     from_port   = 80
     to_port     = 8000
     cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -912,26 +799,7 @@ resource "aws_ecs_task_set" "test" {
 }
 
 func testAccTaskSetConfig_launchTypeFargateAndPlatformVersion(rName, platformVersion string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-  tags = {
-    Name = "terraform-testacc-ecs-service-with-launch-type-fargate-and-platform-version"
-  }
-}
-
-resource "aws_subnet" "test" {
-  count             = 2
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  vpc_id            = aws_vpc.test.id
-  tags = {
-    Name = "tf-acc-ecs-service-with-launch-type-fargate-and-platform-version"
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   count = 2
 
@@ -943,6 +811,10 @@ resource "aws_security_group" "test" {
     from_port   = 80
     to_port     = 8000
     cidr_blocks = [aws_vpc.test.cidr_block]
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
@@ -992,79 +864,4 @@ resource "aws_ecs_task_set" "test" {
   }
 }
 `, rName, platformVersion))
-}
-
-func testAccCheckTaskSetExists(ctx context.Context, name string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
-
-		taskSetId, service, cluster, err := tfecs.TaskSetParseID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		input := &ecs.DescribeTaskSetsInput{
-			TaskSets: aws.StringSlice([]string{taskSetId}),
-			Cluster:  aws.String(cluster),
-			Service:  aws.String(service),
-		}
-
-		output, err := conn.DescribeTaskSetsWithContext(ctx, input)
-
-		if err != nil {
-			return err
-		}
-
-		if output == nil || len(output.TaskSets) == 0 {
-			return fmt.Errorf("ECS TaskSet (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
-	}
-}
-
-func testAccCheckTaskSetDestroy(ctx context.Context) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn()
-
-		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_ecs_task_set" {
-				continue
-			}
-
-			taskSetId, service, cluster, err := tfecs.TaskSetParseID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			input := &ecs.DescribeTaskSetsInput{
-				TaskSets: aws.StringSlice([]string{taskSetId}),
-				Cluster:  aws.String(cluster),
-				Service:  aws.String(service),
-			}
-
-			output, err := conn.DescribeTaskSetsWithContext(ctx, input)
-
-			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeClusterNotFoundException, ecs.ErrCodeServiceNotFoundException, ecs.ErrCodeTaskSetNotFoundException) {
-				continue
-			}
-
-			if err != nil {
-				return err
-			}
-
-			if output != nil && len(output.TaskSets) == 1 {
-				return fmt.Errorf("ECS TaskSet (%s) still exists", rs.Primary.ID)
-			}
-		}
-
-		return nil
-	}
 }

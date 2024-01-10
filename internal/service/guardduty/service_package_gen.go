@@ -5,6 +5,10 @@ package guardduty
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -12,7 +16,12 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newDataSourceFindingIds,
+			Name:    "Finding Ids",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
@@ -37,6 +46,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
+		},
+		{
+			Factory:  ResourceDetectorFeature,
+			TypeName: "aws_guardduty_detector_feature",
+			Name:     "Detector Feature",
 		},
 		{
 			Factory:  ResourceFilter,
@@ -69,6 +83,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceOrganizationConfiguration,
 			TypeName: "aws_guardduty_organization_configuration",
+			Name:     "Organization Configuration",
+		},
+		{
+			Factory:  ResourceOrganizationConfigurationFeature,
+			TypeName: "aws_guardduty_organization_configuration_feature",
+			Name:     "Organization Configuration Feature",
 		},
 		{
 			Factory:  ResourcePublishingDestination,
@@ -89,4 +109,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.GuardDuty
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*guardduty_sdkv1.GuardDuty, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return guardduty_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

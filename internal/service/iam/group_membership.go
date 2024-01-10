@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -49,7 +52,7 @@ func ResourceGroupMembership() *schema.Resource {
 
 func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	group := d.Get("group").(string)
 	userList := flex.ExpandStringValueSet(d.Get("users").(*schema.Set))
@@ -65,7 +68,7 @@ func resourceGroupMembershipCreate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 	group := d.Get("group").(string)
 
 	input := &iam.GetGroupInput{
@@ -131,7 +134,7 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceGroupMembershipUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	if d.HasChange("users") {
 		group := d.Get("group").(string)
@@ -163,7 +166,7 @@ func resourceGroupMembershipUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn()
+	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 	userList := flex.ExpandStringValueSet(d.Get("users").(*schema.Set))
 	group := d.Get("group").(string)
 

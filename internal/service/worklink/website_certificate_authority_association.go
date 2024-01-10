@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package worklink
 
 import (
@@ -55,7 +58,7 @@ func ResourceWebsiteCertificateAuthorityAssociation() *schema.Resource {
 
 func resourceWebsiteCertificateAuthorityAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkLinkConn()
+	conn := meta.(*conns.AWSClient).WorkLinkConn(ctx)
 
 	input := &worklink.AssociateWebsiteCertificateAuthorityInput{
 		FleetArn:    aws.String(d.Get("fleet_arn").(string)),
@@ -78,7 +81,7 @@ func resourceWebsiteCertificateAuthorityAssociationCreate(ctx context.Context, d
 
 func resourceWebsiteCertificateAuthorityAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkLinkConn()
+	conn := meta.(*conns.AWSClient).WorkLinkConn(ctx)
 
 	fleetArn, websiteCaID, err := DecodeWebsiteCertificateAuthorityAssociationResourceID(d.Id())
 	if err != nil {
@@ -110,7 +113,7 @@ func resourceWebsiteCertificateAuthorityAssociationRead(ctx context.Context, d *
 
 func resourceWebsiteCertificateAuthorityAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkLinkConn()
+	conn := meta.(*conns.AWSClient).WorkLinkConn(ctx)
 
 	fleetArn, websiteCaID, err := DecodeWebsiteCertificateAuthorityAssociationResourceID(d.Id())
 	if err != nil {

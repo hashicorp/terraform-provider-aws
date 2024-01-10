@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
@@ -36,7 +39,7 @@ func TestAccServiceCatalogProduct_basic(t *testing.T) {
 				Config: testAccProductConfig_basic(rName, "beskrivning", "supportbeskrivning", domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "catalog", regexp.MustCompile(`product/prod-.*`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "catalog", regexache.MustCompile(`product/prod-.*`)),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "description", "beskrivning"),
@@ -65,7 +68,7 @@ func TestAccServiceCatalogProduct_basic(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"accept_language",
-					"provisioning_artifact_parameters",
+					"provisioning_artifact_parameters.0.disable_template_validation",
 				},
 			},
 		},
@@ -185,7 +188,7 @@ func TestAccServiceCatalogProduct_physicalID(t *testing.T) {
 				Config: testAccProductConfig_physicalID(rName, domain, acctest.DefaultEmailAddress),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProductExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "catalog", regexp.MustCompile(`product/prod-.*`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "catalog", regexache.MustCompile(`product/prod-.*`)),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.description", "artefaktbeskrivning"),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.name", rName),
@@ -194,7 +197,7 @@ func TestAccServiceCatalogProduct_physicalID(t *testing.T) {
 						resourceName,
 						"provisioning_artifact_parameters.0.template_physical_id",
 						"cloudformation",
-						regexp.MustCompile(fmt.Sprintf(`stack/%s/.*`, rName)),
+						regexache.MustCompile(fmt.Sprintf(`stack/%s/.*`, rName)),
 					),
 					resource.TestCheckResourceAttr(resourceName, "provisioning_artifact_parameters.0.type", servicecatalog.ProvisioningArtifactTypeCloudFormationTemplate),
 				),
@@ -205,7 +208,7 @@ func TestAccServiceCatalogProduct_physicalID(t *testing.T) {
 				ImportStateVerify: true,
 				ImportStateVerifyIgnore: []string{
 					"accept_language",
-					"provisioning_artifact_parameters",
+					"provisioning_artifact_parameters.0.disable_template_validation",
 				},
 			},
 		},
@@ -214,7 +217,7 @@ func TestAccServiceCatalogProduct_physicalID(t *testing.T) {
 
 func testAccCheckProductDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_product" {
@@ -252,7 +255,7 @@ func testAccCheckProductExists(ctx context.Context, resourceName string) resourc
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
 
 		input := &servicecatalog.DescribeProductAsAdminInput{
 			Id: aws.String(rs.Primary.ID),
@@ -273,11 +276,6 @@ func testAccProductTemplateURLBaseConfig(rName string) string {
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_s3_object" "test" {

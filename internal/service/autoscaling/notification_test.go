@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling_test
 
 import (
@@ -8,9 +11,9 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -125,7 +128,7 @@ func testAccCheckASGNotificationExists(ctx context.Context, n string, groups []s
 			return fmt.Errorf("No ASG Notification ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
 		opts := &autoscaling.DescribeNotificationConfigurationsInput{
 			AutoScalingGroupNames: aws.StringSlice(groups),
 			MaxRecords:            aws.Int64(100),
@@ -150,7 +153,7 @@ func testAccCheckASGNDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			groups := []*string{aws.String("foobar1-terraform-test")}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn()
+			conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
 			opts := &autoscaling.DescribeNotificationConfigurationsInput{
 				AutoScalingGroupNames: groups,
 			}
@@ -223,14 +226,14 @@ func testAccCheckASGNotificationAttributes(n string, asgn *autoscaling.DescribeN
 }
 
 func testAccNotificationConfig_basic(rName string) string {
-	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_sns_topic" "topic_example" {
   name = "user-updates-topic-%s"
 }
 
 resource "aws_launch_configuration" "foobar" {
   name          = "foobarautoscaling-terraform-test-%s"
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 }
 
@@ -266,18 +269,18 @@ resource "aws_autoscaling_notification" "example" {
 
   topic_arn = aws_sns_topic.topic_example.arn
 }
-`, rName, rName, rName)
+`, rName, rName, rName))
 }
 
 func testAccNotificationConfig_update(rName string) string {
-	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_sns_topic" "topic_example" {
   name = "user-updates-topic-%s"
 }
 
 resource "aws_launch_configuration" "foobar" {
   name          = "foobarautoscaling-terraform-test-%s"
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 }
 
@@ -330,17 +333,17 @@ resource "aws_autoscaling_notification" "example" {
 
   topic_arn = aws_sns_topic.topic_example.arn
 }
-`, rName, rName, rName, rName)
+`, rName, rName, rName, rName))
 }
 
 func testAccNotificationConfig_pagination() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), `
 resource "aws_sns_topic" "user_updates" {
   name = "user-updates-topic"
 }
 
 resource "aws_launch_configuration" "foobar" {
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 }
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lakeformation
 
 import (
@@ -27,6 +30,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 		UpdateWithoutTimeout: resourceDataLakeSettingsCreate,
 		ReadWithoutTimeout:   resourceDataLakeSettingsRead,
 		DeleteWithoutTimeout: resourceDataLakeSettingsDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -40,6 +44,25 @@ func ResourceDataLakeSettings() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
 				},
+			},
+			"read_only_admins": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: verify.ValidARN,
+				},
+			},
+			"allow_external_data_filtering": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"authorized_session_tag_value_list": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"catalog_id": {
 				Type:     schema.TypeString,
@@ -96,6 +119,15 @@ func ResourceDataLakeSettings() *schema.Resource {
 					},
 				},
 			},
+			"external_data_filtering_allow_list": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validPrincipal,
+				},
+			},
 			"trusted_resource_owners": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -111,7 +143,7 @@ func ResourceDataLakeSettings() *schema.Resource {
 
 func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	input := &lakeformation.PutDataLakeSettingsInput{}
 
@@ -121,6 +153,22 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 
 	settings := &lakeformation.DataLakeSettings{}
 
+	if v, ok := d.GetOk("admins"); ok {
+		settings.DataLakeAdmins = expandDataLakeSettingsAdmins(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("read_only_admins"); ok {
+		settings.ReadOnlyAdmins = expandDataLakeSettingsAdmins(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("allow_external_data_filtering"); ok {
+		settings.AllowExternalDataFiltering = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("authorized_session_tag_value_list"); ok {
+		settings.AuthorizedSessionTagValueList = flex.ExpandStringList(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("create_database_default_permissions"); ok {
 		settings.CreateDatabaseDefaultPermissions = expandDataLakeSettingsCreateDefaultPermissions(v.([]interface{}))
 	}
@@ -129,8 +177,8 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 		settings.CreateTableDefaultPermissions = expandDataLakeSettingsCreateDefaultPermissions(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("admins"); ok {
-		settings.DataLakeAdmins = expandDataLakeSettingsAdmins(v.(*schema.Set))
+	if v, ok := d.GetOk("external_data_filtering_allow_list"); ok {
+		settings.ExternalDataFilteringAllowList = expandDataLakeSettingsDataFilteringAllowList(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("trusted_resource_owners"); ok {
@@ -151,7 +199,7 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 				return retry.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(fmt.Errorf("error creating Lake Formation data lake settings: %w", err))
+			return retry.NonRetryableError(fmt.Errorf("creating Lake Formation data lake settings: %w", err))
 		}
 		return nil
 	})
@@ -175,7 +223,7 @@ func resourceDataLakeSettingsCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	input := &lakeformation.GetDataLakeSettingsInput{}
 
@@ -201,9 +249,13 @@ func resourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, m
 
 	settings := output.DataLakeSettings
 
+	d.Set("admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
+	d.Set("read_only_admins", flattenDataLakeSettingsAdmins(settings.ReadOnlyAdmins))
+	d.Set("allow_external_data_filtering", settings.AllowExternalDataFiltering)
+	d.Set("authorized_session_tag_value_list", flex.FlattenStringList(settings.AuthorizedSessionTagValueList))
 	d.Set("create_database_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateDatabaseDefaultPermissions))
 	d.Set("create_table_default_permissions", flattenDataLakeSettingsCreateDefaultPermissions(settings.CreateTableDefaultPermissions))
-	d.Set("admins", flattenDataLakeSettingsAdmins(settings.DataLakeAdmins))
+	d.Set("external_data_filtering_allow_list", flattenDataLakeSettingsDataFilteringAllowList(settings.ExternalDataFilteringAllowList))
 	d.Set("trusted_resource_owners", flex.FlattenStringList(settings.TrustedResourceOwners))
 
 	return diags
@@ -211,13 +263,14 @@ func resourceDataLakeSettingsRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceDataLakeSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn()
+	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
 
 	input := &lakeformation.PutDataLakeSettingsInput{
 		DataLakeSettings: &lakeformation.DataLakeSettings{
 			CreateDatabaseDefaultPermissions: make([]*lakeformation.PrincipalPermissions, 0),
 			CreateTableDefaultPermissions:    make([]*lakeformation.PrincipalPermissions, 0),
 			DataLakeAdmins:                   make([]*lakeformation.DataLakePrincipal, 0),
+			ReadOnlyAdmins:                   make([]*lakeformation.DataLakePrincipal, 0),
 			TrustedResourceOwners:            make([]*string, 0),
 		},
 	}
@@ -316,7 +369,37 @@ func flattenDataLakeSettingsAdmins(apiObjects []*lakeformation.DataLakePrincipal
 	tfSlice := make([]interface{}, 0, len(apiObjects))
 
 	for _, apiObject := range apiObjects {
-		tfSlice = append(tfSlice, *apiObject.DataLakePrincipalIdentifier)
+		tfSlice = append(tfSlice, aws.StringValue(apiObject.DataLakePrincipalIdentifier))
+	}
+
+	return tfSlice
+}
+
+func expandDataLakeSettingsDataFilteringAllowList(tfSet *schema.Set) []*lakeformation.DataLakePrincipal {
+	tfSlice := tfSet.List()
+	apiObjects := make([]*lakeformation.DataLakePrincipal, 0, len(tfSlice))
+
+	for _, tfItem := range tfSlice {
+		val, ok := tfItem.(string)
+		if ok && val != "" {
+			apiObjects = append(apiObjects, &lakeformation.DataLakePrincipal{
+				DataLakePrincipalIdentifier: aws.String(tfItem.(string)),
+			})
+		}
+	}
+
+	return apiObjects
+}
+
+func flattenDataLakeSettingsDataFilteringAllowList(apiObjects []*lakeformation.DataLakePrincipal) []interface{} {
+	if apiObjects == nil {
+		return nil
+	}
+
+	tfSlice := make([]interface{}, 0, len(apiObjects))
+
+	for _, apiObject := range apiObjects {
+		tfSlice = append(tfSlice, aws.StringValue(apiObject.DataLakePrincipalIdentifier))
 	}
 
 	return tfSlice

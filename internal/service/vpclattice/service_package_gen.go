@@ -5,6 +5,9 @@ package vpclattice
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	vpclattice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/vpclattice"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -22,8 +25,29 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceService,
+			Factory:  DataSourceAuthPolicy,
+			TypeName: "aws_vpclattice_auth_policy",
+			Name:     "Auth Policy",
+		},
+		{
+			Factory:  DataSourceListener,
+			TypeName: "aws_vpclattice_listener",
+			Name:     "Listener",
+		},
+		{
+			Factory:  DataSourceResourcePolicy,
+			TypeName: "aws_vpclattice_resource_policy",
+			Name:     "Resource Policy",
+		},
+		{
+			Factory:  dataSourceService,
 			TypeName: "aws_vpclattice_service",
+			Tags:     &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory:  dataSourceServiceNetwork,
+			TypeName: "aws_vpclattice_service_network",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 	}
 }
@@ -31,7 +55,40 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceService,
+			Factory:  resourceAccessLogSubscription,
+			TypeName: "aws_vpclattice_access_log_subscription",
+			Name:     "Access Log Subscription",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceAuthPolicy,
+			TypeName: "aws_vpclattice_auth_policy",
+		},
+		{
+			Factory:  ResourceListener,
+			TypeName: "aws_vpclattice_listener",
+			Name:     "Listener",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceListenerRule,
+			TypeName: "aws_vpclattice_listener_rule",
+			Name:     "Listener Rule",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceResourcePolicy,
+			TypeName: "aws_vpclattice_resource_policy",
+			Name:     "Resource Policy",
+		},
+		{
+			Factory:  resourceService,
 			TypeName: "aws_vpclattice_service",
 			Name:     "Service",
 			Tags: &types.ServicePackageResourceTags{
@@ -39,15 +96,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceServiceNetwork,
+			Factory:  resourceServiceNetwork,
 			TypeName: "aws_vpclattice_service_network",
-			Name:     "ServiceNetwork",
+			Name:     "Service Network",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
 		},
 		{
-			Factory:  ResourceServiceNetworkServiceAssociation,
+			Factory:  resourceServiceNetworkServiceAssociation,
 			TypeName: "aws_vpclattice_service_network_service_association",
 			Name:     "Service Network Service Association",
 			Tags: &types.ServicePackageResourceTags{
@@ -55,7 +112,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceServiceNetworkVPCAssociation,
+			Factory:  resourceServiceNetworkVPCAssociation,
 			TypeName: "aws_vpclattice_service_network_vpc_association",
 			Name:     "Service Network VPC Association",
 			Tags: &types.ServicePackageResourceTags{
@@ -70,6 +127,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 				IdentifierAttribute: "arn",
 			},
 		},
+		{
+			Factory:  resourceTargetGroupAttachment,
+			TypeName: "aws_vpclattice_target_group_attachment",
+			Name:     "Target Group Attachment",
+		},
 	}
 }
 
@@ -77,4 +139,17 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.VPCLattice
 }
 
-var ServicePackage = &servicePackage{}
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*vpclattice_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return vpclattice_sdkv2.NewFromConfig(cfg, func(o *vpclattice_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

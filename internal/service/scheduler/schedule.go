@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package scheduler
 
 import (
@@ -7,10 +10,10 @@ import (
 	"fmt"
 	"log"
 	"math"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler"
 	"github.com/aws/aws-sdk-go-v2/service/scheduler/types"
@@ -97,7 +100,7 @@ func resourceSchedule() *schema.Resource {
 				ConflictsWith: []string{"name_prefix"},
 				ValidateDiagFunc: validation.ToDiagFunc(validation.All(
 					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z-_.]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
 				)),
 			},
 			"name_prefix": {
@@ -108,7 +111,7 @@ func resourceSchedule() *schema.Resource {
 				ConflictsWith: []string{"name"},
 				ValidateDiagFunc: validation.ToDiagFunc(validation.All(
 					validation.StringLenBetween(1, 64-id.UniqueIDSuffixLength),
-					validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z-_.]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), `The name must consist of alphanumerics, hyphens, and underscores.`),
 				)),
 			},
 			"schedule_expression": {
@@ -429,7 +432,7 @@ const (
 )
 
 func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchedulerClient()
+	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 
@@ -507,7 +510,7 @@ func resourceScheduleCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.scheduler-in-func-name
-	conn := meta.(*conns.AWSClient).SchedulerClient()
+	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
 	groupName, scheduleName, err := ResourceScheduleParseID(d.Id())
 
@@ -563,7 +566,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchedulerClient()
+	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
 	in := &scheduler.UpdateScheduleInput{
 		FlexibleTimeWindow: expandFlexibleTimeWindow(d.Get("flexible_time_window").([]interface{})[0].(map[string]interface{})),
@@ -613,7 +616,7 @@ func resourceScheduleUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SchedulerClient()
+	conn := meta.(*conns.AWSClient).SchedulerClient(ctx)
 
 	groupName, scheduleName, err := ResourceScheduleParseID(d.Id())
 

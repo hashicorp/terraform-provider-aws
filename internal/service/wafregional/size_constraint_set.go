@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafregional
 
 import (
@@ -32,7 +35,7 @@ func ResourceSizeConstraintSet() *schema.Resource {
 
 func resourceSizeConstraintSetCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	name := d.Get("name").(string)
@@ -60,7 +63,7 @@ func resourceSizeConstraintSetCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceSizeConstraintSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 
 	log.Printf("[INFO] Reading WAF Regional SizeConstraintSet: %s", d.Get("name").(string))
 	params := &waf.GetSizeConstraintSetInput{
@@ -91,7 +94,7 @@ func resourceSizeConstraintSetUpdate(ctx context.Context, d *schema.ResourceData
 		o, n := d.GetChange("size_constraints")
 		oldConstraints, newConstraints := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateRegionalSizeConstraintSetResource(ctx, d.Id(), oldConstraints, newConstraints, client.WAFRegionalConn(), client.Region)
+		err := updateRegionalSizeConstraintSetResource(ctx, d.Id(), oldConstraints, newConstraints, client.WAFRegionalConn(ctx), client.Region)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating WAF Regional SizeConstraintSet(%s): %s", d.Id(), err)
 		}
@@ -102,7 +105,7 @@ func resourceSizeConstraintSetUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceSizeConstraintSetDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WAFRegionalConn()
+	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
 	oldConstraints := d.Get("size_constraints").(*schema.Set).List()

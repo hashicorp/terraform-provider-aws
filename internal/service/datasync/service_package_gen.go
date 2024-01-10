@@ -5,6 +5,10 @@ package datasync
 import (
 	"context"
 
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	datasync_sdkv1 "github.com/aws/aws-sdk-go/service/datasync"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -34,6 +38,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceLocationAzureBlob,
+			TypeName: "aws_datasync_location_azure_blob",
+			Name:     "Location Microsoft Azure Blob Storage",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
 			Factory:  ResourceLocationEFS,
 			TypeName: "aws_datasync_location_efs",
 			Name:     "Location EFS",
@@ -44,7 +56,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceLocationFSxLustreFileSystem,
 			TypeName: "aws_datasync_location_fsx_lustre_file_system",
-			Name:     "Location FSx Lustre File System",
+			Name:     "Location FSx for Lustre File System",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceLocationFSxONTAPFileSystem,
+			TypeName: "aws_datasync_location_fsx_ontap_file_system",
+			Name:     "Location FSx for NetApp ONTAP File System",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
 			},
@@ -52,7 +72,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceLocationFSxOpenZFSFileSystem,
 			TypeName: "aws_datasync_location_fsx_openzfs_file_system",
-			Name:     "Location OpenZFS File System",
+			Name:     "Location FSx for OpenZFS File System",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
 			},
@@ -60,7 +80,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceLocationFSxWindowsFileSystem,
 			TypeName: "aws_datasync_location_fsx_windows_file_system",
-			Name:     "Location FSx Windows File System",
+			Name:     "Location FSx for Windows File Server File System",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
 			},
@@ -120,4 +140,13 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.DataSync
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*datasync_sdkv1.DataSync, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return datasync_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

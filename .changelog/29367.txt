@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_lambda_invocation: Add lifecycle_scope CRUD to invoke on each resource state transition
+```

@@ -51,7 +51,7 @@ resource "aws_lex_bot" "order_flowers_bot" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `abort_statement` - (Required) The message that Amazon Lex uses to abort a conversation. Attributes are documented under [statement](#statement).
 * `child_directed` - (Required) By specifying true, you confirm that your use of Amazon Lex is related to a website, program, or other application that is directed or targeted, in whole or in part, to children under age 13 and subject to COPPA. For more information see the [Amazon Lex FAQ](https://aws.amazon.com/lex/faqs#data-security) and the [Amazon Lex PutBot API Docs](https://docs.aws.amazon.com/lex/latest/dg/API_PutBot.html#lex-PutBot-request-childDirected).
@@ -118,9 +118,9 @@ slot values into the response card. For more information, see
 * `update` - (Default `5m`)
 * `delete` - (Default `5m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `checksum` - Checksum identifying the version of the bot that was created. The checksum is not
 included as an argument because the resource will add it automatically when updating the bot.
@@ -135,8 +135,17 @@ failure_reason response element.
 
 ## Import
 
-Bots can be imported using their name.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import bots using their name. For example:
 
+```terraform
+import {
+  to = aws_lex_bot.order_flowers_bot
+  id = "OrderFlowers"
+}
 ```
-$ terraform import aws_lex_bot.order_flowers_bot OrderFlowers
+
+Using `terraform import`, import bots using their name. For example:
+
+```console
+% terraform import aws_lex_bot.order_flowers_bot OrderFlowers
 ```

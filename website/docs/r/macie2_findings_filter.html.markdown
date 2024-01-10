@@ -32,7 +32,7 @@ resource "aws_macie2_findings_filter" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `finding_criteria` - (Required) The criteria to use to filter findings.
 * `name` - (Optional) A custom name for the filter. The name must contain at least 3 characters and can contain as many as 64 characters. If omitted, Terraform will assign a random, unique name. Conflicts with `name_prefix`.
@@ -57,17 +57,26 @@ The `criterion` object supports the following:
 * `gt` - (Optional) The value for the property is greater than the specified value.
 * `gte` - (Optional) The value for the property is greater than or equal to the specified value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The unique identifier (ID) of the macie Findings Filter.
 * `arn` - The Amazon Resource Name (ARN) of the Findings Filter.
 
 ## Import
 
-`aws_macie2_findings_filter` can be imported using the id, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_macie2_findings_filter` using the id. For example:
 
+```terraform
+import {
+  to = aws_macie2_findings_filter.example
+  id = "abcd1"
+}
 ```
-$ terraform import aws_macie2_findings_filter.example abcd1
+
+Using `terraform import`, import `aws_macie2_findings_filter` using the id. For example:
+
+```console
+% terraform import aws_macie2_findings_filter.example abcd1
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -104,7 +107,7 @@ func ResourceAuthorizer() *schema.Resource {
 
 func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	if err := validateAuthorizerType(d); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Authorizer: %s", err)
@@ -175,7 +178,7 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	apiID := d.Get("rest_api_id").(string)
 	authorizer, err := FindAuthorizerByTwoPartKey(ctx, conn, d.Id(), apiID)
@@ -190,13 +193,7 @@ func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Authorizer (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("/restapis/%s/authorizers/%s", apiID, d.Id()),
-	}.String()
-	d.Set("arn", arn)
+	d.Set("arn", authorizerARN(meta.(*conns.AWSClient), apiID, d.Id()))
 	d.Set("authorizer_credentials", authorizer.AuthorizerCredentials)
 	if authorizer.AuthorizerResultTtlInSeconds != nil { // nosemgrep:ci.helper-schema-ResourceData-Set-extraneous-nil-check
 		d.Set("authorizer_result_ttl_in_seconds", authorizer.AuthorizerResultTtlInSeconds)
@@ -207,15 +204,15 @@ func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("identity_source", authorizer.IdentitySource)
 	d.Set("identity_validation_expression", authorizer.IdentityValidationExpression)
 	d.Set("name", authorizer.Name)
+	d.Set("provider_arns", aws.StringValueSlice(authorizer.ProviderARNs))
 	d.Set("type", authorizer.Type)
-	d.Set("provider_arns", flex.FlattenStringSet(authorizer.ProviderARNs))
 
 	return diags
 }
 
 func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	operations := make([]*apigateway.PatchOperation, 0)
 
@@ -308,7 +305,7 @@ func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn()
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 
 	log.Printf("[INFO] Deleting API Gateway Authorizer: %s", d.Id())
 	_, err := conn.DeleteAuthorizerWithContext(ctx, &apigateway.DeleteAuthorizerInput{
@@ -383,4 +380,13 @@ func FindAuthorizerByTwoPartKey(ctx context.Context, conn *apigateway.APIGateway
 	}
 
 	return output, nil
+}
+
+func authorizerARN(c *conns.AWSClient, apiID, authorizerID string) string {
+	return arn.ARN{
+		Partition: c.Partition,
+		Service:   "apigateway",
+		Region:    c.Region,
+		Resource:  fmt.Sprintf("/restapis/%s/authorizers/%s", apiID, authorizerID),
+	}.String()
 }

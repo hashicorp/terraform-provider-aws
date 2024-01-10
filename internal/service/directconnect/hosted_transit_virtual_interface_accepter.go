@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect
 
 import (
@@ -60,7 +63,7 @@ func ResourceHostedTransitVirtualInterfaceAccepter() *schema.Resource {
 
 func resourceHostedTransitVirtualInterfaceAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vifId := d.Get("virtual_interface_id").(string)
 	req := &directconnect.ConfirmTransitVirtualInterfaceInput{
@@ -88,10 +91,8 @@ func resourceHostedTransitVirtualInterfaceAccepterCreate(ctx context.Context, d 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if tags := KeyValueTags(ctx, GetTagsIn(ctx)); len(tags) > 0 {
-		if err := UpdateTags(ctx, conn, arn, nil, tags); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Direct Connect hosted transit virtual interface (%s) tags: %s", arn, err)
-		}
+	if err := createTags(ctx, conn, arn, getTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting Direct Connect hosted transit virtual interface (%s) tags: %s", arn, err)
 	}
 
 	return append(diags, resourceHostedTransitVirtualInterfaceAccepterUpdate(ctx, d, meta)...)
@@ -99,7 +100,7 @@ func resourceHostedTransitVirtualInterfaceAccepterCreate(ctx context.Context, d 
 
 func resourceHostedTransitVirtualInterfaceAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {
@@ -141,7 +142,7 @@ func resourceHostedTransitVirtualInterfaceAccepterDelete(ctx context.Context, d 
 }
 
 func resourceHostedTransitVirtualInterfaceAccepterImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).DirectConnectConn()
+	conn := meta.(*conns.AWSClient).DirectConnectConn(ctx)
 
 	vif, err := virtualInterfaceRead(ctx, d.Id(), conn)
 	if err != nil {

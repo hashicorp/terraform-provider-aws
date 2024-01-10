@@ -5,6 +5,9 @@ package sesv2
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	sesv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sesv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -22,14 +25,34 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
+			Factory:  DataSourceConfigurationSet,
+			TypeName: "aws_sesv2_configuration_set",
+		},
+		{
 			Factory:  DataSourceDedicatedIPPool,
 			TypeName: "aws_sesv2_dedicated_ip_pool",
+		},
+		{
+			Factory:  DataSourceEmailIdentity,
+			TypeName: "aws_sesv2_email_identity",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  DataSourceEmailIdentityMailFromAttributes,
+			TypeName: "aws_sesv2_email_identity_mail_from_attributes",
 		},
 	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceAccountVDMAttributes,
+			TypeName: "aws_sesv2_account_vdm_attributes",
+			Name:     "Account VDM Attributes",
+		},
 		{
 			Factory:  ResourceConfigurationSet,
 			TypeName: "aws_sesv2_configuration_set",
@@ -85,4 +108,17 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.SESV2
 }
 
-var ServicePackage = &servicePackage{}
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*sesv2_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return sesv2_sdkv2.NewFromConfig(cfg, func(o *sesv2_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

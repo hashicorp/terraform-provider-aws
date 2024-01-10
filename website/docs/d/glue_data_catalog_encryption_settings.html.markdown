@@ -22,7 +22,9 @@ data "aws_glue_data_catalog_encryption_settings" "example" {
 
 * `catalog_id` - (Required) ID of the Data Catalog. This is typically the AWS account ID.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `data_catalog_encryption_settings` – The security configuration to set. see [Data Catalog Encryption Settings](#data_catalog_encryption_settings).
 * `id` – The ID of the Data Catalog to set the security configuration for.

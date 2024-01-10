@@ -1,0 +1,15 @@
+```release-note:new-data-source
+aws_iot_registration_code
+```
+
+```release-note:new-resource
+aws_iot_ca_certificate
+```
+
+```release-note:bug
+resource/aws_iot_ca_certificate: Change `ca_pem` and `certificate_pem` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew)
+```
+
+```release-note:enhancement
+resource/aws_iot_ca_certificate: Add `ca_certificate_id` attribute
+```

@@ -1,19 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elastictranscoder_test
 
 import (
 	"context"
 	"fmt"
 	"reflect"
-	"regexp"
 	"sort"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elastictranscoder"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelastictranscoder "github.com/hashicorp/terraform-provider-aws/internal/service/elastictranscoder"
@@ -35,7 +38,7 @@ func TestAccElasticTranscoderPipeline_basic(t *testing.T) {
 				Config: testAccPipelineConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, pipeline),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elastictranscoder", regexp.MustCompile(`pipeline/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elastictranscoder", regexache.MustCompile(`pipeline/.+`)),
 				),
 			},
 			{
@@ -243,7 +246,7 @@ func testAccCheckPipelineExists(ctx context.Context, n string, res *elastictrans
 			return fmt.Errorf("No Pipeline ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn(ctx)
 
 		out, err := conn.ReadPipelineWithContext(ctx, &elastictranscoder.ReadPipelineInput{
 			Id: aws.String(rs.Primary.ID),
@@ -261,7 +264,7 @@ func testAccCheckPipelineExists(ctx context.Context, n string, res *elastictrans
 
 func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elastictranscoder_pipline" {
@@ -287,7 +290,7 @@ func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticTranscoderConn(ctx)
 
 	input := &elastictranscoder.ListPipelinesInput{}
 
@@ -333,11 +336,6 @@ EOF
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 `, rName)
 }
@@ -396,11 +394,6 @@ EOF
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
 `, rName)
 }
 
@@ -446,27 +439,12 @@ resource "aws_s3_bucket" "content_bucket" {
   bucket = "%[1]s-content"
 }
 
-resource "aws_s3_bucket_acl" "content_bucket_acl" {
-  bucket = aws_s3_bucket.content_bucket.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket" "input_bucket" {
   bucket = "%[1]s-input"
 }
 
-resource "aws_s3_bucket_acl" "input_bucket_acl" {
-  bucket = aws_s3_bucket.input_bucket.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket" "thumb_bucket" {
   bucket = "%[1]s-thumb"
-}
-
-resource "aws_s3_bucket_acl" "thumb_bucket_acl" {
-  bucket = aws_s3_bucket.thumb_bucket.id
-  acl    = "private"
 }
 `, rName)
 }
@@ -513,27 +491,12 @@ resource "aws_s3_bucket" "content_bucket" {
   bucket = "%[1]s-content"
 }
 
-resource "aws_s3_bucket_acl" "content_bucket_acl" {
-  bucket = aws_s3_bucket.content_bucket.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket" "input_bucket" {
   bucket = "%[1]s-input"
 }
 
-resource "aws_s3_bucket_acl" "input_bucket_acl" {
-  bucket = aws_s3_bucket.input_bucket.id
-  acl    = "private"
-}
-
 resource "aws_s3_bucket" "thumb_bucket" {
   bucket = "%[1]s-thumb"
-}
-
-resource "aws_s3_bucket_acl" "thumb_bucket_acl" {
-  bucket = aws_s3_bucket.thumb_bucket.id
-  acl    = "private"
 }
 `, rName)
 }
@@ -591,11 +554,6 @@ EOF
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
 `, rName)
 }
 
@@ -635,11 +593,6 @@ EOF
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_sns_topic" "test" {
@@ -699,11 +652,6 @@ EOF
 
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_sns_topic" "test" {

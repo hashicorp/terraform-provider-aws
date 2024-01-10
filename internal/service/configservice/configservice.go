@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice
 
 import (
@@ -269,9 +272,15 @@ func refreshConformancePackStatus(ctx context.Context, conn *configservice.Confi
 	}
 }
 
-func refreshOrganizationConfigRuleStatus(ctx context.Context, conn *configservice.ConfigService, name string) retry.StateRefreshFunc {
+func refreshOrganizationConfigRuleStatus(ctx context.Context, conn *configservice.ConfigService, name string, target string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		status, err := describeOrganizationConfigRuleStatus(ctx, conn, name)
+
+		// Transient ResourceDoesNotExist error after creation caught here
+		// in cases where the StateChangeConf's delay time is not sufficient
+		if target != configservice.OrganizationResourceDetailedStatusDeleteSuccessful && tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchOrganizationConfigRuleException) {
+			return nil, "", nil
+		}
 
 		if err != nil {
 			return nil, "", err
@@ -456,11 +465,12 @@ func waitForOrganizationConformancePackStatusDeleteSuccessful(ctx context.Contex
 
 func waitForOrganizationRuleStatusCreateSuccessful(ctx context.Context, conn *configservice.ConfigService, name string, timeout time.Duration) error {
 	stateChangeConf := &retry.StateChangeConf{
-		Pending: []string{configservice.OrganizationRuleStatusCreateInProgress},
-		Target:  []string{configservice.OrganizationRuleStatusCreateSuccessful},
-		Refresh: refreshOrganizationConfigRuleStatus(ctx, conn, name),
-		Timeout: timeout,
-		Delay:   10 * time.Second,
+		Pending:        []string{configservice.OrganizationRuleStatusCreateInProgress},
+		Target:         []string{configservice.OrganizationRuleStatusCreateSuccessful},
+		Refresh:        refreshOrganizationConfigRuleStatus(ctx, conn, name, configservice.OrganizationRuleStatusCreateSuccessful),
+		Timeout:        timeout,
+		NotFoundChecks: 10,
+		Delay:          30 * time.Second,
 	}
 
 	_, err := stateChangeConf.WaitForStateContext(ctx)
@@ -472,7 +482,7 @@ func waitForOrganizationRuleStatusDeleteSuccessful(ctx context.Context, conn *co
 	stateChangeConf := &retry.StateChangeConf{
 		Pending: []string{configservice.OrganizationRuleStatusDeleteInProgress},
 		Target:  []string{configservice.OrganizationRuleStatusDeleteSuccessful},
-		Refresh: refreshOrganizationConfigRuleStatus(ctx, conn, name),
+		Refresh: refreshOrganizationConfigRuleStatus(ctx, conn, name, configservice.OrganizationRuleStatusDeleteSuccessful),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}
@@ -490,7 +500,7 @@ func waitForOrganizationRuleStatusUpdateSuccessful(ctx context.Context, conn *co
 	stateChangeConf := &retry.StateChangeConf{
 		Pending: []string{configservice.OrganizationRuleStatusUpdateInProgress},
 		Target:  []string{configservice.OrganizationRuleStatusUpdateSuccessful},
-		Refresh: refreshOrganizationConfigRuleStatus(ctx, conn, name),
+		Refresh: refreshOrganizationConfigRuleStatus(ctx, conn, name, configservice.OrganizationRuleStatusUpdateSuccessful),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
 	}

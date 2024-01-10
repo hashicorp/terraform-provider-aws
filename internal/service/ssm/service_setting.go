@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
@@ -51,7 +54,7 @@ func ResourceServiceSetting() *schema.Resource {
 
 func resourceServiceSettingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[DEBUG] SSM service setting create: %s", d.Get("setting_id").(string))
 
@@ -75,7 +78,7 @@ func resourceServiceSettingUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceServiceSettingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[DEBUG] Reading SSM Activation: %s", d.Id())
 
@@ -96,7 +99,7 @@ func resourceServiceSettingRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceServiceSettingReset(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SSMConn()
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[DEBUG] Deleting SSM Service Setting: %s", d.Id())
 

@@ -21,14 +21,14 @@ data "aws_lambda_alias" "production" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `function_name` - (Required) Name of the aliased Lambda function.
 * `name` - (Required) Name of the Lambda alias.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN identifying the Lambda function alias.
 * `description` - Description of alias.

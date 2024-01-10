@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafregional
 
 import (
@@ -47,7 +50,7 @@ func (t *WafRegionalRetryer) RetryWithToken(ctx context.Context, f withRegionalT
 		tokenOut, err = t.Connection.GetChangeToken(&waf.GetChangeTokenInput{})
 
 		if err != nil {
-			return nil, fmt.Errorf("error getting WAF Regional change token: %w", err)
+			return nil, fmt.Errorf("getting WAF Regional change token: %w", err)
 		}
 
 		out, err = f(tokenOut.ChangeToken)

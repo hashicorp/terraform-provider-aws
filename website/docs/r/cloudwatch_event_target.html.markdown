@@ -389,7 +389,8 @@ data "aws_iam_policy_document" "example_log_policy" {
     principals {
       type = "Service"
       identifiers = [
-        "events.amazonaws.com"
+        "events.amazonaws.com",
+        "delivery.logs.amazonaws.com"
       ]
     }
   }
@@ -406,7 +407,8 @@ data "aws_iam_policy_document" "example_log_policy" {
     principals {
       type = "Service"
       identifiers = [
-        "events.amazonaws.com"
+        "events.amazonaws.com",
+        "delivery.logs.amazonaws.com"
       ]
     }
 
@@ -451,7 +453,7 @@ resource "aws_cloudwatch_event_target" "example" {
 -> **Note:** In order to be able to have your AWS Lambda function or
    SNS topic invoked by an EventBridge rule, you must set up the right permissions
    using [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)
-   or [`aws_sns_topic.policy`](/docs/providers/aws/r/sns_topic.html#policy).
+   or [`aws_sns_topic_policy`](/docs/providers/aws/r/sns_topic_policy.html).
    More info [here](https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-use-resource-based.html).
 
 The following arguments are required:
@@ -475,6 +477,7 @@ The following arguments are optional:
 * `run_command_targets` - (Optional) Parameters used when you are using the rule to invoke Amazon EC2 Run Command. Documented below. A maximum of 5 are allowed.
 * `redshift_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon Redshift Statement. Documented below. A maximum of 1 are allowed.
 * `retry_policy` - (Optional)  Parameters used when you are providing retry policies. Documented below. A maximum of 1 are allowed.
+* `sagemaker_pipeline_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SageMaker Pipeline. Documented below. A maximum of 1 are allowed.
 * `sqs_target` - (Optional) Parameters used when you are using the rule to invoke an Amazon SQS Queue. Documented below. A maximum of 1 are allowed.
 * `target_id` - (Optional) The unique target assignment ID. If missing, will generate a random, unique id.
 
@@ -504,6 +507,7 @@ The following arguments are optional:
 * `group` - (Optional) Specifies an ECS task group for the task. The maximum length is 255 characters.
 * `launch_type` - (Optional) Specifies the launch type on which your task is running. The launch type that you specify here must match one of the launch type (compatibilities) of the target task. Valid values include: `EC2`, `EXTERNAL`, or `FARGATE`.
 * `network_configuration` - (Optional) Use this if the ECS task uses the awsvpc network mode. This specifies the VPC subnets and security groups associated with the task, and whether a public IP address is to be used. Required if `launch_type` is `FARGATE` because the awsvpc mode is required for Fargate tasks.
+* `ordered_placement_strategy` - (Optional) An array of placement strategy objects to use for the task. You can specify a maximum of five strategy rules per task.
 * `placement_constraint` - (Optional) An array of placement constraint objects to use for the task. You can specify up to 10 constraints per task (including constraints in the task definition and those specified at runtime). See Below.
 * `platform_version` - (Optional) Specifies the platform version for the task. Specify only the numeric portion of the platform version, such as `1.1.0`. This is used only if LaunchType is FARGATE. For more information about valid platform versions, see [AWS Fargate Platform Versions](http://docs.aws.amazon.com/AmazonECS/latest/developerguide/platform_versions.html).
 * `propagate_tags` - (Optional) Specifies whether to propagate the tags from the task definition to the task. If no value is specified, the tags are not propagated. Tags can only be propagated to the task during task creation. The only valid value is: `TASK_DEFINITION`.
@@ -536,6 +540,11 @@ The following arguments are optional:
 
 For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-networking.html)
 
+### ordered_placement_strategy
+
+* `type` - (Required) Type of placement strategy. The only valid values at this time are `binpack`, `random` and `spread`.
+* `field` - (Optional) The field to apply the placement strategy against. For the `spread` placement strategy, valid values are `instanceId` (or `host`, which has the same effect), or any platform or custom attribute that is applied to a container instance, such as `attribute:ecs.availability-zone`. For the `binpack` placement strategy, valid values are `cpu` and `memory`. For the `random` placement strategy, this field is not used. For more information, see [Amazon ECS task placement strategies](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-placement-strategies.html).
+
 ### placement_constraint
 
 * `type` - (Required) Type of constraint. The only valid values at this time are `memberOf` and `distinctInstance`.
@@ -564,14 +573,32 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 
 * `message_group_id` - (Optional) The FIFO message group ID to use as the target.
 
-## Attributes Reference
+### sagemaker_pipeline_target
 
-No additional attributes are exported.
+* `pipeline_parameter_list` - (Optional) List of Parameter names and values for SageMaker Model Building Pipeline execution.
+
+#### pipeline_parameter_list
+
+* `name` - (Required) Name of parameter to start execution of a SageMaker Model Building Pipeline.
+* `value` - (Required) Value of parameter to start execution of a SageMaker Model Building Pipeline.
+
+## Attribute Reference
+
+This resource exports no additional attributes.
 
 ## Import
 
-EventBridge Targets can be imported using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used).
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EventBridge Targets using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
 
- ```
-$ terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id
+ ```terraform
+import {
+  to = aws_cloudwatch_event_target.test-event-target
+  id = "rule-name/target-id"
+}
+```
+
+Using `terraform import`, import EventBridge Targets using `event_bus_name/rule-name/target-id` (if you omit `event_bus_name`, the `default` event bus will be used). For example:
+
+ ```console
+% terraform import aws_cloudwatch_event_target.test-event-target rule-name/target-id
 ```

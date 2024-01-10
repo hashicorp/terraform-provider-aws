@@ -52,15 +52,15 @@ resource "aws_fsx_openzfs_file_system" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the Snapshot. You can use a maximum of 203 alphanumeric characters plus either _ or -  or : or . for the name.
 * `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level. If you have set `copy_tags_to_backups` to true, and you specify one or more tags, no existing file system tags are copied from the file system to the backup.
 * `volume_id` - (Optional) The ID of the volume to snapshot. This can be the root volume or a child volume.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name of the snapshot.
 * `id` - Identifier of the snapshot, e.g., `fsvolsnap-12345678`
@@ -76,8 +76,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-FSx OpenZFS snapshot can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import FSx OpenZFS snapshot using the `id`. For example:
 
+```terraform
+import {
+  to = aws_fsx_openzfs_snapshot.example
+  id = "fs-543ab12b1ca672f33"
+}
 ```
-$ terraform import aws_fsx_openzfs_snapshot.example fs-543ab12b1ca672f33
+
+Using `terraform import`, import FSx OpenZFS snapshot using the `id`. For example:
+
+```console
+% terraform import aws_fsx_openzfs_snapshot.example fs-543ab12b1ca672f33
 ```

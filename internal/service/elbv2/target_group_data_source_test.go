@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2_test
 
 import (
@@ -5,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/elbv2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -31,7 +34,8 @@ func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameByARN, "protocol", "HTTP"),
 					resource.TestCheckResourceAttr(datasourceNameByARN, "protocol_version", "HTTP1"),
 					resource.TestCheckResourceAttrSet(datasourceNameByARN, "vpc_id"),
-					resource.TestCheckResourceAttrSet(datasourceNameByARN, "load_balancing_algorithm_type"),
+					resource.TestCheckResourceAttr(datasourceNameByARN, "load_balancing_algorithm_type", "round_robin"),
+					resource.TestCheckResourceAttr(datasourceNameByARN, "load_balancing_anomaly_mitigation", "off"),
 					resource.TestCheckResourceAttrSet(datasourceNameByARN, "load_balancing_cross_zone_enabled"),
 					resource.TestCheckResourceAttr(datasourceNameByARN, "deregistration_delay", "300"),
 					resource.TestCheckResourceAttr(datasourceNameByARN, "slow_start", "0"),
@@ -52,7 +56,8 @@ func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(datasourceNameByName, "arn_suffix"),
 					resource.TestCheckResourceAttr(datasourceNameByName, "port", "8080"),
 					resource.TestCheckResourceAttr(datasourceNameByName, "protocol", "HTTP"),
-					resource.TestCheckResourceAttrSet(datasourceNameByName, "load_balancing_algorithm_type"),
+					resource.TestCheckResourceAttr(datasourceNameByName, "load_balancing_algorithm_type", "round_robin"),
+					resource.TestCheckResourceAttr(datasourceNameByName, "load_balancing_anomaly_mitigation", "off"),
 					resource.TestCheckResourceAttrSet(datasourceNameByName, "load_balancing_cross_zone_enabled"),
 					resource.TestCheckResourceAttrSet(datasourceNameByName, "vpc_id"),
 					resource.TestCheckResourceAttr(datasourceNameByName, "deregistration_delay", "300"),

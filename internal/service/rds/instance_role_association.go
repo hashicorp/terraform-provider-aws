@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -64,7 +67,7 @@ func ResourceInstanceRoleAssociation() *schema.Resource {
 
 func resourceInstanceRoleAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbInstanceIdentifier := d.Get("db_instance_identifier").(string)
 	roleArn := d.Get("role_arn").(string)
@@ -104,7 +107,7 @@ func resourceInstanceRoleAssociationCreate(ctx context.Context, d *schema.Resour
 
 func resourceInstanceRoleAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbInstanceIdentifier, roleArn, err := InstanceRoleAssociationDecodeID(d.Id())
 	if err != nil {
@@ -132,7 +135,7 @@ func resourceInstanceRoleAssociationRead(ctx context.Context, d *schema.Resource
 
 func resourceInstanceRoleAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	dbInstanceIdentifier, roleArn, err := InstanceRoleAssociationDecodeID(d.Id())
 	if err != nil {

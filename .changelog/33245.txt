@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_fsx_openzfs_file_system: Add `endpoint_ip_address_range`, `preferred_subnet_id` and `route_table_ids` arguments to support the [Multi-AZ deployment type](https://docs.aws.amazon.com/fsx/latest/OpenZFSGuide/availability-durability.html#choosing-single-or-multi)
+```
+
+```release-note:bug
+resource/aws_fsx_openzfs_file_system: Wait for administrative action completion when updating root volume
+```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -9,11 +12,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -53,6 +57,37 @@ func TestAccEC2SpotFleetRequest_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"wait_for_fulfillment"},
+			},
+		},
+	})
+}
+
+func TestAccEC2SpotFleetRequest_context(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
+	contextId := "test_context"
+
+	// Receiving this error is confirmation that the Context ID was included in the spot fleet request.
+	errRegexp, err := regexp.Compile(fmt.Sprintf(`Error: creating EC2 Spot Fleet Request: UnauthorizedOperation: The account "\d+" is not allowed to access Context "%s".`, contextId))
+	if err != nil {
+		t.Fatalf("error compiling expected error regexp: %s", err)
+	}
+
+	publicKey, _, err := sdkacctest.RandSSHKeyPair(acctest.DefaultEmailAddress)
+	if err != nil {
+		t.Fatalf("error generating random SSH key: %s", err)
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccSpotFleetRequestConfig_context(rName, publicKey, validUntil, contextId),
+				ExpectError: errRegexp,
 			},
 		},
 	})
@@ -1760,7 +1795,7 @@ func testAccCheckSpotFleetRequestExists(ctx context.Context, n string, v *ec2.Sp
 			return errors.New("No EC2 Spot Fleet Request ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindSpotFleetRequestByID(ctx, conn, rs.Primary.ID)
 
@@ -1776,7 +1811,7 @@ func testAccCheckSpotFleetRequestExists(ctx context.Context, n string, v *ec2.Sp
 
 func testAccCheckSpotFleetRequestDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_spot_fleet_request" {
@@ -1850,7 +1885,7 @@ func testAccCheckSpotFleetRequest_PlacementAttributes(
 }
 
 func testAccPreCheckSpotFleetRequest(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	_, err := tfec2.FindSpotFleetRequests(ctx, conn, &ec2.DescribeSpotFleetRequestsInput{})
 
@@ -1876,7 +1911,7 @@ func testAccCheckSpotFleetRequest_IAMInstanceProfileARN(sfr *ec2.SpotFleetReques
 			return fmt.Errorf("Expected IamInstanceProfile to be set, got nil")
 		}
 		//Validate the string whether it is ARN
-		re := regexp.MustCompile(fmt.Sprintf(`arn:%s:iam::\d{12}:instance-profile/?[a-zA-Z0-9+=,.@-_].*`, acctest.Partition()))
+		re := regexache.MustCompile(fmt.Sprintf(`arn:%s:iam::\d{12}:instance-profile/?[0-9A-Za-z@-_+=,.].*`, acctest.Partition())) // regex seems suspicious, @-_ is a range
 		if !re.MatchString(*profile.Arn) {
 			return fmt.Errorf("Expected IamInstanceProfile input as ARN, got %s", *profile.Arn)
 		}
@@ -1887,7 +1922,7 @@ func testAccCheckSpotFleetRequest_IAMInstanceProfileARN(sfr *ec2.SpotFleetReques
 
 func testAccSpotFleetRequestConfig_base(rName, publicKey string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -1978,7 +2013,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
 
     tags = {
@@ -1989,6 +2024,33 @@ resource "aws_spot_fleet_request" "test" {
   depends_on = [aws_iam_policy_attachment.test]
 }
 `, rName, validUntil))
+}
+
+func testAccSpotFleetRequestConfig_context(rName, publicKey, validUntil, contextId string) string {
+	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
+resource "aws_spot_fleet_request" "test" {
+  context                             = %[3]q
+  iam_fleet_role                      = aws_iam_role.test.arn
+  spot_price                          = "0.05"
+  target_capacity                     = 2
+  valid_until                         = %[2]q
+  terminate_instances_with_expiration = true
+  instance_interruption_behaviour     = "stop"
+  wait_for_fulfillment                = true
+
+  launch_specification {
+    instance_type = data.aws_ec2_instance_type_offering.available.instance_type
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+    key_name      = aws_key_pair.test.key_name
+
+    tags = {
+      Name = %[1]q
+    }
+  }
+
+  depends_on = [aws_iam_policy_attachment.test]
+}
+`, rName, validUntil, contextId))
 }
 
 func testAccSpotFleetRequestConfig_tags1(rName, publicKey, validUntil, tagKey1, tagValue1 string) string {
@@ -2004,7 +2066,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
 
     tags = {
@@ -2034,7 +2096,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
 
     tags = {
@@ -2064,7 +2126,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
-    ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name                    = aws_key_pair.test.key_name
     associate_public_ip_address = true
 
@@ -2091,7 +2153,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
 
     tags = {
       Name = %[1]q
@@ -2107,7 +2169,7 @@ func testAccSpotFleetRequestConfig_launchTemplate(rName, publicKey, validUntil s
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   key_name      = aws_key_pair.test.key_name
 
@@ -2154,7 +2216,7 @@ data "aws_ec2_instance_type_offering" "test" {
 
 resource "aws_launch_template" "test1" {
   name          = "%[1]s-1"
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   key_name      = aws_key_pair.test.key_name
 
@@ -2169,7 +2231,7 @@ resource "aws_launch_template" "test1" {
 
 resource "aws_launch_template" "test2" {
   name          = "%[1]s-2"
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.test.instance_type
   key_name      = aws_key_pair.test.key_name
 
@@ -2214,7 +2276,7 @@ func testAccSpotFleetRequestConfig_launchTemplateInstanceTypeOverrides(rName, pu
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   key_name      = aws_key_pair.test.key_name
 
@@ -2263,7 +2325,7 @@ func testAccSpotFleetRequestConfig_launchTemplateInstanceRequirementsOverrides(r
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   key_name      = aws_key_pair.test.key_name
 
@@ -2329,7 +2391,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
 
     tags = {
       Name = %[1]q
@@ -2354,7 +2416,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
 
     tags = {
       Name = %[1]q
@@ -2423,7 +2485,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type            = data.aws_ec2_instance_type_offering.available.instance_type
-    ami                      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami                      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name                 = aws_key_pair.test.key_name
     iam_instance_profile_arn = aws_iam_instance_profile.test-iam-instance-profile1.arn
 
@@ -2449,7 +2511,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
 
     tags = {
@@ -2474,7 +2536,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2485,7 +2547,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[1]
 
@@ -2539,7 +2601,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = "m3.large"
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
     subnet_id     = aws_subnet.test1.id
 
@@ -2550,7 +2612,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = "m3.large"
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
     subnet_id     = aws_subnet.test2.id
 
@@ -2618,7 +2680,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = "m3.large"
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
     subnet_id     = aws_subnet.test1.id
 
@@ -2697,7 +2759,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = "m3.large"
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
     subnet_id     = aws_subnet.test1.id
 
@@ -2723,7 +2785,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2734,7 +2796,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = "m3.large"
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2778,14 +2840,14 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = "m3.large"
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
     subnet_id     = aws_subnet.test.id
   }
 
   launch_specification {
     instance_type = "r3.large"
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
     subnet_id     = aws_subnet.test.id
 
@@ -2811,7 +2873,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2822,7 +2884,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = "m3.large"
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
     spot_price        = "0.05"
@@ -2848,7 +2910,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2859,7 +2921,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = "m3.large"
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2886,7 +2948,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2897,7 +2959,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = "m3.large"
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2908,7 +2970,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = "r3.large"
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2935,7 +2997,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2946,7 +3008,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = "m3.large"
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2957,7 +3019,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = "r3.large"
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2983,7 +3045,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = "m3.large"
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
     weighted_capacity = "6"
@@ -2995,7 +3057,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = "r3.large"
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
     weighted_capacity = "3"
@@ -3022,7 +3084,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
 
     ebs_block_device {
       device_name = "/dev/xvda"
@@ -3065,7 +3127,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     instance_type = "t2.micro"
 
     ebs_block_device {
@@ -3111,7 +3173,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     instance_type = "t2.micro"
 
     root_block_device {
@@ -3141,7 +3203,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     instance_type = "t2.micro"
 
     ebs_block_device {
@@ -3178,7 +3240,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     instance_type = "t2.micro"
 
     root_block_device {
@@ -3237,7 +3299,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
 
     tags = {
       First  = "TfAccTest"
@@ -3267,7 +3329,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     placement_tenancy = "dedicated"
     placement_group   = aws_placement_group.test.name
@@ -3295,7 +3357,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
 
     tags = {
@@ -3326,7 +3388,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
 
     tags = {
@@ -3343,7 +3405,7 @@ func testAccSpotFleetRequestConfig_onDemandTargetCapacity(rName, publicKey, vali
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   key_name      = aws_key_pair.test.key_name
 
@@ -3382,7 +3444,7 @@ func testAccSpotFleetRequestConfig_onDemandMaxTotalPrice(rName, publicKey, valid
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   key_name      = aws_key_pair.test.key_name
 
@@ -3421,7 +3483,7 @@ func testAccSpotFleetRequestConfig_onDemandAllocationStrategy(rName, publicKey, 
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   key_name      = aws_key_pair.test.key_name
 
@@ -3469,7 +3531,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
 
     tags = {
@@ -3486,7 +3548,7 @@ func testAccSpotFleetRequestConfig_targetCapacityUnitType(rName, publicKey, vali
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   key_name      = aws_key_pair.test.key_name
 

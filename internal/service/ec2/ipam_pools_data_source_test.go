@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -22,14 +25,14 @@ func TestAccIPAMPoolsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccIPAMPoolsDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ipam_pools.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ipam_pools.#", 0),
 				),
 			},
 			{
 				Config: testAccIPAMPoolsDataSourceConfig_basicTwoPools,
 				Check: resource.ComposeAggregateTestCheckFunc(
 					// DS 1 finds all 3 pools
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ipam_pools.#", "2"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ipam_pools.#", 2),
 
 					// DS 2 filters on 1 specific pool to validate attributes
 					resource.TestCheckResourceAttr(dataSourceNameTwo, "ipam_pools.#", "1"),
@@ -42,6 +45,7 @@ func TestAccIPAMPoolsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.auto_import", resourceName, "auto_import"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.aws_service", resourceName, "aws_service"),
+					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.ipam_scope_id", resourceName, "ipam_scope_id"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.ipam_scope_type", resourceName, "ipam_scope_type"),
 					resource.TestCheckResourceAttrPair(dataSourceNameTwo, "ipam_pools.0.locale", resourceName, "locale"),

@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticbeanstalk_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfelasticbeanstalk "github.com/hashicorp/terraform-provider-aws/internal/service/elasticbeanstalk"
 )
@@ -54,7 +57,7 @@ func TestAccElasticBeanstalkHostedZoneDataSource_region(t *testing.T) {
 			},
 			{
 				Config:      testAccHostedZoneDataSourceConfig_byRegion("ss-pluto-1"),
-				ExpectError: regexp.MustCompile("Unsupported region"),
+				ExpectError: regexache.MustCompile("Unsupported region"),
 			},
 		},
 	})

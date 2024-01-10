@@ -1,0 +1,7 @@
+```release-note:breaking-change
+resource/aws_autoscaling_attachment: `alb_target_group_arn` has been removed -- use `lb_target_group_arn` instead
+```
+
+```release-note:note
+resource/aws_autoscaling_attachment: Update configurations to use `lb_target_group_arn` instead of `alb_target_group_arn` which has been removed
+```

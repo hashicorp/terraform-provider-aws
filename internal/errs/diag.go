@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package errs
 
 import (
@@ -63,13 +66,6 @@ func NewWarningDiagnostic(summary, detail string) diag.Diagnostic {
 		Summary:  summary,
 		Detail:   detail,
 	}
-}
-
-func FromAttributeError(path cty.Path, err error) diag.Diagnostic {
-	return withPath(
-		NewErrorDiagnostic(err.Error(), ""),
-		path,
-	)
 }
 
 func withPath(d diag.Diagnostic, path cty.Path) diag.Diagnostic {

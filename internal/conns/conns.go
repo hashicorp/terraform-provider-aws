@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package conns
 
 import (
 	"context"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	awsbase "github.com/hashicorp/aws-sdk-go-base/v2"
 	awsbasev1 "github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
@@ -32,11 +35,22 @@ var (
 
 // InContext represents the resource information kept in Context.
 type InContext struct {
+	IsDataSource       bool   // Data source?
 	ResourceName       string // Friendly resource name, e.g. "Subnet"
 	ServicePackageName string // Canonical name defined as a constant in names package
 }
 
-func NewContext(ctx context.Context, servicePackageName, resourceName string) context.Context {
+func NewDataSourceContext(ctx context.Context, servicePackageName, resourceName string) context.Context {
+	v := InContext{
+		IsDataSource:       true,
+		ResourceName:       resourceName,
+		ServicePackageName: servicePackageName,
+	}
+
+	return context.WithValue(ctx, contextKey, &v)
+}
+
+func NewResourceContext(ctx context.Context, servicePackageName, resourceName string) context.Context {
 	v := InContext{
 		ResourceName:       resourceName,
 		ServicePackageName: servicePackageName,
@@ -50,8 +64,8 @@ func FromContext(ctx context.Context) (*InContext, bool) {
 	return v, ok
 }
 
-func NewSessionForRegion(cfg *aws.Config, region, terraformVersion string) (*session.Session, error) {
-	session, err := session.NewSession(cfg)
+func NewSessionForRegion(cfg *aws_sdkv1.Config, region, terraformVersion string) (*session_sdkv1.Session, error) {
+	session, err := session_sdkv1.NewSession(cfg)
 
 	if err != nil {
 		return nil, err
@@ -61,7 +75,7 @@ func NewSessionForRegion(cfg *aws.Config, region, terraformVersion string) (*ses
 
 	awsbasev1.SetSessionUserAgent(session, apnInfo, awsbase.UserAgentProducts{})
 
-	return session.Copy(&aws.Config{Region: aws.String(region)}), nil
+	return session.Copy(&aws_sdkv1.Config{Region: aws_sdkv1.String(region)}), nil
 }
 
 func StdUserAgentProducts(terraformVersion string) *awsbase.APNInfo {

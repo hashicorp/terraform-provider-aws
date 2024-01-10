@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package docdb
 
 import (
@@ -17,7 +20,7 @@ func TestValidIdentifier(t *testing.T) {
 	for _, v := range validNames {
 		_, errors := validIdentifier(v, "name")
 		if len(errors) != 0 {
-			t.Fatalf("%q should be a valid DocDB Identifier: %q", v, errors)
+			t.Fatalf("%q should be a valid DocumentDB Identifier: %q", v, errors)
 		}
 	}
 
@@ -35,7 +38,7 @@ func TestValidIdentifier(t *testing.T) {
 	for _, v := range invalidNames {
 		_, errors := validIdentifier(v, "name")
 		if len(errors) == 0 {
-			t.Fatalf("%q should be an invalid DocDB Identifier", v)
+			t.Fatalf("%q should be an invalid DocumentDB Identifier", v)
 		}
 	}
 }

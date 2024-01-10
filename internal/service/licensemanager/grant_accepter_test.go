@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package licensemanager_test
 
 import (
@@ -7,10 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/licensemanager"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
@@ -34,7 +37,7 @@ func testAccGrantAccepter_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 		CheckDestroy:             acctest.CheckWithNamedProviders(testAccCheckGrantAccepterDestroyWithProvider(ctx), providers),
 		Steps: []resource.TestStep{
 			{
@@ -77,7 +80,7 @@ func testAccGrantAccepter_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamed(ctx, t, providers),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 		CheckDestroy:             acctest.CheckWithNamedProviders(testAccCheckGrantAccepterDestroyWithProvider(ctx), providers),
 		Steps: []resource.TestStep{
 			{
@@ -103,7 +106,7 @@ func testAccCheckGrantAccepterExists(ctx context.Context, n string, providerF fu
 			return fmt.Errorf("No License Manager License Configuration ID is set")
 		}
 
-		conn := providerF().Meta().(*conns.AWSClient).LicenseManagerConn()
+		conn := providerF().Meta().(*conns.AWSClient).LicenseManagerConn(ctx)
 
 		out, err := tflicensemanager.FindGrantAccepterByGrantARN(ctx, conn, rs.Primary.ID)
 
@@ -121,7 +124,7 @@ func testAccCheckGrantAccepterExists(ctx context.Context, n string, providerF fu
 
 func testAccCheckGrantAccepterDestroyWithProvider(ctx context.Context) acctest.TestCheckWithProviderFunc {
 	return func(s *terraform.State, provider *schema.Provider) error {
-		conn := provider.Meta().(*conns.AWSClient).LicenseManagerConn()
+		conn := provider.Meta().(*conns.AWSClient).LicenseManagerConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_licensemanager_grant_accepter" {

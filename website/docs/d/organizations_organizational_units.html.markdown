@@ -7,6 +7,7 @@ description: |-
 ---
 
 # Data Source: aws_organizations_organizational_units
+
 Get all direct child organizational units under a parent organizational unit. This only provides immediate children, not all children.
 
 ## Example Usage
@@ -23,7 +24,9 @@ data "aws_organizations_organizational_units" "ou" {
 
 * `parent_id` - (Required) Parent ID of the organizational unit.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `children` - List of child organizational units, which have the following attributes:
     * `arn` - ARN of the organizational unit

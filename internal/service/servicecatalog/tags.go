@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build !generate
 // +build !generate
 
@@ -24,12 +27,12 @@ func productUpdateTags(ctx context.Context, conn servicecatalogiface.ServiceCata
 		Id: aws.String(identifier),
 	}
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
-		input.RemoveTags = aws.StringSlice(removedTags.IgnoreSystem(names.ServiceCatalog).Keys())
+	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.ServiceCatalog); len(removedTags) > 0 {
+		input.RemoveTags = aws.StringSlice(removedTags.Keys())
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
-		input.AddTags = Tags(updatedTags.IgnoreSystem(names.ServiceCatalog))
+	if updatedTags := oldTags.Updated(newTags).IgnoreSystem(names.ServiceCatalog); len(updatedTags) > 0 {
+		input.AddTags = Tags(updatedTags)
 	}
 
 	_, err := conn.UpdateProductWithContext(ctx, input)

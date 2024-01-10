@@ -5,6 +5,9 @@ package mq
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	mq_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mq"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -22,12 +25,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceBroker,
+			Factory:  dataSourceBroker,
 			TypeName: "aws_mq_broker",
+			Name:     "Broker",
 		},
 		{
-			Factory:  DataSourceBrokerInstanceTypeOfferings,
+			Factory:  dataSourceBrokerEngineTypes,
+			TypeName: "aws_mq_broker_engine_types",
+			Name:     "Broker Engine Types",
+		},
+		{
+			Factory:  dataSourceBrokerInstanceTypeOfferings,
 			TypeName: "aws_mq_broker_instance_type_offerings",
+			Name:     "Broker Instance Type Offerings",
 		},
 	}
 }
@@ -35,7 +45,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceBroker,
+			Factory:  resourceBroker,
 			TypeName: "aws_mq_broker",
 			Name:     "Broker",
 			Tags: &types.ServicePackageResourceTags{
@@ -43,7 +53,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceConfiguration,
+			Factory:  resourceConfiguration,
 			TypeName: "aws_mq_configuration",
 			Name:     "Configuration",
 			Tags: &types.ServicePackageResourceTags{
@@ -57,4 +67,17 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.MQ
 }
 
-var ServicePackage = &servicePackage{}
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*mq_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return mq_sdkv2.NewFromConfig(cfg, func(o *mq_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

@@ -5,6 +5,12 @@ package rds
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
+	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -28,6 +34,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceClusterSnapshot,
 			TypeName: "aws_db_cluster_snapshot",
+			Name:     "DB Cluster Snapshot",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceEventCategories,
@@ -36,6 +44,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceInstance,
 			TypeName: "aws_db_instance",
+			Name:     "DB Instance",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceInstances,
@@ -48,6 +58,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceSnapshot,
 			TypeName: "aws_db_snapshot",
+			Name:     "DB Snapshot",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceSubnetGroup,
@@ -85,7 +97,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceClusterSnapshot,
 			TypeName: "aws_db_cluster_snapshot",
-			Name:     "Cluster Snapshot",
+			Name:     "DB Cluster Snapshot",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "db_cluster_snapshot_arn",
 			},
@@ -155,14 +167,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_db_proxy_target",
 		},
 		{
-			Factory:  ResourceSecurityGroup,
-			TypeName: "aws_db_security_group",
-			Name:     "DB Security Group",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
-			},
-		},
-		{
 			Factory:  ResourceSnapshot,
 			TypeName: "aws_db_snapshot",
 			Name:     "DB Snapshot",
@@ -227,6 +231,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_rds_cluster_role_association",
 		},
 		{
+			Factory:  ResourceCustomDBEngineVersion,
+			TypeName: "aws_rds_custom_db_engine_version",
+			Name:     "Custom DB Engine Version",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceGlobalCluster,
 			TypeName: "aws_rds_global_cluster",
 		},
@@ -245,4 +257,24 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.RDS
 }
 
-var ServicePackage = &servicePackage{}
+// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
+func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*rds_sdkv1.RDS, error) {
+	sess := config["session"].(*session_sdkv1.Session)
+
+	return rds_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*rds_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return rds_sdkv2.NewFromConfig(cfg, func(o *rds_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

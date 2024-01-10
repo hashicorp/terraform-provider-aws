@@ -1,15 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"context"
 	"fmt"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
@@ -162,16 +164,9 @@ func testAccCheckEIPAssociationExists(ctx context.Context, n string, v *ec2.Addr
 			return fmt.Errorf("No EC2 EIP Association ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
-		var err error
-		var output *ec2.Address
-
-		if strings.HasPrefix(rs.Primary.ID, "eipassoc-") {
-			output, err = tfec2.FindEIPByAssociationID(ctx, conn, rs.Primary.ID)
-		} else {
-			output, err = tfec2.FindEIPByPublicIP(ctx, conn, rs.Primary.ID)
-		}
+		output, err := tfec2.FindEIPByAssociationID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -185,20 +180,14 @@ func testAccCheckEIPAssociationExists(ctx context.Context, n string, v *ec2.Addr
 
 func testAccCheckEIPAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_eip_association" {
 				continue
 			}
 
-			var err error
-
-			if strings.HasPrefix(rs.Primary.ID, "eipassoc-") {
-				_, err = tfec2.FindEIPByAssociationID(ctx, conn, rs.Primary.ID)
-			} else {
-				_, err = tfec2.FindEIPByPublicIP(ctx, conn, rs.Primary.ID)
-			}
+			_, err := tfec2.FindEIPByAssociationID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -217,7 +206,7 @@ func testAccCheckEIPAssociationDestroy(ctx context.Context) resource.TestCheckFu
 
 func testAccEIPAssociationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -230,7 +219,7 @@ resource "aws_internet_gateway" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id     = aws_subnet.test[0].id
 
@@ -240,7 +229,7 @@ resource "aws_instance" "test" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -256,7 +245,7 @@ resource "aws_eip_association" "test" {
 
 func testAccEIPAssociationConfig_instance(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -271,7 +260,7 @@ resource "aws_internet_gateway" "test" {
 resource "aws_instance" "test" {
   count = 2
 
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id     = aws_subnet.test[0].id
 
@@ -283,7 +272,7 @@ resource "aws_instance" "test" {
 resource "aws_eip" "test" {
   count = 2
 
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -321,7 +310,7 @@ resource "aws_network_interface" "test" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q
@@ -337,7 +326,7 @@ resource "aws_eip_association" "test" {
 
 func testAccEIPAssociationConfig_spotInstance(rName, publicKey string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigVPCWithSubnets(rName, 1),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -359,7 +348,7 @@ resource "aws_key_pair" "test" {
 }
 
 resource "aws_spot_instance_request" "test" {
-  ami                  = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami                  = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type        = data.aws_ec2_instance_type_offering.available.instance_type
   key_name             = aws_key_pair.test.key_name
   spot_price           = "0.10"
@@ -378,7 +367,7 @@ resource "aws_ec2_tag" "test" {
 }
 
 resource "aws_eip" "test" {
-  vpc = true
+  domain = "vpc"
 
   tags = {
     Name = %[1]q

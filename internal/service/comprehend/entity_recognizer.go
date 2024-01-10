@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package comprehend
 
 import (
@@ -5,9 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/aws/ratelimit"
@@ -304,7 +307,7 @@ func ResourceEntityRecognizer() *schema.Resource {
 
 func resourceEntityRecognizerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	awsClient := meta.(*conns.AWSClient)
-	conn := awsClient.ComprehendClient()
+	conn := awsClient.ComprehendClient(ctx)
 
 	var versionName *string
 	raw := d.GetRawConfig().GetAttr("version_name")
@@ -323,18 +326,20 @@ func resourceEntityRecognizerCreate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ComprehendClient()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ComprehendClient(ctx)
 
 	out, err := FindEntityRecognizerByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Comprehend Entity Recognizer (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Comprehend Entity Recognizer (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Comprehend Entity Recognizer (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", out.EntityRecognizerArn)
@@ -348,24 +353,24 @@ func resourceEntityRecognizerRead(ctx context.Context, d *schema.ResourceData, m
 	// DescribeEntityRecognizer() doesn't return the model name
 	name, err := EntityRecognizerParseARN(aws.ToString(out.EntityRecognizerArn))
 	if err != nil {
-		return diag.Errorf("reading Comprehend Entity Recognizer (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Comprehend Entity Recognizer (%s): %s", d.Id(), err)
 	}
 	d.Set("name", name)
 
 	if err := d.Set("input_data_config", flattenEntityRecognizerInputDataConfig(out.InputDataConfig)); err != nil {
-		return diag.Errorf("setting input_data_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting input_data_config: %s", err)
 	}
 
 	if err := d.Set("vpc_config", flattenVPCConfig(out.VpcConfig)); err != nil {
-		return diag.Errorf("setting vpc_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	awsClient := meta.(*conns.AWSClient)
-	conn := awsClient.ComprehendClient()
+	conn := awsClient.ComprehendClient(ctx)
 
 	var diags diag.Diagnostics
 
@@ -387,7 +392,9 @@ func resourceEntityRecognizerUpdate(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ComprehendClient()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ComprehendClient(ctx)
 
 	log.Printf("[INFO] Stopping Comprehend Entity Recognizer (%s)", d.Id())
 
@@ -397,31 +404,31 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return diag.Errorf("stopping Comprehend Entity Recognizer (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "stopping Comprehend Entity Recognizer (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitEntityRecognizerStopped(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return diag.Errorf("waiting for Comprehend Entity Recognizer (%s) to be stopped: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Comprehend Entity Recognizer (%s) to be stopped: %s", d.Id(), err)
 	}
 
 	name, err := EntityRecognizerParseARN(d.Id())
 	if err != nil {
-		return diag.Errorf("deleting Comprehend Entity Recognizer (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Comprehend Entity Recognizer (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[INFO] Deleting Comprehend Entity Recognizer (%s)", name)
 
 	versions, err := ListEntityRecognizerVersionsByName(ctx, conn, name)
 	if err != nil {
-		return diag.Errorf("deleting Comprehend Entity Recognizer (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "deleting Comprehend Entity Recognizer (%s): %s", name, err)
 	}
 
 	var g multierror.Group
@@ -442,7 +449,7 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 				return fmt.Errorf("waiting for version (%s) to be deleted: %s", aws.ToString(v.VersionName), err)
 			}
 
-			ec2Conn := meta.(*conns.AWSClient).EC2Conn()
+			ec2Conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 			networkInterfaces, err := tfec2.FindNetworkInterfaces(ctx, ec2Conn, &ec2.DescribeNetworkInterfacesInput{
 				Filters: []*ec2.Filter{
 					tfec2.NewFilter(fmt.Sprintf("tag:%s", entityRecognizerTagKey), []string{aws.ToString(v.EntityRecognizerArn)}),
@@ -479,13 +486,15 @@ func resourceEntityRecognizerDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if err := g.Wait(); err != nil {
-		return diag.Errorf("deleting Comprehend Entity Recognizer (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "deleting Comprehend Entity Recognizer (%s): %s", name, err)
 	}
 
-	return nil
+	return diags
 }
 
 func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client, d *schema.ResourceData, versionName *string, action string, timeout time.Duration, awsClient *conns.AWSClient) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	in := &comprehend.CreateEntityRecognizerInput{
 		DataAccessRoleArn:  aws.String(d.Get("data_access_role_arn").(string)),
 		InputDataConfig:    expandEntityRecognizerInputDataConfig(getEntityRecognizerInputDataConfig(d)),
@@ -494,7 +503,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 		VersionName:        versionName,
 		VpcConfig:          expandVPCConfig(d.Get("vpc_config").([]interface{})),
 		ClientRequestToken: aws.String(id.UniqueId()),
-		Tags:               GetTagsIn(ctx),
+		Tags:               getTagsIn(ctx),
 	}
 
 	if v, ok := d.Get("model_kms_key_id").(string); ok && v != "" {
@@ -537,11 +546,11 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 		out, err = conn.CreateEntityRecognizer(ctx, in)
 	}
 	if err != nil {
-		return diag.Errorf("%s Amazon Comprehend Entity Recognizer (%s): %s", action, d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "%s Amazon Comprehend Entity Recognizer (%s): %s", action, d.Get("name").(string), err)
 	}
 
 	if out == nil || out.EntityRecognizerArn == nil {
-		return diag.Errorf("%s Amazon Comprehend Entity Recognizer (%s): empty output", action, d.Get("name").(string))
+		return sdkdiag.AppendErrorf(diags, "%s Amazon Comprehend Entity Recognizer (%s): empty output", action, d.Get("name").(string))
 	}
 
 	d.SetId(aws.ToString(out.EntityRecognizerArn))
@@ -555,7 +564,6 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 		return err
 	})
 
-	var diags diag.Diagnostics
 	var tobe string
 	if action == create.ErrActionCreating {
 		tobe = "to be created"
@@ -567,7 +575,7 @@ func entityRecognizerPublishVersion(ctx context.Context, conn *comprehend.Client
 
 	if in.VpcConfig != nil {
 		g.Go(func() error {
-			ec2Conn := awsClient.EC2Conn()
+			ec2Conn := awsClient.EC2Conn(ctx)
 			enis, err := findNetworkInterfaces(waitCtx, ec2Conn, in.VpcConfig.SecurityGroupIds, in.VpcConfig.Subnets)
 			if err != nil {
 				diags = sdkdiag.AppendWarningf(diags, "waiting for Amazon Comprehend Entity Recognizer (%s) %s: %s", d.Id(), tobe, err)
@@ -942,7 +950,7 @@ func EntityRecognizerParseARN(arnString string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	re := regexp.MustCompile(`^entity-recognizer/([[:alnum:]-]+)`)
+	re := regexache.MustCompile(`^entity-recognizer/([[:alnum:]-]+)`)
 	matches := re.FindStringSubmatch(arn.Resource)
 	if len(matches) != 2 {
 		return "", fmt.Errorf("unable to parse %q", arnString)

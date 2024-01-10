@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -271,23 +274,22 @@ func FindAppImageConfigByName(ctx context.Context, conn *sagemaker.SageMaker, ap
 }
 
 func listAppsByName(ctx context.Context, conn *sagemaker.SageMaker, domainID, userProfileOrSpaceName, appType, appName string) (*sagemaker.AppDetails, error) {
-	var apps []*sagemaker.AppDetails
-
 	input := &sagemaker.ListAppsInput{
 		DomainIdEquals: aws.String(domainID),
 	}
+	var output []*sagemaker.AppDetails
 
 	err := conn.ListAppsPagesWithContext(ctx, input, func(page *sagemaker.ListAppsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, app := range page.Apps {
-			if app == nil {
+		for _, v := range page.Apps {
+			if v == nil {
 				continue
 			}
 
-			apps = append(apps, app)
+			output = append(output, v)
 		}
 
 		return !lastPage
@@ -297,29 +299,15 @@ func listAppsByName(ctx context.Context, conn *sagemaker.SageMaker, domainID, us
 		return nil, err
 	}
 
-	if len(apps) == 0 {
-		return nil, nil
-	}
-
-	var foundApp *sagemaker.AppDetails
-	for _, app := range apps {
-		if aws.StringValue(app.AppName) == appName &&
-			aws.StringValue(app.AppType) == appType &&
-			(aws.StringValue(app.SpaceName) == userProfileOrSpaceName ||
-				aws.StringValue(app.UserProfileName) == userProfileOrSpaceName) {
-			foundApp = app
+	for _, v := range output {
+		if aws.StringValue(v.AppName) == appName && aws.StringValue(v.AppType) == appType && (aws.StringValue(v.SpaceName) == userProfileOrSpaceName || aws.StringValue(v.UserProfileName) == userProfileOrSpaceName) {
+			return v, nil
 		}
 	}
 
-	if foundApp == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return foundApp, nil
+	return nil, &retry.NotFoundError{}
 }
 
-// FindAppByName returns the domain corresponding to the specified domain id.
-// Returns nil if no domain is found.
 func FindAppByName(ctx context.Context, conn *sagemaker.SageMaker, domainID, userProfileOrSpaceName, appType, appName string) (*sagemaker.DescribeAppOutput, error) {
 	foundApp, err := listAppsByName(ctx, conn, domainID, userProfileOrSpaceName, appType, appName)
 
@@ -328,15 +316,13 @@ func FindAppByName(ctx context.Context, conn *sagemaker.SageMaker, domainID, use
 	}
 
 	input := &sagemaker.DescribeAppInput{
-		DomainId: aws.String(domainID),
-		AppType:  aws.String(appType),
 		AppName:  aws.String(appName),
+		AppType:  aws.String(appType),
+		DomainId: aws.String(domainID),
 	}
-
 	if foundApp.SpaceName != nil {
 		input.SpaceName = foundApp.SpaceName
 	}
-
 	if foundApp.UserProfileName != nil {
 		input.UserProfileName = foundApp.UserProfileName
 	}
@@ -614,6 +600,31 @@ func FindSpaceByName(ctx context.Context, conn *sagemaker.SageMaker, domainId, n
 	output, err := conn.DescribeSpaceWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, "ValidationException", "RecordNotFound") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindPipelineByName(ctx context.Context, conn *sagemaker.SageMaker, name string) (*sagemaker.DescribePipelineOutput, error) {
+	input := &sagemaker.DescribePipelineInput{
+		PipelineName: aws.String(name),
+	}
+
+	output, err := conn.DescribePipelineWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

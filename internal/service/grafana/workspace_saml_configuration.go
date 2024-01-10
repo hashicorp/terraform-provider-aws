@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package grafana
 
 import (
@@ -103,7 +106,7 @@ func ResourceWorkspaceSAMLConfiguration() *schema.Resource {
 
 func resourceWorkspaceSAMLConfigurationUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	d.SetId(d.Get("workspace_id").(string))
 	workspace, err := FindWorkspaceByID(ctx, conn, d.Id())
@@ -222,7 +225,7 @@ func resourceWorkspaceSAMLConfigurationUpsert(ctx context.Context, d *schema.Res
 
 func resourceWorkspaceSAMLConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).GrafanaConn()
+	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
 	saml, err := FindSamlConfigurationByID(ctx, conn, d.Id())
 

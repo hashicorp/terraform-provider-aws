@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package medialive
 
 import (
@@ -25,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -112,37 +116,6 @@ func (m *multiplexProgram) Schema(ctx context.Context, req resource.SchemaReques
 									},
 								},
 								Blocks: map[string]schema.Block{
-									"statemux_settings": schema.ListNestedBlock{
-										DeprecationMessage: "Configure statmux_settings instead of statemux_settings. This block will be removed in the next major version of the provider.",
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"minimum_bitrate": schema.Int64Attribute{
-													Optional: true,
-													Computed: true,
-													PlanModifiers: []planmodifier.Int64{
-														int64planmodifier.UseStateForUnknown(),
-													},
-												},
-												"maximum_bitrate": schema.Int64Attribute{
-													Optional: true,
-													Computed: true,
-													PlanModifiers: []planmodifier.Int64{
-														int64planmodifier.UseStateForUnknown(),
-													},
-												},
-												"priority": schema.Int64Attribute{
-													Optional: true,
-													Computed: true,
-													PlanModifiers: []planmodifier.Int64{
-														int64planmodifier.UseStateForUnknown(),
-													},
-												},
-											},
-										},
-									},
 									"statmux_settings": schema.ListNestedBlock{
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
@@ -184,7 +157,7 @@ func (m *multiplexProgram) Schema(ctx context.Context, req resource.SchemaReques
 }
 
 func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := m.Meta().MediaLiveClient()
+	conn := m.Meta().MediaLiveClient(ctx)
 
 	var plan resourceMultiplexProgramData
 	diags := req.Plan.Get(ctx, &plan)
@@ -202,13 +175,13 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 		RequestId:   aws.String(id.UniqueId()),
 	}
 
-	mps := make([]multiplexProgramSettings, 1)
+	mps := make(multiplexProgramSettingsObject, 1)
 	resp.Diagnostics.Append(plan.MultiplexProgramSettings.ElementsAs(ctx, &mps, false)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	mpSettings, isStateMuxSet, err := expandMultiplexProgramSettings(ctx, mps)
+	mpSettings, err := mps.expand(ctx)
 
 	resp.Diagnostics.Append(err...)
 	if resp.Diagnostics.HasError() {
@@ -229,10 +202,10 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 
 	var result resourceMultiplexProgramData
 
-	result.ID = types.StringValue(fmt.Sprintf("%s/%s", programName, multiplexId))
-	result.ProgramName = types.StringValue(aws.ToString(out.MultiplexProgram.ProgramName))
-	result.MultiplexID = types.StringValue(plan.MultiplexID.ValueString())
-	result.MultiplexProgramSettings = flattenMultiplexProgramSettings(out.MultiplexProgram.MultiplexProgramSettings, isStateMuxSet)
+	result.ID = flex.StringValueToFramework(ctx, fmt.Sprintf("%s/%s", programName, multiplexId))
+	result.ProgramName = flex.StringToFrameworkLegacy(ctx, out.MultiplexProgram.ProgramName)
+	result.MultiplexID = plan.MultiplexID
+	result.MultiplexProgramSettings = flattenMultiplexProgramSettings(ctx, out.MultiplexProgram.MultiplexProgramSettings)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, result)...)
 
@@ -242,7 +215,7 @@ func (m *multiplexProgram) Create(ctx context.Context, req resource.CreateReques
 }
 
 func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := m.Meta().MediaLiveClient()
+	conn := m.Meta().MediaLiveClient(ctx)
 
 	var state resourceMultiplexProgramData
 	diags := req.State.Get(ctx, &state)
@@ -281,22 +254,7 @@ func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, r
 		return
 	}
 
-	sm := make([]videoSettings, 1)
-	attErr := req.State.GetAttribute(ctx, path.Root("multiplex_program_settings").
-		AtListIndex(0).AtName("video_settings"), &sm)
-
-	resp.Diagnostics.Append(attErr...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	var stateMuxIsNull bool
-	if len(sm) > 0 {
-		if len(sm[0].StatemuxSettings.Elements()) == 0 {
-			stateMuxIsNull = true
-		}
-	}
-	state.MultiplexProgramSettings = flattenMultiplexProgramSettings(out.MultiplexProgramSettings, stateMuxIsNull)
+	state.MultiplexProgramSettings = flattenMultiplexProgramSettings(ctx, out.MultiplexProgramSettings)
 	state.ProgramName = types.StringValue(aws.ToString(out.ProgramName))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -307,7 +265,7 @@ func (m *multiplexProgram) Read(ctx context.Context, req resource.ReadRequest, r
 }
 
 func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := m.Meta().MediaLiveClient()
+	conn := m.Meta().MediaLiveClient(ctx)
 
 	var plan resourceMultiplexProgramData
 	diags := req.Plan.Get(ctx, &plan)
@@ -326,13 +284,13 @@ func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	mps := make([]multiplexProgramSettings, 1)
+	mps := make(multiplexProgramSettingsObject, 1)
 	resp.Diagnostics.Append(plan.MultiplexProgramSettings.ElementsAs(ctx, &mps, false)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	mpSettings, stateMuxIsNull, errExpand := expandMultiplexProgramSettings(ctx, mps)
+	mpSettings, errExpand := mps.expand(ctx)
 
 	resp.Diagnostics.Append(errExpand...)
 	if resp.Diagnostics.HasError() {
@@ -366,13 +324,13 @@ func (m *multiplexProgram) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	plan.MultiplexProgramSettings = flattenMultiplexProgramSettings(out.MultiplexProgramSettings, stateMuxIsNull)
+	plan.MultiplexProgramSettings = flattenMultiplexProgramSettings(ctx, out.MultiplexProgramSettings)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (m *multiplexProgram) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := m.Meta().MediaLiveClient()
+	conn := m.Meta().MediaLiveClient(ctx)
 
 	var state resourceMultiplexProgramData
 	diags := req.State.Get(ctx, &state)
@@ -413,41 +371,6 @@ func (m *multiplexProgram) ImportState(ctx context.Context, req resource.ImportS
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func (m *multiplexProgram) ValidateConfig(ctx context.Context, req resource.ValidateConfigRequest, resp *resource.ValidateConfigResponse) {
-	var data resourceMultiplexProgramData
-
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	mps := make([]multiplexProgramSettings, 1)
-	resp.Diagnostics.Append(data.MultiplexProgramSettings.ElementsAs(ctx, &mps, false)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	if len(mps[0].VideoSettings.Elements()) > 0 || !mps[0].VideoSettings.IsNull() {
-		vs := make([]videoSettings, 1)
-		resp.Diagnostics.Append(mps[0].VideoSettings.ElementsAs(ctx, &vs, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		statMuxSet := len(vs[0].StatmuxSettings.Elements()) > 0
-		stateMuxSet := len(vs[0].StatemuxSettings.Elements()) > 0
-
-		if statMuxSet && stateMuxSet {
-			resp.Diagnostics.AddAttributeError(
-				path.Root("multiplex_program_settings").AtListIndex(0).AtName("video_settings").AtListIndex(0).AtName("statmux_settings"),
-				"Conflicting Attribute Configuration",
-				"Attribute statmux_settings cannot be configured with statemux_settings.",
-			)
-		}
-	}
-}
-
 func FindMultiplexProgramByID(ctx context.Context, conn *medialive.Client, multiplexId, programName string) (*medialive.DescribeMultiplexProgramOutput, error) {
 	in := &medialive.DescribeMultiplexProgramInput{
 		MultiplexId: aws.String(multiplexId),
@@ -473,75 +396,90 @@ func FindMultiplexProgramByID(ctx context.Context, conn *medialive.Client, multi
 	return out, nil
 }
 
-func expandMultiplexProgramSettings(ctx context.Context, mps []multiplexProgramSettings) (*mltypes.MultiplexProgramSettings, bool, diag.Diagnostics) {
+type multiplexProgramSettingsObject []multiplexProgramSettings
+
+func (mps multiplexProgramSettingsObject) expand(ctx context.Context) (*mltypes.MultiplexProgramSettings, diag.Diagnostics) {
 	if len(mps) == 0 {
-		return nil, false, nil
+		return nil, nil
 	}
 
-	var stateMuxIsNull bool
 	data := mps[0]
 
 	l := &mltypes.MultiplexProgramSettings{
-		ProgramNumber:            int32(data.ProgramNumber.ValueInt64()),
+		ProgramNumber:            flex.Int32FromFramework(ctx, data.ProgramNumber),
 		PreferredChannelPipeline: mltypes.PreferredChannelPipeline(data.PreferredChannelPipeline.ValueString()),
 	}
 
 	if len(data.ServiceDescriptor.Elements()) > 0 && !data.ServiceDescriptor.IsNull() {
-		sd := make([]serviceDescriptor, 1)
+		sd := make(serviceDescriptorObject, 1)
 		err := data.ServiceDescriptor.ElementsAs(ctx, &sd, false)
 		if err.HasError() {
-			return nil, false, err
+			return nil, err
 		}
 
-		l.ServiceDescriptor = &mltypes.MultiplexProgramServiceDescriptor{
-			ProviderName: aws.String(sd[0].ProviderName.ValueString()),
-			ServiceName:  aws.String(sd[0].ServiceName.ValueString()),
-		}
+		l.ServiceDescriptor = sd.expand(ctx)
 	}
 
 	if len(data.VideoSettings.Elements()) > 0 && !data.VideoSettings.IsNull() {
-		vs := make([]videoSettings, 1)
+		vs := make(videoSettingsObject, 1)
 		err := data.VideoSettings.ElementsAs(ctx, &vs, false)
 		if err.HasError() {
-			return nil, false, err
+			return nil, err
 		}
 
-		l.VideoSettings = &mltypes.MultiplexVideoSettings{
-			ConstantBitrate: int32(vs[0].ConstantBitrate.ValueInt64()),
-		}
-
-		// Deprecated: will be removed in the next major version
-		if len(vs[0].StatemuxSettings.Elements()) > 0 && !vs[0].StatemuxSettings.IsNull() {
-			sms := make([]statmuxSettings, 1)
-			err := vs[0].StatemuxSettings.ElementsAs(ctx, &sms, false)
-			if err.HasError() {
-				return nil, false, err
-			}
-
-			l.VideoSettings.StatmuxSettings = &mltypes.MultiplexStatmuxVideoSettings{
-				MinimumBitrate: int32(sms[0].MinimumBitrate.ValueInt64()),
-				MaximumBitrate: int32(sms[0].MaximumBitrate.ValueInt64()),
-				Priority:       int32(sms[0].Priority.ValueInt64()),
-			}
-		}
+		l.VideoSettings = vs.expand(ctx)
 
 		if len(vs[0].StatmuxSettings.Elements()) > 0 && !vs[0].StatmuxSettings.IsNull() {
-			stateMuxIsNull = true
-			sms := make([]statmuxSettings, 1)
+			sms := make(statmuxSettingsObject, 1)
 			err := vs[0].StatmuxSettings.ElementsAs(ctx, &sms, false)
 			if err.HasError() {
-				return nil, false, err
+				return nil, err
 			}
 
-			l.VideoSettings.StatmuxSettings = &mltypes.MultiplexStatmuxVideoSettings{
-				MinimumBitrate: int32(sms[0].MinimumBitrate.ValueInt64()),
-				MaximumBitrate: int32(sms[0].MaximumBitrate.ValueInt64()),
-				Priority:       int32(sms[0].Priority.ValueInt64()),
-			}
+			l.VideoSettings.StatmuxSettings = sms.expand(ctx)
 		}
 	}
 
-	return l, stateMuxIsNull, nil
+	return l, nil
+}
+
+type serviceDescriptorObject []serviceDescriptor
+
+func (sd serviceDescriptorObject) expand(ctx context.Context) *mltypes.MultiplexProgramServiceDescriptor {
+	if len(sd) == 0 {
+		return nil
+	}
+
+	return &mltypes.MultiplexProgramServiceDescriptor{
+		ProviderName: flex.StringFromFramework(ctx, sd[0].ProviderName),
+		ServiceName:  flex.StringFromFramework(ctx, sd[0].ServiceName),
+	}
+}
+
+type videoSettingsObject []videoSettings
+
+func (vs videoSettingsObject) expand(ctx context.Context) *mltypes.MultiplexVideoSettings {
+	if len(vs) == 0 {
+		return nil
+	}
+
+	return &mltypes.MultiplexVideoSettings{
+		ConstantBitrate: flex.Int32FromFramework(ctx, vs[0].ConstantBitrate),
+	}
+}
+
+type statmuxSettingsObject []statmuxSettings
+
+func (sms statmuxSettingsObject) expand(ctx context.Context) *mltypes.MultiplexStatmuxVideoSettings {
+	if len(sms) == 0 {
+		return nil
+	}
+
+	return &mltypes.MultiplexStatmuxVideoSettings{
+		MaximumBitrate: flex.Int32FromFramework(ctx, sms[0].MaximumBitrate),
+		MinimumBitrate: flex.Int32FromFramework(ctx, sms[0].MinimumBitrate),
+		Priority:       flex.Int32FromFramework(ctx, sms[0].Priority),
+	}
 }
 
 var (
@@ -552,9 +490,8 @@ var (
 	}
 
 	videoSettingsAttrs = map[string]attr.Type{
-		"constant_bitrate":  types.Int64Type,
-		"statemux_settings": types.ListType{ElemType: types.ObjectType{AttrTypes: statmuxAttrs}},
-		"statmux_settings":  types.ListType{ElemType: types.ObjectType{AttrTypes: statmuxAttrs}},
+		"constant_bitrate": types.Int64Type,
+		"statmux_settings": types.ListType{ElemType: types.ObjectType{AttrTypes: statmuxAttrs}},
 	}
 
 	serviceDescriptorAttrs = map[string]attr.Type{
@@ -570,7 +507,7 @@ var (
 	}
 )
 
-func flattenMultiplexProgramSettings(mps *mltypes.MultiplexProgramSettings, stateMuxIsNull bool) types.List {
+func flattenMultiplexProgramSettings(ctx context.Context, mps *mltypes.MultiplexProgramSettings) types.List {
 	elemType := types.ObjectType{AttrTypes: multiplexProgramSettingsAttrs}
 
 	if mps == nil {
@@ -578,17 +515,17 @@ func flattenMultiplexProgramSettings(mps *mltypes.MultiplexProgramSettings, stat
 	}
 
 	attrs := map[string]attr.Value{}
-	attrs["program_number"] = types.Int64Value(int64(mps.ProgramNumber))
-	attrs["preferred_channel_pipeline"] = types.StringValue(string(mps.PreferredChannelPipeline))
-	attrs["service_descriptor"] = flattenServiceDescriptor(mps.ServiceDescriptor)
-	attrs["video_settings"] = flattenVideoSettings(mps.VideoSettings, stateMuxIsNull)
+	attrs["program_number"] = flex.Int32ToFramework(ctx, mps.ProgramNumber)
+	attrs["preferred_channel_pipeline"] = flex.StringValueToFrameworkLegacy(ctx, mps.PreferredChannelPipeline)
+	attrs["service_descriptor"] = flattenServiceDescriptor(ctx, mps.ServiceDescriptor)
+	attrs["video_settings"] = flattenVideoSettings(ctx, mps.VideoSettings)
 
 	vals := types.ObjectValueMust(multiplexProgramSettingsAttrs, attrs)
 
 	return types.ListValueMust(elemType, []attr.Value{vals})
 }
 
-func flattenServiceDescriptor(sd *mltypes.MultiplexProgramServiceDescriptor) types.List {
+func flattenServiceDescriptor(ctx context.Context, sd *mltypes.MultiplexProgramServiceDescriptor) types.List {
 	elemType := types.ObjectType{AttrTypes: serviceDescriptorAttrs}
 
 	if sd == nil {
@@ -596,15 +533,15 @@ func flattenServiceDescriptor(sd *mltypes.MultiplexProgramServiceDescriptor) typ
 	}
 
 	attrs := map[string]attr.Value{}
-	attrs["provider_name"] = types.StringValue(aws.ToString(sd.ProviderName))
-	attrs["service_name"] = types.StringValue(aws.ToString(sd.ServiceName))
+	attrs["provider_name"] = flex.StringToFrameworkLegacy(ctx, sd.ProviderName)
+	attrs["service_name"] = flex.StringToFrameworkLegacy(ctx, sd.ServiceName)
 
 	vals := types.ObjectValueMust(serviceDescriptorAttrs, attrs)
 
 	return types.ListValueMust(elemType, []attr.Value{vals})
 }
 
-func flattenStatMuxSettings(mps *mltypes.MultiplexStatmuxVideoSettings) types.List {
+func flattenStatMuxSettings(ctx context.Context, mps *mltypes.MultiplexStatmuxVideoSettings) types.List {
 	elemType := types.ObjectType{AttrTypes: statmuxAttrs}
 
 	if mps == nil {
@@ -612,16 +549,16 @@ func flattenStatMuxSettings(mps *mltypes.MultiplexStatmuxVideoSettings) types.Li
 	}
 
 	attrs := map[string]attr.Value{}
-	attrs["minimum_bitrate"] = types.Int64Value(int64(mps.MinimumBitrate))
-	attrs["maximum_bitrate"] = types.Int64Value(int64(mps.MaximumBitrate))
-	attrs["priority"] = types.Int64Value(int64(mps.Priority))
+	attrs["minimum_bitrate"] = flex.Int32ToFramework(ctx, mps.MinimumBitrate)
+	attrs["maximum_bitrate"] = flex.Int32ToFramework(ctx, mps.MaximumBitrate)
+	attrs["priority"] = flex.Int32ToFramework(ctx, mps.Priority)
 
 	vals := types.ObjectValueMust(statmuxAttrs, attrs)
 
 	return types.ListValueMust(elemType, []attr.Value{vals})
 }
 
-func flattenVideoSettings(mps *mltypes.MultiplexVideoSettings, stateMuxIsNull bool) types.List {
+func flattenVideoSettings(ctx context.Context, mps *mltypes.MultiplexVideoSettings) types.List {
 	elemType := types.ObjectType{AttrTypes: videoSettingsAttrs}
 
 	if mps == nil {
@@ -629,15 +566,8 @@ func flattenVideoSettings(mps *mltypes.MultiplexVideoSettings, stateMuxIsNull bo
 	}
 
 	attrs := map[string]attr.Value{}
-	attrs["constant_bitrate"] = types.Int64Value(int64(mps.ConstantBitrate))
-
-	if stateMuxIsNull {
-		attrs["statmux_settings"] = flattenStatMuxSettings(mps.StatmuxSettings)
-		attrs["statemux_settings"] = types.ListValueMust(types.ObjectType{AttrTypes: statmuxAttrs}, []attr.Value{})
-	} else {
-		attrs["statmux_settings"] = types.ListValueMust(types.ObjectType{AttrTypes: statmuxAttrs}, []attr.Value{})
-		attrs["statemux_settings"] = flattenStatMuxSettings(mps.StatmuxSettings)
-	}
+	attrs["constant_bitrate"] = flex.Int32ToFramework(ctx, mps.ConstantBitrate)
+	attrs["statmux_settings"] = flattenStatMuxSettings(ctx, mps.StatmuxSettings)
 
 	vals := types.ObjectValueMust(videoSettingsAttrs, attrs)
 
@@ -678,9 +608,8 @@ type serviceDescriptor struct {
 }
 
 type videoSettings struct {
-	ConstantBitrate  types.Int64 `tfsdk:"constant_bitrate"`
-	StatemuxSettings types.List  `tfsdk:"statemux_settings"` // Deprecated: will be removed in the next major version
-	StatmuxSettings  types.List  `tfsdk:"statmux_settings"`
+	ConstantBitrate types.Int64 `tfsdk:"constant_bitrate"`
+	StatmuxSettings types.List  `tfsdk:"statmux_settings"`
 }
 
 type statmuxSettings struct {

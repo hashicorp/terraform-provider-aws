@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schemas
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/schemas"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -14,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -61,7 +65,7 @@ func ResourceSchema() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 385),
-					validation.StringMatch(regexp.MustCompile(`^[\.\-_A-Za-z@]+`), ""),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z_.@-]+`), ""),
 				),
 			},
 
@@ -74,7 +78,7 @@ func ResourceSchema() *schema.Resource {
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice(schemas.Type_Values(), true),
+				ValidateFunc: validation.StringInSlice(type_Values(), true),
 			},
 
 			"version": {
@@ -96,7 +100,7 @@ func ResourceSchema() *schema.Resource {
 
 func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn()
+	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	name := d.Get("name").(string)
 	registryName := d.Get("registry_name").(string)
@@ -104,7 +108,7 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Content:      aws.String(d.Get("content").(string)),
 		RegistryName: aws.String(registryName),
 		SchemaName:   aws.String(name),
-		Tags:         GetTagsIn(ctx),
+		Tags:         getTagsIn(ctx),
 		Type:         aws.String(d.Get("type").(string)),
 	}
 
@@ -128,7 +132,7 @@ func resourceSchemaCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn()
+	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	name, registryName, err := SchemaParseResourceID(d.Id())
 
@@ -171,7 +175,7 @@ func resourceSchemaRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn()
+	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	if d.HasChanges("content", "description", "type") {
 		name, registryName, err := SchemaParseResourceID(d.Id())
@@ -207,7 +211,7 @@ func resourceSchemaUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceSchemaDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SchemasConn()
+	conn := meta.(*conns.AWSClient).SchemasConn(ctx)
 
 	name, registryName, err := SchemaParseResourceID(d.Id())
 
@@ -230,4 +234,9 @@ func resourceSchemaDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	return diags
+}
+
+func type_Values() []string {
+	// For some reason AWS SDK for Go v1 does not define a TypeJSONSchemaDraft4 constant.
+	return tfslices.AppendUnique(schemas.Type_Values(), "JSONSchemaDraft4")
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -68,6 +71,10 @@ func ResourceSubnetGroup() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -78,14 +85,14 @@ func ResourceSubnetGroup() *schema.Resource {
 
 func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	input := &rds.CreateDBSubnetGroupInput{
 		DBSubnetGroupDescription: aws.String(d.Get("description").(string)),
 		DBSubnetGroupName:        aws.String(name),
 		SubnetIds:                flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:                     GetTagsIn(ctx),
+		Tags:                     getTagsIn(ctx),
 	}
 
 	log.Printf("[DEBUG] Creating RDS DB Subnet Group: %s", input)
@@ -101,7 +108,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	v, err := FindDBSubnetGroupByName(ctx, conn, d.Id())
 
@@ -126,13 +133,14 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("subnet_ids", subnetIDs)
 	d.Set("supported_network_types", aws.StringValueSlice(v.SupportedNetworkTypes))
+	d.Set("vpc_id", v.VpcId)
 
 	return diags
 }
 
 func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	if d.HasChanges("description", "subnet_ids") {
 		input := &rds.ModifyDBSubnetGroupInput{
@@ -153,7 +161,7 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn()
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting RDS DB Subnet Group: %s", d.Id())
 	_, err := conn.DeleteDBSubnetGroupWithContext(ctx, &rds.DeleteDBSubnetGroupInput{

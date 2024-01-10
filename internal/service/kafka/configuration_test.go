@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafka_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafka"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkafka "github.com/hashicorp/terraform-provider-aws/internal/service/kafka"
@@ -33,12 +36,12 @@ func TestAccKafkaConfiguration_basic(t *testing.T) {
 				Config: testAccConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName, &configuration1),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexp.MustCompile(`configuration/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kafka", regexache.MustCompile(`configuration/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "kafka_versions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "latest_revision", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestMatchResourceAttr(resourceName, "server_properties", regexp.MustCompile(`auto.create.topics.enable = true`)),
+					resource.TestMatchResourceAttr(resourceName, "server_properties", regexache.MustCompile(`auto.create.topics.enable = true`)),
 				),
 			},
 			{
@@ -158,7 +161,7 @@ func TestAccKafkaConfiguration_serverProperties(t *testing.T) {
 				Config: testAccConfigurationConfig_serverProperties(rName, serverProperty1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName, &configuration1),
-					resource.TestMatchResourceAttr(resourceName, "server_properties", regexp.MustCompile(serverProperty1)),
+					resource.TestMatchResourceAttr(resourceName, "server_properties", regexache.MustCompile(serverProperty1)),
 				),
 			},
 			{
@@ -171,7 +174,7 @@ func TestAccKafkaConfiguration_serverProperties(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName, &configuration2),
 					resource.TestCheckResourceAttr(resourceName, "latest_revision", "2"),
-					resource.TestMatchResourceAttr(resourceName, "server_properties", regexp.MustCompile(serverProperty2)),
+					resource.TestMatchResourceAttr(resourceName, "server_properties", regexache.MustCompile(serverProperty2)),
 				),
 			},
 		},
@@ -180,7 +183,7 @@ func TestAccKafkaConfiguration_serverProperties(t *testing.T) {
 
 func testAccCheckConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_msk_configuration" {
@@ -221,7 +224,7 @@ func testAccCheckConfigurationExists(ctx context.Context, resourceName string, c
 			return fmt.Errorf("Resource ID not set: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConn(ctx)
 
 		input := &kafka.DescribeConfigurationInput{
 			Arn: aws.String(rs.Primary.ID),

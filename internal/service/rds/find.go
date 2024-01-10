@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -87,44 +90,6 @@ func FindDBClusterRoleByDBClusterIDAndRoleARN(ctx context.Context, conn *rds.RDS
 	return nil, &retry.NotFoundError{}
 }
 
-func FindDBClusterSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBClusterSnapshot, error) {
-	input := &rds.DescribeDBClusterSnapshotsInput{
-		DBClusterSnapshotIdentifier: aws.String(id),
-	}
-
-	output, err := conn.DescribeDBClusterSnapshotsWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterSnapshotNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.DBClusterSnapshots) == 0 || output.DBClusterSnapshots[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.DBClusterSnapshots); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	dbClusterSnapshot := output.DBClusterSnapshots[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(dbClusterSnapshot.DBClusterSnapshotIdentifier) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return dbClusterSnapshot, nil
-}
-
 func FindDBProxyByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DBProxy, error) {
 	input := &rds.DescribeDBProxiesInput{
 		DBProxyName: aws.String(name),
@@ -161,44 +126,6 @@ func FindDBProxyByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DB
 	}
 
 	return dbProxy, nil
-}
-
-func FindDBSnapshotByID(ctx context.Context, conn *rds.RDS, id string) (*rds.DBSnapshot, error) {
-	input := &rds.DescribeDBSnapshotsInput{
-		DBSnapshotIdentifier: aws.String(id),
-	}
-
-	output, err := conn.DescribeDBSnapshotsWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSnapshotNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.DBSnapshots) == 0 || output.DBSnapshots[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.DBSnapshots); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	dbSnapshot := output.DBSnapshots[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(dbSnapshot.DBSnapshotIdentifier) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return dbSnapshot, nil
 }
 
 func FindDBSubnetGroupByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DBSubnetGroup, error) {
@@ -266,168 +193,6 @@ func FindEventSubscriptionByID(ctx context.Context, conn *rds.RDS, id string) (*
 	}
 
 	return output.EventSubscriptionsList[0], nil
-}
-
-func FindDBInstanceAutomatedBackupByARN(ctx context.Context, conn *rds.RDS, arn string) (*rds.DBInstanceAutomatedBackup, error) {
-	input := &rds.DescribeDBInstanceAutomatedBackupsInput{
-		DBInstanceAutomatedBackupsArn: aws.String(arn),
-	}
-
-	output, err := findDBInstanceAutomatedBackup(ctx, conn, input)
-	if err != nil {
-		return nil, err
-	}
-
-	if status := aws.StringValue(output.Status); status == InstanceAutomatedBackupStatusRetained {
-		// If the automated backup is retained, the replication is stopped.
-		return nil, &retry.NotFoundError{
-			Message:     status,
-			LastRequest: input,
-		}
-	}
-
-	// Eventual consistency check.
-	if aws.StringValue(output.DBInstanceAutomatedBackupsArn) != arn {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
-func findDBInstanceAutomatedBackup(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBInstanceAutomatedBackupsInput) (*rds.DBInstanceAutomatedBackup, error) {
-	output, err := findDBInstanceAutomatedBackups(ctx, conn, input)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(output) == 0 || output[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output[0], nil
-}
-
-func findDBInstanceAutomatedBackups(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBInstanceAutomatedBackupsInput) ([]*rds.DBInstanceAutomatedBackup, error) {
-	var output []*rds.DBInstanceAutomatedBackup
-
-	err := conn.DescribeDBInstanceAutomatedBackupsPagesWithContext(ctx, input, func(page *rds.DescribeDBInstanceAutomatedBackupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.DBInstanceAutomatedBackups {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceAutomatedBackupNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
-}
-
-func FindGlobalClusterByDBClusterARN(ctx context.Context, conn *rds.RDS, dbClusterARN string) (*rds.GlobalCluster, error) {
-	input := &rds.DescribeGlobalClustersInput{}
-	globalClusters, err := findGlobalClusters(ctx, conn, input)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, globalCluster := range globalClusters {
-		for _, v := range globalCluster.GlobalClusterMembers {
-			if aws.StringValue(v.DBClusterArn) == dbClusterARN {
-				return globalCluster, nil
-			}
-		}
-	}
-
-	return nil, &retry.NotFoundError{LastRequest: dbClusterARN}
-}
-
-func FindGlobalClusterByID(ctx context.Context, conn *rds.RDS, id string) (*rds.GlobalCluster, error) {
-	input := &rds.DescribeGlobalClustersInput{
-		GlobalClusterIdentifier: aws.String(id),
-	}
-
-	output, err := findGlobalCluster(ctx, conn, input)
-	if err != nil {
-		return nil, err
-	}
-
-	// Eventual consistency check.
-	if aws.StringValue(output.GlobalClusterIdentifier) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
-func findGlobalCluster(ctx context.Context, conn *rds.RDS, input *rds.DescribeGlobalClustersInput) (*rds.GlobalCluster, error) {
-	output, err := findGlobalClusters(ctx, conn, input)
-	if err != nil {
-		return nil, err
-	}
-
-	if len(output) == 0 || output[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output[0], nil
-}
-
-func findGlobalClusters(ctx context.Context, conn *rds.RDS, input *rds.DescribeGlobalClustersInput) ([]*rds.GlobalCluster, error) {
-	var output []*rds.GlobalCluster
-
-	err := conn.DescribeGlobalClustersPagesWithContext(ctx, input, func(page *rds.DescribeGlobalClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, v := range page.GlobalClusters {
-			if v != nil {
-				output = append(output, v)
-			}
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeGlobalClusterNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	return output, nil
 }
 
 func FindReservedDBInstanceByID(ctx context.Context, conn *rds.RDS, id string) (*rds.ReservedDBInstance, error) {

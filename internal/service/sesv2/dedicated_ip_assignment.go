@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sesv2
 
 import (
@@ -58,7 +61,7 @@ const (
 )
 
 func resourceDedicatedIPAssignmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	in := &sesv2.PutDedicatedIpInPoolInput{
 		Ip:                  aws.String(d.Get("ip").(string)),
@@ -77,7 +80,7 @@ func resourceDedicatedIPAssignmentCreate(ctx context.Context, d *schema.Resource
 }
 
 func resourceDedicatedIPAssignmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
 	out, err := FindDedicatedIPAssignmentByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -89,14 +92,14 @@ func resourceDedicatedIPAssignmentRead(ctx context.Context, d *schema.ResourceDa
 		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameDedicatedIPAssignment, d.Id(), err)
 	}
 
-	d.Set("ip", aws.ToString(out.Ip))
-	d.Set("destination_pool_name", aws.ToString(out.PoolName))
+	d.Set("ip", out.Ip)
+	d.Set("destination_pool_name", out.PoolName)
 
 	return nil
 }
 
 func resourceDedicatedIPAssignmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SESV2Client()
+	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 	ip, _ := splitID(d.Id())
 
 	log.Printf("[INFO] Deleting SESV2 DedicatedIPAssignment %s", d.Id())

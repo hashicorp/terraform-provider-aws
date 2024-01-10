@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudhsmv2
 
 import (
@@ -74,7 +77,7 @@ func ResourceHSM() *schema.Resource {
 
 func resourceHSMCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn(ctx)
 
 	clusterID := d.Get("cluster_id").(string)
 	input := &cloudhsmv2.CreateHsmInput{
@@ -119,7 +122,7 @@ func resourceHSMCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceHSMRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn(ctx)
 
 	hsm, err := FindHSMByTwoPartKey(ctx, conn, d.Id(), d.Get("hsm_eni_id").(string))
 
@@ -151,7 +154,7 @@ func resourceHSMRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 func resourceHSMDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudHSMV2Conn()
+	conn := meta.(*conns.AWSClient).CloudHSMV2Conn(ctx)
 
 	log.Printf("[INFO] Deleting CloudHSMv2 HSM: %s", d.Id())
 	_, err := conn.DeleteHsmWithContext(ctx, &cloudhsmv2.DeleteHsmInput{

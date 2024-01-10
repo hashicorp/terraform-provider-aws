@@ -1,14 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package secretsmanager_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -21,15 +24,15 @@ func TestAccSecretsManagerSecretDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccSecretDataSourceConfig_missingRequired,
-				ExpectError: regexp.MustCompile(`must specify either arn or name`),
+				ExpectError: regexache.MustCompile(`must specify either arn or name`),
 			},
 			{
 				Config:      testAccSecretDataSourceConfig_multipleSpecified,
-				ExpectError: regexp.MustCompile(`specify only arn or name`),
+				ExpectError: regexache.MustCompile(`specify only arn or name`),
 			},
 			{
 				Config:      testAccSecretDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`not found`),
+				ExpectError: regexache.MustCompile(`not found`),
 			},
 		},
 	})
@@ -116,9 +119,6 @@ func testAccSecretCheckDataSource(datasourceName, resourceName string) resource.
 			"kms_key_id",
 			"name",
 			"policy",
-			"rotation_enabled",
-			"rotation_lambda_arn",
-			"rotation_rules.#",
 			"tags.#",
 		}
 

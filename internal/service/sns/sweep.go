@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package sns
 
@@ -7,14 +7,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_sns_platform_application", &resource.Sweeper{
 		Name: "aws_sns_platform_application",
 		F:    sweepPlatformApplications,
@@ -53,40 +53,37 @@ func init() {
 
 func sweepPlatformApplications(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &sns.ListPlatformApplicationsInput{}
-	conn := client.(*conns.AWSClient).SNSConn()
+	conn := client.SNSClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListPlatformApplicationsPagesWithContext(ctx, input, func(page *sns.ListPlatformApplicationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := sns.NewListPlatformApplicationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping SNS Platform Application sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing SNS Platform Applications (%s): %w", region, err)
 		}
 
 		for _, v := range page.PlatformApplications {
-			r := ResourcePlatformApplication()
+			r := resourcePlatformApplication()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.PlatformApplicationArn))
+			d.SetId(aws.ToString(v.PlatformApplicationArn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SNS Platform Applications sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing SNS Platform Applications: %w", err)
-	}
-
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping SNS Platform Applications (%s): %w", region, err)
@@ -97,40 +94,37 @@ func sweepPlatformApplications(region string) error {
 
 func sweepTopics(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &sns.ListTopicsInput{}
-	conn := client.(*conns.AWSClient).SNSConn()
+	conn := client.SNSClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListTopicsPagesWithContext(ctx, input, func(page *sns.ListTopicsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := sns.NewListTopicsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping SNS Topic sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing SNS Topics (%s): %w", region, err)
 		}
 
 		for _, v := range page.Topics {
-			r := ResourceTopic()
+			r := resourceTopic()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.TopicArn))
+			d.SetId(aws.ToString(v.TopicArn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SNS Topics sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing SNS Topics: %w", err)
-	}
-
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping SNS Topics (%s): %w", region, err)
@@ -141,45 +135,42 @@ func sweepTopics(region string) error {
 
 func sweepTopicSubscriptions(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	input := &sns.ListSubscriptionsInput{}
-	conn := client.(*conns.AWSClient).SNSConn()
+	conn := client.SNSClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListSubscriptionsPagesWithContext(ctx, input, func(page *sns.ListSubscriptionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := sns.NewListSubscriptionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping SNS Topic Subscription sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing SNS Topic Subscriptions (%s): %w", region, err)
 		}
 
 		for _, v := range page.Subscriptions {
-			arn := aws.StringValue(v.SubscriptionArn)
+			arn := aws.ToString(v.SubscriptionArn)
 
 			if arn == "PendingConfirmation" {
 				continue
 			}
 
-			r := ResourceTopicSubscription()
+			r := resourceTopicSubscription()
 			d := r.Data(nil)
 			d.SetId(arn)
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping SNS Topic Subscriptions sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing SNS Topic Subscriptions: %w", err)
-	}
-
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping SNS Topic Subscriptions (%s): %w", region, err)

@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 # Configuration for markdownlint
 # https://github.com/DavidAnson/markdownlint#configuration
 
@@ -25,9 +28,6 @@ line-length: false
 
 # MD014
 commands-show-output: false
-
-# MD022
-blanks-around-headings: false
 
 # MD024
 no-duplicate-heading: false

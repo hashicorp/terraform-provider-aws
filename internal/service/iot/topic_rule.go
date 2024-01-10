@@ -1,8 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
 	"context"
 	"log"
+	"reflect"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
@@ -442,6 +446,11 @@ func ResourceTopicRule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"batch_mode": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
 									"delivery_stream_name": {
 										Type:     schema.TypeString,
 										Required: true,
@@ -502,6 +511,11 @@ func ResourceTopicRule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"batch_mode": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
 									"channel_name": {
 										Type:     schema.TypeString,
 										Required: true,
@@ -521,6 +535,11 @@ func ResourceTopicRule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"batch_mode": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
 									"input_name": {
 										Type:     schema.TypeString,
 										Required: true,
@@ -553,6 +572,22 @@ func ResourceTopicRule() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: verify.ValidARN,
+									},
+									"header": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"key": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"value": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
 									},
 									"key": {
 										Type:     schema.TypeString,
@@ -791,6 +826,11 @@ func ResourceTopicRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"batch_mode": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"delivery_stream_name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -847,6 +887,11 @@ func ResourceTopicRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"batch_mode": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"channel_name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -864,6 +909,11 @@ func ResourceTopicRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"batch_mode": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"input_name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -894,6 +944,22 @@ func ResourceTopicRule() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: verify.ValidARN,
+						},
+						"header": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"key": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
 						},
 						"key": {
 							Type:     schema.TypeString,
@@ -1166,16 +1232,15 @@ var timestreamDimensionResource *schema.Resource = &schema.Resource{
 
 func resourceTopicRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	ruleName := d.Get("name").(string)
 	input := &iot.CreateTopicRuleInput{
 		RuleName:         aws.String(ruleName),
-		Tags:             aws.String(KeyValueTags(ctx, GetTagsIn(ctx)).URLQueryString()),
+		Tags:             aws.String(KeyValueTags(ctx, getTagsIn(ctx)).URLQueryString()),
 		TopicRulePayload: expandTopicRulePayload(d),
 	}
 
-	log.Printf("[INFO] Creating IoT Topic Rule: %s", input)
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateTopicRuleWithContext(ctx, input)
@@ -1193,7 +1258,7 @@ func resourceTopicRuleCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceTopicRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	output, err := FindTopicRuleByName(ctx, conn, d.Id())
 
@@ -1299,15 +1364,14 @@ func resourceTopicRuleRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceTopicRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &iot.ReplaceTopicRuleInput{
-			RuleName:         aws.String(d.Get("name").(string)),
+			RuleName:         aws.String(d.Id()),
 			TopicRulePayload: expandTopicRulePayload(d),
 		}
 
-		log.Printf("[INFO] Replacing IoT Topic Rule: %s", input)
 		_, err := conn.ReplaceTopicRuleWithContext(ctx, input)
 
 		if err != nil {
@@ -1320,7 +1384,7 @@ func resourceTopicRuleUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceTopicRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IoTConn()
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	log.Printf("[INFO] Deleting IoT Topic Rule: %s", d.Id())
 	_, err := conn.DeleteTopicRuleWithContext(ctx, &iot.DeleteTopicRuleInput{
@@ -1539,6 +1603,10 @@ func expandFirehoseAction(tfList []interface{}) *iot.FirehoseAction {
 	apiObject := &iot.FirehoseAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
+	if v, ok := tfMap["batch_mode"].(bool); ok {
+		apiObject.BatchMode = aws.Bool(v)
+	}
+
 	if v, ok := tfMap["delivery_stream_name"].(string); ok && v != "" {
 		apiObject.DeliveryStreamName = aws.String(v)
 	}
@@ -1598,6 +1666,10 @@ func expandAnalyticsAction(tfList []interface{}) *iot.IotAnalyticsAction {
 	apiObject := &iot.IotAnalyticsAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
+	if v, ok := tfMap["batch_mode"].(bool); ok {
+		apiObject.BatchMode = aws.Bool(v)
+	}
+
 	if v, ok := tfMap["channel_name"].(string); ok && v != "" {
 		apiObject.ChannelName = aws.String(v)
 	}
@@ -1616,6 +1688,10 @@ func expandEventsAction(tfList []interface{}) *iot.IotEventsAction {
 
 	apiObject := &iot.IotEventsAction{}
 	tfMap := tfList[0].(map[string]interface{})
+
+	if v, ok := tfMap["batch_mode"].(bool); ok {
+		apiObject.BatchMode = aws.Bool(v)
+	}
 
 	if v, ok := tfMap["input_name"].(string); ok && v != "" {
 		apiObject.InputName = aws.String(v)
@@ -1648,6 +1724,10 @@ func expandKafkaAction(tfList []interface{}) *iot.KafkaAction {
 		apiObject.DestinationArn = aws.String(v)
 	}
 
+	if v, ok := tfMap["header"].([]interface{}); ok && len(v) > 0 {
+		apiObject.Headers = expandKafkaHeader(v)
+	}
+
 	if v, ok := tfMap["key"].(string); ok && v != "" {
 		apiObject.Key = aws.String(v)
 	}
@@ -1660,7 +1740,31 @@ func expandKafkaAction(tfList []interface{}) *iot.KafkaAction {
 		apiObject.Topic = aws.String(v)
 	}
 
+	if reflect.DeepEqual(&iot.KafkaAction{}, apiObject) {
+		return nil
+	}
+
 	return apiObject
+}
+
+func expandKafkaHeader(tfList []interface{}) []*iot.KafkaActionHeader {
+	var apiObjects []*iot.KafkaActionHeader
+	for _, elem := range tfList {
+		tfMap := elem.(map[string]interface{})
+
+		apiObject := &iot.KafkaActionHeader{}
+		if v, ok := tfMap["key"].(string); ok && v != "" {
+			apiObject.Key = aws.String(v)
+		}
+
+		if v, ok := tfMap["value"].(string); ok && v != "" {
+			apiObject.Value = aws.String(v)
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
 }
 
 func expandKinesisAction(tfList []interface{}) *iot.KinesisAction {
@@ -2623,6 +2727,10 @@ func flattenFirehoseAction(apiObject *iot.FirehoseAction) []interface{} {
 
 	tfMap := make(map[string]interface{})
 
+	if v := apiObject.BatchMode; v != nil {
+		tfMap["batch_mode"] = aws.BoolValue(v)
+	}
+
 	if v := apiObject.DeliveryStreamName; v != nil {
 		tfMap["delivery_stream_name"] = aws.StringValue(v)
 	}
@@ -2710,6 +2818,10 @@ func flattenAnalyticsAction(apiObject *iot.IotAnalyticsAction) []interface{} {
 
 	tfMap := make(map[string]interface{})
 
+	if v := apiObject.BatchMode; v != nil {
+		tfMap["batch_mode"] = aws.BoolValue(v)
+	}
+
 	if v := apiObject.ChannelName; v != nil {
 		tfMap["channel_name"] = aws.StringValue(v)
 	}
@@ -2744,6 +2856,10 @@ func flattenEventsAction(apiObject *iot.IotEventsAction) []interface{} {
 	}
 
 	tfMap := make(map[string]interface{})
+
+	if v := apiObject.BatchMode; v != nil {
+		tfMap["batch_mode"] = aws.BoolValue(v)
+	}
 
 	if v := apiObject.InputName; v != nil {
 		tfMap["input_name"] = aws.StringValue(v)
@@ -2792,6 +2908,10 @@ func flattenKafkaAction(apiObject *iot.KafkaAction) []interface{} {
 		tfMap["destination_arn"] = aws.StringValue(v)
 	}
 
+	if v := apiObject.Headers; v != nil {
+		tfMap["header"] = flattenKafkaHeaders(v)
+	}
+
 	if v := apiObject.Key; v != nil {
 		tfMap["key"] = aws.StringValue(v)
 	}
@@ -2805,6 +2925,28 @@ func flattenKafkaAction(apiObject *iot.KafkaAction) []interface{} {
 	}
 
 	return []interface{}{tfMap}
+}
+
+func flattenKafkaHeaders(apiObjects []*iot.KafkaActionHeader) []interface{} {
+	results := make([]interface{}, 0)
+
+	for _, apiObject := range apiObjects {
+		if apiObject != nil {
+			tfMap := make(map[string]interface{})
+
+			if v := apiObject.Key; v != nil {
+				tfMap["key"] = aws.StringValue(v)
+			}
+
+			if v := apiObject.Value; v != nil {
+				tfMap["value"] = aws.StringValue(v)
+			}
+
+			results = append(results, tfMap)
+		}
+	}
+
+	return results
 }
 
 // Legacy root attribute handling

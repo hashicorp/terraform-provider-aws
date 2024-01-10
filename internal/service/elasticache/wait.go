@@ -1,9 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
 	"context"
 	"time"
 
+	elasticache_v2 "github.com/aws/aws-sdk-go-v2/service/elasticache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
@@ -119,6 +124,58 @@ func waitCacheClusterAvailable(ctx context.Context, conn *elasticache.ElastiCach
 		return v, err
 	}
 	return nil, err
+}
+
+const (
+	ServerlessCacheAvailableMinTimeout = 10 * time.Second
+	ServerlessCacheAvailableDelay      = 30 * time.Second
+
+	ServerlessCacheDeletedMinTimeout = 10 * time.Second
+	ServerlessCacheDeletedDelay      = 30 * time.Second
+)
+
+// waitServerlessCacheAvailable waits for a cache cluster to return available
+func waitServerlessCacheAvailable(ctx context.Context, conn *elasticache_v2.Client, cacheClusterID string, timeout time.Duration) (awstypes.ServerlessCache, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			ServerlessCacheCreating,
+			ServerlessCacheDeleting,
+			ServerlessCacheModifying,
+		},
+		Target:     []string{ServerlessCacheAvailable},
+		Refresh:    statusServerlessCache(ctx, conn, cacheClusterID),
+		Timeout:    timeout,
+		MinTimeout: ServerlessCacheAvailableMinTimeout,
+		Delay:      ServerlessCacheAvailableDelay,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if v, ok := outputRaw.(awstypes.ServerlessCache); ok {
+		return v, err
+	}
+	return awstypes.ServerlessCache{}, err
+}
+
+// waitServerlessCacheDeleted waits for a cache cluster to be deleted
+func waitServerlessCacheDeleted(ctx context.Context, conn *elasticache_v2.Client, cacheClusterID string, timeout time.Duration) (awstypes.ServerlessCache, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			ServerlessCacheCreating,
+			ServerlessCacheDeleting,
+			ServerlessCacheModifying,
+		},
+		Target:     []string{},
+		Refresh:    statusServerlessCache(ctx, conn, cacheClusterID),
+		Timeout:    timeout,
+		MinTimeout: ServerlessCacheDeletedMinTimeout,
+		Delay:      ServerlessCacheDeletedDelay,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if v, ok := outputRaw.(awstypes.ServerlessCache); ok {
+		return v, err
+	}
+	return awstypes.ServerlessCache{}, err
 }
 
 // WaitCacheClusterDeleted waits for a Cache Cluster to be deleted

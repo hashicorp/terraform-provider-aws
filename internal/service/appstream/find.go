@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream
 
 import (
@@ -10,30 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
-
-// FindStackByName Retrieve a appstream stack by name
-func FindStackByName(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Stack, error) {
-	input := &appstream.DescribeStacksInput{
-		Names: []*string{aws.String(name)},
-	}
-
-	var stack *appstream.Stack
-	resp, err := conn.DescribeStacksWithContext(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if len(resp.Stacks) > 1 {
-		return nil, fmt.Errorf("got more than one stack with the name %s", name)
-	}
-
-	if len(resp.Stacks) == 1 {
-		stack = resp.Stacks[0]
-	}
-
-	return stack, nil
-}
 
 // FindFleetByName Retrieve a appstream fleet by name
 func FindFleetByName(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Fleet, error) {

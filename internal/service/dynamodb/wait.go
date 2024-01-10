@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb
 
 import (
@@ -68,6 +71,27 @@ func waitTableActive(ctx context.Context, conn *dynamodb.DynamoDB, tableName str
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*dynamodb.TableDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitImportComplete(ctx context.Context, conn *dynamodb.DynamoDB, importArn string, timeout time.Duration) (*dynamodb.DescribeImportOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{dynamodb.ImportStatusInProgress},
+		Target:  []string{dynamodb.ImportStatusCompleted},
+		Timeout: maxDuration(createTableTimeout, timeout),
+		Refresh: statusImport(ctx, conn, importArn),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if err != nil {
+		err = fmt.Errorf("ImportArn %q : %w", importArn, err)
+	}
+
+	if output, ok := outputRaw.(*dynamodb.DescribeImportOutput); ok {
 		return output, err
 	}
 
@@ -229,7 +253,7 @@ func waitSSEUpdated(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 }
 
 func waitReplicaSSEUpdated(ctx context.Context, client *conns.AWSClient, region string, tableName string, timeout time.Duration) (*dynamodb.TableDescription, error) {
-	sess, err := conns.NewSessionForRegion(&client.DynamoDBConn().Config, region, client.TerraformVersion)
+	sess, err := conns.NewSessionForRegion(&client.DynamoDBConn(ctx).Config, region, client.TerraformVersion)
 	if err != nil {
 		return nil, fmt.Errorf("creating session for region %q: %w", region, err)
 	}

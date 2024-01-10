@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package qldb
 
@@ -7,15 +7,15 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/qldb"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/qldb"
 	multierror "github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_qldb_ledger", &resource.Sweeper{
 		Name: "aws_qldb_ledger",
 		F:    sweepLedgers,
@@ -28,45 +28,41 @@ func init() {
 		Name: "aws_qldb_stream",
 		F:    sweepStreams,
 	})
-
 }
 
 func sweepLedgers(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).QLDBConn()
+	conn := client.QLDBClient(ctx)
 	input := &qldb.ListLedgersInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListLedgersPagesWithContext(ctx, input, func(page *qldb.ListLedgersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := qldb.NewListLedgersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping QLDB Ledger sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing QLDB Ledgers (%s): %w", region, err)
 		}
 
 		for _, v := range page.Ledgers {
-			r := ResourceLedger()
+			r := resourceLedger()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.Name))
+			d.SetId(aws.ToString(v.Name))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping QLDB Ledger sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing QLDB Ledgers (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping QLDB Ledgers (%s): %w", region, err)
@@ -77,18 +73,26 @@ func sweepLedgers(region string) error {
 
 func sweepStreams(region string) error {
 	ctx := sweep.Context(region)
-	client, err := sweep.SharedRegionalSweepClient(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).QLDBConn()
+	conn := client.QLDBClient(ctx)
 	input := &qldb.ListLedgersInput{}
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListLedgersPagesWithContext(ctx, input, func(page *qldb.ListLedgersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := qldb.NewListLedgersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping QLDB Stream sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+		}
+
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing QLDB Ledgers (%s): %w", region, err))
 		}
 
 		for _, v := range page.Ledgers {
@@ -96,45 +100,31 @@ func sweepStreams(region string) error {
 				LedgerName: v.Name,
 			}
 
-			err := conn.ListJournalKinesisStreamsForLedgerPagesWithContext(ctx, input, func(page *qldb.ListJournalKinesisStreamsForLedgerOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
+			pages := qldb.NewListJournalKinesisStreamsForLedgerPaginator(conn, input)
+			for pages.HasMorePages() {
+				page, err := pages.NextPage(ctx)
+
+				if awsv2.SkipSweepError(err) {
+					continue
+				}
+
+				if err != nil {
+					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing QLDB Streams (%s): %w", region, err))
 				}
 
 				for _, v := range page.Streams {
-					r := ResourceStream()
+					r := resourceStream()
 					d := r.Data(nil)
-					d.SetId(aws.StringValue(v.StreamId))
+					d.SetId(aws.ToString(v.StreamId))
 					d.Set("ledger_name", v.LedgerName)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
-
-				return !lastPage
-			})
-
-			if sweep.SkipSweepError(err) {
-				continue
-			}
-
-			if err != nil {
-				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing QLDB Streams (%s): %w", region, err))
 			}
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping QLDB Stream sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
 
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing QLDB Ledgers (%s): %w", region, err))
-	}
-
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping QLDB Streams (%s): %w", region, err))

@@ -64,7 +64,7 @@ Terraform will fail. Ensure that your search is specific enough to return
 a single AMI ID only, or use `most_recent` to choose the most recent one. If
 you want to match multiple AMIs, use the `aws_ami_ids` data source instead.
 
-## Attributes Reference
+## Attribute Reference
 
 `id` is set to the ID of the found AMI. In addition, the following attributes
 are exported:

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
@@ -5,8 +8,8 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ssm"
@@ -15,8 +18,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -27,10 +32,6 @@ import (
 const (
 	patchBaselineIDRegexPattern = `pb-[0-9a-f]{17}`
 )
-
-type ssmClient interface {
-	SSMClient() *ssm.Client
-}
 
 // @SDKResource("aws_ssm_default_patch_baseline")
 func ResourceDefaultPatchBaseline() *schema.Resource {
@@ -44,7 +45,7 @@ func ResourceDefaultPatchBaseline() *schema.Resource {
 				id := d.Id()
 
 				if isPatchBaselineID(id) || isPatchBaselineARN(id) {
-					conn := meta.(ssmClient).SSMClient()
+					conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 					patchbaseline, err := findPatchBaselineByID(ctx, conn, id)
 					if err != nil {
@@ -104,7 +105,7 @@ func diffSuppressPatchBaselineID(_, oldValue, newValue string, _ *schema.Resourc
 	return false
 }
 
-var validatePatchBaselineID = validation.StringMatch(regexp.MustCompile(`^`+patchBaselineIDRegexPattern+`$`), `must match "pb-" followed by 17 hexadecimal characters`)
+var validatePatchBaselineID = validation.StringMatch(regexache.MustCompile(`^`+patchBaselineIDRegexPattern+`$`), `must match "pb-" followed by 17 hexadecimal characters`)
 
 func validatePatchBaselineARN(v any, k string) (ws []string, errors []error) {
 	value, ok := v.(string)
@@ -131,7 +132,7 @@ func validatePatchBaselineARN(v any, k string) (ws []string, errors []error) {
 }
 
 func isPatchBaselineID(s string) bool {
-	re := regexp.MustCompile(`^` + patchBaselineIDRegexPattern + `$`)
+	re := regexache.MustCompile(`^` + patchBaselineIDRegexPattern + `$`)
 
 	return re.MatchString(s)
 }
@@ -155,7 +156,7 @@ func patchBaselineIDFromARN(s string) string {
 }
 
 func patchBaselineIDFromARNResource(s string) string {
-	re := regexp.MustCompile(`^patchbaseline/(` + patchBaselineIDRegexPattern + ")$")
+	re := regexache.MustCompile(`^patchbaseline/(` + patchBaselineIDRegexPattern + ")$")
 	matches := re.FindStringSubmatch(s)
 	if matches == nil || len(matches) != 2 {
 		return ""
@@ -169,18 +170,20 @@ const (
 )
 
 func resourceDefaultPatchBaselineCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	conn := meta.(ssmClient).SSMClient()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	baselineID := d.Get("baseline_id").(string)
 
 	patchBaseline, err := findPatchBaselineByID(ctx, conn, baselineID)
 	if err != nil {
-		return create.DiagErrorMessage(names.SSM, "registering", ResNameDefaultPatchBaseline, baselineID,
+		return create.AppendDiagErrorMessage(diags, names.SSM, "registering", ResNameDefaultPatchBaseline, baselineID,
 			create.ProblemStandardMessage(names.SSM, create.ErrActionReading, resNamePatchBaseline, baselineID, err),
 		)
 	}
 	if pbOS, cOS := string(patchBaseline.OperatingSystem), d.Get("operating_system"); pbOS != cOS {
-		return create.DiagErrorMessage(names.SSM, "registering", ResNameDefaultPatchBaseline, baselineID,
+		return create.AppendDiagErrorMessage(diags, names.SSM, "registering", ResNameDefaultPatchBaseline, baselineID,
 			fmt.Sprintf("Patch Baseline Operating System (%s) does not match %s", pbOS, cOS),
 		)
 	}
@@ -190,16 +193,18 @@ func resourceDefaultPatchBaselineCreate(ctx context.Context, d *schema.ResourceD
 	}
 	_, err = conn.RegisterDefaultPatchBaseline(ctx, in)
 	if err != nil {
-		return create.DiagError(names.SSM, "registering", ResNameDefaultPatchBaseline, baselineID, err)
+		return create.AppendDiagError(diags, names.SSM, "registering", ResNameDefaultPatchBaseline, baselineID, err)
 	}
 
 	d.SetId(string(patchBaseline.OperatingSystem))
 
-	return resourceDefaultPatchBaselineRead(ctx, d, meta)
+	return append(diags, resourceDefaultPatchBaselineRead(ctx, d, meta)...)
 }
 
 func resourceDefaultPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
-	conn := meta.(ssmClient).SSMClient()
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	out, err := FindDefaultPatchBaseline(ctx, conn, types.OperatingSystem(d.Id()))
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -208,13 +213,13 @@ func resourceDefaultPatchBaselineRead(ctx context.Context, d *schema.ResourceDat
 		return nil
 	}
 	if err != nil {
-		return create.DiagError(names.SSM, create.ErrActionReading, ResNameDefaultPatchBaseline, d.Id(), err)
+		return create.AppendDiagError(diags, names.SSM, create.ErrActionReading, ResNameDefaultPatchBaseline, d.Id(), err)
 	}
 
 	d.Set("baseline_id", out.BaselineId)
 	d.Set("operating_system", out.OperatingSystem)
 
-	return nil
+	return diags
 }
 
 func operatingSystemFilter(os ...types.OperatingSystem) types.PatchOrchestratorFilter {
@@ -237,7 +242,7 @@ func ownerIsAWSFilter() types.PatchOrchestratorFilter { // nosemgrep:ci.aws-in-f
 	}
 }
 
-func ownerIsSelfFilter() types.PatchOrchestratorFilter { //nolint:unused // This function is called from a sweeper.
+func ownerIsSelfFilter() types.PatchOrchestratorFilter {
 	return types.PatchOrchestratorFilter{
 		Key:    aws.String("OWNER"),
 		Values: []string{"Self"},
@@ -245,12 +250,10 @@ func ownerIsSelfFilter() types.PatchOrchestratorFilter { //nolint:unused // This
 }
 
 func resourceDefaultPatchBaselineDelete(ctx context.Context, d *schema.ResourceData, meta any) (diags diag.Diagnostics) {
-	return defaultPatchBaselineRestoreOSDefault(ctx, meta.(ssmClient), types.OperatingSystem(d.Id()))
+	return defaultPatchBaselineRestoreOSDefault(ctx, meta.(*conns.AWSClient).SSMClient(ctx), types.OperatingSystem(d.Id()))
 }
 
-func defaultPatchBaselineRestoreOSDefault(ctx context.Context, meta ssmClient, os types.OperatingSystem) (diags diag.Diagnostics) {
-	conn := meta.SSMClient()
-
+func defaultPatchBaselineRestoreOSDefault(ctx context.Context, conn *ssm.Client, os types.OperatingSystem) (diags diag.Diagnostics) {
 	baselineID, err := FindDefaultDefaultPatchBaselineIDForOS(ctx, conn, os)
 	if errors.Is(err, tfresource.ErrEmptyResult) {
 		diags = sdkdiag.AppendWarningf(diags, "no AWS-owned default Patch Baseline found for operating system %q", os)
@@ -282,15 +285,15 @@ func FindDefaultPatchBaseline(ctx context.Context, conn *ssm.Client, os types.Op
 		OperatingSystem: os,
 	}
 	out, err := conn.GetDefaultPatchBaseline(ctx, in)
-	if err != nil {
-		var nfe *types.DoesNotExistException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*types.DoesNotExistException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -306,15 +309,15 @@ func findPatchBaselineByID(ctx context.Context, conn *ssm.Client, id string) (*s
 		BaselineId: aws.String(id),
 	}
 	out, err := conn.GetPatchBaseline(ctx, in)
-	if err != nil {
-		var nfe *types.DoesNotExistException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*types.DoesNotExistException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -336,7 +339,7 @@ func FindDefaultDefaultPatchBaselineIDForOS(ctx context.Context, conn *ssm.Clien
 		operatingSystemFilter(os),
 		ownerIsAWSFilter(),
 	)
-	re := regexp.MustCompile(`^AWS-[A-Za-z0-9]+PatchBaseline$`)
+	re := regexache.MustCompile(`^AWS-[0-9A-Za-z]+PatchBaseline$`)
 	var baselineIdentityIDs []string
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
