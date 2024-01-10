@@ -93,8 +93,9 @@ func testAccIndexingConfiguration_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.named_shadow_indexing_mode", "ON"),
 					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.thing_connectivity_indexing_mode", "STATUS"),
 					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.thing_indexing_mode", "REGISTRY_AND_SHADOW"),
-					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.filter.0.named_shadow_names.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.filter.0.named_shadow_names.0", "thing1shadow"),
+					resource.TestCheckResourceAttr(resourceName, "thing_indexing_configuration.0.filter.0.named_shadow_names.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "thing_indexing_configuration.0.filter.0.named_shadow_names.*", "thing1shadow"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "thing_indexing_configuration.0.filter.0.named_shadow_names.*", "$package"),
 				),
 			},
 			{
@@ -131,7 +132,7 @@ resource "aws_iot_indexing_configuration" "test" {
     named_shadow_indexing_mode       = "ON"
 
     filter {
-      named_shadow_names = ["thing1shadow"]
+      named_shadow_names = ["thing1shadow", "$package"]
     }
 
     custom_field {
