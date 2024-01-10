@@ -12,9 +12,7 @@ const (
 )
 
 const (
-	engineNeptune              = "neptune" // nosemgrep:ci.neptune-in-const-name,ci.neptune-in-var-name
-	storageTypeStandardNeptune = "standard"
-	storageTypeOptNeptune      = "iopt1"
+	engineNeptune = "neptune" // nosemgrep:ci.neptune-in-const-name,ci.neptune-in-var-name
 )
 
 func engine_Values() []string {
@@ -23,10 +21,15 @@ func engine_Values() []string {
 	}
 }
 
-func storage_type_Values() []string {
+const (
+	storageTypeNeptune = "standard"
+	storageTypeIopt1   = "iopt1"
+)
+
+func storageType_Values() []string {
 	return []string{
-		storageTypeStandardNeptune,
-		storageTypeOptNeptune,
+		storageTypeNeptune,
+		storageTypeIopt1,
 	}
 }
 
