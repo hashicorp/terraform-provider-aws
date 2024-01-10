@@ -24,12 +24,29 @@ func (f arnBuildFunction) Metadata(ctx context.Context, req function.MetadataReq
 
 func (f arnBuildFunction) Definition(ctx context.Context, req function.DefinitionRequest, resp *function.DefinitionResponse) {
 	resp.Definition = function.Definition{
+		Summary:             "arn_build Function",
+		MarkdownDescription: "Builds an ARN from its constituent parts",
 		Parameters: []function.Parameter{
-			function.StringParameter{Name: "partition"},
-			function.StringParameter{Name: "service"},
-			function.StringParameter{Name: "region"},
-			function.StringParameter{Name: "account_id"},
-			function.StringParameter{Name: "resource"},
+			function.StringParameter{
+				Name:                "partition",
+				MarkdownDescription: "Partition in which the resource is located",
+			},
+			function.StringParameter{
+				Name:                "service",
+				MarkdownDescription: "Service namespace",
+			},
+			function.StringParameter{
+				Name:                "region",
+				MarkdownDescription: "Region code",
+			},
+			function.StringParameter{
+				Name:                "account_id",
+				MarkdownDescription: "AWS account identifier",
+			},
+			function.StringParameter{
+				Name:                "resource",
+				MarkdownDescription: "Resource section, typically composed of a resource type and identifier",
+			},
 		},
 		Return: function.StringReturn{},
 	}

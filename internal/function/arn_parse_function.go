@@ -34,8 +34,13 @@ func (f arnParseFunction) Metadata(ctx context.Context, req function.MetadataReq
 
 func (f arnParseFunction) Definition(ctx context.Context, req function.DefinitionRequest, resp *function.DefinitionResponse) {
 	resp.Definition = function.Definition{
+		Summary:             "arn_parse Function",
+		MarkdownDescription: "Parses an ARN into its constituent parts",
 		Parameters: []function.Parameter{
-			function.StringParameter{},
+			function.StringParameter{
+				Name:                "arn",
+				MarkdownDescription: "ARN (Amazon Resource Name) to parse",
+			},
 		},
 		Return: function.ObjectReturn{
 			AttributeTypes: arnParseResultAttrTypes,
