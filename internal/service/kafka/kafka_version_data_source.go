@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"golang.org/x/exp/slices"
 )
 
 // @SDKDataSource("aws_msk_kafka_version", name="Kafka Version")
@@ -56,10 +55,7 @@ func dataSourceKafkaVersionRead(ctx context.Context, d *schema.ResourceData, met
 		preferredVersions = tfslices.Of(v.(string))
 	}
 
-	input := &kafka.ListKafkaVersionsInput{}
-	kafkaVersion, err := findKafkaVersion(ctx, conn, input, func(v *types.KafkaVersion) bool {
-		return slices.Contains(preferredVersions, aws.ToString(v.Version))
-	})
+	kafkaVersion, err := findKafkaVersion(ctx, conn, preferredVersions)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("MSK Kafka Version", err))
@@ -73,17 +69,27 @@ func dataSourceKafkaVersionRead(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func findKafkaVersion(ctx context.Context, conn *kafka.Client, input *kafka.ListKafkaVersionsInput, filter tfslices.Predicate[*types.KafkaVersion]) (*types.KafkaVersion, error) { // nosemgrep:ci.kafka-in-func-name
-	output, err := findKafkaVersions(ctx, conn, input, filter)
+func findKafkaVersion(ctx context.Context, conn *kafka.Client, preferredVersions []string) (*types.KafkaVersion, error) { // nosemgrep:ci.kafka-in-func-name
+	input := &kafka.ListKafkaVersionsInput{}
+	output, err := findKafkaVersions(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertFirstValueResult(output)
+	var kafkaVersions []types.KafkaVersion
+	for _, preferredVersion := range preferredVersions {
+		for _, kafkaVersion := range output {
+			if preferredVersion == aws.ToString(kafkaVersion.Version) {
+				kafkaVersions = append(kafkaVersions, kafkaVersion)
+			}
+		}
+	}
+
+	return tfresource.AssertFirstValueResult(kafkaVersions)
 }
 
-func findKafkaVersions(ctx context.Context, conn *kafka.Client, input *kafka.ListKafkaVersionsInput, filter tfslices.Predicate[*types.KafkaVersion]) ([]types.KafkaVersion, error) { // nosemgrep:ci.kafka-in-func-name
+func findKafkaVersions(ctx context.Context, conn *kafka.Client, input *kafka.ListKafkaVersionsInput) ([]types.KafkaVersion, error) { // nosemgrep:ci.kafka-in-func-name
 	var output []types.KafkaVersion
 
 	pages := kafka.NewListKafkaVersionsPaginator(conn, input)
@@ -94,11 +100,7 @@ func findKafkaVersions(ctx context.Context, conn *kafka.Client, input *kafka.Lis
 			return nil, err
 		}
 
-		for _, v := range page.KafkaVersions {
-			if filter(&v) {
-				output = append(output, v)
-			}
-		}
+		output = append(output, page.KafkaVersions...)
 	}
 
 	return output, nil
