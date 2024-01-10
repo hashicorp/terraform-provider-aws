@@ -167,6 +167,10 @@ func resourceConfigurationDelete(ctx context.Context, d *schema.ResourceData, me
 		Arn: aws.String(d.Id()),
 	})
 
+	if errs.IsAErrorMessageContains[*types.BadRequestException](err, "Configuration ARN does not exist") {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting MSK Configuration (%s): %s", d.Id(), err)
 	}
