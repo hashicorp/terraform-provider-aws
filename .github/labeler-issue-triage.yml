@@ -509,6 +509,8 @@ service/pricing:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pricing_'
 service/proton:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_proton_'
+service/qbusiness:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_qbusiness_'
 service/qldb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_qldb_'
 service/qldbsession:

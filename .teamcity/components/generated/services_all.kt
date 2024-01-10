@@ -155,6 +155,7 @@ val services = mapOf(
     "pipes" to ServiceSpec("EventBridge Pipes"),
     "polly" to ServiceSpec("Polly"),
     "pricing" to ServiceSpec("Pricing Calculator", regionOverride = "us-east-1"),
+    "qbusiness" to ServiceSpec("Amazon Q Business"),
     "qldb" to ServiceSpec("QLDB (Quantum Ledger Database)"),
     "quicksight" to ServiceSpec("QuickSight"),
     "ram" to ServiceSpec("RAM (Resource Access Manager)"),
