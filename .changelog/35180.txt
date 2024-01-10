@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ec2_managed_prefix_list: Correct plan-time validation of `max_entries`
+```
