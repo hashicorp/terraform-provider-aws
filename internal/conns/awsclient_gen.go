@@ -205,6 +205,7 @@ import (
 	organizations_sdkv1 "github.com/aws/aws-sdk-go/service/organizations"
 	outposts_sdkv1 "github.com/aws/aws-sdk-go/service/outposts"
 	pinpoint_sdkv1 "github.com/aws/aws-sdk-go/service/pinpoint"
+	qbusiness_sdkv1 "github.com/aws/aws-sdk-go/service/qbusiness"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	ram_sdkv1 "github.com/aws/aws-sdk-go/service/ram"
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
@@ -900,6 +901,10 @@ func (c *AWSClient) PollyClient(ctx context.Context) *polly_sdkv2.Client {
 
 func (c *AWSClient) PricingClient(ctx context.Context) *pricing_sdkv2.Client {
 	return errs.Must(client[*pricing_sdkv2.Client](ctx, c, names.Pricing, make(map[string]any)))
+}
+
+func (c *AWSClient) QBusinessConn(ctx context.Context) *qbusiness_sdkv1.QBusiness {
+	return errs.Must(conn[*qbusiness_sdkv1.QBusiness](ctx, c, names.QBusiness, make(map[string]any)))
 }
 
 func (c *AWSClient) QLDBClient(ctx context.Context) *qldb_sdkv2.Client {

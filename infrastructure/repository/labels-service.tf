@@ -243,6 +243,7 @@ variable "service_labels" {
     "polly",
     "pricing",
     "proton",
+    "qbusiness",
     "qldb",
     "qldbsession",
     "quicksight",

@@ -160,6 +160,7 @@ const (
 	Pipes                        = "pipes"
 	Polly                        = "polly"
 	Pricing                      = "pricing"
+	QBusiness                    = "qbusiness"
 	QLDB                         = "qldb"
 	QuickSight                   = "quicksight"
 	RAM                          = "ram"

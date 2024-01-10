@@ -834,6 +834,9 @@ service/pricing:
 service/proton:
   - 'internal/service/proton/**/*'
   - 'website/**/proton_*'
+service/qbusiness:
+  - 'internal/service/qbusiness/**/*'
+  - 'website/**/qbusiness_*'
 service/qldb:
   - 'internal/service/qldb/**/*'
   - 'website/**/qldb_*'

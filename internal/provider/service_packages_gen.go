@@ -165,6 +165,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/polly"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pricing"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/qbusiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ram"
@@ -390,6 +391,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		pipes.ServicePackage(ctx),
 		polly.ServicePackage(ctx),
 		pricing.ServicePackage(ctx),
+		qbusiness.ServicePackage(ctx),
 		qldb.ServicePackage(ctx),
 		quicksight.ServicePackage(ctx),
 		ram.ServicePackage(ctx),

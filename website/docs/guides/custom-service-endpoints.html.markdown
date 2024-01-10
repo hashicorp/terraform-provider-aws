@@ -228,6 +228,7 @@ provider "aws" {
   <li><code>pipes</code></li>
   <li><code>polly</code></li>
   <li><code>pricing</code></li>
+  <li><code>qbusiness</code></li>
   <li><code>qldb</code></li>
   <li><code>quicksight</code></li>
   <li><code>ram</code></li>
