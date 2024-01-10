@@ -53,7 +53,6 @@ This resource supports the following arguments:
 * `instance_class` - (Required) The instance class to use.
 * `neptune_subnet_group_name` - (Required if `publicly_accessible = false`, Optional otherwise) A subnet group to associate with this neptune instance. **NOTE:** This must match the `neptune_subnet_group_name` of the attached [`aws_neptune_cluster`](/docs/providers/aws/r/neptune_cluster.html).
 * `neptune_parameter_group_name` - (Optional) The name of the neptune parameter group to associate with this instance.
-* `storage_type` - (Optional) Storage type associated with the cluster `standard/iopt1`. Default: `standard`
 * `port` - (Optional) The port on which the DB accepts connections. Defaults to `8182`.
 * `preferred_backup_window` - (Optional) The daily time range during which automated backups are created if automated backups are enabled. Eg: "04:00-09:00"
 * `preferred_maintenance_window` - (Optional) The window to perform maintenance in.
@@ -73,6 +72,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The Instance identifier
 * `kms_key_arn` - The ARN for the KMS encryption key if one is set to the neptune cluster.
 * `storage_encrypted` - Specifies whether the neptune cluster is encrypted.
+* `storage_type` - Storage type associated with the cluster `standard/iopt1`.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `writer` – Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
 
