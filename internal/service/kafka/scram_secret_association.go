@@ -172,7 +172,7 @@ func associateSRAMSecrets(ctx context.Context, conn *kafka.Client, clusterARN st
 		output, err := conn.BatchAssociateScramSecret(ctx, input)
 
 		if err == nil {
-			err = unprocessedScramSecretsError(output.UnprocessedScramSecrets)
+			err = unprocessedScramSecretsError(output.UnprocessedScramSecrets, false)
 		}
 
 		if err != nil {
@@ -193,7 +193,7 @@ func disassociateSRAMSecrets(ctx context.Context, conn *kafka.Client, clusterARN
 		output, err := conn.BatchDisassociateScramSecret(ctx, input)
 
 		if err == nil {
-			err = unprocessedScramSecretsError(output.UnprocessedScramSecrets)
+			err = unprocessedScramSecretsError(output.UnprocessedScramSecrets, true)
 		}
 
 		if err != nil {
@@ -204,10 +204,14 @@ func disassociateSRAMSecrets(ctx context.Context, conn *kafka.Client, clusterARN
 	return nil
 }
 
-func unprocessedScramSecretsError(apiObjects []types.UnprocessedScramSecret) error {
+func unprocessedScramSecretsError(apiObjects []types.UnprocessedScramSecret, ignoreInvalidSecretARN bool) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
+		if ignoreInvalidSecretARN && aws.ToString(apiObject.ErrorCode) == "InvalidSecretArn" {
+			continue
+		}
+
 		err := unprocessedScramSecretError(&apiObject)
 
 		if err != nil {
