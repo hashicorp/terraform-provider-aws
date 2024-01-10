@@ -23,6 +23,7 @@ import (
 	codecatalyst_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codecatalyst"
 	codedeploy_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codedeploy"
 	codeguruprofiler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codeguruprofiler"
+	codepipeline_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codepipeline"
 	codestarconnections_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarconnections"
 	codestarnotifications_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarnotifications"
 	comprehend_sdkv2 "github.com/aws/aws-sdk-go-v2/service/comprehend"
@@ -52,6 +53,7 @@ import (
 	kafka_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kafka"
 	kendra_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kendra"
 	keyspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/keyspaces"
+	kinesis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kinesis"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
 	launchwizard_sdkv2 "github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	lexmodelsv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
@@ -132,7 +134,6 @@ import (
 	codebuild_sdkv1 "github.com/aws/aws-sdk-go/service/codebuild"
 	codecommit_sdkv1 "github.com/aws/aws-sdk-go/service/codecommit"
 	codegurureviewer_sdkv1 "github.com/aws/aws-sdk-go/service/codegurureviewer"
-	codepipeline_sdkv1 "github.com/aws/aws-sdk-go/service/codepipeline"
 	cognitoidentity_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentity"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	configservice_sdkv1 "github.com/aws/aws-sdk-go/service/configservice"
@@ -181,7 +182,6 @@ import (
 	ivs_sdkv1 "github.com/aws/aws-sdk-go/service/ivs"
 	kafka_sdkv1 "github.com/aws/aws-sdk-go/service/kafka"
 	kafkaconnect_sdkv1 "github.com/aws/aws-sdk-go/service/kafkaconnect"
-	kinesis_sdkv1 "github.com/aws/aws-sdk-go/service/kinesis"
 	kinesisanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	kinesisanalyticsv2_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	kinesisvideo_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisvideo"
@@ -196,7 +196,6 @@ import (
 	mediaconvert_sdkv1 "github.com/aws/aws-sdk-go/service/mediaconvert"
 	mediastore_sdkv1 "github.com/aws/aws-sdk-go/service/mediastore"
 	memorydb_sdkv1 "github.com/aws/aws-sdk-go/service/memorydb"
-	mq_sdkv1 "github.com/aws/aws-sdk-go/service/mq"
 	mwaa_sdkv1 "github.com/aws/aws-sdk-go/service/mwaa"
 	neptune_sdkv1 "github.com/aws/aws-sdk-go/service/neptune"
 	networkfirewall_sdkv1 "github.com/aws/aws-sdk-go/service/networkfirewall"
@@ -427,8 +426,8 @@ func (c *AWSClient) CodeGuruReviewerConn(ctx context.Context) *codegurureviewer_
 	return errs.Must(conn[*codegurureviewer_sdkv1.CodeGuruReviewer](ctx, c, names.CodeGuruReviewer, make(map[string]any)))
 }
 
-func (c *AWSClient) CodePipelineConn(ctx context.Context) *codepipeline_sdkv1.CodePipeline {
-	return errs.Must(conn[*codepipeline_sdkv1.CodePipeline](ctx, c, names.CodePipeline, make(map[string]any)))
+func (c *AWSClient) CodePipelineClient(ctx context.Context) *codepipeline_sdkv2.Client {
+	return errs.Must(client[*codepipeline_sdkv2.Client](ctx, c, names.CodePipeline, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeStarConnectionsClient(ctx context.Context) *codestarconnections_sdkv2.Client {
@@ -743,8 +742,8 @@ func (c *AWSClient) KeyspacesClient(ctx context.Context) *keyspaces_sdkv2.Client
 	return errs.Must(client[*keyspaces_sdkv2.Client](ctx, c, names.Keyspaces, make(map[string]any)))
 }
 
-func (c *AWSClient) KinesisConn(ctx context.Context) *kinesis_sdkv1.Kinesis {
-	return errs.Must(conn[*kinesis_sdkv1.Kinesis](ctx, c, names.Kinesis, make(map[string]any)))
+func (c *AWSClient) KinesisClient(ctx context.Context) *kinesis_sdkv2.Client {
+	return errs.Must(client[*kinesis_sdkv2.Client](ctx, c, names.Kinesis, make(map[string]any)))
 }
 
 func (c *AWSClient) KinesisAnalyticsConn(ctx context.Context) *kinesisanalytics_sdkv1.KinesisAnalytics {
@@ -801,10 +800,6 @@ func (c *AWSClient) LogsClient(ctx context.Context) *cloudwatchlogs_sdkv2.Client
 
 func (c *AWSClient) LookoutMetricsClient(ctx context.Context) *lookoutmetrics_sdkv2.Client {
 	return errs.Must(client[*lookoutmetrics_sdkv2.Client](ctx, c, names.LookoutMetrics, make(map[string]any)))
-}
-
-func (c *AWSClient) MQConn(ctx context.Context) *mq_sdkv1.MQ {
-	return errs.Must(conn[*mq_sdkv1.MQ](ctx, c, names.MQ, make(map[string]any)))
 }
 
 func (c *AWSClient) MQClient(ctx context.Context) *mq_sdkv2.Client {

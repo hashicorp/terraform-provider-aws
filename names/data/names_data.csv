@@ -80,7 +80,7 @@ codecommit,codecommit,codecommit,codecommit,,codecommit,,,CodeCommit,CodeCommit,
 deploy,deploy,codedeploy,codedeploy,,deploy,,codedeploy,Deploy,CodeDeploy,,,2,aws_codedeploy_,aws_deploy_,,codedeploy_,CodeDeploy,AWS,,,,,,,
 codeguruprofiler,codeguruprofiler,codeguruprofiler,codeguruprofiler,,codeguruprofiler,,,CodeGuruProfiler,CodeGuruProfiler,,,2,,aws_codeguruprofiler_,,codeguruprofiler_,CodeGuru Profiler,Amazon,,,,,,,
 codeguru-reviewer,codegurureviewer,codegurureviewer,codegurureviewer,,codegurureviewer,,,CodeGuruReviewer,CodeGuruReviewer,,1,,,aws_codegurureviewer_,,codegurureviewer_,CodeGuru Reviewer,Amazon,,,,,,,
-codepipeline,codepipeline,codepipeline,codepipeline,,codepipeline,,,CodePipeline,CodePipeline,,1,,aws_codepipeline,aws_codepipeline_,,codepipeline,CodePipeline,AWS,,,,,,,
+codepipeline,codepipeline,codepipeline,codepipeline,,codepipeline,,,CodePipeline,CodePipeline,,,2,aws_codepipeline,aws_codepipeline_,,codepipeline,CodePipeline,AWS,,,,,,,
 codestar,codestar,codestar,codestar,,codestar,,,CodeStar,CodeStar,,1,,,aws_codestar_,,codestar_,CodeStar,AWS,,x,,,,,
 codestar-connections,codestarconnections,codestarconnections,codestarconnections,,codestarconnections,,,CodeStarConnections,CodeStarConnections,,,2,,aws_codestarconnections_,,codestarconnections_,CodeStar Connections,AWS,,,,,,,
 codestar-notifications,codestarnotifications,codestarnotifications,codestarnotifications,,codestarnotifications,,,CodeStarNotifications,CodeStarNotifications,,,2,,aws_codestarnotifications_,,codestarnotifications_,CodeStar Notifications,AWS,,,,,,,
@@ -203,7 +203,7 @@ ivs,ivs,ivs,ivs,,ivs,,,IVS,IVS,,1,,,aws_ivs_,,ivs_,IVS (Interactive Video),Amazo
 ivschat,ivschat,ivschat,ivschat,,ivschat,,,IVSChat,Ivschat,,,2,,aws_ivschat_,,ivschat_,IVS (Interactive Video) Chat,Amazon,,,,,,,
 kendra,kendra,kendra,kendra,,kendra,,,Kendra,Kendra,,,2,,aws_kendra_,,kendra_,Kendra,Amazon,,,,,,,
 keyspaces,keyspaces,keyspaces,keyspaces,,keyspaces,,,Keyspaces,Keyspaces,,,2,,aws_keyspaces_,,keyspaces_,Keyspaces (for Apache Cassandra),Amazon,,,,,,,
-kinesis,kinesis,kinesis,kinesis,,kinesis,,,Kinesis,Kinesis,,1,,aws_kinesis_stream,aws_kinesis_,,kinesis_stream,Kinesis,Amazon,,,,,,,
+kinesis,kinesis,kinesis,kinesis,,kinesis,,,Kinesis,Kinesis,x,,2,aws_kinesis_stream,aws_kinesis_,,kinesis_stream;kinesis_resource_policy,Kinesis,Amazon,,,,,,,
 kinesisanalytics,kinesisanalytics,kinesisanalytics,kinesisanalytics,,kinesisanalytics,,,KinesisAnalytics,KinesisAnalytics,,1,,aws_kinesis_analytics_,aws_kinesisanalytics_,,kinesis_analytics_,Kinesis Analytics,Amazon,,,,,,,
 kinesisanalyticsv2,kinesisanalyticsv2,kinesisanalyticsv2,kinesisanalyticsv2,,kinesisanalyticsv2,,,KinesisAnalyticsV2,KinesisAnalyticsV2,,1,,,aws_kinesisanalyticsv2_,,kinesisanalyticsv2_,Kinesis Analytics V2,Amazon,,,,,,,
 firehose,firehose,firehose,firehose,,firehose,,,Firehose,Firehose,,,2,aws_kinesis_firehose_,aws_firehose_,,kinesis_firehose_,Kinesis Firehose,Amazon,,,,,,,
@@ -251,7 +251,7 @@ mobile,mobile,mobile,mobile,,mobile,,,Mobile,Mobile,,1,,,aws_mobile_,,mobile_,Mo
 ,,,,,,,,,,,,,,,,,Mobile SDK for Unity,AWS,x,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,Mobile SDK for Xamarin,AWS,x,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,Monitron,Amazon,x,,,,,,No SDK support
-mq,mq,mq,mq,,mq,,,MQ,MQ,,1,2,,aws_mq_,,mq_,MQ,Amazon,,,,,,,
+mq,mq,mq,mq,,mq,,,MQ,MQ,,,2,,aws_mq_,,mq_,MQ,Amazon,,,,,,,
 mturk,mturk,mturk,mturk,,mturk,,,MTurk,MTurk,,1,,,aws_mturk_,,mturk_,MTurk (Mechanical Turk),Amazon,,x,,,,,
 mwaa,mwaa,mwaa,mwaa,,mwaa,,,MWAA,MWAA,,1,,,aws_mwaa_,,mwaa_,MWAA (Managed Workflows for Apache Airflow),Amazon,,,,,,,
 neptune,neptune,neptune,neptune,,neptune,,,Neptune,Neptune,,1,,,aws_neptune_,,neptune_,Neptune,Amazon,,,,,,,
