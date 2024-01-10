@@ -8,7 +8,7 @@ See the Terraform Plugin Framework [Function documentation](TODO) for additional
 ## Prerequisites
 
 The only prerequisite for creating a function is ensuring the desired functionality is appropriate for a provider defined function.
-Functions must be reproducable across executions ("pure" functions), where the same input always results in the same output.
+Functions must be reproducible across executions ("pure" functions), where the same input always results in the same output.
 This requirement precludes the use of network calls, so operations requiring an AWS API call should instead consider utilizing a [data source](add-a-new-datasource.md).
 Data manipulation tasks tend to be the most common use cases.
 
@@ -29,7 +29,7 @@ New functions can be created by copying the format of an existing function insid
 
 ### Fill out the function parameter(s) and return value
 
-The function struct's `Defintion` method will document the expected parameters and return value.
+The function struct's `Definition` method will document the expected parameters and return value.
 Parameter names and return values should be specified in `camel_case`.
 
 ```go
@@ -48,7 +48,7 @@ The example above defines a function which accepts a string parameter, `some_arg
 ### Implement the function logic
 
 The function struct's `Run` method will contain the function logic.
-This includes processing the arguments, setting the return value, and any data processing that needs to happen inbetween.
+This includes processing the arguments, setting the return value, and any data processing that needs to happen in between.
 
 ```go
 func (f exampleFunction) Run(ctx context.Context, req function.RunRequest, resp *function.RunResponse) {
@@ -81,7 +81,7 @@ func (p *fwprovider) Functions(_ context.Context) []func() function.Function {
 ### Write passing Acceptance Tests
 
 All functions should have corresponding acceptance tests.
-For functions with variadic arguments, or which can potentially return an error, tests should be written to excercise those conditions.
+For functions with variadic arguments, or which can potentially return an error, tests should be written to exercise those conditions.
 
 An example outline is included below:
 
