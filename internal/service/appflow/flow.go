@@ -367,10 +367,9 @@ func resourceFlow() *schema.Resource {
 																			ValidateDiagFunc: enum.Validate[types.AggregationType](),
 																		},
 																		"target_file_size": {
-																			Type:         schema.TypeInt,
-																			Optional:     true,
-																			Computed:     true,
-																			ValidateFunc: validation.IntBetween(1, 1024*1024*1024),
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																			Computed: true,
 																		},
 																	},
 																},
