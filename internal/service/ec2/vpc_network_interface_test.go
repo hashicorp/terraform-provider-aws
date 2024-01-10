@@ -1292,7 +1292,7 @@ resource "aws_network_interface" "test" {
 
 func testAccVPCNetworkInterfaceConfig_attachment(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		testAccVPCNetworkInterfaceConfig_baseIPV4(rName),
 		fmt.Sprintf(`
@@ -1307,7 +1307,7 @@ resource "aws_subnet" "test2" {
 }
 
 resource "aws_instance" "test" {
-  ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id                   = aws_subnet.test2.id
   associate_public_ip_address = false
@@ -1337,7 +1337,7 @@ resource "aws_network_interface" "test" {
 
 func testAccVPCNetworkInterfaceConfig_externalAttachment(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		testAccVPCNetworkInterfaceConfig_baseIPV4(rName),
 		fmt.Sprintf(`
@@ -1352,7 +1352,7 @@ resource "aws_subnet" "test2" {
 }
 
 resource "aws_instance" "test" {
-  ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id                   = aws_subnet.test2.id
   associate_public_ip_address = false
