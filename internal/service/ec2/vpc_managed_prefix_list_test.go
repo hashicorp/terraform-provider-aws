@@ -38,7 +38,7 @@ func TestAccVPCManagedPrefixList_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "address_family", "IPv4"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ec2", regexache.MustCompile(`prefix-list/pl-[[:xdigit:]]+`)),
 					resource.TestCheckResourceAttr(resourceName, "entry.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "max_entries", "1"),
+					resource.TestCheckResourceAttr(resourceName, "max_entries", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -511,7 +511,7 @@ func testAccVPCManagedPrefixListConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ec2_managed_prefix_list" "test" {
   address_family = "IPv4"
-  max_entries    = 1
+  max_entries    = 0
   name           = %[1]q
 }
 `, rName)
