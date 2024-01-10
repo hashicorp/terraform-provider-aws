@@ -102,27 +102,18 @@ func resourceManagedPrefixListCreate(ctx context.Context, d *schema.ResourceData
 
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
+	name := d.Get("name").(string)
 	input := &ec2.CreateManagedPrefixListInput{
+		AddressFamily:     aws.String(d.Get("address_family").(string)),
+		MaxEntries:        aws.Int64(int64(d.Get("max_entries").(int))),
+		PrefixListName:    aws.String(name),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypePrefixList),
-	}
-
-	if v, ok := d.GetOk("address_family"); ok {
-		input.AddressFamily = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("entry"); ok && v.(*schema.Set).Len() > 0 {
 		input.Entries = expandAddPrefixListEntries(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("max_entries"); ok {
-		input.MaxEntries = aws.Int64(int64(v.(int)))
-	}
-
-	if v, ok := d.GetOk("name"); ok {
-		input.PrefixListName = aws.String(v.(string))
-	}
-
-	log.Printf("[DEBUG] Creating EC2 Managed Prefix List: %s", input)
 	output, err := conn.CreateManagedPrefixListWithContext(ctx, input)
 
 	if err != nil {
