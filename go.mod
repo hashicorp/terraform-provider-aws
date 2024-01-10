@@ -61,6 +61,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.7.6
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.49.7
+	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.1.6
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.38.6
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.25.6
