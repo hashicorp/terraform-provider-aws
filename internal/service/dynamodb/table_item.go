@@ -292,6 +292,7 @@ func parseTableItemQueryKey(d *schema.ResourceData, keyType string, keyName stri
 }
 
 func resourceTableItemImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	ctx := context.Background()
 	// Parse given id string as either a pipe-delimited string or json
 	var id []string
 	if strings.HasPrefix(d.Id(), "[") {
@@ -324,7 +325,7 @@ func resourceTableItemImport(d *schema.ResourceData, meta interface{}) ([]*schem
 	}
 
 	// Query table description to determine its hash/range key attributes
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 	tableResult, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
 		TableName: aws.String(tableName),
 	})
