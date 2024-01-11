@@ -61,6 +61,7 @@ const (
 	Inspector2EndpointID                 = "inspector2"
 	InternetMonitorEndpointID            = "internetmonitor"
 	IVSChatEndpointID                    = "ivschat"
+	KafkaEndpointID                      = "kafka"
 	KendraEndpointID                     = "kendra"
 	KeyspacesEndpointID                  = "keyspaces"
 	KinesisEndpointID                    = "kinesis"
