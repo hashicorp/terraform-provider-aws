@@ -26,8 +26,9 @@ import (
 )
 
 const (
-	testEngineType    = "bluage"
-	testEngineVersion = "3.7.0"
+	testEngineType          = "bluage"
+	testEngineVersion       = "3.7.0"
+	testEngineUpdateVersion = "3.8.0"
 )
 
 func TestAccM2Environment_basic(t *testing.T) {
@@ -72,6 +73,65 @@ func TestAccM2Environment_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccM2Environment_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	// TIP: This is a long-running test guard for tests that run longer than
+	// 300s (5 min) generally.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var environment m2.GetEnvironmentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_m2_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_highAvailability(rName, testEngineType, testEngineVersion, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", testEngineType),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", testEngineVersion),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
+					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "efs_mount.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fsx_mount.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "M2.m5.large"),
+				),
+			},
+			{
+				Config: testAccEnvironmentConfig_update(rName, testEngineType, testEngineVersion, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", testEngineType),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", testEngineVersion),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
+					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "1"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "efs_mount.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fsx_mount.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "M2.m6i.large"),
+					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "sat:03:35-sat:05:35"),
+				),
 			},
 		},
 	})
@@ -281,7 +341,6 @@ func testAccCheckEnvironmentNotRecreated(before, after *m2.GetEnvironmentOutput)
 
 func testAccEnvironmentConfig_basic(rName, engineType, engineVersion string) string {
 	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName),
-		testAccEnvironmentConfig_efs(rName),
 		fmt.Sprintf(`
 
 resource "aws_m2_environment" "test" {
@@ -294,6 +353,30 @@ resource "aws_m2_environment" "test" {
   subnet_ids         = aws_subnet.test[*].id
 }
 `, rName, engineType, engineVersion))
+}
+
+func testAccEnvironmentConfig_update(rName, engineType, engineVersion string, desiredCapacity int32) string {
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName),
+		fmt.Sprintf(`
+
+resource "aws_m2_environment" "test" {
+  name               = %[1]q
+  description        = %[1]q 
+  engine_type        = %[2]q
+  engine_version     = %[3]q
+  instance_type      = "M2.m6i.large"
+  security_groups    = [aws_security_group.test.id]
+  subnet_ids         = aws_subnet.test[*].id
+ 
+  preferred_maintenance_window = "sat:03:35-sat:05:35"
+
+  high_availability_config {
+    desired_capacity = %[4]d
+  }
+
+}
+`, rName, engineType, engineVersion, desiredCapacity))
+
 }
 
 func testAccEnvironmentConfig_highAvailability(rName, engineType, engineVersion string, desiredCapacity int32) string {

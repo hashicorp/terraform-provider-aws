@@ -132,7 +132,7 @@ func ResourceEnvironment() *schema.Resource {
 						"desired_capacity": {
 							Type:         schema.TypeInt,
 							Required:     true,
-							ValidateFunc: validation.IntBetween(1, 100),
+							ValidateFunc: validation.IntBetween(0, 100),
 						},
 					},
 				},
@@ -321,7 +321,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 		if d.HasChange("high_availability_config") {
 			if v, ok := d.GetOk("high_availability_config"); ok && len(v.([]interface{})) > 0 {
 				config := v.([]interface{})[0].(map[string]interface{})
-				in.DesiredCapacity = aws.Int32(config["desired_capacity"].(int32))
+				in.DesiredCapacity = aws.Int32(int32(config["desired_capacity"].(int)))
 			} else {
 				in.DesiredCapacity = aws.Int32(1)
 			}
