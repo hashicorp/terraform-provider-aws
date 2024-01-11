@@ -23,7 +23,7 @@ func engine_Values() []string {
 
 const (
 	storageTypeStandard = "standard"
-	storageTypeIopt1   = "iopt1"
+	storageTypeIopt1    = "iopt1"
 )
 
 func storageType_Values() []string {

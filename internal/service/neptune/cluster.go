@@ -289,9 +289,17 @@ func ResourceCluster() *schema.Resource {
 				Default:  false,
 			},
 			"storage_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					// https://docs.aws.amazon.com/neptune/latest/userguide/storage-types.html#provisioned-iops-storage:
+					// "You can determine whether a cluster is using I/O–Optimized storage using any describe- call. If the I/O–Optimized storage is enabled, the call returns a storage-type field set to iopt1".
+					if old == "" && new == storageTypeStandard {
+						return true
+					}
+					return new == old
+				},
 				ValidateFunc: validation.StringInSlice(storageType_Values(), false),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
