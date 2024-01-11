@@ -76,7 +76,7 @@ func ResourceCACertificate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"role_arn": {
-							Type:         schema.TypeBool,
+							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
