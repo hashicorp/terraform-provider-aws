@@ -133,7 +133,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `alias` - Alias of the S3 Access Point.
 * `arn` - ARN of the S3 Access Point.
-* `domainName` - DNS domain name of the S3 Access Point in the format _`name`_-_`account_id`_.s3-accesspoint._region_.amazonaws.com.
+* `domainName` - DNS domain name of the S3 Access Point in the format _`name`_-_`accountId`_.s3-accesspoint._region_.amazonaws.com.
 Note: S3 access points only support secure access by HTTPS. HTTP isn't supported.
 * `endpoints` - VPC endpoints for the S3 Access Point.
 * `hasPublicAccessPolicy` - Indicates whether this access point currently has a policy that allows public access.
@@ -186,4 +186,4 @@ Import using the ARN for Access Points associated with an S3 on Outposts Bucket:
 % terraform import aws_s3_access_point.example arn:aws:s3-outposts:us-east-1:123456789012:outpost/op-1234567890123456/accesspoint/example
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-4711b6e565d3af1c9d86bdc8486848e96da9b7027e04a381f81611b271e97502 -->
+<!-- cache-key: cdktf-0.20.0 input-4711b6e565d3af1c9d86bdc8486848e96da9b7027e04a381f81611b271e97502 -->
