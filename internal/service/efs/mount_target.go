@@ -25,7 +25,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_efs_mount_target")
+// @SDKResource("aws_efs_mount_target", name="Mount Target")
 func ResourceMountTarget() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMountTargetCreate,
@@ -222,6 +222,10 @@ func resourceMountTargetDelete(ctx context.Context, d *schema.ResourceData, meta
 		MountTargetId: aws.String(d.Id()),
 	})
 
+	if tfawserr.ErrCodeEquals(err, efs.ErrCodeMountTargetNotFound) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EFS Mount Target (%s): %s", d.Id(), err)
 	}
@@ -243,12 +247,32 @@ func getAZFromSubnetID(ctx context.Context, conn *ec2.EC2, subnetID string) (str
 	return aws.StringValue(subnet.AvailabilityZone), nil
 }
 
-func FindMountTargetByID(ctx context.Context, conn *efs.EFS, id string) (*efs.MountTargetDescription, error) {
-	input := &efs.DescribeMountTargetsInput{
-		MountTargetId: aws.String(id),
+func findMountTarget(ctx context.Context, conn *efs.EFS, input *efs.DescribeMountTargetsInput) (*efs.MountTargetDescription, error) {
+	output, err := findMountTargets(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
 	}
 
-	output, err := conn.DescribeMountTargetsWithContext(ctx, input)
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findMountTargets(ctx context.Context, conn *efs.EFS, input *efs.DescribeMountTargetsInput) ([]*efs.MountTargetDescription, error) {
+	var output []*efs.MountTargetDescription
+
+	err := conn.DescribeMountTargetsPagesWithContext(ctx, input, func(page *efs.DescribeMountTargetsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.MountTargets {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, efs.ErrCodeMountTargetNotFound) {
 		return nil, &retry.NotFoundError{
@@ -261,15 +285,15 @@ func FindMountTargetByID(ctx context.Context, conn *efs.EFS, id string) (*efs.Mo
 		return nil, err
 	}
 
-	if output == nil || len(output.MountTargets) == 0 || output.MountTargets[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+	return output, nil
+}
+
+func FindMountTargetByID(ctx context.Context, conn *efs.EFS, id string) (*efs.MountTargetDescription, error) {
+	input := &efs.DescribeMountTargetsInput{
+		MountTargetId: aws.String(id),
 	}
 
-	if count := len(output.MountTargets); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output.MountTargets[0], nil
+	return findMountTarget(ctx, conn, input)
 }
 
 func statusMountTargetLifeCycleState(ctx context.Context, conn *efs.EFS, id string) retry.StateRefreshFunc {
