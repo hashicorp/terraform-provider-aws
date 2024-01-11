@@ -150,7 +150,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.SetId(aws.StringValue(output.ApplicationId))
-	d.Set("arn", aws.StringValue(output.ApplicationArn))
+	d.Set("arn", output.ApplicationArn)
 
 	if _, err := waitApplicationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating qbusiness application (%s): waiting for completion: %s", d.Id(), err)
@@ -176,11 +176,11 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, "reading qbusiness application: %s", err)
 	}
 
-	d.Set("application_id", aws.StringValue(app.ApplicationId))
-	d.Set("arn", aws.StringValue(app.ApplicationArn))
-	d.Set("description", aws.StringValue(app.Description))
-	d.Set("display_name", aws.StringValue(app.DisplayName))
-	d.Set("iam_service_role_arn", aws.StringValue(app.RoleArn))
+	d.Set("application_id", app.ApplicationId)
+	d.Set("arn", app.ApplicationArn)
+	d.Set("description", app.Description)
+	d.Set("display_name", app.DisplayName)
+	d.Set("iam_service_role_arn", app.RoleArn)
 
 	if v, ok := d.GetOk("attachments_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		if err := d.Set("attachments_configuration", flattenAttachmentsConfiguration(app.AttachmentsConfiguration)); err != nil {

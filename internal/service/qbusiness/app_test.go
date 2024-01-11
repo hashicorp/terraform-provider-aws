@@ -179,25 +179,25 @@ func testAccAppConfig_basic(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_qbusiness_app" "test" {
-	display_name = %[1]q
-	iam_service_role_arn = aws_iam_role.test.arn
+  display_name = %[1]q
+  iam_service_role_arn = aws_iam_role.test.arn
 }
 
 resource "aws_iam_role" "test" {
-	name = %[1]q
+  name = %[1]q
 
-	assume_role_policy = <<EOF
+  assume_role_policy = <<EOF
 {
 "Version": "2012-10-17",
 "Statement": [
-	{
-	"Action": "sts:AssumeRole",
-	"Principal": {
-		"Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-	},
-	"Effect": "Allow",
-	"Sid": ""
-	}
+    {
+    "Action": "sts:AssumeRole",
+    "Principal": {
+        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
+    },
+    "Effect": "Allow",
+    "Sid": ""
+    }
   ]
 }
 EOF
@@ -211,30 +211,30 @@ func testAccAppConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string)
 data "aws_partition" "current" {}
 
 resource "aws_qbusiness_app" "test" {
-	display_name = %[1]q
-	iam_service_role_arn = aws_iam_role.test.arn
+  display_name = %[1]q
+  iam_service_role_arn = aws_iam_role.test.arn
 
-	tags = {
-		%[2]q = %[3]q
-		%[4]q = %[5]q
-	}
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
 }
 
 resource "aws_iam_role" "test" {
-	name = %[1]q
+  name = %[1]q
 
-	assume_role_policy = <<EOF
+  assume_role_policy = <<EOF
 {
 "Version": "2012-10-17",
 "Statement": [
-	{
-	"Action": "sts:AssumeRole",
-	"Principal": {
-		"Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-	},
-	"Effect": "Allow",
-	"Sid": ""
-	}
+  {
+    "Action": "sts:AssumeRole",
+    "Principal": {
+        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
+    },
+    "Effect": "Allow",
+    "Sid": ""
+    }
   ]
 }
 EOF
