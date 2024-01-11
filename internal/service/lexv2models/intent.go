@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -225,7 +226,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 
 	messageNBO := schema.NestedBlockObject{
 		Blocks: map[string]schema.Block{
-			"custom_playload":     customPayloadLNB,
+			"custom_payload":      customPayloadLNB,
 			"image_response_card": imageResponseCardLNB,
 			"plain_text_message":  plainTextMessageLNB,
 			"ssml_message":        ssmlMessageLNB,
@@ -599,11 +600,11 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		},
 	}
 
-	promptAttemptsSpecificationLNB := schema.ListNestedBlock{
-		Validators: []validator.List{
-			listvalidator.SizeAtMost(1),
+	promptAttemptsSpecificationLNB := schema.SetNestedBlock{
+		Validators: []validator.Set{
+			setvalidator.SizeAtMost(6),
 		},
-		CustomType: fwtypes.NewListNestedObjectTypeOf[PromptAttemptsSpecification](ctx),
+		CustomType: fwtypes.NewSetNestedObjectTypeOf[PromptAttemptsSpecification](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"map_block_key": schema.StringAttribute{
@@ -696,7 +697,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
-		CustomType: fwtypes.NewListNestedObjectTypeOf[FulfillmentStartResponseSpecification](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[ElicitationCodeHookInvocationSetting](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"enable_code_hook_invocation": schema.BoolAttribute{
@@ -1397,11 +1398,11 @@ type PromptAttemptsSpecification struct {
 }
 
 type PromptSpecification struct {
-	AllowInterrupt              types.Bool                                                   `tfsdk:"allow_interrupt"`
-	MaxRetries                  types.Int64                                                  `tfsdk:"max_retries"`
-	MessageGroup                fwtypes.ListNestedObjectValueOf[MessageGroup]                `tfsdk:"message_groups"`
-	MessageSelectionStrategy    fwtypes.StringEnum[awstypes.MessageSelectionStrategy]        `tfsdk:"message_selection_strategy"`
-	PromptAttemptsSpecification fwtypes.ListNestedObjectValueOf[PromptAttemptsSpecification] `tfsdk:"prompt_attempts_specification"`
+	AllowInterrupt              types.Bool                                                  `tfsdk:"allow_interrupt"`
+	MaxRetries                  types.Int64                                                 `tfsdk:"max_retries"`
+	MessageGroup                fwtypes.ListNestedObjectValueOf[MessageGroup]               `tfsdk:"message_group"`
+	MessageSelectionStrategy    fwtypes.StringEnum[awstypes.MessageSelectionStrategy]       `tfsdk:"message_selection_strategy"`
+	PromptAttemptsSpecification fwtypes.SetNestedObjectValueOf[PromptAttemptsSpecification] `tfsdk:"prompt_attempts_specification"`
 }
 
 type FailureSuccessTimeout struct {

@@ -331,7 +331,7 @@ func TestIntentAutoFlex(t *testing.T) {
 		MessageGroup:                fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageGroupTF),
 		AllowInterrupt:              types.BoolValue(true),
 		MessageSelectionStrategy:    fwtypes.StringEnumValue(lextypes.MessageSelectionStrategyOrdered),
-		PromptAttemptsSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &promptAttemptSpecificationTF),
+		PromptAttemptsSpecification: fwtypes.NewSetNestedObjectValueOfPtr(ctx, &promptAttemptSpecificationTF),
 	}
 	promptSpecificationAWS := lextypes.PromptSpecification{
 		MaxRetries:               aws.Int32(1),
@@ -1132,43 +1132,79 @@ resource "aws_lexv2models_intent" "test" {
   confirmation_setting {
     active = true
 
-    #prompt_specification {
-      #allow_interrupt = true
-      #max_retries     = 1
-      #message_selection_strategy = "Ordered"
+    prompt_specification {
+      allow_interrupt = true
+      max_retries     = 1
+      message_selection_strategy = "Ordered"
 
-      #prompt_attempts_specification {
-        #map_block_key = "Initial"
+      message_group {
+        message {
+          plain_text_message {
+            value = "test"
+          }
+        }
+      }
 
-        #allowed_input_types {
-          #allow_audio_input = true
-          #allow_dtmf_input  = true
-        #}
+      prompt_attempts_specification {
+        allow_interrupt = true
+        map_block_key   = "Initial"
 
-        #allow_interrupt = true
+        allowed_input_types {
+          allow_audio_input = true
+          allow_dtmf_input  = true
+        }
 
-        #audio_and_dtmf_input_specification {
-          #start_timeout_ms = 1
+        audio_and_dtmf_input_specification {
+          start_timeout_ms = 4000
 
-          #audio_specification {
-            #end_timeout_ms = 1
-            #max_length_ms = 1
-          #}
+          audio_specification {
+            end_timeout_ms = 640
+            max_length_ms  = 15000
+          }
 
-          #dtmf_specification {
-            #deletion_character = "#"
-            #end_character      = "#"
-            #end_timeout_ms     = 1
-            #max_length         = 1
-          #}
-        #}
+          dtmf_specification {
+            deletion_character = "*"
+            end_character      = "#"
+            end_timeout_ms     = 5000
+            max_length         = 513
+          }
+        }
 
-        #text_input_specification {
-          #start_timeout_ms = 1
-        #}
+        text_input_specification {
+          start_timeout_ms = 30000
+        }
+      }
 
-      #}
-    #}
+      prompt_attempts_specification {
+        allow_interrupt = true
+        map_block_key   = "Retry1"
+
+        allowed_input_types {
+          allow_audio_input = true
+          allow_dtmf_input  = true
+        }
+
+        audio_and_dtmf_input_specification {
+          start_timeout_ms = 4000
+
+          audio_specification {
+            end_timeout_ms = 640
+            max_length_ms  = 15000
+          }
+
+          dtmf_specification {
+            deletion_character = "*"
+            end_character      = "#"
+            end_timeout_ms     = 5000
+            max_length         = 513
+          }
+        }
+
+        text_input_specification {
+          start_timeout_ms = 30000
+        }
+      }
+    }
   }
 }
 `, rName))
