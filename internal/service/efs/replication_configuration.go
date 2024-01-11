@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -201,6 +202,116 @@ func resourceReplicationConfigurationDelete(ctx context.Context, d *schema.Resou
 	}
 
 	return diags
+}
+
+func findReplicationConfiguration(ctx context.Context, conn *efs.EFS, input *efs.DescribeReplicationConfigurationsInput) (*efs.ReplicationConfigurationDescription, error) {
+	output, err := findReplicationConfigurations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findReplicationConfigurations(ctx context.Context, conn *efs.EFS, input *efs.DescribeReplicationConfigurationsInput) ([]*efs.ReplicationConfigurationDescription, error) {
+	var output []*efs.ReplicationConfigurationDescription
+
+	err := conn.DescribeReplicationConfigurationsPagesWithContext(ctx, input, func(page *efs.DescribeReplicationConfigurationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Replications {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound, efs.ErrCodeReplicationNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func FindReplicationConfigurationByID(ctx context.Context, conn *efs.EFS, id string) (*efs.ReplicationConfigurationDescription, error) {
+	input := &efs.DescribeReplicationConfigurationsInput{
+		FileSystemId: aws.String(id),
+	}
+
+	output, err := findReplicationConfiguration(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if len(output.Destinations) == 0 || output.Destinations[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusReplicationConfiguration(ctx context.Context, conn *efs.EFS, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindReplicationConfigurationByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Destinations[0].Status), nil
+	}
+}
+
+func waitReplicationConfigurationCreated(ctx context.Context, conn *efs.EFS, id string, timeout time.Duration) (*efs.ReplicationConfigurationDescription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{efs.ReplicationStatusEnabling},
+		Target:  []string{efs.ReplicationStatusEnabled},
+		Refresh: statusReplicationConfiguration(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*efs.ReplicationConfigurationDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitReplicationConfigurationDeleted(ctx context.Context, conn *efs.EFS, id string, timeout time.Duration) (*efs.ReplicationConfigurationDescription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{efs.ReplicationStatusDeleting},
+		Target:                    []string{},
+		Refresh:                   statusReplicationConfiguration(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*efs.ReplicationConfigurationDescription); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandDestinationToCreate(tfMap map[string]interface{}) *efs.DestinationToCreate {
