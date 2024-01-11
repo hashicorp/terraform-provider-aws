@@ -160,7 +160,7 @@ func resourceSecretPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 	log.Printf("[DEBUG] Deleting Secrets Manager Secret Policy: %s", d.Id())
 	err := deleteSecretPolicy(ctx, conn, d.Id())
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "You can't perform this operation on the secret because it was marked for deletion") {
 		return diags
 	}
 

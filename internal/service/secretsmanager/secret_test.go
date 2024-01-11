@@ -34,7 +34,7 @@ func TestAccSecretsManagerSecret_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSecretConfig_name(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSecretExists(ctx, resourceName, &secret),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "secretsmanager", regexache.MustCompile(fmt.Sprintf("secret:%s-[[:alnum:]]+$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -80,6 +80,30 @@ func TestAccSecretsManagerSecret_withNamePrefix(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"recovery_window_in_days", "force_overwrite_replica_secret"},
+			},
+		},
+	})
+}
+
+func TestAccSecretsManagerSecret_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var secret secretsmanager.DescribeSecretOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretConfig_name(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretExists(ctx, resourceName, &secret),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecretsmanager.ResourceSecret(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

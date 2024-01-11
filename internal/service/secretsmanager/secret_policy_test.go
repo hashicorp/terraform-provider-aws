@@ -126,6 +126,31 @@ func TestAccSecretsManagerSecretPolicy_disappears(t *testing.T) {
 	})
 }
 
+func TestAccSecretsManagerSecretPolicy_Disappears_secret(t *testing.T) {
+	ctx := acctest.Context(t)
+	var policy secretsmanager.GetResourcePolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret_policy.test"
+	secretResourceName := "aws_secretsmanager_secret.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretPolicyConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretPolicyExists(ctx, resourceName, &policy),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecretsmanager.ResourceSecret(), secretResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckSecretPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerClient(ctx)
