@@ -447,6 +447,14 @@ func TestAccBatchJobDefinition_updateForcesNewResource(t *testing.T) {
 				},
 >>>>>>> 1c264545ba (initial remove of ForceNew)
 			},
+			{
+				Config: testAccJobDefinitionConfig_containerPropertiesAdvancedUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					testAccCheckJobDefinitionPreviousDeregistered(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "revision", "2"),
+				),
+			},
 		},
 	})
 }
@@ -689,6 +697,48 @@ func TestAccBatchJobDefinition_NodePropertiesupdateForcesNewResource(t *testing.
 					"deregister_on_new_revision",
 				},
 >>>>>>> 1c264545ba (initial remove of ForceNew)
+			},
+		},
+	})
+}
+
+func TestAccBatchJobDefinition_NodeProperties_advanced(t *testing.T) {
+	ctx := acctest.Context(t)
+	var jd batch.JobDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_batch_job_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccJobDefinitionConfig_nodePropertiesAdvanced(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "node_properties", `{"mainNode":1,"nodeRangeProperties":[{"container":{"command":["ls","-la"],"environment":[{"name":"VARNAME","value":"VARVAL"}],"image":"busybox","memory":512,"mountPoints":[{"containerPath":"/tmp","readOnly":false,"sourceVolume":"tmp"}],"resourceRequirements":[],"secrets":[],"ulimits":[{"hardLimit":1024,"name":"nofile","softLimit":1024}],"vcpus":1,"volumes":[{"host":{"sourcePath":"/tmp"},"name":"tmp"}]},"targetNodes":"0:"},{"container":{"command":["echo","test"],"environment":[],"image":"busybox","memory":128,"mountPoints":[],"resourceRequirements":[],"secrets":[],"ulimits":[],"vcpus":1,"volumes":[]},"targetNodes":"1:"}],"numNodes":4}`),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregister_on_new_revision",
+				},
+			},
+			{
+				Config: testAccJobDefinitionConfig_nodePropertiesAdvancedUpdate(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "node_properties", `{"mainNode":1,"nodeRangeProperties":[{"container":{"command":["ls","-la"],"environment":[],"image":"busybox","memory":512,"mountPoints":[],"resourceRequirements":[],"secrets":[],"ulimits":[],"vcpus":1,"volumes":[]},"targetNodes":"0:"},{"container":{"command":["echo","test"],"environment":[],"image":"busybox","memory":128,"mountPoints":[],"resourceRequirements":[],"secrets":[],"ulimits":[],"vcpus":1,"volumes":[]},"targetNodes":"1:"}],"numNodes":4}`),
+					testAccCheckJobDefinitionPreviousDeregistered(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "revision", "2"),
+				),
 			},
 		},
 	})
@@ -1653,8 +1703,8 @@ resource "aws_batch_job_definition" "test" {
 func testAccJobDefinitionConfig_attributes(rName string, sp int, pt bool, rsa int, timeout int, dereg bool) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
-  name = %[1]q
-  type = "container"
+  name                = %[1]q
+  type                = "container"
   scheduling_priority = %[2]d
   propagate_tags      = %[3]t
   container_properties = jsonencode({
