@@ -1274,6 +1274,7 @@ func TestAccCognitoIDPUserPool_WithLambda_preGenerationTokenConfig(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_mode", "ENFORCED"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.pre_token_generation_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_token_generation_config.0.lambda_arn", lambdaResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.pre_token_generation_config.0.lambda_version", "V2_0"),
@@ -1290,6 +1291,7 @@ func TestAccCognitoIDPUserPool_WithLambda_preGenerationTokenConfig(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_mode", "ENFORCED"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.pre_token_generation_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_token_generation_config.0.lambda_arn", lambdaUpdatedResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.pre_token_generation_config.0.lambda_version", "V2_0"),
@@ -1301,6 +1303,7 @@ func TestAccCognitoIDPUserPool_WithLambda_preGenerationTokenConfig(t *testing.T)
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_mode", "ENFORCED"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.pre_token_generation_config.#", "0"),
 				),
 			},
@@ -2477,8 +2480,11 @@ func testAccUserPoolConfig_lambdaPreTokenGenerationConfig(name string) string {
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
-  lambda_config {
+  user_pool_add_ons {
+    advanced_security_mode = "ENFORCED"
+  }
 
+  lambda_config {
     pre_token_generation_config {
       lambda_arn     = aws_lambda_function.test.arn
       lambda_version = "V2_0"
@@ -2501,8 +2507,11 @@ resource "aws_lambda_function" "second" {
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
-  lambda_config {
+  user_pool_add_ons {
+    advanced_security_mode = "ENFORCED"
+  }
 
+  lambda_config {
     pre_token_generation_config {
       lambda_arn     = aws_lambda_function.second.arn
       lambda_version = "V2_0"
@@ -2516,6 +2525,10 @@ func testAccUserPoolConfig_lambdaPreTokenGenerationConfigRemove(name string) str
 	return acctest.ConfigCompose(testAccUserPoolLambdaConfig_base(name), fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
+
+  user_pool_add_ons {
+    advanced_security_mode = "ENFORCED"
+  }
 
   lambda_config {
   }
