@@ -51,7 +51,7 @@ This resource supports the following arguments:
 * `family` - (Required) The family of the neptune cluster parameter group.
 * `description` - (Optional) The description of the neptune cluster parameter group. Defaults to "Managed by Terraform".
 * `parameter` - (Optional) A list of neptune parameters to apply.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Parameter blocks support the following:
 
@@ -65,7 +65,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The neptune cluster parameter group name.
 * `arn` - The ARN of the neptune cluster parameter group.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -89,4 +89,4 @@ Using `terraform import`, import Neptune Cluster Parameter Groups using the `nam
 % terraform import aws_neptune_cluster_parameter_group.cluster_pg production-pg-1
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-3c39999f95e5475d491571cada3c79f247de16c4aa849b9cba8ecd969f7df95d -->
+<!-- cache-key: cdktf-0.20.0 input-3c39999f95e5475d491571cada3c79f247de16c4aa849b9cba8ecd969f7df95d -->

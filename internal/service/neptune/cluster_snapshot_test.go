@@ -140,7 +140,7 @@ resource "aws_neptune_cluster" "test" {
   cluster_identifier  = %[1]q
   skip_final_snapshot = true
 
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  neptune_cluster_parameter_group_name = "default.neptune1.3"
 }
 
 resource "aws_neptune_cluster_snapshot" "test" {

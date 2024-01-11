@@ -86,8 +86,8 @@ This resource supports the following arguments:
 
 The `constraints` block supports the following arguments:
 
-* `encryptionContextEquals` - (Optional) A list of key-value pairs that must match the encryption context in subsequent cryptographic operation requests. The grant allows the operation only when the encryption context in the request is the same as the encryption context specified in this constraint. Conflicts with `encryption_context_subset`.
-* `encryptionContextSubset` - (Optional) A list of key-value pairs that must be included in the encryption context of subsequent cryptographic operation requests. The grant allows the cryptographic operation only when the encryption context in the request includes the key-value pairs specified in this constraint, although it can include additional key-value pairs. Conflicts with `encryption_context_equals`.
+* `encryptionContextEquals` - (Optional) A list of key-value pairs that must match the encryption context in subsequent cryptographic operation requests. The grant allows the operation only when the encryption context in the request is the same as the encryption context specified in this constraint. Conflicts with `encryptionContextSubset`.
+* `encryptionContextSubset` - (Optional) A list of key-value pairs that must be included in the encryption context of subsequent cryptographic operation requests. The grant allows the cryptographic operation only when the encryption context in the request includes the key-value pairs specified in this constraint, although it can include additional key-value pairs. Conflicts with `encryptionContextEquals`.
 
 ## Attribute Reference
 
@@ -118,4 +118,4 @@ Using `terraform import`, import KMS Grants using the Key ID and Grant ID separa
 % terraform import aws_kms_grant.test 1234abcd-12ab-34cd-56ef-1234567890ab:abcde1237f76e4ba7987489ac329fbfba6ad343d6f7075dbd1ef191f0120514
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-9587e187df46d671340d0a3dbe282bc6f1942797aabd7b8c41cc9d9588d41d93 -->
+<!-- cache-key: cdktf-0.20.0 input-9587e187df46d671340d0a3dbe282bc6f1942797aabd7b8c41cc9d9588d41d93 -->

@@ -43,7 +43,7 @@ This resource supports the following arguments:
 * `pricingPlan` - (Optional) Specifies whether the pricing plan for the queue is on-demand or reserved. Valid values are `ON_DEMAND` or `RESERVED`. Default to `ON_DEMAND`.
 * `reservationPlanSettings` - (Optional) A detail pricing plan of the  reserved queue. See below.
 * `status` - (Optional) A status of the queue. Valid values are `ACTIVE` or `RESERVED`. Default to `PAUSED`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Nested Fields
 
@@ -59,7 +59,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The same as `name`
 * `arn` - The Arn of the queue
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -83,4 +83,4 @@ Using `terraform import`, import Media Convert Queue using the queue name. For e
 % terraform import aws_media_convert_queue.test tf-test-queue
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-4187cb7aae796644c39c65825e4388d40e4bbc13bb166ecba228fe64c9f6f4c9 -->
+<!-- cache-key: cdktf-0.20.0 input-4187cb7aae796644c39c65825e4388d40e4bbc13bb166ecba228fe64c9f6f4c9 -->
