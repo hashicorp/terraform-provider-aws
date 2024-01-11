@@ -87,6 +87,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `engine_version` - (Optional) The specific version of the engine for the Environment.
+* `force_update` - (Optional) Force update the environment even if applications are running.
 * `kms_key_id` - (Optional) KMS Key to use for the Environment.
 * `preferred_maintenance_window` - (Optional) Configures the maintenance window that you want for the runtime environment. The maintenance window must have the format `ddd:hh24:mi-ddd:hh24:mi` and must be less than 24 hours. If not provided a random value will be used.
 * `publicly_accessible` - (Optional) Allow applications deployed to this environment to be publicly accessible.
@@ -110,7 +111,7 @@ The following arguments are required:
 * `mount_point` - (Required) Path to mount the filesystem on, must start with `/m2/mount/`.
 * `file_system_id` - (Required) Id of the FSX filesystem to mount.
 
-### high_availability_config - (Optional)
+### high_availability_config
 
 This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 

@@ -102,6 +102,11 @@ func ResourceEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"force_update": {
+				Type:        schema.TypeBool,
+				Optional:    true,
+				Description: "Force updates to the environment.",
+			},
 			"fsx_mount": {
 				Type:          schema.TypeSet,
 				Optional:      true,
@@ -303,6 +308,10 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	in := &m2.UpdateEnvironmentInput{
 		EnvironmentId: aws.String(d.Id()),
+	}
+
+	if v, ok := d.GetOk("force_update"); ok {
+		in.ForceUpdate = v.(bool)
 	}
 
 	if v, ok := d.GetOk("apply_changes_during_maintenance_window"); ok && v.(bool) {
