@@ -181,7 +181,7 @@ func TestIntentAutoFlex(t *testing.T) {
 
 	intentOverrideTF := tflexv2models.IntentOverride{
 		Name: types.StringValue(testString),
-		Slot: fwtypes.NewListNestedObjectValueOfPtr(ctx, &slotValueOverrideMapTF),
+		Slot: fwtypes.NewSetNestedObjectValueOfPtr(ctx, &slotValueOverrideMapTF),
 	}
 	intentOverrideAWS := lextypes.IntentOverride{
 		Name:  aws.String(testString),

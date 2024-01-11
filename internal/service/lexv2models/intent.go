@@ -272,8 +272,8 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		},
 	}
 
-	slotValueOverrideLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[SlotValueOverride](ctx),
+	slotValueOverrideLNB := schema.SetNestedBlock{
+		CustomType: fwtypes.NewSetNestedObjectTypeOf[SlotValueOverride](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"map_block_key": schema.StringAttribute{
@@ -1314,8 +1314,8 @@ type DialogAction struct {
 }
 
 type IntentOverride struct {
-	Name types.String                                       `tfsdk:"name"`
-	Slot fwtypes.ListNestedObjectValueOf[SlotValueOverride] `tfsdk:"slot"`
+	Name types.String                                      `tfsdk:"name"`
+	Slot fwtypes.SetNestedObjectValueOf[SlotValueOverride] `tfsdk:"slot"`
 }
 
 type DialogState struct {
