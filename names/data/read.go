@@ -149,6 +149,10 @@ func (sr ServiceRecord) AwsConfigParameter() string {
 	return strings.ReplaceAll(strings.ToLower(sr.SdkId()), " ", "_")
 }
 
+func (sr ServiceRecord) EndpointAPICall() string {
+	return sr[colEndpointAPICall]
+}
+
 func (sr ServiceRecord) Note() string {
 	return sr[colNote]
 }
@@ -207,5 +211,6 @@ const (
 	colDeprecatedEnvVar // Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services
 	colTfAwsEnvVar      // `TF_AWS_<service>_ENDPOINT` envvar defined for some services
 	colSdkId            // Service SDK ID from AWS SDK for Go v2
+	colEndpointAPICall  // API call to use for endpoint tests
 	colNote
 )
