@@ -55,6 +55,7 @@ import (
 	keyspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/keyspaces"
 	kinesis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kinesis"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
+	launchwizard_sdkv2 "github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	lexmodelsv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
 	lookoutmetrics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lookoutmetrics"
@@ -180,7 +181,6 @@ import (
 	iotanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/iotanalytics"
 	iotevents_sdkv1 "github.com/aws/aws-sdk-go/service/iotevents"
 	ivs_sdkv1 "github.com/aws/aws-sdk-go/service/ivs"
-	kafka_sdkv1 "github.com/aws/aws-sdk-go/service/kafka"
 	kafkaconnect_sdkv1 "github.com/aws/aws-sdk-go/service/kafkaconnect"
 	kinesisanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	kinesisanalyticsv2_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
@@ -205,6 +205,7 @@ import (
 	organizations_sdkv1 "github.com/aws/aws-sdk-go/service/organizations"
 	outposts_sdkv1 "github.com/aws/aws-sdk-go/service/outposts"
 	pinpoint_sdkv1 "github.com/aws/aws-sdk-go/service/pinpoint"
+	qbusiness_sdkv1 "github.com/aws/aws-sdk-go/service/qbusiness"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	ram_sdkv1 "github.com/aws/aws-sdk-go/service/ram"
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
@@ -722,10 +723,6 @@ func (c *AWSClient) KMSConn(ctx context.Context) *kms_sdkv1.KMS {
 	return errs.Must(conn[*kms_sdkv1.KMS](ctx, c, names.KMS, make(map[string]any)))
 }
 
-func (c *AWSClient) KafkaConn(ctx context.Context) *kafka_sdkv1.Kafka {
-	return errs.Must(conn[*kafka_sdkv1.Kafka](ctx, c, names.Kafka, make(map[string]any)))
-}
-
 func (c *AWSClient) KafkaClient(ctx context.Context) *kafka_sdkv2.Client {
 	return errs.Must(client[*kafka_sdkv2.Client](ctx, c, names.Kafka, make(map[string]any)))
 }
@@ -768,6 +765,10 @@ func (c *AWSClient) LambdaConn(ctx context.Context) *lambda_sdkv1.Lambda {
 
 func (c *AWSClient) LambdaClient(ctx context.Context) *lambda_sdkv2.Client {
 	return errs.Must(client[*lambda_sdkv2.Client](ctx, c, names.Lambda, make(map[string]any)))
+}
+
+func (c *AWSClient) LaunchWizardClient(ctx context.Context) *launchwizard_sdkv2.Client {
+	return errs.Must(client[*launchwizard_sdkv2.Client](ctx, c, names.LaunchWizard, make(map[string]any)))
 }
 
 func (c *AWSClient) LexModelsConn(ctx context.Context) *lexmodelbuildingservice_sdkv1.LexModelBuildingService {
@@ -900,6 +901,10 @@ func (c *AWSClient) PollyClient(ctx context.Context) *polly_sdkv2.Client {
 
 func (c *AWSClient) PricingClient(ctx context.Context) *pricing_sdkv2.Client {
 	return errs.Must(client[*pricing_sdkv2.Client](ctx, c, names.Pricing, make(map[string]any)))
+}
+
+func (c *AWSClient) QBusinessConn(ctx context.Context) *qbusiness_sdkv1.QBusiness {
+	return errs.Must(conn[*qbusiness_sdkv1.QBusiness](ctx, c, names.QBusiness, make(map[string]any)))
 }
 
 func (c *AWSClient) QLDBClient(ctx context.Context) *qldb_sdkv2.Client {

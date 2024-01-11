@@ -632,6 +632,9 @@ service/lakeformation:
 service/lambda:
   - 'internal/service/lambda/**/*'
   - 'website/**/lambda_*'
+service/launchwizard:
+  - 'internal/service/launchwizard/**/*'
+  - 'website/**/launchwizard_*'
 service/lexmodels:
   - 'internal/service/lexmodels/**/*'
   - 'website/**/lex_*'
@@ -834,6 +837,9 @@ service/pricing:
 service/proton:
   - 'internal/service/proton/**/*'
   - 'website/**/proton_*'
+service/qbusiness:
+  - 'internal/service/qbusiness/**/*'
+  - 'website/**/qbusiness_*'
 service/qldb:
   - 'internal/service/qldb/**/*'
   - 'website/**/qldb_*'
