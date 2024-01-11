@@ -8,6 +8,7 @@ import (
 	_ "embed"
 	"encoding/csv"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
 )
@@ -136,6 +137,18 @@ func (sr ServiceRecord) TfAwsEnvVar() string {
 	return sr[colTfAwsEnvVar]
 }
 
+func (sr ServiceRecord) SdkId() string {
+	return sr[colSdkId]
+}
+
+func (sr ServiceRecord) AwsServiceEnvVar() string {
+	return fmt.Sprintf("AWS_ENDPOINT_URL_%s", strings.ReplaceAll(strings.ToUpper(sr.SdkId()), " ", "_"))
+}
+
+func (sr ServiceRecord) AwsConfigParameter() string {
+	return strings.ReplaceAll(strings.ToLower(sr.SdkId()), " ", "_")
+}
+
 func (sr ServiceRecord) Note() string {
 	return sr[colNote]
 }
@@ -193,5 +206,6 @@ const (
 	colAllowedSubcategory
 	colDeprecatedEnvVar // Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services
 	colTfAwsEnvVar      // `TF_AWS_<service>_ENDPOINT` envvar defined for some services
+	colSdkId            // Service SDK ID from AWS SDK for Go v2
 	colNote
 )
