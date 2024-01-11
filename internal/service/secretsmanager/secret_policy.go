@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -23,23 +22,22 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_secretsmanager_secret_policy")
-func ResourceSecretPolicy() *schema.Resource {
+// @SDKResource("aws_secretsmanager_secret_policy", name="Secret Policy")
+func resourceSecretPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecretPolicyCreate,
 		ReadWithoutTimeout:   resourceSecretPolicyRead,
 		UpdateWithoutTimeout: resourceSecretPolicyUpdate,
 		DeleteWithoutTimeout: resourceSecretPolicyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"secret_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
+			"block_public_policy": {
+				Type:     schema.TypeBool,
+				Optional: true,
 			},
 			"policy": {
 				Type:                  schema.TypeString,
@@ -52,9 +50,11 @@ func ResourceSecretPolicy() *schema.Resource {
 					return json
 				},
 			},
-			"block_public_policy": {
-				Type:     schema.TypeBool,
-				Optional: true,
+			"secret_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 		},
 	}
@@ -86,6 +86,14 @@ func resourceSecretPolicyCreate(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(aws.ToString(output.ARN))
 
+	_, err = tfresource.RetryWhenNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
+		return findSecretPolicyByID(ctx, conn, d.Id())
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Secrets Manager Secret Policy (%s) create: %s", d.Id(), err)
+	}
+
 	return append(diags, resourceSecretPolicyRead(ctx, d, meta)...)
 }
 
@@ -93,15 +101,9 @@ func resourceSecretPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
-	input := &secretsmanager.GetResourcePolicyInput{
-		SecretId: aws.String(d.Id()),
-	}
+	output, err := findSecretPolicyByID(ctx, conn, d.Id())
 
-	outputRaw, err := tfresource.RetryWhenNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
-		return conn.GetResourcePolicy(ctx, input)
-	})
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Secrets Manager Secret Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -111,16 +113,13 @@ func resourceSecretPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Policy (%s): %s", d.Id(), err)
 	}
 
-	output := outputRaw.(*secretsmanager.GetResourcePolicyOutput)
-
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Policy (%s): empty response", d.Id())
-	}
+	// Empty (nil or "") policy indicates that the policy has been deleted.
+	// For backwards compatibility we don't check that.
 
 	if output.ResourcePolicy != nil {
 		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(output.ResourcePolicy))
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Policy (%s): %s", d.Id(), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		d.Set("policy", policyToSet)
@@ -136,35 +135,19 @@ func resourceSecretPolicyUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
-	if d.HasChanges("policy", "block_public_policy") {
-		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "policy contains an invalid JSON: %s", err)
-		}
-		input := &secretsmanager.PutResourcePolicyInput{
-			ResourcePolicy:    aws.String(policy),
-			SecretId:          aws.String(d.Id()),
-			BlockPublicPolicy: aws.Bool(d.Get("block_public_policy").(bool)),
-		}
+	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
-		log.Printf("[DEBUG] Setting Secrets Manager Secret resource policy; %#v", input)
-		err = retry.RetryContext(ctx, PropagationTimeout, func() *retry.RetryError {
-			_, err := conn.PutResourcePolicy(ctx, input)
-			if tfawserr.ErrMessageContains(err, errCodeMalformedPolicyDocumentException,
-				"This resource policy contains an unsupported principal") {
-				return retry.RetryableError(err)
-			}
-			if err != nil {
-				return retry.NonRetryableError(err)
-			}
-			return nil
-		})
-		if tfresource.TimedOut(err) {
-			_, err = conn.PutResourcePolicy(ctx, input)
-		}
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting Secrets Manager Secret %q policy: %s", d.Id(), err)
-		}
+	input := &secretsmanager.PutResourcePolicyInput{
+		ResourcePolicy:    aws.String(policy),
+		SecretId:          aws.String(d.Id()),
+		BlockPublicPolicy: aws.Bool(d.Get("block_public_policy").(bool)),
+	}
+
+	if _, err := putSecretPolicy(ctx, conn, input); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return append(diags, resourceSecretPolicyRead(ctx, d, meta)...)
@@ -174,17 +157,33 @@ func resourceSecretPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
-	input := &secretsmanager.DeleteResourcePolicyInput{
-		SecretId: aws.String(d.Id()),
+	log.Printf("[DEBUG] Deleting Secrets Manager Secret Policy: %s", d.Id())
+	err := deleteSecretPolicy(ctx, conn, d.Id())
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
 	}
 
-	log.Printf("[DEBUG] Removing Secrets Manager Secret policy: %#v", input)
-	_, err := conn.DeleteResourcePolicy(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
-			return diags
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	_, err = tfresource.RetryUntilNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
+		output, err := findSecretPolicyByID(ctx, conn, d.Id())
+
+		if err != nil {
+			return nil, err
 		}
-		return sdkdiag.AppendErrorf(diags, "removing Secrets Manager Secret %q policy: %s", d.Id(), err)
+
+		if aws.ToString(output.ResourcePolicy) == "" {
+			return nil, &retry.NotFoundError{}
+		}
+
+		return output, nil
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Secrets Manager Secret Policy (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -197,7 +196,7 @@ func findSecretPolicyByID(ctx context.Context, conn *secretsmanager.Client, id s
 
 	output, err := conn.GetResourcePolicy(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.IsA[*types.ResourceNotFoundException](err) || errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "You can't perform this operation on the secret because it was marked for deletion") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

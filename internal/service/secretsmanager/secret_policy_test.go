@@ -9,10 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -137,32 +135,9 @@ func testAccCheckSecretPolicyDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			secretInput := &secretsmanager.DescribeSecretInput{
-				SecretId: aws.String(rs.Primary.ID),
-			}
+			output, err := tfsecretsmanager.FindSecretPolicyByID(ctx, conn, rs.Primary.ID)
 
-			var output *secretsmanager.DescribeSecretOutput
-
-			err := retry.RetryContext(ctx, tfsecretsmanager.PropagationTimeout, func() *retry.RetryError {
-				var err error
-				output, err = conn.DescribeSecret(ctx, secretInput)
-
-				if err != nil {
-					return retry.NonRetryableError(err)
-				}
-
-				if output != nil && output.DeletedDate == nil {
-					return retry.RetryableError(fmt.Errorf("Secret %q still exists", rs.Primary.ID))
-				}
-
-				return nil
-			})
-
-			if tfresource.TimedOut(err) {
-				output, err = conn.DescribeSecret(ctx, secretInput)
-			}
-
-			if tfawserr.ErrCodeEquals(err, tfsecretsmanager.ErrCodeResourceNotFoundException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -170,54 +145,33 @@ func testAccCheckSecretPolicyDestroy(ctx context.Context) resource.TestCheckFunc
 				return err
 			}
 
-			if output != nil && output.DeletedDate == nil {
-				return fmt.Errorf("Secret %q still exists", rs.Primary.ID)
-			}
-
-			input := &secretsmanager.GetResourcePolicyInput{
-				SecretId: aws.String(rs.Primary.ID),
-			}
-
-			_, err = conn.GetResourcePolicy(ctx, input)
-
-			if tfawserr.ErrCodeEquals(err, tfsecretsmanager.ErrCodeResourceNotFoundException) ||
-				tfawserr.ErrMessageContains(err, tfsecretsmanager.ErrCodeInvalidRequestException,
-					"You can't perform this operation on the secret because it was marked for deletion.") {
+			if aws.ToString(output.ResourcePolicy) == "" {
 				continue
 			}
 
-			if err != nil {
-				return err
-			}
+			return fmt.Errorf("Secrets Manager Secret Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckSecretPolicyExists(ctx context.Context, resourceName string, policy *secretsmanager.GetResourcePolicyOutput) resource.TestCheckFunc {
+func testAccCheckSecretPolicyExists(ctx context.Context, n string, v *secretsmanager.GetResourcePolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerClient(ctx)
-		input := &secretsmanager.GetResourcePolicyInput{
-			SecretId: aws.String(rs.Primary.ID),
-		}
 
-		output, err := conn.GetResourcePolicy(ctx, input)
+		output, err := tfsecretsmanager.FindSecretPolicyByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil {
-			return fmt.Errorf("Secret Policy %q does not exist", rs.Primary.ID)
-		}
-
-		*policy = *output
+		*v = *output
 
 		return nil
 	}

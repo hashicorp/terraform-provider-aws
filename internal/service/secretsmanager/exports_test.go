@@ -5,9 +5,11 @@ package secretsmanager
 
 // Exports for use in tests only.
 var (
-	ResourceSecret = resourceSecret
+	ResourceSecret       = resourceSecret
+	ResourceSecretPolicy = resourceSecretPolicy
 
-	FindSecretByID = findSecretByID
+	FindSecretByID       = findSecretByID
+	FindSecretPolicyByID = findSecretPolicyByID
 
 	ErrCodeResourceNotFoundException = errCodeResourceNotFoundException
 	ErrCodeInvalidRequestException   = errCodeInvalidRequestException

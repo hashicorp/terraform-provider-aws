@@ -60,8 +60,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSecretPolicy,
+			Factory:  resourceSecretPolicy,
 			TypeName: "aws_secretsmanager_secret_policy",
+			Name:     "Secret Policy",
 		},
 		{
 			Factory:  ResourceSecretRotation,
