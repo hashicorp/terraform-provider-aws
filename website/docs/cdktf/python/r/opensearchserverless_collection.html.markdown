@@ -64,6 +64,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description of the collection.
+* `standby_replicas` - (Optional) Indicates whether standby replicas should be used for a collection. One of `ENABLED` or `DISABLED`. Defaults to `ENABLED`.
 * `tags` - (Optional) A map of tags to assign to the collection. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `type` - (Optional) Type of collection. One of `SEARCH`, `TIMESERIES`, or `VECTORSEARCH`. Defaults to `TIMESERIES`.
 
@@ -103,4 +104,4 @@ Using `terraform import`, import OpenSearchServerless Collection using the `id`.
 % terraform import aws_opensearchserverless_collection.example example
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-6228d2d8e91060f7235e5e926282f581119f807883b0fd65b2ee82f2cc330709 -->
+<!-- cache-key: cdktf-0.20.0 input-bbd8832845290d485daf33e5853dfc639ffbd2597086ab9e0dd010a45fc52c34 -->

@@ -93,7 +93,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 `connectionProperties` block exports the following:
 
-* `endpoint` - The endpoint of the remote domain, is only set when `connection_mode` is `VPC_ENDPOINT` and `accept_connection` is `TRUE`.
+* `endpoint` - The endpoint of the remote domain, is only set when `connectionMode` is `VPC_ENDPOINT` and `acceptConnection` is `TRUE`.
 
 ## Timeouts
 
@@ -124,4 +124,4 @@ Using `terraform import`, import AWS Opensearch Outbound Connections using the O
 % terraform import aws_opensearch_outbound_connection.foo connection-id
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-22357101732120a510373c3e4ffc6057617f56b27aa4b15000ded430bddb956a -->
+<!-- cache-key: cdktf-0.20.0 input-22357101732120a510373c3e4ffc6057617f56b27aa4b15000ded430bddb956a -->
