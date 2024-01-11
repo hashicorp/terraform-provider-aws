@@ -5,6 +5,7 @@ package efs
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -173,35 +174,46 @@ func resourceReplicationConfigurationDelete(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
-	// Deletion of the replication configuration must be done from the
-	// Region in which the destination file system is located.
+	// Deletion of the replication configuration must be done from the Region in which the destination file system is located.
 	destination := expandDestinationsToCreate(d.Get("destination").([]interface{}))[0]
-	session, err := conns.NewSessionForRegion(&conn.Config, aws.StringValue(destination.Region), meta.(*conns.AWSClient).TerraformVersion)
+	region := aws.StringValue(destination.Region)
+	session, err := conns.NewSessionForRegion(&conn.Config, region, meta.(*conns.AWSClient).TerraformVersion)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating AWS session: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating AWS session (%s): %s", region, err)
 	}
-
-	deleteConn := efs.New(session)
 
 	log.Printf("[DEBUG] Deleting EFS Replication Configuration: %s", d.Id())
-	_, err = deleteConn.DeleteReplicationConfigurationWithContext(ctx, &efs.DeleteReplicationConfigurationInput{
-		SourceFileSystemId: aws.String(d.Id()),
-	})
-
-	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound, efs.ErrCodeReplicationNotFound) {
-		return diags
+	if err := deleteReplicationConfiguration(ctx, efs.New(session), d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting EFS Replication Configuration (%s): %s", d.Id(), err)
-	}
-
-	if _, err := waitReplicationConfigurationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for EFS Replication Configuration (%s) delete: %s", d.Id(), err)
+	// Delete also in the source Region.
+	if err := deleteReplicationConfiguration(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
+}
+
+func deleteReplicationConfiguration(ctx context.Context, conn *efs.EFS, fsID string, timeout time.Duration) error {
+	_, err := conn.DeleteReplicationConfigurationWithContext(ctx, &efs.DeleteReplicationConfigurationInput{
+		SourceFileSystemId: aws.String(fsID),
+	})
+
+	if tfawserr.ErrCodeEquals(err, efs.ErrCodeFileSystemNotFound, efs.ErrCodeReplicationNotFound) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("deleting EFS Replication Configuration (%s): %w", fsID, err)
+	}
+
+	if _, err := waitReplicationConfigurationDeleted(ctx, conn, fsID, timeout); err != nil {
+		return fmt.Errorf("waiting for EFS Replication Configuration (%s) delete: %w", fsID, err)
+	}
+
+	return nil
 }
 
 func findReplicationConfiguration(ctx context.Context, conn *efs.EFS, input *efs.DescribeReplicationConfigurationsInput) (*efs.ReplicationConfigurationDescription, error) {
