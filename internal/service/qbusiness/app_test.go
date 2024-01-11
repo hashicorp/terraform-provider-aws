@@ -179,7 +179,7 @@ func testAccAppConfig_basic(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_qbusiness_app" "test" {
-  display_name = %[1]q
+  display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
 }
 
@@ -211,7 +211,7 @@ func testAccAppConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string)
 data "aws_partition" "current" {}
 
 resource "aws_qbusiness_app" "test" {
-  display_name = %[1]q
+  display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
 
   tags = {

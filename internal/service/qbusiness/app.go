@@ -5,7 +5,6 @@ package qbusiness
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/YakDriver/regexache"
@@ -285,8 +284,6 @@ func flattenAttachmentsConfiguration(v *qbusiness.AppliedAttachmentsConfiguratio
 	if v == nil {
 		return nil
 	}
-
-	fmt.Printf("\nflattenAttachmentsConfiguration: %v\n", v)
 
 	return []interface{}{
 		map[string]interface{}{
