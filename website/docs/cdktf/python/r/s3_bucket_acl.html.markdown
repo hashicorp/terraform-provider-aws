@@ -166,7 +166,7 @@ This resource supports the following arguments:
 
 * `acl` - (Optional, Conflicts with `access_control_policy`) Canned ACL to apply to the bucket.
 * `access_control_policy` - (Optional, Conflicts with `acl`) Configuration block that sets the ACL permissions for an object per grantee. [See below](#access_control_policy).
-* `bucket` - (Required, Forces new resource) Name of the bucket.
+* `bucket` - (Required, Forces new resource) Bucket to which to apply the ACL.
 * `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
 
 ### access_control_policy
@@ -174,14 +174,14 @@ This resource supports the following arguments:
 The `access_control_policy` configuration block supports the following arguments:
 
 * `grant` - (Required) Set of `grant` configuration blocks. [See below](#grant).
-* `owner` - (Required) Configuration block of the bucket owner's display name and ID. [See below](#owner).
+* `owner` - (Required) Configuration block for the bucket owner's display name and ID. [See below](#owner).
 
 ### grant
 
 The `grant` configuration block supports the following arguments:
 
 * `grantee` - (Required) Configuration block for the person being granted permissions. [See below](#grantee).
-* `permission` - (Required) Logging permissions assigned to the grantee for the bucket.
+* `permission` - (Required) Logging permissions assigned to the grantee for the bucket. Valid values: `FULL_CONTROL`, `WRITE`, `WRITE_ACP`, `READ`, `READ_ACP`. See [What permissions can I grant?](https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#permissions) for more details about what each permission means in the context of buckets.
 
 ### owner
 
@@ -285,4 +285,4 @@ If the owner (account ID) of the source bucket _differs_ from the account used t
 
 [1]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl
 
-<!-- cache-key: cdktf-0.19.0 input-06b39c820f5c4f9171593b6ae58155d7343e0494406cf4c1b165f7b639765773 -->
+<!-- cache-key: cdktf-0.20.0 input-6e85df38035944cb581b15759c2b6fd86b7bf937d52ffe8175ea539531910178 -->

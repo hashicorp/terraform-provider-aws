@@ -12,7 +12,7 @@ description: |-
 
 Terraform resource for managing an AWS SESv2 (Simple Email V2) Dedicated IP Assignment.
 
-This resource is used with "Standard" dedicated IP addresses. This includes addresses [requested and relinquished manually](https://docs.aws.amazon.com/ses/latest/dg/dedicated-ip-case.html) via an AWS support case, or [Bring Your Own IP](https://docs.aws.amazon.com/ses/latest/dg/dedicated-ip-byo.html) addresses. Once no longer assigned, this resource returns the IP to the [`sesDefaultDedicatedPool`](https://docs.aws.amazon.com/ses/latest/dg/managing-ip-pools.html), managed by AWS.
+This resource is used with "Standard" dedicated IP addresses. This includes addresses [requested and relinquished manually](https://docs.aws.amazon.com/ses/latest/dg/dedicated-ip-case.html) via an AWS support case, or [Bring Your Own IP](https://docs.aws.amazon.com/ses/latest/dg/dedicated-ip-byo.html) addresses. Once no longer assigned, this resource returns the IP to the [`ses-default-dedicated-pool`](https://docs.aws.amazon.com/ses/latest/dg/managing-ip-pools.html), managed by AWS.
 
 ## Example Usage
 
@@ -50,7 +50,7 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - A comma-separated string made up of `ip` and `destination_pool_name`.
+* `id` - A comma-separated string made up of `ip` and `destinationPoolName`.
 
 ## Timeouts
 
@@ -81,4 +81,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Dedicated IP Assignment
 % terraform import aws_sesv2_dedicated_ip_assignment.example "0.0.0.0,my-pool"
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-ad1eca5879354d37ff31d84910a7c75bc98ff4e0846d438b18b1ca96ed71fe9f -->
+<!-- cache-key: cdktf-0.20.0 input-ad1eca5879354d37ff31d84910a7c75bc98ff4e0846d438b18b1ca96ed71fe9f -->

@@ -57,7 +57,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `delegationId` - Unique identifier for the delegation.
-* `id` - Unique identifier for the resource. This is a comma-separated string containing `assessment_id`, `role_arn`, and `control_set_id`.
+* `id` - Unique identifier for the resource. This is a comma-separated string containing `assessmentId`, `roleArn`, and `controlSetId`.
 * `status` - Status of the delegation.
 
 ## Import
@@ -82,4 +82,4 @@ Using `terraform import`, import Audit Manager Assessment Delegation using the `
 % terraform import aws_auditmanager_assessment_delegation.example abcdef-123456,arn:aws:iam::012345678901:role/example,example
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-a28cb94ff95d8ebfec7195b030654929667d5f4188784ab4f4a6c94229437e4d -->
+<!-- cache-key: cdktf-0.20.0 input-a28cb94ff95d8ebfec7195b030654929667d5f4188784ab4f4a6c94229437e4d -->

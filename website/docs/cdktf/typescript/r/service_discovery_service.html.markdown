@@ -127,7 +127,7 @@ This resource supports the following arguments:
 * `healthCheckCustomConfig` - (Optional, ForceNew) A complex type that contains settings for ECS managed health checks.
 * `namespaceId` - (Optional) The ID of the namespace that you want to use to create the service.
 * `type` - (Optional) If present, specifies that the service instances are only discoverable using the `DiscoverInstances` API operation. No DNS records is registered for the service instances. The only valid value is `HTTP`.
-* `tags` - (Optional) A map of tags to assign to the service. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the service. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### dns_config
 
@@ -164,7 +164,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the service.
 * `arn` - The ARN of the service.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -188,4 +188,4 @@ Using `terraform import`, import Service Discovery Service using the service ID.
 % terraform import aws_service_discovery_service.example 0123456789
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-5ade767584d977305ecc43e9b30413e85a11a275bc3038025a2c51ba270c6462 -->
+<!-- cache-key: cdktf-0.20.0 input-5ade767584d977305ecc43e9b30413e85a11a275bc3038025a2c51ba270c6462 -->

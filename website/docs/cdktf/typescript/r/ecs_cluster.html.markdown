@@ -91,7 +91,7 @@ This resource supports the following arguments:
 * `name` - (Required) Name of the cluster (up to 255 letters, numbers, hyphens, and underscores)
 * `serviceConnectDefaults` - (Optional) Configures a default Service Connect namespace. Detailed below.
 * `setting` - (Optional) Configuration block(s) with cluster settings. For example, this can be used to enable CloudWatch Container Insights for a cluster. Detailed below.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `configuration`
 
@@ -126,7 +126,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN that identifies the cluster.
 * `id` - ARN that identifies the cluster.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -150,4 +150,4 @@ Using `terraform import`, import ECS clusters using the `name`. For example:
 % terraform import aws_ecs_cluster.stateless stateless-app
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-1154f096b3c84b6ef18254400c16ed7229ee1dd00d8545d69ff1e3a5e359aa99 -->
+<!-- cache-key: cdktf-0.20.0 input-1154f096b3c84b6ef18254400c16ed7229ee1dd00d8545d69ff1e3a5e359aa99 -->

@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.49.16
+	github.com/aws/aws-sdk-go v1.49.18
 	github.com/aws/aws-sdk-go-v2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/config v1.26.3
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.11
@@ -25,7 +25,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.12.6
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.8.6
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.15.7
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.30.2
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.10.6
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.22.3
 	github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.18.6
@@ -39,7 +39,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.34.6
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.22.8
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.6.6
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.142.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.143.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/eks v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.34.7
@@ -61,6 +61,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.7.6
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.49.7
+	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.1.6
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.38.6
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.25.6
@@ -90,7 +91,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.6.6
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.44.2
-	github.com/aws/aws-sdk-go-v2/service/securitylake v1.10.6
+	github.com/aws/aws-sdk-go-v2/service/securitylake v1.10.7
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.24.8
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.19.7
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.24.6
@@ -144,7 +145,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pquerna/otp v1.4.0
 	github.com/shopspring/decimal v1.3.1
-	golang.org/x/crypto v0.17.0
+	golang.org/x/crypto v0.18.0
 	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	golang.org/x/tools v0.14.0
 	gopkg.in/dnaeon/go-vcr.v3 v3.1.2
@@ -178,7 +179,7 @@ require (
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/bufbuild/protocompile v0.6.0 // indirect
-	github.com/cloudflare/circl v1.3.3 // indirect
+	github.com/cloudflare/circl v1.3.7 // indirect
 	github.com/evanphx/json-patch v0.5.2 // indirect
 	github.com/fatih/color v1.15.0 // indirect
 	github.com/frankban/quicktest v1.14.6 // indirect
@@ -221,7 +222,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.21.0 // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.19.0 // indirect
-	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231002182017-d307bd883b97 // indirect

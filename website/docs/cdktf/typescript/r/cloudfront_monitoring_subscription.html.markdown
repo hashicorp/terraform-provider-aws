@@ -58,7 +58,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the CloudFront monitoring subscription, which corresponds to the `distribution_id`.
+* `id` - The ID of the CloudFront monitoring subscription, which corresponds to the `distributionId`.
 
 ## Import
 
@@ -82,4 +82,4 @@ Using `terraform import`, import CloudFront monitoring subscription using the id
 % terraform import aws_cloudfront_monitoring_subscription.example E3QYSUHO4VYRGB
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-b91e31f3e82dbecd167a0e42115b3ad5594b5f039d0b0b9f9acb77abb50ffaa6 -->
+<!-- cache-key: cdktf-0.20.0 input-b91e31f3e82dbecd167a0e42115b3ad5594b5f039d0b0b9f9acb77abb50ffaa6 -->

@@ -16,7 +16,7 @@ resource can be used multiple times with the same user for non-overlapping
 groups.
 
 To exclusively manage the users in a group, see the
-[`awsIamGroupMembership` resource][3].
+[`aws_iam_group_membership` resource][3].
 
 ## Example Usage
 
@@ -96,4 +96,4 @@ Using `terraform import`, import IAM user group membership using the user name a
 % terraform import aws_iam_user_group_membership.example1 user1/group1/group2
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-14dd4765176954105a47943f6e53617581e2a060a1824a5c74af382ab83e177b -->
+<!-- cache-key: cdktf-0.20.0 input-14dd4765176954105a47943f6e53617581e2a060a1824a5c74af382ab83e177b -->

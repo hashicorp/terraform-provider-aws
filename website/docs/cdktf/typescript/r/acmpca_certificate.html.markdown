@@ -12,9 +12,9 @@ description: |-
 
 Provides a resource to issue a certificate using AWS Certificate Manager Private Certificate Authority (ACM PCA).
 
-Certificates created using `awsAcmpcaCertificate` are not eligible for automatic renewal,
+Certificates created using `aws_acmpca_certificate` are not eligible for automatic renewal,
 and must be replaced instead.
-To issue a renewable certificate using an ACM PCA, create a [`awsAcmCertificate`](acm_certificate.html)
+To issue a renewable certificate using an ACM PCA, create a [`aws_acm_certificate`](acm_certificate.html)
 with the parameter `certificateAuthorityArn`.
 
 ## Example Usage
@@ -136,4 +136,4 @@ Using `terraform import`, import ACM PCA Certificates using their ARN. For examp
 % terraform import aws_acmpca_certificate.cert arn:aws:acm-pca:eu-west-1:675225743824:certificate-authority/08319ede-83g9-1400-8f21-c7d12b2b6edb/certificate/a4e9c2aa4bcfab625g1b9136464cd3a
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-3b19b04277da26192985928a772fc7a153a2937210c9952942adad77721165c9 -->
+<!-- cache-key: cdktf-0.20.0 input-3b19b04277da26192985928a772fc7a153a2937210c9952942adad77721165c9 -->

@@ -247,6 +247,7 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 ###### Aggregation Config
 
 * `aggregation_type` - (Optional) Whether Amazon AppFlow aggregates the flow records into a single file, or leave them unaggregated. Valid values are `None` and `SingleFile`.
+* `target_file_size` - (Optional) The desired file size, in MB, for each output file that Amazon AppFlow writes to the flow destination. Integer value.
 
 ###### Prefix Config
 

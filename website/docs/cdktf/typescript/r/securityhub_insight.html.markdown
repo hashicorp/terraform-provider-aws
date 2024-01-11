@@ -327,8 +327,8 @@ The `filters` configuration block supports the following arguments:
 The date filter configuration block supports the following arguments:
 
 * `dateRange` - (Optional) A configuration block of the date range for the date filter. See [date_range](#date_range-argument-reference) below for more details.
-* `end` - (Optional) An end date for the date filter. Required with `start` if `date_range` is not specified.
-* `start` - (Optional) A start date for the date filter. Required with `end` if `date_range` is not specified.
+* `end` - (Optional) An end date for the date filter. Required with `start` if `dateRange` is not specified.
+* `start` - (Optional) A start date for the date filter. Required with `end` if `dateRange` is not specified.
 
 ### date_range Argument reference
 
@@ -410,4 +410,4 @@ Using `terraform import`, import Security Hub insights using the ARN. For exampl
 % terraform import aws_securityhub_insight.example arn:aws:securityhub:us-west-2:1234567890:insight/1234567890/custom/91299ed7-abd0-4e44-a858-d0b15e37141a
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-d3d847819c495e43242ec5ec238846c5d4424861a5d61bc30612afcfd23a2887 -->
+<!-- cache-key: cdktf-0.20.0 input-d3d847819c495e43242ec5ec238846c5d4424861a5d61bc30612afcfd23a2887 -->

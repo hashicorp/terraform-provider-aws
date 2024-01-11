@@ -73,7 +73,7 @@ This resource supports the following arguments:
 * `networkConfig` - (Optional) Specifies networking configuration for the monitoring job. Fields are documented below.
 * `roleArn` - (Required) The Amazon Resource Name (ARN) of an IAM role that Amazon SageMaker can assume to perform tasks on your behalf.
 * `stoppingCondition` - (Optional) A time limit for how long the monitoring job is allowed to run before stopping. Fields are documented below.
-* `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A mapping of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### data_quality_app_specification
 
@@ -123,7 +123,7 @@ This resource supports the following arguments:
 
 #### endpoint_input
 
-* `endpointName` - (Required) An endpoint in customer's account which has `data_capture_config` enabled.
+* `endpointName` - (Required) An endpoint in customer's account which has `dataCaptureConfig` enabled.
 * `localPath` - (Optional) Path to the filesystem where the endpoint data is available to the container. Defaults to `/opt/ml/processing/input`.
 * `s3DataDistributionType` - (Optional) Whether input data distributed in Amazon S3 is fully replicated or sharded by an S3 key. Defaults to `FullyReplicated`. Valid values are `FullyReplicated` or `ShardedByS3Key`
 * `s3InputMode` - (Optional) Whether the `Pipe` or `File` is used as the input mode for transferring data for the monitoring job. `Pipe` mode is recommended for large datasets. `File` mode is useful for small files that fit in memory. Defaults to `File`.  Valid values are `Pipe` or `File`
@@ -175,7 +175,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this data quality job definition.
 * `name` - The name of the data quality job definition.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -199,4 +199,4 @@ Using `terraform import`, import data quality job definitions using the `name`. 
 % terraform import aws_sagemaker_data_quality_job_definition.test_data_quality_job_definition data-quality-job-definition-foo
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-89befb37e0c306bddb162e6069b25cc35d269452c0d563034978f681c073a661 -->
+<!-- cache-key: cdktf-0.20.0 input-89befb37e0c306bddb162e6069b25cc35d269452c0d563034978f681c073a661 -->

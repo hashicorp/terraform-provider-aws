@@ -12,7 +12,7 @@ description: |-
 
 Attaches a Managed IAM Policy to an IAM group
 
-~> **NOTE:** The usage of this resource conflicts with the `awsIamPolicyAttachment` resource and will permanently show a difference if both are defined.
+~> **NOTE:** The usage of this resource conflicts with the `aws_iam_policy_attachment` resource and will permanently show a difference if both are defined.
 
 ## Example Usage
 
@@ -80,4 +80,4 @@ Using `terraform import`, import IAM group policy attachments using the group na
 % terraform import aws_iam_group_policy_attachment.test-attach test-group/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-3386ee59f151e68f1f49aa0bbe51aa6530bcb898108b669fb7540481f63c523b -->
+<!-- cache-key: cdktf-0.20.0 input-3386ee59f151e68f1f49aa0bbe51aa6530bcb898108b669fb7540481f63c523b -->

@@ -443,4 +443,4 @@ Using `terraform import`, import S3 bucket notification using the `bucket`. For 
 % terraform import aws_s3_bucket_notification.bucket_notification bucket-name
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-806af2b73f38b1023adb097eb9375961d9c80b720fc588a2e4a83e327c3bfb93 -->
+<!-- cache-key: cdktf-0.20.0 input-806af2b73f38b1023adb097eb9375961d9c80b720fc588a2e4a83e327c3bfb93 -->
