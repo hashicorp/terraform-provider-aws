@@ -827,6 +827,9 @@ func TestAccBatchJobDefinition_schedulingPriority(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"deregister_on_new_revision",
+				},
 			},
 		},
 	})

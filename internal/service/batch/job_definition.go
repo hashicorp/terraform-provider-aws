@@ -354,7 +354,6 @@ func ResourceJobDefinition() *schema.Resource {
 						"attempts": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 10),
 						},
 						"evaluate_on_exit": {
@@ -368,7 +367,6 @@ func ResourceJobDefinition() *schema.Resource {
 									"action": {
 										Type:     schema.TypeString,
 										Required: true,
-										ForceNew: true,
 										StateFunc: func(v interface{}) string {
 											return strings.ToLower(v.(string))
 										},
@@ -377,7 +375,6 @@ func ResourceJobDefinition() *schema.Resource {
 									"on_exit_code": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 512),
 											validation.StringMatch(regexache.MustCompile(`^[0-9]*\*?$`), "must contain only numbers, and can optionally end with an asterisk"),
@@ -386,7 +383,6 @@ func ResourceJobDefinition() *schema.Resource {
 									"on_reason": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 512),
 											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
@@ -395,7 +391,6 @@ func ResourceJobDefinition() *schema.Resource {
 									"on_status_reason": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 512),
 											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
@@ -424,14 +419,12 @@ func ResourceJobDefinition() *schema.Resource {
 			"timeout": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attempt_duration_seconds": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.IntAtLeast(60),
 						},
 					},
