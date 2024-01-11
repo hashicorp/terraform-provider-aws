@@ -1300,7 +1300,7 @@ func TestAccCognitoIDPUserPool_WithLambda_preGenerationTokenConfig(t *testing.T)
 			{
 				Config: testAccUserPoolConfig_lambdaPreTokenGenerationConfigRemove(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_mode", "ENFORCED"),
@@ -2530,8 +2530,6 @@ resource "aws_cognito_user_pool" "test" {
     advanced_security_mode = "ENFORCED"
   }
 
-  lambda_config {
-  }
 }
 `, name))
 }

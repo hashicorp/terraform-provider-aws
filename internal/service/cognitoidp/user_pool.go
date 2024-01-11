@@ -1121,7 +1121,6 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if v, ok := d.GetOk("lambda_config"); ok {
 			configs := v.([]interface{})
 			config, ok := configs[0].(map[string]interface{})
-
 			if ok && config != nil {
 				input.LambdaConfig = expandUserPoolLambdaConfig(config)
 			}
@@ -1555,15 +1554,13 @@ func expandUserPoolLambdaConfig(config map[string]interface{}) *cognitoidentityp
 		configs.PreSignUp = aws.String(v.(string))
 	}
 
-	if v, ok := config["pre_token_generation"]; ok && v.(string) != "" {
-		configs.PreTokenGeneration = aws.String(v.(string))
-	}
-
 	if v, ok := config["pre_token_generation_config"].([]interface{}); ok && len(v) > 0 {
 		s, sok := v[0].(map[string]interface{})
 		if sok && s != nil {
 			configs.PreTokenGenerationConfig = expandedUserPoolPreGenerationConfig(s)
 		}
+	} else if v, ok := config["pre_token_generation"]; ok && v.(string) != "" {
+		configs.PreTokenGeneration = aws.String(v.(string))
 	}
 
 	if v, ok := config["user_migration"]; ok && v.(string) != "" {
@@ -1597,7 +1594,6 @@ func expandUserPoolLambdaConfig(config map[string]interface{}) *cognitoidentityp
 
 func flattenUserPoolLambdaConfig(s *cognitoidentityprovider.LambdaConfigType) []map[string]interface{} {
 	m := map[string]interface{}{}
-
 	if s == nil {
 		return nil
 	}
@@ -1630,12 +1626,10 @@ func flattenUserPoolLambdaConfig(s *cognitoidentityprovider.LambdaConfigType) []
 		m["pre_sign_up"] = aws.StringValue(s.PreSignUp)
 	}
 
-	if s.PreTokenGeneration != nil {
-		m["pre_token_generation"] = aws.StringValue(s.PreTokenGeneration)
-	}
-
 	if s.PreTokenGenerationConfig != nil {
 		m["pre_token_generation_config"] = flattenUserPoolPreTokenGenerationConfig(s.PreTokenGenerationConfig)
+	} else if s.PreTokenGeneration != nil {
+		m["pre_token_generation"] = aws.StringValue(s.PreTokenGeneration)
 	}
 
 	if s.UserMigration != nil {
