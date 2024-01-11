@@ -69,8 +69,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_secretsmanager_secret_rotation",
 		},
 		{
-			Factory:  ResourceSecretVersion,
+			Factory:  resourceSecretVersion,
 			TypeName: "aws_secretsmanager_secret_version",
+			Name:     "Secret Version",
 		},
 	}
 }

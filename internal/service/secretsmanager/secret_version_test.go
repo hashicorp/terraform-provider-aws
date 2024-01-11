@@ -9,14 +9,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -139,6 +138,56 @@ func TestAccSecretsManagerSecretVersion_versionStages(t *testing.T) {
 	})
 }
 
+func TestAccSecretsManagerSecretVersion_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var version secretsmanager.GetSecretValueOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret_version.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretVersionConfig_string(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, resourceName, &version),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecretsmanager.ResourceSecretVersion(), resourceName),
+				),
+				// Because resource Delete leaves a secret with a single stage ("AWSCURRENT"), the resource is still there.
+				// ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccSecretsManagerSecretVersion_Disappears_secret(t *testing.T) {
+	ctx := acctest.Context(t)
+	var version secretsmanager.GetSecretValueOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret_version.test"
+	secretResourceName := "aws_secretsmanager_secret.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretVersionConfig_string(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, resourceName, &version),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecretsmanager.ResourceSecret(), secretResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckSecretVersionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerClient(ctx)
@@ -148,77 +197,43 @@ func testAccCheckSecretVersionDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			secretID, versionID, err := tfsecretsmanager.DecodeSecretVersionID(rs.Primary.ID)
+			output, err := tfsecretsmanager.FindSecretVersionByTwoPartKey(ctx, conn, rs.Primary.Attributes["secret_id"], rs.Primary.Attributes["version_id"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
 				return err
 			}
 
-			input := &secretsmanager.GetSecretValueInput{
-				SecretId:  aws.String(secretID),
-				VersionId: aws.String(versionID),
+			if len(output.VersionStages) == 0 || (len(output.VersionStages) == 1 && output.VersionStages[0] == "AWSCURRENT") {
+				continue
 			}
 
-			output, err := conn.GetSecretValue(ctx, input)
-
-			if err != nil {
-				if tfawserr.ErrCodeEquals(err, tfsecretsmanager.ErrCodeResourceNotFoundException) {
-					return nil
-				}
-				if tfawserr.ErrMessageContains(err, tfsecretsmanager.ErrCodeInvalidRequestException, "was deleted") || tfawserr.ErrMessageContains(err, tfsecretsmanager.ErrCodeInvalidRequestException, "was marked for deletion") {
-					return nil
-				}
-				return err
-			}
-
-			if output == nil {
-				return nil
-			}
-
-			if len(output.VersionStages) == 0 {
-				return nil
-			}
-
-			if len(output.VersionStages) == 1 && output.VersionStages[0] == "AWSCURRENT" {
-				return nil
-			}
-
-			return fmt.Errorf("Secret Version %q still exists", rs.Primary.ID)
+			return fmt.Errorf("Secrets Manager Secret Version %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckSecretVersionExists(ctx context.Context, resourceName string, version *secretsmanager.GetSecretValueOutput) resource.TestCheckFunc {
+func testAccCheckSecretVersionExists(ctx context.Context, n string, v *secretsmanager.GetSecretValueOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		secretID, versionID, err := tfsecretsmanager.DecodeSecretVersionID(rs.Primary.ID)
-		if err != nil {
-			return err
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerClient(ctx)
 
-		input := &secretsmanager.GetSecretValueInput{
-			SecretId:  aws.String(secretID),
-			VersionId: aws.String(versionID),
-		}
-
-		output, err := conn.GetSecretValue(ctx, input)
+		output, err := tfsecretsmanager.FindSecretVersionByTwoPartKey(ctx, conn, rs.Primary.Attributes["secret_id"], rs.Primary.Attributes["version_id"])
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil {
-			return fmt.Errorf("Secret Version %q does not exist", rs.Primary.ID)
-		}
-
-		*version = *output
+		*v = *output
 
 		return nil
 	}
@@ -227,7 +242,7 @@ func testAccCheckSecretVersionExists(ctx context.Context, resourceName string, v
 func testAccSecretVersionConfig_string(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
@@ -240,7 +255,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 func testAccSecretVersionConfig_binary(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
@@ -253,7 +268,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 func testAccSecretVersionConfig_stagesSingle(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
@@ -268,7 +283,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 func testAccSecretVersionConfig_stagesSingleUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
@@ -283,7 +298,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 func testAccSecretVersionConfig_stagesMultiple(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_secretsmanager_secret_version" "test" {
