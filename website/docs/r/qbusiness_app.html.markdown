@@ -34,7 +34,7 @@ This resource supports the following arguments:
 
 * `attachments_control_mode` - (Required) Status information about whether file upload functionality is activated or deactivated for your end user. Valid values are `ENABLED` and `DISABLED`.
 
-`attachments_configuration` supports the following:
+`encryption_configuration` supports the following:
 
 * `kms_key_id` - (Required) The identifier of the AWS KMS key that is used to encrypt your data. Amazon Q doesn't support asymmetric keys.
 
