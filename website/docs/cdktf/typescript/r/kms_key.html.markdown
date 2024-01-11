@@ -12,7 +12,7 @@ description: |-
 
 Manages a single-Region or multi-Region primary KMS key.
 
-~> **NOTE on KMS Key Policy:** KMS Key Policy can be configured in either the standalone resource [`awsKmsKeyPolicy`](kms_key_policy.html)
+~> **NOTE on KMS Key Policy:** KMS Key Policy can be configured in either the standalone resource [`aws_kms_key_policy`](kms_key_policy.html)
 or with the parameter `policy` in this resource.
 Configuring with both will cause inconsistencies and may overwrite configuration.
 
@@ -63,7 +63,8 @@ If the KMS key is a multi-Region primary key with replicas, the waiting period b
 * `isEnabled` - (Optional) Specifies whether the key is enabled. Defaults to `true`.
 * `enableKeyRotation` - (Optional) Specifies whether [key rotation](http://docs.aws.amazon.com/kms/latest/developerguide/rotate-keys.html) is enabled. Defaults to `false`.
 * `multiRegion` - (Optional) Indicates whether the KMS key is a multi-Region (`true`) or regional (`false`) key. Defaults to `false`.
-* `tags` - (Optional) A map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the object. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `xks_key_id` - (Optional) Identifies the external key that serves as key material for the KMS key in an external key store.
 
 ## Attribute Reference
 
@@ -71,7 +72,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - The Amazon Resource Name (ARN) of the key.
 * `keyId` - The globally unique identifier for the key.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -103,4 +104,4 @@ Using `terraform import`, import KMS Keys using the `id`. For example:
 % terraform import aws_kms_key.a 1234abcd-12ab-34cd-56ef-1234567890ab
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-cadf26a57c86ad443716e9d493f3661a0240fbfa81abe024e3813fe0ac63a3dd -->
+<!-- cache-key: cdktf-0.20.0 input-3903730a19d32621156ed63ac9b1860f7a8cb0dbe81af9dc7e694320a93226c9 -->
