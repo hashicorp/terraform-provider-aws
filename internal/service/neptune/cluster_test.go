@@ -800,7 +800,7 @@ func testAccClusterConfig_identifierGenerated() string {
 	return `
 resource "aws_neptune_cluster" "test" {
   engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  neptune_cluster_parameter_group_name = "default.neptune1.3"
   skip_final_snapshot                  = true
 }
 `
@@ -811,7 +811,7 @@ func testAccClusterConfig_identifierPrefix(prefix string) string {
 resource "aws_neptune_cluster" "test" {
   cluster_identifier_prefix            = %[1]q
   engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  neptune_cluster_parameter_group_name = "default.neptune1.3"
   skip_final_snapshot                  = true
 }
 `, prefix)
@@ -823,7 +823,7 @@ resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
   engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  neptune_cluster_parameter_group_name = "default.neptune1.3"
   skip_final_snapshot                  = true
 
   tags = {
@@ -839,7 +839,7 @@ resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
   engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  neptune_cluster_parameter_group_name = "default.neptune1.3"
   skip_final_snapshot                  = true
 
   tags = {
@@ -856,7 +856,7 @@ resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
   engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  neptune_cluster_parameter_group_name = "default.neptune1.3"
   skip_final_snapshot                  = true
   copy_tags_to_snapshot                = %[2]t
 }
@@ -869,7 +869,7 @@ resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
   engine                               = "neptune"
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  neptune_cluster_parameter_group_name = "default.neptune1.3"
   skip_final_snapshot                  = true
   deletion_protection                  = %[2]t
 }
@@ -898,7 +898,7 @@ func testAccClusterConfig_finalSnapshot(rName string) string {
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  neptune_cluster_parameter_group_name = "default.neptune1.3"
   final_snapshot_identifier            = %[1]q
 }
 `, rName))
@@ -983,7 +983,7 @@ EOF
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  neptune_cluster_parameter_group_name = "default.neptune1.3"
   skip_final_snapshot                  = true
 
   depends_on = [aws_iam_role.test, aws_iam_role.test-2]
@@ -1073,7 +1073,7 @@ resource "aws_neptune_cluster" "test" {
   skip_final_snapshot = true
   iam_roles           = [aws_iam_role.test.arn, aws_iam_role.test-2.arn]
 
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  neptune_cluster_parameter_group_name = "default.neptune1.3"
 
   depends_on = [aws_iam_role.test, aws_iam_role.test-2]
 }
@@ -1125,7 +1125,7 @@ resource "aws_neptune_cluster" "test" {
   skip_final_snapshot = true
   iam_roles           = [aws_iam_role.test.arn]
 
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  neptune_cluster_parameter_group_name = "default.neptune1.3"
 
   depends_on = [aws_iam_role.test]
 }
@@ -1160,7 +1160,7 @@ resource "aws_kms_key" "test" {
 resource "aws_neptune_cluster" "test" {
   cluster_identifier                   = %[1]q
   availability_zones                   = local.availability_zone_names
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  neptune_cluster_parameter_group_name = "default.neptune1.3"
   storage_encrypted                    = true
   kms_key_arn                          = aws_kms_key.test.arn
   skip_final_snapshot                  = true
@@ -1176,7 +1176,7 @@ resource "aws_neptune_cluster" "test" {
   storage_encrypted   = true
   skip_final_snapshot = true
 
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  neptune_cluster_parameter_group_name = "default.neptune1.3"
 }
 `, rName))
 }
@@ -1191,7 +1191,7 @@ resource "aws_neptune_cluster" "test" {
   preferred_maintenance_window = "tue:04:00-tue:04:30"
   skip_final_snapshot          = true
 
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  neptune_cluster_parameter_group_name = "default.neptune1.3"
 }
 `, rName))
 }
@@ -1207,7 +1207,7 @@ resource "aws_neptune_cluster" "test" {
   apply_immediately            = true
   skip_final_snapshot          = true
 
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  neptune_cluster_parameter_group_name = "default.neptune1.3"
 }
 `, rName))
 }
@@ -1220,7 +1220,7 @@ resource "aws_neptune_cluster" "test" {
   iam_database_authentication_enabled = true
   skip_final_snapshot                 = true
 
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  neptune_cluster_parameter_group_name = "default.neptune1.3"
 }
 `, rName))
 }
@@ -1233,7 +1233,7 @@ resource "aws_neptune_cluster" "test" {
   skip_final_snapshot            = true
   enable_cloudwatch_logs_exports = ["audit", "slowquery"]
 
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  neptune_cluster_parameter_group_name = "default.neptune1.3"
 }
 `, rName))
 }
@@ -1442,7 +1442,7 @@ resource "aws_security_group" "test" {
 
 resource "aws_neptune_cluster" "source" {
   cluster_identifier                   = "%[1]s-src"
-  neptune_cluster_parameter_group_name = "default.neptune1.2"
+  neptune_cluster_parameter_group_name = "default.neptune1.3"
   skip_final_snapshot                  = true
   storage_encrypted                    = true
   kms_key_arn                          = aws_kms_key.test1.arn
