@@ -12,9 +12,9 @@ description: |-
 
 Associates a Direct Connect Gateway with a VGW or transit gateway.
 
-To create a cross-account association, create an [`awsDxGatewayAssociationProposal` resource](/docs/providers/aws/r/dx_gateway_association_proposal.html)
+To create a cross-account association, create an [`aws_dx_gateway_association_proposal` resource](/docs/providers/aws/r/dx_gateway_association_proposal.html)
 in the AWS account that owns the VGW or transit gateway and then accept the proposal in the AWS account that owns the Direct Connect Gateway
-by creating an `awsDxGatewayAssociation` resource with the `proposalId` and `associatedGatewayOwnerAccountId` attributes set.
+by creating an `aws_dx_gateway_association` resource with the `proposalId` and `associatedGatewayOwnerAccountId` attributes set.
 
 ## Example Usage
 
@@ -154,7 +154,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-A full example of how to create a VPN Gateway in one AWS account, create a Direct Connect Gateway in a second AWS account, and associate the VPN Gateway with the Direct Connect Gateway via the `awsDxGatewayAssociationProposal` and `awsDxGatewayAssociation` resources can be found in [the `/examples/dxGatewayCrossAccountVgwAssociation` directory within the Github Repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/dx-gateway-cross-account-vgw-association).
+A full example of how to create a VPN Gateway in one AWS account, create a Direct Connect Gateway in a second AWS account, and associate the VPN Gateway with the Direct Connect Gateway via the `aws_dx_gateway_association_proposal` and `aws_dx_gateway_association` resources can be found in [the `./examples/dx-gateway-cross-account-vgw-association` directory within the Github Repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/dx-gateway-cross-account-vgw-association).
 
 ## Argument Reference
 
@@ -210,4 +210,4 @@ Using `terraform import`, import Direct Connect gateway associations using `dxGa
 % terraform import aws_dx_gateway_association.example 345508c3-7215-4aef-9832-07c125d5bd0f/vgw-98765432
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-a27cdf93a7d5c42337724f3a987226ae88c4ae0502a4d4160e2444683c6a343d -->
+<!-- cache-key: cdktf-0.20.0 input-a27cdf93a7d5c42337724f3a987226ae88c4ae0502a4d4160e2444683c6a343d -->

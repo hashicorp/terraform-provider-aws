@@ -84,7 +84,7 @@ with the cluster
 * `subnetGroupName` – (Optional) Name of the subnet group to be used for the
 cluster
 
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `serverSideEncryption` object supports the following:
 
@@ -97,7 +97,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The ARN of the DAX cluster
 
 * `nodes` - List of node objects including `id`, `address`, `port` and
-`availability_zone`. Referenceable e.g., as
+`availabilityZone`. Referenceable e.g., as
 `${aws_dax_cluster.test.nodes.0.address}`
 
 * `configurationEndpoint` - The configuration endpoint for this DAX cluster,
@@ -107,7 +107,7 @@ consisting of a DNS name and a port number
 
 * `port` - The port used by the configuration endpoint
 
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -141,4 +141,4 @@ Using `terraform import`, import DAX Clusters using the `clusterName`. For examp
 
 [1]: http://docs.aws.amazon.com/amazondynamodb/latest/developerguide/DAX.concepts.cluster.html#DAX.concepts.nodes
 
-<!-- cache-key: cdktf-0.19.0 input-4181166d95f7861d31bfe7d254c348dcceab5cb195724123d069730a8e82414d -->
+<!-- cache-key: cdktf-0.20.0 input-4181166d95f7861d31bfe7d254c348dcceab5cb195724123d069730a8e82414d -->
