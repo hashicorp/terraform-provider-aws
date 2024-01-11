@@ -78,6 +78,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceReplicationConfiguration,
 			TypeName: "aws_efs_replication_configuration",
+			Name:     "Replication Configuration",
 		},
 	}
 }

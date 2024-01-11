@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_efs_replication_configuration")
+// @SDKResource("aws_efs_replication_configuration", name="Replication Configuration")
 func ResourceReplicationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceReplicationConfigurationCreate,
