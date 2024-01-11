@@ -13,10 +13,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccKafkaClusterDataSource_basic(t *testing.T) {
+func TestAccKafkaBootstrapBrokersDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	dataSourceName := "data.aws_msk_cluster.test"
+	dataSourceName := "data.aws_msk_bootstrap_brokers.test"
 	resourceName := "aws_msk_cluster.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -25,9 +25,8 @@ func TestAccKafkaClusterDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterDataSourceConfig_basic(rName),
+				Config: testAccBootstrapBrokersDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bootstrap_brokers", resourceName, "bootstrap_brokers"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bootstrap_brokers_public_sasl_iam", resourceName, "bootstrap_brokers_public_sasl_iam"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bootstrap_brokers_public_sasl_scram", resourceName, "bootstrap_brokers_public_sasl_scram"),
@@ -35,20 +34,16 @@ func TestAccKafkaClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "bootstrap_brokers_sasl_iam", resourceName, "bootstrap_brokers_sasl_iam"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bootstrap_brokers_sasl_scram", resourceName, "bootstrap_brokers_sasl_scram"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "bootstrap_brokers_tls", resourceName, "bootstrap_brokers_tls"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_name", resourceName, "cluster_name"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "cluster_uuid", resourceName, "cluster_uuid"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "kafka_version", resourceName, "kafka_version"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "number_of_broker_nodes", resourceName, "number_of_broker_nodes"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "tags.%", resourceName, "tags.%"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "zookeeper_connect_string", resourceName, "zookeeper_connect_string"),
-					resource.TestCheckResourceAttrPair(dataSourceName, "zookeeper_connect_string_tls", resourceName, "zookeeper_connect_string_tls"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "bootstrap_brokers_vpc_connectivity_sasl_iam", resourceName, "bootstrap_brokers_vpc_connectivity_sasl_iam"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "bootstrap_brokers_vpc_connectivity_sasl_scram", resourceName, "bootstrap_brokers_vpc_connectivity_sasl_scram"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "bootstrap_brokers_vpc_connectivity_tls", resourceName, "bootstrap_brokers_vpc_connectivity_tls"),
 				),
 			},
 		},
 	})
 }
 
-func testAccClusterDataSourceConfig_basic(rName string) string {
+func testAccBootstrapBrokersDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccClusterConfig_base(rName), fmt.Sprintf(`
 resource "aws_msk_cluster" "test" {
   cluster_name           = %[1]q
@@ -72,8 +67,8 @@ resource "aws_msk_cluster" "test" {
   }
 }
 
-data "aws_msk_cluster" "test" {
-  cluster_name = aws_msk_cluster.test.cluster_name
+data "aws_msk_bootstrap_brokers" "test" {
+  cluster_arn = aws_msk_cluster.test.arn
 }
 `, rName))
 }
