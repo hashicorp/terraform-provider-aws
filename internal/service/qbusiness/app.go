@@ -5,6 +5,8 @@ package qbusiness
 
 import (
 	"context"
+	"fmt"
+	"log"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
@@ -32,6 +34,10 @@ func ResourceApplication() *schema.Resource {
 		UpdateWithoutTimeout: resourceAppUpdate,
 		DeleteWithoutTimeout: resourceAppDelete,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Schema: map[string]*schema.Schema{
 			"application_id": {
 				Type:        schema.TypeString,
@@ -53,7 +59,7 @@ func ResourceApplication() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							Description:  "Status information about whether file upload functionality is activated or deactivated for your end user.",
-							ValidateFunc: validation.StringInSlice([]string{"ENABLED", "DISABLED"}, false),
+							ValidateFunc: validation.StringInSlice(qbusiness.AttachmentsControlMode_Values(), false),
 						},
 					},
 				},
@@ -171,6 +177,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	app, err := FindAppByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, qbusiness.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] qbusiness application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -184,13 +191,18 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("description", aws.StringValue(app.Description))
 	d.Set("display_name", aws.StringValue(app.DisplayName))
 	d.Set("iam_service_role_arn", aws.StringValue(app.RoleArn))
-	if err := d.Set("attachments_configuration", flattenAttachmentsConfiguration(app.AttachmentsConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting qbusiness application attachments_configuration: %s", err)
-	}
-	if err := d.Set("encryption_configuration", flattenEncryptionConfiguration(app.EncryptionConfiguration)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting qbusiness application encryption_configuration: %s", err)
+
+	if v, ok := d.GetOk("attachments_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if err := d.Set("attachments_configuration", flattenAttachmentsConfiguration(app.AttachmentsConfiguration)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting qbusiness application attachments_configuration: %s", err)
+		}
 	}
 
+	if v, ok := d.GetOk("encryption_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if err := d.Set("encryption_configuration", flattenEncryptionConfiguration(app.EncryptionConfiguration)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting qbusiness application encryption_configuration: %s", err)
+		}
+	}
 	return diags
 }
 
@@ -199,7 +211,9 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	conn := meta.(*conns.AWSClient).QBusinessConn(ctx)
 
-	input := &qbusiness.UpdateApplicationInput{}
+	input := &qbusiness.UpdateApplicationInput{
+		ApplicationId: aws.String(d.Id()),
+	}
 
 	if d.HasChange("description") {
 		input.Description = aws.String(d.Get("description").(string))
@@ -225,7 +239,7 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "updating qbusiness application: %s", err)
 	}
 
-	return diags
+	return append(diags, resourceAppRead(ctx, d, meta)...)
 }
 
 func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -243,6 +257,10 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting qbusiness application (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitApplicationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for qbusiness app (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -277,6 +295,8 @@ func flattenAttachmentsConfiguration(v *qbusiness.AppliedAttachmentsConfiguratio
 	if v == nil {
 		return nil
 	}
+
+	fmt.Printf("\nflattenAttachmentsConfiguration: %v\n", v)
 
 	return []interface{}{
 		map[string]interface{}{

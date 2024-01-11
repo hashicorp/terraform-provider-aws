@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/pinpoint"
 	"github.com/aws/aws-sdk-go/service/qbusiness"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -19,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccPinpointApp_basic(t *testing.T) {
+func TestAccQBusinessApp_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application qbusiness.GetApplicationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -27,7 +26,7 @@ func TestAccPinpointApp_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, pinpoint.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, qbusiness.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -44,6 +43,69 @@ func TestAccPinpointApp_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccQBusinessApp_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var application qbusiness.GetApplicationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_qbusiness_app.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, qbusiness.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAppExists(ctx, resourceName, &application),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfqbusiness.ResourceApplication(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccQBusinessApp_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var application qbusiness.GetApplicationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_qbusiness_app.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, qbusiness.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppConfig_tags(rName, "key1", "value1", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppExists(ctx, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAppConfig_tags(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppExists(ctx, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -114,6 +176,8 @@ func testAccCheckAppExists(ctx context.Context, n string, v *qbusiness.GetApplic
 
 func testAccAppConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_qbusiness_app" "test" {
 	display_name = %[1]q
 	iam_service_role_arn = aws_iam_role.test.arn
@@ -123,21 +187,58 @@ resource "aws_iam_role" "test" {
 	name = %[1]q
 
 	assume_role_policy = <<EOF
-  {
-	"Version": "2012-10-17",
-	"Statement": [
-	  {
-		"Action": "sts:AssumeRole",
-		"Principal": {
-		  "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-		},
-		"Effect": "Allow",
-		"Sid": ""
-	  }
-	]
-  }
-  EOF
-  }
+{
+"Version": "2012-10-17",
+"Statement": [
+	{
+	"Action": "sts:AssumeRole",
+	"Principal": {
+		"Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
+	},
+	"Effect": "Allow",
+	"Sid": ""
+	}
+  ]
+}
+EOF
+}
 
 `, rName)
+}
+
+func testAccAppConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_qbusiness_app" "test" {
+	display_name = %[1]q
+	iam_service_role_arn = aws_iam_role.test.arn
+
+	tags = {
+		%[2]q = %[3]q
+		%[4]q = %[5]q
+	}
+}
+
+resource "aws_iam_role" "test" {
+	name = %[1]q
+
+	assume_role_policy = <<EOF
+{
+"Version": "2012-10-17",
+"Statement": [
+	{
+	"Action": "sts:AssumeRole",
+	"Principal": {
+		"Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
+	},
+	"Effect": "Allow",
+	"Sid": ""
+	}
+  ]
+}
+EOF
+}
+
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

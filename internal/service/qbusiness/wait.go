@@ -10,15 +10,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/qbusiness"
-	"github.com/aws/aws-sdk-go/service/redshift"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func waitApplicationCreated(ctx context.Context, conn *qbusiness.QBusiness, id string, timeout time.Duration) (*redshift.Cluster, error) {
+func waitApplicationCreated(ctx context.Context, conn *qbusiness.QBusiness, id string, timeout time.Duration) (*qbusiness.GetApplicationOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{applicationStatusUpdating, applicationStatusCreating},
-		Target:     []string{applicationStatusActive},
+		Pending:    []string{qbusiness.ApplicationStatusCreating, qbusiness.ApplicationStatusUpdating},
+		Target:     []string{qbusiness.ApplicationStatusActive},
 		Refresh:    statusAppAvailability(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
@@ -26,8 +25,27 @@ func waitApplicationCreated(ctx context.Context, conn *qbusiness.QBusiness, id s
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*redshift.Cluster); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.ClusterStatus)))
+	if output, ok := outputRaw.(*qbusiness.GetApplicationOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status)))
+
+		return output, err
+	}
+	return nil, err
+}
+
+func waitApplicationDeleted(ctx context.Context, conn *qbusiness.QBusiness, id string, timeout time.Duration) (*qbusiness.GetApplicationOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{qbusiness.ApplicationStatusActive, qbusiness.ApplicationStatusDeleting},
+		Target:     []string{},
+		Refresh:    statusAppAvailability(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*qbusiness.GetApplicationOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status)))
 
 		return output, err
 	}
