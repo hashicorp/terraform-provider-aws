@@ -62,7 +62,7 @@ func dataSourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	secretID := d.Get("secret_id").(string)
-	output, err := FindSecretByID(ctx, conn, secretID)
+	output, err := findSecretByID(ctx, conn, secretID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s): %s", secretID, err)

@@ -376,10 +376,6 @@ func testAccCheckSecretExists(ctx context.Context, n string, v *secretsmanager.D
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Secrets Manager Secret ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerClient(ctx)
 
 		output, err := tfsecretsmanager.FindSecretByID(ctx, conn, rs.Primary.ID)

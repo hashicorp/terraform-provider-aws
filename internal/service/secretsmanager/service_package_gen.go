@@ -51,7 +51,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceSecret,
+			Factory:  resourceSecret,
 			TypeName: "aws_secretsmanager_secret",
 			Name:     "Secret",
 			Tags: &types.ServicePackageResourceTags{

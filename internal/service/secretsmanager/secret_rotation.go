@@ -115,7 +115,7 @@ func resourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, PropagationTimeout, func() (interface{}, error) {
-		return FindSecretByID(ctx, conn, d.Id())
+		return findSecretByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
