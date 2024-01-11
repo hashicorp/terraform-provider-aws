@@ -64,12 +64,6 @@ func ResourceApplication() *schema.Resource {
 					},
 				},
 			},
-			"client_token": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Description:  "A token that you provide to identify the request to create your Amazon Q application.",
-				ValidateFunc: validation.StringLenBetween(1, 100),
-			},
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
@@ -80,16 +74,16 @@ func ResourceApplication() *schema.Resource {
 				),
 			},
 			"encryption_configuration": {
-				Type:        schema.TypeList,
-				Optional:    true,
-				ForceNew:    true,
-				MaxItems:    1,
-				Description: "The identifier of the AWS KMS key that is used to encrypt your data. Amazon Q doesn't support asymmetric keys.",
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"kms_key_id": {
 							Type:         schema.TypeString,
 							Required:     true,
+							Description:  "The identifier of the AWS KMS key that is used to encrypt your data. Amazon Q doesn't support asymmetric keys.",
 							ValidateFunc: verify.ValidKMSKeyID,
 						},
 					},
@@ -135,10 +129,6 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.AttachmentsConfiguration = &qbusiness.AttachmentsConfiguration{
 			AttachmentsControlMode: aws.String(v.([]interface{})[0].(map[string]interface{})["attachments_control_mode"].(string)),
 		}
-	}
-
-	if v, ok := d.GetOk("client_token"); ok {
-		input.ClientToken = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
