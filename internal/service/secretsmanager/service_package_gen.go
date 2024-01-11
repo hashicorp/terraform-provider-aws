@@ -25,8 +25,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceRandomPassword,
+			Factory:  dataSourceRandomPassword,
 			TypeName: "aws_secretsmanager_random_password",
+			Name:     "Random Password",
 		},
 		{
 			Factory:  DataSourceSecret,
