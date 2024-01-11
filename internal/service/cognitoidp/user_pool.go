@@ -320,6 +320,25 @@ func ResourceUserPool() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
+						"pre_token_generation_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"lambda_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"lambda_version": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(cognitoidentityprovider.PreTokenGenerationLambdaVersionType_Values(), false),
+									},
+								},
+							},
+						},
 						"user_migration": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -1540,6 +1559,13 @@ func expandUserPoolLambdaConfig(config map[string]interface{}) *cognitoidentityp
 		configs.PreTokenGeneration = aws.String(v.(string))
 	}
 
+	if v, ok := config["pre_token_generation_config"].([]interface{}); ok && len(v) > 0 {
+		s, sok := v[0].(map[string]interface{})
+		if sok && s != nil {
+			configs.PreTokenGenerationConfig = expandedUserPoolPreGenerationConfig(s)
+		}
+	}
+
 	if v, ok := config["user_migration"]; ok && v.(string) != "" {
 		configs.UserMigration = aws.String(v.(string))
 	}
@@ -1606,6 +1632,10 @@ func flattenUserPoolLambdaConfig(s *cognitoidentityprovider.LambdaConfigType) []
 
 	if s.PreTokenGeneration != nil {
 		m["pre_token_generation"] = aws.StringValue(s.PreTokenGeneration)
+	}
+
+	if s.PreTokenGenerationConfig != nil {
+		m["pre_token_generation_config"] = flattenUserPoolPreTokenGenerationConfig(s.PreTokenGenerationConfig)
 	}
 
 	if s.UserMigration != nil {
@@ -2203,6 +2233,28 @@ func UserPoolSchemaAttributeMatchesStandardAttribute(input *cognitoidentityprovi
 		}
 	}
 	return false
+}
+
+func expandedUserPoolPreGenerationConfig(config map[string]interface{}) *cognitoidentityprovider.PreTokenGenerationVersionConfigType {
+	preTokenGenerationConfig := &cognitoidentityprovider.PreTokenGenerationVersionConfigType{
+		LambdaArn:     aws.String(config["lambda_arn"].(string)),
+		LambdaVersion: aws.String(config["lambda_version"].(string)),
+	}
+
+	return preTokenGenerationConfig
+}
+
+func flattenUserPoolPreTokenGenerationConfig(u *cognitoidentityprovider.PreTokenGenerationVersionConfigType) []map[string]interface{} {
+	m := map[string]interface{}{}
+
+	if u == nil {
+		return nil
+	}
+
+	m["lambda_arn"] = aws.StringValue(u.LambdaArn)
+	m["lambda_version"] = aws.StringValue(u.LambdaVersion)
+
+	return []map[string]interface{}{m}
 }
 
 func expandUserPoolCustomSMSSender(config map[string]interface{}) *cognitoidentityprovider.CustomSMSLambdaVersionConfigType {

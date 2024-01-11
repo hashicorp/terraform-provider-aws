@@ -1254,6 +1254,60 @@ func TestAccCognitoIDPUserPool_WithLambda_sms(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPUserPool_WithLambda_preGenerationTokenConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+	lambdaResourceName := "aws_lambda_function.test"
+	lambdaUpdatedResourceName := "aws_lambda_function.second"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_lambdaSMSSender(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, nil),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.pre_token_generation_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_token_generation_config.0.lambda_arn", lambdaResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.pre_token_generation_config.0.lambda_version", "V2_0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserPoolConfig_lambdaSMSSenderUpdated(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.pre_token_generation_config.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_token_generation_config.0.lambda_arn", lambdaUpdatedResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.pre_token_generation_config.0.lambda_version", "V2_0"),
+				),
+			},
+			{
+				Config: testAccUserPoolConfig_lambdaSMSSenderUpdatedRemove(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.pre_token_generation_config.#", "0"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPUserPool_schemaAttributes(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pool1, pool2 cognitoidentityprovider.DescribeUserPoolOutput
@@ -2413,6 +2467,57 @@ resource "aws_cognito_user_pool" "test" {
 
   lambda_config {
     kms_key_id = aws_kms_key.test.arn
+  }
+}
+`, name))
+}
+
+func testAccUserPoolConfig_lambdaPreTokenGenerationConfig(name string) string {
+	return acctest.ConfigCompose(testAccUserPoolLambdaConfig_base(name), fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  lambda_config {
+
+    pre_token_generation_config {
+      lambda_arn     = aws_lambda_function.test.arn
+      lambda_version = "V2_0"
+    }
+  }
+}
+`, name))
+}
+
+func testAccUserPoolConfig_lambdaPreTokenGenerationConfigUpdated(name string) string {
+	return acctest.ConfigCompose(testAccUserPoolLambdaConfig_base(name), fmt.Sprintf(`
+resource "aws_lambda_function" "second" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = "%[1]s_second"
+  role          = aws_iam_role.test.arn
+  handler       = "exports.example"
+  runtime       = "nodejs16.x"
+}
+
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  lambda_config {
+
+    pre_token_generation_config {
+      lambda_arn     = aws_lambda_function.second.arn
+      lambda_version = "V2_0"
+    }
+  }
+}
+`, name))
+}
+
+func testAccUserPoolConfig_lambdaPreTokenGenerationConfigRemove(name string) string {
+	return acctest.ConfigCompose(testAccUserPoolLambdaConfig_base(name), fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name = %[1]q
+
+  lambda_config {
   }
 }
 `, name))
