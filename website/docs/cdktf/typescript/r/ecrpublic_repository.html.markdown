@@ -12,7 +12,7 @@ description: |-
 
 Provides a Public Elastic Container Registry Repository.
 
-~> **NOTE:** This resource can only be used in the `usEast1` region.
+~> **NOTE:** This resource can only be used in the `us-east-1` region.
 
 ## Example Usage
 
@@ -59,7 +59,7 @@ This resource supports the following arguments:
 
 * `repositoryName` - (Required) Name of the repository.
 * `catalogData` - (Optional) Catalog data configuration for the repository. See [below for schema](#catalog_data).
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### catalog_data
 
@@ -78,7 +78,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The repository name.
 * `registryId` - The registry ID where the repository was created.
 * `repositoryUri` - The URI of the repository.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -108,4 +108,4 @@ Using `terraform import`, import ECR Public Repositories using the `repositoryNa
 % terraform import aws_ecrpublic_repository.example example
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-0eb50922129c99699d4703ec9d9700079393eb47686643926f7ecccc4d057b7c -->
+<!-- cache-key: cdktf-0.20.0 input-0eb50922129c99699d4703ec9d9700079393eb47686643926f7ecccc4d057b7c -->
