@@ -231,7 +231,7 @@ The `encryptionConfig` configuration block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `associationId` - The existing association identifier that uniquely identifies the resource type and storage config for the given instance ID.
-* `id` - The identifier of the hosting Amazon Connect Instance, `association_id`, and `resource_type` separated by a colon (`:`).
+* `id` - The identifier of the hosting Amazon Connect Instance, `associationId`, and `resourceType` separated by a colon (`:`).
 
 ## Import
 
@@ -255,4 +255,4 @@ Using `terraform import`, import Amazon Connect Instance Storage Configs using t
 % terraform import aws_connect_instance_storage_config.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5:CHAT_TRANSCRIPTS
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-f61d343b420a3f570c17898dc773fd2fccd8d832985461fc87179d145f2b2518 -->
+<!-- cache-key: cdktf-0.20.0 input-f61d343b420a3f570c17898dc773fd2fccd8d832985461fc87179d145f2b2518 -->

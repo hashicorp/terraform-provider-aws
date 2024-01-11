@@ -95,4 +95,4 @@ Using `terraform import`, import DocDB (DocumentDB) Elastic Cluster using the `a
 % terraform import aws_docdbelastic_cluster.example arn:aws:docdb-elastic:us-east-1:000011112222:cluster/12345678-7abc-def0-1234-56789abcdef
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-72c6f43059dacd1c8b8497e448a8a5523906111ec1c313f45af37bc2c5640b3a -->
+<!-- cache-key: cdktf-0.20.0 input-72c6f43059dacd1c8b8497e448a8a5523906111ec1c313f45af37bc2c5640b3a -->

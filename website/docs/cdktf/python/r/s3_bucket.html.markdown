@@ -345,4 +345,4 @@ Using `terraform import`, import S3 bucket using the `bucket`. For example:
 % terraform import aws_s3_bucket.bucket bucket-name
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-1f79125771c4e34066399db2fdaa1b311a30fbbd0b043c2559213eae3c08b88f -->
+<!-- cache-key: cdktf-0.20.0 input-1f79125771c4e34066399db2fdaa1b311a30fbbd0b043c2559213eae3c08b88f -->

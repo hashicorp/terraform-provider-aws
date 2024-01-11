@@ -14,14 +14,14 @@ Provides an AutoScaling Lifecycle Hook resource.
 
 ~> **NOTE:** Terraform has two types of ways you can add lifecycle hooks - via
 the `initialLifecycleHook` attribute from the
-[`awsAutoscalingGroup`](/docs/providers/aws/r/autoscaling_group.html)
+[`aws_autoscaling_group`](/docs/providers/aws/r/autoscaling_group.html)
 resource, or via this one. Hooks added via this resource will not be added
 until the autoscaling group has been created, and depending on your
 [capacity](/docs/providers/aws/r/autoscaling_group.html#waiting-for-capacity)
 settings, after the initial instances have been launched, creating unintended
 behavior. If you need hooks to run on all instances, add them with
 `initialLifecycleHook` in
-[`awsAutoscalingGroup`](/docs/providers/aws/r/autoscaling_group.html),
+[`aws_autoscaling_group`](/docs/providers/aws/r/autoscaling_group.html),
 but take care to not duplicate those hooks with this resource.
 
 ## Example Usage
@@ -122,4 +122,4 @@ Using `terraform import`, import AutoScaling Lifecycle Hooks using the role auto
 % terraform import aws_autoscaling_lifecycle_hook.test-lifecycle-hook asg-name/lifecycle-hook-name
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-8ca53e0779c7b9f57e18da9406cc44b6560bf338b79f9897124efbb999b1bb41 -->
+<!-- cache-key: cdktf-0.20.0 input-8ca53e0779c7b9f57e18da9406cc44b6560bf338b79f9897124efbb999b1bb41 -->

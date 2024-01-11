@@ -12,7 +12,7 @@ description: |-
 
 Manages an ECR repository lifecycle policy.
 
-~> **NOTE:** Only one `awsEcrLifecyclePolicy` resource can be used with the same ECR repository. To apply multiple rules, they must be combined in the `policy` JSON.
+~> **NOTE:** Only one `aws_ecr_lifecycle_policy` resource can be used with the same ECR repository. To apply multiple rules, they must be combined in the `policy` JSON.
 
 ~> **NOTE:** The AWS ECR API seems to reorder rules based on `rulePriority`. If you define multiple rules that are not sorted in ascending `rulePriority` order in the Terraform code, the resource will be flagged for recreation every `terraform plan`.
 
@@ -110,4 +110,4 @@ Using `terraform import`, import ECR Lifecycle Policy using the name of the repo
 % terraform import aws_ecr_lifecycle_policy.example tf-example
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-0e4c7e8c7cdaee9fd0d8211aaa75d4db1e461d9cccef8d7c28f406dede927735 -->
+<!-- cache-key: cdktf-0.20.0 input-0e4c7e8c7cdaee9fd0d8211aaa75d4db1e461d9cccef8d7c28f406dede927735 -->

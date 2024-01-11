@@ -53,7 +53,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
+* `id` - The `bucket` or `bucket` and `expectedBucketOwner` separated by a comma (`,`) if the latter is provided.
 
 ## Import
 
@@ -101,4 +101,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_accelerate_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-b8d2eb8976f9eb67b7e44985d08d6df0a0c35907c6a6a2a51239045804765fc1 -->
+<!-- cache-key: cdktf-0.20.0 input-b8d2eb8976f9eb67b7e44985d08d6df0a0c35907c6a6a2a51239045804765fc1 -->

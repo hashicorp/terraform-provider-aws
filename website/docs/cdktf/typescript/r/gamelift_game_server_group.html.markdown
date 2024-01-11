@@ -184,7 +184,7 @@ This resource supports the following arguments:
 ### `autoScalingPolicy`
 
 Configuration settings to define a scaling policy for the Auto Scaling group that is optimized for game hosting.
-The scaling policy uses the metric `percentUtilizedGameServers` to maintain a buffer of idle game servers that
+The scaling policy uses the metric `PercentUtilizedGameServers` to maintain a buffer of idle game servers that
 can immediately accommodate new games and players.
 
 * `estimatedInstanceWarmup` - (Optional) Length of time, in seconds, it takes for a new instance to start
@@ -195,7 +195,7 @@ can immediately accommodate new games and players.
 #### `targetTrackingConfiguration`
 
 Settings for a target-based scaling policy applied to Auto Scaling group.
-These settings are used to create a target-based policy that tracks the GameLift FleetIQ metric `percentUtilizedGameServers`
+These settings are used to create a target-based policy that tracks the GameLift FleetIQ metric `PercentUtilizedGameServers`
 and specifies a target value for the metric.
 
 * `targetValue` - (Required) Desired value to use with a game server group target-based scaling policy.
@@ -257,4 +257,4 @@ Using `terraform import`, import GameLift Game Server Group using the `name`. Fo
 % terraform import aws_gamelift_game_server_group.example example
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-366bd6af5a933ffff5198fbc9bb42ed30d90f3b3e04f89cb1b84627bb8a40b8c -->
+<!-- cache-key: cdktf-0.20.0 input-366bd6af5a933ffff5198fbc9bb42ed30d90f3b3e04f89cb1b84627bb8a40b8c -->

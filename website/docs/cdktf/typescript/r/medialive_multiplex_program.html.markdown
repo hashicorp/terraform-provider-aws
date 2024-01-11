@@ -114,7 +114,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the MultiplexProgram.
-* `exampleAttribute` - Concise description.
+* `example_attribute` - Concise description.
 
 ## Import
 
@@ -138,4 +138,4 @@ Using `terraform import`, import MediaLive MultiplexProgram using the `id`, or a
 % terraform import aws_medialive_multiplex_program.example example_program/1234567
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-d0f4d6ecf5fbb8e34c4bfcc4ff4baddff29c0893a211fa29af99ff4cfade72b1 -->
+<!-- cache-key: cdktf-0.20.0 input-d0f4d6ecf5fbb8e34c4bfcc4ff4baddff29c0893a211fa29af99ff4cfade72b1 -->

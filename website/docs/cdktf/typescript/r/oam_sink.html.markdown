@@ -47,7 +47,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -86,4 +86,4 @@ Using `terraform import`, import CloudWatch Observability Access Manager Sink us
 % terraform import aws_oam_sink.example arn:aws:oam:us-west-2:123456789012:sink/sink-id
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-bfac1b8a7916df1eba20033d354f70066d912081ba258d1753faa7d442661fb5 -->
+<!-- cache-key: cdktf-0.20.0 input-bfac1b8a7916df1eba20033d354f70066d912081ba258d1753faa7d442661fb5 -->

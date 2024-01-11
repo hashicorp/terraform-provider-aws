@@ -44,7 +44,7 @@ The following arguments are optional:
 
 * `description` - (Optional) The optional description for the geofence collection.
 * `kmsKeyId` - (Optional) A key identifier for an AWS KMS customer managed key assigned to the Amazon Location resource.
-* `tags` - (Optional) Key-value tags for the geofence collection. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value tags for the geofence collection. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -84,4 +84,4 @@ Using `terraform import`, import Location Geofence Collection using the `collect
 % terraform import aws_location_geofence_collection.example example
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-d5f8a31edd538788388ea70b948bf927302bc8710ba3768ffc3484e329693d37 -->
+<!-- cache-key: cdktf-0.20.0 input-d5f8a31edd538788388ea70b948bf927302bc8710ba3768ffc3484e329693d37 -->

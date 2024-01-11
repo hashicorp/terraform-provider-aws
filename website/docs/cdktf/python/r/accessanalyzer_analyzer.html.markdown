@@ -69,7 +69,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `type` - (Optional) Type of Analyzer. Valid values are `ACCOUNT` or `ORGANIZATION`. Defaults to `ACCOUNT`.
+* `type` - (Optional) Type of Analyzer. Valid values are `ACCOUNT`, `ORGANIZATION`, `ACCOUNT_UNUSED_ACCESS `, `ORGANIZATION_UNUSED_ACCESS`. Defaults to `ACCOUNT`.
 
 ## Attribute Reference
 
@@ -98,4 +98,4 @@ Using `terraform import`, import Access Analyzer Analyzers using the `analyzer_n
 % terraform import aws_accessanalyzer_analyzer.example example
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-865517f541a3e2db841337fbd9f0628587cf4b4a56bf09cdcd6af204495a9819 -->
+<!-- cache-key: cdktf-0.20.0 input-4062f5c13fefb0112227bba24e101e8cb8dee9426f907b5735a0434c43b3e06c -->
