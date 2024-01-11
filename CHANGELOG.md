@@ -95,6 +95,7 @@ BUG FIXES:
 * resource/aws_kinesis_firehose_delivery_stream: Fix `InvalidArgumentException: Both BufferSizeInMBs and BufferIntervalInSeconds are required to configure buffering for lambda processor` errors on resource Update ([#26964](https://github.com/hashicorp/terraform-provider-aws/issues/26964))
 * resource/aws_kinesis_firehose_delivery_stream: Fix perpetual `extended_s3_configuration.processing_configuration.processors.parameters` diffs when processor type is `Lambda` ([#35137](https://github.com/hashicorp/terraform-provider-aws/issues/35137))
 * resource/aws_lambda_function: Ensure lambda does not get deployed if `source_code_hash` does not change. ([#29921](https://github.com/hashicorp/terraform-provider-aws/issues/29921))
+* resource/aws_lb: Fix `ValidationError: Attributes cannot be empty` errors ([#35228](https://github.com/hashicorp/terraform-provider-aws/issues/35228))
 * resource/aws_lb_target_group: Fix diff on `stickiness.cookie_name` when `stickiness.type` is `lb_cookie` ([#31436](https://github.com/hashicorp/terraform-provider-aws/issues/31436))
 * resource/aws_memorydb_cluster: Treat `snapshotting` status as pending when creating cluster ([#31077](https://github.com/hashicorp/terraform-provider-aws/issues/31077))
 * resource/aws_s3_bucket_object: Remove any leading `./` from `key` to maintain AWS SDK for Go v1 (pre-v5.17.0) compatibility ([#35223](https://github.com/hashicorp/terraform-provider-aws/issues/35223))
