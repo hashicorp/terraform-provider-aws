@@ -733,6 +733,8 @@ func flattenObjectDate(t *time.Time) string {
 // See https://docs.aws.amazon.com/sdk-for-go/api/service/s3/#hdr-Automatic_URI_cleaning.
 // See https://github.com/aws/aws-sdk-go/blob/cf903c8c543034654bb8f53b5f9d6454fdb2117f/private/protocol/rest/build.go#L247-L258.
 func sdkv1CompatibleCleanKey(key string) string {
+	// Remove leading './'.
+	key = strings.TrimPrefix(key, "./")
 	// We are effectively ignoring all leading '/'s and treating multiple '/'s as a single '/'.
 	key = strings.TrimLeft(key, "/")
 	key = regexache.MustCompile(`/+`).ReplaceAllString(key, "/")

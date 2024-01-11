@@ -80,7 +80,7 @@ codecommit,codecommit,codecommit,codecommit,,codecommit,,,CodeCommit,CodeCommit,
 deploy,deploy,codedeploy,codedeploy,,deploy,,codedeploy,Deploy,CodeDeploy,,,2,aws_codedeploy_,aws_deploy_,,codedeploy_,CodeDeploy,AWS,,,,,,,
 codeguruprofiler,codeguruprofiler,codeguruprofiler,codeguruprofiler,,codeguruprofiler,,,CodeGuruProfiler,CodeGuruProfiler,,,2,,aws_codeguruprofiler_,,codeguruprofiler_,CodeGuru Profiler,Amazon,,,,,,,
 codeguru-reviewer,codegurureviewer,codegurureviewer,codegurureviewer,,codegurureviewer,,,CodeGuruReviewer,CodeGuruReviewer,,1,,,aws_codegurureviewer_,,codegurureviewer_,CodeGuru Reviewer,Amazon,,,,,,,
-codepipeline,codepipeline,codepipeline,codepipeline,,codepipeline,,,CodePipeline,CodePipeline,,1,,aws_codepipeline,aws_codepipeline_,,codepipeline,CodePipeline,AWS,,,,,,,
+codepipeline,codepipeline,codepipeline,codepipeline,,codepipeline,,,CodePipeline,CodePipeline,,,2,aws_codepipeline,aws_codepipeline_,,codepipeline,CodePipeline,AWS,,,,,,,
 codestar,codestar,codestar,codestar,,codestar,,,CodeStar,CodeStar,,1,,,aws_codestar_,,codestar_,CodeStar,AWS,,x,,,,,
 codestar-connections,codestarconnections,codestarconnections,codestarconnections,,codestarconnections,,,CodeStarConnections,CodeStarConnections,,,2,,aws_codestarconnections_,,codestarconnections_,CodeStar Connections,AWS,,,,,,,
 codestar-notifications,codestarnotifications,codestarnotifications,codestarnotifications,,codestarnotifications,,,CodeStarNotifications,CodeStarNotifications,,,2,,aws_codestarnotifications_,,codestarnotifications_,CodeStar Notifications,AWS,,,,,,,
@@ -203,10 +203,10 @@ ivs,ivs,ivs,ivs,,ivs,,,IVS,IVS,,1,,,aws_ivs_,,ivs_,IVS (Interactive Video),Amazo
 ivschat,ivschat,ivschat,ivschat,,ivschat,,,IVSChat,Ivschat,,,2,,aws_ivschat_,,ivschat_,IVS (Interactive Video) Chat,Amazon,,,,,,,
 kendra,kendra,kendra,kendra,,kendra,,,Kendra,Kendra,,,2,,aws_kendra_,,kendra_,Kendra,Amazon,,,,,,,
 keyspaces,keyspaces,keyspaces,keyspaces,,keyspaces,,,Keyspaces,Keyspaces,,,2,,aws_keyspaces_,,keyspaces_,Keyspaces (for Apache Cassandra),Amazon,,,,,,,
-kinesis,kinesis,kinesis,kinesis,,kinesis,,,Kinesis,Kinesis,,1,,aws_kinesis_stream,aws_kinesis_,,kinesis_stream,Kinesis,Amazon,,,,,,,
+kinesis,kinesis,kinesis,kinesis,,kinesis,,,Kinesis,Kinesis,x,,2,aws_kinesis_stream,aws_kinesis_,,kinesis_stream;kinesis_resource_policy,Kinesis,Amazon,,,,,,,
 kinesisanalytics,kinesisanalytics,kinesisanalytics,kinesisanalytics,,kinesisanalytics,,,KinesisAnalytics,KinesisAnalytics,,1,,aws_kinesis_analytics_,aws_kinesisanalytics_,,kinesis_analytics_,Kinesis Analytics,Amazon,,,,,,,
 kinesisanalyticsv2,kinesisanalyticsv2,kinesisanalyticsv2,kinesisanalyticsv2,,kinesisanalyticsv2,,,KinesisAnalyticsV2,KinesisAnalyticsV2,,1,,,aws_kinesisanalyticsv2_,,kinesisanalyticsv2_,Kinesis Analytics V2,Amazon,,,,,,,
-firehose,firehose,firehose,firehose,,firehose,,,Firehose,Firehose,,1,,aws_kinesis_firehose_,aws_firehose_,,kinesis_firehose_,Kinesis Firehose,Amazon,,,,,,,
+firehose,firehose,firehose,firehose,,firehose,,,Firehose,Firehose,,,2,aws_kinesis_firehose_,aws_firehose_,,kinesis_firehose_,Kinesis Firehose,Amazon,,,,,,,
 kinesisvideo,kinesisvideo,kinesisvideo,kinesisvideo,,kinesisvideo,,,KinesisVideo,KinesisVideo,,1,,,aws_kinesisvideo_,,kinesis_video_,Kinesis Video,Amazon,,,,,,,
 kinesis-video-archived-media,kinesisvideoarchivedmedia,kinesisvideoarchivedmedia,kinesisvideoarchivedmedia,,kinesisvideoarchivedmedia,,,KinesisVideoArchivedMedia,KinesisVideoArchivedMedia,,1,,,aws_kinesisvideoarchivedmedia_,,kinesisvideoarchivedmedia_,Kinesis Video Archived Media,Amazon,,x,,,,,
 kinesis-video-media,kinesisvideomedia,kinesisvideomedia,kinesisvideomedia,,kinesisvideomedia,,,KinesisVideoMedia,KinesisVideoMedia,,1,,,aws_kinesisvideomedia_,,kinesisvideomedia_,Kinesis Video Media,Amazon,,x,,,,,
@@ -214,7 +214,7 @@ kinesis-video-signaling,kinesisvideosignaling,kinesisvideosignalingchannels,kine
 kms,kms,kms,kms,,kms,,,KMS,KMS,,1,,,aws_kms_,,kms_,KMS (Key Management),AWS,,,,,,,
 lakeformation,lakeformation,lakeformation,lakeformation,,lakeformation,,,LakeFormation,LakeFormation,,1,,,aws_lakeformation_,,lakeformation_,Lake Formation,AWS,,,,,,,
 lambda,lambda,lambda,lambda,,lambda,,,Lambda,Lambda,,1,2,,aws_lambda_,,lambda_,Lambda,AWS,,,,,,,
-,,,,,,,,,,,,,,,,,Launch Wizard,AWS,x,,,,,,No SDK support
+launch-wizard,launchwizard,launchwizard,launchwizard,,launchwizard,,,LaunchWizard,LaunchWizard,,,2,,aws_launchwizard_,,launchwizard_,Launch Wizard,AWS,,,,,,,
 lex-models,lexmodels,lexmodelbuildingservice,lexmodelbuildingservice,,lexmodels,,lexmodelbuilding;lexmodelbuildingservice;lex,LexModels,LexModelBuildingService,,1,,aws_lex_,aws_lexmodels_,,lex_,Lex Model Building,Amazon,,,,,,,
 lexv2-models,lexv2models,lexmodelsv2,lexmodelsv2,,lexv2models,,lexmodelsv2,LexV2Models,LexModelsV2,,,2,,aws_lexv2models_,,lexv2models_,Lex V2 Models,Amazon,,,,,,,
 lex-runtime,lexruntime,lexruntimeservice,lexruntimeservice,,lexruntime,,lexruntimeservice,LexRuntime,LexRuntimeService,,1,,,aws_lexruntime_,,lexruntime_,Lex Runtime,Amazon,,x,,,,,
@@ -232,7 +232,7 @@ macie,macie,macie,macie,,macie,,,Macie,Macie,,1,,,aws_macie_,,macie_,Macie Class
 ,,,,,,,,,,,,,,,,,Mainframe Modernization,AWS,x,,,,,,No SDK support
 managedblockchain,managedblockchain,managedblockchain,managedblockchain,,managedblockchain,,,ManagedBlockchain,ManagedBlockchain,,1,,,aws_managedblockchain_,,managedblockchain_,Managed Blockchain,Amazon,,x,,,,,
 grafana,grafana,managedgrafana,grafana,,grafana,,managedgrafana;amg,Grafana,ManagedGrafana,,1,,,aws_grafana_,,grafana_,Managed Grafana,Amazon,,,,,,,
-kafka,kafka,kafka,kafka,,kafka,,msk,Kafka,Kafka,,1,2,aws_msk_,aws_kafka_,,msk_,Managed Streaming for Kafka,Amazon,,,,,,,
+kafka,kafka,kafka,kafka,,kafka,,msk,Kafka,Kafka,x,,2,aws_msk_,aws_kafka_,,msk_,Managed Streaming for Kafka,Amazon,,,,,,,
 kafkaconnect,kafkaconnect,kafkaconnect,kafkaconnect,,kafkaconnect,,,KafkaConnect,KafkaConnect,,1,,aws_mskconnect_,aws_kafkaconnect_,,mskconnect_,Managed Streaming for Kafka Connect,Amazon,,,,,,,
 ,,,,,,,,,,,,,,,,,Management Console,AWS,x,,,,,,No SDK support
 marketplace-catalog,marketplacecatalog,marketplacecatalog,marketplacecatalog,,marketplacecatalog,,,MarketplaceCatalog,MarketplaceCatalog,,1,,,aws_marketplacecatalog_,,marketplace_catalog_,Marketplace Catalog,AWS,,x,,,,,
@@ -251,7 +251,7 @@ mobile,mobile,mobile,mobile,,mobile,,,Mobile,Mobile,,1,,,aws_mobile_,,mobile_,Mo
 ,,,,,,,,,,,,,,,,,Mobile SDK for Unity,AWS,x,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,Mobile SDK for Xamarin,AWS,x,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,Monitron,Amazon,x,,,,,,No SDK support
-mq,mq,mq,mq,,mq,,,MQ,MQ,,1,2,,aws_mq_,,mq_,MQ,Amazon,,,,,,,
+mq,mq,mq,mq,,mq,,,MQ,MQ,,,2,,aws_mq_,,mq_,MQ,Amazon,,,,,,,
 mturk,mturk,mturk,mturk,,mturk,,,MTurk,MTurk,,1,,,aws_mturk_,,mturk_,MTurk (Mechanical Turk),Amazon,,x,,,,,
 mwaa,mwaa,mwaa,mwaa,,mwaa,,,MWAA,MWAA,,1,,,aws_mwaa_,,mwaa_,MWAA (Managed Workflows for Apache Airflow),Amazon,,,,,,,
 neptune,neptune,neptune,neptune,,neptune,,,Neptune,Neptune,,1,,,aws_neptune_,,neptune_,Neptune,Amazon,,,,,,,
@@ -282,6 +282,7 @@ polly,polly,polly,polly,,polly,,,Polly,Polly,,,2,,aws_polly_,,polly_,Polly,Amazo
 ,,,,,,,,,,,,,,,,,Porting Assistant for .NET,,x,,,,,,No SDK support
 pricing,pricing,pricing,pricing,,pricing,,,Pricing,Pricing,,,2,,aws_pricing_,,pricing_,Pricing Calculator,AWS,,,,,,,
 proton,proton,proton,proton,,proton,,,Proton,Proton,,1,,,aws_proton_,,proton_,Proton,AWS,,x,,,,,
+qbusiness,qbusiness,qbusiness,qbusiness,,qbusiness,,,QBusiness,QBusiness,,1,,,aws_qbusiness_,,qbusiness_,Amazon Q Business,Amazon,,,,,,,
 qldb,qldb,qldb,qldb,,qldb,,,QLDB,QLDB,,,2,,aws_qldb_,,qldb_,QLDB (Quantum Ledger Database),Amazon,,,,,,,
 qldb-session,qldbsession,qldbsession,qldbsession,,qldbsession,,,QLDBSession,QLDBSession,,1,,,aws_qldbsession_,,qldbsession_,QLDB Session,Amazon,,x,,,,,
 quicksight,quicksight,quicksight,quicksight,,quicksight,,,QuickSight,QuickSight,,1,,,aws_quicksight_,,quicksight_,QuickSight,Amazon,,,,,,,

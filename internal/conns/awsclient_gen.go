@@ -23,6 +23,7 @@ import (
 	codecatalyst_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codecatalyst"
 	codedeploy_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codedeploy"
 	codeguruprofiler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codeguruprofiler"
+	codepipeline_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codepipeline"
 	codestarconnections_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarconnections"
 	codestarnotifications_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarnotifications"
 	comprehend_sdkv2 "github.com/aws/aws-sdk-go-v2/service/comprehend"
@@ -40,6 +41,7 @@ import (
 	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	evidently_sdkv2 "github.com/aws/aws-sdk-go-v2/service/evidently"
 	finspace_sdkv2 "github.com/aws/aws-sdk-go-v2/service/finspace"
+	firehose_sdkv2 "github.com/aws/aws-sdk-go-v2/service/firehose"
 	fis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fis"
 	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
 	groundstation_sdkv2 "github.com/aws/aws-sdk-go-v2/service/groundstation"
@@ -51,7 +53,9 @@ import (
 	kafka_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kafka"
 	kendra_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kendra"
 	keyspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/keyspaces"
+	kinesis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kinesis"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
+	launchwizard_sdkv2 "github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	lexmodelsv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
 	lookoutmetrics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lookoutmetrics"
@@ -130,7 +134,6 @@ import (
 	codebuild_sdkv1 "github.com/aws/aws-sdk-go/service/codebuild"
 	codecommit_sdkv1 "github.com/aws/aws-sdk-go/service/codecommit"
 	codegurureviewer_sdkv1 "github.com/aws/aws-sdk-go/service/codegurureviewer"
-	codepipeline_sdkv1 "github.com/aws/aws-sdk-go/service/codepipeline"
 	cognitoidentity_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentity"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	configservice_sdkv1 "github.com/aws/aws-sdk-go/service/configservice"
@@ -163,7 +166,6 @@ import (
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
 	emrcontainers_sdkv1 "github.com/aws/aws-sdk-go/service/emrcontainers"
 	eventbridge_sdkv1 "github.com/aws/aws-sdk-go/service/eventbridge"
-	firehose_sdkv1 "github.com/aws/aws-sdk-go/service/firehose"
 	fms_sdkv1 "github.com/aws/aws-sdk-go/service/fms"
 	fsx_sdkv1 "github.com/aws/aws-sdk-go/service/fsx"
 	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
@@ -178,9 +180,7 @@ import (
 	iotanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/iotanalytics"
 	iotevents_sdkv1 "github.com/aws/aws-sdk-go/service/iotevents"
 	ivs_sdkv1 "github.com/aws/aws-sdk-go/service/ivs"
-	kafka_sdkv1 "github.com/aws/aws-sdk-go/service/kafka"
 	kafkaconnect_sdkv1 "github.com/aws/aws-sdk-go/service/kafkaconnect"
-	kinesis_sdkv1 "github.com/aws/aws-sdk-go/service/kinesis"
 	kinesisanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalytics"
 	kinesisanalyticsv2_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	kinesisvideo_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisvideo"
@@ -195,7 +195,6 @@ import (
 	mediaconvert_sdkv1 "github.com/aws/aws-sdk-go/service/mediaconvert"
 	mediastore_sdkv1 "github.com/aws/aws-sdk-go/service/mediastore"
 	memorydb_sdkv1 "github.com/aws/aws-sdk-go/service/memorydb"
-	mq_sdkv1 "github.com/aws/aws-sdk-go/service/mq"
 	mwaa_sdkv1 "github.com/aws/aws-sdk-go/service/mwaa"
 	neptune_sdkv1 "github.com/aws/aws-sdk-go/service/neptune"
 	networkfirewall_sdkv1 "github.com/aws/aws-sdk-go/service/networkfirewall"
@@ -205,6 +204,7 @@ import (
 	organizations_sdkv1 "github.com/aws/aws-sdk-go/service/organizations"
 	outposts_sdkv1 "github.com/aws/aws-sdk-go/service/outposts"
 	pinpoint_sdkv1 "github.com/aws/aws-sdk-go/service/pinpoint"
+	qbusiness_sdkv1 "github.com/aws/aws-sdk-go/service/qbusiness"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	ram_sdkv1 "github.com/aws/aws-sdk-go/service/ram"
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
@@ -426,8 +426,8 @@ func (c *AWSClient) CodeGuruReviewerConn(ctx context.Context) *codegurureviewer_
 	return errs.Must(conn[*codegurureviewer_sdkv1.CodeGuruReviewer](ctx, c, names.CodeGuruReviewer, make(map[string]any)))
 }
 
-func (c *AWSClient) CodePipelineConn(ctx context.Context) *codepipeline_sdkv1.CodePipeline {
-	return errs.Must(conn[*codepipeline_sdkv1.CodePipeline](ctx, c, names.CodePipeline, make(map[string]any)))
+func (c *AWSClient) CodePipelineClient(ctx context.Context) *codepipeline_sdkv2.Client {
+	return errs.Must(client[*codepipeline_sdkv2.Client](ctx, c, names.CodePipeline, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeStarConnectionsClient(ctx context.Context) *codestarconnections_sdkv2.Client {
@@ -634,8 +634,8 @@ func (c *AWSClient) FinSpaceClient(ctx context.Context) *finspace_sdkv2.Client {
 	return errs.Must(client[*finspace_sdkv2.Client](ctx, c, names.FinSpace, make(map[string]any)))
 }
 
-func (c *AWSClient) FirehoseConn(ctx context.Context) *firehose_sdkv1.Firehose {
-	return errs.Must(conn[*firehose_sdkv1.Firehose](ctx, c, names.Firehose, make(map[string]any)))
+func (c *AWSClient) FirehoseClient(ctx context.Context) *firehose_sdkv2.Client {
+	return errs.Must(client[*firehose_sdkv2.Client](ctx, c, names.Firehose, make(map[string]any)))
 }
 
 func (c *AWSClient) GameLiftConn(ctx context.Context) *gamelift_sdkv1.GameLift {
@@ -722,10 +722,6 @@ func (c *AWSClient) KMSConn(ctx context.Context) *kms_sdkv1.KMS {
 	return errs.Must(conn[*kms_sdkv1.KMS](ctx, c, names.KMS, make(map[string]any)))
 }
 
-func (c *AWSClient) KafkaConn(ctx context.Context) *kafka_sdkv1.Kafka {
-	return errs.Must(conn[*kafka_sdkv1.Kafka](ctx, c, names.Kafka, make(map[string]any)))
-}
-
 func (c *AWSClient) KafkaClient(ctx context.Context) *kafka_sdkv2.Client {
 	return errs.Must(client[*kafka_sdkv2.Client](ctx, c, names.Kafka, make(map[string]any)))
 }
@@ -742,8 +738,8 @@ func (c *AWSClient) KeyspacesClient(ctx context.Context) *keyspaces_sdkv2.Client
 	return errs.Must(client[*keyspaces_sdkv2.Client](ctx, c, names.Keyspaces, make(map[string]any)))
 }
 
-func (c *AWSClient) KinesisConn(ctx context.Context) *kinesis_sdkv1.Kinesis {
-	return errs.Must(conn[*kinesis_sdkv1.Kinesis](ctx, c, names.Kinesis, make(map[string]any)))
+func (c *AWSClient) KinesisClient(ctx context.Context) *kinesis_sdkv2.Client {
+	return errs.Must(client[*kinesis_sdkv2.Client](ctx, c, names.Kinesis, make(map[string]any)))
 }
 
 func (c *AWSClient) KinesisAnalyticsConn(ctx context.Context) *kinesisanalytics_sdkv1.KinesisAnalytics {
@@ -768,6 +764,10 @@ func (c *AWSClient) LambdaConn(ctx context.Context) *lambda_sdkv1.Lambda {
 
 func (c *AWSClient) LambdaClient(ctx context.Context) *lambda_sdkv2.Client {
 	return errs.Must(client[*lambda_sdkv2.Client](ctx, c, names.Lambda, make(map[string]any)))
+}
+
+func (c *AWSClient) LaunchWizardClient(ctx context.Context) *launchwizard_sdkv2.Client {
+	return errs.Must(client[*launchwizard_sdkv2.Client](ctx, c, names.LaunchWizard, make(map[string]any)))
 }
 
 func (c *AWSClient) LexModelsConn(ctx context.Context) *lexmodelbuildingservice_sdkv1.LexModelBuildingService {
@@ -796,10 +796,6 @@ func (c *AWSClient) LogsClient(ctx context.Context) *cloudwatchlogs_sdkv2.Client
 
 func (c *AWSClient) LookoutMetricsClient(ctx context.Context) *lookoutmetrics_sdkv2.Client {
 	return errs.Must(client[*lookoutmetrics_sdkv2.Client](ctx, c, names.LookoutMetrics, make(map[string]any)))
-}
-
-func (c *AWSClient) MQConn(ctx context.Context) *mq_sdkv1.MQ {
-	return errs.Must(conn[*mq_sdkv1.MQ](ctx, c, names.MQ, make(map[string]any)))
 }
 
 func (c *AWSClient) MQClient(ctx context.Context) *mq_sdkv2.Client {
@@ -900,6 +896,10 @@ func (c *AWSClient) PollyClient(ctx context.Context) *polly_sdkv2.Client {
 
 func (c *AWSClient) PricingClient(ctx context.Context) *pricing_sdkv2.Client {
 	return errs.Must(client[*pricing_sdkv2.Client](ctx, c, names.Pricing, make(map[string]any)))
+}
+
+func (c *AWSClient) QBusinessConn(ctx context.Context) *qbusiness_sdkv1.QBusiness {
+	return errs.Must(conn[*qbusiness_sdkv1.QBusiness](ctx, c, names.QBusiness, make(map[string]any)))
 }
 
 func (c *AWSClient) QLDBClient(ctx context.Context) *qldb_sdkv2.Client {
