@@ -31,7 +31,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 	return []*types.ServicePackageSDKResource{
 		{
 			Factory:  ResourceApplication,
-			TypeName: "aws_qbusiness_application",
+			TypeName: "aws_qbusiness_app",
 			Name:     "Application",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
