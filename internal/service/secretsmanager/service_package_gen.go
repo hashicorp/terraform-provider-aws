@@ -30,8 +30,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Random Password",
 		},
 		{
-			Factory:  DataSourceSecret,
+			Factory:  dataSourceSecret,
 			TypeName: "aws_secretsmanager_secret",
+			Name:     "Secret",
 		},
 		{
 			Factory:  DataSourceSecretRotation,

@@ -24,15 +24,15 @@ func TestAccSecretsManagerSecretDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccSecretDataSourceConfig_missingRequired,
-				ExpectError: regexache.MustCompile(`must specify either arn or name`),
+				ExpectError: regexache.MustCompile("one of `arn,name` must be specified"),
 			},
 			{
 				Config:      testAccSecretDataSourceConfig_multipleSpecified,
-				ExpectError: regexache.MustCompile(`specify only arn or name`),
+				ExpectError: regexache.MustCompile("only one of `arn,name` can be specified"),
 			},
 			{
 				Config:      testAccSecretDataSourceConfig_nonExistent,
-				ExpectError: regexache.MustCompile(`not found`),
+				ExpectError: regexache.MustCompile(`couldn't find resource`),
 			},
 		},
 	})
