@@ -1,5 +1,5 @@
 ---
-subcategory: "Q Business"
+subcategory: "Amazon Q Business"
 layout: "aws"
 page_title: "AWS: aws_qbusiness_app"
 description: |-
