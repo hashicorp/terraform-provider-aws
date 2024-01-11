@@ -63,7 +63,7 @@ var (
 			"DatabaseInstanceNumber": "00",
 			"DatabasePassword" :"Password123@",
 			"InstallDatabaseSoftware" :"Yes",
-			"DatabaseInstallationMediaS3Uri" :"%[1]s\/HANA_DB_Software",
+			"DatabaseInstallationMediaS3Uri" :"%[1]s/HANA_DB_Software",
 			"DatabaseOperatingSystem": "SuSE-Linux-15-SP4-For-SAP-HVM",
 			"DatabaseAmiId" :%[2]q,
 			"DatabasePrimaryHostname" :"hana-primary",
@@ -93,7 +93,7 @@ var (
 			"DatabaseInstanceNumber": "00",
 			"DatabasePassword" :"Password123@",
 			"InstallDatabaseSoftware" :"Yes",
-			"DatabaseInstallationMediaS3Uri" :"%[1]s\/HANA_DB_Software",
+			"DatabaseInstallationMediaS3Uri" :"%[1]s/HANA_DB_Software",
 			"DatabaseOperatingSystem": "SuSE-Linux-15-SP4-For-SAP-HVM",
 			"DatabaseAmiId" :%[2]q,
 			"DatabasePrimaryHostname" :"hana-primary",
@@ -126,7 +126,7 @@ var (
 			"DatabaseInstanceNumber": "00",
 			"DatabasePassword" :"Password123@",
 			"InstallDatabaseSoftware" :"Yes",
-			"DatabaseInstallationMediaS3Uri" :"%[1]s\/HANA_DB_Software",
+			"DatabaseInstallationMediaS3Uri" :"%[1]s/HANA_DB_Software",
 			"DatabaseOperatingSystem": "SuSE-Linux-15-SP4-For-SAP-HVM",
 			"DatabaseAmiId" :%[2]q,
 			"DatabasePrimaryHostname" :"hana-primary",
@@ -189,12 +189,12 @@ var (
 			"DatabaseSecondaryHostname" :"hakldbsec",
 			"SapPassword" :"Password123@",
 			"InstallSap":"Yes",
-			"DatabaseVirtualIpAddress" :"10.0.0.10",
+			"DatabaseVirtualIpAddress" :"192.168.100.100",
 			"DatabasePrimarySiteName" :"dbsitfp",
 			"DatabaseSecondarySiteName" :"dbsitshc",
 			"DatabasePacemakerTag" :"hallpag",
 			"SetupTransportDomainController" :"No",
-			"SapInstallationSpecifications": "{\"parameters\":{\"PRODUCT_ID\":\"saps4hana-2020\",\"HDB_SCHEMA_NAME\":\"SAPABAP1\",\"CI_INSTANCE_NR\":\"50\",\"ASCS_VIRTUAL_HOSTNAME\":\"hallvirascs\",\"ERS_VIRTUAL_HOSTNAME\":\"hallvirers\",\"ASCS_OVERLAY_IP\":\"10.29.26.79\",\"ERS_OVERLAY_IP\":\"10.96.87.80\",\"DB_VIRTUAL_HOSTNAME\":\"halldbvr1\",\"SAP_PACEMAKER_TAG\":\"hllpacetag\",\"SAPINST_CD_SAPCAR\":\"%[1]s/SAPCAR\",\"SAPINST_CD_SWPM\":\"%[1]s/SWPM\",\"SAPINST_CD_KERNEL\":\"%[1]s/Kernel\",\"SAPINST_CD_LOAD\":\"%[1]s/Exports\",\"SAPINST_CD_RDBMS\":\"%[1]s/HANA_DB_Software\",\"SAPINST_CD_RDBMS_CLIENT\":\"%[1]s/HANA_Client_Software\"}, \"onFailureBehaviour\": \"CONTINUE\"}",
+			"SapInstallationSpecifications": "{\"parameters\":{\"PRODUCT_ID\":\"saps4hana-2020\",\"HDB_SCHEMA_NAME\":\"SAPABAP1\",\"CI_INSTANCE_NR\":\"50\",\"ASCS_VIRTUAL_HOSTNAME\":\"hallvirascs\",\"ERS_VIRTUAL_HOSTNAME\":\"hallvirers\",\"ASCS_OVERLAY_IP\":\"192.168.100.110\",\"ERS_OVERLAY_IP\":\"192.168.100.120\",\"DB_VIRTUAL_HOSTNAME\":\"halldbvr1\",\"SAP_PACEMAKER_TAG\":\"hllpacetag\",\"SAPINST_CD_SAPCAR\":\"%[1]s/SAPCAR\",\"SAPINST_CD_SWPM\":\"%[1]s/SWPM\",\"SAPINST_CD_KERNEL\":\"%[1]s/Kernel\",\"SAPINST_CD_LOAD\":\"%[1]s/Exports\",\"SAPINST_CD_RDBMS\":\"%[1]s/HANA_DB_Software\",\"SAPINST_CD_RDBMS_CLIENT\":\"%[1]s/HANA_Client_Software\"}, \"onFailureBehaviour\": \"CONTINUE\"}",
 			"SaveDeploymentArtifacts" :"No",
 			"DisableDeploymentRollback" :"Yes",
 			"ApplicationDataVolumeType": "gp3",    
@@ -208,22 +208,6 @@ var (
 	}
 )
 
-// func TestAccLaunchWizardDeployment_serial(t *testing.T) {
-// 	t.Parallel()
-
-// 	setEnvVars_TODO_REPLACE()
-
-// 	//all test cases require a NAT gateway by design. running serial due to 5 EIP quota per region
-// 	testCases := map[string]map[string]func(t *testing.T){
-// 		"Deployment": {
-// 			"basic_SapHanaSingle":      testAccLaunchWizardDeployment_basicSapHanaSingle,
-// 			"disappears_SapHanaSingle": testAccLaunchWizardDeployment_disappearsSapHanaSingle,
-// 			"basic_SapHanaHA":          testAccLaunchWizardDeployment_basicSapHanaHA,
-// 		},
-// 	}
-
-// 	acctest.RunSerialTests2Levels(t, testCases, 0)
-// }
 
 func TestAccLaunchWizardDeployment_basicSapHanaSingle(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -272,9 +256,9 @@ func TestAccLaunchWizardDeployment_basicSapHanaSingle(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"specifications.SapPassword",
-				},
+				// ImportStateVerifyIgnore: []string{
+				// 	"specifications.DatabasePassword",
+				// },
 			},
 		},
 	})
@@ -429,9 +413,9 @@ func TestAccLaunchWizardDeployment_basicSapNWOnHanaHA(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"specifications.DatabasePassword",
-				},
+				// ImportStateVerifyIgnore: []string{
+				// 	"specifications.SapPassword",
+				// },
 			},
 		},
 	})
@@ -452,9 +436,6 @@ resource "aws_launchwizard_deployment" "test" {
   deployment_pattern = %[3]q
   workload_name = %[4]q
   specifications = %[2]s
-
-  
-
 }
 `, rName, specification_template_computed, deploymentPattern, workloadName))
 }
