@@ -16,7 +16,35 @@ Terraform resource for managing an [AWS Mainframe Modernization Environment](htt
 ```terraform
 resource "aws_m2_environment" "test" {
   name               = "test-env"
-  engine_type        = "blueage"
+  engine_type        = "bluage"
+  instance_type      = "M2.m5.large"
+  security_groups    = ["sg-01234567890abcdef"]
+  subnet_ids         = ["subnet-01234567890abcdef"]
+}
+```
+
+### High Availability
+
+```terraform
+resource "aws_m2_environment" "test" {
+  name               = "test-env"
+  engine_type        = "bluage"
+  instance_type      = "M2.m5.large"
+  security_groups    = ["sg-01234567890abcdef"]
+  subnet_ids         = ["subnet-01234567890abcdef", "subnet-01234567890abcdea"]
+  
+  high_availability_config {
+    desired_capacity = 2
+  }
+}
+```
+
+### EFS Filesystem
+
+```terraform
+resource "aws_m2_environment" "test" {
+  name               = "test-env"
+  engine_type        = "bluage"
   instance_type      = "M2.m5.large"
   security_groups    = ["sg-01234567890abcdef"]
   subnet_ids         = ["subnet-01234567890abcdef"]
@@ -25,10 +53,24 @@ resource "aws_m2_environment" "test" {
     file_system_id = "fs-01234567890abcdef"
     mount_point = "/m2/mount/example"
   }
+}
+```
 
-  high_availability_config {
-    desired_capacity = 2
+### FSX Filesystem
+
+```terraform
+resource "aws_m2_environment" "test" {
+  name               = "test-env"
+  engine_type        = "bluage"
+  instance_type      = "M2.m5.large"
+  security_groups    = ["sg-01234567890abcdef"]
+  subnet_ids         = ["subnet-01234567890abcdef"]
+
+  fsx_mount {
+    file_system_id = "fs-01234567890abcdef"
+    mount_point = "/m2/mount/example"
   }
+
 }
 ```
 
@@ -36,8 +78,8 @@ resource "aws_m2_environment" "test" {
 
 The following arguments are required:
 
-* `name` - (Required) The name of the runtime environment. Must be unique within the account.
-* `engine_type` - (Required) The engine type must be `microfocus | bluage`.
+* `name` - (Required) Name of the runtime environment. Must be unique within the account.
+* `engine_type` - (Required) Engine type must be `microfocus | bluage`.
 * `instance_type` - (Required) M2 Instance Type.
 * `security_groups` - (Required) List of security group ids.
 * `subnet_ids` - (Required) List of subnet ids to deploy environment to.
@@ -45,7 +87,8 @@ The following arguments are required:
 The following arguments are optional:
 
 * `engine_version` - (Optional) The specific version of the engine for the Environment.
-* `preferred_maintenance_window` - (Optional) Configures the maintenance window that you want for the runtime nvironment. The maintenance window must have the format `ddd:hh24:mi-ddd:hh24:mi` and must be less than 24 hours. If not provided a random value will be used.
+* `kms_key_id` - (Optional) KMS Key to use for the Environment.
+* `preferred_maintenance_window` - (Optional) Configures the maintenance window that you want for the runtime environment. The maintenance window must have the format `ddd:hh24:mi-ddd:hh24:mi` and must be less than 24 hours. If not provided a random value will be used.
 * `publicly_accessible` - (Optional) Allow applications deployed to this environment to be publicly accessible.
 * `tags` - (Optional) Key-value tags for the place index. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -56,7 +99,16 @@ This argument is processed in [attribute-as-blocks mode](https://www.terraform.i
 The following arguments are required:
 
 * `mount_point` - (Required) Path to mount the filesystem on, must start with `/m2/mount/`.
-* `file_sysatem_id` - (Required) Id of the EFS filesystem to mount.
+* `file_system_id` - (Required) Id of the EFS filesystem to mount.
+
+### fsx_mount
+
+This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
+
+The following arguments are required:
+
+* `mount_point` - (Required) Path to mount the filesystem on, must start with `/m2/mount/`.
+* `file_system_id` - (Required) Id of the FSX filesystem to mount.
 
 ### high_availability_config - (Optional)
 
@@ -66,14 +118,6 @@ The following arguments are required:
 
 * `desired_capacity` - (Required) Desired number of instances for the Environment.
 
-### fsx_mount
-
-This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
-
-The following arguments are required:
-
-* `mount_point` - (Required) Path to mount the filesystem on, must start with `/m2/mount/`.
-* `file_sysatem_id` - (Required) Id of the FSX filesystem to mount.
 
 
 ## Attribute Reference

@@ -53,7 +53,54 @@ func TestAccM2Environment_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_basic(rName, testEngineType, testEngineVersion, 2),
+				Config: testAccEnvironmentConfig_basic(rName, testEngineType, testEngineVersion),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", testEngineType),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", testEngineVersion),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
+					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "efs_mount.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fsx_mount.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "M2.m5.large"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccM2Environment_highAvailability(t *testing.T) {
+	ctx := acctest.Context(t)
+	// TIP: This is a long-running test guard for tests that run longer than
+	// 300s (5 min) generally.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var environment m2.GetEnvironmentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_m2_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_highAvailability(rName, testEngineType, testEngineVersion, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
@@ -61,6 +108,53 @@ func TestAccM2Environment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "engine_version", testEngineVersion),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "2"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "efs_mount.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fsx_mount.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "M2.m5.large"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccM2Environment_efs(t *testing.T) {
+	ctx := acctest.Context(t)
+	// TIP: This is a long-running test guard for tests that run longer than
+	// 300s (5 min) generally.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var environment m2.GetEnvironmentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_m2_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_efsComplete(rName, testEngineType, testEngineVersion),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", testEngineType),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", testEngineVersion),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
+					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "efs_mount.0.mount_point", "/m2/mount/example"),
@@ -98,7 +192,7 @@ func TestAccM2Environment_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_basic(rName, testEngineType, testEngineVersion, 2),
+				Config: testAccEnvironmentConfig_basic(rName, testEngineType, testEngineVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfm2.ResourceEnvironment(), resourceName),
@@ -185,7 +279,7 @@ func testAccCheckEnvironmentNotRecreated(before, after *m2.GetEnvironmentOutput)
 	}
 }
 
-func testAccEnvironmentConfig_basic(rName, engineType, engineVersion string, desiredCapacity int32) string {
+func testAccEnvironmentConfig_basic(rName, engineType, engineVersion string) string {
 	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName),
 		testAccEnvironmentConfig_efs(rName),
 		fmt.Sprintf(`
@@ -198,19 +292,51 @@ resource "aws_m2_environment" "test" {
   instance_type      = "M2.m5.large"
   security_groups    = [aws_security_group.test.id]
   subnet_ids         = aws_subnet.test[*].id
-  kms_key_id         = aws_kms_key.test.id
-  
+}
+`, rName, engineType, engineVersion))
+}
 
-  efs_mount {
-    file_system_id = aws_efs_file_system.test.id
-    mount_point = "/m2/mount/example"
-  }
+func testAccEnvironmentConfig_highAvailability(rName, engineType, engineVersion string, desiredCapacity int32) string {
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName),
+		fmt.Sprintf(`
+
+resource "aws_m2_environment" "test" {
+  name               = %[1]q
+  description        = %[1]q 
+  engine_type        = %[2]q
+  engine_version     = %[3]q
+  instance_type      = "M2.m5.large"
+  security_groups    = [aws_security_group.test.id]
+  subnet_ids         = aws_subnet.test[*].id 
 
   high_availability_config {
     desired_capacity = %[4]d
   }
 }
 `, rName, engineType, engineVersion, desiredCapacity))
+}
+
+func testAccEnvironmentConfig_efsComplete(rName, engineType, engineVersion string) string {
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName),
+		testAccEnvironmentConfig_efs(rName),
+		fmt.Sprintf(`
+
+resource "aws_m2_environment" "test" {
+  name               = %[1]q
+  description        = %[1]q 
+  engine_type        = %[2]q
+  engine_version     = %[3]q
+  instance_type      = "M2.m5.large"
+  security_groups    = [aws_security_group.test.id]
+  subnet_ids         = aws_subnet.test[*].id 
+
+  efs_mount {
+    file_system_id = aws_efs_file_system.test.id
+    mount_point = "/m2/mount/example"
+  }
+
+}
+`, rName, engineType, engineVersion))
 }
 
 func testAccEnvironmentConfig_base(rName string) string {
@@ -258,9 +384,6 @@ resource "aws_security_group" "test" {
     protocol = "-1"
     cidr_blocks = [aws_vpc.test.cidr_block]
    }
-}
-resource "aws_kms_key" "test" {
-  deletion_window_in_days = 7
 }
 `, rName))
 }

@@ -102,11 +102,6 @@ func ResourceEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"force_updates": {
-				Type:        schema.TypeBool,
-				Optional:    true,
-				Description: "Force updates to the environment.",
-			},
 			"fsx_mount": {
 				Type:          schema.TypeSet,
 				Optional:      true,
@@ -131,6 +126,7 @@ func ResourceEnvironment() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"desired_capacity": {
@@ -168,7 +164,6 @@ func ResourceEnvironment() *schema.Resource {
 			"publicly_accessible": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				Default:  false,
 				ForceNew: true,
 			},
 			"security_groups": {
@@ -207,25 +202,34 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	in := &m2.CreateEnvironmentInput{
-		EngineType:         types.EngineType(d.Get("engine_type").(string)),
-		InstanceType:       aws.String(d.Get("instance_type").(string)),
-		Name:               aws.String(d.Get("name").(string)),
-		ClientToken:        aws.String(clientToken),
-		Description:        aws.String(d.Get("description").(string)),
-		EngineVersion:      aws.String(d.Get("engine_version").(string)),
-		KmsKeyId:           aws.String(d.Get("kms_key_id").(string)),
-		PubliclyAccessible: d.Get("publicly_accessible").(bool),
-		SecurityGroupIds:   flex.ExpandStringValueSet(d.Get("security_groups").(*schema.Set)),
-		SubnetIds:          flex.ExpandStringValueSet(d.Get("subnet_ids").(*schema.Set)),
-		Tags:               getTagsIn(ctx),
+		EngineType:       types.EngineType(d.Get("engine_type").(string)),
+		InstanceType:     aws.String(d.Get("instance_type").(string)),
+		Name:             aws.String(d.Get("name").(string)),
+		ClientToken:      aws.String(clientToken),
+		Description:      aws.String(d.Get("description").(string)),
+		SecurityGroupIds: flex.ExpandStringValueSet(d.Get("security_groups").(*schema.Set)),
+		SubnetIds:        flex.ExpandStringValueSet(d.Get("subnet_ids").(*schema.Set)),
+		Tags:             getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("engine_version"); ok {
+		in.EngineVersion = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("high_availability_config"); ok && len(v.([]interface{})) > 0 {
 		in.HighAvailabilityConfig = expandHaConfig(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("kms_key_id"); ok {
+		in.KmsKeyId = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("preferred_maintenance_window"); ok {
 		in.PreferredMaintenanceWindow = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("publicly_accessible"); ok {
+		in.PubliclyAccessible = v.(bool)
 	}
 
 	in.StorageConfigurations = expandStorageConfigurations(d)
@@ -485,24 +489,6 @@ func expandStorageConfigurations(d *schema.ResourceData) []types.StorageConfigur
 	return configs
 }
 
-func expandStorageConfiguration(m map[string]interface{}, efs bool) types.StorageConfiguration {
-	if efs {
-		return &types.StorageConfigurationMemberEfs{
-			Value: types.EfsStorageConfiguration{
-				FileSystemId: aws.String(m["file_system_id"].(string)),
-				MountPoint:   aws.String(m["mount_point"].(string)),
-			},
-		}
-	} else {
-		return &types.StorageConfigurationMemberFsx{
-			Value: types.FsxStorageConfiguration{
-				FileSystemId: aws.String(m["file_system_id"].(string)),
-				MountPoint:   aws.String(m["mount_point"].(string)),
-			},
-		}
-	}
-}
-
 func expandHaConfig(tfList []interface{}) *types.HighAvailabilityConfig {
 	if len(tfList) == 0 {
 		return nil
@@ -527,6 +513,24 @@ func flattenHaConfig(haConfig *types.HighAvailabilityConfig) []interface{} {
 	return []interface{}{map[string]interface{}{
 		"desired_capacity": haConfig.DesiredCapacity,
 	}}
+}
+
+func expandStorageConfiguration(m map[string]interface{}, efs bool) types.StorageConfiguration {
+	if efs {
+		return &types.StorageConfigurationMemberEfs{
+			Value: types.EfsStorageConfiguration{
+				FileSystemId: aws.String(m["file_system_id"].(string)),
+				MountPoint:   aws.String(m["mount_point"].(string)),
+			},
+		}
+	} else {
+		return &types.StorageConfigurationMemberFsx{
+			Value: types.FsxStorageConfiguration{
+				FileSystemId: aws.String(m["file_system_id"].(string)),
+				MountPoint:   aws.String(m["mount_point"].(string)),
+			},
+		}
+	}
 }
 
 func flattenStorageConfig(storageConfig []types.StorageConfiguration) ([]interface{}, []interface{}) {
