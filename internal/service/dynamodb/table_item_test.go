@@ -37,7 +37,7 @@ func TestAccDynamoDBTableItem_basic(t *testing.T) {
 }`
 
 	checkFn := func(s []*terraform.InstanceState) error {
-		return testAccAWSDynamoDbItemCompareItemAttribute(itemContent, s)
+		return testAccDynamoDbTableItemCompareItemAttribute(itemContent, s)
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -55,21 +55,6 @@ func TestAccDynamoDBTableItem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "table_name", tableName),
 					acctest.CheckResourceAttrEquivalentJSON("aws_dynamodb_table_item.test", "item", itemContent),
 				),
-			},
-			{
-				ResourceName:            "aws_dynamodb_table_item.test",
-				ImportStateId:           fmt.Sprintf("%s|%s", tableName, "something"),
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"item"},
-			},
-			{
-				ResourceName:            "aws_dynamodb_table_item.test",
-				ImportStateId:           fmt.Sprintf("[\"%s\", \"%s\"]", tableName, "something"),
-				ImportStateCheck:        checkFn,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"item"},
 			},
 			{
 				ResourceName:            "aws_dynamodb_table_item.test",
@@ -108,7 +93,7 @@ func TestAccDynamoDBTableItem_rangeKey(t *testing.T) {
 }`
 
 	checkFn := func(s []*terraform.InstanceState) error {
-		return testAccAWSDynamoDbItemCompareItemAttribute(itemContent, s)
+		return testAccDynamoDbTableItemCompareItemAttribute(itemContent, s)
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -451,7 +436,7 @@ func TestAccDynamoDBTableItem_disappears(t *testing.T) {
 	})
 }
 
-func TestAccCheckAWSDynamoDbItem_importWithHashKey(t *testing.T) {
+func TestAccDynamoDBTableItem_importWithHashKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf dynamodb.GetItemOutput
 
@@ -470,7 +455,7 @@ func TestAccCheckAWSDynamoDbItem_importWithHashKey(t *testing.T) {
 }`, hashKey, hashKeyValue)
 
 	checkFn := func(s []*terraform.InstanceState) error {
-		return testAccAWSDynamoDbItemCompareItemAttribute(item, s)
+		return testAccDynamoDbTableItemCompareItemAttribute(item, s)
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -479,7 +464,7 @@ func TestAccCheckAWSDynamoDbItem_importWithHashKey(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbItemImportWithHashKey(tableName, hashKey, item),
+				Config: testAccTableItemImport_hashKey(tableName, hashKey, item),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test", &conf),
 					testAccCheckTableItemCount(ctx, tableName, 1),
@@ -508,7 +493,7 @@ func TestAccCheckAWSDynamoDbItem_importWithHashKey(t *testing.T) {
 	})
 }
 
-func TestAccCheckAWSDynamoDbItem_importWithRangeKey(t *testing.T) {
+func TestAccDynamoDBTableItem_importWithRangeKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf dynamodb.GetItemOutput
 
@@ -530,7 +515,7 @@ func TestAccCheckAWSDynamoDbItem_importWithRangeKey(t *testing.T) {
 }`, hashKey, hashKeyValue, rangeKey, rangeKeyValue)
 
 	checkFn := func(s []*terraform.InstanceState) error {
-		return testAccAWSDynamoDbItemCompareItemAttribute(item, s)
+		return testAccDynamoDbTableItemCompareItemAttribute(item, s)
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -539,7 +524,7 @@ func TestAccCheckAWSDynamoDbItem_importWithRangeKey(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSDynamoDbItemImportWithRangeKey(tableName, hashKey, rangeKey, item),
+				Config: testAccTableItemImport_rangeKey(tableName, hashKey, rangeKey, item),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test", &conf),
 					testAccCheckTableItemCount(ctx, tableName, 1),
@@ -569,7 +554,7 @@ func TestAccCheckAWSDynamoDbItem_importWithRangeKey(t *testing.T) {
 	})
 }
 
-func testAccAWSDynamoDbItemCompareItemAttribute(item string, s []*terraform.InstanceState) error {
+func testAccDynamoDbTableItemCompareItemAttribute(item string, s []*terraform.InstanceState) error {
 	if len(s) != 1 {
 		return fmt.Errorf("expected 1 state: %#v", s)
 	}
@@ -757,7 +742,7 @@ func testAccCheckTableItemCount(ctx context.Context, tableName string, count int
 	}
 }
 
-func testAccAWSDynamoDbItemImportWithHashKey(tableName, hashKey, item string) string {
+func testAccTableItemImport_hashKey(tableName, hashKey, item string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = "%s"
@@ -779,7 +764,7 @@ ITEM
 `, tableName, hashKey, hashKey, item)
 }
 
-func testAccAWSDynamoDbItemImportWithRangeKey(tableName, hashKey, rangeKey, item string) string {
+func testAccTableItemImport_rangeKey(tableName, hashKey, rangeKey, item string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
   name           = "%s"
