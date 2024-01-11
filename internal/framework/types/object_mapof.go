@@ -53,17 +53,28 @@ func (t ObjectMapTypeOf[T]) ValueFromMap(ctx context.Context, in basetypes.MapVa
 		return NewObjectMapUnknownValueMapOf[T](ctx), diags
 	}
 
-	listValue, d := basetypes.NewMapValue(NewObjectTypeOf[T](ctx), in.Elements())
+	v, d := basetypes.NewMapValue(NewObjectTypeOf[T](ctx), in.Elements())
 	diags.Append(d...)
 	if diags.HasError() {
 		return NewObjectMapUnknownValueMapOf[T](ctx), diags
 	}
 
 	value := ObjectMapValueOf[T]{
-		MapValue: listValue,
+		MapValue: v,
 	}
 
 	return value, diags
+}
+
+func (t ObjectMapTypeOf[T]) ValueFromRawMap(ctx context.Context, in any) (basetypes.MapValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if _, ok := in.(map[string]T); !ok {
+		diags.Append(diag.NewErrorDiagnostic("Invalid map value", fmt.Sprintf("incorrect type: want %T, got %T", (map[string]T)(nil), in)))
+		return nil, diags
+	}
+
+	return NewObjectMapValueMapOf(ctx, in.(map[string]T)), diags
 }
 
 func (t ObjectMapTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
@@ -73,19 +84,19 @@ func (t ObjectMapTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.V
 		return nil, err
 	}
 
-	listValue, ok := attrValue.(basetypes.MapValue)
+	v, ok := attrValue.(basetypes.MapValue)
 
 	if !ok {
 		return nil, fmt.Errorf("unexpected value type of %T", attrValue)
 	}
 
-	listValuable, diags := t.ValueFromMap(ctx, listValue)
+	valuable, diags := t.ValueFromMap(ctx, v)
 
 	if diags.HasError() {
 		return nil, fmt.Errorf("unexpected error converting MapValue to MapValuable: %v", diags)
 	}
 
-	return listValuable, nil
+	return valuable, nil
 }
 
 func (t ObjectMapTypeOf[T]) ValueType(ctx context.Context) attr.Value {
@@ -96,6 +107,16 @@ func (t ObjectMapTypeOf[T]) NullValue(ctx context.Context) (attr.Value, diag.Dia
 	var diags diag.Diagnostics
 
 	return NewObjectMapNullValueMapOf[T](ctx), diags
+}
+
+func (t ObjectMapTypeOf[T]) New(ctx context.Context) (any, diag.Diagnostics) {
+	return newMap[T](ctx)
+}
+
+func newMap[T any](_ context.Context) (map[string]T, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	return make(map[string]T), diags
 }
 
 // ObjectMapValueOf represents a Terraform Plugin Framework Map value whose elements are of type ObjectTypeOf.

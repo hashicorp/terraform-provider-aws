@@ -1415,6 +1415,8 @@ resource "aws_glue_catalog_table" "test" {
 
 func testAccCatalogTableConfig_target(rName string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
@@ -1427,6 +1429,7 @@ resource "aws_glue_catalog_table" "test" {
     catalog_id    = aws_glue_catalog_table.test2.catalog_id
     database_name = aws_glue_catalog_table.test2.database_name
     name          = aws_glue_catalog_table.test2.name
+    region        = data.aws_region.current.name
   }
 }
 
