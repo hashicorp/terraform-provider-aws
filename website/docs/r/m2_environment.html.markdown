@@ -14,7 +14,21 @@ Terraform resource for managing an [AWS Mainframe Modernization Environment](htt
 ### Basic Usage
 
 ```terraform
-resource "aws_m2_environment" "example" {
+resource "aws_m2_environment" "test" {
+  name               = "test-env"
+  engine_type        = "blueage"
+  instance_type      = "M2.m5.large"
+  security_groups    = ["sg-01234567890abcdef"]
+  subnet_ids         = ["subnet-01234567890abcdef"]
+
+  efs_mount {
+    file_system_id = "fs-01234567890abcdef"
+    mount_point = "/m2/mount/example"
+  }
+
+  high_availability_config {
+    desired_capacity = 2
+  }
 }
 ```
 
@@ -22,18 +36,52 @@ resource "aws_m2_environment" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `name` - (Required) The name of the runtime environment. Must be unique within the account.
+* `engine_type` - (Required) The engine type must be `microfocus | bluage`.
+* `instance_type` - (Required) M2 Instance Type.
+* `security_groups` - (Required) List of security group ids.
+* `subnet_ids` - (Required) List of subnet ids to deploy environment to.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `engine_version` - (Optional) The specific version of the engine for the Environment.
+* `preferred_maintenance_window` - (Optional) Configures the maintenance window that you want for the runtime nvironment. The maintenance window must have the format `ddd:hh24:mi-ddd:hh24:mi` and must be less than 24 hours. If not provided a random value will be used.
+* `publicly_accessible` - (Optional) Allow applications deployed to this environment to be publicly accessible.
+* `tags` - (Optional) Key-value tags for the place index. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### efs_mount
+
+This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
+
+The following arguments are required:
+
+* `mount_point` - (Required) Path to mount the filesystem on, must start with `/m2/mount/`.
+* `file_sysatem_id` - (Required) Id of the EFS filesystem to mount.
+
+### high_availability_config - (Optional)
+
+This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
+
+The following arguments are required:
+
+* `desired_capacity` - (Required) Desired number of instances for the Environment.
+
+### fsx_mount
+
+This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
+
+The following arguments are required:
+
+* `mount_point` - (Required) Path to mount the filesystem on, must start with `/m2/mount/`.
+* `file_sysatem_id` - (Required) Id of the FSX filesystem to mount.
+
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Environment. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `arn` - ARN of the Environment.
+* `load_balancer_arn` - ARN of the load balancer created by the Environment.
 
 ## Timeouts
 
@@ -50,12 +98,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_m2_environment.example
-  id = "environment-id-12345678"
+  id = "01234567890abcdef012345678"
 }
 ```
 
-Using `terraform import`, import Mainframe Modernization Environment using the `example_id_arg`. For example:
+Using `terraform import`, import Mainframe Modernization Environment using the `01234567890abcdef012345678`. For example:
 
 ```console
-% terraform import aws_m2_environment.example environment-id-12345678
+% terraform import aws_m2_environment.example 01234567890abcdef012345678
 ```
