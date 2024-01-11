@@ -9,6 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -140,7 +141,22 @@ func FindResourceSharePrincipalAssociationByShareARNPrincipal(ctx context.Contex
 		ResourceShareArns: aws.StringSlice([]string{resourceShareARN}),
 	}
 
+	return findResourceShareAssociation(ctx, conn, input)
+}
+
+func findResourceShareAssociation(ctx context.Context, conn *ram.RAM, input *ram.GetResourceShareAssociationsInput) (*ram.ResourceShareAssociation, error) {
+	output, err := findResourceShareAssociations(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findResourceShareAssociations(ctx context.Context, conn *ram.RAM, input *ram.GetResourceShareAssociationsInput) ([]*ram.ResourceShareAssociation, error) {
 	var output []*ram.ResourceShareAssociation
+
 	err := conn.GetResourceShareAssociationsPagesWithContext(ctx, input, func(page *ram.GetResourceShareAssociationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -155,13 +171,16 @@ func FindResourceSharePrincipalAssociationByShareARNPrincipal(ctx context.Contex
 		return !lastPage
 	})
 
+	if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output) == 0 || output[0] == nil {
-		return nil, nil
-	}
-
-	return output[0], nil
+	return output, nil
 }
