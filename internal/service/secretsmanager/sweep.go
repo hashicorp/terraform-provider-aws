@@ -7,9 +7,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
@@ -34,40 +33,35 @@ func sweepSecretPolicies(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.SecretsManagerClient(ctx)
+	input := &secretsmanager.ListSecretsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	paginator := secretsmanager.NewListSecretsPaginator(conn, &secretsmanager.ListSecretsInput{})
+	paginator := secretsmanager.NewListSecretsPaginator(conn, input)
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Secrets Manager Secret Policy sweep for %s: %s", region, err)
+			return nil
+		}
+
 		if err != nil {
-			if awsv2.SkipSweepError(err) {
-				log.Printf("[WARN] Skipping Secrets Manager Secret sweep for %s: %s", region, err)
-				return nil
-			}
-			return fmt.Errorf("error retrieving Secrets Manager Secrets: %w", err)
+			return fmt.Errorf("error listing Secrets Manager Secrets (%s): %w", region, err)
 		}
 
-		if page != nil {
-			if len(page.SecretList) == 0 {
-				log.Print("[DEBUG] No Secrets Manager Secrets to sweep")
-			}
+		for _, v := range page.SecretList {
+			r := resourceSecretPolicy()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.ARN))
 
-			for _, secret := range page.SecretList {
-				name := aws.StringValue(secret.Name)
-
-				log.Printf("[INFO] Deleting Secrets Manager Secret Policy: %s", name)
-				input := &secretsmanager.DeleteResourcePolicyInput{
-					SecretId: aws.String(name),
-				}
-
-				_, err := conn.DeleteResourcePolicy(ctx, input)
-				if err != nil {
-					if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
-						continue
-					}
-					log.Printf("[ERROR] Failed to delete Secrets Manager Secret Policy (%s): %s", name, err)
-				}
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Secrets Manager Secret Policies (%s): %w", region, err)
 	}
 
 	return nil
@@ -80,41 +74,35 @@ func sweepSecrets(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 	conn := client.SecretsManagerClient(ctx)
+	input := &secretsmanager.ListSecretsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	paginator := secretsmanager.NewListSecretsPaginator(conn, &secretsmanager.ListSecretsInput{})
+	paginator := secretsmanager.NewListSecretsPaginator(conn, input)
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
-		if err != nil {
-			if awsv2.SkipSweepError(err) {
-				log.Printf("[WARN] Skipping Secrets Manager Secret sweep for %s: %s", region, err)
-				return nil
-			}
-			return fmt.Errorf("error retrieving Secrets Manager Secrets: %w", err)
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Secrets Manager Secret sweep for %s: %s", region, err)
+			return nil
 		}
 
-		if page != nil {
-			if len(page.SecretList) == 0 {
-				log.Print("[DEBUG] No Secrets Manager Secrets to sweep")
-			}
+		if err != nil {
+			return fmt.Errorf("error listing Secrets Manager Secrets (%s): %w", region, err)
+		}
 
-			for _, secret := range page.SecretList {
-				name := aws.StringValue(secret.Name)
+		for _, v := range page.SecretList {
+			r := resourceSecret()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.ARN))
 
-				log.Printf("[INFO] Deleting Secrets Manager Secret: %s", name)
-				input := &secretsmanager.DeleteSecretInput{
-					ForceDeleteWithoutRecovery: aws.Bool(true),
-					SecretId:                   aws.String(name),
-				}
-
-				_, err := conn.DeleteSecret(ctx, input)
-				if err != nil {
-					if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
-						continue
-					}
-					log.Printf("[ERROR] Failed to delete Secrets Manager Secret (%s): %s", name, err)
-				}
-			}
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Secrets Manager Secrets (%s): %w", region, err)
+	}
+
 	return nil
 }
