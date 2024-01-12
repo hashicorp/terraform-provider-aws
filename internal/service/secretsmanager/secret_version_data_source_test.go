@@ -28,7 +28,7 @@ func TestAccSecretsManagerSecretVersionDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccSecretVersionDataSourceConfig_nonExistent,
-				ExpectError: regexache.MustCompile(`not found`),
+				ExpectError: regexache.MustCompile(`couldn't find resource`),
 			},
 			{
 				Config: testAccSecretVersionDataSourceConfig_stageDefault(rName),

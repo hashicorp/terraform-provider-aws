@@ -25,6 +25,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+const (
+	secretVersionStageCurrent = "AWSCURRENT"
+)
+
 // @SDKResource("aws_secretsmanager_secret_version", name="Secret Version")
 func resourceSecretVersion() *schema.Resource {
 	return &schema.Resource{
@@ -181,7 +185,7 @@ func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, me
 
 	for _, stage := range del {
 		// InvalidParameterException: You can only move staging label AWSCURRENT to a different secret version. It can’t be completely removed.
-		if stage == "AWSCURRENT" {
+		if stage == secretVersionStageCurrent {
 			log.Printf("[INFO] Skipping removal of AWSCURRENT staging label for secret %q version %q", secretID, versionID)
 			continue
 		}
@@ -214,7 +218,7 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 	if v, ok := d.GetOk("version_stages"); ok && v.(*schema.Set).Len() > 0 {
 		for _, stage := range flex.ExpandStringValueSet(v.(*schema.Set)) {
 			// InvalidParameterException: You can only move staging label AWSCURRENT to a different secret version. It can’t be completely removed.
-			if stage == "AWSCURRENT" {
+			if stage == secretVersionStageCurrent {
 				log.Printf("[WARN] Cannot remove AWSCURRENT staging label, which may leave the secret %q version %q active", secretID, versionID)
 				continue
 			}
@@ -225,7 +229,7 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 				VersionStage:        aws.String(stage),
 			}
 
-			log.Printf("[DEBUG] Deleting Secrets Manager Secret Version (%s) stage: %v", d.Id(), stage)
+			log.Printf("[DEBUG] Deleting Secrets Manager Secret Version (%s) stage: %s", d.Id(), stage)
 			_, err := conn.UpdateSecretVersionStage(ctx, input)
 
 			if errs.IsA[*types.ResourceNotFoundException](err) ||
@@ -247,7 +251,7 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 			return nil, err
 		}
 
-		if len(output.VersionStages) == 0 || (len(output.VersionStages) == 1 && output.VersionStages[0] == "AWSCURRENT") {
+		if len(output.VersionStages) == 0 || (len(output.VersionStages) == 1 && output.VersionStages[0] == secretVersionStageCurrent) {
 			return nil, &retry.NotFoundError{}
 		}
 
@@ -280,12 +284,7 @@ func secretVersionParseResourceID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func findSecretVersionByTwoPartKey(ctx context.Context, conn *secretsmanager.Client, secretID, versionID string) (*secretsmanager.GetSecretValueOutput, error) {
-	input := &secretsmanager.GetSecretValueInput{
-		SecretId:  aws.String(secretID),
-		VersionId: aws.String(versionID),
-	}
-
+func findSecretVersion(ctx context.Context, conn *secretsmanager.Client, input *secretsmanager.GetSecretValueInput) (*secretsmanager.GetSecretValueOutput, error) {
 	output, err := conn.GetSecretValue(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) ||
@@ -306,4 +305,13 @@ func findSecretVersionByTwoPartKey(ctx context.Context, conn *secretsmanager.Cli
 	}
 
 	return output, nil
+}
+
+func findSecretVersionByTwoPartKey(ctx context.Context, conn *secretsmanager.Client, secretID, versionID string) (*secretsmanager.GetSecretValueOutput, error) {
+	input := &secretsmanager.GetSecretValueInput{
+		SecretId:  aws.String(secretID),
+		VersionId: aws.String(versionID),
+	}
+
+	return findSecretVersion(ctx, conn, input)
 }
