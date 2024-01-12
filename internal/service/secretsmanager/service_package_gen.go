@@ -44,8 +44,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Secret Version",
 		},
 		{
-			Factory:  DataSourceSecrets,
+			Factory:  dataSourceSecrets,
 			TypeName: "aws_secretsmanager_secrets",
+			Name:     "Secrets",
 		},
 	}
 }
