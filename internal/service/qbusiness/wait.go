@@ -52,12 +52,30 @@ func waitApplicationDeleted(ctx context.Context, conn *qbusiness.QBusiness, id s
 	return nil, err
 }
 
-
-func waitIndexCreated(ctx context.Context, conn *qbusiness.QBusiness, application_id, index_id string, timeout time.Duration) (*qbusiness.GetIndexOutput, error) {
+func waitIndexCreated(ctx context.Context, conn *qbusiness.QBusiness, index_id string, timeout time.Duration) (*qbusiness.GetIndexOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{qbusiness.IndexStatusCreating, qbusiness.IndexStatusUpdating},
 		Target:     []string{qbusiness.IndexStatusActive},
-		Refresh:    statusIndexAvailability(ctx, conn, application_id, index_id),
+		Refresh:    statusIndexAvailability(ctx, conn, index_id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*qbusiness.GetIndexOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status)))
+
+		return output, err
+	}
+	return nil, err
+}
+
+func waitIndexDeleted(ctx context.Context, conn *qbusiness.QBusiness, index_id string, timeout time.Duration) (*qbusiness.GetIndexOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{qbusiness.IndexStatusActive, qbusiness.IndexStatusDeleting},
+		Target:     []string{},
+		Refresh:    statusIndexAvailability(ctx, conn, index_id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}

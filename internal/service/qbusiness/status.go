@@ -28,9 +28,9 @@ func statusAppAvailability(ctx context.Context, conn *qbusiness.QBusiness, id st
 	}
 }
 
-func statusIndexAvailability(ctx context.Context, conn *qbusiness.QBusiness, application_id, index_id string) retry.StateRefreshFunc {
+func statusIndexAvailability(ctx context.Context, conn *qbusiness.QBusiness, index_id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindIndexById(ctx, application_id, index_id, conn)
+		output, err := FindIndexByID(ctx, conn, index_id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

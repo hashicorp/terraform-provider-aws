@@ -26,7 +26,6 @@ import (
 // @SDKResource("aws_qbusiness_app", name="Application")
 // @Tags(identifierAttribute="arn")
 func ResourceApplication() *schema.Resource {
-
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAppCreate,
 		ReadWithoutTimeout:   resourceAppRead,
