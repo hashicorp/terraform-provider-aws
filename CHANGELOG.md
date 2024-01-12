@@ -1,13 +1,10 @@
 ## 5.33.0 (Unreleased)
 
-ENHANCEMENTS:
-
-* resource/aws_mq_broker: Fix `interface conversion: interface {} is *schema.Set, not []string` panic ([#35265](https://github.com/hashicorp/terraform-provider-aws/issues/35265))
-
 BUG FIXES:
 
 * data-source/aws_ecr_image: Fix error when `most_recent` is not also `latest` ([#35269](https://github.com/hashicorp/terraform-provider-aws/issues/35269))
 * resource/aws_iot_ca_certificate: Change `registration_config.role_arn` from `TypeBool` to `TypeString`, fixing `Inappropriate value for attribute "role_arn": a bool is required` errors ([#35234](https://github.com/hashicorp/terraform-provider-aws/issues/35234))
+* resource/aws_mq_broker: Fix `interface conversion: interface {} is *schema.Set, not []string` panic ([#35265](https://github.com/hashicorp/terraform-provider-aws/issues/35265))
 
 ## 5.32.0 (January 11, 2024)
 
