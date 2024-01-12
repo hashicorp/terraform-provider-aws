@@ -51,7 +51,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -92,4 +92,4 @@ Using `terraform import`, import CloudWatch Observability Access Manager Link us
 % terraform import aws_oam_link.example arn:aws:oam:us-west-2:123456789012:link/link-id
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-ff78965c47d628d5cd420e2503ed25c914c1d4493bc3eefc1a9e530ca1d58967 -->
+<!-- cache-key: cdktf-0.20.0 input-ff78965c47d628d5cd420e2503ed25c914c1d4493bc3eefc1a9e530ca1d58967 -->

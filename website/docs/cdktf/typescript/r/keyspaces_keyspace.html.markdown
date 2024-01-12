@@ -44,7 +44,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -52,7 +52,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The name of the keyspace.
 * `arn` - The ARN of the keyspace.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -83,4 +83,4 @@ Using `terraform import`, import a keyspace using the `name`. For example:
 % terraform import aws_keyspaces_keyspace.example my_keyspace
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-45356374226b4001cb8f4913ce874bd4156dabd51b8ab1e4fe9896d2e554989a -->
+<!-- cache-key: cdktf-0.20.0 input-45356374226b4001cb8f4913ce874bd4156dabd51b8ab1e4fe9896d2e554989a -->

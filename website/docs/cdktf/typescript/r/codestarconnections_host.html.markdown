@@ -12,7 +12,7 @@ description: |-
 
 Provides a CodeStar Host.
 
-~> **NOTE:** The `awsCodestarconnectionsHost` resource is created in the state `pending`. Authentication with the host provider must be completed in the AWS Console. For more information visit [Set up a pending host](https://docs.aws.amazon.com/dtconsole/latest/userguide/connections-host-setup.html).
+~> **NOTE:** The `aws_codestarconnections_host` resource is created in the state `PENDING`. Authentication with the host provider must be completed in the AWS Console. For more information visit [Set up a pending host](https://docs.aws.amazon.com/dtconsole/latest/userguide/connections-host-setup.html).
 
 ## Example Usage
 
@@ -84,4 +84,4 @@ Using `terraform import`, import CodeStar Host using the ARN. For example:
 % terraform import aws_codestarconnections_host.example-host arn:aws:codestar-connections:us-west-1:0123456789:host/79d4d357-a2ee-41e4-b350-2fe39ae59448
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-deb204f04b1d3b40e9230a8529e261bf3e35a0ba36cd5b092788c3a247d424f1 -->
+<!-- cache-key: cdktf-0.20.0 input-deb204f04b1d3b40e9230a8529e261bf3e35a0ba36cd5b092788c3a247d424f1 -->

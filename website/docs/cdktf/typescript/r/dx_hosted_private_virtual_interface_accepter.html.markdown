@@ -78,15 +78,15 @@ This resource supports the following arguments:
 
 * `virtualInterfaceId` - (Required) The ID of the Direct Connect virtual interface to accept.
 * `dxGatewayId` - (Optional) The ID of the Direct Connect gateway to which to connect the virtual interface.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpnGatewayId` - (Optional) The ID of the [virtual private gateway](vpn_gateway.html) to which to connect the virtual interface.
 
-### Removing `awsDxHostedPrivateVirtualInterfaceAccepter` from your configuration
+### Removing `aws_dx_hosted_private_virtual_interface_accepter` from your configuration
 
 AWS allows a Direct Connect hosted private virtual interface to be deleted from either the allocator's or accepter's side.
 However, Terraform only allows the Direct Connect hosted private virtual interface to be deleted from the allocator's side
-by removing the corresponding `awsDxHostedPrivateVirtualInterface` resource from your configuration.
-Removing a `awsDxHostedPrivateVirtualInterfaceAccepter` resource from your configuration will remove it
+by removing the corresponding `aws_dx_hosted_private_virtual_interface` resource from your configuration.
+Removing a `aws_dx_hosted_private_virtual_interface_accepter` resource from your configuration will remove it
 from your statefile and management, **but will not delete the Direct Connect virtual interface.**
 
 ## Attribute Reference
@@ -95,7 +95,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the virtual interface.
 * `arn` - The ARN of the virtual interface.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -126,4 +126,4 @@ Using `terraform import`, import Direct Connect hosted private virtual interface
 % terraform import aws_dx_hosted_private_virtual_interface_accepter.test dxvif-33cc44dd
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-82aee1d3fc70745175c9dad52c1bbb0ad47469969a29d92069bf48c33d5539a9 -->
+<!-- cache-key: cdktf-0.20.0 input-82aee1d3fc70745175c9dad52c1bbb0ad47469969a29d92069bf48c33d5539a9 -->

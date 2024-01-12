@@ -106,7 +106,7 @@ The `partitionedPrefix` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
+* `id` - The `bucket` or `bucket` and `expectedBucketOwner` separated by a comma (`,`) if the latter is provided.
 
 ## Import
 
@@ -154,4 +154,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_logging.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-84005dc097b2a2ceb5d4b3077a825a1234cf23a38227e29e509ee3ce8851df2f -->
+<!-- cache-key: cdktf-0.20.0 input-84005dc097b2a2ceb5d4b3077a825a1234cf23a38227e29e509ee3ce8851df2f -->

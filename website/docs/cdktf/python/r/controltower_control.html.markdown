@@ -79,4 +79,4 @@ Using `terraform import`, import Control Tower Controls using their `organizatio
 % terraform import aws_controltower_control.example arn:aws:organizations::123456789101:ou/o-qqaejywet/ou-qg5o-ufbhdtv3,arn:aws:controltower:us-east-1::control/WTDSMKDKDNLE
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-542aa41221af63c248afa6f1f14005c7167d5839e1e53ee461a2747d1b0be787 -->
+<!-- cache-key: cdktf-0.20.0 input-542aa41221af63c248afa6f1f14005c7167d5839e1e53ee461a2747d1b0be787 -->

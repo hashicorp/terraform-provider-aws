@@ -17,7 +17,7 @@ If you created your AWS account after 2013-12-04 you have a default VPC in each 
 
 **This is an advanced resource** and has special caveats to be aware of when using it. Please read this document in its entirety before using this resource.
 
-The `awsDefaultVpc` resource behaves differently from normal resources in that if a default VPC exists, Terraform does not _create_ this resource, but instead "adopts" it into management.
+The `aws_default_vpc` resource behaves differently from normal resources in that if a default VPC exists, Terraform does not _create_ this resource, but instead "adopts" it into management.
 If no default VPC exists, Terraform creates a new default VPC, which leads to the implicit creation of [other resources](https://docs.aws.amazon.com/vpc/latest/userguide/default-vpc.html#default-vpc-components).
 By default, `terraform destroy` does not delete the default VPC but does remove the resource from Terraform state.
 Set the `forceDestroy` argument to `true` to delete the default VPC.
@@ -50,9 +50,9 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The arguments of an `awsDefaultVpc` differ slightly from those of [`awsVpc`](vpc.html):
+The arguments of an `aws_default_vpc` differ slightly from those of [`aws_vpc`](vpc.html):
 
-* The `cidrBlock` and `instance_tenancy` arguments become computed attributes
+* The `cidrBlock` and `instanceTenancy` arguments become computed attributes
 * The default value for `enableDnsHostnames` is `true`
 
 This resource supports the following additional arguments:
@@ -88,4 +88,4 @@ Using `terraform import`, import Default VPCs using the VPC `id`. For example:
 % terraform import aws_default_vpc.default vpc-a01106c2
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-23d964c1dc88c45ec1734d4089d10399fa0b6a694656d6ed659894a9f0b6dd98 -->
+<!-- cache-key: cdktf-0.20.0 input-23d964c1dc88c45ec1734d4089d10399fa0b6a694656d6ed659894a9f0b6dd98 -->

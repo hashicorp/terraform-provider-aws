@@ -78,7 +78,7 @@ The following arguments are required:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Same as `cluster_arn`.
+* `id` - Same as `clusterArn`.
 
 ## Import
 
@@ -102,4 +102,4 @@ Using `terraform import`, import Managed Streaming for Kafka Cluster Policy usin
 % terraform import aws_msk_cluster_policy.example arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-1d0af5714d8c3f37bc8001ce239abd95f2f1a370064fc908a9872519c5f9e04e -->
+<!-- cache-key: cdktf-0.20.0 input-1d0af5714d8c3f37bc8001ce239abd95f2f1a370064fc908a9872519c5f9e04e -->
