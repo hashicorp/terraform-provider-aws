@@ -43,6 +43,7 @@ func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
 					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "rotate_immediately", "true"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", strconv.Itoa(days)),
 					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.duration", ""),
@@ -50,9 +51,49 @@ func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"rotate_immediately"},
+			},
+		},
+	})
+}
+
+func TestAccSecretsManagerSecretRotation_rotateImmediately(t *testing.T) {
+	ctx := acctest.Context(t)
+	var secret secretsmanager.DescribeSecretOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	const (
+		resourceName               = "aws_secretsmanager_secret_rotation.test"
+		lambdaFunctionResourceName = "aws_lambda_function.test"
+		days                       = 7
+	)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretRotationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretRotationConfig_rotateImmediately(rName, days),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "rotation_enabled", "true"),
+					resource.TestCheckResourceAttrPair(resourceName, "rotation_lambda_arn", lambdaFunctionResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "rotate_immediately", "false"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.automatically_after_days", strconv.Itoa(days)),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.duration", ""),
+					resource.TestCheckResourceAttr(resourceName, "rotation_rules.0.schedule_expression", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"rotate_immediately"},
 			},
 		},
 	})
@@ -151,9 +192,10 @@ func TestAccSecretsManagerSecretRotation_scheduleExpression(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"rotate_immediately"},
 			},
 		},
 	})
@@ -199,9 +241,10 @@ func TestAccSecretsManagerSecretRotation_scheduleExpressionToDays(t *testing.T) 
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"rotate_immediately"},
 			},
 		},
 	})
@@ -246,9 +289,10 @@ func TestAccSecretsManagerSecretRotation_scheduleExpressionHours(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"rotate_immediately"},
 			},
 		},
 	})
@@ -283,9 +327,10 @@ func TestAccSecretsManagerSecretRotation_duration(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"rotate_immediately"},
 			},
 		},
 	})
@@ -416,6 +461,34 @@ resource "aws_secretsmanager_secret_version" "test" {
 resource "aws_secretsmanager_secret_rotation" "test" {
   secret_id           = aws_secretsmanager_secret.test.id
   rotation_lambda_arn = aws_lambda_function.test.arn
+
+  rotation_rules {
+    automatically_after_days = %[2]d
+  }
+
+  depends_on = [aws_lambda_permission.test]
+}
+`, rName, automaticallyAfterDays))
+}
+
+func testAccSecretRotationConfig_rotateImmediately(rName string, automaticallyAfterDays int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		testAccSecretRotationConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_secretsmanager_secret" "test" {
+  name = %[1]q
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = "test-string"
+}
+
+resource "aws_secretsmanager_secret_rotation" "test" {
+  secret_id           = aws_secretsmanager_secret.test.id
+  rotation_lambda_arn = aws_lambda_function.test.arn
+  rotate_immediately  = false
 
   rotation_rules {
     automatically_after_days = %[2]d

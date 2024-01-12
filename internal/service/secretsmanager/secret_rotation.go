@@ -35,6 +35,11 @@ func resourceSecretRotation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"rotate_immediately": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"rotation_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
@@ -88,6 +93,7 @@ func resourceSecretRotationCreate(ctx context.Context, d *schema.ResourceData, m
 	secretID := d.Get("secret_id").(string)
 	input := &secretsmanager.RotateSecretInput{
 		ClientRequestToken: aws.String(id.UniqueId()), // Needed because we're handling our own retries
+		RotateImmediately:  aws.Bool(d.Get("rotate_immediately").(bool)),
 		RotationRules:      expandRotationRules(d.Get("rotation_rules").([]interface{})),
 		SecretId:           aws.String(secretID),
 	}
@@ -146,24 +152,27 @@ func resourceSecretRotationUpdate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
-	secretID := d.Get("secret_id").(string)
-	input := &secretsmanager.RotateSecretInput{
-		ClientRequestToken: aws.String(id.UniqueId()), // Needed because we're handling our own retries
-		RotationRules:      expandRotationRules(d.Get("rotation_rules").([]interface{})),
-		SecretId:           aws.String(secretID),
-	}
+	if d.HasChanges("rotation_lambda_arn", "rotation_rules") {
+		secretID := d.Get("secret_id").(string)
+		input := &secretsmanager.RotateSecretInput{
+			ClientRequestToken: aws.String(id.UniqueId()), // Needed because we're handling our own retries
+			RotateImmediately:  aws.Bool(d.Get("rotate_immediately").(bool)),
+			RotationRules:      expandRotationRules(d.Get("rotation_rules").([]interface{})),
+			SecretId:           aws.String(secretID),
+		}
 
-	if v, ok := d.GetOk("rotation_lambda_arn"); ok {
-		input.RotationLambdaARN = aws.String(v.(string))
-	}
+		if v, ok := d.GetOk("rotation_lambda_arn"); ok {
+			input.RotationLambdaARN = aws.String(v.(string))
+		}
 
-	// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
-		return conn.RotateSecret(ctx, input)
-	}, "AccessDeniedException")
+		// AccessDeniedException: Secrets Manager cannot invoke the specified Lambda function.
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
+			return conn.RotateSecret(ctx, input)
+		}, "AccessDeniedException")
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Secrets Manager Secret Rotation (%s): %s", d.Id(), err)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Secrets Manager Secret Rotation (%s): %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceSecretRotationRead(ctx, d, meta)...)
