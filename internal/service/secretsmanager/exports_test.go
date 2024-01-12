@@ -5,9 +5,10 @@ package secretsmanager
 
 // Exports for use in tests only.
 var (
-	ResourceSecret        = resourceSecret
-	ResourceSecretPolicy  = resourceSecretPolicy
-	ResourceSecretVersion = resourceSecretVersion
+	ResourceSecret         = resourceSecret
+	ResourceSecretPolicy   = resourceSecretPolicy
+	ResourceSecretRotation = resourceSecretRotation
+	ResourceSecretVersion  = resourceSecretVersion
 
 	FindSecretByID                = findSecretByID
 	FindSecretPolicyByID          = findSecretPolicyByID
