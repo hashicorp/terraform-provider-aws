@@ -100,6 +100,16 @@ func expandRecordingGroupRecordingStrategy(configured []interface{}) *configserv
 	return &recordingStrategy
 }
 
+func expandRecordingMode(mode map[string]interface{}) *configservice.RecordingMode {
+	recordingMode := configservice.RecordingMode{}
+
+	if v, ok := mode["recording_frequency"].(string); ok {
+		recordingMode.RecordingFrequency = aws.String(v)
+	}
+
+	return &recordingMode
+}
+
 func expandRulesEvaluationModes(in []interface{}) []*configservice.EvaluationModeConfiguration {
 	if len(in) == 0 {
 		return nil
@@ -260,6 +270,17 @@ func flattenRecordingGroup(g *configservice.RecordingGroup) []map[string]interfa
 
 	return []map[string]interface{}{m}
 }
+
+func flattenRecordingMode(g *configservice.RecordingMode) []map[string]interface{} {
+	m := make(map[string]interface{}, 1)
+
+	if g.RecordingFrequency != nil {
+		m["recording_frequency"] = *g.RecordingFrequency
+	}
+
+	return []map[string]interface{}{m}
+}
+
 func flattenExclusionByResourceTypes(exclusionByResourceTypes *configservice.ExclusionByResourceTypes) []interface{} {
 	if exclusionByResourceTypes == nil {
 		return nil
@@ -300,6 +321,7 @@ func flattenRecordingGroupRecordingStrategy(recordingStrategy *configservice.Rec
 
 	return []interface{}{m}
 }
+
 func flattenRuleScope(scope *configservice.Scope) []interface{} {
 	var items []interface{}
 
