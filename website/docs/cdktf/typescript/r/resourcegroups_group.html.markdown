@@ -45,8 +45,8 @@ This resource supports the following arguments:
 * `name` - (Required) The resource group's name. A resource group name can have a maximum of 127 characters, including letters, numbers, hyphens, dots, and underscores. The name cannot start with `AWS` or `aws`.
 * `configuration` - (Optional) A configuration associates the resource group with an AWS service and specifies how the service can interact with the resources in the group. See below for details.
 * `description` - (Optional) A description of the resource group.
-* `resourceQuery` - (Required) A `resource_query` block. Resource queries are documented below.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `resourceQuery` - (Required) A `resourceQuery` block. Resource queries are documented below.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `resourceQuery` block supports the following arguments:
 
@@ -68,7 +68,7 @@ The `parameters` block supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN assigned by AWS for this resource group.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -92,4 +92,4 @@ Using `terraform import`, import resource groups using the `name`. For example:
 % terraform import aws_resourcegroups_group.foo resource-group-name
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-ffd6b1c7348fc0bfb39edb3c57aaf4b3dc4b1a11fa63096a13a4a4883d2ab21d -->
+<!-- cache-key: cdktf-0.20.0 input-ffd6b1c7348fc0bfb39edb3c57aaf4b3dc4b1a11fa63096a13a4a4883d2ab21d -->

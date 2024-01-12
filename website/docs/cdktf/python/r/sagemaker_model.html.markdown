@@ -134,4 +134,4 @@ Using `terraform import`, import models using the `name`. For example:
 % terraform import aws_sagemaker_model.test_model model-foo
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-19ce3f053fc0e6fa1af2c28c5e497e97fb4890e3cc71a468a66b19f56cd52592 -->
+<!-- cache-key: cdktf-0.20.0 input-19ce3f053fc0e6fa1af2c28c5e497e97fb4890e3cc71a468a66b19f56cd52592 -->

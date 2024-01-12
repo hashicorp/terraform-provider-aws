@@ -106,7 +106,7 @@ The `healthCheck` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The `service_name` and `version` separation by a slash (`/`).
+* `id` - The `serviceName` and `version` separation by a slash (`/`).
 * `createdAt` - The timestamp when the deployment was created.
 * `state` - The current state of the container service.
 * `version` - The version number of the deployment.
@@ -139,4 +139,4 @@ Using `terraform import`, import Lightsail Container Service Deployment Version 
 % terraform import aws_lightsail_container_service_deployment_version.example container-service-1/1
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-bb1ba480fb42ed01fcc93296f85d9bb0f9f2e3da82d84722d66da594585cd420 -->
+<!-- cache-key: cdktf-0.20.0 input-bb1ba480fb42ed01fcc93296f85d9bb0f9f2e3da82d84722d66da594585cd420 -->

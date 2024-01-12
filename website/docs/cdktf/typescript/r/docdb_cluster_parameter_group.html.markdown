@@ -51,7 +51,7 @@ This resource supports the following arguments:
 * `family` - (Required, Forces new resource) The family of the DocumentDB cluster parameter group.
 * `description` - (Optional, Forces new resource) The description of the DocumentDB cluster parameter group. Defaults to "Managed by Terraform".
 * `parameter` - (Optional) A list of DocumentDB parameters to apply. Setting parameters to system default values may show a difference on imported resources.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Parameter blocks support the following:
 
@@ -67,7 +67,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The DocumentDB cluster parameter group name.
 * `arn` - The ARN of the DocumentDB cluster parameter group.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -91,4 +91,4 @@ Using `terraform import`, import DocumentDB Cluster Parameter Groups using the `
 % terraform import aws_docdb_cluster_parameter_group.cluster_pg production-pg-1
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-419b7174b76157b8619854ef58a66430a8d320805696c26428ef99ede67bae36 -->
+<!-- cache-key: cdktf-0.20.0 input-419b7174b76157b8619854ef58a66430a8d320805696c26428ef99ede67bae36 -->

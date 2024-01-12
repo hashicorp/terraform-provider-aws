@@ -99,8 +99,8 @@ This resource exports the following attributes in addition to the arguments abov
 * `originalSourceFileSystemArn` - The Amazon Resource Name (ARN) of the original source Amazon EFS file system in the replication configuration.
 * `sourceFileSystemArn` - The Amazon Resource Name (ARN) of the current source file system in the replication configuration.
 * `sourceFileSystemRegion` - The AWS Region in which the source Amazon EFS file system is located.
-* `destination[0]FileSystemId` - The fs ID of the replica.
-* `destination[0]Status` - The status of the replication.
+* `destination[0].file_system_id` - The fs ID of the replica.
+* `destination[0].status` - The status of the replication.
 
 ## Timeouts
 
@@ -131,4 +131,4 @@ Using `terraform import`, import EFS Replication Configurations using the file s
 % terraform import aws_efs_replication_configuration.example fs-id
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-946efd1b44fba73bdf7367fb477373ab0672aab7b032ed389da0ec41f5bbc874 -->
+<!-- cache-key: cdktf-0.20.0 input-946efd1b44fba73bdf7367fb477373ab0672aab7b032ed389da0ec41f5bbc874 -->

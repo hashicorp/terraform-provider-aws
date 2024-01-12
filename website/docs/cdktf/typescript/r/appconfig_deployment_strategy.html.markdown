@@ -54,7 +54,7 @@ This resource supports the following arguments:
 * `description` - (Optional) Description of the deployment strategy. Can be at most 1024 characters.
 * `finalBakeTimeInMinutes` - (Optional) Amount of time AWS AppConfig monitors for alarms before considering the deployment to be complete and no longer eligible for automatic roll back. Minimum value of 0, maximum value of 1440.
 * `growthType` - (Optional) Algorithm used to define how percentage grows over time. Valid value: `LINEAR` and `EXPONENTIAL`. Defaults to `LINEAR`.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -62,7 +62,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - AppConfig deployment strategy ID.
 * `arn` - ARN of the AppConfig Deployment Strategy.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -86,4 +86,4 @@ Using `terraform import`, import AppConfig Deployment Strategies using their dep
 % terraform import aws_appconfig_deployment_strategy.example 11xxxxx
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-5523efc97b4058c67f8184189e652c62466a4aef6fbcf077f1b0196ea0ec5624 -->
+<!-- cache-key: cdktf-0.20.0 input-5523efc97b4058c67f8184189e652c62466a4aef6fbcf077f1b0196ea0ec5624 -->

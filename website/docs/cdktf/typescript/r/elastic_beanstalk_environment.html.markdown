@@ -78,7 +78,7 @@ for any `create` or `update` action. Minimum `10s`, maximum `180s`. Omit this to
 use the default behavior, which is an exponential backoff
 * `versionLabel` - (Optional) The name of the Elastic Beanstalk Application Version
 to use in deployment.
-* `tags` - (Optional) A set of tags to apply to the Environment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A set of tags to apply to the Environment. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Option Settings
 
@@ -141,7 +141,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `name` - Name of the Elastic Beanstalk Environment.
 * `description` - Description of the Elastic Beanstalk Environment.
 * `tier` - The environment tier specified.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `application` – The Elastic Beanstalk Application specified for this environment.
 * `setting` – Settings specifically set for this Environment.
 * `allSettings` – List of all option settings configured in this Environment. These
@@ -182,4 +182,4 @@ Using `terraform import`, import Elastic Beanstalk Environments using the `id`. 
 % terraform import aws_elastic_beanstalk_environment.prodenv e-rpqsewtp2j
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-ad1ef9e1da7358ae03a61072b63ebad273ca716292310f87ea1ffcf0427f9d1d -->
+<!-- cache-key: cdktf-0.20.0 input-ad1ef9e1da7358ae03a61072b63ebad273ca716292310f87ea1ffcf0427f9d1d -->

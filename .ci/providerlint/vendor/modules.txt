@@ -24,7 +24,7 @@ github.com/agext/levenshtein
 # github.com/apparentlymart/go-textseg/v15 v15.0.0
 ## explicit; go 1.16
 github.com/apparentlymart/go-textseg/v15/textseg
-# github.com/aws/aws-sdk-go v1.49.8
+# github.com/aws/aws-sdk-go v1.49.19
 ## explicit; go 1.19
 github.com/aws/aws-sdk-go/aws/awserr
 github.com/aws/aws-sdk-go/aws/endpoints
@@ -183,7 +183,7 @@ github.com/bflad/tfproviderlint/xpasses/XR007
 github.com/bflad/tfproviderlint/xpasses/XR008
 github.com/bflad/tfproviderlint/xpasses/XS001
 github.com/bflad/tfproviderlint/xpasses/XS002
-# github.com/cloudflare/circl v1.3.3
+# github.com/cloudflare/circl v1.3.7
 ## explicit; go 1.19
 github.com/cloudflare/circl/dh/x25519
 github.com/cloudflare/circl/dh/x448

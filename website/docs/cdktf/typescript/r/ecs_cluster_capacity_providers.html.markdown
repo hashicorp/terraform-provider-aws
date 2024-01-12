@@ -69,7 +69,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Same as `cluster_name`.
+* `id` - Same as `clusterName`.
 
 ## Import
 
@@ -93,4 +93,4 @@ Using `terraform import`, import ECS cluster capacity providers using the `clust
 % terraform import aws_ecs_cluster_capacity_providers.example my-cluster
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-07d58c0c07d75ffbdc73f076ed8b48e2079c33284e6a34a1e4cdf792f6d41841 -->
+<!-- cache-key: cdktf-0.20.0 input-07d58c0c07d75ffbdc73f076ed8b48e2079c33284e6a34a1e4cdf792f6d41841 -->

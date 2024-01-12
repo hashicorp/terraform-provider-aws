@@ -146,8 +146,8 @@ When the type is `HOST_COUNT`, the value represents the minimum number of health
 The `trafficRoutingConfig` block supports the following:
 
 * `type` - (Optional) Type of traffic routing config. One of `TimeBasedCanary`, `TimeBasedLinear`, `AllAtOnce`.
-* `timeBasedCanary` - (Optional) The time based canary configuration information. If `type` is `TimeBasedLinear`, use `time_based_linear` instead.
-* `timeBasedLinear` - (Optional) The time based linear configuration information. If `type` is `TimeBasedCanary`, use `time_based_canary` instead.
+* `timeBasedCanary` - (Optional) The time based canary configuration information. If `type` is `TimeBasedLinear`, use `timeBasedLinear` instead.
+* `timeBasedLinear` - (Optional) The time based linear configuration information. If `type` is `TimeBasedCanary`, use `timeBasedCanary` instead.
 
 The `timeBasedCanary` block supports the following:
 
@@ -188,4 +188,4 @@ Using `terraform import`, import CodeDeploy Deployment Configurations using the 
 % terraform import aws_codedeploy_deployment_config.example my-deployment-config
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-2cc160bcb5a9c6c91fd5d75e63168fd2d320f48dbdb419ab8d514075206a12e7 -->
+<!-- cache-key: cdktf-0.20.0 input-2cc160bcb5a9c6c91fd5d75e63168fd2d320f48dbdb419ab8d514075206a12e7 -->

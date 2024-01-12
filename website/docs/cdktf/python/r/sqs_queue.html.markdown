@@ -95,11 +95,23 @@ from cdktf import Fn, Token, TerraformStack
 # See https://cdk.tf/provider-generation for more details.
 #
 from imports.aws.sqs_queue import SqsQueue
+from imports.aws.sqs_queue_redrive_allow_policy import SqsQueueRedriveAllowPolicy
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        SqsQueue(self, "terraform_queue_deadletter",
-            name="terraform-example-deadletter-queue",
+        terraform_queue_deadletter = SqsQueue(self, "terraform_queue_deadletter",
+            name="terraform-example-deadletter-queue"
+        )
+        terraform_queue = SqsQueue(self, "terraform_queue",
+            name="terraform-example-queue",
+            redrive_policy=Token.as_string(
+                Fn.jsonencode({
+                    "dead_letter_target_arn": terraform_queue_deadletter.arn,
+                    "max_receive_count": 4
+                }))
+        )
+        SqsQueueRedriveAllowPolicy(self, "terraform_queue_redrive_allow_policy",
+            queue_url=terraform_queue_deadletter.id,
             redrive_allow_policy=Token.as_string(
                 Fn.jsonencode({
                     "redrive_permission": "byQueue",
@@ -202,4 +214,4 @@ Using `terraform import`, import SQS Queues using the queue `url`. For example:
 % terraform import aws_sqs_queue.public_queue https://queue.amazonaws.com/80398EXAMPLE/MyQueue
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-61c8bbd892ec566ac1dba66044b682f7399f3a0480c812df8151302e52b9e635 -->
+<!-- cache-key: cdktf-0.20.0 input-73d659bd50569b3c8fc9416a390ac20884b69a87261e4c407bc298935589e844 -->

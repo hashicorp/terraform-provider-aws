@@ -63,7 +63,7 @@ This resource supports the following arguments:
 
 * `accountId` - (Optional) The AWS account ID for the S3 Access Grants instance. Defaults to automatically determined account ID of the Terraform AWS provider.
 * `identityCenterArn` - (Optional) The ARN of the AWS IAM Identity Center instance associated with the S3 Access Grants instance.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -72,7 +72,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `accessGrantsInstanceArn` - Amazon Resource Name (ARN) of the S3 Access Grants instance.
 * `accessGrantsInstanceId` - Unique ID of the S3 Access Grants instance.
 * `identityCenterApplicationArn` - The ARN of the AWS IAM Identity Center instance application; a subresource of the original Identity Center instance.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -96,4 +96,4 @@ Using `terraform import`, import S3 Access Grants instances using the `accountId
 % terraform import aws_s3control_access_grants_instance.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-b93dc63072425c740c37ee25cbe238215ca8b10e57f9a55f7f1d1276607f9789 -->
+<!-- cache-key: cdktf-0.20.0 input-b93dc63072425c740c37ee25cbe238215ca8b10e57f9a55f7f1d1276607f9789 -->

@@ -12,7 +12,7 @@ description: |-
 
 Manages the Security Hub Organization Configuration.
 
-~> **NOTE:** This resource requires an [`awsSecurityhubOrganizationAdminAccount`](/docs/providers/aws/r/securityhub_organization_admin_account.html) to be configured (not necessarily with Terraform). More information about managing Security Hub in an organization can be found in the [Managing administrator and member accounts](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-accounts.html) documentation
+~> **NOTE:** This resource requires an [`aws_securityhub_organization_admin_account`](/docs/providers/aws/r/securityhub_organization_admin_account.html) to be configured (not necessarily with Terraform). More information about managing Security Hub in an organization can be found in the [Managing administrator and member accounts](https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-accounts.html) documentation
 
 ~> **NOTE:** This is an advanced Terraform resource. Terraform will automatically assume management of the Security Hub Organization Configuration without import and perform no actions on removal from the Terraform configuration.
 
@@ -89,4 +89,4 @@ Using `terraform import`, import an existing Security Hub enabled account using 
 % terraform import aws_securityhub_organization_configuration.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-5b0a80355870042433f0256e95b1b1ca23a8a89ac8d72a202dca64a9bd9f9132 -->
+<!-- cache-key: cdktf-0.20.0 input-5b0a80355870042433f0256e95b1b1ca23a8a89ac8d72a202dca64a9bd9f9132 -->

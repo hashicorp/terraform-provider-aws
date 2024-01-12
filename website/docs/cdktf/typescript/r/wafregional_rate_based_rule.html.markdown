@@ -64,7 +64,7 @@ This resource supports the following arguments:
 * `rateKey` - (Required) Valid value is IP.
 * `rateLimit` - (Required) The maximum number of requests, which have an identical value in the field specified by the RateKey, allowed in a five-minute period. Minimum value is 100.
 * `predicate` - (Optional) The objects to include in a rule (documented below).
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Nested Blocks
 
@@ -87,7 +87,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the WAF Regional Rate Based Rule.
 * `arn` - The ARN of the WAF Regional Rate Based Rule.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -111,4 +111,4 @@ Using `terraform import`, import WAF Regional Rate Based Rule using the id. For 
 % terraform import aws_wafregional_rate_based_rule.wafrule a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-c9528cd637559b06111f0a86770cfd3352bea18039b8f306e153eeb9fb06d57f -->
+<!-- cache-key: cdktf-0.20.0 input-c9528cd637559b06111f0a86770cfd3352bea18039b8f306e153eeb9fb06d57f -->

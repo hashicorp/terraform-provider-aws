@@ -129,4 +129,4 @@ Using `terraform import`, import Bedrock custom model using the `id` set to the 
 % terraform import aws_bedrock_model_invocation_logging_configuration.my_config us-east-1
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-6a6344a5bcdcbee5ffbb3e6bfe5855bb6387749abc8d00f3624bcc81d6f76069 -->
+<!-- cache-key: cdktf-0.20.0 input-6a6344a5bcdcbee5ffbb3e6bfe5855bb6387749abc8d00f3624bcc81d6f76069 -->

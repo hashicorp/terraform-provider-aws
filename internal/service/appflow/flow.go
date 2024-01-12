@@ -366,6 +366,11 @@ func resourceFlow() *schema.Resource {
 																			Computed:         true,
 																			ValidateDiagFunc: enum.Validate[types.AggregationType](),
 																		},
+																		"target_file_size": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																			Computed: true,
+																		},
 																	},
 																},
 															},
@@ -1509,6 +1514,10 @@ func expandAggregationConfig(tfMap map[string]interface{}) *types.AggregationCon
 		a.AggregationType = types.AggregationType(v)
 	}
 
+	if v, ok := tfMap["target_file_size"].(int); ok && v != 0 {
+		a.TargetFileSize = aws.Int64(int64(v))
+	}
+
 	return a
 }
 
@@ -2639,6 +2648,7 @@ func flattenAggregationConfig(aggregationConfig *types.AggregationConfig) map[st
 	m := map[string]interface{}{}
 
 	m["aggregation_type"] = aggregationConfig.AggregationType
+	m["target_file_size"] = aggregationConfig.TargetFileSize
 
 	return m
 }

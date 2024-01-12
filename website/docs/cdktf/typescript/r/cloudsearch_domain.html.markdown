@@ -12,7 +12,7 @@ description: |-
 
 Provides an CloudSearch domain resource.
 
-Terraform waits for the domain to become `active` when applying a configuration.
+Terraform waits for the domain to become `Active` when applying a configuration.
 
 ## Example Usage
 
@@ -138,4 +138,4 @@ Using `terraform import`, import CloudSearch Domains using the `name`. For examp
 % terraform import aws_cloudsearch_domain.example example-domain
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-df7fa25a0a776188ea2cf1cb4023457fb311e8f2073fe09ae64b76245200a9e4 -->
+<!-- cache-key: cdktf-0.20.0 input-df7fa25a0a776188ea2cf1cb4023457fb311e8f2073fe09ae64b76245200a9e4 -->
