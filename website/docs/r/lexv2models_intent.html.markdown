@@ -70,6 +70,76 @@ resource "aws_lexv2models_intent" "example" {
   bot_version = aws_lexv2models_bot_locale.test.bot_version
   name        = "botens_namn"
   locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  confirmation_setting {
+    active = true
+
+    prompt_specification {
+      allow_interrupt = true
+      max_retries     = 1
+      message_selection_strategy = "Ordered"
+
+      prompt_attempts_specification {
+        allow_interrupt = true
+        map_block_key   = "Initial"
+
+        allowed_input_types {
+          allow_audio_input = true
+          allow_dtmf_input  = true
+        }
+
+        audio_and_dtmf_input_specification {
+          start_timeout_ms = 4000
+
+          audio_specification {
+            end_timeout_ms = 640
+            max_length_ms  = 15000
+          }
+
+          dtmf_specification {
+            deletion_character = "*"
+            end_character      = "#"
+            end_timeout_ms     = 5000
+            max_length         = 513
+          }
+        }
+
+        text_input_specification {
+          start_timeout_ms = 30000
+        }
+      }
+
+      prompt_attempts_specification {
+        allow_interrupt = true
+        map_block_key   = "Retry1"
+
+        allowed_input_types {
+          allow_audio_input = true
+          allow_dtmf_input  = true
+        }
+
+        audio_and_dtmf_input_specification {
+          start_timeout_ms = 4000
+
+          audio_specification {
+            end_timeout_ms = 640
+            max_length_ms  = 15000
+          }
+
+          dtmf_specification {
+            deletion_character = "*"
+            end_character      = "#"
+            end_timeout_ms     = 5000
+            max_length         = 513
+          }
+        }
+
+        text_input_specification {
+          start_timeout_ms = 30000
+        }
+      }
+    }
+  }
 }
 ```
 
@@ -85,7 +155,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `closing_setting` - (Optional) Configuration block for the response that Amazon Lex sends to the user when the intent is closed. See [`closing_setting`](#closing_setting).
-* `confirmation_setting` - (Optional) Configuration block for prompts that Amazon Lex sends to the user to confirm the completion of an intent. If the user answers "no," the settings contain a statement that is sent to the user to end the intent. See [`confirmation_setting`](#confirmation_setting).
+* `confirmation_setting` - (Optional) Configuration block for prompts that Amazon Lex sends to the user to confirm the completion of an intent. If the user answers "no," the settings contain a statement that is sent to the user to end the intent. If you configure this block without `prompt_specification.*.prompt_attempts_specification`, AWS will provide default configurations for `Initial` and `Retry1` `prompt_attempts_specification`s. This will cause Terraform to report differences. Use the `confirmation_setting` configuration above in the [Basic Usage](#basic-usage) example to avoid differences resulting from AWS default configuration. See [`confirmation_setting`](#confirmation_setting).
 * `description` - (Optional) Description of the intent. Use the description to help identify the intent in lists.
 * `dialog_code_hook` - (Optional) Configuration block for invoking the alias Lambda function for each user input. You can invoke this Lambda function to personalize user interaction. See [`dialog_code_hook`](#dialog_code_hook).
 * `fulfillment_code_hook` - (Optional) Configuration block for invoking the alias Lambda function when the intent is ready for fulfillment. You can invoke this function to complete the bot's transaction with the user. See [`fulfillment_code_hook`](#fulfillment_code_hook).

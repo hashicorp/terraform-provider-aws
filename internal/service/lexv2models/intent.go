@@ -982,10 +982,6 @@ func (r *resourceIntent) Create(ctx context.Context, req resource.CreateRequest,
 	data.CreationDateTime = dataAfter.CreationDateTime
 	data.LastUpdatedDateTime = dataAfter.LastUpdatedDateTime
 
-	//if len(data.SlotPriority) > 0 {
-	// update because SlotPriority can't be set on create
-	//}
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
