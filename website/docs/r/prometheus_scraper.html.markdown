@@ -94,7 +94,6 @@ EOT
 }
 ```
 
-
 ### Use default EKS scraper configuration
 
 You can use the data source `aws_prometheus_scraper_configuration` to use a
