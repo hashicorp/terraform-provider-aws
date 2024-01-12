@@ -962,7 +962,7 @@ func TestAccLexV2ModelsIntent_disappears(t *testing.T) {
 	})
 }
 
-func TestAccLexV2ModelsIntent_update(t *testing.T) {
+func TestAccLexV2ModelsIntent_updateConfirmationSetting(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var intent lexmodelsv2.DescribeIntentOutput
@@ -1001,7 +1001,7 @@ func TestAccLexV2ModelsIntent_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccIntentConfig_updateConfirmationSetting(rName, 2, "test2", 650, 660),
+				Config: testAccIntentConfig_updateConfirmationSetting(rName, 1, "test", 650, 660),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -1009,11 +1009,11 @@ func TestAccLexV2ModelsIntent_update(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*", map[string]string{
-						"max_retries":                "2",
+						"max_retries":                "1",
 						"message_selection_strategy": "Ordered",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*.message_group.*.message.*.plain_text_message.*", map[string]string{
-						"value": "test2",
+						"value": "test",
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*.prompt_attempts_specification.*.audio_and_dtmf_input_specification.*.audio_specification.*", map[string]string{
 						"end_timeout_ms": "650",

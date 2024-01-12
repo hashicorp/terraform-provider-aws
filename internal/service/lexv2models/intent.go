@@ -973,7 +973,7 @@ func (r *resourceIntent) Create(ctx context.Context, req resource.CreateRequest,
 
 	// get some data from the intent
 	var dataAfter ResourceIntentData
-	resp.Diagnostics.Append(flex.Flatten(ctx, intent, &dataAfter)...)
+	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameIntent), intent, &dataAfter)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -992,18 +992,18 @@ func (r *resourceIntent) Create(ctx context.Context, req resource.CreateRequest,
 func (r *resourceIntent) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var state ResourceIntentData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	var data ResourceIntentData
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	if err := state.InitFromID(); err != nil {
+	if err := data.InitFromID(); err != nil {
 		resp.Diagnostics.AddError("parsing resource ID", err.Error())
 		return
 	}
 
-	out, err := findIntentByIDs(ctx, conn, state.IntentID.ValueString(), state.BotID.ValueString(), state.BotVersion.ValueString(), state.LocaleID.ValueString())
+	out, err := findIntentByIDs(ctx, conn, data.IntentID.ValueString(), data.BotID.ValueString(), data.BotVersion.ValueString(), data.LocaleID.ValueString())
 
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
@@ -1012,72 +1012,104 @@ func (r *resourceIntent) Read(ctx context.Context, req resource.ReadRequest, res
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionSetting, ResNameIntent, state.ID.String(), err),
+			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionSetting, ResNameIntent, data.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameIntent), out, &state)...)
+	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameIntent), out, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 func (r *resourceIntent) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().LexV2ModelsClient(ctx)
 
-	var plan, state ResourceIntentData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	var old, new ResourceIntentData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	in := &lexmodelsv2.UpdateIntentInput{
-		BotId:      plan.BotID.ValueStringPointer(),
-		BotVersion: plan.BotVersion.ValueStringPointer(),
-		IntentId:   plan.IntentID.ValueStringPointer(),
-		IntentName: plan.Name.ValueStringPointer(),
-		LocaleId:   plan.LocaleID.ValueStringPointer(),
-	}
-
-	resp.Diagnostics.Append(flex.Expand(ctx, &plan, in)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := conn.UpdateIntent(ctx, in)
+	change := false
+	if !new.ClosingSetting.Equal(old.ClosingSetting) {
+		change = true
+	}
+	if !new.ConfirmationSetting.Equal(old.ConfirmationSetting) {
+		change = true
+	}
+	if !new.Description.Equal(old.Description) {
+		change = true
+	}
+	if !new.DialogCodeHook.Equal(old.DialogCodeHook) {
+		change = true
+	}
+	if !new.FulfillmentCodeHook.Equal(old.FulfillmentCodeHook) {
+		change = true
+	}
+	if !new.InitialResponseSetting.Equal(old.InitialResponseSetting) {
+		change = true
+	}
+	if !new.InputContext.Equal(old.InputContext) {
+		change = true
+	}
+	if !new.KendraConfiguration.Equal(old.KendraConfiguration) {
+		change = true
+	}
+	if !new.Name.Equal(old.Name) {
+		change = true
+	}
+	if !new.OutputContext.Equal(old.OutputContext) {
+		change = true
+	}
+	if !new.ParentIntentSignature.Equal(old.ParentIntentSignature) {
+		change = true
+	}
+	if !new.SampleUtterance.Equal(old.SampleUtterance) {
+		change = true
+	}
+	if !new.SlotPriority.Equal(old.SlotPriority) {
+		change = true
+	}
+
+	if !change {
+		return
+	}
+
+	input := &lexmodelsv2.UpdateIntentInput{}
+	resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameIntent), &new, input)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	_, err := conn.UpdateIntent(ctx, input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionUpdating, ResNameIntent, plan.ID.String(), err),
+			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionUpdating, ResNameIntent, new.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionUpdating, ResNameIntent, plan.ID.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
 
-	plan.IntentID = flex.StringToFramework(ctx, out.IntentId)
-	plan.setID()
-
-	_, err = waitIntentNormal(ctx, conn, plan.IntentID.ValueString(), plan.BotID.ValueString(), plan.BotVersion.ValueString(), plan.LocaleID.ValueString(), r.UpdateTimeout(ctx, plan.Timeouts))
+	_, err = waitIntentNormal(ctx, conn, new.IntentID.ValueString(), new.BotID.ValueString(), new.BotVersion.ValueString(), new.LocaleID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForUpdate, ResNameIntent, plan.ID.String(), err),
+			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionWaitingForUpdate, ResNameIntent, new.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
 }
 
 func (r *resourceIntent) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
