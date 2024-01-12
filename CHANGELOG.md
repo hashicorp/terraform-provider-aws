@@ -1,4 +1,10 @@
 ## 5.33.0 (Unreleased)
+
+BUG FIXES:
+
+* data-source/aws_ecr_image: Fix error when `most_recent` is not also `latest` ([#35269](https://github.com/hashicorp/terraform-provider-aws/issues/35269))
+* resource/aws_iot_ca_certificate: Change `registration_config.role_arn` from `TypeBool` to `TypeString`, fixing `Inappropriate value for attribute "role_arn": a bool is required` errors ([#35234](https://github.com/hashicorp/terraform-provider-aws/issues/35234))
+
 ## 5.32.0 (January 11, 2024)
 
 FEATURES:
