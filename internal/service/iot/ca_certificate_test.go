@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -181,11 +180,6 @@ func TestAccIoTCACertificate_registrationConfig(t *testing.T) {
 		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckCACertificateDestroy(ctx),
 		Steps: []resource.TestStep{
-			{
-				Config: testAccCACertificateConfig_registrationConfig_iamRole(),
-				// Hard wait here for the IAM role to work around eventual consistency issues
-				Check: acctest.CheckSleep(t, 10*time.Second),
-			},
 			{
 				Config: testAccCACertificateConfig_registrationConfig(),
 				Check: resource.ComposeTestCheckFunc(
