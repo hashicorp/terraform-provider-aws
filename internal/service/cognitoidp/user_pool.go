@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -318,11 +319,13 @@ func ResourceUserPool() *schema.Resource {
 						"pre_token_generation": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: verify.ValidARN,
 						},
 						"pre_token_generation_config": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -633,7 +636,27 @@ func ResourceUserPool() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			// func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+
+			// 	// check if pre_token_generation exists
+			// 	// if it does, then we need to check if the pre_token_generation has changes
+			// 	// if it does, we need to set the pre_token_generation_config lambda_arn to be the same as the pre_token_generation lambda_arn
+
+			// 	if diff.HasChange("lambda_config") {
+			// 		if diff.HasChange("lambda_config.0.pre_token_generation") {
+			// 			diff.SetNewComputed("lambda_config.0.pre_token_generation_config.0.lambda_arn")
+			// 		}
+
+			// 		if diff.HasChange("lambda_config.0.pre_token_generation_config") {
+			// 			diff.SetNewComputed("lambda_config.0.pre_token_generation")
+			// 		}
+			// 	}
+
+			// 	return nil
+			// },
+			verify.SetTagsDiff,
+		),
 	}
 }
 
@@ -1122,6 +1145,14 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			configs := v.([]interface{})
 			config, ok := configs[0].(map[string]interface{})
 			if ok && config != nil {
+				if d.HasChange("lambda_config.0.pre_token_generation") {
+					config["pre_token_generation_config"].([]interface{})[0].(map[string]interface{})["lambda_arn"] = d.Get("lambda_config.0.pre_token_generation")
+				}
+
+				if d.HasChange("lambda_config.0.pre_token_generation_config.0.lambda_arn") {
+					config["pre_token_generation"] = d.Get("lambda_config.0.pre_token_generation_config.0.lambda_arn")
+				}
+
 				input.LambdaConfig = expandUserPoolLambdaConfig(config)
 			}
 		}
@@ -1554,13 +1585,15 @@ func expandUserPoolLambdaConfig(config map[string]interface{}) *cognitoidentityp
 		configs.PreSignUp = aws.String(v.(string))
 	}
 
+	if v, ok := config["pre_token_generation"]; ok && v.(string) != "" {
+		configs.PreTokenGeneration = aws.String(v.(string))
+	}
+
 	if v, ok := config["pre_token_generation_config"].([]interface{}); ok && len(v) > 0 {
 		s, sok := v[0].(map[string]interface{})
 		if sok && s != nil {
 			configs.PreTokenGenerationConfig = expandedUserPoolPreGenerationConfig(s)
 		}
-	} else if v, ok := config["pre_token_generation"]; ok && v.(string) != "" {
-		configs.PreTokenGeneration = aws.String(v.(string))
 	}
 
 	if v, ok := config["user_migration"]; ok && v.(string) != "" {
@@ -1626,10 +1659,12 @@ func flattenUserPoolLambdaConfig(s *cognitoidentityprovider.LambdaConfigType) []
 		m["pre_sign_up"] = aws.StringValue(s.PreSignUp)
 	}
 
+	if s.PreTokenGeneration != nil {
+		m["pre_token_generation"] = aws.StringValue(s.PreTokenGeneration)
+	}
+
 	if s.PreTokenGenerationConfig != nil {
 		m["pre_token_generation_config"] = flattenUserPoolPreTokenGenerationConfig(s.PreTokenGenerationConfig)
-	} else if s.PreTokenGeneration != nil {
-		m["pre_token_generation"] = aws.StringValue(s.PreTokenGeneration)
 	}
 
 	if s.UserMigration != nil {

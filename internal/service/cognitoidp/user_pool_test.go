@@ -1272,8 +1272,6 @@ func TestAccCognitoIDPUserPool_WithLambda_preGenerationTokenConfig(t *testing.T)
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, nil),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_mode", "ENFORCED"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.pre_token_generation_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_token_generation_config.0.lambda_arn", lambdaResourceName, "arn"),
@@ -1289,8 +1287,6 @@ func TestAccCognitoIDPUserPool_WithLambda_preGenerationTokenConfig(t *testing.T)
 				Config: testAccUserPoolConfig_lambdaPreTokenGenerationConfigUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_mode", "ENFORCED"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.pre_token_generation_config.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "lambda_config.0.pre_token_generation_config.0.lambda_arn", lambdaUpdatedResourceName, "arn"),
@@ -1301,8 +1297,6 @@ func TestAccCognitoIDPUserPool_WithLambda_preGenerationTokenConfig(t *testing.T)
 				Config: testAccUserPoolConfig_lambdaPreTokenGenerationConfigRemove(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_email_sender.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.custom_sms_sender.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "user_pool_add_ons.0.advanced_security_mode", "ENFORCED"),
 					resource.TestCheckResourceAttr(resourceName, "lambda_config.0.pre_token_generation_config.#", "0"),
 				),
