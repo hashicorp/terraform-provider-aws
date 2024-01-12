@@ -13,7 +13,4 @@ var (
 	FindSecretByID                = findSecretByID
 	FindSecretPolicyByID          = findSecretPolicyByID
 	FindSecretVersionByTwoPartKey = findSecretVersionByTwoPartKey
-
-	ErrCodeResourceNotFoundException = errCodeResourceNotFoundException
-	ErrCodeInvalidRequestException   = errCodeInvalidRequestException
 )
