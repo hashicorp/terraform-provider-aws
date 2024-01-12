@@ -6,16 +6,15 @@ package secretsmanager
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_secretsmanager_secret_rotation")
-func DataSourceSecretRotation() *schema.Resource {
+// @SDKDataSource("aws_secretsmanager_secret_rotation", name="Secret Rotation")
+func dataSourceSecretRotation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecretRotationRead,
 
@@ -49,9 +48,8 @@ func DataSourceSecretRotation() *schema.Resource {
 				},
 			},
 			"secret_id": {
-				Type:         schema.TypeString,
-				ValidateFunc: validation.StringLenBetween(1, 2048),
-				Required:     true,
+				Type:     schema.TypeString,
+				Required: true,
 			},
 		},
 	}
@@ -68,7 +66,7 @@ func dataSourceSecretRotationRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s): %s", secretID, err)
 	}
 
-	d.SetId(aws.StringValue(output.ARN))
+	d.SetId(aws.ToString(output.ARN))
 	d.Set("rotation_enabled", output.RotationEnabled)
 	d.Set("rotation_lambda_arn", output.RotationLambdaARN)
 	if err := d.Set("rotation_rules", flattenRotationRules(output.RotationRules)); err != nil {
