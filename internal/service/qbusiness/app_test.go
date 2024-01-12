@@ -37,6 +37,8 @@ func TestAccQBusinessApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.0.attachments_control_mode", "DISABLED"),
 				),
 			},
 			{
@@ -181,6 +183,10 @@ data "aws_partition" "current" {}
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
+
+  attachments_configuration {
+    attachments_control_mode = "DISABLED"
+  }
 }
 
 resource "aws_iam_role" "test" {
