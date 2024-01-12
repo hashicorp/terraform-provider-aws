@@ -5,6 +5,7 @@ package securityhub_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -23,6 +25,7 @@ import (
 
 func testAccAutomationRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	var automationRule types.AutomationRulesConfig
 	resourceName := "aws_securityhub_automation_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -35,7 +38,7 @@ func testAccAutomationRule_basic(t *testing.T) {
 			{
 				Config: testAccAutomationRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutomationRuleExists(ctx, resourceName),
+					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
 				),
 			},
 			{
@@ -49,6 +52,7 @@ func testAccAutomationRule_basic(t *testing.T) {
 
 func testAccAutomationRule_full(t *testing.T) {
 	ctx := acctest.Context(t)
+	var automationRule types.AutomationRulesConfig
 	resourceName := "aws_securityhub_automation_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -61,7 +65,7 @@ func testAccAutomationRule_full(t *testing.T) {
 			{
 				Config: testAccAutomationRuleConfig_full(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutomationRuleExists(ctx, resourceName),
+					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.confidence", "20"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.criticality", "25"),
@@ -87,7 +91,7 @@ func testAccAutomationRule_full(t *testing.T) {
 			{
 				Config: testAccAutomationRuleConfig_fullUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutomationRuleExists(ctx, resourceName),
+					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.confidence", "10"),
 					resource.TestCheckResourceAttr(resourceName, "actions.0.finding_fields_update.0.criticality", "15"),
@@ -111,6 +115,7 @@ func testAccAutomationRule_full(t *testing.T) {
 
 func testAccAutomationRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
+	var automationRule types.AutomationRulesConfig
 	resourceName := "aws_securityhub_automation_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -123,8 +128,8 @@ func testAccAutomationRule_disappears(t *testing.T) {
 			{
 				Config: testAccAutomationRuleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutomationRuleExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecurityhub.ResourceAutomationRule(), resourceName),
+					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecurityhub.ResourceAutomationRule, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -134,6 +139,7 @@ func testAccAutomationRule_disappears(t *testing.T) {
 
 func testAccAutomationRule_stringFilters(t *testing.T) {
 	ctx := acctest.Context(t)
+	var automationRule types.AutomationRulesConfig
 	resourceName := "aws_securityhub_automation_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -146,7 +152,7 @@ func testAccAutomationRule_stringFilters(t *testing.T) {
 			{
 				Config: testAccAutomationRuleConfig_stringFilters(rName, string(types.StringFilterComparisonEquals), "1234567890"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutomationRuleExists(ctx, resourceName),
+					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.aws_account_id.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.aws_account_id.0.comparison", string(types.StringFilterComparisonEquals)),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.aws_account_id.0.value", "1234567890"),
@@ -160,7 +166,7 @@ func testAccAutomationRule_stringFilters(t *testing.T) {
 			{
 				Config: testAccAutomationRuleConfig_stringFilters(rName, string(types.StringFilterComparisonContains), "0987654321"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutomationRuleExists(ctx, resourceName),
+					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.aws_account_id.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.aws_account_id.0.comparison", string(types.StringFilterComparisonContains)),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.aws_account_id.0.value", "0987654321"),
@@ -172,6 +178,7 @@ func testAccAutomationRule_stringFilters(t *testing.T) {
 
 func testAccAutomationRule_numberFilters(t *testing.T) {
 	ctx := acctest.Context(t)
+	var automationRule types.AutomationRulesConfig
 	resourceName := "aws_securityhub_automation_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -184,7 +191,7 @@ func testAccAutomationRule_numberFilters(t *testing.T) {
 			{
 				Config: testAccAutomationRuleConfig_numberFilters(rName, "eq = 5"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutomationRuleExists(ctx, resourceName),
+					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.confidence.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.confidence.0.eq", "5"),
 				),
@@ -197,7 +204,7 @@ func testAccAutomationRule_numberFilters(t *testing.T) {
 			{
 				Config: testAccAutomationRuleConfig_numberFilters(rName, "lte = 50"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutomationRuleExists(ctx, resourceName),
+					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.confidence.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.confidence.0.lte", "50"),
 				),
@@ -208,6 +215,7 @@ func testAccAutomationRule_numberFilters(t *testing.T) {
 
 func testAccAutomationRule_dateFilters(t *testing.T) {
 	ctx := acctest.Context(t)
+	var automationRule types.AutomationRulesConfig
 	resourceName := "aws_securityhub_automation_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	endDate := time.Now().Add(5 * time.Minute).Format(time.RFC3339)
@@ -222,7 +230,7 @@ func testAccAutomationRule_dateFilters(t *testing.T) {
 			{
 				Config: testAccAutomationRuleConfig_dateFiltersAbsoluteRange(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutomationRuleExists(ctx, resourceName),
+					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.created_at.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.created_at.0.end", endDate),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.created_at.0.start", startDate),
@@ -236,7 +244,7 @@ func testAccAutomationRule_dateFilters(t *testing.T) {
 			{
 				Config: testAccAutomationRuleConfig_dateFiltersRelativeRange(rName, string(types.DateRangeUnitDays), 10),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutomationRuleExists(ctx, resourceName),
+					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.created_at.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.created_at.0.date_range.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.created_at.0.date_range.0.unit", string(types.DateRangeUnitDays)),
@@ -249,6 +257,7 @@ func testAccAutomationRule_dateFilters(t *testing.T) {
 
 func testAccAutomationRule_mapFilters(t *testing.T) {
 	ctx := acctest.Context(t)
+	var automationRule types.AutomationRulesConfig
 	resourceName := "aws_securityhub_automation_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -261,7 +270,7 @@ func testAccAutomationRule_mapFilters(t *testing.T) {
 			{
 				Config: testAccAutomationRuleConfig_mapFilters(rName, string(types.MapFilterComparisonEquals), "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutomationRuleExists(ctx, resourceName),
+					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.0.comparison", string(types.MapFilterComparisonEquals)),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.0.key", "key1"),
@@ -276,7 +285,7 @@ func testAccAutomationRule_mapFilters(t *testing.T) {
 			{
 				Config: testAccAutomationRuleConfig_mapFilters(rName, string(types.MapFilterComparisonContains), "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutomationRuleExists(ctx, resourceName),
+					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.0.comparison", string(types.MapFilterComparisonContains)),
 					resource.TestCheckResourceAttr(resourceName, "criteria.0.resource_details_other.0.key", "key2"),
@@ -289,6 +298,7 @@ func testAccAutomationRule_mapFilters(t *testing.T) {
 
 func testAccAutomationRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
+	var automationRule types.AutomationRulesConfig
 	resourceName := "aws_securityhub_automation_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -301,7 +311,7 @@ func testAccAutomationRule_tags(t *testing.T) {
 			{
 				Config: testAccAutomationRuleConfig_tags(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutomationRuleExists(ctx, resourceName),
+					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -314,7 +324,7 @@ func testAccAutomationRule_tags(t *testing.T) {
 			{
 				Config: testAccAutomationRuleConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutomationRuleExists(ctx, resourceName),
+					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -323,7 +333,7 @@ func testAccAutomationRule_tags(t *testing.T) {
 			{
 				Config: testAccAutomationRuleConfig_tags(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAutomationRuleExists(ctx, resourceName),
+					testAccCheckAutomationRuleExists(ctx, resourceName, &automationRule),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -332,18 +342,26 @@ func testAccAutomationRule_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAutomationRuleExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckAutomationRuleExists(ctx context.Context, name string, automationRule *types.AutomationRulesConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
+		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return fmt.Errorf("Not found: %s", n)
+			return create.Error(names.SecurityHubEndpointID, create.ErrActionCheckingExistence, tfsecurityhub.ResNameAutomationRule, name, errors.New("not found"))
+		}
+
+		if rs.Primary.ID == "" {
+			return create.Error(names.SecurityHubEndpointID, create.ErrActionCheckingExistence, tfsecurityhub.ResNameAutomationRule, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
+		resp, err := tfsecurityhub.FindAutomationRuleByARN(ctx, conn, rs.Primary.ID)
+		if err != nil {
+			return create.Error(names.SecurityHubEndpointID, create.ErrActionCheckingExistence, tfsecurityhub.ResNameAutomationRule, rs.Primary.ID, err)
+		}
 
-		_, err := tfsecurityhub.FindAutomationRuleByARN(ctx, conn, rs.Primary.ID)
+		*automationRule = *resp
 
-		return err
+		return nil
 	}
 }
 
@@ -357,16 +375,14 @@ func testAccCheckAutomationRuleDestroy(ctx context.Context) resource.TestCheckFu
 			}
 
 			_, err := tfsecurityhub.FindAutomationRuleByARN(ctx, conn, rs.Primary.ID)
-
 			if tfresource.NotFound(err) {
-				continue
+				return nil
 			}
-
 			if err != nil {
-				return err
+				return create.Error(names.SecurityHubEndpointID, create.ErrActionCheckingDestroyed, tfsecurityhub.ResNameAutomationRule, rs.Primary.ID, err)
 			}
 
-			return fmt.Errorf("Security Hub Automation Rule (%s) still exists", rs.Primary.ID)
+			return create.Error(names.SecurityHubEndpointID, create.ErrActionCheckingDestroyed, tfsecurityhub.ResNameAutomationRule, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil

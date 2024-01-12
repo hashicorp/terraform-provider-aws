@@ -3,14 +3,16 @@ subcategory: "Security Hub"
 layout: "aws"
 page_title: "AWS: aws_securityhub_automation_rule"
 description: |-
-  Provides a Security Hub automation rule resource.
+  Terraform resource for managing an AWS Security Hub Automation Rule.
 ---
 
 # Resource: aws_securityhub_automation_rule
 
-Provides a Security Hub automation rule resource.
+Terraform resource for managing an AWS Security Hub Automation Rule.
 
 ## Example Usage
+
+### Basic Usage
 
 ```terraform
 resource "aws_securityhub_automation_rule" "example" {
