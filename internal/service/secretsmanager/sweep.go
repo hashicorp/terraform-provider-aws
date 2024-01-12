@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
 
 func RegisterSweepers() {
@@ -50,9 +51,16 @@ func sweepSecretPolicies(region string) error {
 		}
 
 		for _, v := range page.SecretList {
+			arn := aws.ToString(v.ARN)
+
+			if owningService := aws.ToString(v.OwningService); owningService != "" {
+				log.Printf("[INFO] Skipping Secrets Manager Secret %s: OwningService=%s", arn, owningService)
+				continue
+			}
+
 			r := resourceSecretPolicy()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(v.ARN))
+			d.SetId(arn)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -90,9 +98,24 @@ func sweepSecrets(region string) error {
 		}
 
 		for _, v := range page.SecretList {
+			arn := aws.ToString(v.ARN)
+
+			if owningService := aws.ToString(v.OwningService); owningService != "" {
+				log.Printf("[INFO] Skipping Secrets Manager Secret %s: OwningService=%s", arn, owningService)
+				continue
+			}
+
 			r := resourceSecret()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(v.ARN))
+			d.SetId(arn)
+			// Refresh replicas.
+			if err := sdk.ReadResource(ctx, r, d, client); err != nil {
+				log.Printf("[WARN] Skipping Secrets Manager Secret %s: %s", arn, err)
+				continue
+			}
+			if d.Id() == "" {
+				continue
+			}
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
