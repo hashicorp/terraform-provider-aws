@@ -34,6 +34,9 @@ func resourceSecretRotation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		MigrateState:  secretRotationMigrateState,
+		SchemaVersion: 1,
+
 		Schema: map[string]*schema.Schema{
 			"rotate_immediately": {
 				Type:     schema.TypeBool,

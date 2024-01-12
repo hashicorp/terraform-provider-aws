@@ -60,6 +60,45 @@ func TestAccSecretsManagerSecretRotation_basic(t *testing.T) {
 	})
 }
 
+func TestAccSecretsManagerSecretRotation_upgradePreRotateImmediately(t *testing.T) {
+	ctx := acctest.Context(t)
+	var secret secretsmanager.DescribeSecretOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	const (
+		resourceName = "aws_secretsmanager_secret_rotation.test"
+		days         = 7
+	)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		CheckDestroy: testAccCheckSecretRotationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.32.0",
+					},
+				},
+				Config: testAccSecretRotationConfig_basic(rName, days),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
+					resource.TestCheckNoResourceAttr(resourceName, "rotate_immediately"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccSecretRotationConfig_basic(rName, days),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretRotationExists(ctx, resourceName, &secret),
+					resource.TestCheckResourceAttr(resourceName, "rotate_immediately", "true"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccSecretsManagerSecretRotation_rotateImmediately(t *testing.T) {
 	ctx := acctest.Context(t)
 	var secret secretsmanager.DescribeSecretOutput
