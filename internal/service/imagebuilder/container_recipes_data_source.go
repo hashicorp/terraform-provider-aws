@@ -35,7 +35,7 @@ func DataSourceContainerRecipes() *schema.Resource {
 			"owner": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"Self", "Shared", "Amazon"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"Self", "Shared", "Amazon", "ThirdParty"}, false),
 			},
 		},
 	}
