@@ -1,4 +1,5 @@
 ## 5.33.0 (Unreleased)
+## 5.33.0 (January 12, 2024)
 
 BUG FIXES:
 
