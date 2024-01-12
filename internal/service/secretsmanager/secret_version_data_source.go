@@ -5,6 +5,7 @@ package secretsmanager
 
 import (
 	"context"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
@@ -21,6 +22,10 @@ func dataSourceSecretVersion() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"created_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -86,6 +91,7 @@ func dataSourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(id)
 	d.Set("arn", output.ARN)
+	d.Set("created_date", aws.String(output.CreatedDate.Format(time.RFC3339)))
 	d.Set("secret_id", secretID)
 	d.Set("secret_binary", string(output.SecretBinary))
 	d.Set("secret_string", output.SecretString)

@@ -5,6 +5,7 @@ package secretsmanager
 
 import (
 	"context"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -28,11 +29,19 @@ func dataSourceSecret() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 				ExactlyOneOf: []string{"arn", "name"},
 			},
+			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"kms_key_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"last_changed_date": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -72,8 +81,10 @@ func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, meta inte
 	arn := aws.ToString(secret.ARN)
 	d.SetId(arn)
 	d.Set("arn", arn)
+	d.Set("created_date", aws.String(secret.CreatedDate.Format(time.RFC3339)))
 	d.Set("description", secret.Description)
 	d.Set("kms_key_id", secret.KmsKeyId)
+	d.Set("last_changed_date", aws.String(secret.LastChangedDate.Format(time.RFC3339)))
 	d.Set("name", secret.Name)
 
 	policy, err := findSecretPolicyByID(ctx, conn, d.Id())
