@@ -1,4 +1,9 @@
 ## 5.33.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_fis_experiment_template: Fix validation error when not using `target.resource_arns` or `target.resource_tag` attributes. ([#35254](https://github.com/hashicorp/terraform-provider-aws/issues/35254))
+
 ## 5.32.1 (January 12, 2024)
 
 BUG FIXES:
