@@ -1,5 +1,9 @@
 ## 5.33.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_mq_broker: Fix `interface conversion: interface {} is *schema.Set, not []string` panic ([#35265](https://github.com/hashicorp/terraform-provider-aws/issues/35265))
+
 BUG FIXES:
 
 * data-source/aws_ecr_image: Fix error when `most_recent` is not also `latest` ([#35269](https://github.com/hashicorp/terraform-provider-aws/issues/35269))
