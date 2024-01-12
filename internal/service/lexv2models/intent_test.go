@@ -981,13 +981,46 @@ func TestAccLexV2ModelsIntent_update(t *testing.T) {
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntentConfig_update(rName),
+				Config: testAccIntentConfig_updateConfirmationSetting(rName, 1, "test", 640, 640),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
 					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*", map[string]string{
+						"max_retries":                "1",
+						"message_selection_strategy": "Ordered",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*.message_group.*.message.*.plain_text_message.*", map[string]string{
+						"value": "test",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*.prompt_attempts_specification.*.audio_and_dtmf_input_specification.*.audio_specification.*", map[string]string{
+						"end_timeout_ms": "640",
+					}),
+				),
+			},
+			{
+				Config: testAccIntentConfig_updateConfirmationSetting(rName, 2, "test2", 650, 660),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*", map[string]string{
+						"max_retries":                "2",
+						"message_selection_strategy": "Ordered",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*.message_group.*.message.*.plain_text_message.*", map[string]string{
+						"value": "test2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*.prompt_attempts_specification.*.audio_and_dtmf_input_specification.*.audio_specification.*", map[string]string{
+						"end_timeout_ms": "650",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "confirmation_setting.*.prompt_specification.*.prompt_attempts_specification.*.audio_and_dtmf_input_specification.*.audio_specification.*", map[string]string{
+						"end_timeout_ms": "660",
+					}),
 				),
 			},
 		},
@@ -1119,7 +1152,7 @@ resource "aws_lexv2models_intent" "test" {
 `, rName))
 }
 
-func testAccIntentConfig_update(rName string) string {
+func testAccIntentConfig_updateConfirmationSetting(rName string, retries int, textMsg string, endTOMs1, endTOMs2 int) string {
 	return acctest.ConfigCompose(
 		testAccIntentConfig_base(rName, 60, true),
 		fmt.Sprintf(`
@@ -1134,13 +1167,13 @@ resource "aws_lexv2models_intent" "test" {
 
     prompt_specification {
       allow_interrupt = true
-      max_retries     = 1
+      max_retries     = %[2]d
       message_selection_strategy = "Ordered"
 
       message_group {
         message {
           plain_text_message {
-            value = "test"
+            value = %[3]q
           }
         }
       }
@@ -1158,7 +1191,7 @@ resource "aws_lexv2models_intent" "test" {
           start_timeout_ms = 4000
 
           audio_specification {
-            end_timeout_ms = 640
+            end_timeout_ms = %[4]d
             max_length_ms  = 15000
           }
 
@@ -1188,7 +1221,7 @@ resource "aws_lexv2models_intent" "test" {
           start_timeout_ms = 4000
 
           audio_specification {
-            end_timeout_ms = 640
+            end_timeout_ms = %[5]d
             max_length_ms  = 15000
           }
 
@@ -1207,5 +1240,5 @@ resource "aws_lexv2models_intent" "test" {
     }
   }
 }
-`, rName))
+`, rName, retries, textMsg, endTOMs1, endTOMs2))
 }

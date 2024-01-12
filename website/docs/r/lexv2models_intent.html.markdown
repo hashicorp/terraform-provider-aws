@@ -95,7 +95,7 @@ The following arguments are optional:
 * `output_context` - (Optional) Configuration blocks for contexts that the intent activates when it is fulfilled. You can use an output context to indicate the intents that Amazon Lex should consider for the next turn of the conversation with a customer. When you use the outputContextsList property, all of the contexts specified in the list are activated when the intent is fulfilled. You can set up to 10 output contexts. You can also set the number of conversation turns that the context should be active, or the length of time that the context should be active. See [`output_context`](#output_context).
 * `parent_intent_signature` - (Optional) Identifier for the built-in intent to base this intent on.
 * `sample_utterance` - (Optional) Configuration block for strings that a user might say to signal the intent. See [`sample_utterance`](#sample_utterance).
-* `slot_priority` - (Optional) Configuration block for a new list of slots and their priorities that are contained by the intent. See [`slot_priority`](#slot_priority).
+* `slot_priority` - (Optional) Configuration block for a new list of slots and their priorities that are contained by the intent. This is ignored on create and only valid for updates. See [`slot_priority`](#slot_priority).
 
 ### `closing_setting`
 

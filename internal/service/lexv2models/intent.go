@@ -861,14 +861,21 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"bot_version": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"creation_date_time": schema.StringAttribute{
 				Computed:   true,
 				CustomType: fwtypes.TimestampType,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
@@ -876,15 +883,22 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 			"id": framework.IDAttribute(),
 			"intent_id": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"last_updated_date_time": schema.StringAttribute{
 				Computed:   true,
 				CustomType: fwtypes.TimestampType,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"locale_id": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"name": schema.StringAttribute{
