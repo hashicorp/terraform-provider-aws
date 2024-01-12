@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -111,16 +113,18 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"keys": {
-							Type:        schema.TypeSet,
-							Optional:    true,
-							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "Resource tag keys to ignore across all resources.",
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Description: "Resource tag keys to ignore across all resources. " +
+								"Can also be configured with the " + envvar.IgnoreTagsKeys + " environment variable.",
 						},
 						"key_prefixes": {
-							Type:        schema.TypeSet,
-							Optional:    true,
-							Elem:        &schema.Schema{Type: schema.TypeString},
-							Description: "Resource tag key prefixes to ignore across all resources.",
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+							Description: "Resource tag key prefixes to ignore across all resources. " +
+								"Can also be configured with the " + envvar.IgnoreTagsKeyPrefixes + " environment variable.",
 						},
 					},
 				},
@@ -559,6 +563,8 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 
 	if v, ok := d.GetOk("ignore_tags"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		config.IgnoreTagsConfig = expandIgnoreTags(ctx, v.([]interface{})[0].(map[string]interface{}))
+	} else {
+		config.IgnoreTagsConfig = expandIgnoreTags(ctx, nil)
 	}
 
 	if v, ok := d.GetOk("max_retries"); ok {
@@ -847,21 +853,41 @@ func expandDefaultTags(ctx context.Context, tfMap map[string]interface{}) *tftag
 }
 
 func expandIgnoreTags(ctx context.Context, tfMap map[string]interface{}) *tftags.IgnoreConfig {
-	if tfMap == nil {
+	var keys, keyPrefixes []interface{}
+
+	if tfMap != nil {
+		if v, ok := tfMap["keys"].(*schema.Set); ok {
+			keys = v.List()
+		}
+		if v, ok := tfMap["key_prefixes"].(*schema.Set); ok {
+			keyPrefixes = v.List()
+		}
+	}
+
+	if v := os.Getenv(envvar.IgnoreTagsKeys); v != "" {
+		for _, k := range strings.Split(v, ",") {
+			if trimmed := strings.TrimSpace(k); trimmed != "" {
+				keys = append(keys, trimmed)
+			}
+		}
+	}
+
+	if v := os.Getenv(envvar.IgnoreTagsKeyPrefixes); v != "" {
+		for _, kp := range strings.Split(v, ",") {
+			if trimmed := strings.TrimSpace(kp); trimmed != "" {
+				keyPrefixes = append(keyPrefixes, trimmed)
+			}
+		}
+	}
+
+	if len(keys) == 0 && len(keyPrefixes) == 0 {
 		return nil
 	}
 
-	ignoreConfig := &tftags.IgnoreConfig{}
-
-	if v, ok := tfMap["keys"].(*schema.Set); ok {
-		ignoreConfig.Keys = tftags.New(ctx, v.List())
+	return &tftags.IgnoreConfig{
+		Keys:        tftags.New(ctx, keys),
+		KeyPrefixes: tftags.New(ctx, keyPrefixes),
 	}
-
-	if v, ok := tfMap["key_prefixes"].(*schema.Set); ok {
-		ignoreConfig.KeyPrefixes = tftags.New(ctx, v.List())
-	}
-
-	return ignoreConfig
 }
 
 func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string, error) {

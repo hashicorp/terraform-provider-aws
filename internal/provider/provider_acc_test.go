@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -341,6 +342,94 @@ func TestAccProvider_IgnoreTagsKeys_multiple(t *testing.T) {
 				Config: testAccProviderConfig_ignoreTagsKeys2("test1", "test2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIgnoreTagsKeys(ctx, t, &provider, []string{"test1", "test2"}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccProvider_IgnoreTagsKeys_envVarOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider *schema.Provider
+
+	t.Setenv(envvar.IgnoreTagsKeys, "test3,test4")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProviderConfig_ignoreTagsKeys0(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIgnoreTagsKeys(ctx, t, &provider, []string{"test3", "test4"}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccProvider_IgnoreTagsKeys_envVarMerged(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider *schema.Provider
+
+	t.Setenv(envvar.IgnoreTagsKeys, "test3,test4")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProviderConfig_ignoreTagsKeys2("test1", "test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIgnoreTagsKeys(ctx, t, &provider, []string{"test1", "test2", "test3", "test4"}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccProvider_IgnoreTagsKeyPrefixes_envVarOnly(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider *schema.Provider
+
+	t.Setenv(envvar.IgnoreTagsKeyPrefixes, "test3,test4")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProviderConfig_ignoreTagsKeyPrefixes0(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIgnoreTagsKeyPrefixes(ctx, t, &provider, []string{"test3", "test4"}),
+				),
+			},
+		},
+	})
+}
+
+func TestAccProvider_IgnoreTagsKeyPrefixes_envVarMerged(t *testing.T) {
+	ctx := acctest.Context(t)
+	var provider *schema.Provider
+
+	t.Setenv(envvar.IgnoreTagsKeyPrefixes, "test3,test4")
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t),
+		ProtoV5ProviderFactories: testAccProtoV5ProviderFactoriesInternal(ctx, t, &provider),
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProviderConfig_ignoreTagsKeyPrefixes2("test1", "test2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIgnoreTagsKeyPrefixes(ctx, t, &provider, []string{"test1", "test2", "test3", "test4"}),
 				),
 			},
 		},
