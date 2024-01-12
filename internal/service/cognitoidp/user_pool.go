@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -636,27 +635,7 @@ func ResourceUserPool() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: customdiff.Sequence(
-			// func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
-
-			// 	// check if pre_token_generation exists
-			// 	// if it does, then we need to check if the pre_token_generation has changes
-			// 	// if it does, we need to set the pre_token_generation_config lambda_arn to be the same as the pre_token_generation lambda_arn
-
-			// 	if diff.HasChange("lambda_config") {
-			// 		if diff.HasChange("lambda_config.0.pre_token_generation") {
-			// 			diff.SetNewComputed("lambda_config.0.pre_token_generation_config.0.lambda_arn")
-			// 		}
-
-			// 		if diff.HasChange("lambda_config.0.pre_token_generation_config") {
-			// 			diff.SetNewComputed("lambda_config.0.pre_token_generation")
-			// 		}
-			// 	}
-
-			// 	return nil
-			// },
-			verify.SetTagsDiff,
-		),
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
