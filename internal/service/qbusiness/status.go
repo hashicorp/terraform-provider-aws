@@ -27,3 +27,19 @@ func statusAppAvailability(ctx context.Context, conn *qbusiness.QBusiness, id st
 		return output, aws.StringValue(output.Status), nil
 	}
 }
+
+func statusIndexAvailability(ctx context.Context, conn *qbusiness.QBusiness, application_id, index_id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindIndexById(ctx, application_id, index_id, conn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
