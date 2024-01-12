@@ -633,7 +633,6 @@ func expandExperimentTemplateTargets(l *schema.Set) (map[string]types.CreateExpe
 		raw := m.(map[string]interface{})
 		config := types.CreateExperimentTemplateTargetInput{}
 		var hasSeenResourceArns bool
-		var hasSeenResourceTag bool
 
 		if v, ok := raw["filter"].([]interface{}); ok && len(v) > 0 {
 			config.Filters = expandExperimentTemplateTargetFilters(v)
@@ -651,11 +650,6 @@ func expandExperimentTemplateTargets(l *schema.Set) (map[string]types.CreateExpe
 				return nil, errors.New("Only one of resource_arns, resource_tag can be set in a target block")
 			}
 			config.ResourceTags = expandExperimentTemplateTargetResourceTags(v)
-			hasSeenResourceTag = true
-		}
-
-		if !hasSeenResourceArns && !hasSeenResourceTag {
-			return nil, errors.New("A target block requires one of resource_arns, resource_tag")
 		}
 
 		if v, ok := raw["resource_type"].(string); ok && v != "" {
@@ -689,7 +683,6 @@ func expandExperimentTemplateTargetsForUpdate(l *schema.Set) (map[string]types.U
 		raw := m.(map[string]interface{})
 		config := types.UpdateExperimentTemplateTargetInput{}
 		var hasSeenResourceArns bool
-		var hasSeenResourceTag bool
 
 		if v, ok := raw["filter"].([]interface{}); ok && len(v) > 0 {
 			config.Filters = expandExperimentTemplateTargetFilters(v)
@@ -707,11 +700,6 @@ func expandExperimentTemplateTargetsForUpdate(l *schema.Set) (map[string]types.U
 				return nil, errors.New("Only one of resource_arns, resource_tag can be set in a target block")
 			}
 			config.ResourceTags = expandExperimentTemplateTargetResourceTags(v)
-			hasSeenResourceTag = true
-		}
-
-		if !hasSeenResourceArns && !hasSeenResourceTag {
-			return nil, errors.New("A target block requires one of resource_arns, resource_tag")
 		}
 
 		if v, ok := raw["resource_type"].(string); ok && v != "" {
