@@ -56,7 +56,8 @@ func ResourceApplication() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"attachments_control_mode": {
 							Type:         schema.TypeString,
-							Required:     true,
+							Optional:     true,
+							Default:      qbusiness.AttachmentsControlModeEnabled,
 							Description:  "Status information about whether file upload functionality is activated or deactivated for your end user.",
 							ValidateFunc: validation.StringInSlice(qbusiness.AttachmentsControlMode_Values(), false),
 						},

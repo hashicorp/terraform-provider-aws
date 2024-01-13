@@ -37,8 +37,6 @@ func TestAccQBusinessApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.0.attachments_control_mode", "DISABLED"),
 				),
 			},
 			{
@@ -107,6 +105,46 @@ func TestAccQBusinessApp_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccQBusinessApp_attachmentsConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var application qbusiness.GetApplicationOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_qbusiness_app.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, qbusiness.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAppExists(ctx, resourceName, &application),
+					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+				),
+			},
+			{
+				Config: testAccAppConfig_attachmentsConfiguration(rName, qbusiness.AttachmentsControlModeEnabled),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAppExists(ctx, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.0.attachments_control_mode", qbusiness.AttachmentsControlModeEnabled),
+				),
+			},
+			{
+				Config: testAccAppConfig_attachmentsConfiguration(rName, qbusiness.AttachmentsControlModeDisabled),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAppExists(ctx, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.0.attachments_control_mode", qbusiness.AttachmentsControlModeDisabled),
 				),
 			},
 		},
@@ -183,10 +221,6 @@ data "aws_partition" "current" {}
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
-
-  attachments_configuration {
-    attachments_control_mode = "DISABLED"
-  }
 }
 
 resource "aws_iam_role" "test" {
@@ -210,6 +244,42 @@ EOF
 }
 
 `, rName)
+}
+
+func testAccAppConfig_attachmentsConfiguration(rName, mode string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_qbusiness_app" "test" {
+  display_name         = %[1]q
+  iam_service_role_arn = aws_iam_role.test.arn
+
+  attachments_configuration {
+    attachments_control_mode = %[2]q
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+"Version": "2012-10-17",
+"Statement": [
+    {
+    "Action": "sts:AssumeRole",
+    "Principal": {
+        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
+    },
+    "Effect": "Allow",
+    "Sid": ""
+    }
+  ]
+}
+EOF
+}
+
+`, rName, mode)
 }
 
 func testAccAppConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
