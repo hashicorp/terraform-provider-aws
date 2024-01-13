@@ -925,6 +925,13 @@ func expandMutualAuthenticationAttributes(l []interface{}) *elbv2.MutualAuthenti
 		}
 	}
 
+	if mode == mutualAuthenticationPassthrough {
+		return &elbv2.MutualAuthenticationAttributes{
+			Mode:          aws.String(mode),
+			TrustStoreArn: aws.String(tfMap["trust_store_arn"].(string)),
+		}
+	}
+
 	return &elbv2.MutualAuthenticationAttributes{
 		Mode:                          aws.String(mode),
 		TrustStoreArn:                 aws.String(tfMap["trust_store_arn"].(string)),
