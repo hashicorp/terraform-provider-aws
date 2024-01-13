@@ -475,7 +475,6 @@ func (r *resourceAutomationRule) Update(ctx context.Context, req resource.Update
 		!plan.RuleName.Equal(state.RuleName) ||
 		!plan.RuleOrder.Equal(state.RuleOrder) ||
 		!plan.RuleStatus.Equal(state.RuleStatus) {
-
 		in := &securityhub.BatchUpdateAutomationRulesInput{}
 		automationRuleItem := awstypes.UpdateAutomationRulesRequestItem{
 			Description: aws.String(plan.Description.ValueString()),
@@ -825,12 +824,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		awsAccountId, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.AwsAccountId = awsAccountId
+		apiObject.AwsAccountId = expandStringFilter(tfList)
 	}
 
 	if !tfObj.AWSAccountName.IsNull() {
@@ -840,12 +834,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		awsAccountName, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.AwsAccountName = awsAccountName
+		apiObject.AwsAccountName = expandStringFilter(tfList)
 	}
 
 	if !tfObj.CompanyName.IsNull() {
@@ -855,12 +844,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		companyName, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.CompanyName = companyName
+		apiObject.CompanyName = expandStringFilter(tfList)
 	}
 
 	if !tfObj.ComplianceAssociatedStandardsId.IsNull() {
@@ -870,12 +854,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		complianceAssociatedStandardsId, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.ComplianceAssociatedStandardsId = complianceAssociatedStandardsId
+		apiObject.ComplianceAssociatedStandardsId = expandStringFilter(tfList)
 	}
 
 	if !tfObj.ComplianceSecurityControlId.IsNull() {
@@ -885,12 +864,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		complianceSecurityControlId, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.ComplianceSecurityControlId = complianceSecurityControlId
+		apiObject.ComplianceSecurityControlId = expandStringFilter(tfList)
 	}
 
 	if !tfObj.ComplianceStatus.IsNull() {
@@ -900,12 +874,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		complianceStatus, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.ComplianceStatus = complianceStatus
+		apiObject.ComplianceStatus = expandStringFilter(tfList)
 	}
 
 	if !tfObj.Confidence.IsNull() {
@@ -915,12 +884,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		confidence, d := expandNumberFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.Confidence = confidence
+		apiObject.Confidence = expandNumberFilter(tfList)
 	}
 
 	if !tfObj.CreatedAt.IsNull() {
@@ -945,12 +909,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		criticality, d := expandNumberFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.Criticality = criticality
+		apiObject.Criticality = expandNumberFilter(tfList)
 	}
 
 	if !tfObj.Description.IsNull() {
@@ -960,12 +919,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		description, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.Description = description
+		apiObject.Description = expandStringFilter(tfList)
 	}
 
 	if !tfObj.FirstObservedAt.IsNull() {
@@ -990,12 +944,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		generatorId, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.GeneratorId = generatorId
+		apiObject.GeneratorId = expandStringFilter(tfList)
 	}
 
 	if !tfObj.Id.IsNull() {
@@ -1005,12 +954,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		id, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.Id = id
+		apiObject.Id = expandStringFilter(tfList)
 	}
 
 	if !tfObj.LastObservedAt.IsNull() {
@@ -1035,12 +979,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		noteText, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.NoteText = noteText
+		apiObject.NoteText = expandStringFilter(tfList)
 	}
 
 	if !tfObj.NoteUpdatedAt.IsNull() {
@@ -1065,12 +1004,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		noteUpdatedBy, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.NoteUpdatedBy = noteUpdatedBy
+		apiObject.NoteUpdatedBy = expandStringFilter(tfList)
 	}
 
 	if !tfObj.ProductARN.IsNull() {
@@ -1080,12 +1014,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		productARN, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.ProductArn = productARN
+		apiObject.ProductArn = expandStringFilter(tfList)
 	}
 
 	if !tfObj.ProductName.IsNull() {
@@ -1095,12 +1024,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		productName, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.ProductName = productName
+		apiObject.ProductName = expandStringFilter(tfList)
 	}
 
 	if !tfObj.RecordState.IsNull() {
@@ -1110,12 +1034,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		recordState, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.RecordState = recordState
+		apiObject.RecordState = expandStringFilter(tfList)
 	}
 
 	if !tfObj.RelatedFindingsId.IsNull() {
@@ -1125,12 +1044,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		relatedFindingsId, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.RelatedFindingsId = relatedFindingsId
+		apiObject.RelatedFindingsId = expandStringFilter(tfList)
 	}
 
 	if !tfObj.RelatedFindingsProductArn.IsNull() {
@@ -1140,12 +1054,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		relatedFindingsProductArn, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.RelatedFindingsProductArn = relatedFindingsProductArn
+		apiObject.RelatedFindingsProductArn = expandStringFilter(tfList)
 	}
 
 	if !tfObj.ResourceApplicationArn.IsNull() {
@@ -1155,12 +1064,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		resourceApplicationArn, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.ResourceApplicationArn = resourceApplicationArn
+		apiObject.ResourceApplicationArn = expandStringFilter(tfList)
 	}
 
 	if !tfObj.ResourceApplicationName.IsNull() {
@@ -1170,12 +1074,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		resourceApplicationName, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.ResourceApplicationName = resourceApplicationName
+		apiObject.ResourceApplicationName = expandStringFilter(tfList)
 	}
 
 	if !tfObj.ResourceDetailsOther.IsNull() {
@@ -1185,12 +1084,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		resourceDetailsOther, d := expandMapFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.ResourceDetailsOther = resourceDetailsOther
+		apiObject.ResourceDetailsOther = expandMapFilter(tfList)
 	}
 
 	if !tfObj.ResourceId.IsNull() {
@@ -1200,12 +1094,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		resourceId, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.ResourceId = resourceId
+		apiObject.ResourceId = expandStringFilter(tfList)
 	}
 
 	if !tfObj.ResourcePartition.IsNull() {
@@ -1215,12 +1104,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		resourcePartition, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.ResourcePartition = resourcePartition
+		apiObject.ResourcePartition = expandStringFilter(tfList)
 	}
 
 	if !tfObj.ResourceRegion.IsNull() {
@@ -1230,12 +1114,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		resourceRegion, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.ResourceRegion = resourceRegion
+		apiObject.ResourceRegion = expandStringFilter(tfList)
 	}
 
 	if !tfObj.ResourceTags.IsNull() {
@@ -1245,12 +1124,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		resourceTags, d := expandMapFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.ResourceTags = resourceTags
+		apiObject.ResourceTags = expandMapFilter(tfList)
 	}
 
 	if !tfObj.ResourceType.IsNull() {
@@ -1260,12 +1134,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		resourceType, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.ResourceType = resourceType
+		apiObject.ResourceType = expandStringFilter(tfList)
 	}
 
 	if !tfObj.SeverityLabel.IsNull() {
@@ -1275,12 +1144,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		severityLabel, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.SeverityLabel = severityLabel
+		apiObject.SeverityLabel = expandStringFilter(tfList)
 	}
 
 	if !tfObj.SourceUrl.IsNull() {
@@ -1290,12 +1154,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		sourceUrl, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.SourceUrl = sourceUrl
+		apiObject.SourceUrl = expandStringFilter(tfList)
 	}
 
 	if !tfObj.Title.IsNull() {
@@ -1305,12 +1164,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		title, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.Title = title
+		apiObject.Title = expandStringFilter(tfList)
 	}
 
 	if !tfObj.Type.IsNull() {
@@ -1320,12 +1174,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		typeValue, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.Type = typeValue
+		apiObject.Type = expandStringFilter(tfList)
 	}
 
 	if !tfObj.UpdatedAt.IsNull() {
@@ -1350,12 +1199,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		userDefinedFields, d := expandMapFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.UserDefinedFields = userDefinedFields
+		apiObject.UserDefinedFields = expandMapFilter(tfList)
 	}
 
 	if !tfObj.VerificationState.IsNull() {
@@ -1365,12 +1209,7 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		verificationState, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.VerificationState = verificationState
+		apiObject.VerificationState = expandStringFilter(tfList)
 	}
 
 	if !tfObj.WorkflowStatus.IsNull() {
@@ -1380,22 +1219,15 @@ func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.Autom
 			return nil, diags
 		}
 
-		workflowStatus, d := expandStringFilter(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.WorkflowStatus = workflowStatus
+		apiObject.WorkflowStatus = expandStringFilter(tfList)
 	}
 
 	return &apiObject, diags
 }
 
-func expandStringFilter(tfList []stringFilterData) ([]awstypes.StringFilter, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
+func expandStringFilter(tfList []stringFilterData) []awstypes.StringFilter {
 	if len(tfList) == 0 {
-		return nil, diags
+		return nil
 	}
 
 	apiResult := []awstypes.StringFilter{}
@@ -1409,14 +1241,12 @@ func expandStringFilter(tfList []stringFilterData) ([]awstypes.StringFilter, dia
 		apiResult = append(apiResult, apiObject)
 	}
 
-	return apiResult, diags
+	return apiResult
 }
 
-func expandNumberFilter(tfList []numberFilterData) ([]awstypes.NumberFilter, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
+func expandNumberFilter(tfList []numberFilterData) []awstypes.NumberFilter {
 	if len(tfList) == 0 {
-		return nil, diags
+		return nil
 	}
 
 	apiResult := []awstypes.NumberFilter{}
@@ -1439,14 +1269,12 @@ func expandNumberFilter(tfList []numberFilterData) ([]awstypes.NumberFilter, dia
 		apiResult = append(apiResult, apiObject)
 	}
 
-	return apiResult, diags
+	return apiResult
 }
 
-func expandMapFilter(tfList []mapFilterData) ([]awstypes.MapFilter, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
+func expandMapFilter(tfList []mapFilterData) []awstypes.MapFilter {
 	if len(tfList) == 0 {
-		return nil, diags
+		return nil
 	}
 
 	apiResult := []awstypes.MapFilter{}
@@ -1469,7 +1297,7 @@ func expandMapFilter(tfList []mapFilterData) ([]awstypes.MapFilter, diag.Diagnos
 		apiResult = append(apiResult, apiObject)
 	}
 
-	return apiResult, diags
+	return apiResult
 }
 
 func expandDateFilter(ctx context.Context, tfList []dateFilterData) ([]awstypes.DateFilter, diag.Diagnostics) {
@@ -1491,12 +1319,7 @@ func expandDateFilter(ctx context.Context, tfList []dateFilterData) ([]awstypes.
 				return nil, diags
 			}
 
-			dateRange, d := expandDateRange(tfList)
-			diags.Append(d...)
-			if diags.HasError() {
-				return nil, diags
-			}
-			apiObject.DateRange = dateRange
+			apiObject.DateRange = expandDateRange(tfList)
 		}
 
 		if !filter.End.IsNull() {
@@ -1513,11 +1336,9 @@ func expandDateFilter(ctx context.Context, tfList []dateFilterData) ([]awstypes.
 	return apiResult, diags
 }
 
-func expandDateRange(tfList []dateRangeData) (*awstypes.DateRange, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
+func expandDateRange(tfList []dateRangeData) *awstypes.DateRange {
 	if len(tfList) == 0 {
-		return nil, diags
+		return nil
 	}
 
 	tfObj := tfList[0]
@@ -1532,7 +1353,7 @@ func expandDateRange(tfList []dateRangeData) (*awstypes.DateRange, diag.Diagnost
 		apiObject.Value = aws.Int32(int32(tfObj.Value.ValueInt64()))
 	}
 
-	return &apiObject, diags
+	return &apiObject
 }
 
 func flattenActions(ctx context.Context, apiObject []awstypes.AutomationRulesAction) (types.Set, diag.Diagnostics) {
@@ -1969,7 +1790,6 @@ func flattenDateFilter(ctx context.Context, apiObject []awstypes.DateFilter) (ty
 	result := []attr.Value{}
 
 	for _, filter := range apiObject {
-
 		dateRange, d := flattenDateRange(ctx, filter.DateRange)
 		diags.Append(d...)
 
