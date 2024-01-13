@@ -91,6 +91,7 @@ func ResourceIndex() *schema.Resource {
 				MaxItems:         1,
 				Optional:         true,
 				ForceNew:         true,
+				Description:      "Configuration information for document metadata or fields",
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{

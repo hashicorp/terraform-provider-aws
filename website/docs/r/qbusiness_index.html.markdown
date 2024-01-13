@@ -3,67 +3,50 @@ subcategory: "Amazon Q Business"
 layout: "aws"
 page_title: "AWS: aws_qbusiness_index"
 description: |-
-  Terraform resource for managing an AWS Amazon Q Business Index.
+  Provides a Q Business Index resource.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_qbusiness_index
 
-Terraform resource for managing an AWS Amazon Q Business Index.
+Provides a Q Business Index resource.
 
 ## Example Usage
 
-### Basic Usage
-
 ```terraform
 resource "aws_qbusiness_index" "example" {
+  application_id = "aws_qbusiness_app.test.application_id"
+  display_name   = "Index display name"
 }
 ```
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `application_id` - (Required) Id of the Q Business application.
+* `display_name` - (Required) Index display name.
+* `capacity_configuration` - (Optional) The number of additional storage units for the Amazon Q index.
+* `description` - (Optional) The description for the Amazon Q index.
+* `document_attribute_configurations` - (Optional) Configuration information for document metadata or fields.
 
-The following arguments are optional:
+`attachments_configuration` supports the following:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `attribute` - (Required) Configuration information for document metadata or fields. Min 1, maximum 50 elements.
+
+`attribute` supports the following:
+
+* `name` - (Required) The name of the document attribute.
+* `search` - (Required) Information about whether the document attribute can be used by an end user to search for information on their web experience. Valid values are `ENABLED` and `DISABLED`
+* `type` - (Required) The type of document attribute. Valid values are `STRING`, `STRING_LIST`, `NUMBER` and `DATE`
+
+`capacity_configuration` supports the following:
+
+* `units` - (Required) The number of storage units configured for an Amazon Q index.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Index. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
-
-## Import
-
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Q Business Index using the `example_id_arg`. For example:
-
-```terraform
-import {
-  to = aws_qbusiness_index.example
-  id = "index-id-12345678"
-}
-```
-
-Using `terraform import`, import Amazon Q Business Index using the `example_id_arg`. For example:
-
-```console
-% terraform import aws_qbusiness_index.example index-id-12345678
-```
+* `index_id` - Id of the Q Business index.
+* `arn` - Amazon Resource Name (ARN) of the Q Business index.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
