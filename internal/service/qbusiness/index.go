@@ -5,7 +5,6 @@ package qbusiness
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strings"
 
@@ -88,19 +87,18 @@ func ResourceIndex() *schema.Resource {
 				),
 			},
 			"document_attribute_configurations": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				//ForceNew:         true,
+				Type:             schema.TypeList,
+				MaxItems:         1,
+				Optional:         true,
+				ForceNew:         true,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attribute": {
-							Type:        schema.TypeList,
-							Required:    true,
-							MaxItems:    50,
-							MinItems:    1,
-							Description: "The name of the index field.",
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 50,
+							MinItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
@@ -190,7 +188,6 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating qbusiness index (%s): %s", d.Id(), err)
 	}
-
 	return append(diags, resourceIndexRead(ctx, d, meta)...)
 }
 
@@ -221,7 +218,8 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "setting qbusiness index capacity_configuration: %s", err)
 	}
 
-	if err := d.Set("document_attribute_configurations", flattenDocumentAttributeConfigurations(output.DocumentAttributeConfigurations)); err != nil {
+	omitDefaults := filterDefaultDocumentAttributeConfigurations(output.DocumentAttributeConfigurations)
+	if err := d.Set("document_attribute_configurations", flattenDocumentAttributeConfigurations(omitDefaults)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting qbusiness index document_attribute_configurations: %s", err)
 	}
 
@@ -249,23 +247,6 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("capacity_configuration") {
 		input.CapacityConfiguration = expandIndexCapacityConfiguration(d.Get("capacity_configuration").([]interface{}))
-	}
-
-	if d.HasChange("document_attribute_configurations") {
-		old, new := d.GetChange("document_attribute_configurations")
-		oldConfig := expandDocumentAttributeConfigurations(old.([]interface{}))
-		newConfig := expandDocumentAttributeConfigurations(new.([]interface{}))
-
-		fmt.Printf("\nold config: %v\n", oldConfig)
-		fmt.Printf("new config: %v\n", newConfig)
-
-		if !isSubsetOf(oldConfig, newConfig) {
-			fmt.Print("old config is not a subset of new config\n")
-			diags = append(diags, resourceIndexDelete(ctx, d, meta)...)
-			d.SetId("")
-			return diags
-		}
-		input.DocumentAttributeConfigurations = newConfig
 	}
 
 	_, err := conn.UpdateIndexWithContext(ctx, input)
@@ -388,18 +369,20 @@ func expandDocumentAttributeConfigurations(v []interface{}) []*qbusiness.Documen
 	return attributes
 }
 
-func isSubsetOf(subset, superset []*qbusiness.DocumentAttributeConfiguration) bool {
-	for _, sub := range subset {
-		found := false
-		for _, super := range superset {
-			if aws.StringValue(sub.Name) == aws.StringValue(super.Name) {
-				found = true
-				break
-			}
+func filterDefaultDocumentAttributeConfigurations(conf []*qbusiness.DocumentAttributeConfiguration) []*qbusiness.DocumentAttributeConfiguration {
+	var attributes []*qbusiness.DocumentAttributeConfiguration
+	for _, attribute := range conf {
+		filter := false
+		if strings.HasPrefix(aws.StringValue(attribute.Name), "_") {
+			filter = true
 		}
-		if !found {
-			return false
+		if aws.StringValue(attribute.Name) == "_document_title" && aws.StringValue(attribute.Search) == qbusiness.StatusDisabled {
+			filter = false
 		}
+		if filter {
+			continue
+		}
+		attributes = append(attributes, attribute)
 	}
-	return true
+	return attributes
 }

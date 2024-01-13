@@ -107,6 +107,9 @@ func TestAccQBusinessIndex_documentAttributeConfigurations(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIndexExists(ctx, resourceName, &index),
 					resource.TestCheckResourceAttr(resourceName, "document_attribute_configurations.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "document_attribute_configurations.0.attribute.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "document_attribute_configurations.0.attribute.0.name", "foo1"),
+					resource.TestCheckResourceAttr(resourceName, "document_attribute_configurations.0.attribute.1.name", "foo2"),
 				),
 			},
 		},
