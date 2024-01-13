@@ -5,6 +5,7 @@ package qbusiness
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 
@@ -87,10 +88,10 @@ func ResourceIndex() *schema.Resource {
 				),
 			},
 			"document_attribute_configurations": {
-				Type:             schema.TypeList,
-				MaxItems:         1,
-				Optional:         true,
-				ForceNew:         true,
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				//ForceNew:         true,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -153,13 +154,17 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		DisplayName:   aws.String(display_name),
 	}
 
-	input.Tags = getTagsIn(ctx)
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
 
 	if v, ok := d.GetOk("capacity_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.CapacityConfiguration = &qbusiness.IndexCapacityConfiguration{
 			Units: aws.Int64(int64(v.([]interface{})[0].(map[string]interface{})["units"].(int))),
 		}
 	}
+
+	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateIndexWithContext(ctx, input)
 
@@ -244,6 +249,23 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChange("capacity_configuration") {
 		input.CapacityConfiguration = expandIndexCapacityConfiguration(d.Get("capacity_configuration").([]interface{}))
+	}
+
+	if d.HasChange("document_attribute_configurations") {
+		old, new := d.GetChange("document_attribute_configurations")
+		oldConfig := expandDocumentAttributeConfigurations(old.([]interface{}))
+		newConfig := expandDocumentAttributeConfigurations(new.([]interface{}))
+
+		fmt.Printf("\nold config: %v\n", oldConfig)
+		fmt.Printf("new config: %v\n", newConfig)
+
+		if !isSubsetOf(oldConfig, newConfig) {
+			fmt.Print("old config is not a subset of new config\n")
+			diags = append(diags, resourceIndexDelete(ctx, d, meta)...)
+			d.SetId("")
+			return diags
+		}
+		input.DocumentAttributeConfigurations = newConfig
 	}
 
 	_, err := conn.UpdateIndexWithContext(ctx, input)
@@ -364,4 +386,20 @@ func expandDocumentAttributeConfigurations(v []interface{}) []*qbusiness.Documen
 		})
 	}
 	return attributes
+}
+
+func isSubsetOf(subset, superset []*qbusiness.DocumentAttributeConfiguration) bool {
+	for _, sub := range subset {
+		found := false
+		for _, super := range superset {
+			if aws.StringValue(sub.Name) == aws.StringValue(super.Name) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			return false
+		}
+	}
+	return true
 }

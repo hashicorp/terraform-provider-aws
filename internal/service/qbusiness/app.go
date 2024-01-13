@@ -48,9 +48,10 @@ func ResourceApplication() *schema.Resource {
 				Computed:    true,
 			},
 			"attachments_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attachments_control_mode": {
@@ -72,10 +73,11 @@ func ResourceApplication() *schema.Resource {
 				),
 			},
 			"encryption_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
+				Type:             schema.TypeList,
+				Optional:         true,
+				ForceNew:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"kms_key_id": {
@@ -180,16 +182,12 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("display_name", app.DisplayName)
 	d.Set("iam_service_role_arn", app.RoleArn)
 
-	if v, ok := d.GetOk("attachments_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		if err := d.Set("attachments_configuration", flattenAttachmentsConfiguration(app.AttachmentsConfiguration)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting qbusiness application attachments_configuration: %s", err)
-		}
+	if err := d.Set("attachments_configuration", flattenAttachmentsConfiguration(app.AttachmentsConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting qbusiness application attachments_configuration: %s", err)
 	}
 
-	if v, ok := d.GetOk("encryption_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		if err := d.Set("encryption_configuration", flattenEncryptionConfiguration(app.EncryptionConfiguration)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting qbusiness application encryption_configuration: %s", err)
-		}
+	if err := d.Set("encryption_configuration", flattenEncryptionConfiguration(app.EncryptionConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting qbusiness application encryption_configuration: %s", err)
 	}
 	return diags
 }
