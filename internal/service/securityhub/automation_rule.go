@@ -660,12 +660,7 @@ func expandFindingFieldsUpdate(ctx context.Context, tfList []findingFieldsUpdate
 			return nil, diags
 		}
 
-		note, d := expandNote(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.Note = note
+		apiObject.Note = expandNote(tfList)
 	}
 
 	if !tfObj.RelatedFindings.IsNull() {
@@ -675,12 +670,7 @@ func expandFindingFieldsUpdate(ctx context.Context, tfList []findingFieldsUpdate
 			return nil, diags
 		}
 
-		relatedFindings, d := expandRelatedFindings(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.RelatedFindings = relatedFindings
+		apiObject.RelatedFindings = expandRelatedFindings(tfList)
 	}
 
 	if !tfObj.Severity.IsNull() {
@@ -690,12 +680,7 @@ func expandFindingFieldsUpdate(ctx context.Context, tfList []findingFieldsUpdate
 			return nil, diags
 		}
 
-		severity, d := expandSeverity(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.Severity = severity
+		apiObject.Severity = expandSeverity(tfList)
 	}
 
 	if !tfObj.Types.IsNull() {
@@ -717,22 +702,15 @@ func expandFindingFieldsUpdate(ctx context.Context, tfList []findingFieldsUpdate
 			return nil, diags
 		}
 
-		workflow, d := expandWorkflow(tfList)
-		diags.Append(d...)
-		if diags.HasError() {
-			return nil, diags
-		}
-		apiObject.Workflow = workflow
+		apiObject.Workflow = expandWorkflow(tfList)
 	}
 
 	return &apiObject, diags
 }
 
-func expandNote(tfList []noteData) (*awstypes.NoteUpdate, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
+func expandNote(tfList []noteData) *awstypes.NoteUpdate {
 	if len(tfList) == 0 {
-		return nil, diags
+		return nil
 	}
 
 	tfObj := tfList[0]
@@ -742,14 +720,12 @@ func expandNote(tfList []noteData) (*awstypes.NoteUpdate, diag.Diagnostics) {
 		UpdatedBy: aws.String(tfObj.UpdatedBy.ValueString()),
 	}
 
-	return &apiObject, diags
+	return &apiObject
 }
 
-func expandRelatedFindings(tfList []relatedFindingsData) ([]awstypes.RelatedFinding, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
+func expandRelatedFindings(tfList []relatedFindingsData) []awstypes.RelatedFinding {
 	if len(tfList) == 0 {
-		return nil, diags
+		return nil
 	}
 
 	apiResult := []awstypes.RelatedFinding{}
@@ -763,14 +739,12 @@ func expandRelatedFindings(tfList []relatedFindingsData) ([]awstypes.RelatedFind
 		apiResult = append(apiResult, apiObject)
 	}
 
-	return apiResult, diags
+	return apiResult
 }
 
-func expandSeverity(tfList []severityData) (*awstypes.SeverityUpdate, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
+func expandSeverity(tfList []severityData) *awstypes.SeverityUpdate {
 	if len(tfList) == 0 {
-		return nil, diags
+		return nil
 	}
 
 	tfObj := tfList[0]
@@ -785,14 +759,12 @@ func expandSeverity(tfList []severityData) (*awstypes.SeverityUpdate, diag.Diagn
 		apiObject.Product = aws.Float64(tfObj.Product.ValueFloat64())
 	}
 
-	return &apiObject, diags
+	return &apiObject
 }
 
-func expandWorkflow(tfList []workflowData) (*awstypes.WorkflowUpdate, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
+func expandWorkflow(tfList []workflowData) *awstypes.WorkflowUpdate {
 	if len(tfList) == 0 {
-		return nil, diags
+		return nil
 	}
 
 	tfObj := tfList[0]
@@ -803,7 +775,7 @@ func expandWorkflow(tfList []workflowData) (*awstypes.WorkflowUpdate, diag.Diagn
 		apiObject.Status = awstypes.WorkflowStatus(tfObj.Status.ValueString())
 	}
 
-	return &apiObject, diags
+	return &apiObject
 }
 
 func expandCriteria(ctx context.Context, tfList []criteriaData) (*awstypes.AutomationRulesFindingFilters, diag.Diagnostics) {
