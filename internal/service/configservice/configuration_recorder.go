@@ -110,6 +110,32 @@ func ResourceConfigurationRecorder() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(configservice.RecordingFrequency_Values(), false),
 						},
+						"recording_mode_overrides": {
+							Type:     schema.TypeList,
+							Optional: true,
+							// Even though the name is plural, the API only allows one override:
+							// ValidationException: 1 validation error detected: Value '[com.amazonaws.starling.dove.RecordingModeOverride@aa179030, com.amazonaws.starling.dove.RecordingModeOverride@4b13c61c]' at 'configurationRecorder.recordingMode.recordingModeOverrides' failed to satisfy constraint: Member must have length less than or equal to 1
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"description": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"resource_types": {
+										Type:     schema.TypeSet,
+										Required: true,
+										MinItems: 1,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"recording_frequency": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(configservice.RecordingFrequency_Values(), false),
+									},
+								},
+							},
+						},
 					},
 				},
 			},

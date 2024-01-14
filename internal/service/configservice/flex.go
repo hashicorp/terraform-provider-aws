@@ -107,7 +107,38 @@ func expandRecordingMode(mode map[string]interface{}) *configservice.RecordingMo
 		recordingMode.RecordingFrequency = aws.String(v)
 	}
 
+	if v, ok := mode["recording_mode_overrides"]; ok {
+		recordingMode.RecordingModeOverrides = expandRecordingModeRecordingModeOverrides(v.([]interface{}))
+	}
+
 	return &recordingMode
+}
+
+func expandRecordingModeRecordingModeOverrides(configured []interface{}) []*configservice.RecordingModeOverride {
+	var out []*configservice.RecordingModeOverride
+	for _, val := range configured {
+		m, ok := val.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		e := &configservice.RecordingModeOverride{}
+
+		if v, ok := m["description"].(string); ok && v != "" {
+			e.Description = aws.String(v)
+		}
+
+		if v, ok := m["resource_types"]; ok {
+			e.ResourceTypes = flex.ExpandStringSet(v.(*schema.Set))
+		}
+
+		if v, ok := m["recording_frequency"].(string); ok && v != "" {
+			e.RecordingFrequency = aws.String(v)
+		}
+
+		out = append(out, e)
+	}
+	return out
 }
 
 func expandRulesEvaluationModes(in []interface{}) []*configservice.EvaluationModeConfiguration {
@@ -278,7 +309,29 @@ func flattenRecordingMode(g *configservice.RecordingMode) []map[string]interface
 		m["recording_frequency"] = *g.RecordingFrequency
 	}
 
+	if g.RecordingModeOverrides != nil && len(g.RecordingModeOverrides) > 0 {
+		m["recording_mode_overrides"] = flattenRecordingModeRecordingModeOverrides(g.RecordingModeOverrides)
+	}
+
 	return []map[string]interface{}{m}
+}
+
+func flattenRecordingModeRecordingModeOverrides(in []*configservice.RecordingModeOverride) []interface{} {
+	var out []interface{}
+	for _, v := range in {
+		m := map[string]interface{}{
+			"description":         aws.StringValue(v.Description),
+			"recording_frequency": aws.StringValue(v.RecordingFrequency),
+		}
+
+		if v.ResourceTypes != nil {
+			m["resource_types"] = flex.FlattenStringSet(v.ResourceTypes)
+		}
+
+		out = append(out, m)
+	}
+
+	return out
 }
 
 func flattenExclusionByResourceTypes(exclusionByResourceTypes *configservice.ExclusionByResourceTypes) []interface{} {
