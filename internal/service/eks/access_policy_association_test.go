@@ -43,8 +43,9 @@ func TestAccEKSAccessPolicyAssociation_basic(t *testing.T) {
 				Config: testAccAccessPolicyAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPolicyAssociationExists(ctx, resourceName, &associatedaccesspolicy),
-					resource.TestCheckResourceAttr(resourceName, "associated_access_policy.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "associated_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "cluster_name"),
+					resource.TestCheckResourceAttrSet(resourceName, "modified_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "policy_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "principal_arn"),
 				),
@@ -81,7 +82,7 @@ func TestAccEKSAccessPolicyAssociation_disappears(t *testing.T) {
 				Config: testAccAccessPolicyAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessPolicyAssociationExists(ctx, resourceName, &associatedaccesspolicy),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceAccessEntry(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceAccessPolicyAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -131,11 +132,9 @@ func testAccCheckAccessPolicyAssociationExists(ctx context.Context, name string,
 		if err != nil {
 			return err
 		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
 
 		output, err := tfeks.FindAccessPolicyByID(ctx, conn, clusterName, principal_arn, policy_arn)
-
 		if err != nil {
 			return err
 		}
@@ -213,7 +212,7 @@ resource "aws_eks_cluster" "test" {
 }
 
 func testAccAccessPolicyAssociationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccAccessEntryConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAccessPolicyAssociationConfig_base(rName), fmt.Sprintf(`
 resource "aws_iam_user" "test" {
   name = %[1]q
 }
@@ -221,9 +220,10 @@ resource "aws_iam_user" "test" {
 resource "aws_eks_access_entry" "test" {
   cluster_name  = aws_eks_cluster.test.name
   principal_arn = aws_iam_user.test.arn
+  depends_on    = [aws_eks_cluster.test]
 }
 
-resource "aws_eks_access_policy_association" "this" {
+resource "aws_eks_access_policy_association" "test" {
   cluster_name  = aws_eks_cluster.test.name
   principal_arn = aws_iam_user.test.arn
   policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
@@ -231,6 +231,7 @@ resource "aws_eks_access_policy_association" "this" {
   access_scope {
     type = "cluster"
   }
+  depends_on = [aws_eks_cluster.test, aws_eks_access_entry.test]
 }
 `, rName))
 }

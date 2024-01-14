@@ -75,7 +75,7 @@ func resourceCluster() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							ForceNew: true,
-							// When value is -1, instance maintenance policy is removed, state file will not contain any value.
+							// bootstrapClusterAdminPermissions is not returned by API, hence comparing old value with value in schema.
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								var bootstrapClusterAdminPermissions bool
 								if _, ok := d.GetOk("access_config"); ok {

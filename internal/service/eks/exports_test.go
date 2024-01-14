@@ -5,13 +5,14 @@ package eks
 
 // Exports for use in tests only.
 var (
-	ResourceAccessEntry            = resourceAccessEntry
-	ResourceAddon                  = resourceAddon
-	ResourceCluster                = resourceCluster
-	ResourceFargateProfile         = resourceFargateProfile
-	ResourceIdentityProviderConfig = resourceIdentityProviderConfig
-	ResourceNodeGroup              = resourceNodeGroup
-	ResourcePodIdentityAssociation = newPodIdentityAssociationResource
+	ResourceAccessEntry             = resourceAccessEntry
+	ResourceAccessPolicyAssociation = resourceAccessPolicyAssociation
+	ResourceAddon                   = resourceAddon
+	ResourceCluster                 = resourceCluster
+	ResourceFargateProfile          = resourceFargateProfile
+	ResourceIdentityProviderConfig  = resourceIdentityProviderConfig
+	ResourceNodeGroup               = resourceNodeGroup
+	ResourcePodIdentityAssociation  = newPodIdentityAssociationResource
 
 	FindAddonByTwoPartKey                      = findAddonByTwoPartKey
 	FindClusterByName                          = findClusterByName

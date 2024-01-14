@@ -18,10 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_eks_access_policy_association", name="Access Policy Association")
@@ -54,11 +52,13 @@ func resourceAccessPolicyAssociation() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"type": {
 							Type:     schema.TypeString,
+							ForceNew: true,
 							Required: true,
 						},
 						"namespaces": {
 							Type:     schema.TypeSet,
 							Optional: true,
+							ForceNew: true,
 							Elem: &schema.Schema{
 								Type: schema.TypeString,
 							},
@@ -88,8 +88,6 @@ func resourceAccessPolicyAssociation() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			names.AttrTags:    tftags.TagsSchemaComputed(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -135,10 +133,6 @@ func resourceAccessPolicyAssociationRead(ctx context.Context, d *schema.Resource
 		return diags
 	}
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EKS Access Policy Association (%s): %s", d.Id(), err)
-	}
-
 	if output == nil {
 		if d.IsNewResource() {
 			return sdkdiag.AppendErrorf(diags, "reading EKS Associated Policy Attachment (%s): not found after creation", d.Id())
@@ -147,6 +141,10 @@ func resourceAccessPolicyAssociationRead(ctx context.Context, d *schema.Resource
 		log.Printf("[WARN] EKS Associated Policy Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EKS Access Policy Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set("access_scope", flattenAccessScope(output.AccessScope))
@@ -162,7 +160,6 @@ func resourceAccessPolicyAssociationRead(ctx context.Context, d *schema.Resource
 func resourceAccessPolicyAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
-
 	clusterName, principal_arn, policy_arn, err := AssociatePolicyParseResourceID(d.Id())
 
 	if err != nil {
@@ -178,7 +175,7 @@ func resourceAccessPolicyAssociationDelete(ctx context.Context, d *schema.Resour
 	}
 	_, err = conn.DisassociateAccessPolicy(ctx, input)
 
-	if errs.IsAErrorMessageContains[*types.ResourceNotFoundException](err, "The specified resource could not be found") {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil
 	}
 
@@ -231,16 +228,15 @@ func FindAccessPolicyByID(ctx context.Context, conn *eks.Client, clusterName str
 	var result *types.AssociatedAccessPolicy
 
 	output, err := conn.ListAssociatedAccessPolicies(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.AssociatedAccessPolicies == nil {
+	if output == nil || output.AssociatedAccessPolicies == nil || errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
+	}
+
+	if err != nil {
+		return nil, err
 	}
 
 	for _, accessPolicy := range output.AssociatedAccessPolicies {
