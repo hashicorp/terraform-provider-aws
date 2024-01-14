@@ -220,10 +220,16 @@ The `destination` configuration block supports the following arguments:
 * `storage_class` - (Optional) The [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_Destination.html#AmazonS3-Type-Destination-StorageClass) used to store the object. By default, Amazon S3 uses the storage class of the source object to create the object replica.
 * `replica_kms_key_id` - (Optional) Destination KMS encryption key ARN for SSE-KMS replication. Must be used in conjunction with
   `sse_kms_encrypted_objects` source selection criteria.
-* `access_control_translation` - (Optional) Specifies the overrides to use for object owners on replication. Must be used in conjunction with `account_id` owner override configuration.
+* `access_control_translation` - (Optional) Specifies the overrides to use for object owners on replication ([documented below](#access-control-translation)). Must be used in conjunction with `account_id` owner override configuration.
 * `account_id` - (Optional) Account ID to use for overriding the object owner on replication. Must be used in conjunction with `access_control_translation` override configuration.
 * `replication_time` - (Optional) Enables S3 Replication Time Control (S3 RTC) ([documented below](#replication-time)).
 * `metrics` - (Optional) Enables replication metrics (required for S3 RTC) ([documented below](#metrics)).
+
+#### Access Control Translation
+
+The `access_control_translation` configuration block supports the following arguments:
+
+* `owner` - (Required) Specifies the replica ownership. For default and valid values, see [PUT bucket replication](https://docs.aws.amazon.com/AmazonS3/latest/API/API_PutBucketReplication.html) in the Amazon S3 API Reference. The only valid value is `Destination`.
 
 #### Replication Time
 
