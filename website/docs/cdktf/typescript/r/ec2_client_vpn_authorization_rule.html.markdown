@@ -43,8 +43,8 @@ This resource supports the following arguments:
 
 * `clientVpnEndpointId` - (Required) The ID of the Client VPN endpoint.
 * `targetNetworkCidr` - (Required) The IPv4 address range, in CIDR notation, of the network to which the authorization rule applies.
-* `accessGroupId` - (Optional) The ID of the group to which the authorization rule grants access. One of `access_group_id` or `authorize_all_groups` must be set.
-* `authorizeAllGroups` - (Optional) Indicates whether the authorization rule grants access to all clients. One of `access_group_id` or `authorize_all_groups` must be set.
+* `accessGroupId` - (Optional) The ID of the group to which the authorization rule grants access. One of `accessGroupId` or `authorizeAllGroups` must be set.
+* `authorizeAllGroups` - (Optional) Indicates whether the authorization rule grants access to all clients. One of `accessGroupId` or `authorizeAllGroups` must be set.
 * `description` - (Optional) A brief description of the authorization rule.
 
 ## Attribute Reference
@@ -104,4 +104,4 @@ Using the endpoint ID, target network CIDR, and group name:
 % terraform import aws_ec2_client_vpn_authorization_rule.example cvpn-endpoint-0ac3a1abbccddd666,10.1.0.0/24,team-a
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-9be9ac769186ff37ee1d96174a6329f4231687f8b5769f002ba41ebeea327607 -->
+<!-- cache-key: cdktf-0.20.0 input-9be9ac769186ff37ee1d96174a6329f4231687f8b5769f002ba41ebeea327607 -->

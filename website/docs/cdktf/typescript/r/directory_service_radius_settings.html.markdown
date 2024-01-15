@@ -63,7 +63,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Timeouts
 
-`awsDirectoryServiceRadiusSettings` provides the following [Timeouts](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts) configuration options:
+`aws_directory_service_radius_settings` provides the following [Timeouts](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts) configuration options:
 
 - `create` - (Default `30 minutes`) Used for RADIUS settings creation
 - `update` - (Default `30 minutes`) Used for RADIUS settings update
@@ -90,4 +90,4 @@ Using `terraform import`, import RADIUS settings using the directory ID. For exa
 % terraform import aws_directory_service_radius_settings.example d-926724cf57
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-120cead939815417bd9577d93de9c412838e216cb9e55a21bc6d0f08acbd6ddc -->
+<!-- cache-key: cdktf-0.20.0 input-120cead939815417bd9577d93de9c412838e216cb9e55a21bc6d0f08acbd6ddc -->

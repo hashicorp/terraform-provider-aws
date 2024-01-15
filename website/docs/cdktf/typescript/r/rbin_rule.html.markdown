@@ -55,13 +55,13 @@ class MyConvertedCode extends TerraformStack {
 The following arguments are required:
 
 * `resourceType` - (Required) The resource type to be retained by the retention rule. Valid values are `EBS_SNAPSHOT` and `EC2_IMAGE`.
-* `retentionPeriod` - (Required) Information about the retention period for which the retention rule is to retain resources. See [`retention_period`](#retention_period) below.
+* `retentionPeriod` - (Required) Information about the retention period for which the retention rule is to retain resources. See [`retentionPeriod`](#retention_period) below.
 
 The following arguments are optional:
 
 * `description` - (Optional) The retention rule description.
-* `resourceTags` - (Optional) Specifies the resource tags to use to identify resources that are to be retained by a tag-level retention rule. See [`resource_tags`](#resource_tags) below.
-* `lockConfiguration` - (Optional) Information about the retention rule lock configuration. See [`lock_configuration`](#lock_configuration) below.
+* `resourceTags` - (Optional) Specifies the resource tags to use to identify resources that are to be retained by a tag-level retention rule. See [`resourceTags`](#resource_tags) below.
+* `lockConfiguration` - (Optional) Information about the retention rule lock configuration. See [`lockConfiguration`](#lock_configuration) below.
 
 ### retention_period
 
@@ -84,7 +84,7 @@ The following argument is optional:
 
 The following argument is required:
 
-* `unlockDelay` - (Required) Information about the retention rule unlock delay. See [`unlock_delay`](#unlock_delay) below.
+* `unlockDelay` - (Required) Information about the retention rule unlock delay. See [`unlockDelay`](#unlock_delay) below.
 
 ### unlock_delay
 
@@ -124,4 +124,4 @@ Using `terraform import`, import RBin Rule using the `id`. For example:
 % terraform import aws_rbin_rule.example examplerule
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-fa128f027cec3535b461f4a8bc2a7d6697d0113ab8d96009de17320fb4fdffe0 -->
+<!-- cache-key: cdktf-0.20.0 input-fa128f027cec3535b461f4a8bc2a7d6697d0113ab8d96009de17320fb4fdffe0 -->

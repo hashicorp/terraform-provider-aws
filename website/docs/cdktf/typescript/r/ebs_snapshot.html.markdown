@@ -55,7 +55,7 @@ This resource supports the following arguments:
 * `storageTier` - (Optional) The name of the storage tier. Valid values are `archive` and `standard`. Default value is `standard`.
 * `permanentRestore` - (Optional) Indicates whether to permanently restore an archived snapshot.
 * `temporaryRestoreDays` - (Optional) Specifies the number of days for which to temporarily restore an archived snapshot. Required for temporary restores only. The snapshot will be automatically re-archived after this period.
-* `tags` - (Optional) A map of tags to assign to the snapshot. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the snapshot. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -69,7 +69,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `volumeSize` - The size of the drive in GiBs.
 * `kmsKeyId` - The ARN for the KMS encryption key.
 * `dataEncryptionKeyId` - The data encryption key identifier for the snapshot.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -100,4 +100,4 @@ Using `terraform import`, import EBS Snapshot using the `id`. For example:
 % terraform import aws_ebs_snapshot.id snap-049df61146c4d7901
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-1e7edd88fa309f9a2fbc01f16873ff7d886c948a085d015d286894010821fe01 -->
+<!-- cache-key: cdktf-0.20.0 input-1e7edd88fa309f9a2fbc01f16873ff7d886c948a085d015d286894010821fe01 -->

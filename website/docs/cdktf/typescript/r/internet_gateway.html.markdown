@@ -42,7 +42,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `vpcId` - (Optional) The VPC ID to create in.  See the [aws_internet_gateway_attachment](internet_gateway_attachment.html) resource for an alternate way to attach an Internet Gateway to a VPC.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 -> **Note:** It's recommended to denote that the AWS Instance or Elastic IP depends on the Internet Gateway. For example:
 
@@ -77,7 +77,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ID of the Internet Gateway.
 * `arn` - The ARN of the Internet Gateway.
 * `ownerId` - The ID of the AWS account that owns the internet gateway.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -109,4 +109,4 @@ Using `terraform import`, import Internet Gateways using the `id`. For example:
 % terraform import aws_internet_gateway.gw igw-c0a643a9
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-81f1e80b898b03aa78644b4608f5a5bf4c569724d3c844941b04df531a254c3a -->
+<!-- cache-key: cdktf-0.20.0 input-81f1e80b898b03aa78644b4608f5a5bf4c569724d3c844941b04df531a254c3a -->

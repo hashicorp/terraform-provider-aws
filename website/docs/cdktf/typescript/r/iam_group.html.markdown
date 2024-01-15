@@ -12,7 +12,7 @@ description: |-
 
 Provides an IAM group.
 
-~> **NOTE on user management:** Using `awsIamGroupMembership` or `awsIamUserGroupMembership` resources in addition to manually managing user/group membership using the console may lead to configuration drift or conflicts. For this reason, it's recommended to either manage membership entirely with Terraform or entirely within the AWS console.
+~> **NOTE on user management:** Using `aws_iam_group_membership` or `aws_iam_user_group_membership` resources in addition to manually managing user/group membership using the console may lead to configuration drift or conflicts. For this reason, it's recommended to either manage membership entirely with Terraform or entirely within the AWS console.
 
 ## Example Usage
 
@@ -78,4 +78,4 @@ Using `terraform import`, import IAM Groups using the `name`. For example:
 % terraform import aws_iam_group.developers developers
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-e1f951434c8e97d752b4b33f7392019781badf8207ba190fd5ffe85bdd25a7f4 -->
+<!-- cache-key: cdktf-0.20.0 input-e1f951434c8e97d752b4b33f7392019781badf8207ba190fd5ffe85bdd25a7f4 -->

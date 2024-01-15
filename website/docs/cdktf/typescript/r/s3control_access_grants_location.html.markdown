@@ -52,7 +52,7 @@ This resource supports the following arguments:
 * `iamRoleArn` - (Required) The ARN of the IAM role that S3 Access Grants should use when fulfilling runtime access
 requests to the location.
 * `locationScope` - (Required) The default S3 URI `s3://` or the URI to a custom location, a specific bucket or prefix.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -60,7 +60,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `accessGrantsLocationArn` - Amazon Resource Name (ARN) of the S3 Access Grants location.
 * `accessGrantsLocationId` - Unique ID of the S3 Access Grants location.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -84,4 +84,4 @@ Using `terraform import`, import S3 Access Grants locations using the `accountId
 % terraform import aws_s3control_access_grants_location.example 123456789012,default
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-00a08b277ec91e24309d1edae7d8df05172848de4d8e44b507d33423f4b4aa85 -->
+<!-- cache-key: cdktf-0.20.0 input-00a08b277ec91e24309d1edae7d8df05172848de4d8e44b507d33423f4b4aa85 -->

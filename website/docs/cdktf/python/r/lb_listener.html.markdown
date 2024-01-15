@@ -324,11 +324,10 @@ class MyConvertedCode(TerraformStack):
             )
             ],
             load_balancer_arn=example.id,
-            mutual_authentication=[{
-                "mode": "verify",
-                "trust_store_arn": "..."
-            }
-            ]
+            mutual_authentication=LbListenerMutualAuthentication(
+                mode="verify",
+                trust_store_arn="..."
+            )
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
         aws_lb_listener_example.override_logical_id("example")
@@ -499,4 +498,4 @@ Using `terraform import`, import listeners using their ARN. For example:
 % terraform import aws_lb_listener.front_end arn:aws:elasticloadbalancing:us-west-2:187416307283:listener/app/front-end-alb/8e4497da625e2d8a/9ab28ade35828f96
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-174713c7c737454764e5033a2fcb15ce31c91908eaf73c511335922f57b68249 -->
+<!-- cache-key: cdktf-0.20.0 input-174713c7c737454764e5033a2fcb15ce31c91908eaf73c511335922f57b68249 -->
