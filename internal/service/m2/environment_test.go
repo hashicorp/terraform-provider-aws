@@ -345,7 +345,7 @@ func testAccEnvironmentConfig_basic(rName, engineType, engineVersion string) str
 
 resource "aws_m2_environment" "test" {
   name               = %[1]q
-  description        = %[1]q 
+  description        = %[1]q
   engine_type        = %[2]q
   engine_version     = %[3]q
   instance_type      = "M2.m5.large"
@@ -361,7 +361,7 @@ func testAccEnvironmentConfig_update(rName, engineType, engineVersion string, de
 
 resource "aws_m2_environment" "test" {
   name               = %[1]q
-  description        = %[1]q 
+  description        = %[1]q
   engine_type        = %[2]q
   engine_version     = %[3]q
   instance_type      = "M2.m6i.large"
@@ -385,7 +385,7 @@ func testAccEnvironmentConfig_highAvailability(rName, engineType, engineVersion 
 
 resource "aws_m2_environment" "test" {
   name               = %[1]q
-  description        = %[1]q 
+  description        = %[1]q
   engine_type        = %[2]q
   engine_version     = %[3]q
   instance_type      = "M2.m5.large"
@@ -406,7 +406,7 @@ func testAccEnvironmentConfig_efsComplete(rName, engineType, engineVersion strin
 
 resource "aws_m2_environment" "test" {
   name               = %[1]q
-  description        = %[1]q 
+  description        = %[1]q
   engine_type        = %[2]q
   engine_version     = %[3]q
   instance_type      = "M2.m5.large"
