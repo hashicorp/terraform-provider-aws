@@ -4,11 +4,13 @@
 package qbusiness
 
 import (
+	"context"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/qbusiness"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -119,11 +121,14 @@ func hookConfigurationSchema() *schema.Schema {
 // @Tags(identifierAttribute="arn")
 func ResourceDatasource() *schema.Resource {
 	return &schema.Resource{
+
+		CreateWithoutTimeout: resourceDatasourceCreate,
+
 		Schema: map[string]*schema.Schema{
 			"application_id": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The identifier of the Amazon Q application the data source will be attached to.",
+				Description: "Identifier of the Amazon Q application the data source will be attached to.",
 				ValidateFunc: validation.All(
 					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must be a valid application ID"),
 				),
@@ -137,7 +142,7 @@ func ResourceDatasource() *schema.Resource {
 			"description": {
 				Type:        schema.TypeString,
 				Optional:    true,
-				Description: "A description for the data source connector.",
+				Description: "Description for the data source connector.",
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 1000),
 					validation.StringMatch(regexache.MustCompile(`^\P{C}*$`), "must not contain control characters"),
@@ -146,7 +151,7 @@ func ResourceDatasource() *schema.Resource {
 			"display_name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "A name for the data source connector.",
+				Description: "Name for the data source connector.",
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 100),
 					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_-]*$`), "must begin with a letter or number and contain only alphanumeric, underscore, or hyphen characters"),
@@ -208,13 +213,13 @@ func ResourceDatasource() *schema.Resource {
 			"iam_service_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Description:  "The Amazon Resource Name (ARN) of an IAM role with permission to access the data source and required resources.",
+				Description:  "Amazon Resource Name (ARN) of an IAM role with permission to access the data source and required resources.",
 				ValidateFunc: verify.ValidARN,
 			},
 			"index_id": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The identifier of the index that you want to use with the data source connector.",
+				Description: "Identifier of the index that you want to use with the data source connector.",
 				ValidateFunc: validation.All(
 					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must be a valid application ID"),
 				),
@@ -257,6 +262,43 @@ func ResourceDatasource() *schema.Resource {
 	}
 }
 
+func resourceDatasourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	return diags
+}
+
+func expandDocumentEnrichmentConfiguration(v []interface{}) *qbusiness.DocumentEnrichmentConfiguration {
+	if len(v) == 0 || v[0] == nil {
+		return nil
+	}
+	m := v[0].(map[string]interface{})
+
+	return &qbusiness.DocumentEnrichmentConfiguration{
+		InlineConfigurations:            expandInlineDocumentEnrichmentConfigurations(m["inline_configurations"].([]interface{})),
+		PostExtractionHookConfiguration: expandHookConfiguration(m["post_extraction_hook_configuration"].([]interface{})),
+		PreExtractionHookConfiguration:  expandHookConfiguration(m["pre_extraction_hook_configuration"].([]interface{})),
+	}
+}
+
+func expandInlineDocumentEnrichmentConfigurations(v []interface{}) []*qbusiness.InlineDocumentEnrichmentConfiguration {
+	if len(v) == 0 || v[0] == nil {
+		return nil
+	}
+	m := v[0].(map[string]interface{})
+
+	var conf []*qbusiness.InlineDocumentEnrichmentConfiguration
+
+	for _, c := range m["configuration"].([]interface{}) {
+		conf = append(conf, &qbusiness.InlineDocumentEnrichmentConfiguration{
+			Condition:               expandDocumentAttributeCondition(c.(map[string]interface{})["condition"].([]interface{})),
+			DocumentContentOperator: aws.String(c.(map[string]interface{})["document_content_operator"].(string)),
+			Target:                  expandDocuemntAttributeTarget(c.(map[string]interface{})["target"].([]interface{})),
+		})
+	}
+
+	return conf
+}
 func expandHookConfiguration(v []interface{}) *qbusiness.HookConfiguration {
 	if len(v) == 0 || v[0] == nil {
 		return nil
@@ -268,6 +310,19 @@ func expandHookConfiguration(v []interface{}) *qbusiness.HookConfiguration {
 		RoleArn:             aws.String(m["role_arn"].(string)),
 		LambdaArn:           aws.String(m["lambda_arn"].(string)),
 		S3BucketName:        aws.String(m["s3_bucket_name"].(string)),
+	}
+}
+
+func expandDocuemntAttributeTarget(v []interface{}) *qbusiness.DocumentAttributeTarget {
+	if len(v) == 0 || v[0] == nil {
+		return nil
+	}
+	m := v[0].(map[string]interface{})
+
+	return &qbusiness.DocumentAttributeTarget{
+		Key:                    aws.String(m["key"].(string)),
+		AttributeValueOperator: aws.String(m["attributeValueOperator"].(string)),
+		Value:                  expandValueSchema(m["value"].([]interface{})),
 	}
 }
 
