@@ -91,7 +91,7 @@ This resource supports the following arguments:
 * `description` - (Optional) Information about the extension.
 * `actionPoint` - (Required) The action points defined in the extension. [Detailed below](#action_point).
 * `parameter` - (Optional) The parameters accepted by the extension. You specify parameter values when you associate the extension to an AppConfig resource by using the CreateExtensionAssociation API action. For Lambda extension actions, these parameters are included in the Lambda request object. [Detailed below](#parameter).
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### `actionPoint`
 
@@ -147,4 +147,4 @@ Using `terraform import`, import AppConfig Extensions using their extension ID. 
 % terraform import aws_appconfig_extension.example 71rxuzt
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-a57e9661c333d971fc98cbdd2a1d95de7a9014d90bd4fdbf0d526c04df1b2f9d -->
+<!-- cache-key: cdktf-0.20.0 input-a57e9661c333d971fc98cbdd2a1d95de7a9014d90bd4fdbf0d526c04df1b2f9d -->

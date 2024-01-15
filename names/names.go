@@ -83,6 +83,7 @@ const (
 	RolesAnywhereEndpointID              = "rolesanywhere"
 	Route53DomainsEndpointID             = "route53domains"
 	SchedulerEndpointID                  = "scheduler"
+	SecretsManagerEndpointID             = "secretsmanager"
 	SecurityLakeEndpointID               = "securitylake"
 	ServiceQuotasEndpointID              = "servicequotas"
 	S3EndpointID                         = "s3"

@@ -12,7 +12,7 @@ description: |-
 
 Manages a CloudFormation StackSet Instance. Instances are managed in the account and region of the StackSet after the target account permissions have been configured. Additional information about StackSets can be found in the [AWS CloudFormation User Guide](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/what-is-cfnstacksets.html).
 
-~> **NOTE:** All target accounts must have an IAM Role created that matches the name of the execution role configured in the StackSet (the `executionRoleName` argument in the `awsCloudformationStackSet` resource) in a trust relationship with the administrative account or administration IAM Role. The execution role must have appropriate permissions to manage resources defined in the template along with those required for StackSets to operate. See the [AWS CloudFormation User Guide](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-prereqs.html) for more details.
+~> **NOTE:** All target accounts must have an IAM Role created that matches the name of the execution role configured in the StackSet (the `executionRoleName` argument in the `aws_cloudformation_stack_set` resource) in a trust relationship with the administrative account or administration IAM Role. The execution role must have appropriate permissions to manage resources defined in the template along with those required for StackSets to operate. See the [AWS CloudFormation User Guide](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-prereqs.html) for more details.
 
 ~> **NOTE:** To retain the Stack during Terraform resource destroy, ensure `retain_stack = true` has been successfully applied into the Terraform state first. This must be completed _before_ an apply that would destroy the resource.
 
@@ -191,10 +191,10 @@ The `operationPreferences` configuration block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique identifier for the resource. If `deployment_targets` is set, this is a comma-delimited string combining stack set name, organizational unit IDs (`/`-delimited), and region (ie. `mystack,ou-123/ou-456,us-east-1`). Otherwise, this is a comma-delimited string combining stack set name, AWS account ID, and region (ie. `mystack,123456789012,us-east-1`).
+* `id` - Unique identifier for the resource. If `deploymentTargets` is set, this is a comma-delimited string combining stack set name, organizational unit IDs (`/`-delimited), and region (ie. `mystack,ou-123/ou-456,us-east-1`). Otherwise, this is a comma-delimited string combining stack set name, AWS account ID, and region (ie. `mystack,123456789012,us-east-1`).
 * `organizationalUnitId` - The organization root ID or organizational unit (OU) ID in which the stack is deployed.
 * `stackId` - Stack identifier.
-* `stackInstanceSummaries` - List of stack instances created from an organizational unit deployment target. This will only be populated when `deployment_targets` is set. See [`stack_instance_summaries`](#stack_instance_summaries-attribute-reference).
+* `stackInstanceSummaries` - List of stack instances created from an organizational unit deployment target. This will only be populated when `deploymentTargets` is set. See [`stackInstanceSummaries`](#stack_instance_summaries-attribute-reference).
 
 ### `stackInstanceSummaries` Attribute Reference
 
@@ -272,4 +272,4 @@ Using `terraform import`, import CloudFormation StackSet Instances when acting a
 % terraform import aws_cloudformation_stack_set_instance.example example,ou-sdas-123123123/ou-sdas-789789789,us-east-1,DELEGATED_ADMIN
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-1e1b74c9b69f000ae028bff21e6d418d876fa6006347b01a1cc908f1b3a20e44 -->
+<!-- cache-key: cdktf-0.20.0 input-1e1b74c9b69f000ae028bff21e6d418d876fa6006347b01a1cc908f1b3a20e44 -->

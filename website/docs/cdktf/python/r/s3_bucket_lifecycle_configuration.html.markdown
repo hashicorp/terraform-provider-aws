@@ -552,4 +552,4 @@ If the owner (account ID) of the source bucket differs from the account used to 
 % terraform import aws_s3_bucket_lifecycle_configuration.example bucket-name,123456789012
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-09c85db0718dbe9da94d83ba043b896029c3cb4f61db2f24a7bdb8ad04b786bc -->
+<!-- cache-key: cdktf-0.20.0 input-09c85db0718dbe9da94d83ba043b896029c3cb4f61db2f24a7bdb8ad04b786bc -->

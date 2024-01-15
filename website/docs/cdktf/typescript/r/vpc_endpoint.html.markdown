@@ -201,7 +201,7 @@ Defaults to `false`.
 * `subnetIds` - (Optional) The ID of one or more subnets in which to create a network interface for the endpoint. Applicable for endpoints of type `GatewayLoadBalancer` and `Interface`. Interface type endpoints cannot function without being assigned to a subnet.
 * `securityGroupIds` - (Optional) The ID of one or more security groups to associate with the network interface. Applicable for endpoints of type `Interface`.
 If no security groups are specified, the VPC's [default security group](https://docs.aws.amazon.com/vpc/latest/userguide/VPC_SecurityGroups.html#DefaultSecurityGroup) is associated with the endpoint.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpcEndpointType` - (Optional) The VPC endpoint type, `Gateway`, `GatewayLoadBalancer`, or `Interface`. Defaults to `Gateway`.
 
 ### dns_options
@@ -230,7 +230,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `prefixListId` - The prefix list ID of the exposed AWS service. Applicable for endpoints of type `Gateway`.
 * `requesterManaged` -  Whether or not the VPC Endpoint is being managed by its service - `true` or `false`.
 * `state` - The state of the VPC endpoint.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 DNS blocks (for `dnsEntry`) support the following attributes:
 
@@ -259,4 +259,4 @@ Using `terraform import`, import VPC Endpoints using the VPC endpoint `id`. For 
 % terraform import aws_vpc_endpoint.endpoint1 vpce-3ecf2a57
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-99d63ee8f4c01f608caa49087597f7c77a9530bcbc5fdad466beec3bfb05b6f8 -->
+<!-- cache-key: cdktf-0.20.0 input-99d63ee8f4c01f608caa49087597f7c77a9530bcbc5fdad466beec3bfb05b6f8 -->

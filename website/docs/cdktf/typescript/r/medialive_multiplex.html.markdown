@@ -65,7 +65,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `startMultiplex` - (Optional) Whether to start the Multiplex. Defaults to `false`.
-* `tags` - (Optional) A map of tags to assign to the Multiplex. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the Multiplex. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Multiplex Settings
 
@@ -110,4 +110,4 @@ Using `terraform import`, import MediaLive Multiplex using the `id`. For example
 % terraform import aws_medialive_multiplex.example 12345678
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-ef0b0248360f7c92f3d75bdb422730873d3e865bff521828049e013dc339473a -->
+<!-- cache-key: cdktf-0.20.0 input-ef0b0248360f7c92f3d75bdb422730873d3e865bff521828049e013dc339473a -->

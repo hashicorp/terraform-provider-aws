@@ -134,7 +134,7 @@ The `loggingConfiguration` block supports the following arguments:
 
 The `logDestinationConfig` block supports the following arguments:
 
-* `logDestination` - (Required) A map describing the logging destination for the chosen `log_destination_type`.
+* `logDestination` - (Required) A map describing the logging destination for the chosen `logDestinationType`.
     * For an Amazon S3 bucket, specify the key `bucketName` with the name of the bucket and optionally specify the key `prefix` with a path.
     * For a CloudWatch log group, specify the key `logGroup` with the name of the CloudWatch log group.
     * For a Kinesis Data Firehose delivery stream, specify the key `deliveryStream` with the name of the delivery stream.
@@ -171,4 +171,4 @@ Using `terraform import`, import Network Firewall Logging Configurations using t
 % terraform import aws_networkfirewall_logging_configuration.example arn:aws:network-firewall:us-west-1:123456789012:firewall/example
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-2700cb50e1d426b15657fe101c09e1dc07bb26140cf98ca4ff2db12e4a6d391e -->
+<!-- cache-key: cdktf-0.20.0 input-2700cb50e1d426b15657fe101c09e1dc07bb26140cf98ca4ff2db12e4a6d391e -->

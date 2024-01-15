@@ -15,7 +15,7 @@ Manages a trust relationship between two Active Directory Directories.
 The directories may either be both AWS Managed Microsoft AD domains or an AWS Managed Microsoft AD domain and a self-managed Active Directory Domain.
 
 The Trust relationship must be configured on both sides of the relationship.
-If a Trust has only been created on one side, it will be in the state `verifyFailed`.
+If a Trust has only been created on one side, it will be in the state `VerifyFailed`.
 Once the second Trust is created, the first will update to the correct state.
 
 ## Example Usage
@@ -169,10 +169,10 @@ This resource exports the following attributes in addition to the arguments abov
 * `createdDateTime` - Date and time when the Trust was created.
 * `id` - The Trust identifier.
 * `lastUpdatedDateTime` - Date and time when the Trust was last updated.
-* `stateLastUpdatedDateTime` - Date and time when the Trust state in `trust_state` was last updated.
+* `stateLastUpdatedDateTime` - Date and time when the Trust state in `trustState` was last updated.
 * `trustState` - State of the Trust relationship.
   One of `Created`, `VerifyFailed`,`Verified`, `UpdateFailed`,`Updated`,`Deleted`, or `Failed`.
-* `trustStateReason` - Reason for the Trust state set in `trust_state`.
+* `trustStateReason` - Reason for the Trust state set in `trustState`.
 
 ## Import
 
@@ -196,4 +196,4 @@ Using `terraform import`, import the Trust relationship using the directory ID a
 % terraform import aws_directory_service_trust.example d-926724cf57/directory.example.com
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-66aa03e6601035df60798595ea8787d00d4683201307e38bda224131aa72224e -->
+<!-- cache-key: cdktf-0.20.0 input-66aa03e6601035df60798595ea8787d00d4683201307e38bda224131aa72224e -->

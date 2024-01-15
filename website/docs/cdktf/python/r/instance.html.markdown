@@ -32,7 +32,7 @@ class MyConvertedCode(TerraformStack):
         ubuntu = DataAwsAmi(self, "ubuntu",
             filter=[DataAwsAmiFilter(
                 name="name",
-                values=["ubuntu/images/hvm-ssd/ubuntu-focal-20.04-amd64-server-*"]
+                values=["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64-server-*"]
             ), DataAwsAmiFilter(
                 name="virtualization-type",
                 values=["hvm"]
@@ -514,4 +514,4 @@ Using `terraform import`, import instances using the `id`. For example:
 % terraform import aws_instance.web i-12345678
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-3c65e83e2786a585ff91f7f409ce62e768ad71e9ab841a301904e25fdc0f6666 -->
+<!-- cache-key: cdktf-0.20.0 input-bc21ff879c5753aa1178d8dc97410b19bac08580623819a9f72bec8dedbdf25a -->

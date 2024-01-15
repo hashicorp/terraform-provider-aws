@@ -47,7 +47,7 @@ This resource supports the following arguments:
 * `resourceCreationLimitPolicy` - (Optional) Policy that limits the number of game sessions an individual player can create over a span of time for this fleet. See below.
 * `runtimeConfiguration` - (Optional) Instructions for launching server processes on each instance in the fleet. See below.
 * `scriptId` - (Optional) ID of the GameLift Script to be deployed on the fleet.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Nested Fields
 
@@ -60,7 +60,7 @@ This resource supports the following arguments:
 * `fromPort` - (Required) Starting value for a range of allowed port numbers.
 * `ipRange` - (Required) Range of allowed IP addresses expressed in CIDR notationE.g., `000.000.000.000/[subnet mask]` or `0.0.0.0/[subnet mask]`.
 * `protocol` - (Required) Network communication protocol used by the fleetE.g., `TCP` or `UDP`
-* `toPort` - (Required) Ending value for a range of allowed port numbers. Port numbers are end-inclusive. This value must be higher than `from_port`.
+* `toPort` - (Required) Ending value for a range of allowed port numbers. Port numbers are end-inclusive. This value must be higher than `fromPort`.
 
 #### `resourceCreationLimitPolicy`
 
@@ -88,7 +88,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `buildArn` - Build ARN.
 * `operatingSystem` - Operating system of the fleet's computing resources.
 * `scriptArn` - Script ARN.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -119,4 +119,4 @@ Using `terraform import`, import GameLift Fleets using the ID. For example:
 % terraform import aws_gamelift_fleet.example <fleet-id>
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-3bb7364110eb682f1c0a8b20937e245e89dbedcb5915fce66d3f5e59fd6676d6 -->
+<!-- cache-key: cdktf-0.20.0 input-3bb7364110eb682f1c0a8b20937e245e89dbedcb5915fce66d3f5e59fd6676d6 -->
