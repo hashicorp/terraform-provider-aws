@@ -426,8 +426,8 @@ func testAccEnvironmentConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-  enable_dns_support = true
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
   enable_dns_hostnames = true
 
   tags = {
@@ -456,15 +456,15 @@ resource "aws_security_group" "test" {
     Name = %[1]q
   }
   egress {
-    from_port = 0
-    to_port = 0
-    protocol = "-1"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
   ingress {
-    from_port = 0
-    to_port = 0 
-    protocol = "-1"
+    from_port   = 0
+    to_port     = 0 
+    protocol    = "-1"
     cidr_blocks = [aws_vpc.test.cidr_block]
    }
 }
@@ -492,8 +492,9 @@ resource "aws_efs_access_point" "test" {
 
 resource "aws_efs_mount_target" "test" {
   count = 2
-  file_system_id = aws_efs_file_system.test.id
-  subnet_id      = aws_subnet.test[count.index].id
+
+  file_system_id  = aws_efs_file_system.test.id
+  subnet_id       = aws_subnet.test[count.index].id
   security_groups = [aws_security_group.test.id]
 }
 `, rName)
