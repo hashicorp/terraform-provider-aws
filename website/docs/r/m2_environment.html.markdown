@@ -119,8 +119,6 @@ The following arguments are required:
 
 * `desired_capacity` - (Required) Desired number of instances for the Environment.
 
-
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
