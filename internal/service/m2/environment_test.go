@@ -330,7 +330,6 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 func testAccEnvironmentConfig_basic(rName, engineType, engineVersion string) string {
 	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
-
 resource "aws_m2_environment" "test" {
   name            = %[1]q
   description     = %[1]q
@@ -346,7 +345,6 @@ resource "aws_m2_environment" "test" {
 func testAccEnvironmentConfig_update(rName, engineType, engineVersion string, desiredCapacity int32) string {
 	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
-
 resource "aws_m2_environment" "test" {
   name            = %[1]q
   description     = %[1]q
@@ -361,16 +359,13 @@ resource "aws_m2_environment" "test" {
   high_availability_config {
     desired_capacity = %[4]d
   }
-
 }
 `, rName, engineType, engineVersion, desiredCapacity))
-
 }
 
 func testAccEnvironmentConfig_highAvailability(rName, engineType, engineVersion string, desiredCapacity int32) string {
 	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
-
 resource "aws_m2_environment" "test" {
   name            = %[1]q
   description     = %[1]q
@@ -391,7 +386,6 @@ func testAccEnvironmentConfig_efsComplete(rName, engineType, engineVersion strin
 	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName),
 		testAccEnvironmentConfig_efs(rName),
 		fmt.Sprintf(`
-
 resource "aws_m2_environment" "test" {
   name            = %[1]q
   description     = %[1]q
@@ -405,7 +399,6 @@ resource "aws_m2_environment" "test" {
     file_system_id = aws_efs_file_system.test.id
     mount_point    = "/m2/mount/example"
   }
-
 }
 `, rName, engineType, engineVersion))
 }

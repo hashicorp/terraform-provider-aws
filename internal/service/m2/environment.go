@@ -502,7 +502,6 @@ func expandHaConfig(tfList []interface{}) *types.HighAvailabilityConfig {
 	v, ok := tfList[0].(map[string]interface{})
 
 	if ok {
-
 		return &types.HighAvailabilityConfig{
 			DesiredCapacity: aws.Int32(int32(v["desired_capacity"].(int))),
 		}
