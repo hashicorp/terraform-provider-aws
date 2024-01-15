@@ -293,11 +293,11 @@ func testAccAnalyzerConfig_configuration(rName string) string {
 resource "aws_accessanalyzer_analyzer" "test" {
   analyzer_name = %[1]q
   type          = "ACCOUNT_UNUSED_ACCESS"
-  
+
   configuration {
-	unused_access {
-		unused_access_age = 180
-	}
+    unused_access {
+      unused_access_age = 180
+    }
   }
 }
 `, rName)
