@@ -32,7 +32,7 @@ resource "aws_m2_environment" "test" {
   instance_type   = "M2.m5.large"
   security_groups = ["sg-01234567890abcdef"]
   subnet_ids      = ["subnet-01234567890abcdef", "subnet-01234567890abcdea"]
-  
+
   high_availability_config {
     desired_capacity = 2
   }
