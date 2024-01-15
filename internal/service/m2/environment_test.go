@@ -463,10 +463,10 @@ resource "aws_security_group" "test" {
   }
   ingress {
     from_port   = 0
-    to_port     = 0 
+    to_port     = 0
     protocol    = "-1"
     cidr_blocks = [aws_vpc.test.cidr_block]
-   }
+  }
 }
 `, rName))
 }
