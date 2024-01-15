@@ -344,13 +344,13 @@ func testAccEnvironmentConfig_basic(rName, engineType, engineVersion string) str
 		fmt.Sprintf(`
 
 resource "aws_m2_environment" "test" {
-  name               = %[1]q
-  description        = %[1]q
-  engine_type        = %[2]q
-  engine_version     = %[3]q
-  instance_type      = "M2.m5.large"
-  security_groups    = [aws_security_group.test.id]
-  subnet_ids         = aws_subnet.test[*].id
+  name            = %[1]q
+  description     = %[1]q
+  engine_type     = %[2]q
+  engine_version  = %[3]q
+  instance_type   = "M2.m5.large"
+  security_groups = [aws_security_group.test.id]
+  subnet_ids      = aws_subnet.test[*].id
 }
 `, rName, engineType, engineVersion))
 }
@@ -360,13 +360,13 @@ func testAccEnvironmentConfig_update(rName, engineType, engineVersion string, de
 		fmt.Sprintf(`
 
 resource "aws_m2_environment" "test" {
-  name               = %[1]q
-  description        = %[1]q
-  engine_type        = %[2]q
-  engine_version     = %[3]q
-  instance_type      = "M2.m6i.large"
-  security_groups    = [aws_security_group.test.id]
-  subnet_ids         = aws_subnet.test[*].id
+  name            = %[1]q
+  description     = %[1]q
+  engine_type     = %[2]q
+  engine_version  = %[3]q
+  instance_type   = "M2.m6i.large"
+  security_groups = [aws_security_group.test.id]
+  subnet_ids      = aws_subnet.test[*].id
  
   preferred_maintenance_window = "sat:03:35-sat:05:35"
 
@@ -384,13 +384,13 @@ func testAccEnvironmentConfig_highAvailability(rName, engineType, engineVersion 
 		fmt.Sprintf(`
 
 resource "aws_m2_environment" "test" {
-  name               = %[1]q
-  description        = %[1]q
-  engine_type        = %[2]q
-  engine_version     = %[3]q
-  instance_type      = "M2.m5.large"
-  security_groups    = [aws_security_group.test.id]
-  subnet_ids         = aws_subnet.test[*].id 
+  name            = %[1]q
+  description     = %[1]q
+  engine_type     = %[2]q
+  engine_version  = %[3]q
+  instance_type   = "M2.m5.large"
+  security_groups = [aws_security_group.test.id]
+  subnet_ids      = aws_subnet.test[*].id 
 
   high_availability_config {
     desired_capacity = %[4]d
@@ -405,17 +405,17 @@ func testAccEnvironmentConfig_efsComplete(rName, engineType, engineVersion strin
 		fmt.Sprintf(`
 
 resource "aws_m2_environment" "test" {
-  name               = %[1]q
-  description        = %[1]q
-  engine_type        = %[2]q
-  engine_version     = %[3]q
-  instance_type      = "M2.m5.large"
-  security_groups    = [aws_security_group.test.id]
-  subnet_ids         = aws_subnet.test[*].id 
+  name            = %[1]q
+  description     = %[1]q
+  engine_type     = %[2]q
+  engine_version  = %[3]q
+  instance_type   = "M2.m5.large"
+  security_groups = [aws_security_group.test.id]
+  subnet_ids      = aws_subnet.test[*].id 
 
   efs_mount {
     file_system_id = aws_efs_file_system.test.id
-    mount_point = "/m2/mount/example"
+    mount_point    = "/m2/mount/example"
   }
 
 }
