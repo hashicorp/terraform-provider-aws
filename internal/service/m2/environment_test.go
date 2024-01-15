@@ -367,7 +367,7 @@ resource "aws_m2_environment" "test" {
   instance_type   = "M2.m6i.large"
   security_groups = [aws_security_group.test.id]
   subnet_ids      = aws_subnet.test[*].id
- 
+
   preferred_maintenance_window = "sat:03:35-sat:05:35"
 
   high_availability_config {
