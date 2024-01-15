@@ -390,7 +390,7 @@ resource "aws_m2_environment" "test" {
   engine_version  = %[3]q
   instance_type   = "M2.m5.large"
   security_groups = [aws_security_group.test.id]
-  subnet_ids      = aws_subnet.test[*].id 
+  subnet_ids      = aws_subnet.test[*].id
 
   high_availability_config {
     desired_capacity = %[4]d
@@ -411,7 +411,7 @@ resource "aws_m2_environment" "test" {
   engine_version  = %[3]q
   instance_type   = "M2.m5.large"
   security_groups = [aws_security_group.test.id]
-  subnet_ids      = aws_subnet.test[*].id 
+  subnet_ids      = aws_subnet.test[*].id
 
   efs_mount {
     file_system_id = aws_efs_file_system.test.id
