@@ -236,7 +236,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		in.PubliclyAccessible = v.(bool)
 	}
 
-	in.StorageConfigurations = expandStorageConfigurations(d)
+	in.StorageConfigurations = expandStorageConfig(d)
 
 	out, err := conn.CreateEnvironment(ctx, in)
 	if err != nil {
@@ -475,20 +475,20 @@ func findEnvironmentByID(ctx context.Context, conn *m2.Client, id string) (*m2.G
 	return out, nil
 }
 
-func expandStorageConfigurations(d *schema.ResourceData) []types.StorageConfiguration {
+func expandStorageConfig(d *schema.ResourceData) []types.StorageConfiguration {
 	configs := make([]types.StorageConfiguration, 0)
 
 	if efsMounts, ok := d.GetOk("efs_mount"); ok {
 		for _, config := range efsMounts.([]interface{}) {
 			configMap := config.(map[string]interface{})
-			configs = append(configs, expandStorageConfiguration(configMap, true))
+			configs = append(configs, newStorageConfig(configMap, true))
 		}
 	}
 
 	if fsxMounts, ok := d.GetOk("fsx_mount"); ok {
 		for _, config := range fsxMounts.([]interface{}) {
 			configMap := config.(map[string]interface{})
-			configs = append(configs, expandStorageConfiguration(configMap, false))
+			configs = append(configs, newStorageConfig(configMap, false))
 		}
 	}
 	return configs
@@ -519,7 +519,7 @@ func flattenHaConfig(haConfig *types.HighAvailabilityConfig) []interface{} {
 	}}
 }
 
-func expandStorageConfiguration(m map[string]interface{}, efs bool) types.StorageConfiguration {
+func newStorageConfig(m map[string]interface{}, efs bool) types.StorageConfiguration {
 	if efs {
 		return &types.StorageConfigurationMemberEfs{
 			Value: types.EfsStorageConfiguration{
