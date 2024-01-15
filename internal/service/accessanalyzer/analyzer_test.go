@@ -156,6 +156,37 @@ func testAccAnalyzer_Type_Organization(t *testing.T) {
 	})
 }
 
+func testAccAnalyzer_configuration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var analyzer types.AnalyzerSummary
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_accessanalyzer_analyzer.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccessAnalyzerEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAnalyzerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAnalyzerConfig_configuration(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAnalyzerExists(ctx, resourceName, &analyzer),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.unused_access.0.unused_access_age", "180"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAnalyzerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AccessAnalyzerClient(ctx)
@@ -253,6 +284,21 @@ resource "aws_accessanalyzer_analyzer" "test" {
 
   analyzer_name = %[1]q
   type          = "ORGANIZATION"
+}
+`, rName)
+}
+
+func testAccAnalyzerConfig_configuration(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_accessanalyzer_analyzer" "test" {
+  analyzer_name = %[1]q
+  type          = "ACCOUNT_UNUSED_ACCESS"
+  
+  configuration {
+	unused_access {
+		unused_access_age = 180
+	}
+  }
 }
 `, rName)
 }

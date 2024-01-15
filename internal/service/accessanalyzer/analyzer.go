@@ -62,6 +62,31 @@ func resourceAnalyzer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"unused_access": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"unused_access_age": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
@@ -87,6 +112,10 @@ func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		ClientToken:  aws.String(id.UniqueId()),
 		Tags:         getTagsIn(ctx),
 		Type:         types.Type(d.Get("type").(string)),
+	}
+
+	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 {
+		input.Configuration = expandConfiguration(v.([]interface{}))
 	}
 
 	// Handle Organizations eventual consistency.
@@ -130,6 +159,7 @@ func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("analyzer_name", analyzer.Name)
 	d.Set("arn", analyzer.Arn)
+	d.Set("configuration", flattenConfiguration(analyzer.Configuration))
 	d.Set("type", analyzer.Type)
 
 	setTagsOut(ctx, analyzer.Tags)
@@ -189,4 +219,63 @@ func findAnalyzerByName(ctx context.Context, conn *accessanalyzer.Client, name s
 	}
 
 	return output.Analyzer, nil
+}
+
+func expandConfiguration(tfMap []interface{}) types.AnalyzerConfiguration {
+	tfList, ok := tfMap[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.AnalyzerConfigurationMemberUnusedAccess{}
+
+	if v, ok := tfList["unused_access"]; ok && len(v.([]interface{})) > 0 {
+		apiObject.Value = expandUnusedAccess(v.([]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandUnusedAccess(tfMap []interface{}) types.UnusedAccessConfiguration {
+	tfList := tfMap[0].(map[string]interface{})
+	apiObject := types.UnusedAccessConfiguration{}
+
+	if v, ok := tfList["unused_access_age"]; ok {
+		apiObject.UnusedAccessAge = aws.Int32(int32(v.(int)))
+	}
+
+	return apiObject
+}
+
+func flattenConfiguration(apiObject types.AnalyzerConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	switch v := apiObject.(type) {
+	case *types.AnalyzerConfigurationMemberUnusedAccess:
+		analyzerConfigurationMemberUnusedAccess := flattenUnusedAccessConfiguration(&v.Value)
+		tfMap["unused_access"] = analyzerConfigurationMemberUnusedAccess
+
+	default:
+		log.Println("union is nil or unknown type")
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenUnusedAccessConfiguration(apiObject *types.UnusedAccessConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.UnusedAccessAge; v != nil {
+		tfMap["unused_access_age"] = aws.ToInt32(v)
+	}
+
+	return []interface{}{tfMap}
 }
