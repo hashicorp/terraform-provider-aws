@@ -25,9 +25,8 @@ import (
 )
 
 const (
-	testEngineType          = "bluage"
-	testEngineVersion       = "3.7.0"
-	testEngineUpdateVersion = "3.8.0"
+	testEngineType    = "bluage"
+	testEngineVersion = "3.7.0"
 )
 
 func TestAccM2Environment_basic(t *testing.T) {
@@ -325,16 +324,6 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccCheckEnvironmentNotRecreated(before, after *m2.GetEnvironmentOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.EnvironmentId), aws.ToString(after.EnvironmentId); before != after {
-			return create.Error(names.M2, create.ErrActionCheckingNotRecreated, tfm2.ResNameEnvironment, before, errors.New("recreated"))
-		}
-
-		return nil
 	}
 }
 

@@ -29,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @SDKResource("aws_m2_environment", name="Environment")
 // @Tags(identifierAttribute="arn")
 func ResourceEnvironment() *schema.Resource {
@@ -72,7 +71,7 @@ func ResourceEnvironment() *schema.Resource {
 				ForceNew: true,
 			},
 			"efs_mount": {
-				Type:          schema.TypeSet,
+				Type:          schema.TypeList,
 				Optional:      true,
 				MinItems:      0,
 				MaxItems:      1,
@@ -108,7 +107,7 @@ func ResourceEnvironment() *schema.Resource {
 				Description: "Force updates to the environment.",
 			},
 			"fsx_mount": {
-				Type:          schema.TypeSet,
+				Type:          schema.TypeList,
 				Optional:      true,
 				ForceNew:      true,
 				MinItems:      0,
@@ -250,12 +249,10 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	d.SetId(aws.ToString(out.EnvironmentId))
 
-	// TIP: -- 5. Use a waiter to wait for create to complete
 	if _, err := waitEnvironmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.AppendDiagError(diags, names.M2, create.ErrActionWaitingForCreation, ResNameEnvironment, d.Id(), err)
 	}
 
-	// TIP: -- 6. Call the Read function in the Create return
 	return append(diags, resourceEnvironmentRead(ctx, d, meta)...)
 }
 
@@ -285,7 +282,6 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("name", out.Name)
 
 	efsConfig, fsxConfig := flattenStorageConfig(out.StorageConfigurations)
-
 	d.Set("efs_mount", efsConfig)
 	d.Set("fsx_mount", fsxConfig)
 
@@ -483,14 +479,14 @@ func expandStorageConfigurations(d *schema.ResourceData) []types.StorageConfigur
 	configs := make([]types.StorageConfiguration, 0)
 
 	if efsMounts, ok := d.GetOk("efs_mount"); ok {
-		for _, config := range efsMounts.(*schema.Set).List() {
+		for _, config := range efsMounts.([]interface{}) {
 			configMap := config.(map[string]interface{})
 			configs = append(configs, expandStorageConfiguration(configMap, true))
 		}
 	}
 
 	if fsxMounts, ok := d.GetOk("fsx_mount"); ok {
-		for _, config := range fsxMounts.(*schema.Set).List() {
+		for _, config := range fsxMounts.([]interface{}) {
 			configMap := config.(map[string]interface{})
 			configs = append(configs, expandStorageConfiguration(configMap, false))
 		}
@@ -546,13 +542,11 @@ func flattenStorageConfig(storageConfig []types.StorageConfiguration) ([]interfa
 	efsConfig := make([]interface{}, 0)
 	fsxConfig := make([]interface{}, 0)
 	for _, config := range storageConfig {
-		switch config.(type) {
+		switch v := config.(type) {
 		case *types.StorageConfigurationMemberEfs:
-			r := config.(*types.StorageConfigurationMemberEfs)
-			efsConfig = appendStorageConfig(r.Value.FileSystemId, r.Value.MountPoint, efsConfig)
+			efsConfig = appendStorageConfig(v.Value.FileSystemId, v.Value.MountPoint, efsConfig)
 		case *types.StorageConfigurationMemberFsx:
-			r := config.(*types.StorageConfigurationMemberFsx)
-			fsxConfig = appendStorageConfig(r.Value.FileSystemId, r.Value.MountPoint, fsxConfig)
+			fsxConfig = appendStorageConfig(v.Value.FileSystemId, v.Value.MountPoint, fsxConfig)
 		}
 	}
 	return efsConfig, fsxConfig
