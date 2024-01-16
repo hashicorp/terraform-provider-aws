@@ -1,0 +1,7 @@
+```release-note:new-data-source
+aws_connect_bot_association
+```
+
+```release-note:new-resource
+aws_connect_bot_association
+```

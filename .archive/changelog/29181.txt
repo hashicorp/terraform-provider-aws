@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_ec2_fleet: Add `fleet_instance_set`, `fleet_state`, `fulfilled_capacity`, and `fulfilled_on_demand_capacity` attributes
+```
+
+```release-note:enhancement
+resource/aws_ec2_fleet: Add `on_demand_options.capacity_reservation_options`,`on_demand_options.max_total_price`, `on_demand_options.min_target_capacity`, `on_demand_options.single_availability_zone` and `on_demand_options.single_instance_type` arguments
+```
+
+```release-note:enhancement
+resource/aws_ec2_fleet: Add `spot_options.maintenance_strategies.capacity_rebalance.termination_delay` argument
+```
+
+```release-note:enhancement
+resource/aws_ec2_fleet: Add `valid_from` and `valid_until` arguments
+```

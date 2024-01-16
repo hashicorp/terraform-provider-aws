@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_fsx_ontap_file_system: Reduce the minimum valid value of the `throughput_capacity` argument to `128` (128 MB/s)
+```

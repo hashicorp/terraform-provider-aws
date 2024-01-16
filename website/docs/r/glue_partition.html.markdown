@@ -22,7 +22,7 @@ resource "aws_glue_partition" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `database_name` - (Required) Name of the metadata database where the table metadata resides. For Hive compatibility, this must be all lowercase.
 * `partition_values` - (Required) The values that define the partition.
@@ -40,7 +40,7 @@ The following arguments are supported:
 * `number_of_buckets` - (Optional) Must be specified if the table contains any dimension columns.
 * `ser_de_info` - (Optional) [Serialization/deserialization (SerDe)](#ser_de_info) information.
 * `bucket_columns` - (Optional) A list of reducer grouping columns, clustering columns, and bucketing columns in the table.
-* `sort_columns` - (Optional) A list of [Order](#sort_column) objects specifying the sort order of each bucket in the table.
+* `sort_columns` - (Optional) A list of [Order](#sort_columns) objects specifying the sort order of each bucket in the table.
 * `parameters` - (Optional) User-supplied properties in key-value form.
 * `skewed_info` - (Optional) Information about values that appear very frequently in a column (skewed values).
 * `stored_as_sub_directories` - (Optional) True if the table data is stored in subdirectories, or False if not.
@@ -68,9 +68,9 @@ The following arguments are supported:
 * `skewed_column_value_location_maps` - (Optional) A list of values that appear so frequently as to be considered skewed.
 * `skewed_column_values` - (Optional) A map of skewed values to the columns that contain them.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - partition id.
 * `creation_time` - The time at which the partition was created.
@@ -79,8 +79,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Glue Partitions can be imported with their catalog ID (usually AWS account ID), database name, table name and partition values e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Glue Partitions using the catalog ID (usually AWS account ID), database name, table name and partition values. For example:
 
+```terraform
+import {
+  to = aws_glue_partition.part
+  id = "123456789012:MyDatabase:MyTable:val1#val2"
+}
 ```
-$ terraform import aws_glue_partition.part 123456789012:MyDatabase:MyTable:val1#val2
+
+Using `terraform import`, import Glue Partitions using the catalog ID (usually AWS account ID), database name, table name and partition values. For example:
+
+```console
+% terraform import aws_glue_partition.part 123456789012:MyDatabase:MyTable:val1#val2
 ```

@@ -1,0 +1,27 @@
+```release-note:bug
+data-source/aws_elasticache_cluster: Gracefully handle additional tagging error type in non-standard AWS partitions (i.e., ISO)
+```
+
+```release-note:bug
+resource/aws_elasticache_cluster: Gracefully handle additional tagging error type in non-standard AWS partitions (i.e., ISO)
+```
+
+```release-note:bug
+resource/aws_elasticache_parameter_group: Gracefully handle additional tagging error type in non-standard AWS partitions (i.e., ISO)
+```
+
+```release-note:bug
+resource/aws_elasticache_replication_group: Gracefully handle additional tagging error type in non-standard AWS partitions (i.e., ISO)
+```
+
+```release-note:bug
+resource/aws_elasticache_subnet_group: Gracefully handle additional tagging error type in non-standard AWS partitions (i.e., ISO)
+```
+
+```release-note:bug
+resource/aws_elasticache_user_group: Gracefully handle additional tagging error type in non-standard AWS partitions (i.e., ISO)
+```
+
+```release-note:bug
+resource/aws_elasticache_user: Gracefully handle additional tagging error type in non-standard AWS partitions (i.e., ISO)
+```

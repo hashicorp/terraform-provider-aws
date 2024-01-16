@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_sqs_queue: Fix erroneous diffs in `policy` when no changes made or policies are equivalent
+```
+
+```release-note:bug
+resource/aws_sqs_queue_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent
+```
+
+```release-note:bug
+resource/aws_sqs_queue: Fix "error reading, empty result" and various eventual consistency errors
+```
+
+```release-note:bug
+resource/aws_sqs_queue_policy: Fix "error reading, empty result" and various eventual consistency errors
+```

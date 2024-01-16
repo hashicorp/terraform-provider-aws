@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_iam_role: Add `role_last_used` attribute
+```
+
+```release-note:enhancement
+data-source/aws_iam_role: Add `role_last_used` attribute
+```

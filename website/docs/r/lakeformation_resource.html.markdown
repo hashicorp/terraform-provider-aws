@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_lakeformation_resource
 
-Registers a Lake Formation resource (e.g. S3 bucket) as managed by the Data Catalog. In other words, the S3 path is added to the data lake.
+Registers a Lake Formation resource (e.g., S3 bucket) as managed by the Data Catalog. In other words, the S3 path is added to the data lake.
 
 Choose a role that has read/write access to the chosen Amazon S3 path or use the service-linked role. When you register the S3 path, the service-linked role and a new inline policy are created on your behalf. Lake Formation adds the first path to the inline policy and attaches it to the service-linked role. When you register subsequent paths, Lake Formation adds the path to the existing policy.
 
@@ -31,8 +31,8 @@ resource "aws_lakeformation_resource" "example" {
 
 ~> **NOTE:** AWS does not support registering an S3 location with an IAM role and subsequently updating the S3 location registration to a service-linked role.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `last_modified` - (Optional) The date and time the resource was last modified in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).

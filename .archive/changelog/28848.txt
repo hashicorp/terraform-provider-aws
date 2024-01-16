@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_db_instance: Add `manage_master_user_password`, `master_user_secret` and `master_user_secret_kms_key_id` arguments to support RDS managed master password in Secrets Manager
+```
+
+```release-note:enhancement
+resource/aws_rds_cluster: Add `manage_master_user_password`, `master_user_secret` and `master_user_secret_kms_key_id` arguments to support RDS managed master password in Secrets Manager
+```
+
+```release-note:enhancement
+data-source/aws_db_instance: Add `master_user_secret` attribute
+```
+
+```release-note:enhancement
+data-source/aws_rds_cluster: Add `master_user_secret` attribute
+```

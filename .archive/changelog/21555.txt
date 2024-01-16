@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_launch_template: Add `network_card_index` argument to `network_interfaces` configuration block
+```
+
+```release-note:enhancement
+data-source/aws_launch_template: Add `network_card_index` attribute to `network_interfaces` configuration block
+```
+
+```release-note:bug
+resource/aws_placement_group: `partition_count` argument is Computed, preventing spurious resource diffs
+```

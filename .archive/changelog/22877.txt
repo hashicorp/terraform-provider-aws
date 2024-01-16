@@ -1,0 +1,11 @@
+```release-note:note
+data-source/aws_s3_bucket_object: The data source is deprecated; use `aws_s3_object` instead
+```
+
+```release-note:note
+data-source/aws_s3_bucket_objects: The data source is deprecated; use `aws_s3_objects` instead
+```
+
+```release-note:note
+resource/aws_s3_bucket_object: The resource is deprecated; use `aws_s3_object` instead
+```

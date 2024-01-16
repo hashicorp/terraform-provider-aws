@@ -1,0 +1,76 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+package batch_test
+
+import (
+	"fmt"
+	"testing"
+
+	"github.com/aws/aws-sdk-go/service/batch"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+)
+
+func TestAccBatchSchedulingPolicyDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix("tf_acc_test_")
+	resourceName := "aws_batch_scheduling_policy.test"
+	datasourceName := "data.aws_batch_scheduling_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSchedulingPolicyDataSourceConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "fair_share_policy.#", resourceName, "fair_share_policy.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "fair_share_policy.0.compute_reservation", resourceName, "fair_share_policy.0.compute_reservation"),
+					resource.TestCheckResourceAttrPair(datasourceName, "fair_share_policy.0.share_decay_seconds", resourceName, "fair_share_policy.0.share_decay_seconds"),
+					resource.TestCheckResourceAttrPair(datasourceName, "fair_share_policy.0.share_distribution.#", resourceName, "fair_share_policy.0.share_distribution.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+				),
+			},
+		},
+	})
+}
+
+func testAccSchedulingPolicyDataSourceConfig(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_scheduling_policy" "test" {
+  name = %[1]q
+
+  fair_share_policy {
+    compute_reservation = 1
+    share_decay_seconds = 3600
+
+    share_distribution {
+      share_identifier = "A1*"
+      weight_factor    = 0.1
+    }
+
+    share_distribution {
+      share_identifier = "A2"
+      weight_factor    = 0.2
+    }
+  }
+
+  tags = {
+    "Name" = "Test Batch Scheduling Policy"
+  }
+}
+`, rName)
+}
+
+func testAccSchedulingPolicyDataSourceConfig_basic(rName string) string {
+	return fmt.Sprintf(testAccSchedulingPolicyDataSourceConfig(rName) + `
+data "aws_batch_scheduling_policy" "test" {
+  arn = aws_batch_scheduling_policy.test.arn
+}
+`)
+}

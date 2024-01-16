@@ -1,0 +1,57 @@
+---
+subcategory: "Backup"
+layout: "aws"
+page_title: "AWS: aws_backup_report_plan"
+description: |-
+  Provides details about an AWS Backup Report Plan.
+---
+
+# Data Source: aws_backup_report_plan
+
+Use this data source to get information on an existing backup report plan.
+
+## Example Usage
+
+```terraform
+data "aws_backup_report_plan" "example" {
+  name = "tf_example_backup_report_plan_name"
+}
+```
+
+## Argument Reference
+
+This data source supports the following arguments:
+
+* `name` - (Required) Backup report plan name.
+
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
+
+* `arn` - ARN of the backup report plan.
+* `creation_time` - Date and time that a report plan is created, in Unix format and Coordinated Universal Time (UTC).
+* `deployment_status` - Deployment status of a report plan. The statuses are: `CREATE_IN_PROGRESS` | `UPDATE_IN_PROGRESS` | `DELETE_IN_PROGRESS` | `COMPLETED`.
+* `description` - Description of the report plan.
+* `id` - ID of the report plan.
+* `report_delivery_channel` - An object that contains information about where and how to deliver your reports, specifically your Amazon S3 bucket name, S3 key prefix, and the formats of your reports. Detailed below.
+* `report_setting` - An object that identifies the report template for the report. Reports are built using a report template. Detailed below.
+* `tags` - Metadata that you can assign to help organize the report plans you create.
+
+### Report Delivery Channel Attributes
+
+`report_delivery_channel` has the following attributes:
+
+* `formats` - List of the format of your reports: CSV, JSON, or both.
+* `s3_bucket_name` - Unique name of the S3 bucket that receives your reports.
+* `s3_key_prefix` - Prefix for where Backup Audit Manager delivers your reports to Amazon S3. The prefix is this part of the following path: s3://your-bucket-name/prefix/Backup/us-west-2/year/month/day/report-name.
+
+### Report Setting Attributes
+
+`report_setting` has the following attributes:
+
+* `accounts` - (Optional) Specifies the list of accounts a report covers.
+* `framework_arns` - ARNs of the frameworks a report covers.
+* `number_of_frameworks` - Specifies the number of frameworks a report covers.
+* `organization_units` - (Optional) Specifies the list of Organizational Units a report covers.
+* `regions` - (Optional) Specifies the list of regions a report covers.
+* `report_template` - Identifies the report template for the report. Reports are built using a report template.

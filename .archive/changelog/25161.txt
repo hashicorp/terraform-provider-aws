@@ -1,0 +1,23 @@
+```release-note:enhancement
+resource/aws_instance: Add `private_dns_name_options` argument
+```
+
+```release-note:enhancement
+data-source/aws_instance: Add `private_dns_name_options` attribute
+```
+
+```release-note:enhancement
+resource/aws_instance: Correctly handle `credit_specification` for T4g instances
+```
+
+```release-note:enhancement
+data-source/aws_instance: Correctly set `credit_specification` for T4g instances
+```
+
+```release-note:enhancement
+resource/aws_launch_template: Correctly handle `credit_specification` for T4g instances
+```
+
+```release-note:enhancement
+data-source/aws_launch_template: Correctly set `credit_specification` for T4g instances
+```

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_instance: Prevent panic when reading the instance's block device mappings
+```

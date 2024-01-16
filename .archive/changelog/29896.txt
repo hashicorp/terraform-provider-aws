@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_cloudwatch_metric_alarm: Add `period` parameter to `metric_query`
+```
+
+```release-note:enhancement
+resource/aws_cloudwatch_metric_alarm: Add validation to `period` parameter of `metric_query.metric`
+```

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_medialive_channel: Fix setting of `bitrate` for `eac3_settings`.
+```

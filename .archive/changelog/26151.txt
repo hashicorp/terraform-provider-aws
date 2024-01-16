@@ -1,0 +1,7 @@
+```release-note:note
+resource/aws_connect_queue: The `quick_connect_ids_associated` attribute is being deprecated in favor of `quick_connect_ids`
+```
+
+```release-note:note
+resource/aws_connect_routing_profile: The `queue_configs_associated` attribute is being deprecated in favor of `queue_configs`
+```

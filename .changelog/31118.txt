@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_nat_gateway: Guarantee that all attributes are set when the NAT Gateway is associated with a single address
+```
+
+```release-note:bug
+data-source/aws_nat_gateway: Guarantee that all attributes are set when the NAT Gateway is associated with a single address
+```

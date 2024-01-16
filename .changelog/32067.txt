@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_redshiftserverless_workgroup: Fix `waiting for completion: unexpected state 'AVAILABLE'` errors when deleting resource
+```

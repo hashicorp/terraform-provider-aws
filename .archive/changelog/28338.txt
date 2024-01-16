@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_ecs_service: Fix `service_connect_configuration.service.ingress_port_override` being set to 0 (`InvalidParameterException: IngressPortOverride cannot use ports <= 1024` error) when not configured
+```
+
+```release-note:bug
+resource/aws_ecs_service: Fix `missing required field, UpdateServiceInput.ServiceConnectConfiguration.Enabled` error when removing `service_connect_configuration` configuration block 
+```

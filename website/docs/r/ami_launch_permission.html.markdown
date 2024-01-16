@@ -1,16 +1,18 @@
 ---
-subcategory: "EC2"
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_ami_launch_permission"
 description: |-
-  Adds launch permission to Amazon Machine Image (AMI).
+  Adds a launch permission to an Amazon Machine Image (AMI).
 ---
 
 # Resource: aws_ami_launch_permission
 
-Adds launch permission to Amazon Machine Image (AMI) from another AWS account.
+Adds a launch permission to an Amazon Machine Image (AMI).
 
 ## Example Usage
+
+### AWS Account ID
 
 ```terraform
 resource "aws_ami_launch_permission" "example" {
@@ -19,23 +21,55 @@ resource "aws_ami_launch_permission" "example" {
 }
 ```
 
+### Public Access
+
+```terraform
+resource "aws_ami_launch_permission" "example" {
+  image_id = "ami-12345678"
+  group    = "all"
+}
+```
+
+### Organization Access
+
+```terraform
+data "aws_organizations_organization" "current" {}
+
+resource "aws_ami_launch_permission" "example" {
+  image_id         = "ami-12345678"
+  organization_arn = data.aws_organizations_organization.current.arn
+}
+```
+
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `image_id` - (required) A region-unique name for the AMI.
-* `account_id` - (required) An AWS Account ID to add launch permissions.
+* `account_id` - (Optional) AWS account ID for the launch permission.
+* `group` - (Optional) Name of the group for the launch permission. Valid values: `"all"`.
+* `image_id` - (Required) ID of the AMI.
+* `organization_arn` - (Optional) ARN of an organization for the launch permission.
+* `organizational_unit_arn` - (Optional) ARN of an organizational unit for the launch permission.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
-* `id` - A combination of "`image_id`-`account_id`".
+* `id` - Launch permission ID.
 
 ## Import
 
-AWS AMI Launch Permission can be imported using the `ACCOUNT-ID/IMAGE-ID`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AMI Launch Permissions using `[ACCOUNT-ID|GROUP-NAME|ORGANIZATION-ARN|ORGANIZATIONAL-UNIT-ARN]/IMAGE-ID`. For example:
 
-```sh
-$ terraform import aws_ami_launch_permission.example 123456789012/ami-12345678
+```terraform
+import {
+  to = aws_ami_launch_permission.example
+  id = "123456789012/ami-12345678"
+}
+```
+
+Using `terraform import`, import AMI Launch Permissions using `[ACCOUNT-ID|GROUP-NAME|ORGANIZATION-ARN|ORGANIZATIONAL-UNIT-ARN]/IMAGE-ID`. For example:
+
+```console
+% terraform import aws_ami_launch_permission.example 123456789012/ami-12345678
 ```

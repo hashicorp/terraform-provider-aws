@@ -1,3 +1,0 @@
-```release-notes:new-data-source
-aws_servicecatalog_constraint
-```

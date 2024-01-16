@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_s3_bucket_object: Support objects greater than 5GB in size by using the [Amazon S3 upload manager](https://docs.aws.amazon.com/sdk-for-go/v1/developer-guide/sdk-utilities.html#upload-manager)
+```

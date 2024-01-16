@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_backup_report_plan: Add `accounts`, `organization_units` and `regions` attributes to the `report_setting` block
+```
+
+```release-note:enhancement
+data-source/aws_backup_report_plan: Add `accounts`, `organization_units` and `regions` attributes to the `report_setting` block
+```

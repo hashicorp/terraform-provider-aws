@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_vpc: Add `ipv6_cidr_block_network_border_group` argument
+```

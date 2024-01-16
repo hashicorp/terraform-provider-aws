@@ -1,0 +1,12 @@
+```release-note:new-resource
+aws_networkmanager_core_network_policy_attachment
+```
+
+```release-note:enhancement
+resource/aws_networkmanager_core_network: Add `base_policy_region` and `create_base_policy` arguments
+```
+
+```release-note:note
+resource/aws_networkmanager_core_network: The `policy_document` attribute is being deprecated in favor of the new `aws_networkmanager_core_network_policy_attachment` resource.
+```
+

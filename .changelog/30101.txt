@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_pinpoint_app: Don't return an error like `deleting Pinpoint Application (...): %!s()` after successful Delete
+```
+
+```release-note:bug
+resource/aws_opsworks_application: Don't return an error like `deleting OpsWorks Application (...): %!s()` after successful Delete
+```

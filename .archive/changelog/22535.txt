@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_ecr_repository: Attempt `tags`-on-create, fallback to tag after create, and allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO)
+```
+
+```release-note:enhancement
+data-source/aws_ecr_repository: Allow some `tags` errors to be non-fatal to support non-standard AWS partitions (i.e., ISO)
+```

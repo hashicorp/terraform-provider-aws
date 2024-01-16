@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_kinesis_firehose_delivery_stream: Add `opensearch` as a valid `destination` value
+```
+
+```release-note:enhancement
+resource/aws_kinesis_firehose_delivery_stream: Add `opensearch_configuration` block
+```

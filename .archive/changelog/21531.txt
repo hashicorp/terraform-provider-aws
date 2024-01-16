@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_route: Extend creation timeout to 5 minutes
+```
+
+```release-note:enhancement
+resource/aws_route_table: Extend creation timeout to 5 minutes
+```

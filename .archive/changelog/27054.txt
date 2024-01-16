@@ -1,0 +1,15 @@
+```release-note:new-data-source
+aws_appconfig_environment
+```
+
+```release-note:new-data-source
+aws_appconfig_environments
+```
+
+```release-note:new-data-source
+aws_appconfig_configuration_profile
+```
+
+```release-note:new-data-source
+aws_appconfig_configuration_profiles
+```

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ce_anomaly_subscription:Fix crash upon adding or removing monitor ARNs to `monitor_arn_list`.
+```

@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 terraform {
   backend "remote" {
     organization = "hashicorp-v2"
@@ -9,8 +12,8 @@ terraform {
 
   required_providers {
     github = {
-      source  = "hashicorp/github"
-      version = "4.12.0"
+      source  = "integrations/github"
+      version = "5.44.0"
     }
   }
 
@@ -18,5 +21,5 @@ terraform {
 }
 
 provider "github" {
-  organization = "hashicorp"
+  owner = "hashicorp"
 }

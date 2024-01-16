@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_acmpca_certificate_authority: Add `usage_mode` argument to support [short-lived certificates](https://docs.aws.amazon.com/privateca/latest/userguide/short-lived-certificates.html)
+```
+
+```release-note:enhancement
+data-source/aws_acmpca_certificate_authority: Add `usage_mode` attribute
+```

@@ -1,0 +1,3 @@
+```release-note:bug-fix
+resource/aws_appstream_fleet: Use `image_arn` when specified
+```

@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_lb_target_group: Support querying by `tags`
+```
