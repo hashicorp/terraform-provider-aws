@@ -14,10 +14,10 @@ Terraform resource for managing an AWS Rekognition Collection.
 
 ```terraform
 resource "aws_rekognition_collection" "test" {
-  collection_id             = "my-collection"
+  collection_id = "my-collection"
 
   tags = {
-	test = 1
+    test = 1
   }
 }
 ```
