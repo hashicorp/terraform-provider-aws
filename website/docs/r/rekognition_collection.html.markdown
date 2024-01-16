@@ -13,11 +13,11 @@ Terraform resource for managing an AWS Rekognition Collection.
 ## Example Usage
 
 ```terraform
-resource "aws_rekognition_collection" "test" {
+resource "aws_rekognition_collection" "example" {
   collection_id = "my-collection"
 
   tags = {
-    test = 1
+    example = 1
   }
 }
 ```
