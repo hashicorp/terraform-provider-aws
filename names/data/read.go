@@ -153,6 +153,10 @@ func (sr ServiceRecord) EndpointAPICall() string {
 	return sr[colEndpointAPICall]
 }
 
+func (sr ServiceRecord) EndpointAPIParams() string {
+	return sr[colEndpointAPIParams]
+}
+
 func (sr ServiceRecord) Note() string {
 	return sr[colNote]
 }
@@ -208,9 +212,10 @@ const (
 	colNotImplemented // If set, the service will be included in, e.g. labels, but not have a service client
 	colEndpointOnly   // If set, the service is included in list of endpoints
 	colAllowedSubcategory
-	colDeprecatedEnvVar // Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services
-	colTfAwsEnvVar      // `TF_AWS_<service>_ENDPOINT` envvar defined for some services
-	colSdkId            // Service SDK ID from AWS SDK for Go v2
-	colEndpointAPICall  // API call to use for endpoint tests
+	colDeprecatedEnvVar  // Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services
+	colTfAwsEnvVar       // `TF_AWS_<service>_ENDPOINT` envvar defined for some services
+	colSdkId             // Service SDK ID from AWS SDK for Go v2
+	colEndpointAPICall   // API call to use for endpoint tests
+	colEndpointAPIParams // Any needed parameters for endpoint tests
 	colNote
 )
