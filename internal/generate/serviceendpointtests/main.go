@@ -9,6 +9,7 @@ package main
 import (
 	_ "embed"
 	"path/filepath"
+	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
@@ -28,17 +29,26 @@ func main() {
 		g.Fatalf("error reading service data: %s", err)
 	}
 
-	for _, l := range services {
+	for i, l := range services {
 		packageName := l.ProviderPackage()
 
 		switch packageName {
 		case "codecatalyst", // Bearer auth token needs special handling
 			"s3control",       // Resolver modifies URL
-			"timestreamwrite": // Use endpoint discovery
+			"timestreamwrite": // Uses endpoint discovery
 			continue
 		}
 
-		if !l.ClientSDKV2() {
+		if l.Exclude() {
+			continue
+		}
+
+		if l.NotImplemented() {
+			continue
+		}
+
+		if packageName == "" {
+			g.Infof("wtf, line %d", i+1)
 			continue
 		}
 
@@ -54,13 +64,37 @@ func main() {
 
 		td := TemplateData{
 			PackageName:       packageName,
-			GoV2Package:       l.GoV2Package(),
 			ProviderNameUpper: l.ProviderNameUpper(),
 			Region:            "us-west-2",
 			APICall:           l.EndpointAPICall(),
 			APICallParams:     l.EndpointAPIParams(),
 			AwsEnvVar:         l.AwsServiceEnvVar(),
 			ConfigParameter:   l.AwsConfigParameter(),
+		}
+		if l.ClientSDKV1() {
+			td.GoV1Package = l.GoV1Package()
+
+			if strings.Contains(td.APICallParams, "aws_sdkv1") {
+				td.ImportAWS_V1 = true
+			}
+			switch packageName {
+			case "imagebuilder",
+				"globalaccelerator",
+				"route53recoveryreadiness",
+				"worklink":
+				td.V1NameResolverNeedsUnknownService = true
+			}
+			switch packageName {
+			case "wafregional":
+				td.V1AlternateInputPackage = "waf"
+			}
+		}
+		if l.ClientSDKV2() {
+			td.GoV2Package = l.GoV2Package()
+
+			if strings.Contains(td.APICallParams, "awstypes") {
+				td.ImportAwsTypes = true
+			}
 		}
 
 		switch packageName {
@@ -85,14 +119,19 @@ func main() {
 }
 
 type TemplateData struct {
-	PackageName       string
-	GoV2Package       string
-	ProviderNameUpper string
-	Region            string
-	APICall           string
-	APICallParams     string
-	AwsEnvVar         string
-	ConfigParameter   string
+	PackageName                       string
+	GoV1Package                       string
+	GoV2Package                       string
+	ProviderNameUpper                 string
+	Region                            string
+	APICall                           string
+	APICallParams                     string
+	AwsEnvVar                         string
+	ConfigParameter                   string
+	V1NameResolverNeedsUnknownService bool
+	V1AlternateInputPackage           string
+	ImportAWS_V1                      bool
+	ImportAwsTypes                    bool
 }
 
 //go:embed file.tmpl
