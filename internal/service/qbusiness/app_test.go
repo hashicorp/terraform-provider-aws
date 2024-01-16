@@ -8,7 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/qbusiness"
+	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
+	"github.com/aws/aws-sdk-go-v2/service/qbusiness/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -26,7 +27,7 @@ func TestAccQBusinessApp_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, qbusiness.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -56,7 +57,7 @@ func TestAccQBusinessApp_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, qbusiness.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -80,7 +81,7 @@ func TestAccQBusinessApp_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, qbusiness.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -119,7 +120,7 @@ func TestAccQBusinessApp_attachmentsConfiguration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckApp(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, qbusiness.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -132,19 +133,19 @@ func TestAccQBusinessApp_attachmentsConfiguration(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAppConfig_attachmentsConfiguration(rName, qbusiness.AttachmentsControlModeEnabled),
+				Config: testAccAppConfig_attachmentsConfiguration(rName, string(types.AttachmentsControlModeEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.0.attachments_control_mode", qbusiness.AttachmentsControlModeEnabled),
+					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.0.attachments_control_mode", string(types.AttachmentsControlModeEnabled)),
 				),
 			},
 			{
-				Config: testAccAppConfig_attachmentsConfiguration(rName, qbusiness.AttachmentsControlModeDisabled),
+				Config: testAccAppConfig_attachmentsConfiguration(rName, string(types.AttachmentsControlModeDisabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.0.attachments_control_mode", qbusiness.AttachmentsControlModeDisabled),
+					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.0.attachments_control_mode", string(types.AttachmentsControlModeDisabled)),
 				),
 			},
 		},
@@ -152,11 +153,11 @@ func TestAccQBusinessApp_attachmentsConfiguration(t *testing.T) {
 }
 
 func testAccPreCheckApp(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).QBusinessConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).QBusinessClient(ctx)
 
 	input := &qbusiness.ListApplicationsInput{}
 
-	_, err := conn.ListApplicationsWithContext(ctx, input)
+	_, err := conn.ListApplications(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -169,7 +170,7 @@ func testAccPreCheckApp(ctx context.Context, t *testing.T) {
 
 func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QBusinessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QBusinessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_qbusiness_app" {
@@ -200,7 +201,7 @@ func testAccCheckAppExists(ctx context.Context, n string, v *qbusiness.GetApplic
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QBusinessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QBusinessClient(ctx)
 
 		output, err := tfqbusiness.FindAppByID(ctx, conn, rs.Primary.ID)
 

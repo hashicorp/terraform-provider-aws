@@ -8,14 +8,16 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/qbusiness"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
+	"github.com/aws/aws-sdk-go-v2/service/qbusiness/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -55,11 +57,11 @@ func ResourceApplication() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attachments_control_mode": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      qbusiness.AttachmentsControlModeEnabled,
-							Description:  "Status information about whether file upload functionality is activated or deactivated for your end user.",
-							ValidateFunc: validation.StringInSlice(qbusiness.AttachmentsControlMode_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          types.AttachmentsControlModeEnabled,
+							Description:      "Status information about whether file upload functionality is activated or deactivated for your end user.",
+							ValidateDiagFunc: enum.Validate[types.AttachmentsControlMode](),
 						},
 					},
 				},
@@ -116,7 +118,7 @@ func ResourceApplication() *schema.Resource {
 func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).QBusinessConn(ctx)
+	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
 
 	iam_service_role_arn := d.Get("iam_service_role_arn").(string)
 	display_name := d.Get("display_name").(string)
@@ -127,8 +129,8 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("attachments_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.AttachmentsConfiguration = &qbusiness.AttachmentsConfiguration{
-			AttachmentsControlMode: aws.String(v.([]interface{})[0].(map[string]interface{})["attachments_control_mode"].(string)),
+		input.AttachmentsConfiguration = &types.AttachmentsConfiguration{
+			AttachmentsControlMode: (types.AttachmentsControlMode)(v.([]interface{})[0].(map[string]interface{})["attachments_control_mode"].(string)),
 		}
 	}
 
@@ -137,20 +139,20 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("encryption_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.EncryptionConfiguration = &qbusiness.EncryptionConfiguration{
+		input.EncryptionConfiguration = &types.EncryptionConfiguration{
 			KmsKeyId: aws.String(v.([]interface{})[0].(map[string]interface{})["kms_key_id"].(string)),
 		}
 	}
 
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateApplicationWithContext(ctx, input)
+	output, err := conn.CreateApplication(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating qbusiness application: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.ApplicationId))
+	d.SetId(aws.ToString(output.ApplicationId))
 	d.Set("arn", output.ApplicationArn)
 
 	if _, err := waitApplicationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
@@ -163,11 +165,11 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).QBusinessConn(ctx)
+	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
 
 	app, err := FindAppByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, qbusiness.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] qbusiness application (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -196,7 +198,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).QBusinessConn(ctx)
+	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
 
 	input := &qbusiness.UpdateApplicationInput{
 		ApplicationId: aws.String(d.Id()),
@@ -215,12 +217,12 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if d.HasChange("attachments_configuration") {
-		input.AttachmentsConfiguration = &qbusiness.AttachmentsConfiguration{
-			AttachmentsControlMode: aws.String(d.Get("attachments_configuration").([]interface{})[0].(map[string]interface{})["attachments_control_mode"].(string)),
+		input.AttachmentsConfiguration = &types.AttachmentsConfiguration{
+			AttachmentsControlMode: (types.AttachmentsControlMode)(d.Get("attachments_configuration").([]interface{})[0].(map[string]interface{})["attachments_control_mode"].(string)),
 		}
 	}
 
-	_, err := conn.UpdateApplicationWithContext(ctx, input)
+	_, err := conn.UpdateApplication(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating qbusiness application: %s", err)
@@ -232,14 +234,14 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).QBusinessConn(ctx)
+	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
 
-	_, err := conn.DeleteApplicationWithContext(ctx, &qbusiness.DeleteApplicationInput{
+	_, err := conn.DeleteApplication(ctx, &qbusiness.DeleteApplicationInput{
 		ApplicationId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, qbusiness.ErrCodeResourceNotFoundException) {
-		return diags
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil
 	}
 
 	if err != nil {
@@ -250,17 +252,17 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "waiting for qbusiness app (%s) delete: %s", d.Id(), err)
 	}
 
-	return diags
+	return nil
 }
 
-func FindAppByID(ctx context.Context, conn *qbusiness.QBusiness, id string) (*qbusiness.GetApplicationOutput, error) {
+func FindAppByID(ctx context.Context, conn *qbusiness.Client, id string) (*qbusiness.GetApplicationOutput, error) {
 	input := &qbusiness.GetApplicationInput{
 		ApplicationId: aws.String(id),
 	}
 
-	output, err := conn.GetApplicationWithContext(ctx, input)
+	output, err := conn.GetApplication(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, qbusiness.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -278,26 +280,26 @@ func FindAppByID(ctx context.Context, conn *qbusiness.QBusiness, id string) (*qb
 	return output, nil
 }
 
-func flattenAttachmentsConfiguration(v *qbusiness.AppliedAttachmentsConfiguration) []interface{} {
+func flattenAttachmentsConfiguration(v *types.AppliedAttachmentsConfiguration) []interface{} {
 	if v == nil {
 		return nil
 	}
 
 	return []interface{}{
 		map[string]interface{}{
-			"attachments_control_mode": aws.StringValue(v.AttachmentsControlMode),
+			"attachments_control_mode": string(v.AttachmentsControlMode),
 		},
 	}
 }
 
-func flattenEncryptionConfiguration(v *qbusiness.EncryptionConfiguration) []interface{} {
+func flattenEncryptionConfiguration(v *types.EncryptionConfiguration) []interface{} {
 	if v == nil {
 		return nil
 	}
 
 	return []interface{}{
 		map[string]interface{}{
-			"kms_key_id": aws.StringValue(v.KmsKeyId),
+			"kms_key_id": aws.ToString(v.KmsKeyId),
 		},
 	}
 }

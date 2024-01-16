@@ -6,13 +6,12 @@ package qbusiness
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/qbusiness"
+	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusAppAvailability(ctx context.Context, conn *qbusiness.QBusiness, id string) retry.StateRefreshFunc {
+func statusAppAvailability(ctx context.Context, conn *qbusiness.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindAppByID(ctx, conn, id)
 
@@ -24,6 +23,6 @@ func statusAppAvailability(ctx context.Context, conn *qbusiness.QBusiness, id st
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
