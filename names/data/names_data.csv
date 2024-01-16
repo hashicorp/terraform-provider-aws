@@ -282,7 +282,7 @@ polly,polly,polly,polly,,polly,,,Polly,Polly,,,2,,aws_polly_,,polly_,Polly,Amazo
 ,,,,,,,,,,,,,,,,,Porting Assistant for .NET,,x,,,,,,No SDK support
 pricing,pricing,pricing,pricing,,pricing,,,Pricing,Pricing,,,2,,aws_pricing_,,pricing_,Pricing Calculator,AWS,,,,,,,
 proton,proton,proton,proton,,proton,,,Proton,Proton,,1,,,aws_proton_,,proton_,Proton,AWS,,x,,,,,
-qbusiness,qbusiness,qbusiness,qbusiness,,qbusiness,,,QBusiness,QBusiness,,1,2,,aws_qbusiness_,,qbusiness_,Amazon Q Business,Amazon,,,,,,,
+qbusiness,qbusiness,qbusiness,qbusiness,,qbusiness,,,QBusiness,QBusiness,,,2,,aws_qbusiness_,,qbusiness_,Amazon Q Business,Amazon,,,,,,,
 qldb,qldb,qldb,qldb,,qldb,,,QLDB,QLDB,,,2,,aws_qldb_,,qldb_,QLDB (Quantum Ledger Database),Amazon,,,,,,,
 qldb-session,qldbsession,qldbsession,qldbsession,,qldbsession,,,QLDBSession,QLDBSession,,1,,,aws_qldbsession_,,qldbsession_,QLDB Session,Amazon,,x,,,,,
 quicksight,quicksight,quicksight,quicksight,,quicksight,,,QuickSight,QuickSight,,1,,,aws_quicksight_,,quicksight_,QuickSight,Amazon,,,,,,,
