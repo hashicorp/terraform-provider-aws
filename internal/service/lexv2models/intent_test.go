@@ -16,6 +16,7 @@ import (
 	"github.com/aws/smithy-go/middleware"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -202,8 +203,8 @@ func TestIntentAutoFlex(t *testing.T) {
 	dialogStateTF := tflexv2models.DialogState{
 		DialogAction: fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogActionTF),
 		Intent:       fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentOverrideTF),
-		SessionAttributes: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
-			testString: basetypes.NewStringValue(testString2),
+		SessionAttributes: fwtypes.NewMapValueOfMust[basetypes.StringValue](ctx, map[string]attr.Value{
+			testString: types.StringValue(testString2),
 		}),
 	}
 	dialogStateAWS := lextypes.DialogState{
@@ -1027,6 +1028,47 @@ func TestAccLexV2ModelsIntent_updateConfirmationSetting(t *testing.T) {
 	})
 }
 
+func TestAccLexV2ModelsIntent_updateClosingSetting(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var intent lexmodelsv2.DescribeIntentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_intent.test"
+	botLocaleName := "aws_lexv2models_bot_locale.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntentConfig_updateClosingSetting(rName, "test", "test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "closing_setting.*", map[string]string{
+						"active": "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "closing_setting.*.closing_response.*.message_group.*.message.*.plain_text_message.*", map[string]string{
+						"value": "test",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "closing_setting.*.closing_response.*.conditional.*.conditional_branch.*", map[string]string{
+						"name": rName,
+					}),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckIntentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LexV2ModelsClient(ctx)
@@ -1241,4 +1283,64 @@ resource "aws_lexv2models_intent" "test" {
   }
 }
 `, rName, retries, textMsg, endTOMs1, endTOMs2))
+}
+
+func testAccIntentConfig_updateClosingSetting(rName string, textMsg1, testMsg2 string) string {
+	return acctest.ConfigCompose(
+		testAccIntentConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_intent" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  closing_setting {
+    active = true
+
+    closing_response {
+      allow_interrupt = true
+
+      message_group {
+        message {
+          plain_text_message {
+            value = %[2]q
+          }
+        }
+      }
+    }
+
+    conditional {
+      active = true
+
+      conditional_branch {
+        name = %[1]q
+
+        condition {
+          expression_string = "slot1 = \"test\""
+        }
+
+        next_step {
+          dialog_action {
+            type = "CloseIntent"
+            slot_to_elicit = "slot1"
+          }
+        }
+
+        response {
+          allow_interrupt = true
+
+          message_group {
+            message {
+              plain_text_message {
+                value = %[3]q
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, textMsg1, testMsg2))
 }

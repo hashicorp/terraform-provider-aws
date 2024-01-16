@@ -340,6 +340,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		Attributes: map[string]schema.Attribute{
 			"session_attributes": schema.MapAttribute{
 				ElementType: types.StringType,
+				CustomType:  fwtypes.NewMapTypeOf[types.String](ctx),
 				Optional:    true,
 			},
 		},
