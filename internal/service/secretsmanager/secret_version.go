@@ -26,7 +26,8 @@ import (
 )
 
 const (
-	secretVersionStageCurrent = "AWSCURRENT"
+	secretVersionStageCurrent  = "AWSCURRENT"
+	secretVersionStagePrevious = "AWSPREVIOUS"
 )
 
 // @SDKResource("aws_secretsmanager_secret_version", name="Secret Version")
@@ -251,7 +252,7 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 			return nil, err
 		}
 
-		if len(output.VersionStages) == 0 || (len(output.VersionStages) == 1 && output.VersionStages[0] == secretVersionStageCurrent) {
+		if len(output.VersionStages) == 0 || (len(output.VersionStages) == 1 && (output.VersionStages[0] == secretVersionStageCurrent || output.VersionStages[0] == secretVersionStagePrevious)) {
 			return nil, &retry.NotFoundError{}
 		}
 
