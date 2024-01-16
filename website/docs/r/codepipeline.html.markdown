@@ -95,9 +95,13 @@ resource "aws_s3_bucket" "codepipeline_bucket" {
   bucket = "test-bucket"
 }
 
-resource "aws_s3_bucket_acl" "codepipeline_bucket_acl" {
+resource "aws_s3_bucket_public_access_block" "codepipeline_bucket_pab" {
   bucket = aws_s3_bucket.codepipeline_bucket.id
-  acl    = "private"
+
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 data "aws_iam_policy_document" "assume_role" {
@@ -170,10 +174,12 @@ data "aws_kms_alias" "s3kmskey" {
 This resource supports the following arguments:
 
 * `name` - (Required) The name of the pipeline.
+* `pipeline_type` - (Optional) Type of the pipeline. Possible values are: `V1` and `V2`. Default value is `V1`.
 * `role_arn` - (Required) A service role Amazon Resource Name (ARN) that grants AWS CodePipeline permission to make calls to AWS services on your behalf.
 * `artifact_store` (Required) One or more artifact_store blocks. Artifact stores are documented below.
 * `stage` (Minimum of at least two `stage` blocks is required) A stage block. Stages are documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `variable` - (Optional) A pipeline-level variable block. Valid only when `pipeline_type` is `V2`. Variable are documented below.
 
 An `artifact_store` block supports the following arguments:
 
@@ -206,6 +212,12 @@ An `action` block supports the following arguments:
 * `run_order` - (Optional) The order in which actions are run.
 * `region` - (Optional) The region in which to run the action.
 * `namespace` - (Optional) The namespace all output variables will be accessed from.
+
+A `variable` block supports the following arguments:
+
+* `name` - (Required) The name of a pipeline-level variable.
+* `default_value` - (Optional) The default value of a pipeline-level variable.
+* `description` - (Optional) The description of a pipeline-level variable.
 
 ~> **Note:** The input artifact of an action must exactly match the output artifact declared in a preceding action, but the input artifact does not have to be the next action in strict sequence from the action that provided the output artifact. Actions in parallel can declare different output artifacts, which are in turn consumed by different following actions.
 

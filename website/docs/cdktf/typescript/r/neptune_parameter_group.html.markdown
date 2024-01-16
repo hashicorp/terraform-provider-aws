@@ -50,7 +50,7 @@ This resource supports the following arguments:
 * `family` - (Required) The family of the Neptune parameter group.
 * `description` - (Optional) The description of the Neptune parameter group. Defaults to "Managed by Terraform".
 * `parameter` - (Optional) A list of Neptune parameters to apply.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 Parameter blocks support the following:
 
@@ -64,7 +64,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The Neptune parameter group name.
 * `arn` - The Neptune parameter group Amazon Resource Name (ARN).
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -88,4 +88,4 @@ Using `terraform import`, import Neptune Parameter Groups using the `name`. For 
 % terraform import aws_neptune_parameter_group.some_pg some-pg
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-be5d1c3f583ff995c239201e37d2fd118d3f64576d14e1031f1d003e3d679e3c -->
+<!-- cache-key: cdktf-0.20.0 input-be5d1c3f583ff995c239201e37d2fd118d3f64576d14e1031f1d003e3d679e3c -->

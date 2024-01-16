@@ -102,7 +102,7 @@ This resource supports the following arguments:
 * `earlyMediaEnabled` - (Optional) Specifies whether early media for outbound calls is enabled . Defaults to `true` if outbound calls is enabled.
 * `identityManagementType` - (Required) Specifies the identity management type attached to the instance. Allowed Values are: `SAML`, `CONNECT_MANAGED`, `EXISTING_DIRECTORY`.
 * `inboundCallsEnabled` - (Required) Specifies whether inbound calls are enabled.
-* `instanceAlias` - (Optional) Specifies the name of the instance. Required if `directory_id` not specified.
+* `instanceAlias` - (Optional) Specifies the name of the instance. Required if `directoryId` not specified.
 * `multiPartyConferenceEnabled` - (Optional) Specifies whether multi-party calls/conference is enabled. Defaults to `false`.
 * `outboundCallsEnabled` - (Required) Specifies whether outbound calls are enabled.
 <!-- * `use_custom_tts_voices` - (Optional) Whether use custom tts voices is enabled. Defaults to `false` -->
@@ -146,4 +146,4 @@ Using `terraform import`, import Connect instances using the `id`. For example:
 % terraform import aws_connect_instance.example f1288a1f-6193-445a-b47e-af739b2
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-e8635103b3da162fead649adf119535c0b0db258c89a17c04da04da2013fbd83 -->
+<!-- cache-key: cdktf-0.20.0 input-e8635103b3da162fead649adf119535c0b0db258c89a17c04da04da2013fbd83 -->

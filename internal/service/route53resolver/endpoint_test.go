@@ -40,6 +40,8 @@ func TestAccRoute53ResolverEndpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "host_vpc_id", vpcResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "name", ""),
+					resource.TestCheckResourceAttr(resourceName, "protocols.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", "IPV4"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -144,6 +146,7 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "direction", "OUTBOUND"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", initialName),
+					resource.TestCheckResourceAttr(resourceName, "protocols.#", "1"),
 				),
 			},
 			{
@@ -153,6 +156,37 @@ func TestAccRoute53ResolverEndpoint_updateOutbound(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "direction", "OUTBOUND"),
 					resource.TestCheckResourceAttr(resourceName, "ip_address.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedName),
+					resource.TestCheckResourceAttr(resourceName, "protocols.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRoute53ResolverEndpoint_resolverEndpointType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ep route53resolver.ResolverEndpoint
+	resourceName := "aws_route53_resolver_endpoint.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEndpointConfig_resolverEndpointType(rName, "DUALSTACK"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName, &ep),
+					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", "DUALSTACK"),
+				),
+			},
+			{
+				Config: testAccEndpointConfig_resolverEndpointType(rName, "IPV4"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEndpointExists(ctx, resourceName, &ep),
+					resource.TestCheckResourceAttr(resourceName, "resolver_endpoint_type", "IPV4"),
 				),
 			},
 		},
@@ -377,6 +411,70 @@ resource "aws_route53_resolver_endpoint" "test" {
   ip_address {
     subnet_id = aws_subnet.test[0].id
   }
+
+  protocols = ["Do53", "DoH"]
 }
 `, name))
+}
+
+func testAccEndpointConfig_resolverEndpointType(rName, resolverEndpointType string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+
+  assign_generated_ipv6_cidr_block = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 3
+
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.test.ipv6_cidr_block, 8, count.index)
+  assign_ipv6_address_on_creation = true
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  count = 2
+
+  vpc_id = aws_vpc.test.id
+  name   = "%[1]s-${count.index}"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route53_resolver_endpoint" "test" {
+  direction = "INBOUND"
+
+  security_group_ids = aws_security_group.test[*].id
+
+  ip_address {
+    subnet_id = aws_subnet.test[0].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[1].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[2].id
+  }
+
+  resolver_endpoint_type = %[2]q
+}
+`, rName, resolverEndpointType))
 }

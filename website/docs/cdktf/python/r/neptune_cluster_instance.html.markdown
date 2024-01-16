@@ -90,6 +90,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The Instance identifier
 * `kms_key_arn` - The ARN for the KMS encryption key if one is set to the neptune cluster.
 * `storage_encrypted` - Specifies whether the neptune cluster is encrypted.
+* `storage_type` - Storage type associated with the cluster `standard/iopt1`.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `writer` – Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
 
@@ -122,4 +123,4 @@ Using `terraform import`, import `aws_neptune_cluster_instance` using the instan
 % terraform import aws_neptune_cluster_instance.example my-instance
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-c9fbfba9a3319bef7009738e3db57be0a358b60956afc9ca57b4650ac05f9ef1 -->
+<!-- cache-key: cdktf-0.20.0 input-0abad5cd10252cd9f3a92156a3e64f69bc80fe9fbd523f8707ff92c3e99b6327 -->
