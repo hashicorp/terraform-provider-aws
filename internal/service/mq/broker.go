@@ -746,7 +746,7 @@ func resourceUserHash(v interface{}) int {
 		buf.WriteString("false-")
 	}
 	if g, ok := m["groups"]; ok {
-		buf.WriteString(fmt.Sprintf("%v-", g.([]string)))
+		buf.WriteString(fmt.Sprintf("%v-", g.(*schema.Set).List()))
 	}
 	if p, ok := m["password"]; ok {
 		buf.WriteString(fmt.Sprintf("%s-", p.(string)))
@@ -999,7 +999,7 @@ func flattenUsers(users []*types.User, cfgUsers []interface{}) *schema.Set {
 			m["replication_user"] = aws.ToBool(u.ReplicationUser)
 		}
 		if len(u.Groups) > 0 {
-			m["groups"] = u.Groups
+			m["groups"] = flex.FlattenStringValueSet(u.Groups)
 		}
 		out = append(out, m)
 	}

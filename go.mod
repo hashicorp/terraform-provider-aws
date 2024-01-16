@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.49.18
+	github.com/aws/aws-sdk-go v1.49.19
 	github.com/aws/aws-sdk-go-v2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/config v1.26.3
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.11
@@ -39,7 +39,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.34.6
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.22.8
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.6.6
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.143.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.144.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/eks v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.34.7
@@ -65,6 +65,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.38.6
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.25.6
+	github.com/aws/aws-sdk-go-v2/service/m2 v1.10.7
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.44.1
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.28.7
@@ -89,6 +90,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.48.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.41.8
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.6.6
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.44.2
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.10.7
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.24.8
@@ -109,7 +111,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.8.4
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.5.6
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.27.6
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.35.7
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.35.8
 	github.com/aws/aws-sdk-go-v2/service/xray v1.23.7
 	github.com/beevik/etree v1.3.0
 	github.com/davecgh/go-spew v1.1.1
@@ -126,7 +128,7 @@ require (
 	github.com/hashicorp/go-uuid v1.0.3
 	github.com/hashicorp/go-version v1.6.0
 	github.com/hashicorp/hcl/v2 v2.19.1
-	github.com/hashicorp/terraform-plugin-framework v1.4.2
+	github.com/hashicorp/terraform-plugin-framework v1.5.0
 	github.com/hashicorp/terraform-plugin-framework-jsontypes v0.1.0
 	github.com/hashicorp/terraform-plugin-framework-timeouts v0.4.1
 	github.com/hashicorp/terraform-plugin-framework-validators v0.12.0
