@@ -55,8 +55,8 @@ This resource exports no additional attributes.
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -104,4 +104,4 @@ Using the endpoint ID, target network CIDR, and group name:
 % terraform import aws_ec2_client_vpn_authorization_rule.example cvpn-endpoint-0ac3a1abbccddd666,10.1.0.0/24,team-a
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-9be9ac769186ff37ee1d96174a6329f4231687f8b5769f002ba41ebeea327607 -->
+<!-- cache-key: cdktf-0.20.0 input-9be9ac769186ff37ee1d96174a6329f4231687f8b5769f002ba41ebeea327607 -->

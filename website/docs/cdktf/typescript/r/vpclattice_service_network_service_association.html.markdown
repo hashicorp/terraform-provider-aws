@@ -67,8 +67,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -92,4 +92,4 @@ Using `terraform import`, import VPC Lattice Service Network Service Association
 % terraform import aws_vpclattice_service_network_service_association.example snsa-05e2474658a88f6ba
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ed0fbd858c03d6277e22292ff2f9c7e7102bc8ebdee62a4f130453206c0b83a7 -->
+<!-- cache-key: cdktf-0.20.0 input-ed0fbd858c03d6277e22292ff2f9c7e7102bc8ebdee62a4f130453206c0b83a7 -->

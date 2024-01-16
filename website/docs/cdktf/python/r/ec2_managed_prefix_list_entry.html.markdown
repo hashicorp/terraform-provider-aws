@@ -54,7 +54,7 @@ This resource supports the following arguments:
 
 * `cidr` - (Required) CIDR block of this entry.
 * `description` - (Optional) Description of this entry. Please note that due to API limitations, updating only the description of an entry will require recreating the entry.
-* `prefix_list_id` - (Required) CIDR block of this entry.
+* `prefix_list_id` - (Required) The ID of the prefix list.
 
 ## Attribute Reference
 
@@ -81,4 +81,4 @@ Using `terraform import`, import prefix list entries using `prefix_list_id` and 
 % terraform import aws_ec2_managed_prefix_list_entry.default pl-0570a1d2d725c16be,10.0.3.0/24
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a95730eacb673234acf87d5fadae62c50b9ab8fba39c257ae0b77d4dc4586a17 -->
+<!-- cache-key: cdktf-0.20.0 input-3d44a4444122a301a9ec7b354d4857edd3200d8c413f7cb4c55f5979d3c06693 -->

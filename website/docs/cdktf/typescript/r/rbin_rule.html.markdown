@@ -54,7 +54,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `resourceType` - (Required) The resource type to be retained by the retention rule. Valid values are `ebsSnapshot` and `ec2Image`.
+* `resourceType` - (Required) The resource type to be retained by the retention rule. Valid values are `EBS_SNAPSHOT` and `EC2_IMAGE`.
 * `retentionPeriod` - (Required) Information about the retention period for which the retention rule is to retain resources. See [`retentionPeriod`](#retention_period) below.
 
 The following arguments are optional:
@@ -99,7 +99,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - (String) ID of the Rule.
 * `lockEndTime` - (Timestamp) The date and time at which the unlock delay is set to expire. Only returned for retention rules that have been unlocked and that are still within the unlock delay period.
-* `lockState` - (Optional) The lock state of the retention rules to list. Only retention rules with the specified lock state are returned. Valid values are `locked`, `pendingUnlock`, `unlocked`.
+* `lockState` - (Optional) The lock state of the retention rules to list. Only retention rules with the specified lock state are returned. Valid values are `locked`, `pending_unlock`, `unlocked`.
 * `status` - (String) The state of the retention rule. Only retention rules that are in the `available` state retain resources. Valid values include `pending` and `available`.
 
 ## Import
@@ -124,4 +124,4 @@ Using `terraform import`, import RBin Rule using the `id`. For example:
 % terraform import aws_rbin_rule.example examplerule
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-fa128f027cec3535b461f4a8bc2a7d6697d0113ab8d96009de17320fb4fdffe0 -->
+<!-- cache-key: cdktf-0.20.0 input-fa128f027cec3535b461f4a8bc2a7d6697d0113ab8d96009de17320fb4fdffe0 -->

@@ -188,9 +188,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `update` - (Default `5M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -214,4 +214,4 @@ Using `terraform import`, import IVS (Interactive Video) Chat Logging Configurat
 % terraform import aws_ivschat_logging_configuration.example arn:aws:ivschat:us-west-2:326937407773:logging-configuration/MMUQc8wcqZmC
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bba8a6a4c3ad40b83127a5d0756507ed6f522126fec6a06bdf49e17484976b8d -->
+<!-- cache-key: cdktf-0.20.0 input-bba8a6a4c3ad40b83127a5d0756507ed6f522126fec6a06bdf49e17484976b8d -->

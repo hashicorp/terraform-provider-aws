@@ -84,9 +84,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -110,4 +110,4 @@ Using `terraform import`, import MediaLive Multiplex using the `id`. For example
 % terraform import aws_medialive_multiplex.example 12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ef0b0248360f7c92f3d75bdb422730873d3e865bff521828049e013dc339473a -->
+<!-- cache-key: cdktf-0.20.0 input-ef0b0248360f7c92f3d75bdb422730873d3e865bff521828049e013dc339473a -->

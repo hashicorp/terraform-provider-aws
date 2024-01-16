@@ -81,7 +81,7 @@ This resource supports the following arguments:
 
 **notification** supports the following:
 
-* `events` - (Required) You can configure a vault to publish a notification for `archiveRetrievalCompleted` and `inventoryRetrievalCompleted` events.
+* `events` - (Required) You can configure a vault to publish a notification for `ArchiveRetrievalCompleted` and `InventoryRetrievalCompleted` events.
 * `snsTopic` - (Required) The SNS Topic ARN.
 
 ## Attribute Reference
@@ -114,4 +114,4 @@ Using `terraform import`, import Glacier Vaults using the `name`. For example:
 % terraform import aws_glacier_vault.archive my_archive
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1bfb612252a42581f297e83a2d1f1c7c609160aeeb4a7bd67bccea5a3aa3cff5 -->
+<!-- cache-key: cdktf-0.20.0 input-1bfb612252a42581f297e83a2d1f1c7c609160aeeb4a7bd67bccea5a3aa3cff5 -->

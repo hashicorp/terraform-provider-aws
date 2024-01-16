@@ -94,7 +94,7 @@ This resource supports the following arguments:
 `advancedBackupSetting` supports the following arguments:
 
 * `backupOptions` - (Required) Specifies the backup option for a selected resource. This option is only available for Windows VSS backup jobs. Set to `{ WindowsVSS = "enabled" }` to enable Windows VSS backup option and create a VSS Windows backup.
-* `resourceType` - (Required) The type of AWS resource to be backed up. For VSS Windows backups, the only supported resource type is Amazon EC2. Valid values: `ec2`.
+* `resourceType` - (Required) The type of AWS resource to be backed up. For VSS Windows backups, the only supported resource type is Amazon EC2. Valid values: `EC2`.
 
 ## Attribute Reference
 
@@ -127,4 +127,4 @@ Using `terraform import`, import Backup Plan using the `id`. For example:
 % terraform import aws_backup_plan.test <id>
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e41e73e041e50613fcaa9cb0889a0177d0b33c0a30b6e8469e4e706a67a8b35d -->
+<!-- cache-key: cdktf-0.20.0 input-e41e73e041e50613fcaa9cb0889a0177d0b33c0a30b6e8469e4e706a67a8b35d -->

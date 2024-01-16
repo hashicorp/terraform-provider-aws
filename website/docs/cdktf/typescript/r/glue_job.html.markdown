@@ -184,8 +184,8 @@ This resource supports the following arguments:
 * `description` – (Optional) Description of the job.
 * `executionProperty` – (Optional) Execution property of the job. Defined below.
 * `glueVersion` - (Optional) The version of glue to use, for example "1.0". Ray jobs should set this to 4.0 or greater. For information about available versions, see the [AWS Glue Release Notes](https://docs.aws.amazon.com/glue/latest/dg/release-notes.html).
-* `executionClass` - (Optional) Indicates whether the job is run with a standard or flexible execution class. The standard execution class is ideal for time-sensitive workloads that require fast job startup and dedicated resources. Valid value: `flex`, `standard`.
-* `maxCapacity` – (Optional) The maximum number of AWS Glue data processing units (DPUs) that can be allocated when this job runs. `required` when `pythonshell` is set, accept either `00625` or `10`. Use `numberOfWorkers` and `workerType` arguments instead with `glueVersion` `20` and above.
+* `executionClass` - (Optional) Indicates whether the job is run with a standard or flexible execution class. The standard execution class is ideal for time-sensitive workloads that require fast job startup and dedicated resources. Valid value: `FLEX`, `STANDARD`.
+* `maxCapacity` – (Optional) The maximum number of AWS Glue data processing units (DPUs) that can be allocated when this job runs. `Required` when `pythonshell` is set, accept either `0.0625` or `1.0`. Use `numberOfWorkers` and `workerType` arguments instead with `glueVersion` `2.0` and above.
 * `maxRetries` – (Optional) The maximum number of times to retry this job if it fails.
 * `name` – (Required) The name you assign to this job. It must be unique in your account.
 * `notificationProperty` - (Optional) Notification property of the job. Defined below.
@@ -246,4 +246,4 @@ Using `terraform import`, import Glue Jobs using `name`. For example:
 % terraform import aws_glue_job.MyJob MyJob
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ac5c52bfdcb19605598f998f548ee765f8ef650d5dfdb2f5a9674b5f4c2f9ae2 -->
+<!-- cache-key: cdktf-0.20.0 input-ac5c52bfdcb19605598f998f548ee765f8ef650d5dfdb2f5a9674b5f4c2f9ae2 -->

@@ -12,7 +12,7 @@ description: |-
 
 Manages a Config Organization Conformance Pack. More information can be found in the [Managing Conformance Packs Across all Accounts in Your Organization](https://docs.aws.amazon.com/config/latest/developerguide/conformance-pack-organization-apis.html) and [AWS Config Managed Rules](https://docs.aws.amazon.com/config/latest/developerguide/evaluate-config_use-managed-rules.html) documentation. Example conformance pack templates may be found in the [AWS Config Rules Repository](https://github.com/awslabs/aws-config-rules/tree/master/aws-config-conformance-packs).
 
-~> **NOTE:** This resource must be created in the Organization master account or a delegated administrator account, and the Organization must have all features enabled. Every Organization account except those configured in the `excludedAccounts` argument must have a Configuration Recorder with proper IAM permissions before the Organization Conformance Pack will successfully create or update. See also the [`awsConfigConfigurationRecorder` resource](/docs/providers/aws/r/config_configuration_recorder.html).
+~> **NOTE:** This resource must be created in the Organization master account or a delegated administrator account, and the Organization must have all features enabled. Every Organization account except those configured in the `excludedAccounts` argument must have a Configuration Recorder with proper IAM permissions before the Organization Conformance Pack will successfully create or update. See also the [`aws_config_configuration_recorder` resource](/docs/providers/aws/r/config_configuration_recorder.html).
 
 ## Example Usage
 
@@ -137,9 +137,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `update` - (Default `10M`)
-- `delete` - (Default `20M`)
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `20m`)
 
 ## Import
 
@@ -163,4 +163,4 @@ Using `terraform import`, import Config Organization Conformance Packs using the
 % terraform import aws_config_organization_conformance_pack.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4f933a5e639d5b2cfd2450761a6e901c02e6e8a4875255817cf9b88f4cfacd1d -->
+<!-- cache-key: cdktf-0.20.0 input-4f933a5e639d5b2cfd2450761a6e901c02e6e8a4875255817cf9b88f4cfacd1d -->

@@ -46,7 +46,7 @@ class MyConvertedCode extends TerraformStack {
 
 The following arguments are required:
 
-* `authMode`- (Required) Specifies whether the Studio authenticates users using IAM or Amazon Web Services SSO. Valid values are `sso` or `iam`.
+* `authMode`- (Required) Specifies whether the Studio authenticates users using IAM or Amazon Web Services SSO. Valid values are `SSO` or `IAM`.
 * `defaultS3Location` - (Required) The Amazon S3 location to back up Amazon EMR Studio Workspaces and notebook files.
 * `name` - (Required) A descriptive name for the Amazon EMR Studio.
 * `engineSecurityGroupId` - (Required) The ID of the Amazon EMR Studio Engine security group. The Engine security group allows inbound network traffic from the Workspace security group, and it must be in the same VPC specified by `vpcId`.
@@ -92,4 +92,4 @@ Using `terraform import`, import EMR studios using the `id`. For example:
 % terraform import aws_emr_studio.studio es-123456ABCDEF
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-61bdc9504022130875c4d8d0fd748ffd340f18084eaa62d5583c0c5041452faf -->
+<!-- cache-key: cdktf-0.20.0 input-61bdc9504022130875c4d8d0fd748ffd340f18084eaa62d5583c0c5041452faf -->

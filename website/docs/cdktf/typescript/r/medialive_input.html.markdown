@@ -109,9 +109,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -135,4 +135,4 @@ Using `terraform import`, import MediaLive Input using the `id`. For example:
 % terraform import aws_medialive_input.example 12345678
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e7c2ee81ba845515caa1acd230663186d94a15faebb59c803051c3bdd77ad5df -->
+<!-- cache-key: cdktf-0.20.0 input-e7c2ee81ba845515caa1acd230663186d94a15faebb59c803051c3bdd77ad5df -->

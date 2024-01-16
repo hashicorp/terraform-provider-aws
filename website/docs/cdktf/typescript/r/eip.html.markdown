@@ -14,7 +14,7 @@ Provides an Elastic IP resource.
 
 ~> **Note:** EIP may require IGW to exist prior to association. Use `dependsOn` to set an explicit dependency on the IGW.
 
-~> **Note:** Do not use `networkInterface` to associate the EIP to `awsLb` or `awsNatGateway` resources. Instead use the `allocationId` available in those resources to allow AWS to manage the association, otherwise you will see `authFailure` errors.
+~> **Note:** Do not use `networkInterface` to associate the EIP to `aws_lb` or `aws_nat_gateway` resources. Instead use the `allocationId` available in those resources to allow AWS to manage the association, otherwise you will see `AuthFailure` errors.
 
 ## Example Usage
 
@@ -189,9 +189,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `15M`)
-- `update` - (Default `5M`)
-- `delete` - (Default `3M`)
+- `read` - (Default `15m`)
+- `update` - (Default `5m`)
+- `delete` - (Default `3m`)
 
 ## Import
 
@@ -217,4 +217,4 @@ Using `terraform import`, import EIPs in a VPC using their Allocation ID. For ex
 
 [1]: https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_AssociateAddress.html
 
-<!-- cache-key: cdktf-0.18.0 input-2894d9bbbc820133a7e6582361d7e5ae944dbddb77332e6b8487b7c5fcf90efe -->
+<!-- cache-key: cdktf-0.20.0 input-2894d9bbbc820133a7e6582361d7e5ae944dbddb77332e6b8487b7c5fcf90efe -->

@@ -12,7 +12,7 @@ description: |-
 
 Provides an ElastiCache parameter group resource.
 
-~> **NOTE:** Attempting to remove the `reservedMemory` parameter when `family` is set to `redis26` or `redis28` may show a perpetual difference in Terraform due to an ElastiCache API limitation. Leave that parameter configured with any value to workaround the issue.
+~> **NOTE:** Attempting to remove the `reserved-memory` parameter when `family` is set to `redis2.6` or `redis2.8` may show a perpetual difference in Terraform due to an ElastiCache API limitation. Leave that parameter configured with any value to workaround the issue.
 
 ## Example Usage
 
@@ -92,4 +92,4 @@ Using `terraform import`, import ElastiCache Parameter Groups using the `name`. 
 % terraform import aws_elasticache_parameter_group.default redis-params
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1858c11d21ea62b961241aaf317216a7b9adcdbbfcf280755e49cbf394b01a06 -->
+<!-- cache-key: cdktf-0.20.0 input-1858c11d21ea62b961241aaf317216a7b9adcdbbfcf280755e49cbf394b01a06 -->

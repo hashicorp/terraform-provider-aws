@@ -69,8 +69,8 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `domainName` - (Optional) the suffix domain name to use by default when resolving non Fully Qualified Domain Names. In other words, this is what ends up being the `search` value in the `/etc/resolvConf` file.
-* `domainNameServers` - (Optional) List of name servers to configure in `/etc/resolvConf`. If you want to use the default AWS nameservers you should set this to `amazonProvidedDns`.
+* `domainName` - (Optional) the suffix domain name to use by default when resolving non Fully Qualified Domain Names. In other words, this is what ends up being the `search` value in the `/etc/resolv.conf` file.
+* `domainNameServers` - (Optional) List of name servers to configure in `/etc/resolv.conf`. If you want to use the default AWS nameservers you should set this to `AmazonProvidedDNS`.
 * `ntpServers` - (Optional) List of NTP servers to configure.
 * `netbiosNameServers` - (Optional) List of NETBIOS name servers.
 * `netbiosNodeType` - (Optional) The NetBIOS node type (1, 2, 4, or 8). AWS recommends to specify 2 since broadcast and multicast are not supported in their network. For more information about these node types, see [RFC 2132](http://www.ietf.org/rfc/rfc2132.txt).
@@ -80,9 +80,9 @@ This resource supports the following arguments:
 
 * Notice that all arguments are optional but you have to specify at least one argument.
 * `domainNameServers`, `netbiosNameServers`, `ntpServers` are limited by AWS to maximum four servers only.
-* To actually use the DHCP Options Set you need to associate it to a VPC using [`awsVpcDhcpOptionsAssociation`](/docs/providers/aws/r/vpc_dhcp_options_association.html).
+* To actually use the DHCP Options Set you need to associate it to a VPC using [`aws_vpc_dhcp_options_association`](/docs/providers/aws/r/vpc_dhcp_options_association.html).
 * If you delete a DHCP Options Set, all VPCs using it will be associated to AWS's `default` DHCP Option Set.
-* In most cases unless you're configuring your own DNS you'll want to set `domainNameServers` to `amazonProvidedDns`.
+* In most cases unless you're configuring your own DNS you'll want to set `domainNameServers` to `AmazonProvidedDNS`.
 
 ## Attribute Reference
 
@@ -118,4 +118,4 @@ Using `terraform import`, import VPC DHCP Options using the DHCP Options `id`. F
 % terraform import aws_vpc_dhcp_options.my_options dopt-d9070ebb
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e86ad5600e185c6fcfac37962334f477301d705d06ab42100c161640170994e2 -->
+<!-- cache-key: cdktf-0.20.0 input-e86ad5600e185c6fcfac37962334f477301d705d06ab42100c161640170994e2 -->

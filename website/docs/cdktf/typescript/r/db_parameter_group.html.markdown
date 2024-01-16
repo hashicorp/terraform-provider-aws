@@ -18,11 +18,11 @@ Provides an RDS DB parameter group resource. Documentation of the available para
 * [Oracle Parameters](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_ModifyInstance.Oracle.html#USER_ModifyInstance.Oracle.sqlnet)
 * [PostgreSQL Parameters](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.PostgreSQL.CommonDBATasks.html#Appendix.PostgreSQL.CommonDBATasks.Parameters)
 
-> **Hands-on:** For an example of the `awsDbParameterGroup` in use, follow the [Manage AWS RDS Instances](https://learn.hashicorp.com/tutorials/terraform/aws-rds?in=terraform/aws&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) tutorial on HashiCorp Learn.
+> **Hands-on:** For an example of the `aws_db_parameter_group` in use, follow the [Manage AWS RDS Instances](https://learn.hashicorp.com/tutorials/terraform/aws-rds?in=terraform/aws&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS) tutorial on HashiCorp Learn.
 
 ~> **NOTE:** After applying your changes, you may encounter a perpetual diff in your Terraform plan
 output for a `parameter` whose `value` remains unchanged but whose `applyMethod` is changing
-(e.g., from `immediate` to `pendingReboot`, or `pendingReboot` to `immediate`). If only the
+(e.g., from `immediate` to `pending-reboot`, or `pending-reboot` to `immediate`). If only the
 apply method of a parameter is changing, the AWS API will not register this change. To change
 the `applyMethod` of a parameter, its value must also change.
 
@@ -61,9 +61,9 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-### `createBeforeDestroy` Lifecycle Configuration
+### `create_before_destroy` Lifecycle Configuration
 
-The [`createBeforeDestroy`](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#create_before_destroy)
+The [`create_before_destroy`](https://developer.hashicorp.com/terraform/language/meta-arguments/lifecycle#create_before_destroy)
 lifecycle configuration is necessary for modifications that force re-creation of an existing,
 in-use parameter group. This includes common situations like changing the group `name` or
 bumping the `family` version during a major version upgrade. This configuration will prevent destruction
@@ -159,4 +159,4 @@ Using `terraform import`, import DB Parameter groups using the `name`. For examp
 % terraform import aws_db_parameter_group.rds_pg rds-pg
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-58d3afb77ce85c7eccf039e1c08d533c541b3a0e93a559083e86605494ac1352 -->
+<!-- cache-key: cdktf-0.20.0 input-58d3afb77ce85c7eccf039e1c08d533c541b3a0e93a559083e86605494ac1352 -->

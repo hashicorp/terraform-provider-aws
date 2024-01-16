@@ -143,7 +143,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `enableDnsHostnames` - Whether or not the VPC has DNS hostname support
 * `mainRouteTableId` - The ID of the main route table associated with
      this VPC. Note that you can change a VPC's main route table by using an
-     [`awsMainRouteTableAssociation`](/docs/providers/aws/r/main_route_table_association.html).
+     [`aws_main_route_table_association`](/docs/providers/aws/r/main_route_table_association.html).
 * `defaultNetworkAclId` - The ID of the network ACL created by default on VPC creation
 * `defaultSecurityGroupId` - The ID of the security group created by default on VPC creation
 * `defaultRouteTableId` - The ID of the route table created by default on VPC creation
@@ -174,4 +174,4 @@ Using `terraform import`, import VPCs using the VPC `id`. For example:
 % terraform import aws_vpc.test_vpc vpc-a01106c2
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ae6df6e7b2fd061f8aef4637ee76c64d6bc7f7657d175ee9d2e9140d0df3c94b -->
+<!-- cache-key: cdktf-0.20.0 input-ae6df6e7b2fd061f8aef4637ee76c64d6bc7f7657d175ee9d2e9140d0df3c94b -->

@@ -247,7 +247,7 @@ The following arguments are optional:
 
 ### default_cache_behavior
 
-* `behavior` - (Required) The cache behavior of the distribution. Valid values: `cache` and `dontCache`.
+* `behavior` - (Required) The cache behavior of the distribution. Valid values: `cache` and `dont-cache`.
 
 ### origin
 
@@ -311,9 +311,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `update` - (Default `180M`)
-* `delete` - (Default `90M`)
+* `create` - (Default `60m`)
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
 
 ## Import
 
@@ -337,4 +337,4 @@ Using `terraform import`, import Lightsail Distribution using the `id`. For exam
 % terraform import aws_lightsail_distribution.example rft-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-b44e08c4566f08d2f501b30c7bf2c5324fc78fc14f7f0e7e555cd7b0bc5ae99f -->
+<!-- cache-key: cdktf-0.20.0 input-b44e08c4566f08d2f501b30c7bf2c5324fc78fc14f7f0e7e555cd7b0bc5ae99f -->

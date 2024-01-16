@@ -58,8 +58,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `1M`)
-- `delete` - (Default `1M`)
+- `create` - (Default `1m`)
+- `delete` - (Default `1m`)
 
 ## Import
 
@@ -83,4 +83,4 @@ Using `terraform import`, import a keyspace using the `name`. For example:
 % terraform import aws_keyspaces_keyspace.example my_keyspace
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-45356374226b4001cb8f4913ce874bd4156dabd51b8ab1e4fe9896d2e554989a -->
+<!-- cache-key: cdktf-0.20.0 input-45356374226b4001cb8f4913ce874bd4156dabd51b8ab1e4fe9896d2e554989a -->

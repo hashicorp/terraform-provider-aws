@@ -868,7 +868,7 @@ func expandUpdateMaintenanceStartTimeInput(tfMap map[string]interface{}) *storag
 		apiObject.DayOfMonth = aws.Int64(v)
 	}
 
-	if v, null, _ := nullable.Int(tfMap["day_of_week"].(string)).Value(); !null && v > 0 {
+	if v, null, _ := nullable.Int(tfMap["day_of_week"].(string)).Value(); !null {
 		apiObject.DayOfWeek = aws.Int64(v)
 	}
 

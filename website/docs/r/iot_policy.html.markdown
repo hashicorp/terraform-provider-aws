@@ -10,6 +10,8 @@ description: |-
 
 Provides an IoT policy.
 
+~> **NOTE on policy versions:** Updating this resource creates a new, default policy version. If updating the resource would exceed the maximum number of versions (5), the oldest non-default version of the policy is deleted before the new policy version is created.
+
 ## Example Usage
 
 ```terraform
@@ -48,6 +50,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `name` - The name of this policy.
 * `default_version_id` - The default version of this policy.
 * `policy` - The policy document.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `update` - (Default `1m`)
+* `delete` - (Default `5m`)
 
 ## Import
 

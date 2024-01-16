@@ -53,8 +53,8 @@ This resource supports the following arguments:
 #### `routingStrategy`
 
 * `fleetId` - (Optional) ID of the GameLift Fleet to point the alias to.
-* `message` - (Optional) Message text to be used with the `terminal` routing strategy.
-* `type` - (Required) Type of routing strategyE.g., `simple` or `terminal`
+* `message` - (Optional) Message text to be used with the `TERMINAL` routing strategy.
+* `type` - (Required) Type of routing strategyE.g., `SIMPLE` or `TERMINAL`
 
 ## Attribute Reference
 
@@ -86,4 +86,4 @@ Using `terraform import`, import GameLift Aliases using the ID. For example:
 % terraform import aws_gamelift_alias.example <alias-id>
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0388556f6d66db5cdeeff13f1605184c6bf94fb66ae580f7a99c34af9b175b72 -->
+<!-- cache-key: cdktf-0.20.0 input-0388556f6d66db5cdeeff13f1605184c6bf94fb66ae580f7a99c34af9b175b72 -->

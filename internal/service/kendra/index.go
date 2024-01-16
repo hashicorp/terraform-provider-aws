@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -379,6 +380,8 @@ func ResourceIndex() *schema.Resource {
 }
 
 func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	name := d.Get("name").(string)
@@ -429,11 +432,11 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	)
 
 	if err != nil {
-		return diag.Errorf("creating Kendra Index (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Kendra Index (%s): %s", name, err)
 	}
 
 	if outputRaw == nil {
-		return diag.Errorf("creating Kendra Index (%s): empty output", name)
+		return sdkdiag.AppendErrorf(diags, "creating Kendra Index (%s): empty output", name)
 	}
 
 	output := outputRaw.(*kendra.CreateIndexOutput)
@@ -442,7 +445,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// waiter since the status changes from CREATING to either ACTIVE or FAILED
 	if _, err := waitIndexCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Index (%s) creation: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Index (%s) creation: %s", d.Id(), err)
 	}
 
 	callUpdateIndex := false
@@ -458,13 +461,15 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if callUpdateIndex {
-		return resourceIndexUpdate(ctx, d, meta)
+		return append(diags, resourceIndexUpdate(ctx, d, meta)...)
 	}
 
-	return resourceIndexRead(ctx, d, meta)
+	return append(diags, resourceIndexRead(ctx, d, meta)...)
 }
 
 func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	resp, err := findIndexByID(ctx, conn, d.Id())
@@ -472,11 +477,11 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kendra Index (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("getting Kendra Index (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Kendra Index (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -499,33 +504,35 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("user_context_policy", resp.UserContextPolicy)
 
 	if err := d.Set("capacity_units", flattenCapacityUnits(resp.CapacityUnits)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := d.Set("document_metadata_configuration_updates", flattenDocumentMetadataConfigurations(resp.DocumentMetadataConfigurations)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := d.Set("index_statistics", flattenIndexStatistics(resp.IndexStatistics)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := d.Set("server_side_encryption_configuration", flattenServerSideEncryptionConfiguration(resp.ServerSideEncryptionConfiguration)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := d.Set("user_group_resolution_configuration", flattenUserGroupResolutionConfiguration(resp.UserGroupResolutionConfiguration)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if err := d.Set("user_token_configurations", flattenUserTokenConfigurations(resp.UserTokenConfigurations)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id := d.Id()
@@ -575,19 +582,21 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		)
 
 		if err != nil {
-			return diag.Errorf("updating Index (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Index (%s): %s", d.Id(), err)
 		}
 
 		// waiter since the status changes from UPDATING to either ACTIVE or FAILED
 		if _, err := waitIndexUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Index (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Index (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceIndexRead(ctx, d, meta)
+	return append(diags, resourceIndexRead(ctx, d, meta)...)
 }
 
 func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id := d.Id()
@@ -597,14 +606,14 @@ func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		return diag.Errorf("deleting Index (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Index (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitIndexDeleted(ctx, conn, id, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Index (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Index (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findIndexByID(ctx context.Context, conn *kendra.Client, id string) (*kendra.DescribeIndexOutput, error) {

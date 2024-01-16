@@ -12,7 +12,7 @@ description: |-
 
 Associate an existing ElastiCache user and an existing user group.
 
-~> **NOTE:** Terraform will detect changes in the `awsElasticacheUserGroup` since `awsElasticacheUserGroupAssociation` changes the user IDs associated with the user group. You can ignore these changes with the `lifecycle` `ignoreChanges` meta argument as shown in the example.
+~> **NOTE:** Terraform will detect changes in the `aws_elasticache_user_group` since `aws_elasticache_user_group_association` changes the user IDs associated with the user group. You can ignore these changes with the `lifecycle` `ignore_changes` meta argument as shown in the example.
 
 ## Example Usage
 
@@ -105,4 +105,4 @@ Using `terraform import`, import ElastiCache user group associations using the `
 % terraform import aws_elasticache_user_group_association.example userGoupId1,userId
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0fb04431352bb053d0baffe8ca67747d1db14fc5f35be68ff3b233036b0d1ebf -->
+<!-- cache-key: cdktf-0.20.0 input-0fb04431352bb053d0baffe8ca67747d1db14fc5f35be68ff3b233036b0d1ebf -->

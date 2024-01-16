@@ -71,9 +71,9 @@ This resource supports the following arguments:
 * `icmpType` - (Optional) ICMP protocol: The ICMP type. Required if specifying ICMP for the protocolE.g., -1
 * `icmpCode` - (Optional) ICMP protocol: The ICMP code. Required if specifying ICMP for the protocolE.g., -1
 
-~> **NOTE:** If the value of `protocol` is `1` or `all`, the `fromPort` and `toPort` values will be ignored and the rule will apply to all ports.
+~> **NOTE:** If the value of `protocol` is `-1` or `all`, the `fromPort` and `toPort` values will be ignored and the rule will apply to all ports.
 
-~> **NOTE:** If the value of `icmpType` is `1` (which results in a wildcard ICMP type), the `icmpCode` must also be set to `1` (wildcard ICMP code).
+~> **NOTE:** If the value of `icmpType` is `-1` (which results in a wildcard ICMP type), the `icmpCode` must also be set to `-1` (wildcard ICMP code).
 
 ~> Note: For more information on ICMP types and codes, see here: https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
 
@@ -85,9 +85,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import individual rules using `networkAclId:ruleNumber:protocol:egress`, where `protocol` can be a decimal (such as "6") or string (such as "tcp") value. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import individual rules using `NETWORK_ACL_ID:RULE_NUMBER:PROTOCOL:EGRESS`, where `PROTOCOL` can be a decimal (such as "6") or string (such as "tcp") value. For example:
 
-**NOTE:** If importing a rule previously provisioned by Terraform, the `protocol` must be the input value used at creation time. For more information on protocol numbers and keywords, see here: https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml.
+**NOTE:** If importing a rule previously provisioned by Terraform, the `PROTOCOL` must be the input value used at creation time. For more information on protocol numbers and keywords, see here: https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml.
 
 Using the procotol's string value:
 
@@ -117,7 +117,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-**Using `terraform import` to import** individual rules using `networkAclId:ruleNumber:protocol:egress`, where `protocol` can be a decimal (such as "6") or string (such as "tcp") value. For example:
+**Using `terraform import` to import** individual rules using `NETWORK_ACL_ID:RULE_NUMBER:PROTOCOL:EGRESS`, where `PROTOCOL` can be a decimal (such as "6") or string (such as "tcp") value. For example:
 
 Using the procotol's string value:
 
@@ -131,4 +131,4 @@ Using the procotol's decimal value:
 % terraform import aws_network_acl_rule.my_rule acl-7aaabd18:100:6:false
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0bee1d657a21ade598a9d4b01c7ed38ce1ada8aeab9c5dd0de56c1ba6dff131d -->
+<!-- cache-key: cdktf-0.20.0 input-0bee1d657a21ade598a9d4b01c7ed38ce1ada8aeab9c5dd0de56c1ba6dff131d -->

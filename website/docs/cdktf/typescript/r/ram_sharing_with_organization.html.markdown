@@ -12,7 +12,7 @@ description: |-
 
 Manages Resource Access Manager (RAM) Resource Sharing with AWS Organizations. If you enable sharing with your organization, you can share resources without using invitations. Refer to the [AWS RAM user guide](https://docs.aws.amazon.com/ram/latest/userguide/getting-started-sharing.html#getting-started-sharing-orgs) for more details.
 
-~> **NOTE:** Use this resource to manage resource sharing within your organization, **not** the [`awsOrganizationsOrganization`](organizations_organization.html) resource with `ramAmazonawsCom` configured in `awsServiceAccessPrincipals`.
+~> **NOTE:** Use this resource to manage resource sharing within your organization, **not** the [`aws_organizations_organization`](organizations_organization.html) resource with `ram.amazonaws.com` configured in `awsServiceAccessPrincipals`.
 
 ## Example Usage
 
@@ -66,4 +66,4 @@ Using `terraform import`, import the resource using the current AWS account ID. 
 % terraform import aws_ram_sharing_with_organization.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0c4fa7fe1ef6a2bea6e88c0be32053d41d723ebfb97b9b5e06eddaaf8a239ae7 -->
+<!-- cache-key: cdktf-0.20.0 input-0c4fa7fe1ef6a2bea6e88c0be32053d41d723ebfb97b9b5e06eddaaf8a239ae7 -->

@@ -96,7 +96,7 @@ The following arguments are required:
 * `fargateProfileName` – (Required) Name of the EKS Fargate Profile.
 * `podExecutionRoleArn` – (Required) Amazon Resource Name (ARN) of the IAM Role that provides permissions for the EKS Fargate Profile.
 * `selector` - (Required) Configuration block(s) for selecting Kubernetes Pods to execute with this EKS Fargate Profile. Detailed below.
-* `subnetIds` – (Required) Identifiers of private EC2 Subnets to associate with the EKS Fargate Profile. These subnets must have the following resource tag: `kubernetesIo/cluster/clusterName` (where `clusterName` is replaced with the name of the EKS Cluster).
+* `subnetIds` – (Required) Identifiers of private EC2 Subnets to associate with the EKS Fargate Profile. These subnets must have the following resource tag: `kubernetes.io/cluster/CLUSTER_NAME` (where `CLUSTER_NAME` is replaced with the name of the EKS Cluster).
 
 The following arguments are optional:
 
@@ -125,8 +125,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10M`)
-* `delete` - (Default `10M`)
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
@@ -150,4 +150,4 @@ Using `terraform import`, import EKS Fargate Profiles using the `clusterName` an
 % terraform import aws_eks_fargate_profile.my_fargate_profile my_cluster:my_fargate_profile
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-52dddf83ced38ed29e926dd7cc5c30ad1c64cf020058373656f323fa68137332 -->
+<!-- cache-key: cdktf-0.20.0 input-52dddf83ced38ed29e926dd7cc5c30ad1c64cf020058373656f323fa68137332 -->

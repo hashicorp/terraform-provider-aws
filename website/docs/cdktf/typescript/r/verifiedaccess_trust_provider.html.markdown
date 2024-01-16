@@ -62,9 +62,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `update` - (Default `180M`)
-* `delete` - (Default `90M`)
+* `create` - (Default `60m`)
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
 
 ## Import
 
@@ -88,4 +88,4 @@ Using `terraform import`, import Transfer Workflows using the  `id`. For example
 % terraform import aws_verifiedaccess_trust_provider.example vatp-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2750aebf3d558cbde0da2f4c4cdd13becc482ee01d0d3f03dd896dff73393961 -->
+<!-- cache-key: cdktf-0.20.0 input-2750aebf3d558cbde0da2f4c4cdd13becc482ee01d0d3f03dd896dff73393961 -->

@@ -77,8 +77,8 @@ The `spec` object supports the following:
 
 The `egressFilter` object supports the following:
 
-* `type` - (Optional) Egress filter type. By default, the type is `dropAll`.
-Valid values are `allowAll` and `dropAll`.
+* `type` - (Optional) Egress filter type. By default, the type is `DROP_ALL`.
+Valid values are `ALLOW_ALL` and `DROP_ALL`.
 
 ## Attribute Reference
 
@@ -114,4 +114,4 @@ Using `terraform import`, import App Mesh service meshes using the `name`. For e
 % terraform import aws_appmesh_mesh.simple simpleapp
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-3173e5025bf46613bb3d81fd897c112506cd0123d7fe3d3c9ffea66ee2187a85 -->
+<!-- cache-key: cdktf-0.20.0 input-3173e5025bf46613bb3d81fd897c112506cd0123d7fe3d3c9ffea66ee2187a85 -->

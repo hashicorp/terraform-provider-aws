@@ -62,11 +62,14 @@ This resource supports the following arguments:
 
 * `disable_glue_table_creation` - (Optional) Set to `true` to turn Online Store On.
 * `security_config` - (Required) Security config for at-rest encryption of your OnlineStore. See [Security Config](#security-config) Below.
+* `storage_type` - (Optional) Option for different tiers of low latency storage for real-time data retrieval. Valid values are `Standard`, or `InMemory`.
+* `ttl_duration` - (Optional) Time to live duration, where the record is hard deleted after the expiration time is reached; ExpiresAt = EventTime + TtlDuration.. See [TTl Duration](#ttl-duration) Below.
 
 #### S3 Storage Config
 
 * `kms_key_id` - (Optional) The AWS Key Management Service (KMS) key ID of the key used to encrypt any objects written into the OfflineStore S3 location.
 * `s3_uri` - (Required) The S3 URI, or location in Amazon S3, of OfflineStore.
+* `resolved_output_s3_uri` - (Optional) The S3 path where offline records are written.
 
 #### Data Catalog Config
 
@@ -77,6 +80,11 @@ This resource supports the following arguments:
 #### Security Config
 
 * `kms_key_id` - (Optional) The ID of the AWS Key Management Service (AWS KMS) key that SageMaker Feature Store uses to encrypt the Amazon S3 objects at rest using Amazon S3 server-side encryption.
+
+#### TTl Duration
+
+* `unit` - (Optional) TtlDuration time unit. Valid values are `Seconds`, `Minutes`, `Hours`, `Days`, or `Weeks`.
+* `value` - (Optional) TtlDuration time value.
 
 ## Attribute Reference
 

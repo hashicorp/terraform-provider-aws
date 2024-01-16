@@ -140,7 +140,7 @@ This resource supports the following arguments:
 * `maxRetries` – (Optional) The maximum number of times to retry this ML Transform if it fails.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `timeout` – (Optional) The ML Transform timeout in minutes. The default is 2880 minutes (48 hours).
-* `workerType` - (Optional) The type of predefined worker that is allocated when an ML Transform runs. Accepts a value of `standard`, `g1X`, or `g2X`. Required with `numberOfWorkers`.
+* `workerType` - (Optional) The type of predefined worker that is allocated when an ML Transform runs. Accepts a value of `Standard`, `G.1X`, or `G.2X`. Required with `numberOfWorkers`.
 * `numberOfWorkers` - (Optional) The number of workers of a defined `workerType` that are allocated when an ML Transform runs. Required with `workerType`.
 
 ### input_record_tables
@@ -199,4 +199,4 @@ Using `terraform import`, import Glue ML Transforms using `id`. For example:
 % terraform import aws_glue_ml_transform.example tfm-c2cafbe83b1c575f49eaca9939220e2fcd58e2d5
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-295ef64caa0ed9cd96476b3d72c04967e7f94dc142182bf5b2175f9cde26f649 -->
+<!-- cache-key: cdktf-0.20.0 input-295ef64caa0ed9cd96476b3d72c04967e7f94dc142182bf5b2175f9cde26f649 -->

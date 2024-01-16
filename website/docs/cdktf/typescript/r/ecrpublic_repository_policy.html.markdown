@@ -14,7 +14,7 @@ Provides an Elastic Container Registry Public Repository Policy.
 
 Note that currently only one policy may be applied to a repository.
 
-~> **NOTE:** This resource can only be used in the `usEast1` region.
+~> **NOTE:** This resource can only be used in the `us-east-1` region.
 
 ## Example Usage
 
@@ -121,4 +121,4 @@ Using `terraform import`, import ECR Public Repository Policy using the reposito
 % terraform import aws_ecrpublic_repository_policy.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5333277a8aafe52743e3f8ec371b6439d670b524be4655ccdec7e4c63f6b5fd0 -->
+<!-- cache-key: cdktf-0.20.0 input-5333277a8aafe52743e3f8ec371b6439d670b524be4655ccdec7e4c63f6b5fd0 -->

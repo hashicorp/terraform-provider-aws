@@ -37,6 +37,12 @@ class MyConvertedCode(TerraformStack):
                 "Tag1": "Value1",
                 "Tag2": "Value2"
             },
+            timeouts=[{
+                "create": "40m",
+                "delete": "1h",
+                "update": "50m"
+            }
+            ],
             vpc_id=Token.as_string(aws_vpc_example.id)
         )
 ```
@@ -45,7 +51,7 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `delete_protection` - (Optional) A boolean flag indicating whether it is possible to delete the firewall. Defaults to `false`.
+* `delete_protection` - (Optional) A flag indicating whether the firewall is protected against deletion. Use this setting to protect against accidentally deleting a firewall that is in use. Defaults to `false`.
 
 * `description` - (Optional) A friendly description of the firewall.
 
@@ -53,11 +59,11 @@ This resource supports the following arguments:
 
 * `firewall_policy_arn` - (Required) The Amazon Resource Name (ARN) of the VPC Firewall policy.
 
-* `firewall_policy_change_protection` - (Option) A boolean flag indicating whether it is possible to change the associated firewall policy. Defaults to `false`.
+* `firewall_policy_change_protection` - (Optional) A flag indicating whether the firewall is protected against a change to the firewall policy association. Use this setting to protect against accidentally modifying the firewall policy for a firewall that is in use. Defaults to `false`.
 
 * `name` - (Required, Forces new resource) A friendly name of the firewall.
 
-* `subnet_change_protection` - (Optional) A boolean flag indicating whether it is possible to change the associated subnet(s). Defaults to `false`.
+* `subnet_change_protection` - (Optional) A flag indicating whether the firewall is protected against changes to the subnet associations. Use this setting to protect against accidentally modifying the subnet associations for a firewall that is in use. Defaults to `false`.
 
 * `subnet_mapping` - (Required) Set of configuration blocks describing the public subnets. Each subnet must belong to a different Availability Zone in the VPC. AWS Network Firewall creates a firewall endpoint in each subnet. See [Subnet Mapping](#subnet-mapping) below for details.
 
@@ -98,6 +104,14 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `update_token` - A string token used when updating a firewall.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `30m`)
+- `update` - (Default `30m`)
+- `delete` - (Default `30m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Firewall Firewalls using their `arn`. For example:
@@ -117,4 +131,4 @@ Using `terraform import`, import Network Firewall Firewalls using their `arn`. F
 % terraform import aws_networkfirewall_firewall.example arn:aws:network-firewall:us-west-1:123456789012:firewall/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2f79b5ba62479f655245def84991cac49da81f4de5c0c95cba76b91f27bb118b -->
+<!-- cache-key: cdktf-0.20.0 input-d895065359f42b9e93c9bc33e9ace68cddf94a70bf435d843a23b560380a98bd -->

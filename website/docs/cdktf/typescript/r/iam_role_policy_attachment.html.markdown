@@ -12,9 +12,9 @@ description: |-
 
 Attaches a Managed IAM Policy to an IAM role
 
-~> **NOTE:** The usage of this resource conflicts with the `awsIamPolicyAttachment` resource and will permanently show a difference if both are defined.
+~> **NOTE:** The usage of this resource conflicts with the `aws_iam_policy_attachment` resource and will permanently show a difference if both are defined.
 
-~> **NOTE:** For a given role, this resource is incompatible with using the [`awsIamRole` resource](/docs/providers/aws/r/iam_role.html) `managedPolicyArns` argument. When using that argument and this resource, both will attempt to manage the role's managed policy attachments and Terraform will show a permanent difference.
+~> **NOTE:** For a given role, this resource is incompatible with using the [`aws_iam_role` resource](/docs/providers/aws/r/iam_role.html) `managedPolicyArns` argument. When using that argument and this resource, both will attempt to manage the role's managed policy attachments and Terraform will show a permanent difference.
 
 ## Example Usage
 
@@ -109,4 +109,4 @@ Using `terraform import`, import IAM role policy attachments using the role name
 % terraform import aws_iam_role_policy_attachment.test-attach test-role/arn:aws:iam::xxxxxxxxxxxx:policy/test-policy
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8fa8f1d0aab28daaa2f2296516256e63edd3a1f444a588a760d3d43847fd78f4 -->
+<!-- cache-key: cdktf-0.20.0 input-8fa8f1d0aab28daaa2f2296516256e63edd3a1f444a588a760d3d43847fd78f4 -->

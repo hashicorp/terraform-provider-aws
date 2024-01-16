@@ -53,15 +53,15 @@ This resource supports the following arguments:
 
 * `standardsArn` - (Required) The ARN of a standard - see below.
 
-Currently available standards (remember to replace `${varRegion}` as appropriate):
+Currently available standards (remember to replace `${var.region}` as appropriate):
 
 | Name                                     | ARN                                                                                             |
 |------------------------------------------|-------------------------------------------------------------------------------------------------|
-| AWS Foundational Security Best Practices | `arn:aws:securityhub:${varRegion}::standards/awsFoundationalSecurityBestPractices/v/100` |
-| CIS AWS Foundations Benchmark v1.2.0     | `arn:aws:securityhub:::ruleset/cisAwsFoundationsBenchmark/v/120`                           |
-| CIS AWS Foundations Benchmark v1.4.0     | `arn:aws:securityhub:${varRegion}::standards/cisAwsFoundationsBenchmark/v/140`            |
-| NIST SP 800-53 Rev. 5                    | `arn:aws:securityhub:${varRegion}::standards/nist80053/v/500`                              |
-| PCI DSS                                  | `arn:aws:securityhub:${varRegion}::standards/pciDss/v/321`                                  |
+| AWS Foundational Security Best Practices | `arn:aws:securityhub:${var.region}::standards/aws-foundational-security-best-practices/v/1.0.0` |
+| CIS AWS Foundations Benchmark v1.2.0     | `arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0`                           |
+| CIS AWS Foundations Benchmark v1.4.0     | `arn:aws:securityhub:${var.region}::standards/cis-aws-foundations-benchmark/v/1.4.0`            |
+| NIST SP 800-53 Rev. 5                    | `arn:aws:securityhub:${var.region}::standards/nist-800-53/v/5.0.0`                              |
+| PCI DSS                                  | `arn:aws:securityhub:${var.region}::standards/pci-dss/v/3.2.1`                                  |
 
 ## Attribute Reference
 
@@ -123,4 +123,4 @@ Using `terraform import`, import Security Hub standards subscriptions using the 
 % terraform import aws_securityhub_standards_subscription.nist_800_53_rev_5 arn:aws:securityhub:eu-west-1:123456789012:subscription/nist-800-53/v/5.0.0
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-87f38b34c6cd1e5a8b36b0f50996b817110ec2206abee08341de02841e9f3b5f -->
+<!-- cache-key: cdktf-0.20.0 input-87f38b34c6cd1e5a8b36b0f50996b817110ec2206abee08341de02841e9f3b5f -->

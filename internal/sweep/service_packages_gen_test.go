@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/appfabric"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/appintegrations"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/applicationinsights"
@@ -29,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscalingplans"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ce"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chime"
@@ -47,6 +49,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codebuild"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codecatalyst"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codecommit"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/codeguruprofiler"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codegurureviewer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codepipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/codestarconnections"
@@ -57,8 +60,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/computeoptimizer"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/connectcases"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/customerprofiles"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
@@ -101,6 +106,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/glue"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/greengrass"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/groundstation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/healthlake"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/iam"
@@ -125,17 +131,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/launchwizard"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexmodels"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/lightsail"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/location"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/logs"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/lookoutmetrics"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/m2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackage"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/mediapackagev2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/meta"
@@ -149,10 +159,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opensearchserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/osis"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/outposts"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/pcaconnectorad"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/polly"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pricing"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/qbusiness"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ram"
@@ -182,6 +196,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/serverlessrepo"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalogappregistry"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/servicequotas"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ses"
@@ -195,6 +210,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmcontacts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmincidents"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmsap"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sts"
@@ -208,6 +224,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/wellarchitected"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/xray"
@@ -226,6 +243,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		apigatewayv2.ServicePackage(ctx),
 		appautoscaling.ServicePackage(ctx),
 		appconfig.ServicePackage(ctx),
+		appfabric.ServicePackage(ctx),
 		appflow.ServicePackage(ctx),
 		appintegrations.ServicePackage(ctx),
 		applicationinsights.ServicePackage(ctx),
@@ -239,6 +257,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		autoscalingplans.ServicePackage(ctx),
 		backup.ServicePackage(ctx),
 		batch.ServicePackage(ctx),
+		bedrock.ServicePackage(ctx),
 		budgets.ServicePackage(ctx),
 		ce.ServicePackage(ctx),
 		chime.ServicePackage(ctx),
@@ -257,6 +276,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		codebuild.ServicePackage(ctx),
 		codecatalyst.ServicePackage(ctx),
 		codecommit.ServicePackage(ctx),
+		codeguruprofiler.ServicePackage(ctx),
 		codegurureviewer.ServicePackage(ctx),
 		codepipeline.ServicePackage(ctx),
 		codestarconnections.ServicePackage(ctx),
@@ -267,8 +287,10 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		computeoptimizer.ServicePackage(ctx),
 		configservice.ServicePackage(ctx),
 		connect.ServicePackage(ctx),
+		connectcases.ServicePackage(ctx),
 		controltower.ServicePackage(ctx),
 		cur.ServicePackage(ctx),
+		customerprofiles.ServicePackage(ctx),
 		dataexchange.ServicePackage(ctx),
 		datapipeline.ServicePackage(ctx),
 		datasync.ServicePackage(ctx),
@@ -311,6 +333,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		glue.ServicePackage(ctx),
 		grafana.ServicePackage(ctx),
 		greengrass.ServicePackage(ctx),
+		groundstation.ServicePackage(ctx),
 		guardduty.ServicePackage(ctx),
 		healthlake.ServicePackage(ctx),
 		iam.ServicePackage(ctx),
@@ -335,17 +358,21 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		kms.ServicePackage(ctx),
 		lakeformation.ServicePackage(ctx),
 		lambda.ServicePackage(ctx),
+		launchwizard.ServicePackage(ctx),
 		lexmodels.ServicePackage(ctx),
 		lexv2models.ServicePackage(ctx),
 		licensemanager.ServicePackage(ctx),
 		lightsail.ServicePackage(ctx),
 		location.ServicePackage(ctx),
 		logs.ServicePackage(ctx),
+		lookoutmetrics.ServicePackage(ctx),
+		m2.ServicePackage(ctx),
 		macie2.ServicePackage(ctx),
 		mediaconnect.ServicePackage(ctx),
 		mediaconvert.ServicePackage(ctx),
 		medialive.ServicePackage(ctx),
 		mediapackage.ServicePackage(ctx),
+		mediapackagev2.ServicePackage(ctx),
 		mediastore.ServicePackage(ctx),
 		memorydb.ServicePackage(ctx),
 		meta.ServicePackage(ctx),
@@ -359,10 +386,14 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		opensearchserverless.ServicePackage(ctx),
 		opsworks.ServicePackage(ctx),
 		organizations.ServicePackage(ctx),
+		osis.ServicePackage(ctx),
 		outposts.ServicePackage(ctx),
+		pcaconnectorad.ServicePackage(ctx),
 		pinpoint.ServicePackage(ctx),
 		pipes.ServicePackage(ctx),
+		polly.ServicePackage(ctx),
 		pricing.ServicePackage(ctx),
+		qbusiness.ServicePackage(ctx),
 		qldb.ServicePackage(ctx),
 		quicksight.ServicePackage(ctx),
 		ram.ServicePackage(ctx),
@@ -392,6 +423,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		securitylake.ServicePackage(ctx),
 		serverlessrepo.ServicePackage(ctx),
 		servicecatalog.ServicePackage(ctx),
+		servicecatalogappregistry.ServicePackage(ctx),
 		servicediscovery.ServicePackage(ctx),
 		servicequotas.ServicePackage(ctx),
 		ses.ServicePackage(ctx),
@@ -405,6 +437,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		ssm.ServicePackage(ctx),
 		ssmcontacts.ServicePackage(ctx),
 		ssmincidents.ServicePackage(ctx),
+		ssmsap.ServicePackage(ctx),
 		ssoadmin.ServicePackage(ctx),
 		storagegateway.ServicePackage(ctx),
 		sts.ServicePackage(ctx),
@@ -418,6 +451,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		waf.ServicePackage(ctx),
 		wafregional.ServicePackage(ctx),
 		wafv2.ServicePackage(ctx),
+		wellarchitected.ServicePackage(ctx),
 		worklink.ServicePackage(ctx),
 		workspaces.ServicePackage(ctx),
 		xray.ServicePackage(ctx),

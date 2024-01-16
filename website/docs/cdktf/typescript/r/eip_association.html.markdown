@@ -13,9 +13,9 @@ description: |-
 Provides an AWS EIP Association as a top level resource, to associate and
 disassociate Elastic IPs from AWS Instances and Network Interfaces.
 
-~> **NOTE:** Do not use this resource to associate an EIP to `awsLb` or `awsNatGateway` resources. Instead use the `allocationId` available in those resources to allow AWS to manage the association, otherwise you will see `authFailure` errors.
+~> **NOTE:** Do not use this resource to associate an EIP to `aws_lb` or `aws_nat_gateway` resources. Instead use the `allocationId` available in those resources to allow AWS to manage the association, otherwise you will see `AuthFailure` errors.
 
-~> **NOTE:** `awsEipAssociation` is useful in scenarios where EIPs are either
+~> **NOTE:** `aws_eip_association` is useful in scenarios where EIPs are either
 pre-existing or distributed to customers or users and therefore cannot be changed.
 
 ## Example Usage
@@ -108,4 +108,4 @@ Using `terraform import`, import EIP Assocations using their association IDs. Fo
 % terraform import aws_eip_association.test eipassoc-ab12c345
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0b7dcca3745ca6b46014b918c2445a458ece3c2721fbe7d3b6d1cb5ec4e2bb32 -->
+<!-- cache-key: cdktf-0.20.0 input-0b7dcca3745ca6b46014b918c2445a458ece3c2721fbe7d3b6d1cb5ec4e2bb32 -->

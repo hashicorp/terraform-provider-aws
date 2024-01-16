@@ -64,7 +64,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) of the EBS Snapshot.
 * `id` - The snapshot ID (e.g., snap-59fcb34e).
 * `ownerId` - The AWS account ID of the EBS snapshot owner.
-* `ownerAlias` - Value from an Amazon-maintained list (`amazon`, `awsMarketplace`, `microsoft`) of snapshot owners.
+* `ownerAlias` - Value from an Amazon-maintained list (`amazon`, `aws-marketplace`, `microsoft`) of snapshot owners.
 * `encrypted` - Whether the snapshot is encrypted.
 * `volumeSize` - The size of the drive in GiBs.
 * `kmsKeyId` - The ARN for the KMS encryption key.
@@ -75,8 +75,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -100,4 +100,4 @@ Using `terraform import`, import EBS Snapshot using the `id`. For example:
 % terraform import aws_ebs_snapshot.id snap-049df61146c4d7901
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1e7edd88fa309f9a2fbc01f16873ff7d886c948a085d015d286894010821fe01 -->
+<!-- cache-key: cdktf-0.20.0 input-1e7edd88fa309f9a2fbc01f16873ff7d886c948a085d015d286894010821fe01 -->

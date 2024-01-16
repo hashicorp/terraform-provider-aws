@@ -522,8 +522,12 @@ func flattenSelfManagedActiveDirectoryAttributes(d *schema.ResourceData, rs *fsx
 	// if we can or Terraform will show a difference for the argument from empty string to the value.
 	// This is not a pattern that should be used normally.
 	// See also: flattenEmrKerberosAttributes
-	m["file_system_administrators_group"] = d.Get("active_directory_configuration.0.self_managed_active_directory_configuration.0.file_system_administrators_group").(string)
-	m["password"] = d.Get("active_directory_configuration.0.self_managed_active_directory_configuration.0.password").(string)
+	if v, ok := d.GetOk("active_directory_configuration.0.self_managed_active_directory_configuration.0.file_system_administrators_group"); ok {
+		m["file_system_administrators_group"] = v.(string)
+	}
+	if v, ok := d.GetOk("active_directory_configuration.0.self_managed_active_directory_configuration.0.password"); ok {
+		m["password"] = v.(string)
+	}
 
 	return []interface{}{m}
 }

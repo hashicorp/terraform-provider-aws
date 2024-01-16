@@ -59,7 +59,7 @@ This resource supports the following arguments:
 * `instanceArn` - (Required, Forces new resource) The Amazon Resource Name (ARN) of the SSO Instance under which the operation will be executed.
 * `name` - (Required, Forces new resource) The name of the Permission Set.
 * `relayState` - (Optional) The relay state URL used to redirect users within the application during the federation authentication process.
-* `sessionDuration` - (Optional) The length of time that the application user sessions are valid in the ISO-8601 standard. Default: `pt1H`.
+* `sessionDuration` - (Optional) The length of time that the application user sessions are valid in the ISO-8601 standard. Default: `PT1H`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -75,7 +75,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `update` - (Default `10M`)
+- `update` - (Default `10m`)
 
 ## Import
 
@@ -99,4 +99,4 @@ Using `terraform import`, import SSO Permission Sets using the `arn` and `instan
 % terraform import aws_ssoadmin_permission_set.example arn:aws:sso:::permissionSet/ssoins-2938j0x8920sbj72/ps-80383020jr9302rk,arn:aws:sso:::instance/ssoins-2938j0x8920sbj72
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2c1f2076ed612356260a73ee4a57bd14c4cf5a5dd7d59da0d248e8cda59c8f43 -->
+<!-- cache-key: cdktf-0.20.0 input-2c1f2076ed612356260a73ee4a57bd14c4cf5a5dd7d59da0d248e8cda59c8f43 -->

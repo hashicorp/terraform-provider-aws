@@ -117,10 +117,10 @@ Listeners (`listener`) support the following:
 
 * `instancePort` - (Required) The port on the instance to route to
 * `instanceProtocol` - (Required) The protocol to use to the instance. Valid
-  values are `http`, `https`, `tcp`, or `ssl`
+  values are `HTTP`, `HTTPS`, `TCP`, or `SSL`
 * `lbPort` - (Required) The port to listen on for the load balancer
-* `lbProtocol` - (Required) The protocol to listen on. Valid values are `http`,
-  `https`, `tcp`, or `ssl`
+* `lbProtocol` - (Required) The protocol to listen on. Valid values are `HTTP`,
+  `HTTPS`, `TCP`, or `SSL`
 * `sslCertificateId` - (Optional) The ARN of an SSL certificate you have
 uploaded to AWS IAM. **Note ECDSA-specific restrictions below.  Only valid when `lbProtocol` is either HTTPS or SSL**
 
@@ -130,8 +130,8 @@ Health Check (`healthCheck`) supports the following:
 * `unhealthyThreshold` - (Required) The number of checks before the instance is declared unhealthy.
 * `target` - (Required) The target of the check. Valid pattern is "${PROTOCOL}:${PORT}${PATH}", where PROTOCOL
   values are:
-    * `http`, `https` - PORT and PATH are required
-    * `tcp`, `ssl` - PORT is required, PATH is not supported
+    * `HTTP`, `HTTPS` - PORT and PATH are required
+    * `TCP`, `SSL` - PORT is required, PATH is not supported
 * `interval` - (Required) The interval between checks.
 * `timeout` - (Required) The length of time before the check times out.
 
@@ -140,7 +140,7 @@ Health Check (`healthCheck`) supports the following:
 If the ARN of the `sslCertificateId` that is pointed to references a
 certificate that was signed by an ECDSA key, note that ELB only supports the
 P256 and P384 curves.  Using a certificate signed by a key using a different
-curve could produce the error `errSslVersionOrCipherMismatch` in your
+curve could produce the error `ERR_SSL_VERSION_OR_CIPHER_MISMATCH` in your
 browser.
 
 ## Attribute Reference
@@ -183,4 +183,4 @@ Using `terraform import`, import ELBs using the `name`. For example:
 % terraform import aws_elb.bar elb-production-12345
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-51cf9c0bd7493a8933e0ea949d5da8ff7b2aba67934ff679f9a3811feef95d7c -->
+<!-- cache-key: cdktf-0.20.0 input-51cf9c0bd7493a8933e0ea949d5da8ff7b2aba67934ff679f9a3811feef95d7c -->

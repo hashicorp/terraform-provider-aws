@@ -37,7 +37,7 @@ class MyConvertedCode extends TerraformStack {
       comment: "my function",
       name: "test",
       publish: true,
-      runtime: "cloudfront-js-1.0",
+      runtime: "cloudfront-js-2.0",
     });
   }
 }
@@ -50,7 +50,7 @@ The following arguments are required:
 
 * `name` - (Required) Unique name for your CloudFront Function.
 * `code` - (Required) Source code of the function
-* `runtime` - (Required) Identifier of the function's runtime. Currently only `cloudfrontJs10` is valid.
+* `runtime` - (Required) Identifier of the function's runtime. Valid values are `cloudfront-js-1.0` and `cloudfront-js-2.0`.
 
 The following arguments are optional:
 
@@ -62,9 +62,9 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) identifying your CloudFront Function.
-* `etag` - ETag hash of the function. This is the value for the `development` stage of the function.
-* `liveStageEtag` - ETag hash of any `live` stage of the function.
-* `status` - Status of the function. Can be `unpublished`, `unassociated` or `associated`.
+* `etag` - ETag hash of the function. This is the value for the `DEVELOPMENT` stage of the function.
+* `liveStageEtag` - ETag hash of any `LIVE` stage of the function.
+* `status` - Status of the function. Can be `UNPUBLISHED`, `UNASSOCIATED` or `ASSOCIATED`.
 
 ## Import
 
@@ -88,4 +88,4 @@ Using `terraform import`, import CloudFront Functions using the `name`. For exam
 % terraform import aws_cloudfront_function.test my_test_function
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4dbd0fc63d6063c2f79ef92be1f7d40dedd1c366a0fddb227942d78a1ac1a21c -->
+<!-- cache-key: cdktf-0.20.0 input-59747461944d6c7a0eb3b5564be5c3973566f4157642b81587c3635adda2af9d -->

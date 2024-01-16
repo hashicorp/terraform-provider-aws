@@ -13,7 +13,7 @@ description: |-
 Provides a Route53 query logging configuration resource.
 
 ~> **NOTE:** There are restrictions on the configuration of query logging. Notably,
-the CloudWatch log group must be in the `usEast1` region,
+the CloudWatch log group must be in the `us-east-1` region,
 a permissive CloudWatch log resource policy must be in place, and
 the Route53 hosted zone must be public.
 See [Configuring Logging for DNS Queries](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/query-logs.html?console_help=true#query-logs-configuring) for additional details.
@@ -133,4 +133,4 @@ Using `terraform import`, import Route53 query logging configurations using thei
 % terraform import aws_route53_query_log.example_com xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d9656f2fc1e20251769a3e2a3d8099ca32009721211d5ef362901f305ddc7e9e -->
+<!-- cache-key: cdktf-0.20.0 input-d9656f2fc1e20251769a3e2a3d8099ca32009721211d5ef362901f305ddc7e9e -->

@@ -109,10 +109,10 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			// TODO: inline policy goes crazy, have to figure what this type should look like
 			// also read article again
 			"inline_policy": schema.MapAttribute{
-                ElementType: types.StringType,
-                Optional: true,
-                // TODO: maybe some validation?
-            },
+				ElementType: types.StringType,
+				Optional:    true,
+				// TODO: maybe some validation?
+			},
 			"managed_policy_arns": schema.SetAttribute{
 				Computed:    true,
 				Optional:    true,
@@ -256,9 +256,9 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	roleName := aws.StringValue(output.Role.RoleName)
 
 	// TODO: has to figure this out because typing of inline policies
-    if !plan.InlinePolicy.IsNull() && !plan.InlinePolicy.IsUnknown() {
-        inline_policies_map := make(map[string]string)
-        plan.InlinePolicy.ElementsAs(ctx, inline_policies_map, false)
+	if !plan.InlinePolicy.IsNull() && !plan.InlinePolicy.IsUnknown() {
+		inline_policies_map := make(map[string]string)
+		plan.InlinePolicy.ElementsAs(ctx, inline_policies_map, false)
 		policies := expandRoleInlinePolicies(roleName, inline_policies_map)
 		if err := addRoleInlinePolicies(ctx, policies, meta); err != nil {
 			resp.Diagnostics.AddError(
@@ -430,6 +430,8 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("path", role.Path)
 	if role.PermissionsBoundary != nil {
 		d.Set("permissions_boundary", role.PermissionsBoundary.PermissionsBoundaryArn)
+	} else {
+		d.Set("permissions_boundary", nil)
 	}
 	d.Set("unique_id", role.RoleId)
 
@@ -967,7 +969,7 @@ func expandRoleInlinePolicies(roleName string, tfmap map[string]string) []*iam.P
 
 	var apiObjects []*iam.PutRolePolicyInput
 
-    // TODO: Loop through map, update lower function
+	// TODO: Loop through map, update lower function
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -1009,15 +1011,13 @@ func addRoleInlinePolicies(ctx context.Context, policies []*iam.PutRolePolicyInp
 func (r resourceIamRole) addRoleManagedPolicies(ctx context.Context, roleName string, policies []*string) error {
 	conn := r.Meta().IAMConn(ctx)
 
-	var errs *multierror.Error
 	for _, arn := range policies {
 		if err := attachPolicyToRole(ctx, conn, roleName, aws.StringValue(arn)); err != nil {
-			newErr := fmt.Errorf("attaching managed policy (%s): %w", aws.StringValue(arn), err)
-			errs = multierror.Append(errs, newErr)
+			errs = append(errs, err)
 		}
 	}
 
-	return errs.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 func readRoleInlinePolicies(ctx context.Context, roleName string, meta interface{}) ([]*iam.PutRolePolicyInput, error) {

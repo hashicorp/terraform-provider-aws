@@ -88,7 +88,7 @@ backend and the Cognito service to communicate about the developer provider.
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - An identity pool ID, e.g. `usWest2:1A2345678901234B5CdeF6789G01H2I3`.
+* `id` - An identity pool ID, e.g. `us-west-2:1a234567-8901-234b-5cde-f6789g01h2i3`.
 * `arn` - The ARN of the identity pool.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
@@ -114,4 +114,4 @@ Using `terraform import`, import Cognito Identity Pool using its ID. For example
 % terraform import aws_cognito_identity_pool.mypool us-west-2:1a234567-8901-234b-5cde-f6789g01h2i3
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6cea6e360281bc475ea8b2d012b8c1df933a00c36975d5e9256c0c0610277b76 -->
+<!-- cache-key: cdktf-0.20.0 input-6cea6e360281bc475ea8b2d012b8c1df933a00c36975d5e9256c0c0610277b76 -->

@@ -77,9 +77,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `5M`)
-- `update` - (Default `2M`)
-- `delete` - (Default `5M`)
+- `create` - (Default `5m`)
+- `update` - (Default `2m`)
+- `delete` - (Default `5m`)
 
 ## Import
 
@@ -129,4 +129,4 @@ With EC2 Internet Gateways:
 % terraform import aws_route_table_association.assoc igw-01b3a60780f8d034a/rtb-656c65616e6f72
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4552818b4878e80d058998466d30965c95d752e528e046f4f7a9999a8dfcb719 -->
+<!-- cache-key: cdktf-0.20.0 input-4552818b4878e80d058998466d30965c95d752e528e046f4f7a9999a8dfcb719 -->

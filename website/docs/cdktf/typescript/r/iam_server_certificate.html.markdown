@@ -81,8 +81,8 @@ class MyConvertedCode extends TerraformStack {
 Some properties of an IAM Server Certificates cannot be updated while they are
 in use. In order for Terraform to effectively manage a Certificate in this situation, it is
 recommended you utilize the `namePrefix` attribute and enable the
-`createBeforeDestroy` [lifecycle block][lifecycle]. This will allow Terraform
-to create a new, updated `awsIamServerCertificate` resource and replace it in
+`create_before_destroy` [lifecycle block][lifecycle]. This will allow Terraform
+to create a new, updated `aws_iam_server_certificate` resource and replace it in
 dependant resources before attempting to destroy the old version.
 
 ```typescript
@@ -141,7 +141,7 @@ This resource supports the following arguments:
 * `privateKey` – (Required) The contents of the private key in PEM-encoded format.
 * `path` - (Optional) The IAM path for the server certificate.  If it is not
     included, it defaults to a slash (/). If this certificate is for use with
-    AWS CloudFront, the path must be in format `/cloudfront/yourPathHere`.
+    AWS CloudFront, the path must be in format `/cloudfront/your_path_here`.
     See [IAM Identifiers][1] for more details on IAM Paths.
 * `tags` - (Optional) Map of resource tags for the server certificate. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -184,4 +184,4 @@ Using `terraform import`, import IAM Server Certificates using the `name`. For e
 [2]: https://docs.aws.amazon.com/IAM/latest/UserGuide/ManagingServerCerts.html
 [lifecycle]: /docs/configuration/resources.html
 
-<!-- cache-key: cdktf-0.18.0 input-4e79a75d64fc823b8d2391e118523a861e5a2f30f4797410fdc70324a0c27272 -->
+<!-- cache-key: cdktf-0.20.0 input-4e79a75d64fc823b8d2391e118523a861e5a2f30f4797410fdc70324a0c27272 -->

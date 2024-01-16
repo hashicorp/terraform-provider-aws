@@ -274,7 +274,7 @@ func resourceBudgetActionRead(ctx context.Context, d *schema.ResourceData, meta 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Budget Action (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -378,7 +378,7 @@ func resourceBudgetActionDelete(ctx context.Context, d *schema.ResourceData, met
 	}, budgets.ErrCodeResourceLockedException)
 
 	if tfawserr.ErrCodeEquals(err, budgets.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {

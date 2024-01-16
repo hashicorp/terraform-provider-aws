@@ -64,7 +64,7 @@ This resource supports the following arguments:
 
 #### Arguments
 
-* `source` - (Required) The IP address range, in CIDR notation, e.g., `10000/16`
+* `source` - (Required) The IP address range, in CIDR notation, e.g., `10.0.0.0/16`
 * `description` - (Optional) The description.
 
 ## Attribute Reference
@@ -96,4 +96,4 @@ Using `terraform import`, import WorkSpaces IP groups using their GroupID. For e
 % terraform import aws_workspaces_ip_group.example wsipg-488lrtl3k
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4b601bcbe6ec03a647bced3e04fee24a2ec058d79738bc0ec9fc5dbfd30d43de -->
+<!-- cache-key: cdktf-0.20.0 input-4b601bcbe6ec03a647bced3e04fee24a2ec058d79738bc0ec9fc5dbfd30d43de -->

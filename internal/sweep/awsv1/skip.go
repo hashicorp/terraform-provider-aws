@@ -74,6 +74,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "ValidationException", "Account is not whitelisted to use this feature") {
 		return true
 	}
+	// For example from us-gov-east-1 IoT domain configuration
+	if tfawserr.ErrMessageContains(err, "UnauthorizedException", "API is not available in") {
+		return true
+	}
 
 	return false
 }

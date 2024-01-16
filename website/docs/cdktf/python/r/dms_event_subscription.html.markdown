@@ -48,7 +48,7 @@ This resource supports the following arguments:
 * `name` - (Required) Name of event subscription.
 * `enabled` - (Optional, Default: true) Whether the event subscription should be enabled.
 * `event_categories` - (Optional) List of event categories to listen for, see `DescribeEventCategories` for a canonical list.
-* `source_type` - (Optional, Default: all events) Type of source for events. Valid values: `replication-instance` or `replication-task`
+* `source_type` - (Required) Type of source for events. Valid values: `replication-instance` or `replication-task`
 * `source_ids` - (Required) Ids of sources to listen to.
 * `sns_topic_arn` - (Required) SNS topic arn to send events on.
 * `tags` - (Optional) Map of resource tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -87,4 +87,4 @@ Using `terraform import`, import event subscriptions using the `name`. For examp
 % terraform import aws_dms_event_subscription.test my-awesome-event-subscription
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-8fddb59943e1aef59e7d893b468b8a5bb1e2486c31cb4b972078535d91348ad6 -->
+<!-- cache-key: cdktf-0.20.0 input-7ab29fa8b2cfaf3933b10cc81fb97251c9b7fed17847deff37a767a43abec6cb -->

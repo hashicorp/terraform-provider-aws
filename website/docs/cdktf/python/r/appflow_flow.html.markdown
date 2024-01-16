@@ -52,7 +52,7 @@ class MyConvertedCode(TerraformStack):
                     type="Service"
                 )
                 ],
-                resources=["arn:aws:s3:::example_destination", "arn:aws:s3:::example_destination/*"
+                resources=["arn:aws:s3:::example-destination", "arn:aws:s3:::example-destination/*"
                 ],
                 sid="AllowAppFlowDestinationActions"
             )
@@ -69,7 +69,7 @@ class MyConvertedCode(TerraformStack):
                     type="Service"
                 )
                 ],
-                resources=["arn:aws:s3:::example_source", "arn:aws:s3:::example_source/*"
+                resources=["arn:aws:s3:::example-source", "arn:aws:s3:::example-source/*"
                 ],
                 sid="AllowAppFlowSourceActions"
             )
@@ -250,6 +250,7 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 ###### Aggregation Config
 
 * `aggregation_type` - (Optional) Whether Amazon AppFlow aggregates the flow records into a single file, or leave them unaggregated. Valid values are `None` and `SingleFile`.
+* `target_file_size` - (Optional) The desired file size, in MB, for each output file that Amazon AppFlow writes to the flow destination. Integer value.
 
 ###### Prefix Config
 
@@ -434,4 +435,4 @@ Using `terraform import`, import AppFlow flows using the `arn`. For example:
 % terraform import aws_appflow_flow.example arn:aws:appflow:us-west-2:123456789012:flow/example-flow
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-17e1cfe9c9c0df000acad27d00f90bbaa486384b6d2aa3d057f258c6051b900d -->
+<!-- cache-key: cdktf-0.20.0 input-4ca9fdaf96bd2b74a2fc9a8d9bbb3103ce7bfc35dff776410395697c472adf37 -->

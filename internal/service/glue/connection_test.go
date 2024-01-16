@@ -540,23 +540,34 @@ resource "aws_db_subnet_group" "test" {
   subnet_ids = aws_subnet.test[*].id
 }
 
+data "aws_rds_engine_version" "default" {
+  engine = "aurora-mysql"
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  preferred_instance_classes = ["db.t3.small", "db.t3.medium", "db.t3.large"]
+}
+
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = "%[1]s"
-  database_name                   = "gluedatabase"
-  db_cluster_parameter_group_name = "default.aurora-mysql5.7"
-  db_subnet_group_name            = aws_db_subnet_group.test.name
-  engine                          = "aurora-mysql"
-  master_password                 = "gluepassword"
-  master_username                 = "glueusername"
-  skip_final_snapshot             = true
-  vpc_security_group_ids          = [aws_security_group.test.id]
+  cluster_identifier     = "%[1]s"
+  database_name          = "gluedatabase"
+  db_subnet_group_name   = aws_db_subnet_group.test.name
+  engine                 = data.aws_rds_orderable_db_instance.test.engine
+  engine_version         = data.aws_rds_orderable_db_instance.test.engine_version
+  master_password        = "gluepassword"
+  master_username        = "glueusername"
+  skip_final_snapshot    = true
+  vpc_security_group_ids = [aws_security_group.test.id]
 }
 
 resource "aws_rds_cluster_instance" "test" {
-  cluster_identifier = aws_rds_cluster.test.id
-  engine             = "aurora-mysql"
   identifier         = "%[1]s"
-  instance_class     = "db.t2.medium"
+  cluster_identifier = aws_rds_cluster.test.id
+  engine             = data.aws_rds_orderable_db_instance.test.engine
+  engine_version     = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 }
 
 resource "aws_glue_connection" "test" {

@@ -103,7 +103,7 @@ The `rewrite` object supports the following:
 
 The `hostname` object supports the following:
 
-* `defaultTargetHostname` - (Required) Default target host name to write to. Valid values: `enabled`, `disabled`.
+* `defaultTargetHostname` - (Required) Default target host name to write to. Valid values: `ENABLED`, `DISABLED`.
 
 The `path` object supports the following:
 
@@ -111,7 +111,7 @@ The `path` object supports the following:
 
 The `prefix` object supports the following:
 
-* `defaultPrefix` - (Optional) Default prefix used to replace the incoming route prefix when rewritten. Valid values: `enabled`, `disabled`.
+* `defaultPrefix` - (Optional) Default prefix used to replace the incoming route prefix when rewritten. Valid values: `ENABLED`, `DISABLED`.
 * `value` - (Optional) Value used to replace the incoming route prefix when rewritten.
 
 The `grpcRoute`'s `match` object supports the following:
@@ -202,4 +202,4 @@ Using `terraform import`, import App Mesh gateway routes using `meshName` and `v
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.18.0 input-c4b969b72d8a7fa97ad9813ee47129d1f3ecfc1dcc5979566a12522b5042594d -->
+<!-- cache-key: cdktf-0.20.0 input-c4b969b72d8a7fa97ad9813ee47129d1f3ecfc1dcc5979566a12522b5042594d -->

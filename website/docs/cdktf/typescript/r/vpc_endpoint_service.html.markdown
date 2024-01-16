@@ -89,12 +89,12 @@ This resource exports the following attributes in addition to the arguments abov
 * `baseEndpointDnsNames` - A set of DNS names for the service.
 * `managesVpcEndpoints` - Whether or not the service manages its VPC endpoints - `true` or `false`.
 * `serviceName` - The service name.
-* `serviceType` - The service type, `gateway` or `interface`.
+* `serviceType` - The service type, `Gateway` or `Interface`.
 * `state` - The state of the VPC endpoint service.
 * `privateDnsNameConfiguration` - List of objects containing information about the endpoint service private DNS name configuration.
     * `name` - Name of the record subdomain the service provider needs to create.
     * `state` - Verification state of the VPC endpoint service. Consumers of the endpoint service can use the private name only when the state is `verified`.
-    * `type` - Endpoint service verification type, for example `txt`.
+    * `type` - Endpoint service verification type, for example `TXT`.
     * `value` - Value the service provider adds to the private DNS name domain record before verification.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
@@ -120,4 +120,4 @@ Using `terraform import`, import VPC Endpoint Services using the VPC endpoint se
 % terraform import aws_vpc_endpoint_service.foo vpce-svc-0f97a19d3fa8220bc
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c09a7b5d8b527c0d1b6c1d63d0ebeee104d7dd496159317437a0efb2c6008154 -->
+<!-- cache-key: cdktf-0.20.0 input-c09a7b5d8b527c0d1b6c1d63d0ebeee104d7dd496159317437a0efb2c6008154 -->

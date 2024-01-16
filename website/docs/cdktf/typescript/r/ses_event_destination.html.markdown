@@ -115,7 +115,7 @@ This resource supports the following arguments:
 * `kinesisDestination` - (Optional) Send the events to a kinesis firehose destination
 * `snsDestination` - (Optional) Send the events to an SNS Topic destination
 
-~> **NOTE:** You can specify `"cloudwatchDestination"` or `"kinesisDestination"` but not both
+~> **NOTE:** You can specify `"cloudwatch_destination"` or `"kinesis_destination"` but not both
 
 ### cloudwatch_destination Argument Reference
 
@@ -161,4 +161,4 @@ Using `terraform import`, import SES event destinations using `configurationSetN
 % terraform import aws_ses_event_destination.sns some-configuration-set-test/event-destination-sns
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-03d0657b4ec477015386f442c464924c2a2cf73364ec9a281d1dab9658fde299 -->
+<!-- cache-key: cdktf-0.20.0 input-03d0657b4ec477015386f442c464924c2a2cf73364ec9a281d1dab9658fde299 -->

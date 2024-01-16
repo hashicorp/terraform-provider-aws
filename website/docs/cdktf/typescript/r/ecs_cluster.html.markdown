@@ -100,8 +100,8 @@ This resource supports the following arguments:
 #### `executeCommandConfiguration`
 
 * `kmsKeyId` - (Optional) The AWS Key Management Service key ID to encrypt the data between the local client and the container.
-* `logConfiguration` - (Optional) The log configuration for the results of the execute command actions Required when `logging` is `override`. Detailed below.
-* `logging` - (Optional) The log setting to use for redirecting logs for your execute command results. Valid values are `none`, `default`, and `override`.
+* `logConfiguration` - (Optional) The log configuration for the results of the execute command actions Required when `logging` is `OVERRIDE`. Detailed below.
+* `logging` - (Optional) The log setting to use for redirecting logs for your execute command results. Valid values are `NONE`, `DEFAULT`, and `OVERRIDE`.
 
 ##### `logConfiguration`
 
@@ -118,7 +118,7 @@ This resource supports the following arguments:
 
 ### `serviceConnectDefaults`
 
-* `namespace` - (Required) The ARN of the [`awsServiceDiscoveryHttpNamespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) that's used when you create a service and don't specify a Service Connect configuration.
+* `namespace` - (Required) The ARN of the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) that's used when you create a service and don't specify a Service Connect configuration.
 
 ## Attribute Reference
 
@@ -150,4 +150,4 @@ Using `terraform import`, import ECS clusters using the `name`. For example:
 % terraform import aws_ecs_cluster.stateless stateless-app
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1154f096b3c84b6ef18254400c16ed7229ee1dd00d8545d69ff1e3a5e359aa99 -->
+<!-- cache-key: cdktf-0.20.0 input-1154f096b3c84b6ef18254400c16ed7229ee1dd00d8545d69ff1e3a5e359aa99 -->

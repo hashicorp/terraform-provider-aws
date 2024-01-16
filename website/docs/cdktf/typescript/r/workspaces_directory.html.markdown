@@ -12,7 +12,7 @@ description: |-
 
 Provides a WorkSpaces directory in AWS WorkSpaces Service.
 
-~> **NOTE:** AWS WorkSpaces service requires [`workspacesDefaultRole`](https://docs.aws.amazon.com/workspaces/latest/adminguide/workspaces-access-control.html#create-default-role) IAM role to operate normally.
+~> **NOTE:** AWS WorkSpaces service requires [`workspaces_DefaultRole`](https://docs.aws.amazon.com/workspaces/latest/adminguide/workspaces-access-control.html#create-default-role) IAM role to operate normally.
 
 ## Example Usage
 
@@ -220,7 +220,7 @@ This resource supports the following arguments:
 -> **Note:** Once you specified `customSecurityGroupId` or `defaultOu`, there is no way to delete these attributes. If you cleanup them from the configuration, they still be present in state.
 
 * `customSecurityGroupId` – (Optional) The identifier of your custom security group. Should relate to the same VPC, where workspaces reside in.
-* `defaultOu` – (Optional) The default organizational unit (OU) for your WorkSpace directories. Should conform `"ou=<value>,dc=<value>,...,dc=<value>"` pattern.
+* `defaultOu` – (Optional) The default organizational unit (OU) for your WorkSpace directories. Should conform `"OU=<value>,DC=<value>,...,DC=<value>"` pattern.
 * `enableInternetAccess` – (Optional) Indicates whether internet access is enabled for your WorkSpaces.
 * `enableMaintenanceMode` – (Optional) Indicates whether maintenance mode is enabled for your WorkSpaces. For more information, see [WorkSpace Maintenance](https://docs.aws.amazon.com/workspaces/latest/adminguide/workspace-maintenance.html)..
 * `userEnabledAsLocalAdministrator` – (Optional) Indicates whether users are local administrators of their WorkSpaces.
@@ -263,4 +263,4 @@ Using `terraform import`, import Workspaces directory using the directory ID. Fo
 % terraform import aws_workspaces_directory.main d-4444444444
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-d3c63279ed03f48d66f7e43838d7dd34eb898e70056d69f86ad10924bad87a77 -->
+<!-- cache-key: cdktf-0.20.0 input-d3c63279ed03f48d66f7e43838d7dd34eb898e70056d69f86ad10924bad87a77 -->

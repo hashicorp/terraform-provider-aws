@@ -140,9 +140,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `10M`)
-- `update` - (Default `10M`)
-- `delete` - (Default `30M`)
+- `create` - (Default `10m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `30m`)
 
 ## Import
 
@@ -166,4 +166,4 @@ Using `terraform import`, import NAT Gateways using the `id`. For example:
 % terraform import aws_nat_gateway.private_gw nat-05dba92075d71c408
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6e34b90b4993bab91f851a578e7ddb84ebd6aef6d8220655a1d5b45186bd1edf -->
+<!-- cache-key: cdktf-0.20.0 input-6e34b90b4993bab91f851a578e7ddb84ebd6aef6d8220655a1d5b45186bd1edf -->

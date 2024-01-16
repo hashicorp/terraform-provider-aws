@@ -14,9 +14,9 @@ Provides an AWS App Mesh virtual router resource.
 
 ## Breaking Changes
 
-Because of backward incompatible API changes (read [here](https://github.com/awslabs/aws-app-mesh-examples/issues/92) and [here](https://github.com/awslabs/aws-app-mesh-examples/issues/94)), `awsAppmeshVirtualRouter` resource definitions created with provider versions earlier than v2.3.0 will need to be modified:
+Because of backward incompatible API changes (read [here](https://github.com/awslabs/aws-app-mesh-examples/issues/92) and [here](https://github.com/awslabs/aws-app-mesh-examples/issues/94)), `aws_appmesh_virtual_router` resource definitions created with provider versions earlier than v2.3.0 will need to be modified:
 
-* Remove service `serviceNames` from the `spec` argument. AWS has created a `awsAppmeshVirtualService` resource for each service name. Import these resource using `terraform import`.
+* Remove service `service_names` from the `spec` argument. AWS has created a `aws_appmesh_virtual_service` resource for each service name. Import these resource using `terraform import`.
 
 * Add a `listener` configuration block to the `spec` argument.
 
@@ -114,4 +114,4 @@ Using `terraform import`, import App Mesh virtual routers using `meshName` toget
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.18.0 input-b6f73966761dbca6e2aaf44ef6787d712dc92b753deee4152c13d29b3071617c -->
+<!-- cache-key: cdktf-0.20.0 input-b6f73966761dbca6e2aaf44ef6787d712dc92b753deee4152c13d29b3071617c -->

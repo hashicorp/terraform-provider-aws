@@ -89,7 +89,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-- The required policies on `callAnalyticsRole` will vary based on the selected processors. See [Call analytics resource access role](https://docs.aws.amazon.com/chime-sdk/latest/dg/ca-resource-access-role.html) for directions on choosing appropriate policies.
+- The required policies on `call_analytics_role` will vary based on the selected processors. See [Call analytics resource access role](https://docs.aws.amazon.com/chime-sdk/latest/dg/ca-resource-access-role.html) for directions on choosing appropriate policies.
 
 ### Transcribe Call Analytics processor usage
 
@@ -472,9 +472,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `3M`)
-* `update` - (Default `3M`)
-* `delete` - (Default `30S`)
+* `create` - (Default `3m`)
+* `update` - (Default `3m`)
+* `delete` - (Default `30s`)
 
 ## Import
 
@@ -498,4 +498,4 @@ Using `terraform import`, import Chime SDK Media Pipelines Media Insights Pipeli
 % terraform import aws_chimesdkmediapipelines_media_insights_pipeline_configuration.example abcdef123456
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e27c8cae132bb59224264ffd318670201dbde0c3fb71b0400db863d44cf5ecde -->
+<!-- cache-key: cdktf-0.20.0 input-e27c8cae132bb59224264ffd318670201dbde0c3fb71b0400db863d44cf5ecde -->

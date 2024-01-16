@@ -37,7 +37,7 @@ class MyConvertedCode(TerraformStack):
             comment="my function",
             name="test",
             publish=True,
-            runtime="cloudfront-js-1.0"
+            runtime="cloudfront-js-2.0"
         )
 ```
 
@@ -47,7 +47,7 @@ The following arguments are required:
 
 * `name` - (Required) Unique name for your CloudFront Function.
 * `code` - (Required) Source code of the function
-* `runtime` - (Required) Identifier of the function's runtime. Currently only `cloudfront-js-1.0` is valid.
+* `runtime` - (Required) Identifier of the function's runtime. Valid values are `cloudfront-js-1.0` and `cloudfront-js-2.0`.
 
 The following arguments are optional:
 
@@ -82,4 +82,4 @@ Using `terraform import`, import CloudFront Functions using the `name`. For exam
 % terraform import aws_cloudfront_function.test my_test_function
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4dbd0fc63d6063c2f79ef92be1f7d40dedd1c366a0fddb227942d78a1ac1a21c -->
+<!-- cache-key: cdktf-0.20.0 input-59747461944d6c7a0eb3b5564be5c3973566f4157642b81587c3635adda2af9d -->

@@ -14,7 +14,7 @@ Provides a resource to manage a [default subnet](http://docs.aws.amazon.com/Amaz
 
 **This is an advanced resource** and has special caveats to be aware of when using it. Please read this document in its entirety before using this resource.
 
-The `awsDefaultSubnet` resource behaves differently from normal resources in that if a default subnet exists in the specified Availability Zone, Terraform does not _create_ this resource, but instead "adopts" it into management.
+The `aws_default_subnet` resource behaves differently from normal resources in that if a default subnet exists in the specified Availability Zone, Terraform does not _create_ this resource, but instead "adopts" it into management.
 If no default subnet exists, Terraform creates a new default subnet.
 By default, `terraform destroy` does not delete the default subnet but does remove the resource from Terraform state.
 Set the `forceDestroy` argument to `true` to delete the default subnet.
@@ -46,7 +46,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-The arguments of an `awsDefaultSubnet` differ slightly from those of [`awsSubnet`](subnet.html):
+The arguments of an `aws_default_subnet` differ slightly from those of [`aws_subnet`](subnet.html):
 
 * `availabilityZone` is required
 * The `availabilityZoneId`, `cidrBlock` and `vpcId` arguments become computed attributes
@@ -86,4 +86,4 @@ Using `terraform import`, import subnets using the subnet `id`. For example:
 % terraform import aws_default_subnet.public_subnet subnet-9d4a7b6c
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-946ded19323b4288f4f2e72461cc5948a23ea35404090c8cf1614d4381c9ce49 -->
+<!-- cache-key: cdktf-0.20.0 input-946ded19323b4288f4f2e72461cc5948a23ea35404090c8cf1614d4381c9ce49 -->

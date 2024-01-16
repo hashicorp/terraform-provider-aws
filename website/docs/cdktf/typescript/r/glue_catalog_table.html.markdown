@@ -130,7 +130,7 @@ The follow arguments are optional:
 
 ### open_table_format_input
 
-~> **NOTE:** A `openTableFormatInput` cannot be added to an existing `glueCatalogTable`.
+~> **NOTE:** A `openTableFormatInput` cannot be added to an existing `glue_catalog_table`.
 This will destroy and recreate the table, possibly resulting in data loss.
 
 * `icebergInput` - (Required) Configuration block for iceberg table config. See [`icebergInput`](#iceberg_input) below.
@@ -145,9 +145,9 @@ This will destroy and recreate the table, possibly resulting in data loss.
 
 ### partition_index
 
-~> **NOTE:** A `partitionIndex` cannot be added to an existing `glueCatalogTable`.
+~> **NOTE:** A `partitionIndex` cannot be added to an existing `glue_catalog_table`.
 This will destroy and recreate the table, possibly resulting in data loss.
-To add an index to an existing table, see the [`gluePartitionIndex` resource](/docs/providers/aws/r/glue_partition_index.html) for configuration details.
+To add an index to an existing table, see the [`glue_partition_index` resource](/docs/providers/aws/r/glue_partition_index.html) for configuration details.
 
 * `indexName` - (Required) Name of the partition index.
 * `keys` - (Required) Keys for the partition index.
@@ -197,7 +197,7 @@ To add an index to an existing table, see the [`gluePartitionIndex` resource](/d
 
 * `name` - (Optional) Name of the SerDe.
 * `parameters` - (Optional) Map of initialization parameters for the SerDe, in key-value form.
-* `serializationLibrary` - (Optional) Usually the class that implements the SerDe. An example is `orgApacheHadoopHiveSerde2ColumnarColumnarSerDe`.
+* `serializationLibrary` - (Optional) Usually the class that implements the SerDe. An example is `org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe`.
 
 #### sort_columns
 
@@ -215,6 +215,7 @@ To add an index to an existing table, see the [`gluePartitionIndex` resource](/d
 * `catalogId` - (Required) ID of the Data Catalog in which the table resides.
 * `databaseName` - (Required) Name of the catalog database that contains the target table.
 * `name` - (Required) Name of the target table.
+* `region` - (Optional) Region of the target table.
 
 ## Attribute Reference
 
@@ -245,4 +246,4 @@ Using `terraform import`, import Glue Tables using the catalog ID (usually AWS a
 % terraform import aws_glue_catalog_table.MyTable 123456789012:MyDatabase:MyTable
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-45918d95d1ee42b18f0a38282d1c7f92c766f0d90f43a1e0cd1f7c41e6fd3936 -->
+<!-- cache-key: cdktf-0.20.0 input-440086f7b6f42d14e88814e52247b9d2d35062cc39a397bacf9d9b2222191e88 -->

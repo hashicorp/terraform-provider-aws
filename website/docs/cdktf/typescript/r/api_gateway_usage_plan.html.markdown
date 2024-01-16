@@ -113,7 +113,7 @@ The API Gateway Usage Plan argument layout is a structure composed of several su
 
 ##### Throttle
 
-* `path` (Required) - Method to apply the throttle settings for. Specfiy the path and method, for example `/test/get`.
+* `path` (Required) - Method to apply the throttle settings for. Specfiy the path and method, for example `/test/GET`.
 * `burstLimit` (Optional) - The API request burst limit, the maximum rate limit over a time ranging from one to a few seconds, depending upon whether the underlying token bucket is at its full capacity.
 * `rateLimit` (Optional) - The API request steady-state rate limit.
 
@@ -164,4 +164,4 @@ Using `terraform import`, import AWS API Gateway Usage Plan using the `id`. For 
 % terraform import aws_api_gateway_usage_plan.myusageplan <usage_plan_id>
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-24116054635474bb919fe95d52d6e98ba1ea28094c03b0bd8fe0eab47156f843 -->
+<!-- cache-key: cdktf-0.20.0 input-24116054635474bb919fe95d52d6e98ba1ea28094c03b0bd8fe0eab47156f843 -->

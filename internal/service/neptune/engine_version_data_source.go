@@ -5,7 +5,6 @@ package neptune
 
 import (
 	"context"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
@@ -13,6 +12,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKDataSource("aws_neptune_engine_version")
@@ -23,64 +25,52 @@ func DataSourceEngineVersion() *schema.Resource {
 			"engine": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  "neptune",
+				Default:  engineNeptune,
 			},
-
 			"engine_description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"exportable_log_types": {
 				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
-
 			"parameter_group_family": {
 				Type:     schema.TypeString,
 				Computed: true,
 				Optional: true,
 			},
-
 			"preferred_versions": {
 				Type:          schema.TypeList,
 				Optional:      true,
 				Elem:          &schema.Schema{Type: schema.TypeString},
 				ConflictsWith: []string{"version"},
 			},
-
 			"supported_timezones": {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
-				Set:      schema.HashString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"supports_log_exports_to_cloudwatch": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"supports_read_replica": {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-
 			"valid_upgrade_targets": {
 				Type:     schema.TypeSet,
-				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
-				Set:      schema.HashString,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"version": {
 				Type:          schema.TypeString,
 				Computed:      true,
 				Optional:      true,
 				ConflictsWith: []string{"preferred_versions"},
 			},
-
 			"version_description": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -105,95 +95,91 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 
 	if v, ok := d.GetOk("version"); ok {
 		input.EngineVersion = aws.String(v.(string))
+	} else if _, ok := d.GetOk("preferred_versions"); !ok {
+		input.DefaultOnly = aws.Bool(true)
 	}
 
-	if _, ok := d.GetOk("version"); !ok {
-		if _, ok := d.GetOk("preferred_versions"); !ok {
-			input.DefaultOnly = aws.Bool(true)
-		}
-	}
+	var engineVersion *neptune.DBEngineVersion
+	var err error
+	if preferredVersions := flex.ExpandStringValueList(d.Get("preferred_versions").([]interface{})); len(preferredVersions) > 0 {
+		var engineVersions []*neptune.DBEngineVersion
 
-	log.Printf("[DEBUG] Reading Neptune engine versions: %v", input)
-	var engineVersions []*neptune.DBEngineVersion
+		engineVersions, err = findEngineVersions(ctx, conn, input)
 
-	err := conn.DescribeDBEngineVersionsPagesWithContext(ctx, input, func(resp *neptune.DescribeDBEngineVersionsOutput, lastPage bool) bool {
-		for _, engineVersion := range resp.DBEngineVersions {
-			if engineVersion == nil {
-				continue
+		if err == nil {
+		PreferredVersionLoop:
+			// Return the first matching version.
+			for _, preferredVersion := range preferredVersions {
+				for _, v := range engineVersions {
+					if preferredVersion == aws.StringValue(v.EngineVersion) {
+						engineVersion = v
+						break PreferredVersionLoop
+					}
+				}
 			}
 
-			engineVersions = append(engineVersions, engineVersion)
+			if engineVersion == nil {
+				err = tfresource.NewEmptyResultError(input)
+			}
 		}
+	} else {
+		engineVersion, err = findEngineVersion(ctx, conn, input)
+	}
+
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Neptune Engine Version", err))
+	}
+
+	d.SetId(aws.StringValue(engineVersion.EngineVersion))
+	d.Set("engine", engineVersion.Engine)
+	d.Set("engine_description", engineVersion.DBEngineDescription)
+	d.Set("exportable_log_types", aws.StringValueSlice(engineVersion.ExportableLogTypes))
+	d.Set("parameter_group_family", engineVersion.DBParameterGroupFamily)
+	d.Set("supported_timezones", tfslices.ApplyToAll(engineVersion.SupportedTimezones, func(v *neptune.Timezone) string {
+		return aws.StringValue(v.TimezoneName)
+	}))
+	d.Set("supports_log_exports_to_cloudwatch", engineVersion.SupportsLogExportsToCloudwatchLogs)
+	d.Set("supports_read_replica", engineVersion.SupportsReadReplica)
+	d.Set("valid_upgrade_targets", tfslices.ApplyToAll(engineVersion.ValidUpgradeTarget, func(v *neptune.UpgradeTarget) string {
+		return aws.StringValue(v.EngineVersion)
+	}))
+
+	d.Set("version", engineVersion.EngineVersion)
+	d.Set("version_description", engineVersion.DBEngineVersionDescription)
+
+	return diags
+}
+
+func findEngineVersion(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBEngineVersionsInput) (*neptune.DBEngineVersion, error) {
+	output, err := findEngineVersions(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findEngineVersions(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBEngineVersionsInput) ([]*neptune.DBEngineVersion, error) {
+	var output []*neptune.DBEngineVersion
+
+	err := conn.DescribeDBEngineVersionsPagesWithContext(ctx, input, func(page *neptune.DescribeDBEngineVersionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBEngineVersions {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
 		return !lastPage
 	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Neptune engine versions: %s", err)
+		return nil, err
 	}
 
-	if len(engineVersions) == 0 {
-		return sdkdiag.AppendErrorf(diags, "no Neptune engine versions found")
-	}
-
-	// preferred versions
-	var found *neptune.DBEngineVersion
-	if l := d.Get("preferred_versions").([]interface{}); len(l) > 0 {
-		for _, elem := range l {
-			preferredVersion, ok := elem.(string)
-
-			if !ok {
-				continue
-			}
-
-			for _, engineVersion := range engineVersions {
-				if preferredVersion == aws.StringValue(engineVersion.EngineVersion) {
-					found = engineVersion
-					break
-				}
-			}
-
-			if found != nil {
-				break
-			}
-		}
-	}
-
-	if found == nil && len(engineVersions) > 1 {
-		return sdkdiag.AppendErrorf(diags, "multiple Neptune engine versions (%v) match the criteria", engineVersions)
-	}
-
-	if found == nil && len(engineVersions) == 1 {
-		found = engineVersions[0]
-	}
-
-	if found == nil {
-		return sdkdiag.AppendErrorf(diags, "no Neptune engine versions match the criteria")
-	}
-
-	d.SetId(aws.StringValue(found.EngineVersion))
-
-	d.Set("engine", found.Engine)
-	d.Set("engine_description", found.DBEngineDescription)
-	d.Set("exportable_log_types", found.ExportableLogTypes)
-	d.Set("parameter_group_family", found.DBParameterGroupFamily)
-
-	var timezones []string
-	for _, tz := range found.SupportedTimezones {
-		timezones = append(timezones, aws.StringValue(tz.TimezoneName))
-	}
-	d.Set("supported_timezones", timezones)
-
-	d.Set("supports_log_exports_to_cloudwatch", found.SupportsLogExportsToCloudwatchLogs)
-	d.Set("supports_read_replica", found.SupportsReadReplica)
-
-	var upgradeTargets []string
-	for _, ut := range found.ValidUpgradeTarget {
-		upgradeTargets = append(upgradeTargets, aws.StringValue(ut.EngineVersion))
-	}
-	d.Set("valid_upgrade_targets", upgradeTargets)
-
-	d.Set("version", found.EngineVersion)
-	d.Set("version_description", found.DBEngineVersionDescription)
-
-	return diags
+	return output, nil
 }

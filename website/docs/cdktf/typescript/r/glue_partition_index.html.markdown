@@ -143,8 +143,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10M`)
-* `delete` - (Default `10M`)
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
@@ -168,4 +168,4 @@ Using `terraform import`, import Glue Partition Indexes using the catalog ID (us
 % terraform import aws_glue_partition_index.example 123456789012:MyDatabase:MyTable:index-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-2c1eca414462f36b306c6c36d0f8b45e95a67975829b6e6678f2b74c1376628b -->
+<!-- cache-key: cdktf-0.20.0 input-2c1eca414462f36b306c6c36d0f8b45e95a67975829b6e6678f2b74c1376628b -->

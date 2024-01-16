@@ -241,7 +241,7 @@ The `healthCheck` object supports the following:
 The `tls` object supports the following:
 
 * `certificate` - (Required) Listener's TLS certificate.
-* `mode`- (Required) Listener's TLS mode. Valid values: `disabled`, `permissive`, `strict`.
+* `mode`- (Required) Listener's TLS mode. Valid values: `DISABLED`, `PERMISSIVE`, `STRICT`.
 * `validation`- (Optional) Listener's Transport Layer Security (TLS) validation context.
 
 The `certificate` object supports the following:
@@ -324,4 +324,4 @@ Using `terraform import`, import App Mesh virtual gateway using `meshName` toget
 
 [1]: /docs/providers/aws/index.html
 
-<!-- cache-key: cdktf-0.18.0 input-0f019884935cffb4e15faa186fec437bbd1c1ed08bbdf658cac478d98a5253e8 -->
+<!-- cache-key: cdktf-0.20.0 input-0f019884935cffb4e15faa186fec437bbd1c1ed08bbdf658cac478d98a5253e8 -->

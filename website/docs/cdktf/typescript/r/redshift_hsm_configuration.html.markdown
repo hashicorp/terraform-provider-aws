@@ -56,7 +56,7 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the Hsm Client Certificate.
-* `hsmConfigurationPublicKey` - The public key that the Amazon Redshift cluster will use to connect to the HSM. You must register the public key in the HSM.
+* `hsm_configuration_public_key` - The public key that the Amazon Redshift cluster will use to connect to the HSM. You must register the public key in the HSM.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
@@ -81,4 +81,4 @@ Using `terraform import`, import Redshift HSM Client Certificates using `hsmConf
 % terraform import aws_redshift_hsm_configuration.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bd8a362c2861dd8693c1edee0bfc416d38b5b6843e0fe94fad4b67e8798aa729 -->
+<!-- cache-key: cdktf-0.20.0 input-bd8a362c2861dd8693c1edee0bfc416d38b5b6843e0fe94fad4b67e8798aa729 -->

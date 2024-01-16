@@ -68,9 +68,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `5M`)
-- `update` - (Default `120M`)
-- `delete` - (Default `120M`)
+- `create` - (Default `5m`)
+- `update` - (Default `120m`)
+- `delete` - (Default `120m`)
 
 ## Import
 
@@ -98,4 +98,4 @@ Using `terraform import`, import Kinesis Streams using the `arn`. For example:
 [2]: http://www.iana.org/assignments/media-types/media-types.xhtml
 [3]: https://tools.ietf.org/html/rfc6838#section-4.2
 
-<!-- cache-key: cdktf-0.18.0 input-9e588c14e41b8ac56c1691ef835d73ed6f334b72a8ab742e2478725e27ff938c -->
+<!-- cache-key: cdktf-0.20.0 input-9e588c14e41b8ac56c1691ef835d73ed6f334b72a8ab742e2478725e27ff938c -->

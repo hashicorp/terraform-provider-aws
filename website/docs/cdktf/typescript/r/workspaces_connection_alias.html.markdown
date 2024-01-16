@@ -56,9 +56,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60M`)
-* `update` - (Default `180M`)
-* `delete` - (Default `90M`)
+* `create` - (Default `60m`)
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
 
 ## Import
 
@@ -82,4 +82,4 @@ Using `terraform import`, import WorkSpaces Connection Alias using the connectio
 % terraform import aws_workspaces_connection_alias.example rft-8012925589
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-413fd75316cfeb359e07cefddd821d90ecf5ceabe738b42d92da1fd7d2704797 -->
+<!-- cache-key: cdktf-0.20.0 input-413fd75316cfeb359e07cefddd821d90ecf5ceabe738b42d92da1fd7d2704797 -->

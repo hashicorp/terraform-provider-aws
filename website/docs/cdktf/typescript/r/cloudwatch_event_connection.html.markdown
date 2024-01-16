@@ -195,14 +195,14 @@ This resource supports the following arguments:
 
 * `name` - (Required) The name of the new connection. Maximum of 64 characters consisting of numbers, lower/upper case letters, .,-,_.
 * `description` - (Optional) Enter a description for the connection. Maximum of 512 characters.
-* `authorizationType` - (Required) Choose the type of authorization to use for the connection. One of `apiKey`,`basic`,`oauthClientCredentials`.
+* `authorizationType` - (Required) Choose the type of authorization to use for the connection. One of `API_KEY`,`BASIC`,`OAUTH_CLIENT_CREDENTIALS`.
 * `authParameters` - (Required) Parameters used for authorization. A maximum of 1 are allowed. Documented below.
-* `invocationHttpParameters` - (Optional) Invocation Http Parameters are additional credentials used to sign each Invocation of the ApiDestination created from this Connection. If the ApiDestination Rule Target has additional HttpParameters, the values will be merged together, with the Connection Invocation Http Parameters taking precedence. Secret values are stored and managed by AWS Secrets Manager. A maximum of 1 are allowed. Documented below.
 
 `authParameters` support the following:
 
 * `apiKey` - (Optional) Parameters used for API_KEY authorization. An API key to include in the header for each authentication request. A maximum of 1 are allowed. Conflicts with `basic` and `oauth`. Documented below.
 * `basic` - (Optional) Parameters used for BASIC authorization. A maximum of 1 are allowed. Conflicts with `apiKey` and `oauth`. Documented below.
+* `invocationHttpParameters` - (Optional) Invocation Http Parameters are additional credentials used to sign each Invocation of the ApiDestination created from this Connection. If the ApiDestination Rule Target has additional HttpParameters, the values will be merged together, with the Connection Invocation Http Parameters taking precedence. Secret values are stored and managed by AWS Secrets Manager. A maximum of 1 are allowed. Documented below.
 * `oauth` - (Optional) Parameters used for OAUTH_CLIENT_CREDENTIALS authorization. A maximum of 1 are allowed. Conflicts with `basic` and `apiKey`. Documented below.
 
 `apiKey` support the following:
@@ -270,4 +270,4 @@ Using `terraform import`, import EventBridge EventBridge connection using the `n
 % terraform import aws_cloudwatch_event_connection.test ngrok-connection
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4759efe6af4674649e56020fa0ba96724fe1874dd8ece605bca5846e4d11241e -->
+<!-- cache-key: cdktf-0.20.0 input-6a64e18f1cbb83509a228aa3d7c17d6e961eec87beb305f9c6ec8edf596253a7 -->

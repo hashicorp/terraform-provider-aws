@@ -55,7 +55,7 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `complianceType` - (Optional) Compliance type that the new custom framework supports, such as `cis` or `hipaa`.
+* `complianceType` - (Optional) Compliance type that the new custom framework supports, such as `CIS` or `HIPAA`.
 * `description` - (Optional) Description of the framework.
 * `tags` - (Optional) A map of tags to assign to the framework. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -73,7 +73,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the framework.
-* `controlSets[*]Id` - Unique identifier for the framework control set.
+* `control_sets[*].id` - Unique identifier for the framework control set.
 * `id` - Unique identifier for the framework.
 * `frameworkType` - Framework type, such as a custom framework or a standard framework.
 
@@ -99,4 +99,4 @@ Using `terraform import`, import Audit Manager Framework using the framework `id
 % terraform import aws_auditmanager_framework.example abc123-de45
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-821a948286ad3665c063ce96f7b07cc9d38f2a8d5044bfae6a4c6b6094687367 -->
+<!-- cache-key: cdktf-0.20.0 input-821a948286ad3665c063ce96f7b07cc9d38f2a8d5044bfae6a4c6b6094687367 -->

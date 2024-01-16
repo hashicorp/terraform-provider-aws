@@ -183,7 +183,7 @@ documented below under [statement](#statement).
 Describes how the intent is fulfilled after the user provides all of the information required for the intent.
 
 * `type` - (Required) How the intent should be fulfilled, either by running a Lambda function or by
-returning the slot data to the client application. Type can be either `returnIntent` or `codeHook`, as documented [here](https://docs.aws.amazon.com/lex/latest/dg/API_FulfillmentActivity.html).
+returning the slot data to the client application. Type can be either `ReturnIntent` or `CodeHook`, as documented [here](https://docs.aws.amazon.com/lex/latest/dg/API_FulfillmentActivity.html).
 * `codeHook` - (Optional) A description of the Lambda function that is run to fulfill the intent.
 Required if type is CodeHook. Attributes are documented under [code_hook](#code_hook).
 
@@ -260,9 +260,9 @@ included as an argument because the resource will add it automatically when upda
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `1M`)
-* `update` - (Default `1M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `1m`)
+* `update` - (Default `1m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -286,4 +286,4 @@ Using `terraform import`, import intents using their name. For example:
 % terraform import aws_lex_intent.order_flowers_intent OrderFlowers
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-bc4d0529031c21b9dbe67a57c70be3664c7edf7ad0c0512f13dbf0d1a13356b3 -->
+<!-- cache-key: cdktf-0.20.0 input-bc4d0529031c21b9dbe67a57c70be3664c7edf7ad0c0512f13dbf0d1a13356b3 -->

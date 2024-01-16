@@ -57,7 +57,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `delete` - (Default `10M`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -81,4 +81,4 @@ Using `terraform import`, import Backup vault using the `name`. For example:
 % terraform import aws_backup_vault.test-vault TestVault
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-eca95e815c6165631f5519aecaf60793b9c12d8e7d3bc319cb6177906c2d98c0 -->
+<!-- cache-key: cdktf-0.20.0 input-eca95e815c6165631f5519aecaf60793b9c12d8e7d3bc319cb6177906c2d98c0 -->

@@ -158,7 +158,7 @@ This resource supports the following arguments:
 * `defaultAction` - (Required) Default action block for the default listener rule. Default action blocks are defined below.
 * `name` - (Required, Forces new resource) Name of the listener. A listener name must be unique within a service. Valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.
 * `port` - (Optional, Forces new resource) Listener port. You can specify a value from 1 to 65535. If `port` is not specified and `protocol` is HTTP, the value will default to 80. If `port` is not specified and `protocol` is HTTPS, the value will default to 443.
-* `protocol` - (Required, Forces new resource) Protocol for the listener. Supported values are `http` or `https`
+* `protocol` - (Required, Forces new resource) Protocol for the listener. Supported values are `HTTP` or `HTTPS`
 * `serviceArn` - (Optional) Amazon Resource Name (ARN) of the VPC Lattice service. You must include either the `serviceArn` or `serviceIdentifier` arguments.
 * `serviceIdentifier` - (Optional) ID of the VPC Lattice service. You must include either the `serviceArn` or `serviceIdentifier` arguments.
 -> **NOTE:** You must specify one of the following arguments: `serviceArn` or `serviceIdentifier`.
@@ -168,14 +168,14 @@ This resource supports the following arguments:
 
 Default action blocks (for `defaultAction`) must include at least one of the following argument blocks:
 
-* `fixedResponse` - (Optional) Configuration block for returning a fixed response. See Fixed Response blocks below.
+* `fixed-response` - (Optional) Configuration block for returning a fixed response. See Fixed Response blocks below.
 * `forward` - (Optional) Route requests to one or more target groups. See Forward blocks below.
 
 -> **NOTE:** You must specify exactly one of the following argument blocks: `fixedResponse` or `forward`.
 
 ### Fixed Response
 
-Fixed response blocks (for `fixedResponse`) must include the following argument:
+Fixed response blocks (for `fixed-response`) must include the following argument:
 
 * `statusCode` - (Required) Custom HTTP status code to return, e.g. a 404 response code. See [Listeners](https://docs.aws.amazon.com/vpc-lattice/latest/ug/listeners.html) in the AWS documentation for a list of supported codes.
 
@@ -199,7 +199,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the listener.
 * `createdAt` - Date and time that the listener was created, specified in ISO-8601 format.
-* `listenerId` - Standalone ID of the listener, e.g. `listener0A1B2C3D4E5F6G`.
+* `listenerId` - Standalone ID of the listener, e.g. `listener-0a1b2c3d4e5f6g`.
 * `updatedAt` - Date and time that the listener was last updated, specified in ISO-8601 format.
 
 ## Import
@@ -224,4 +224,4 @@ Using `terraform import`, import VPC Lattice Listener using the `listenerId` of 
 % terraform import aws_vpclattice_listener.example svc-1a2b3c4d/listener-987654321
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e2bae928892603c6e366f96e2b306e1d9cc0375cc0bc9fe47de944099b3dfbab -->
+<!-- cache-key: cdktf-0.20.0 input-e2bae928892603c6e366f96e2b306e1d9cc0375cc0bc9fe47de944099b3dfbab -->

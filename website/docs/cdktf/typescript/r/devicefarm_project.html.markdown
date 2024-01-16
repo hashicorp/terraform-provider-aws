@@ -15,7 +15,7 @@ Provides a resource to manage AWS Device Farm Projects.
 For more information about Device Farm Projects, see the AWS Documentation on
 [Device Farm Projects][aws-get-project].
 
-~> **NOTE:** AWS currently has limited regional support for Device Farm (e.g., `usWest2`). See [AWS Device Farm endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/devicefarm.html) for information on supported regions.
+~> **NOTE:** AWS currently has limited regional support for Device Farm (e.g., `us-west-2`). See [AWS Device Farm endpoints and quotas](https://docs.aws.amazon.com/general/latest/gr/devicefarm.html) for information on supported regions.
 
 ## Example Usage
 
@@ -76,4 +76,4 @@ Using `terraform import`, import DeviceFarm Projects using their ARN. For exampl
 % terraform import aws_devicefarm_project.example arn:aws:devicefarm:us-west-2:123456789012:project:4fa784c7-ccb4-4dbf-ba4f-02198320daa1
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-fea501aea933ca5c661b1980e1f92d94c086b5241762d0510490c8478e31499d -->
+<!-- cache-key: cdktf-0.20.0 input-fea501aea933ca5c661b1980e1f92d94c086b5241762d0510490c8478e31499d -->

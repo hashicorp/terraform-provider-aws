@@ -101,9 +101,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -127,4 +127,4 @@ Using `terraform import`, import an AWS FinSpace Kx User using the `id` (environ
 % terraform import aws_finspace_kx_user.example n3ceo7wqxoxcti5tujqwzs,my-tf-kx-user
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ca0c383fee51cd83230b9fbdc20cbdd865bb1f5eb6633d7d2d1fa7bea216bcb4 -->
+<!-- cache-key: cdktf-0.20.0 input-ca0c383fee51cd83230b9fbdc20cbdd865bb1f5eb6633d7d2d1fa7bea216bcb4 -->

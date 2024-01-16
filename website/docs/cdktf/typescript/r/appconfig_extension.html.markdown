@@ -97,7 +97,7 @@ This resource supports the following arguments:
 
 Defines the actions the extension performs during the AppConfig workflow and at which point those actions are performed. The `actionPoint` configuration block supports the following arguments:
 
-* `point` - (Required) The point at which to perform the defined actions. Valid points are `preCreateHostedConfigurationVersion`, `preStartDeployment`, `onDeploymentStart`, `onDeploymentStep`, `onDeploymentBaking`, `onDeploymentComplete`, `onDeploymentRolledBack`.
+* `point` - (Required) The point at which to perform the defined actions. Valid points are `PRE_CREATE_HOSTED_CONFIGURATION_VERSION`, `PRE_START_DEPLOYMENT`, `ON_DEPLOYMENT_START`, `ON_DEPLOYMENT_STEP`, `ON_DEPLOYMENT_BAKING`, `ON_DEPLOYMENT_COMPLETE`, `ON_DEPLOYMENT_ROLLED_BACK`.
 * `action` - (Required) An action defines the tasks the extension performs during the AppConfig workflow. [Detailed below](#action).
 
 #### `action`
@@ -147,4 +147,4 @@ Using `terraform import`, import AppConfig Extensions using their extension ID. 
 % terraform import aws_appconfig_extension.example 71rxuzt
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-a57e9661c333d971fc98cbdd2a1d95de7a9014d90bd4fdbf0d526c04df1b2f9d -->
+<!-- cache-key: cdktf-0.20.0 input-a57e9661c333d971fc98cbdd2a1d95de7a9014d90bd4fdbf0d526c04df1b2f9d -->

@@ -13,9 +13,9 @@ description: |-
 Provides a resource to manage the default customer master key (CMK) that your AWS account uses to encrypt EBS volumes.
 
 Your AWS account has an AWS-managed default CMK that is used for encrypting an EBS volume when no CMK is specified in the API call that creates the volume.
-By using the `awsEbsDefaultKmsKey` resource, you can specify a customer-managed CMK to use in place of the AWS-managed default CMK.
+By using the `aws_ebs_default_kms_key` resource, you can specify a customer-managed CMK to use in place of the AWS-managed default CMK.
 
-~> **NOTE:** Creating an `awsEbsDefaultKmsKey` resource does not enable default EBS encryption. Use the [`awsEbsEncryptionByDefault`](ebs_encryption_by_default.html) to enable default EBS encryption.
+~> **NOTE:** Creating an `aws_ebs_default_kms_key` resource does not enable default EBS encryption. Use the [`aws_ebs_encryption_by_default`](ebs_encryption_by_default.html) to enable default EBS encryption.
 
 ~> **NOTE:** Destroying this resource will reset the default CMK to the account's AWS-managed default CMK for EBS.
 
@@ -73,4 +73,4 @@ Using `terraform import`, import the EBS default KMS CMK using the KMS key ARN. 
 % terraform import aws_ebs_default_kms_key.example arn:aws:kms:us-east-1:123456789012:key/abcd-1234
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1b6624f3132e4695fc32d40d7c90ec4c11690a7b3a4758236262f116dc876595 -->
+<!-- cache-key: cdktf-0.20.0 input-1b6624f3132e4695fc32d40d7c90ec4c11690a7b3a4758236262f116dc876595 -->

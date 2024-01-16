@@ -12,7 +12,7 @@ description: |-
 
 Provides a workspace in [AWS Workspaces](https://docs.aws.amazon.com/workspaces/latest/adminguide/amazon-workspaces.html) Service
 
-~> **NOTE:** AWS WorkSpaces service requires [`workspacesDefaultRole`](https://docs.aws.amazon.com/workspaces/latest/adminguide/workspaces-access-control.html#create-default-role) IAM role to operate normally.
+~> **NOTE:** AWS WorkSpaces service requires [`workspaces_DefaultRole`](https://docs.aws.amazon.com/workspaces/latest/adminguide/workspaces-access-control.html#create-default-role) IAM role to operate normally.
 
 ## Example Usage
 
@@ -74,9 +74,9 @@ This resource supports the following arguments:
 
 `workspaceProperties` supports the following:
 
-* `computeTypeName` – (Optional) The compute type. For more information, see [Amazon WorkSpaces Bundles](http://aws.amazon.com/workspaces/details/#Amazon_WorkSpaces_Bundles). Valid values are `value`, `standard`, `performance`, `power`, `graphics`, `powerpro`, `graphicspro`, `graphicsG4Dn`, and `graphicsproG4Dn`.
+* `computeTypeName` – (Optional) The compute type. For more information, see [Amazon WorkSpaces Bundles](http://aws.amazon.com/workspaces/details/#Amazon_WorkSpaces_Bundles). Valid values are `VALUE`, `STANDARD`, `PERFORMANCE`, `POWER`, `GRAPHICS`, `POWERPRO`, `GRAPHICSPRO`, `GRAPHICS_G4DN`, and `GRAPHICSPRO_G4DN`.
 * `rootVolumeSizeGib` – (Optional) The size of the root volume.
-* `runningMode` – (Optional) The running mode. For more information, see [Manage the WorkSpace Running Mode](https://docs.aws.amazon.com/workspaces/latest/adminguide/running-mode.html). Valid values are `autoStop` and `alwaysOn`.
+* `runningMode` – (Optional) The running mode. For more information, see [Manage the WorkSpace Running Mode](https://docs.aws.amazon.com/workspaces/latest/adminguide/running-mode.html). Valid values are `AUTO_STOP` and `ALWAYS_ON`.
 * `runningModeAutoStopTimeoutInMinutes` – (Optional) The time after a user logs off when WorkSpaces are automatically stopped. Configured in 60-minute intervals.
 * `userVolumeSizeGib` – (Optional) The size of the user storage.
 
@@ -94,9 +94,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `30M`)
-- `update` - (Default `10M`)
-- `delete` - (Default `10M`)
+- `create` - (Default `30m`)
+- `update` - (Default `10m`)
+- `delete` - (Default `10m`)
 
 ## Import
 
@@ -120,4 +120,4 @@ Using `terraform import`, import Workspaces using their ID. For example:
 % terraform import aws_workspaces_workspace.example ws-9z9zmbkhv
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-574adeff5bd705e5554426bab9884c262aeb7fe0041d5694569aac9e50fca556 -->
+<!-- cache-key: cdktf-0.20.0 input-574adeff5bd705e5554426bab9884c262aeb7fe0041d5694569aac9e50fca556 -->

@@ -31,9 +31,8 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         Route(self, "r",
-            depends_on=[testing],
             destination_cidr_block="10.0.1.0/22",
-            route_table_id="rtb-4fbb3ac4",
+            route_table_id=testing.id,
             vpc_peering_connection_id="pcx-45ff3dc1"
         )
 ```
@@ -172,4 +171,4 @@ Import a route in route table `rtb-656C65616E6F72` with a managed prefix list de
 % terraform import aws_route.my_route rtb-656C65616E6F72_pl-0570a1d2d725c16be
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-53c7f6fd35f56da19c62820b7371f087d7dfdcf3dc6ba0a873a118f63167b0a4 -->
+<!-- cache-key: cdktf-0.20.0 input-acd7ced5ea391aca7fec001fb7ccca36d5b1b371d3a058994f80e01a34a00681 -->

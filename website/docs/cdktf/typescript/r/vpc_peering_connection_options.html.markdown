@@ -175,7 +175,7 @@ This resource supports the following arguments:
 
 #### Accepter and Requester Arguments
 
--> **Note:** When enabled, the DNS resolution feature requires that VPCs participating in the peering must have support for the DNS hostnames enabled. This can be done using the [`enableDnsHostnames`](vpc.html#enable_dns_hostnames) attribute in the [`awsVpc`](vpc.html) resource. See [Using DNS with Your VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-dns.html) user guide for more information.
+-> **Note:** When enabled, the DNS resolution feature requires that VPCs participating in the peering must have support for the DNS hostnames enabled. This can be done using the [`enableDnsHostnames`](vpc.html#enable_dns_hostnames) attribute in the [`aws_vpc`](vpc.html) resource. See [Using DNS with Your VPC](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/vpc-dns.html) user guide for more information.
 
 * `allowRemoteVpcDnsResolution` - (Optional) Allow a local VPC to resolve public DNS hostnames to private IP addresses when queried from instances in the peer VPC.
 
@@ -207,4 +207,4 @@ Using `terraform import`, import VPC Peering Connection Options using the VPC pe
 % terraform import aws_vpc_peering_connection_options.foo pcx-111aaa111
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-0062ec18a4f742aa15c04ce7c0dc2438cb0c8699001025a2f42368b3d237e0ac -->
+<!-- cache-key: cdktf-0.20.0 input-0062ec18a4f742aa15c04ce7c0dc2438cb0c8699001025a2f42368b3d237e0ac -->

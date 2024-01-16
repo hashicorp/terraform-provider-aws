@@ -69,7 +69,7 @@ This resource supports the following arguments:
 This argument supports the following arguments:
 
 * `sendingPoolName` - (Optional) The name of the dedicated IP pool to associate with the configuration set.
-* `tlsPolicy` - (Optional) Specifies whether messages that use the configuration set are required to use Transport Layer Security (TLS). Valid values: `require`, `optional`.
+* `tlsPolicy` - (Optional) Specifies whether messages that use the configuration set are required to use Transport Layer Security (TLS). Valid values: `REQUIRE`, `OPTIONAL`.
 
 ### reputation_options
 
@@ -85,7 +85,7 @@ This argument supports the following arguments:
 
 ### suppression_options
 
-* `suppressedReasons` - (Optional) A list that contains the reasons that email addresses are automatically added to the suppression list for your account. Valid values: `bounce`, `complaint`.
+* `suppressedReasons` - (Optional) A list that contains the reasons that email addresses are automatically added to the suppression list for your account. Valid values: `BOUNCE`, `COMPLAINT`.
 
 ### tracking_options
 
@@ -98,11 +98,11 @@ This argument supports the following arguments:
 
 ### dashboard_options
 
-* `engagementMetrics` - (Optional) Specifies the status of your VDM engagement metrics collection. Valid values: `enabled`, `disabled`.
+* `engagementMetrics` - (Optional) Specifies the status of your VDM engagement metrics collection. Valid values: `ENABLED`, `DISABLED`.
 
 ### guardian_options
 
-* `optimizedSharedDelivery` - (Optional) Specifies the status of your VDM optimized shared delivery. Valid values: `enabled`, `disabled`.
+* `optimizedSharedDelivery` - (Optional) Specifies the status of your VDM optimized shared delivery. Valid values: `ENABLED`, `DISABLED`.
 
 ## Attribute Reference
 
@@ -134,4 +134,4 @@ Using `terraform import`, import SESv2 (Simple Email V2) Configuration Set using
 % terraform import aws_sesv2_configuration_set.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-10e28775dfdb49d09b8bd0c0f6dc69fead8aab4b14b0a6b4b6476ac6de7c155d -->
+<!-- cache-key: cdktf-0.20.0 input-10e28775dfdb49d09b8bd0c0f6dc69fead8aab4b14b0a6b4b6476ac6de7c155d -->

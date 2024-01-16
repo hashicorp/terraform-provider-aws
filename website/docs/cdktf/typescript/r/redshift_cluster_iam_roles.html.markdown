@@ -12,7 +12,7 @@ description: |-
 
 Provides a Redshift Cluster IAM Roles resource.
 
-~> **NOTE:** A Redshift cluster's default IAM role can be managed both by this resource's `defaultIamRoleArn` argument and the [`awsRedshiftCluster`](redshift_cluster.html) resource's `defaultIamRoleArn` argument. Do not configure different values for both arguments. Doing so will cause a conflict of default IAM roles.
+~> **NOTE:** A Redshift cluster's default IAM role can be managed both by this resource's `defaultIamRoleArn` argument and the [`aws_redshift_cluster`](redshift_cluster.html) resource's `defaultIamRoleArn` argument. Do not configure different values for both arguments. Doing so will cause a conflict of default IAM roles.
 
 ## Example Usage
 
@@ -75,4 +75,4 @@ Using `terraform import`, import Redshift Cluster IAM Roless using the `clusterI
 % terraform import aws_redshift_cluster_iam_roles.examplegroup1 example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-91240022530f469d269e463be72eba257c8ec52cf957eb83d56ddf8c04d98dc9 -->
+<!-- cache-key: cdktf-0.20.0 input-91240022530f469d269e463be72eba257c8ec52cf957eb83d56ddf8c04d98dc9 -->

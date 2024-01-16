@@ -86,9 +86,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -112,4 +112,4 @@ Using `terraform import`, import Transcribe Vocabulary using the `vocabularyName
 % terraform import aws_transcribe_vocabulary.example example-name
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-4a63881191c0f51840ddf42c0326273b5b41ebbdda248795a18439aec52f460c -->
+<!-- cache-key: cdktf-0.20.0 input-4a63881191c0f51840ddf42c0326273b5b41ebbdda248795a18439aec52f460c -->

@@ -159,9 +159,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `5M`)
-* `update` - (Default `5M`)
-* `delete` - (Default `5M`)
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -185,4 +185,4 @@ Using `terraform import`, import a QuickSight Theme using the AWS account ID and
 % terraform import aws_quicksight_theme.example 123456789012,example-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-aa652dec5ece740b9a748611a9a30b95144c3c47e65363b38cd20d01eab3af22 -->
+<!-- cache-key: cdktf-0.20.0 input-aa652dec5ece740b9a748611a9a30b95144c3c47e65363b38cd20d01eab3af22 -->

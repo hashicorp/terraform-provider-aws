@@ -12,7 +12,7 @@ description: |-
 
 Provides a SageMaker Project resource.
 
- -> Note: If you are trying to use SageMaker projects with SageMaker studio you will need to add a tag with the key `sagemaker:studioVisibility` with value `true`. For more on requirements to use projects and permission needed see [AWS Docs](https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-projects-templates-custom.html).
+ -> Note: If you are trying to use SageMaker projects with SageMaker studio you will need to add a tag with the key `sagemaker:studio-visibility` with value `true`. For more on requirements to use projects and permission needed see [AWS Docs](https://docs.aws.amazon.com/sagemaker/latest/dg/sagemaker-projects-templates-custom.html).
 
 ## Example Usage
 
@@ -91,4 +91,4 @@ Using `terraform import`, import SageMaker Projects using the `projectName`. For
 % terraform import aws_sagemaker_project.example example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-5d67b37f736cf104db6893c21c2531fd0183fe8f2dd008b379c345da42e3802b -->
+<!-- cache-key: cdktf-0.20.0 input-5d67b37f736cf104db6893c21c2531fd0183fe8f2dd008b379c345da42e3802b -->

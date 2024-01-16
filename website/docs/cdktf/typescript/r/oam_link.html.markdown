@@ -66,9 +66,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `1M`)
-* `update` - (Default `1M`)
-* `delete` - (Default `1M`)
+* `create` - (Default `1m`)
+* `update` - (Default `1m`)
+* `delete` - (Default `1m`)
 
 ## Import
 
@@ -92,4 +92,4 @@ Using `terraform import`, import CloudWatch Observability Access Manager Link us
 % terraform import aws_oam_link.example arn:aws:oam:us-west-2:123456789012:link/link-id
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ff78965c47d628d5cd420e2503ed25c914c1d4493bc3eefc1a9e530ca1d58967 -->
+<!-- cache-key: cdktf-0.20.0 input-ff78965c47d628d5cd420e2503ed25c914c1d4493bc3eefc1a9e530ca1d58967 -->

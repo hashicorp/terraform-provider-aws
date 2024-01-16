@@ -29,6 +29,7 @@ class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
     new Cloud9EnvironmentEc2(this, "example", {
+      imageId: "amazonlinux-2023-x86_64",
       instanceType: "t2.micro",
       name: "example-env",
     });
@@ -128,17 +129,21 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) The name of the environment.
-* `instanceType` - (Required) The type of instance to connect to the environment, e.g., `t2Micro`.
+* `instanceType` - (Required) The type of instance to connect to the environment, e.g., `t2.micro`.
+* `imageId` - (Required) The identifier for the Amazon Machine Image (AMI) that's used to create the EC2 instance. Valid values are
+    * `amazonlinux-1-x86_64`
+    * `amazonlinux-2-x86_64`
+    * `amazonlinux-2023-x86_64`
+    * `ubuntu-18.04-x86_64`
+    * `ubuntu-22.04-x86_64`
+    * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-1-x86_64`
+    * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2-x86_64`
+    * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux-2023-x86_64`
+    * `resolve:ssm:/aws/service/cloud9/amis/ubuntu-18.04-x86_64`
+    * `resolve:ssm:/aws/service/cloud9/amis/ubuntu-22.04-x86_64`
 * `automaticStopTimeMinutes` - (Optional) The number of minutes until the running instance is shut down after the environment has last been used.
-* `connectionType` - (Optional) The connection type used for connecting to an Amazon EC2 environment. Valid values are `connectSsh` and `connectSsm`. For more information please refer [AWS documentation for Cloud9](https://docs.aws.amazon.com/cloud9/latest/user-guide/ec2-ssm.html).
+* `connectionType` - (Optional) The connection type used for connecting to an Amazon EC2 environment. Valid values are `CONNECT_SSH` and `CONNECT_SSM`. For more information please refer [AWS documentation for Cloud9](https://docs.aws.amazon.com/cloud9/latest/user-guide/ec2-ssm.html).
 * `description` - (Optional) The description of the environment.
-* `imageId` - (Optional) The identifier for the Amazon Machine Image (AMI) that's used to create the EC2 instance. Valid values are
-    * `amazonlinux1X8664`
-    * `amazonlinux2X8664`
-    * `ubuntu1804X8664`
-    * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux1X8664`
-    * `resolve:ssm:/aws/service/cloud9/amis/amazonlinux2X8664`
-    * `resolve:ssm:/aws/service/cloud9/amis/ubuntu1804X8664`
 * `ownerArn` - (Optional) The ARN of the environment owner. This can be ARN of any AWS IAM principal. Defaults to the environment's creator.
 * `subnetId` - (Optional) The ID of the subnet in Amazon VPC that AWS Cloud9 will use to communicate with the Amazon EC2 instance.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -150,6 +155,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The ID of the environment.
 * `arn` - The ARN of the environment.
 * `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-* `type` - The type of the environment (e.g., `ssh` or `ec2`)
+* `type` - The type of the environment (e.g., `ssh` or `ec2`).
 
-<!-- cache-key: cdktf-0.18.0 input-2a58beb0c3fd4ea15dc0631954b304204f380a8a3544afa37851d017826b09cc -->
+<!-- cache-key: cdktf-0.20.0 input-0be6df5cef8a430f287883ab12bb10a284a2fdea28cb4d94bc8569901fcc42d6 -->

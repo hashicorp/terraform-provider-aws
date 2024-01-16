@@ -14,7 +14,7 @@ Provides a resource to create an EventBridge resource policy to support cross-ac
 
 ~> **Note:** EventBridge was formerly known as CloudWatch Events. The functionality is identical.
 
-~> **Note:** The EventBridge bus policy resource  (`awsCloudwatchEventBusPolicy`) is incompatible with the EventBridge permission resource (`awsCloudwatchEventPermission`) and will overwrite permissions.
+~> **Note:** The EventBridge bus policy resource  (`aws_cloudwatch_event_bus_policy`) is incompatible with the EventBridge permission resource (`aws_cloudwatch_event_permission`) and will overwrite permissions.
 
 ## Example Usage
 
@@ -238,4 +238,4 @@ Using `terraform import`, import an EventBridge policy using the `eventBusName`.
 % terraform import aws_cloudwatch_event_bus_policy.DevAccountAccess example-event-bus
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-169b2e45e0cb69c0e508149ef8eef91ea77e8a9d2a0a5c4ea7af58d28ac95866 -->
+<!-- cache-key: cdktf-0.20.0 input-169b2e45e0cb69c0e508149ef8eef91ea77e8a9d2a0a5c4ea7af58d28ac95866 -->
