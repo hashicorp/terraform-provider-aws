@@ -43,3 +43,19 @@ func statusIndexAvailability(ctx context.Context, conn *qbusiness.QBusiness, ind
 		return output, aws.StringValue(output.Status), nil
 	}
 }
+
+func statusRetrieverAvailability(ctx context.Context, conn *qbusiness.QBusiness, retriever_id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindRetrieverByID(ctx, conn, retriever_id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}

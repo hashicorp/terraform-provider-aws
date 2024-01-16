@@ -89,3 +89,41 @@ func waitIndexDeleted(ctx context.Context, conn *qbusiness.QBusiness, index_id s
 	}
 	return nil, err
 }
+
+func waitRetrieverCreated(ctx context.Context, conn *qbusiness.QBusiness, retriever_id string, timeout time.Duration) (*qbusiness.GetRetrieverOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{qbusiness.RetrieverStatusCreating},
+		Target:     []string{qbusiness.RetrieverStatusActive},
+		Refresh:    statusRetrieverAvailability(ctx, conn, retriever_id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*qbusiness.GetRetrieverOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status)))
+
+		return output, err
+	}
+	return nil, err
+}
+
+func waitRetrieverDeleted(ctx context.Context, conn *qbusiness.QBusiness, retriever_id string, timeout time.Duration) (*qbusiness.GetRetrieverOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{qbusiness.RetrieverStatusActive},
+		Target:     []string{},
+		Refresh:    statusRetrieverAvailability(ctx, conn, retriever_id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*qbusiness.GetRetrieverOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status)))
+
+		return output, err
+	}
+	return nil, err
+}
