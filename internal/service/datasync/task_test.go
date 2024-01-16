@@ -132,6 +132,13 @@ func TestAccDataSyncTask_schedule(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "schedule.0.schedule_expression", "cron(0 12 ? * SUN,MON *)"),
 				),
 			},
+			{
+				Config: testAccTaskConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskExists(ctx, resourceName, &task1),
+					resource.TestCheckResourceAttr(resourceName, "schedule.#", "0"),
+				),
+			},
 		},
 	})
 }
