@@ -141,6 +141,18 @@ func ValidAccountID(v interface{}, k string) (ws []string, errors []error) {
 	return
 }
 
+func ValidBase64String(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if !IsBase64Encoded([]byte(value)) {
+		errors = append(errors, fmt.Errorf(
+			"%q (%q) must be base64-encoded",
+			k, value))
+	}
+
+	return
+}
+
 // ValidCIDRNetworkAddress ensures that the string value is a valid CIDR that
 // represents a network address - it adds an error otherwise
 func ValidCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
