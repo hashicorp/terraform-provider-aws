@@ -305,6 +305,8 @@ func TestAccEKSAddon_configurationValues(t *testing.T) {
 	resourceName := "aws_eks_addon.test"
 	configurationValues := "{\"env\": {\"WARM_ENI_TARGET\":\"2\",\"ENABLE_POD_ENI\":\"true\"},\"resources\": {\"limits\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"}}}"
 	updateConfigurationValues := "{\"env\": {\"WARM_ENI_TARGET\":\"2\",\"ENABLE_POD_ENI\":\"true\"},\"resources\": {\"limits\":{\"cpu\":\"200m\",\"memory\":\"150Mi\"},\"requests\":{\"cpu\":\"200m\",\"memory\":\"150Mi\"}}}"
+	trailingNewlineConfigurationValues := "{\"env\": {\"WARM_ENI_TARGET\":\"2\",\"ENABLE_POD_ENI\":\"true\"},\"resources\": {\"limits\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"},\"requests\":{\"cpu\":\"100m\",\"memory\":\"100Mi\"}}}\\n"
+	yamlConfigurationValues := "controller:\\r\\n  podAnnotations:\\r\\n    fluentbit.io/exclude: \\\"true\\"
 	emptyConfigurationValues := "{}"
 	invalidConfigurationValues := "{\"env\": {\"INVALID_FIELD\":\"2\"}}"
 	addonName := "vpc-cni"
@@ -321,6 +323,20 @@ func TestAccEKSAddon_configurationValues(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAddonExists(ctx, resourceName, &addon),
 					resource.TestCheckResourceAttr(resourceName, "configuration_values", configurationValues),
+				),
+			},
+			{
+				Config: testAccAddonConfig_configurationValues(rName, addonName, addonVersion, trailingNewlineConfigurationValues, string(types.ResolveConflictsOverwrite)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAddonExists(ctx, resourceName, &addon),
+					resource.TestCheckResourceAttr(resourceName, "configuration_values", configurationValues),
+				),
+			},
+			{
+				Config: testAccAddonConfig_configurationValues(rName, addonName, addonVersion, yamlConfigurationValues, string(types.ResolveConflictsOverwrite)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAddonExists(ctx, resourceName, &addon),
+					resource.TestCheckResourceAttr(resourceName, "configuration_values", yamlConfigurationValues),
 				),
 			},
 			{

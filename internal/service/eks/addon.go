@@ -189,7 +189,7 @@ func resourceAddonCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		//
 		// Addon resource is tainted after failed creation, thus will be deleted and created again.
 		// Re-creating like this will resolve the error, but it will also purge any
-		// configurations that were applied by the user (that were conflicting). This might we an unwanted
+		// configurations that were applied by the user (that were conflicting). This might be an unwanted
 		// side effect and should be left for the user to decide how to handle it.
 		diags = sdkdiag.AppendErrorf(diags, "waiting for EKS Add-On (%s) create: %s", d.Id(), err)
 		return sdkdiag.AppendWarningf(diags, "Running terraform apply again will remove the kubernetes add-on and attempt to create it again effectively purging previous add-on configuration")
@@ -223,7 +223,7 @@ func resourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("addon_version", addon.AddonVersion)
 	d.Set("arn", addon.AddonArn)
 	d.Set("cluster_name", addon.ClusterName)
-	d.Set("configuration_values", addon.ConfigurationValues)
+	d.Set("configuration_values", strings.TrimSuffix(aws.ToString(addon.ConfigurationValues), `\n`))
 	d.Set("created_at", aws.ToTime(addon.CreatedAt).Format(time.RFC3339))
 	d.Set("modified_at", aws.ToTime(addon.ModifiedAt).Format(time.RFC3339))
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
@@ -254,7 +254,7 @@ func resourceAddonUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if d.HasChange("configuration_values") {
-			input.ConfigurationValues = aws.String(d.Get("configuration_values").(string))
+			input.ConfigurationValues = aws.String(strings.TrimSuffix(d.Get("configuration_values").(string), `\n`))
 		}
 
 		var conflictResolutionAttr string
