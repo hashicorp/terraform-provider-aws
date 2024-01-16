@@ -188,10 +188,6 @@ func TestAccSecretsManagerSecretVersion_Disappears_secret(t *testing.T) {
 	})
 }
 
-/*
-
-	Need to handle 'AWSPREVIOUS' better.
-
 func TestAccSecretsManagerSecretVersion_multipleVersions(t *testing.T) {
 	ctx := acctest.Context(t)
 	var version1, version2, version3 secretsmanager.GetSecretValueOutput
@@ -212,19 +208,19 @@ func TestAccSecretsManagerSecretVersion_multipleVersions(t *testing.T) {
 					testAccCheckSecretVersionExists(ctx, resource1Name, &version1),
 					resource.TestCheckResourceAttr(resource1Name, "version_stages.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resource1Name, "version_stages.*", "one"),
-					testAccCheckSecretVersionExists(ctx, resource1Name, &version2),
+					testAccCheckSecretVersionExists(ctx, resource2Name, &version2),
 					resource.TestCheckResourceAttr(resource2Name, "version_stages.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resource2Name, "version_stages.*", "two"),
-					resource.TestCheckTypeSetElemAttr(resource2Name, "version_stages.*", "AWSCURRENT"),
-					testAccCheckSecretVersionExists(ctx, resource1Name, &version3),
-					resource.TestCheckResourceAttr(resource3Name, "version_stages.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resource2Name, "version_stages.*", "2"),
+					testAccCheckSecretVersionExists(ctx, resource3Name, &version3),
+					resource.TestCheckResourceAttr(resource3Name, "version_stages.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resource3Name, "version_stages.*", "three"),
+					resource.TestCheckTypeSetElemAttr(resource3Name, "version_stages.*", "AWSCURRENT"),
 				),
 			},
 		},
 	})
 }
-*/
 
 func testAccCheckSecretVersionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -245,7 +241,7 @@ func testAccCheckSecretVersionDestroy(ctx context.Context) resource.TestCheckFun
 				return err
 			}
 
-			if len(output.VersionStages) == 0 || (len(output.VersionStages) == 1 && output.VersionStages[0] == "AWSCURRENT") {
+			if len(output.VersionStages) == 0 || (len(output.VersionStages) == 1 && (output.VersionStages[0] == "AWSCURRENT" || output.VersionStages[0] == "AWSPREVIOUS")) {
 				continue
 			}
 
@@ -348,7 +344,6 @@ resource "aws_secretsmanager_secret_version" "test" {
 `, rName)
 }
 
-/*
 func testAccSecretVersionConfig_multipleVersions(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
@@ -360,21 +355,32 @@ resource "aws_secretsmanager_secret_version" "test1" {
   secret_string = "test1"
 
   version_stages = ["one"]
+
+  lifecycle {
+    ignore_changes = [version_stages] # "AWSPREVIOUS"
+  }
 }
 
 resource "aws_secretsmanager_secret_version" "test2" {
   secret_id     = aws_secretsmanager_secret.test.id
   secret_string = "test2"
 
-  version_stages = ["two", "AWSCURRENT"]
+  version_stages = ["two", "2"]
+
+  depends_on  = [aws_secretsmanager_secret_version.test1]
+
+  lifecycle {
+    ignore_changes = [version_stages] # "AWSPREVIOUS"
+  }
 }
 
 resource "aws_secretsmanager_secret_version" "test3" {
   secret_id     = aws_secretsmanager_secret.test.id
   secret_string = "test3"
 
-  version_stages = ["three"]
+  version_stages = ["three", "AWSCURRENT"]
+
+  depends_on  = [aws_secretsmanager_secret_version.test2]
 }
 `, rName)
 }
-*/
