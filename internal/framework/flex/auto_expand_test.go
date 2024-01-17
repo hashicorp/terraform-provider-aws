@@ -464,7 +464,7 @@ func TestExpandGeneric(t *testing.T) {
 		{
 			TestName: "map string",
 			Source: &TestFlexTF11{
-				FieldInner: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+				FieldInner: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
 					"x": types.StringValue("y"),
 				}),
 			},
@@ -537,7 +537,7 @@ func TestExpandGeneric(t *testing.T) {
 			TestName: "nested string map",
 			Source: &TestFlexTF14{
 				FieldOuter: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF11{
-					FieldInner: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+					FieldInner: fwtypes.NewMapValueOfMust[basetypes.StringValue](ctx, map[string]attr.Value{
 						"x": types.StringValue("y"),
 					}),
 				}),
@@ -744,7 +744,7 @@ func TestExpandGeneric(t *testing.T) {
 						},
 					}),
 				}),
-				SessionAttributes: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+				SessionAttributes: fwtypes.NewMapValueOfMust[basetypes.StringValue](ctx, map[string]attr.Value{
 					"x": basetypes.NewStringValue("y"),
 				}),
 			},
