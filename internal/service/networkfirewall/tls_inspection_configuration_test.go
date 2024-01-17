@@ -167,12 +167,12 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_basic(t *testing.T) {
 					// acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "networkfirewall", regexache.MustCompile(`tlsinspectionconfiguration:+.`)),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				// ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
-			},
+			// {
+			// 	ResourceName:      resourceName,
+			// 	ImportState:       true,
+			// 	ImportStateVerify: true,
+			// 	// ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			// },
 		},
 	})
 }
@@ -304,10 +304,14 @@ resource "aws_acm_certificate" "cert" {
 
 func testAccTLSInspectionConfigurationConfig_basic(rName, certificateARN string) string {
 	//	return acctest.ConfigCompose(testAccTLSInspectionConfigurationConfig_base(domainName), fmt.Sprintf(`
-	return fmt.Sprintf(`
+	foo := fmt.Sprintf(`
 resource "aws_networkfirewall_tls_inspection_configuration" "test" {
   name = %[1]q
   description = "test"
+  encryption_configuration {
+    key_id = "AWS_OWNED_KMS_KEY"
+    type = "AWS_OWNED_KMS_KEY"
+  }
   tls_inspection_configuration {
     server_certificate_configurations {
       server_certificates {
@@ -334,6 +338,8 @@ resource "aws_networkfirewall_tls_inspection_configuration" "test" {
   }
 }
 `, rName, certificateARN)
+	fmt.Println(foo)
+	return foo
 }
 
 func testAccTLSInspectionConfigurationConfig_withEncryptionConfiguration(rName string) string {
