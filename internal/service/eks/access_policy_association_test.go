@@ -120,7 +120,6 @@ func testAccCheckAccessPolicyAssociationDestroy(ctx context.Context) resource.Te
 }
 
 func testAccCheckAccessPolicyAssociationExists(ctx context.Context, name string, associatedaccesspolicy *types.AssociatedAccessPolicy) resource.TestCheckFunc {
-
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {

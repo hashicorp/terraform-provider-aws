@@ -117,7 +117,6 @@ func testAccCheckAccessEntryDestroy(ctx context.Context) resource.TestCheckFunc 
 }
 
 func testAccCheckAccessEntryExists(ctx context.Context, name string, accessentry *types.AccessEntry) resource.TestCheckFunc {
-
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
