@@ -21,6 +21,13 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
+			Factory: newResourceApplication,
+			Name:    "Application",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory: newResourceEnvironment,
 			Name:    "Environment",
 			Tags: &types.ServicePackageResourceTags{
