@@ -9,9 +9,10 @@ import (
 
 func Diagnostic(in *tfprotov5.Diagnostic) (*tfplugin5.Diagnostic, error) {
 	diag := &tfplugin5.Diagnostic{
-		Severity: Diagnostic_Severity(in.Severity),
-		Summary:  forceValidUTF8(in.Summary),
-		Detail:   forceValidUTF8(in.Detail),
+		Severity:         Diagnostic_Severity(in.Severity),
+		Summary:          forceValidUTF8(in.Summary),
+		Detail:           forceValidUTF8(in.Detail),
+		FunctionArgument: in.FunctionArgument,
 	}
 	if in.Attribute != nil {
 		attr, err := AttributePath(in.Attribute)

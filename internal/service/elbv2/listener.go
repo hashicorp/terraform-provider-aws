@@ -480,7 +480,7 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	// Tags are not supported on creation with some load balancer types (i.e. Gateway)
 	// Retry creation without tags
-	if input.Tags != nil && tfawserr.ErrMessageContains(err, ErrValidationError, TagsOnCreationErrMessage) {
+	if input.Tags != nil && tfawserr.ErrMessageContains(err, errCodeValidationError, tagsOnCreationErrMessage) {
 		input.Tags = nil
 
 		output, err = retryListenerCreate(ctx, conn, input, d.Timeout(schema.TimeoutCreate))
@@ -918,17 +918,22 @@ func expandMutualAuthenticationAttributes(l []interface{}) *elbv2.MutualAuthenti
 		return nil
 	}
 
-	mode := tfMap["mode"].(string)
-	if mode == mutualAuthenticationOff {
+	switch mode := tfMap["mode"].(string); mode {
+	case mutualAuthenticationOff:
 		return &elbv2.MutualAuthenticationAttributes{
 			Mode: aws.String(mode),
 		}
-	}
-
-	return &elbv2.MutualAuthenticationAttributes{
-		Mode:                          aws.String(mode),
-		TrustStoreArn:                 aws.String(tfMap["trust_store_arn"].(string)),
-		IgnoreClientCertificateExpiry: aws.Bool(tfMap["ignore_client_certificate_expiry"].(bool)),
+	case mutualAuthenticationPassthrough:
+		return &elbv2.MutualAuthenticationAttributes{
+			Mode:          aws.String(mode),
+			TrustStoreArn: aws.String(tfMap["trust_store_arn"].(string)),
+		}
+	default:
+		return &elbv2.MutualAuthenticationAttributes{
+			Mode:                          aws.String(mode),
+			TrustStoreArn:                 aws.String(tfMap["trust_store_arn"].(string)),
+			IgnoreClientCertificateExpiry: aws.Bool(tfMap["ignore_client_certificate_expiry"].(bool)),
+		}
 	}
 }
 

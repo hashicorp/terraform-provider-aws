@@ -36,6 +36,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Bot Version",
 		},
 		{
+			Factory: newResourceIntent,
+			Name:    "Intent",
+		},
+		{
 			Factory: newResourceSlot,
 			Name:    "Slot",
 		},

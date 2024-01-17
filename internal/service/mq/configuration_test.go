@@ -9,13 +9,13 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/mq"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMQConfiguration_basic(t *testing.T) {
@@ -26,10 +26,10 @@ func TestAccMQConfiguration_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -75,10 +75,10 @@ func TestAccMQConfiguration_withActiveMQData(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -111,10 +111,10 @@ func TestAccMQConfiguration_withActiveMQLdapData(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -148,10 +148,10 @@ func TestAccMQConfiguration_withRabbitMQData(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -185,10 +185,10 @@ func TestAccMQConfiguration_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -233,11 +233,7 @@ func testAccCheckConfigurationExists(ctx context.Context, n string) resource.Tes
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No MQ Configuration ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MQClient(ctx)
 
 		_, err := tfmq.FindConfigurationByID(ctx, conn, rs.Primary.ID)
 

@@ -279,12 +279,12 @@ func testAccCheckVolumeAttachmentDestroy(ctx context.Context) resource.TestCheck
 
 func testAccVolumeAttachmentInstanceOnlyBaseConfig(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   availability_zone = data.aws_availability_zones.available.names[0]
   instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
 
