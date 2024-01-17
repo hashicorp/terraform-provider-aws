@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -133,6 +134,54 @@ func TestAccSecretsManagerSecretVersion_versionStages(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSecretsManagerSecretVersion_versionStagesExternalUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var version secretsmanager.GetSecretValueOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_secretsmanager_secret_version.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSecretVersionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSecretVersionConfig_stagesSingle(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, resourceName, &version),
+					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
+					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "one"),
+				),
+			},
+			{
+				PreConfig: func() {
+					conn := acctest.Provider.Meta().(*conns.AWSClient).SecretsManagerClient(ctx)
+
+					_, err := conn.PutSecretValue(ctx, &secretsmanager.PutSecretValueInput{
+						SecretId:     version.ARN,
+						SecretString: aws.String("external_update"),
+					})
+
+					if err != nil {
+						t.Fatalf("externally updating Secrets Manager Secret Version: %s", err)
+					}
+				},
+				Config: testAccSecretVersionConfig_stagesSingle(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSecretVersionExists(ctx, resourceName, &version),
+					resource.TestCheckResourceAttr(resourceName, "secret_string", "test-string"),
+					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "one"),
+				),
 			},
 		},
 	})
