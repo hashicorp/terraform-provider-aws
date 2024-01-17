@@ -15,7 +15,7 @@ Access Entry Policy Association for an EKS Cluster.
 ```terraform
 resource "aws_eks_access_policy_association" "example" {
   cluster_name     = aws_eks_cluster.example.name
-  policy_arn       = aws.iam_role.policy.arn
+  policy_arn       = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
   principal_arn    = aws_iam_role.example.arn
   access_scope = {
     type       = "namespace"
