@@ -43,7 +43,7 @@ func statusIndexAvailability(ctx context.Context, conn *qbusiness.Client, index_
 	}
 }
 
-func statusRetrieverAvailability(ctx context.Context, conn *qbusiness.QBusiness, retriever_id string) retry.StateRefreshFunc {
+func statusRetrieverAvailability(ctx context.Context, conn *qbusiness.Client, retriever_id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindRetrieverByID(ctx, conn, retriever_id)
 
@@ -55,6 +55,6 @@ func statusRetrieverAvailability(ctx context.Context, conn *qbusiness.QBusiness,
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }

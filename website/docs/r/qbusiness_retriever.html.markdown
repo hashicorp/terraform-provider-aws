@@ -16,11 +16,8 @@ Provides a Q Business Retriever resource.
 resource "aws_qbusiness_retriever" "example" {
   application_id = "aws_qbusiness_app.test.application_id"
   display_name   = "Retriever display name"
-  type           = "NATIVE_INDEX"
-  configuration {
-    native_index_configuration {
-      index_id = aws_qbusiness_index.test.index_id
-    }
+  native_index_configuration {
+    index_id = aws_qbusiness_index.test.index_id
   }
 }
 ```
@@ -31,14 +28,9 @@ This resource supports the following arguments:
 
 * `application_id` - (Required) Identifier of Amazon Q application.
 * `display_name` - (Required) Name of retriever.
-* `type` - (Required) Type of retriever. Valid values are `NATIVE_INDEX` and `KENDRA_INDEX`
-* `configuration` - (Optional) Configuration information for retriever.
 * `iam_service_role_arn` - (Optional) ARN of an IAM role used by Amazon Q to access the basic authentication credentials stored in a Secrets Manager secret.
-
-`configuration` supports the following:
-
-* `kendra_index_configuration` - (Optional) Information on how the Amazon Kendra index used as a retriever for your Amazon Q application is configured.
-* `native_index_configuration` - (Optional) Information on how a Amazon Q index used as a retriever for your Amazon Q application is configured.
+* `kendra_index_configuration` - (Optional) Information on how the Amazon Kendra index used as a retriever for your Amazon Q application is configured. Conflicts with `native_index_configuration`
+* `native_index_configuration` - (Optional) Information on how a Amazon Q index used as a retriever for your Amazon Q application is configured. Conflicts with `kendra_index_configuration`
 
 `kendra_index_configuration` supports the following:
 

@@ -91,10 +91,10 @@ func waitIndexDeleted(ctx context.Context, conn *qbusiness.Client, index_id stri
 	return nil, err
 }
 
-func waitRetrieverCreated(ctx context.Context, conn *qbusiness.QBusiness, retriever_id string, timeout time.Duration) (*qbusiness.GetRetrieverOutput, error) {
+func waitRetrieverCreated(ctx context.Context, conn *qbusiness.Client, retriever_id string, timeout time.Duration) (*qbusiness.GetRetrieverOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{qbusiness.RetrieverStatusCreating},
-		Target:     []string{qbusiness.RetrieverStatusActive},
+		Pending:    enum.Slice(types.RetrieverStatusCreating),
+		Target:     enum.Slice(types.RetrieverStatusActive),
 		Refresh:    statusRetrieverAvailability(ctx, conn, retriever_id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
@@ -103,16 +103,16 @@ func waitRetrieverCreated(ctx context.Context, conn *qbusiness.QBusiness, retrie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*qbusiness.GetRetrieverOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status)))
+		tfresource.SetLastError(err, errors.New(string(output.Status)))
 
 		return output, err
 	}
 	return nil, err
 }
 
-func waitRetrieverDeleted(ctx context.Context, conn *qbusiness.QBusiness, retriever_id string, timeout time.Duration) (*qbusiness.GetRetrieverOutput, error) {
+func waitRetrieverDeleted(ctx context.Context, conn *qbusiness.Client, retriever_id string, timeout time.Duration) (*qbusiness.GetRetrieverOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{qbusiness.RetrieverStatusActive},
+		Pending:    enum.Slice(types.RetrieverStatusActive),
 		Target:     []string{},
 		Refresh:    statusRetrieverAvailability(ctx, conn, retriever_id),
 		Timeout:    timeout,
@@ -122,7 +122,7 @@ func waitRetrieverDeleted(ctx context.Context, conn *qbusiness.QBusiness, retrie
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*qbusiness.GetRetrieverOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status)))
+		tfresource.SetLastError(err, errors.New(string(output.Status)))
 
 		return output, err
 	}

@@ -126,7 +126,6 @@ func resourceRetrieverCreate(ctx context.Context, d *schema.ResourceData, meta i
 	input := &qbusiness.CreateRetrieverInput{
 		ApplicationId: aws.String(application_id),
 		DisplayName:   aws.String(d.Get("display_name").(string)),
-		Type:          types.RetrieverType(d.Get("type").(string)),
 	}
 
 	if v, ok := d.GetOk("iam_service_role_arn"); ok {
@@ -135,10 +134,12 @@ func resourceRetrieverCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if v, ok := d.GetOk("kendra_index_configuration"); ok {
 		input.Configuration = types.RetrieverConfiguration(expandKendraIndexConfiguration(v.([]interface{})))
+		input.Type = types.RetrieverTypeKendraIndex
 	}
 
 	if v, ok := d.GetOk("native_index_configuration"); ok {
 		input.Configuration = types.RetrieverConfiguration(expandNativeIndexConfiguration(v.([]interface{})))
+		input.Type = types.RetrieverTypeNativeIndex
 	}
 
 	input.Tags = getTagsIn(ctx)
@@ -185,8 +186,13 @@ func resourceRetrieverUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		changed = true
 	}
 
-	if d.HasChange("configuration") {
-		input.Configuration = expandRetrieverConfiguration(d.Get("configuration").([]interface{}))
+	if d.HasChange("kendra_index_configuration") {
+		input.Configuration = types.RetrieverConfiguration(expandKendraIndexConfiguration(d.Get("kendra_index_configuration").([]interface{})))
+		changed = true
+	}
+
+	if d.HasChange("native_index_configuration") {
+		input.Configuration = types.RetrieverConfiguration(expandNativeIndexConfiguration(d.Get("native_index_configuration").([]interface{})))
 		changed = true
 	}
 
@@ -217,11 +223,15 @@ func resourceRetrieverRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set("application_id", output.ApplicationId)
 	d.Set("arn", output.RetrieverArn)
-	d.Set("configuration", flattenRetrieverConfiguration(output.Configuration))
+	if output.Type == types.RetrieverTypeKendraIndex {
+		d.Set("kendra_index_configuration", flattenKendraIndexConfiguration(output.Configuration.(*types.RetrieverConfigurationMemberKendraIndexConfiguration)))
+	}
+	if output.Type == types.RetrieverTypeNativeIndex {
+		d.Set("native_index_configuration", flattenNativeIndexConfiguration(output.Configuration.(*types.RetrieverConfigurationMemberNativeIndexConfiguration)))
+	}
 	d.Set("display_name", output.DisplayName)
 	d.Set("iam_service_role_arn", output.RoleArn)
 	d.Set("retriever_id", output.RetrieverId)
-	d.Set("type", output.Type)
 
 	return diags
 }
@@ -319,35 +329,13 @@ func expandNativeIndexConfiguration(v []interface{}) *types.RetrieverConfigurati
 	}
 }
 
-func flattenRetrieverConfiguration(c interface{}) []interface{} {
-	if c == nil {
-		return nil
-	}
-
-	m := map[string]interface{}{}
-
-	if t, ok := c.(types.RetrieverConfigurationMemberKendraIndexConfiguration); ok {
-		m["kendra_index_configuration"] = []interface{}{flattenKendraIndexConfiguration(t)}
-	}
-
-	if t == types.RetrieverTypeKendraIndex {
-		m["kendra_index_configuration"] = []interface{}{flattenKendraIndexConfiguration(types.KendraIndexConfiguration(c))}
-	}
-
-	if t == types.RetrieverTypeNativeIndex {
-		m["native_index_configuration"] = []interface{}{flattenNativeIndexConfiguration(c.NativeIndexConfiguration)}
-	}
-
-	return []interface{}{m}
-}
-
-func flattenKendraIndexConfiguration(c types.RetrieverConfigurationMemberKendraIndexConfiguration) map[string]interface{} {
+func flattenKendraIndexConfiguration(c *types.RetrieverConfigurationMemberKendraIndexConfiguration) map[string]interface{} {
 	m := map[string]interface{}{}
 	m["index_id"] = aws.ToString(c.Value.IndexId)
 	return m
 }
 
-func flattenNativeIndexConfiguration(c types.RetrieverConfigurationMemberNativeIndexConfiguration) map[string]interface{} {
+func flattenNativeIndexConfiguration(c *types.RetrieverConfigurationMemberNativeIndexConfiguration) map[string]interface{} {
 	m := map[string]interface{}{}
 	m["index_id"] = aws.ToString(c.Value.IndexId)
 	return m
