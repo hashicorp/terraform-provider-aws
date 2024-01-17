@@ -116,6 +116,7 @@ func ResourceRetriever() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -154,11 +155,11 @@ func resourceRetrieverCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	d.SetId(application_id + "/" + aws.ToString(output.RetrieverId))
 
-	if _, err := waitRetrieverCreated(ctx, conn, aws.ToString(output.RetrieverId), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitRetrieverCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for qbusiness retriever (%s) to be created: %s", d.Id(), err)
 	}
 
-	return append(diags, resourceIndexRead(ctx, d, meta)...)
+	return append(diags, resourceRetrieverRead(ctx, d, meta)...)
 }
 
 func resourceRetrieverUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -254,7 +255,13 @@ func resourceRetrieverDelete(ctx context.Context, d *schema.ResourceData, meta i
 		RetrieverId:   aws.String(retriever_id),
 	}
 
-	if _, err := conn.DeleteRetriever(ctx, input); err != nil {
+	_, err = conn.DeleteRetriever(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
+	}
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting qbusiness retriever: %s", err)
 	}
 
@@ -331,14 +338,14 @@ func expandNativeIndexConfiguration(v []interface{}) *types.RetrieverConfigurati
 	}
 }
 
-func flattenKendraIndexConfiguration(c *types.RetrieverConfigurationMemberKendraIndexConfiguration) map[string]interface{} {
+func flattenKendraIndexConfiguration(c *types.RetrieverConfigurationMemberKendraIndexConfiguration) []interface{} {
 	m := map[string]interface{}{}
 	m["index_id"] = aws.ToString(c.Value.IndexId)
-	return m
+	return []interface{}{m}
 }
 
-func flattenNativeIndexConfiguration(c *types.RetrieverConfigurationMemberNativeIndexConfiguration) map[string]interface{} {
+func flattenNativeIndexConfiguration(c *types.RetrieverConfigurationMemberNativeIndexConfiguration) []interface{} {
 	m := map[string]interface{}{}
 	m["index_id"] = aws.ToString(c.Value.IndexId)
-	return m
+	return []interface{}{m}
 }

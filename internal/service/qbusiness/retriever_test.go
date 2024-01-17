@@ -20,7 +20,7 @@ import (
 
 func TestAccQBusinessRetriever_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var index qbusiness.GetRetrieverOutput
+	var retriever qbusiness.GetRetrieverOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_qbusiness_retriever.test"
 
@@ -33,10 +33,10 @@ func TestAccQBusinessRetriever_basic(t *testing.T) {
 			{
 				Config: testAccRetrieverConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRetrieverExists(ctx, resourceName, &index),
+					testAccCheckRetrieverExists(ctx, resourceName, &retriever),
 					resource.TestCheckResourceAttrSet(resourceName, "retriever_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "kendra_index_configuration"),
+					resource.TestCheckResourceAttr(resourceName, "native_index_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
 				),
 			},
@@ -51,7 +51,7 @@ func TestAccQBusinessRetriever_basic(t *testing.T) {
 
 func TestAccQBusinessRetriever_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var index qbusiness.GetRetrieverOutput
+	var retriever qbusiness.GetRetrieverOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_qbusiness_retriever.test"
 
@@ -64,7 +64,7 @@ func TestAccQBusinessRetriever_disappears(t *testing.T) {
 			{
 				Config: testAccRetrieverConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRetrieverExists(ctx, resourceName, &index),
+					testAccCheckRetrieverExists(ctx, resourceName, &retriever),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfqbusiness.ResourceRetriever(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -75,7 +75,7 @@ func TestAccQBusinessRetriever_disappears(t *testing.T) {
 
 func TestAccQBusinessRetriever_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var index qbusiness.GetRetrieverOutput
+	var retriever qbusiness.GetRetrieverOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_qbusiness_retriever.test"
 
@@ -88,7 +88,7 @@ func TestAccQBusinessRetriever_tags(t *testing.T) {
 			{
 				Config: testAccRetrieverConfig_tags(rName, "key1", "value1", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRetrieverExists(ctx, resourceName, &index),
+					testAccCheckRetrieverExists(ctx, resourceName, &retriever),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -102,7 +102,7 @@ func TestAccQBusinessRetriever_tags(t *testing.T) {
 			{
 				Config: testAccRetrieverConfig_tags(rName, "key1", "value1new", "key2", "value2new"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRetrieverExists(ctx, resourceName, &index),
+					testAccCheckRetrieverExists(ctx, resourceName, &retriever),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1new"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2new"),
 				),
@@ -218,7 +218,7 @@ resource "aws_qbusiness_index" "test" {
   capacity_configuration {
     units = 1
   }
-  description          = "Index name"
+  description          = %[1]q
 }
 `, rName)
 }
@@ -272,7 +272,7 @@ resource "aws_qbusiness_index" "test" {
   capacity_configuration {
     units = 1
   }
-  description          = "Index name"
+  description          = %[1]q
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
