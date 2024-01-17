@@ -195,7 +195,7 @@ resource "aws_eks_cluster" "example" {
   }
 
   access_config {
-    authentication_mode                         = "CONFIGMAP"
+    authentication_mode                         = "CONFIG_MAP"
     bootstrap_cluster_creator_admin_permissions = true
   }
 }
