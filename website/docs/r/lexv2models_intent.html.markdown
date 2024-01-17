@@ -70,6 +70,19 @@ resource "aws_lexv2models_intent" "example" {
   bot_version = aws_lexv2models_bot_locale.test.bot_version
   name        = "botens_namn"
   locale_id   = aws_lexv2models_bot_locale.test.locale_id
+}
+```
+
+### `confirmation_setting` Example
+
+When using `confirmation_setting`, if you do not provide a `prompt_attempts_specification`, AWS Lex will provide default `prompt_attempts_specification`s. As a result, Terraform will report a difference in the configuration. To avoid this behavior, include the default `prompt_attempts_specification` configuration shown below.
+
+```terraform
+resource "aws_lexv2models_intent" "example" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  name        = "botens_namn"
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
 
   confirmation_setting {
     active = true
