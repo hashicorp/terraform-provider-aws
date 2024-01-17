@@ -219,10 +219,10 @@ func flattenAccessScope(apiObject *types.AccessScope) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func FindAccessPolicyByID(ctx context.Context, conn *eks.Client, clusterName string, principal_arn string, policy_arn string) (*types.AssociatedAccessPolicy, error) {
+func FindAccessPolicyByID(ctx context.Context, conn *eks.Client, clusterName, principalARN, policyARN string) (*types.AssociatedAccessPolicy, error) {
 	input := &eks.ListAssociatedAccessPoliciesInput{
 		ClusterName:  aws.String(clusterName),
-		PrincipalArn: aws.String(principal_arn),
+		PrincipalArn: aws.String(principalARN),
 	}
 
 	var result *types.AssociatedAccessPolicy
@@ -239,9 +239,10 @@ func FindAccessPolicyByID(ctx context.Context, conn *eks.Client, clusterName str
 		return nil, err
 	}
 
-	for _, accessPolicy := range output.AssociatedAccessPolicies {
-		if aws.ToString(accessPolicy.PolicyArn) == policy_arn {
-			result = &accessPolicy
+	for _, v := range output.AssociatedAccessPolicies {
+		v := v
+		if aws.ToString(v.PolicyArn) == policyARN {
+			result = &v
 		}
 	}
 
