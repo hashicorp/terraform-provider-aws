@@ -35,7 +35,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceAccessEntry,
 			TypeName: "aws_eks_access_entry",
-		}, {
+			Name:     "Access Entry",
+		},
+		{
 			Factory:  dataSourceAddon,
 			TypeName: "aws_eks_addon",
 		},
