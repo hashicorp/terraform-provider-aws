@@ -344,7 +344,7 @@ The following arguments are optional:
 
 #### `post_code_hook_specification`
 
-* `failure_conditional` - (Optional)	Configuration block for conditional branches to evaluate after the dialog code hook throws an exception or returns with the State field of the Intent object set to Failed.
+* `failure_conditional` - (Optional) Configuration block for conditional branches to evaluate after the dialog code hook throws an exception or returns with the State field of the Intent object set to Failed.
 * `failure_next_step` - (Optional) Configuration block for the next step the bot runs after the dialog code hook throws an exception or returns with the State field of the Intent object set to Failed . See [`failure_next_step`](#failure_next_step).
 * `failure_response` - (Optional) Configuration block for message groups that Amazon Lex uses to respond the user input. See [`failure_response`](#failure_response).
 * `success_conditional` - (Optional) Configuration block for conditional branches to evaluate after the dialog code hook finishes successfully. See [`success_conditional`](#success_conditional).
