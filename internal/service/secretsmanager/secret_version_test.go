@@ -416,7 +416,7 @@ resource "aws_secretsmanager_secret_version" "test2" {
 
   version_stages = ["two", "2"]
 
-  depends_on  = [aws_secretsmanager_secret_version.test1]
+  depends_on = [aws_secretsmanager_secret_version.test1]
 
   lifecycle {
     ignore_changes = [version_stages] # "AWSPREVIOUS"
@@ -429,7 +429,7 @@ resource "aws_secretsmanager_secret_version" "test3" {
 
   version_stages = ["three", "AWSCURRENT"]
 
-  depends_on  = [aws_secretsmanager_secret_version.test2]
+  depends_on = [aws_secretsmanager_secret_version.test2]
 }
 `, rName)
 }
