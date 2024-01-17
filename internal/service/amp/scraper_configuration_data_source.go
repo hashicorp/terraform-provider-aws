@@ -71,7 +71,6 @@ func (d *dataSourceScraperConfiguration) Read(ctx context.Context, req datasourc
 }
 
 func findScraperConfiguration(ctx context.Context, conn *amp.Client) ([]byte, error) {
-
 	input := &amp.GetDefaultScraperConfigurationInput{}
 
 	out, err := conn.GetDefaultScraperConfiguration(ctx, input)
