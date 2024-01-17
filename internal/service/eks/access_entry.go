@@ -194,7 +194,7 @@ func resourceAccessEntryDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if errs.IsAErrorMessageContains[*types.ResourceNotFoundException](err, "The specified resource could not be found") {
-		return nil
+		return diags
 	}
 
 	if err != nil {

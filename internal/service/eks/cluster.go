@@ -403,6 +403,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
 	cluster, err := findClusterByName(ctx, conn, d.Id())
@@ -410,11 +411,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EKS Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading EKS Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EKS Cluster (%s): %s", d.Id(), err)
 	}
 	//Can check if
 	accessConfig := &types.CreateAccessConfigRequest{}
@@ -423,7 +424,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if err := d.Set("access_config", flattenAccessConfigResponse(cluster.AccessConfig, accessConfig.BootstrapClusterCreatorAdminPermissions)); err != nil {
-		return diag.Errorf("setting access_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting access_config: %s", err)
 	}
 	/*
 		if err := d.Set("access_config", flattenAccessConfigResponse(cluster.AccessConfig)); err != nil {
@@ -433,7 +434,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set("arn", cluster.Arn)
 	if err := d.Set("certificate_authority", flattenCertificate(cluster.CertificateAuthority)); err != nil {
-		return diag.Errorf("setting certificate_authority: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting certificate_authority: %s", err)
 	}
 	// cluster_id is only relevant for clusters on Outposts.
 	if cluster.OutpostConfig != nil {
@@ -441,33 +442,33 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("created_at", aws.ToTime(cluster.CreatedAt).String())
 	if err := d.Set("enabled_cluster_log_types", flattenLogging(cluster.Logging)); err != nil {
-		return diag.Errorf("setting enabled_cluster_log_types: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting enabled_cluster_log_types: %s", err)
 	}
 	if err := d.Set("encryption_config", flattenEncryptionConfig(cluster.EncryptionConfig)); err != nil {
-		return diag.Errorf("setting encryption_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting encryption_config: %s", err)
 	}
 	d.Set("endpoint", cluster.Endpoint)
 	if err := d.Set("identity", flattenIdentity(cluster.Identity)); err != nil {
-		return diag.Errorf("setting identity: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting identity: %s", err)
 	}
 	if err := d.Set("kubernetes_network_config", flattenKubernetesNetworkConfigResponse(cluster.KubernetesNetworkConfig)); err != nil {
-		return diag.Errorf("setting kubernetes_network_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting kubernetes_network_config: %s", err)
 	}
 	d.Set("name", cluster.Name)
 	if err := d.Set("outpost_config", flattenOutpostConfigResponse(cluster.OutpostConfig)); err != nil {
-		return diag.Errorf("setting outpost_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting outpost_config: %s", err)
 	}
 	d.Set("platform_version", cluster.PlatformVersion)
 	d.Set("role_arn", cluster.RoleArn)
 	d.Set("status", cluster.Status)
 	d.Set("version", cluster.Version)
 	if err := d.Set("vpc_config", flattenVPCConfigResponse(cluster.ResourcesVpcConfig)); err != nil {
-		return diag.Errorf("setting vpc_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
 	setTagsOut(ctx, cluster.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -491,7 +492,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		updateID := aws.ToString(output.Update.Id)
 
 		if _, err := waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for EKS Cluster (%s) version update (%s): %s", d.Id(), updateID, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) version update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
@@ -504,7 +505,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		output, err := conn.UpdateClusterConfig(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating EKS Cluster (%s) Access config: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) Access config: %s", d.Id(), err)
 		}
 
 		updateID := aws.ToString(output.Update.Id)
@@ -512,7 +513,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		_, err = waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
-			return diag.Errorf("waiting for EKS Cluster (%s) Access config update (%s): %s", d.Id(), updateID, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) Access config update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
@@ -823,12 +824,13 @@ func expandAccessConfigForCreate(l []interface{}) *types.CreateAccessConfigReque
 	accessConfigRequest := &types.CreateAccessConfigRequest{}
 
 	if v, ok := tfMap["authentication_mode"].(string); ok && v != "" {
-		accessConfigRequest.AuthenticationMode = types.AuthenticationMode(*aws.String(v))
+		accessConfigRequest.AuthenticationMode = types.AuthenticationMode(v)
 	}
 
 	if v, ok := tfMap["bootstrap_cluster_creator_admin_permissions"].(bool); ok {
 		accessConfigRequest.BootstrapClusterCreatorAdminPermissions = aws.Bool(v)
 	}
+
 	return accessConfigRequest
 }
 
@@ -839,7 +841,7 @@ func expandAccessConfigForUpdate(l []interface{}) *types.UpdateAccessConfigReque
 
 	m := l[0].(map[string]interface{})
 	accessConfigRequest := &types.UpdateAccessConfigRequest{
-		AuthenticationMode: types.AuthenticationMode(*aws.String(m["authentication_mode"].(string))),
+		AuthenticationMode: types.AuthenticationMode(m["authentication_mode"].(string)),
 	}
 
 	return accessConfigRequest

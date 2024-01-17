@@ -176,7 +176,7 @@ func resourceAccessPolicyAssociationDelete(ctx context.Context, d *schema.Resour
 	_, err = conn.DisassociateAccessPolicy(ctx, input)
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -196,7 +196,7 @@ func expandAccessScope(l []interface{}) *types.AccessScope {
 	accessScope := &types.AccessScope{}
 
 	if v, ok := m["type"].(string); ok && v != "" {
-		accessScope.Type = types.AccessScopeType(*aws.String(v))
+		accessScope.Type = types.AccessScopeType(v)
 	}
 
 	if v, ok := m["namespaces"]; ok {
