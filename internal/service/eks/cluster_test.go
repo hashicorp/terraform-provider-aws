@@ -899,7 +899,7 @@ resource "aws_eks_cluster" "test" {
 
   access_config {
     bootstrap_cluster_creator_admin_permissions = true
-	authentication_mode                         = "CONFIG_MAP"
+    authentication_mode                         = "CONFIG_MAP"
   }
 
   vpc_config {
@@ -954,7 +954,7 @@ resource "aws_eks_cluster" "test" {
   }
 
   access_config {
-	authentication_mode = "CONFIG_MAP"
+    authentication_mode = "CONFIG_MAP"
   }
 
   depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]

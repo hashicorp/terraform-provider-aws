@@ -202,8 +202,9 @@ resource "aws_eks_cluster" "test" {
   vpc_config {
     subnet_ids = aws_subnet.test[*].id
   }
+
   access_config {
-	authentication_mode = "API"
+    authentication_mode = "API"
   }
 
   depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]

@@ -55,8 +55,9 @@ resource "aws_eks_access_entry" "test" {
 }
 
 data "aws_eks_access_entry" "test" {
-  cluster_name = aws_eks_cluster.test.name
+  cluster_name  = aws_eks_cluster.test.name
   principal_arn = aws_iam_user.test.arn
+
   depends_on = [
     aws_eks_access_entry.test,
     aws_eks_cluster.test,
