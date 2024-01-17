@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -75,17 +74,6 @@ func resourceCluster() *schema.Resource {
 							Type:     schema.TypeBool,
 							Optional: true,
 							ForceNew: true,
-							// bootstrapClusterAdminPermissions is not returned by API, hence comparing old value with value in schema.
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								var bootstrapClusterAdminPermissions bool
-								if _, ok := d.GetOk("access_config"); ok {
-									tfMap := d.Get("access_config").([]interface{})[0].(map[string]interface{})
-									if v, ok := tfMap["bootstrap_cluster_creator_admin_permissions"].(bool); ok {
-										bootstrapClusterAdminPermissions = v
-									}
-								}
-								return old == strconv.FormatBool(bootstrapClusterAdminPermissions)
-							},
 						},
 					},
 				},
@@ -335,21 +323,21 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		EncryptionConfig:   expandEncryptionConfig(d.Get("encryption_config").([]interface{})),
 		Logging:            expandLogging(d.Get("enabled_cluster_log_types").(*schema.Set)),
 		Name:               aws.String(name),
-		ResourcesVpcConfig: expandVPCConfigRequestForCreate(d.Get("vpc_config").([]interface{})),
+		ResourcesVpcConfig: expandVpcConfigRequest(d.Get("vpc_config").([]interface{})),
 		RoleArn:            aws.String(d.Get("role_arn").(string)),
 		Tags:               getTagsIn(ctx),
 	}
 
-	if _, ok := d.GetOk("access_config"); ok {
-		input.AccessConfig = expandAccessConfigForCreate(d.Get("access_config").([]interface{}))
+	if v, ok := d.GetOk("access_config"); ok {
+		input.AccessConfig = expandCreateAccessConfigRequest(v.([]interface{}))
 	}
 
-	if _, ok := d.GetOk("kubernetes_network_config"); ok {
-		input.KubernetesNetworkConfig = expandKubernetesNetworkConfigRequest(d.Get("kubernetes_network_config").([]interface{}))
+	if v, ok := d.GetOk("kubernetes_network_config"); ok {
+		input.KubernetesNetworkConfig = expandKubernetesNetworkConfigRequest(v.([]interface{}))
 	}
 
-	if _, ok := d.GetOk("outpost_config"); ok {
-		input.OutpostConfig = expandOutpostConfigRequest(d.Get("outpost_config").([]interface{}))
+	if v, ok := d.GetOk("outpost_config"); ok {
+		input.OutpostConfig = expandOutpostConfigRequest(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("version"); ok {
@@ -417,21 +405,17 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EKS Cluster (%s): %s", d.Id(), err)
 	}
-	//Can check if
-	accessConfig := &types.CreateAccessConfigRequest{}
-	if v, ok := d.GetOk("access_config"); ok {
-		accessConfig = expandAccessConfigForCreate(v.([]interface{}))
-	}
 
-	if err := d.Set("access_config", flattenAccessConfigResponse(cluster.AccessConfig, accessConfig.BootstrapClusterCreatorAdminPermissions)); err != nil {
+	// bootstrap_cluster_creator_admin_permissions isn't returned from the AWS API.
+	var bootstrapClusterCreatorAdminPermissions *bool
+	if v, ok := d.GetOk("access_config"); ok {
+		if apiObject := expandCreateAccessConfigRequest(v.([]interface{})); apiObject != nil {
+			bootstrapClusterCreatorAdminPermissions = apiObject.BootstrapClusterCreatorAdminPermissions
+		}
+	}
+	if err := d.Set("access_config", flattenAccessConfigResponse(cluster.AccessConfig, bootstrapClusterCreatorAdminPermissions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting access_config: %s", err)
 	}
-	/*
-		if err := d.Set("access_config", flattenAccessConfigResponse(cluster.AccessConfig)); err != nil {
-			return diag.Errorf("setting access_config: %s", err)
-		}
-	*/
-
 	d.Set("arn", cluster.Arn)
 	if err := d.Set("certificate_authority", flattenCertificate(cluster.CertificateAuthority)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting certificate_authority: %s", err)
@@ -444,7 +428,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("enabled_cluster_log_types", flattenLogging(cluster.Logging)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting enabled_cluster_log_types: %s", err)
 	}
-	if err := d.Set("encryption_config", flattenEncryptionConfig(cluster.EncryptionConfig)); err != nil {
+	if err := d.Set("encryption_config", flattenEncryptionConfigs(cluster.EncryptionConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encryption_config: %s", err)
 	}
 	d.Set("endpoint", cluster.Endpoint)
@@ -497,15 +481,14 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChange("access_config") {
-
 		input := &eks.UpdateClusterConfigInput{
-			AccessConfig: expandAccessConfigForUpdate(d.Get("access_config").([]interface{})),
+			AccessConfig: expandUpdateAccessConfigRequest(d.Get("access_config").([]interface{})),
 		}
 
 		output, err := conn.UpdateClusterConfig(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) Access config: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) access configuration: %s", d.Id(), err)
 		}
 
 		updateID := aws.ToString(output.Update.Id)
@@ -513,7 +496,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		_, err = waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) Access config update (%s): %s", d.Id(), updateID, err)
+			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) access configuration update (%s): %s", d.Id(), updateID, err)
 		}
 	}
 
@@ -558,6 +541,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) logging update (%s): %s", d.Id(), updateID, err)
 		}
 	}
+
 	if d.HasChanges("vpc_config.0.endpoint_private_access", "vpc_config.0.endpoint_public_access", "vpc_config.0.public_access_cidrs") {
 		config := &types.VpcConfigRequest{
 			EndpointPrivateAccess: aws.Bool(d.Get("vpc_config.0.endpoint_private_access").(bool)),
@@ -680,22 +664,22 @@ func findClusterByName(ctx context.Context, conn *eks.Client, name string) (*typ
 	return output.Cluster, nil
 }
 
-func updateVPCConfig(ctx context.Context, conn *eks.Client, name string, config *types.VpcConfigRequest, timeout time.Duration) error {
+func updateVPCConfig(ctx context.Context, conn *eks.Client, name string, vpcConfig *types.VpcConfigRequest, timeout time.Duration) error {
 	input := &eks.UpdateClusterConfigInput{
 		Name:               aws.String(name),
-		ResourcesVpcConfig: config,
+		ResourcesVpcConfig: vpcConfig,
 	}
 
 	output, err := conn.UpdateClusterConfig(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("updating EKS Cluster (%s) VPC config: %s", name, err)
+		return fmt.Errorf("updating EKS Cluster (%s) VPC configuration: %s", name, err)
 	}
 
 	updateID := aws.ToString(output.Update.Id)
 
 	if _, err := waitClusterUpdateSuccessful(ctx, conn, name, updateID, timeout); err != nil {
-		return fmt.Errorf("waiting for EKS Cluster (%s) VPC config update (%s): %s", name, updateID, err)
+		return fmt.Errorf("waiting for EKS Cluster (%s) VPC configuration update (%s): %s", name, updateID, err)
 	}
 
 	return nil
@@ -814,37 +798,46 @@ func waitClusterUpdateSuccessful(ctx context.Context, conn *eks.Client, name, id
 	return nil, err
 }
 
-func expandAccessConfigForCreate(l []interface{}) *types.CreateAccessConfigRequest {
-	tfMap, ok := l[0].(map[string]interface{})
+func expandCreateAccessConfigRequest(tfList []interface{}) *types.CreateAccessConfigRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
 
+	tfMap, ok := tfList[0].(map[string]interface{})
 	if !ok {
 		return nil
 	}
 
-	accessConfigRequest := &types.CreateAccessConfigRequest{}
+	apiObject := &types.CreateAccessConfigRequest{}
 
 	if v, ok := tfMap["authentication_mode"].(string); ok && v != "" {
-		accessConfigRequest.AuthenticationMode = types.AuthenticationMode(v)
+		apiObject.AuthenticationMode = types.AuthenticationMode(v)
 	}
 
 	if v, ok := tfMap["bootstrap_cluster_creator_admin_permissions"].(bool); ok {
-		accessConfigRequest.BootstrapClusterCreatorAdminPermissions = aws.Bool(v)
+		apiObject.BootstrapClusterCreatorAdminPermissions = aws.Bool(v)
 	}
 
-	return accessConfigRequest
+	return apiObject
 }
 
-func expandAccessConfigForUpdate(l []interface{}) *types.UpdateAccessConfigRequest {
-	if len(l) == 0 {
+func expandUpdateAccessConfigRequest(tfList []interface{}) *types.UpdateAccessConfigRequest {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
-	accessConfigRequest := &types.UpdateAccessConfigRequest{
-		AuthenticationMode: types.AuthenticationMode(m["authentication_mode"].(string)),
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
 	}
 
-	return accessConfigRequest
+	apiObject := &types.UpdateAccessConfigRequest{}
+
+	if v, ok := tfMap["authentication_mode"].(string); ok && v != "" {
+		apiObject.AuthenticationMode = types.AuthenticationMode(v)
+	}
+
+	return apiObject
 }
 
 func expandEncryptionConfig(tfList []interface{}) []types.EncryptionConfig {
@@ -856,7 +849,6 @@ func expandEncryptionConfig(tfList []interface{}) []types.EncryptionConfig {
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
-
 		if !ok {
 			continue
 		}
@@ -876,8 +868,11 @@ func expandEncryptionConfig(tfList []interface{}) []types.EncryptionConfig {
 }
 
 func expandProvider(tfList []interface{}) *types.Provider {
-	tfMap, ok := tfList[0].(map[string]interface{})
+	if len(tfList) == 0 {
+		return nil
+	}
 
+	tfMap, ok := tfList[0].(map[string]interface{})
 	if !ok {
 		return nil
 	}
@@ -891,9 +886,12 @@ func expandProvider(tfList []interface{}) *types.Provider {
 	return apiObject
 }
 
-func expandOutpostConfigRequest(l []interface{}) *types.OutpostConfigRequest {
-	tfMap, ok := l[0].(map[string]interface{})
+func expandOutpostConfigRequest(tfList []interface{}) *types.OutpostConfigRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
 
+	tfMap, ok := tfList[0].(map[string]interface{})
 	if !ok {
 		return nil
 	}
@@ -905,7 +903,7 @@ func expandOutpostConfigRequest(l []interface{}) *types.OutpostConfigRequest {
 	}
 
 	if v, ok := tfMap["control_plane_placement"].([]interface{}); ok {
-		outpostConfigRequest.ControlPlanePlacement = expandControlPlanePlacement(v)
+		outpostConfigRequest.ControlPlanePlacement = expandControlPlanePlacementRequest(v)
 	}
 
 	if v, ok := tfMap["outpost_arns"].(*schema.Set); ok && v.Len() > 0 {
@@ -915,13 +913,12 @@ func expandOutpostConfigRequest(l []interface{}) *types.OutpostConfigRequest {
 	return outpostConfigRequest
 }
 
-func expandControlPlanePlacement(tfList []interface{}) *types.ControlPlanePlacementRequest {
+func expandControlPlanePlacementRequest(tfList []interface{}) *types.ControlPlanePlacementRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	tfMap, ok := tfList[0].(map[string]interface{})
-
 	if !ok {
 		return nil
 	}
@@ -935,42 +932,48 @@ func expandControlPlanePlacement(tfList []interface{}) *types.ControlPlanePlacem
 	return apiObject
 }
 
-func expandVPCConfigRequestForCreate(l []interface{}) *types.VpcConfigRequest {
-	if len(l) == 0 {
+func expandVpcConfigRequest(tfList []interface{}) *types.VpcConfigRequest { // nosemgrep:ci.caps5-in-func-name
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
-
-	vpcConfigRequest := &types.VpcConfigRequest{
-		EndpointPrivateAccess: aws.Bool(m["endpoint_private_access"].(bool)),
-		EndpointPublicAccess:  aws.Bool(m["endpoint_public_access"].(bool)),
-		SecurityGroupIds:      flex.ExpandStringValueSet(m["security_group_ids"].(*schema.Set)),
-		SubnetIds:             flex.ExpandStringValueSet(m["subnet_ids"].(*schema.Set)),
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
 	}
 
-	if v, ok := m["public_access_cidrs"].(*schema.Set); ok && v.Len() > 0 {
-		vpcConfigRequest.PublicAccessCidrs = flex.ExpandStringValueSet(v)
+	apiObject := &types.VpcConfigRequest{
+		EndpointPrivateAccess: aws.Bool(tfMap["endpoint_private_access"].(bool)),
+		EndpointPublicAccess:  aws.Bool(tfMap["endpoint_public_access"].(bool)),
+		SecurityGroupIds:      flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
+		SubnetIds:             flex.ExpandStringValueSet(tfMap["subnet_ids"].(*schema.Set)),
 	}
 
-	return vpcConfigRequest
+	if v, ok := tfMap["public_access_cidrs"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.PublicAccessCidrs = flex.ExpandStringValueSet(v)
+	}
+
+	return apiObject
 }
 
 func expandKubernetesNetworkConfigRequest(tfList []interface{}) *types.KubernetesNetworkConfigRequest {
-	tfMap, ok := tfList[0].(map[string]interface{})
+	if len(tfList) == 0 {
+		return nil
+	}
 
+	tfMap, ok := tfList[0].(map[string]interface{})
 	if !ok {
 		return nil
 	}
 
 	apiObject := &types.KubernetesNetworkConfigRequest{}
 
-	if v, ok := tfMap["service_ipv4_cidr"].(string); ok && v != "" {
-		apiObject.ServiceIpv4Cidr = aws.String(v)
-	}
-
 	if v, ok := tfMap["ip_family"].(string); ok && v != "" {
 		apiObject.IpFamily = types.IpFamily(v)
+	}
+
+	if v, ok := tfMap["service_ipv4_cidr"].(string); ok && v != "" {
+		apiObject.ServiceIpv4Cidr = aws.String(v)
 	}
 
 	return apiObject
@@ -1030,7 +1033,7 @@ func flattenOIDC(oidc *types.OIDC) []map[string]interface{} {
 	return []map[string]interface{}{m}
 }
 
-func flattenAccessConfigResponse(apiObject *types.AccessConfigResponse, bootstrap *bool) []interface{} {
+func flattenAccessConfigResponse(apiObject *types.AccessConfigResponse, bootstrapClusterCreatorAdminPermissions *bool) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1038,14 +1041,15 @@ func flattenAccessConfigResponse(apiObject *types.AccessConfigResponse, bootstra
 	tfMap := map[string]interface{}{
 		"authentication_mode": apiObject.AuthenticationMode,
 	}
-	if bootstrap != nil {
-		tfMap["bootstrap_cluster_creator_admin_permissions"] = aws.ToBool(bootstrap)
+
+	if bootstrapClusterCreatorAdminPermissions != nil {
+		tfMap["bootstrap_cluster_creator_admin_permissions"] = aws.ToBool(bootstrapClusterCreatorAdminPermissions)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenEncryptionConfig(apiObjects []types.EncryptionConfig) []interface{} {
+func flattenEncryptionConfigs(apiObjects []types.EncryptionConfig) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -1076,7 +1080,7 @@ func flattenProvider(apiObject *types.Provider) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenVPCConfigResponse(vpcConfig *types.VpcConfigResponse) []map[string]interface{} {
+func flattenVPCConfigResponse(vpcConfig *types.VpcConfigResponse) []map[string]interface{} { // nosemgrep:ci.caps5-in-func-name
 	if vpcConfig == nil {
 		return []map[string]interface{}{}
 	}
