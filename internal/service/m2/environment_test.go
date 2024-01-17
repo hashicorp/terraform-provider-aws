@@ -337,6 +337,10 @@ resource "aws_m2_environment" "test" {
   instance_type   = "M2.m5.large"
   security_groups = [aws_security_group.test.id]
   subnet_ids      = aws_subnet.test[*].id
+
+  tags = {
+    key = "value"
+  }
 }
 `, rName, engineType, engineVersion))
 }
@@ -358,6 +362,10 @@ resource "aws_m2_environment" "test" {
   high_availability_config {
     desired_capacity = %[4]d
   }
+
+  tags = {
+    key = "%[4]d"
+  }
 }
 `, rName, engineType, engineVersion, desiredCapacity))
 }
@@ -377,6 +385,10 @@ resource "aws_m2_environment" "test" {
   high_availability_config {
     desired_capacity = %[4]d
   }
+  tags = {
+    key = "%[4]d"
+  }
+
 }
 `, rName, engineType, engineVersion, desiredCapacity))
 }

@@ -217,6 +217,8 @@ func (r *resourceEnvironment) Create(ctx context.Context, req resource.CreateReq
 
 	in.ClientToken = aws.String(clientToken)
 
+	in.Tags = getTagsIn(ctx)
+
 	if !plan.StorageConfiguration.IsNull() {
 		var sc []storageData
 		resp.Diagnostics.Append(plan.StorageConfiguration.ElementsAs(ctx, &sc, false)...)
