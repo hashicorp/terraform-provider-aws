@@ -59,6 +59,7 @@ import (
 	lexmodelsv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
 	lookoutmetrics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lookoutmetrics"
+	m2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/m2"
 	mediaconnect_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediaconnect"
 	medialive_sdkv2 "github.com/aws/aws-sdk-go-v2/service/medialive"
 	mediapackage_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackage"
@@ -71,6 +72,7 @@ import (
 	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
 	polly_sdkv2 "github.com/aws/aws-sdk-go-v2/service/polly"
 	pricing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pricing"
+	qbusiness_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qbusiness"
 	qldb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qldb"
 	rbin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
@@ -205,7 +207,6 @@ import (
 	organizations_sdkv1 "github.com/aws/aws-sdk-go/service/organizations"
 	outposts_sdkv1 "github.com/aws/aws-sdk-go/service/outposts"
 	pinpoint_sdkv1 "github.com/aws/aws-sdk-go/service/pinpoint"
-	qbusiness_sdkv1 "github.com/aws/aws-sdk-go/service/qbusiness"
 	quicksight_sdkv1 "github.com/aws/aws-sdk-go/service/quicksight"
 	ram_sdkv1 "github.com/aws/aws-sdk-go/service/ram"
 	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
@@ -798,6 +799,10 @@ func (c *AWSClient) LookoutMetricsClient(ctx context.Context) *lookoutmetrics_sd
 	return errs.Must(client[*lookoutmetrics_sdkv2.Client](ctx, c, names.LookoutMetrics, make(map[string]any)))
 }
 
+func (c *AWSClient) M2Client(ctx context.Context) *m2_sdkv2.Client {
+	return errs.Must(client[*m2_sdkv2.Client](ctx, c, names.M2, make(map[string]any)))
+}
+
 func (c *AWSClient) MQClient(ctx context.Context) *mq_sdkv2.Client {
 	return errs.Must(client[*mq_sdkv2.Client](ctx, c, names.MQ, make(map[string]any)))
 }
@@ -898,8 +903,8 @@ func (c *AWSClient) PricingClient(ctx context.Context) *pricing_sdkv2.Client {
 	return errs.Must(client[*pricing_sdkv2.Client](ctx, c, names.Pricing, make(map[string]any)))
 }
 
-func (c *AWSClient) QBusinessConn(ctx context.Context) *qbusiness_sdkv1.QBusiness {
-	return errs.Must(conn[*qbusiness_sdkv1.QBusiness](ctx, c, names.QBusiness, make(map[string]any)))
+func (c *AWSClient) QBusinessClient(ctx context.Context) *qbusiness_sdkv2.Client {
+	return errs.Must(client[*qbusiness_sdkv2.Client](ctx, c, names.QBusiness, make(map[string]any)))
 }
 
 func (c *AWSClient) QLDBClient(ctx context.Context) *qldb_sdkv2.Client {
