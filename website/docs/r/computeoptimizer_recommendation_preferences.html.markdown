@@ -23,6 +23,21 @@ Terraform resource for managing an AWS Compute Optimizer Recommendation Preferen
 
 ```terraform
 resource "aws_computeoptimizer_recommendation_preferences" "example" {
+  enhanced_infrastructure_metrics = "Active" 
+	external_metrics_preference = "DataDog"
+ 	inferred_workload_types          = "Active"
+	lookback_period = "DAYS_14"
+	preferred_resources = [
+		""
+	]
+	resource_type                    = "Ec2Instance"
+	savings_estimation_mode = "AfterDiscounts"
+
+	utilization_prefrences = "P99_5"
+	scope = {
+	  name  = "ResourceARN"
+	  value = aws_autoscaling_group.web.arn
+	}
 }
 ```
 
@@ -30,40 +45,49 @@ resource "aws_computeoptimizer_recommendation_preferences" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `resource_type` - (Required) Target resource type.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `enhanced_infrastructure_metrics` - (Optional) Enhanced infrastructure metrics.
+
+* `external_metrics_preference` - (Optional) External metrics provider.
+
+* `inferred_workload_types` - (Optional) Inferred workload status.
+
+* `look_back_period` - (Optional) Number of days analyzed.
+
+* `preferred_resources` - (Optional) Resource types considered.
+
+* `savings_estimation_mode` - (Optional) Savings estimation status.
+
+* `scope` - (Optional) Recommendation preferences.
+
+* `utilization_preferences` - (Optional) CPU utilization thresholds.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Recommendation Preferences. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `id` - AWS Account the recommendation is created in.
+# TODO - Verify attribute references.
+* `recommendation_preference_names` - Recommendation preference created.
+* `resource_type` - Resource types monitored.
 
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Compute Optimizer Recommendation Preferences using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Compute Optimizer Recommendation Preferences using the `resource_type`, and `recommendation_preference_names` separated by a colon (`:`). For example:
 
 ```terraform
 import {
   to = aws_computeoptimizer_recommendation_preferences.example
-  id = "recommendation_preferences-id-12345678"
+  id = "Ec2Instance:UtilizationPreferences"
 }
 ```
 
 Using `terraform import`, import Compute Optimizer Recommendation Preferences using the `example_id_arg`. For example:
 
 ```console
-% terraform import aws_computeoptimizer_recommendation_preferences.example recommendation_preferences-id-12345678
+% terraform import aws_computeoptimizer_recommendation_preferences.example Ec2Instance:UtilizationPreferences
 ```
