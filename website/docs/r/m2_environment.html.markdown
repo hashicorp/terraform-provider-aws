@@ -48,10 +48,11 @@ resource "aws_m2_environment" "test" {
   instance_type   = "M2.m5.large"
   security_groups = ["sg-01234567890abcdef"]
   subnet_ids      = ["subnet-01234567890abcdef"]
-
-  efs_mount {
-    file_system_id = "fs-01234567890abcdef"
-    mount_point    = "/m2/mount/example"
+  storage_configuration {
+    efs {
+      file_system_id = "fs-01234567890abcdef"
+      mount_point    = "/m2/mount/example"
+    }
   }
 }
 ```
@@ -66,9 +67,11 @@ resource "aws_m2_environment" "test" {
   security_groups = ["sg-01234567890abcdef"]
   subnet_ids      = ["subnet-01234567890abcdef"]
 
-  fsx_mount {
-    file_system_id = "fs-01234567890abcdef"
-    mount_point    = "/m2/mount/example"
+  storage_configuration {
+    fsx {
+      file_system_id = "fs-01234567890abcdef"
+      mount_point    = "/m2/mount/example"
+    }
   }
 
 }
@@ -93,7 +96,8 @@ The following arguments are optional:
 * `publicly_accessible` - (Optional) Allow applications deployed to this environment to be publicly accessible.
 * `tags` - (Optional) Key-value tags for the place index. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-### efs_mount
+### storage_configuration
+#### efs
 
 This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 
@@ -102,7 +106,7 @@ The following arguments are required:
 * `mount_point` - (Required) Path to mount the filesystem on, must start with `/m2/mount/`.
 * `file_system_id` - (Required) Id of the EFS filesystem to mount.
 
-### fsx_mount
+#### fsx
 
 This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 

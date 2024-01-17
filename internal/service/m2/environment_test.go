@@ -109,8 +109,8 @@ func TestAccM2Environment_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "efs_mount.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "fsx_mount.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "M2.m5.large"),
 				),
 			},
@@ -125,8 +125,8 @@ func TestAccM2Environment_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "efs_mount.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "fsx_mount.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "M2.m6i.large"),
 					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "sat:03:35-sat:05:35"),
 				),
@@ -168,8 +168,8 @@ func TestAccM2Environment_highAvailability(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "efs_mount.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "fsx_mount.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "M2.m5.large"),
 				),
 			},
@@ -214,9 +214,8 @@ func TestAccM2Environment_efs(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "efs_mount.0.mount_point", "/m2/mount/example"),
-					resource.TestCheckResourceAttr(resourceName, "fsx_mount.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.efs.0.mount_point", "/m2/mount/example"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "M2.m5.large"),
 				),
 			},
@@ -253,7 +252,7 @@ func TestAccM2Environment_disappears(t *testing.T) {
 				Config: testAccEnvironmentConfig_basic(rName, testEngineType, testEngineVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfm2.ResourceEnvironment(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfm2.ResourceEnvironment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -395,9 +394,11 @@ resource "aws_m2_environment" "test" {
   security_groups = [aws_security_group.test.id]
   subnet_ids      = aws_subnet.test[*].id
 
-  efs_mount {
-    file_system_id = aws_efs_file_system.test.id
-    mount_point    = "/m2/mount/example"
+  storage_configuration {
+    efs {
+      file_system_id = aws_efs_file_system.test.id
+      mount_point    = "/m2/mount/example"
+    }
   }
 }
 `, rName, engineType, engineVersion))
