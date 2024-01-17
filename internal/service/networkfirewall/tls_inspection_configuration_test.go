@@ -23,7 +23,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -229,7 +228,7 @@ func testAccCheckTLSInspectionConfigurationDestroy(ctx context.Context) resource
 				TLSInspectionConfigurationArn: aws.String(rs.Primary.Attributes["arn"]),
 			}
 			_, err := conn.DescribeTLSInspectionConfigurationWithContext(ctx, input)
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if errs.IsA[*networkfirewall.ResourceNotFoundException](err) {
 				return nil
 			}
 			if err != nil {

@@ -693,10 +693,8 @@ func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req res
 }
 
 func (r *resourceTLSInspectionConfiguration) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().NetworkFirewallConn(ctx)
 
-	// TIP: -- 2. Fetch the state
 	var state resourceTLSInspectionConfigurationData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -713,7 +711,7 @@ func (r *resourceTLSInspectionConfiguration) Delete(ctx context.Context, req res
 	// TIP: On rare occassions, the API returns a not found error after deleting a
 	// resource. If that happens, we don't want it to show up as an error.
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		if errs.IsA[*networkfirewall.ResourceNotFoundException](err) {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -727,7 +725,7 @@ func (r *resourceTLSInspectionConfiguration) Delete(ctx context.Context, req res
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitTLSInspectionConfigurationDeleted(ctx, conn, state.ARN.ValueString(), deleteTimeout)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		if errs.IsA[*networkfirewall.ResourceNotFoundException](err) {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -866,7 +864,7 @@ func findTLSInspectionConfigurationByNameAndARN(ctx context.Context, conn *netwo
 
 	out, err := conn.DescribeTLSInspectionConfigurationWithContext(ctx, in)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		if errs.IsA[*networkfirewall.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
