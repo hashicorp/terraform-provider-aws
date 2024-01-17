@@ -88,8 +88,8 @@ resource "aws_lexv2models_intent" "example" {
     active = true
 
     prompt_specification {
-      allow_interrupt = true
-      max_retries     = 1
+      allow_interrupt            = true
+      max_retries                = 1
       message_selection_strategy = "Ordered"
 
       prompt_attempts_specification {
