@@ -55,7 +55,7 @@ func TestAccCustomLogSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccAWSLogSource_disappears(t *testing.T) {
+func TestAccCustomLogSource_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_securitylake_custom_log_source.test"
