@@ -1007,10 +1007,6 @@ resource "aws_eks_cluster" "test" {
     subnet_ids = aws_subnet.test[*].id
   }
 
-  access_config {
-    authentication_mode = "CONFIG_MAP"
-  }
-
   depends_on = [aws_iam_role_policy_attachment.test-AmazonEKSClusterPolicy]
 }
 `, rName, strings.Join(logTypes, "\", \"")))
