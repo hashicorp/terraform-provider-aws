@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/qbusiness"
+	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -26,7 +26,7 @@ func TestAccQBusinessIndex_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIndex(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, qbusiness.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -58,7 +58,7 @@ func TestAccQBusinessIndex_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIndex(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, qbusiness.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -82,7 +82,7 @@ func TestAccQBusinessIndex_documentAttributeConfigurations(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIndex(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, qbusiness.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIndexDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -117,11 +117,11 @@ func TestAccQBusinessIndex_documentAttributeConfigurations(t *testing.T) {
 }
 
 func testAccPreCheckIndex(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).QBusinessConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).QBusinessClient(ctx)
 
 	input := &qbusiness.ListApplicationsInput{}
 
-	_, err := conn.ListApplicationsWithContext(ctx, input)
+	_, err := conn.ListApplications(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -134,7 +134,7 @@ func testAccPreCheckIndex(ctx context.Context, t *testing.T) {
 
 func testAccCheckIndexDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QBusinessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QBusinessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_qbusiness_index" {
@@ -165,7 +165,7 @@ func testAccCheckIndexExists(ctx context.Context, n string, v *qbusiness.GetInde
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QBusinessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QBusinessClient(ctx)
 
 		output, err := tfqbusiness.FindIndexByID(ctx, conn, rs.Primary.ID)
 

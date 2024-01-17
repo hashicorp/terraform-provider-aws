@@ -27,7 +27,7 @@ func statusAppAvailability(ctx context.Context, conn *qbusiness.Client, id strin
 	}
 }
 
-func statusIndexAvailability(ctx context.Context, conn *qbusiness.QBusiness, index_id string) retry.StateRefreshFunc {
+func statusIndexAvailability(ctx context.Context, conn *qbusiness.Client, index_id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindIndexByID(ctx, conn, index_id)
 
@@ -39,6 +39,6 @@ func statusIndexAvailability(ctx context.Context, conn *qbusiness.QBusiness, ind
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
