@@ -13,9 +13,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/launchwizard/types"
 	"github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	"github.com/aws/aws-sdk-go-v2/service/launchwizard/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/launchwizard/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
 	tflaunchwizard "github.com/hashicorp/terraform-provider-aws/internal/service/launchwizard"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 /**
@@ -217,182 +217,177 @@ func testAccDeploymentConfig_basic(rName string, specTemplate string, deployment
 			testAccDeploymentConfigBase(rName),
 			fmt.Sprintf(`
 
-		resource "aws_launchwizard_deployment" "test" {
-			name             = %[1]q
-			deployment_pattern = %[3]q
-			workload_name = %[4]q
-			specifications = %[2]s
-		}
+resource "aws_launchwizard_deployment" "test" {
+  name               = %[1]q
+  deployment_pattern = %[3]q
+  workload_name      = %[4]q
+  specifications     = %[2]s
+}
 `, rName, specification_template_computed, deploymentPattern, workloadName))
 	} else {
 		return acctest.ConfigCompose(
 			testAccDeploymentConfigBase(rName),
 			fmt.Sprintf(`
 
-		resource "aws_launchwizard_deployment" "test" {
-			name             = %[1]q
-			deployment_pattern = %[3]q
-			workload_name = %[4]q
-			specifications = %[2]s
-			skip_destroy_after_failure = %[5]q
-		}
+resource "aws_launchwizard_deployment" "test" {
+  name                       = %[1]q
+  deployment_pattern         = %[3]q
+  workload_name              = %[4]q
+  specifications             = %[2]s
+  skip_destroy_after_failure = %[5]q
+}
 `, rName, specification_template_computed, deploymentPattern, workloadName, skipDestroyAfterFailure))
 	}
 }
 
 func testAccDeploymentConfigBase(rName string) string {
 	return fmt.Sprintf(`
-	resource "aws_vpc" "test" {
-		cidr_block           = "10.0.0.0/16"
-		enable_dns_hostnames = true
-		enable_dns_support   = true
-	  
-		tags = {
-		  Name                          = %[1]q
-		}
-	  }
-	  
-	  resource "aws_internet_gateway" "test" {
-		vpc_id = aws_vpc.test.id
-	  
-		tags = {
-		  Name = %[1]q
-		}
-	  }
-	  
-	  resource "aws_route_table" "public" {
-		vpc_id = aws_vpc.test.id
-	  
-		route {
-		  cidr_block = "0.0.0.0/0"
-		  gateway_id = aws_internet_gateway.test.id
-		}
-	  
-		tags = {
-		  Name = %[1]q
-		  LaunchWizardApplicationType = "SAP"
-		}
-	  }
-	  
-	  resource "aws_main_route_table_association" "test" {
-		route_table_id = aws_route_table.public.id
-		vpc_id         = aws_vpc.test.id
-	  }
-	  
-	  data "aws_availability_zones" "available" {
-		state = "available"
-	  
-		filter {
-		  name   = "opt-in-status"
-		  values = ["opt-in-not-required"]
-		}
-	  }
+resource "aws_vpc" "test" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+  tags = {
+    Name = %[1]q
+  }
+}
 
 
-	  resource "aws_subnet" "private" {
-		count = 2
-	  
-		availability_zone = data.aws_availability_zones.available.names[count.index]
-		cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index + 2)
-		vpc_id            = aws_vpc.test.id
-	  
-		tags = {
-		  Name                          = %[1]q
-		}
-	  }
-	  
-	  resource "aws_eip" "public" {
-		count      = 2
-		depends_on = [aws_internet_gateway.test]
-	  
-		domain = "vpc"
-	  
-		tags = {
-		  Name = %[1]q
-		}
-	  }
-	  
-	  resource "aws_nat_gateway" "public" {
-		count = 2
-	  
-		allocation_id = aws_eip.public[count.index].id
-		subnet_id     = aws_subnet.public[count.index].id
-	  
-		tags = {
-		  Name = %[1]q
-		}
-	  }
-	  
-	  resource "aws_route_table" "private" {
-		count = 2
-	  
-		vpc_id = aws_vpc.test.id
-	  
-		route {
-		  cidr_block     = "0.0.0.0/0"
-		  nat_gateway_id = aws_nat_gateway.public[count.index].id
-		}
-	  
-		tags = {
-		  Name = %[1]q
-		}
-	  }
-	  
-	  resource "aws_route_table_association" "private" {
-		count = 2
-	  
-		subnet_id      = aws_subnet.private[count.index].id
-		route_table_id = aws_route_table.private[count.index].id
-	  }
-	  
-	  resource "aws_subnet" "public" {
-		count = 2
-	  
-		availability_zone = data.aws_availability_zones.available.names[count.index]
-		cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-		vpc_id            = aws_vpc.test.id
-	  
-		tags = {
-		  Name                          = %[1]q
-		}
-	  }
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+  tags = {
+    Name = %[1]q
+  }
+}
 
-	  resource "aws_security_group" "test" {
-		name        = %[1]q
-		vpc_id      = aws_vpc.test.id
-		egress {
-		from_port   = 0
-		to_port     = 0
-		protocol    = "-1"
-		cidr_blocks = ["0.0.0.0/0"]
-		}
-		ingress {
-		from_port   = 0
-		to_port     = 0
-		protocol    = "-1"
-		cidr_blocks = ["0.0.0.0/0"]
-		}
-	}
 
-	
-	resource "tls_private_key" "key" {
-	  algorithm = "RSA"
-	  rsa_bits  = 4096
-	}
-	
-	resource "aws_key_pair" "key" {
-	  public_key = tls_private_key.key.public_key_openssh
-	}
+resource "aws_route_table" "public" {
+  vpc_id = aws_vpc.test.id
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.test.id
+  }
+  tags = {
+    Name                        = %[1]q
+    LaunchWizardApplicationType = "SAP"
+  }
+}
 
-	data "aws_ami" "suse" {
-		most_recent = true
-		owners      = ["aws-marketplace"]
-		filter {
-		  name   = "name"
-		  values = ["suse-sles-sap-15-sp4*hvm*"]
-		}
-	  }
-	`, rName)
+
+resource "aws_main_route_table_association" "test" {
+  route_table_id = aws_route_table.public.id
+  vpc_id         = aws_vpc.test.id
+}
+
+
+data "aws_availability_zones" "available" {
+  state = "available"
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+
+resource "aws_subnet" "private" {
+  count             = 2
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index + 2)
+  vpc_id            = aws_vpc.test.id
+  tags = {
+    Name = %[1]q
+  }
+}
+
+
+resource "aws_eip" "public" {
+  count      = 2
+  depends_on = [aws_internet_gateway.test]
+  domain     = "vpc"
+  tags = {
+    Name = %[1]q
+  }
+}
+
+
+resource "aws_nat_gateway" "public" {
+  count         = 2
+  allocation_id = aws_eip.public[count.index].id
+  subnet_id     = aws_subnet.public[count.index].id
+  tags = {
+    Name = %[1]q
+  }
+}
+
+
+resource "aws_route_table" "private" {
+  count  = 2
+  vpc_id = aws_vpc.test.id
+  route {
+    cidr_block     = "0.0.0.0/0"
+    nat_gateway_id = aws_nat_gateway.public[count.index].id
+  }
+  tags = {
+    Name = %[1]q
+  }
+}
+
+
+resource "aws_route_table_association" "private" {
+  count          = 2
+  subnet_id      = aws_subnet.private[count.index].id
+  route_table_id = aws_route_table.private[count.index].id
+}
+
+
+resource "aws_subnet" "public" {
+  count             = 2
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+  vpc_id            = aws_vpc.test.id
+  tags = {
+    Name = %[1]q
+  }
+}
+
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+
+resource "tls_private_key" "key" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+
+resource "aws_key_pair" "key" {
+  public_key = tls_private_key.key.public_key_openssh
+}
+
+
+data "aws_ami" "suse" {
+  most_recent = true
+  owners      = ["aws-marketplace"]
+  filter {
+    name   = "name"
+    values = ["suse-sles-sap-15-sp4*hvm*"]
+  }
+}
+`, rName)
 }
 
 func testAccCheckDeploymentDestroy(ctx context.Context) resource.TestCheckFunc {

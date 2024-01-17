@@ -4,36 +4,36 @@
 package launchwizard
 
 import (
-    "context"
-    "errors"
-    "reflect"
-    "time"
+	"context"
+	"errors"
+	"reflect"
+	"time"
 
 	"github.com/YakDriver/regexache"
-    "github.com/aws/aws-sdk-go-v2/aws"
-    awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
-    "github.com/aws/aws-sdk-go-v2/service/launchwizard"
-    awstypes "github.com/aws/aws-sdk-go-v2/service/launchwizard/types"
-    "github.com/aws/smithy-go"
-    "github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-    "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-    "github.com/hashicorp/terraform-plugin-framework/path"
-    "github.com/hashicorp/terraform-plugin-framework/resource"
-    "github.com/hashicorp/terraform-plugin-framework/resource/schema"
-    "github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
-    "github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-    "github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-    "github.com/hashicorp/terraform-plugin-framework/schema/validator"
-    "github.com/hashicorp/terraform-plugin-framework/types"
-    "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-    "github.com/hashicorp/terraform-provider-aws/internal/create"
-    "github.com/hashicorp/terraform-provider-aws/internal/errs"
-    "github.com/hashicorp/terraform-provider-aws/internal/framework"
-    "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-    "github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-    "github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
+	"github.com/aws/aws-sdk-go-v2/service/launchwizard"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/launchwizard/types"
+	"github.com/aws/smithy-go"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource(name="Deployment")
@@ -309,7 +309,7 @@ func (r *resourceDeployment) Read(ctx context.Context, req resource.ReadRequest,
 	spec_temp := flex.ExpandFrameworkStringMap(ctx, flex.FlattenFrameworkStringValueMap(ctx, out.Specifications))
 
 	//workaround as specification is not returned properly by Get API. TODO: Ask AWS to fix the API
-	if *spec_temp["SaveDeploymentArtifacts"] == "true" {
+	if spec_temp["SaveDeploymentArtifacts"] == aws.String("true") {
 		*spec_temp["SaveDeploymentArtifacts"] = "Yes"
 	} else {
 		*spec_temp["SaveDeploymentArtifacts"] = "No"
@@ -470,8 +470,8 @@ func (r *resourceDeployment) ImportState(ctx context.Context, req resource.Impor
 
 func waitDeploymentCreated(ctx context.Context, conn *launchwizard.Client, id string, timeout time.Duration) (*awstypes.DeploymentData, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(awstypes.DeploymentStatusCreating), string(awstypes.DeploymentStatusInProgress), string(awstypes.DeploymentStatusValidating)},
-		Target:                    []string{string(awstypes.DeploymentStatusCompleted)},
+		Pending:                   enum.Slice(awstypes.DeploymentStatusCreating, awstypes.DeploymentStatusInProgress, awstypes.DeploymentStatusValidating),
+		Target:                    enum.Slice(awstypes.DeploymentStatusCompleted),
 		Refresh:                   statusDeployment(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -488,8 +488,8 @@ func waitDeploymentCreated(ctx context.Context, conn *launchwizard.Client, id st
 
 func waitDeploymentDeleted(ctx context.Context, conn *launchwizard.Client, id string, timeout time.Duration) (*awstypes.DeploymentData, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.DeploymentStatusDeleteInProgress), string(awstypes.DeploymentStatusDeleteInitiating), string(awstypes.DeploymentStatusInProgress)},
-		Target:  []string{string(awstypes.DeploymentStatusDeleted), string(awstypes.DeploymentStatusCompleted)},
+		Pending: enum.Slice(awstypes.DeploymentStatusDeleteInProgress, awstypes.DeploymentStatusDeleteInitiating, awstypes.DeploymentStatusInProgress),
+		Target:  enum.Slice(awstypes.DeploymentStatusDeleted, awstypes.DeploymentStatusCompleted),
 		Refresh: statusDeployment(ctx, conn, id),
 		Timeout: timeout,
 		Delay:   5 * time.Second,
