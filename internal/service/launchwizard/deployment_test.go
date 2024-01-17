@@ -8,14 +8,14 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/launchwizard/types"
 	"github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	"github.com/aws/aws-sdk-go-v2/service/launchwizard/types"
-
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -24,8 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
-
-	awstypes "github.com/aws/aws-sdk-go-v2/service/launchwizard/types"
 	tflaunchwizard "github.com/hashicorp/terraform-provider-aws/internal/service/launchwizard"
 )
 
@@ -176,7 +174,7 @@ func TestAccLaunchWizardDeployment_SkipDestroyAfterFailure(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDeploymentConfig_basic(rName, testSpecFailure["specification_template"], testSpecFailure["deployment_pattern"], testSpecFailure["workload_name"], "true"),
-				ExpectError: regexp.MustCompile(".*Resource will be replaced on next apply*"),
+				ExpectError: regexache.MustCompile(".*Resource will be replaced on next apply*"),
 			},
 			{
 				Config: testAccDeploymentConfig_basic(rName, testSpec["specification_template"], testSpec["deployment_pattern"], testSpec["workload_name"], "true"),
@@ -219,32 +217,31 @@ func testAccDeploymentConfig_basic(rName string, specTemplate string, deployment
 			testAccDeploymentConfigBase(rName),
 			fmt.Sprintf(`
 
-resource "aws_launchwizard_deployment" "test" {
-  name             = %[1]q
-  deployment_pattern = %[3]q
-  workload_name = %[4]q
-  specifications = %[2]s
-}
+		resource "aws_launchwizard_deployment" "test" {
+			name             = %[1]q
+			deployment_pattern = %[3]q
+			workload_name = %[4]q
+			specifications = %[2]s
+		}
 `, rName, specification_template_computed, deploymentPattern, workloadName))
 	} else {
 		return acctest.ConfigCompose(
 			testAccDeploymentConfigBase(rName),
 			fmt.Sprintf(`
 
-resource "aws_launchwizard_deployment" "test" {
-  name             = %[1]q
-  deployment_pattern = %[3]q
-  workload_name = %[4]q
-  specifications = %[2]s
-  skip_destroy_after_failure = %[5]q
-}
+		resource "aws_launchwizard_deployment" "test" {
+			name             = %[1]q
+			deployment_pattern = %[3]q
+			workload_name = %[4]q
+			specifications = %[2]s
+			skip_destroy_after_failure = %[5]q
+		}
 `, rName, specification_template_computed, deploymentPattern, workloadName, skipDestroyAfterFailure))
 	}
 }
 
 func testAccDeploymentConfigBase(rName string) string {
 	return fmt.Sprintf(`
-
 	resource "aws_vpc" "test" {
 		cidr_block           = "10.0.0.0/16"
 		enable_dns_hostnames = true
@@ -395,8 +392,6 @@ func testAccDeploymentConfigBase(rName string) string {
 		  values = ["suse-sles-sap-15-sp4*hvm*"]
 		}
 	  }
-	  
-
 	`, rName)
 }
 

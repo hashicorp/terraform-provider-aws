@@ -5,14 +5,7 @@ page_title: "AWS: aws_launchwizard_deployment"
 description: |-
   Terraform resource for managing an AWS Launch Wizard Deployment. Check the user and API guide for workload-specific details. Currently only SAP workloads are enabled for the API.  
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_launchwizard_deployment
 
 Terraform resource for managing an AWS Launch Wizard Deployment. Check the user and API guide for workload-specific details. Currently only SAP workloads are enabled for the API.
@@ -69,9 +62,9 @@ data "aws_ami" "suse" {
 
 ```
 
-### Complex Example: SAP Netweaver on SAP HANA - High Availablity
+### Complex Example: SAP Netweaver on SAP HANA - High Availability
 
-Possible parameters for a SAP Netweaver on SAP HANA - High Availablity deployment can be found [here](https://docs.aws.amazon.com/launchwizard/latest/APIReference/launch-wizard-specifications-sap-netweaver-ha.html).
+Possible parameters for a SAP Netweaver on SAP HANA - High Availability deployment can be found [here](https://docs.aws.amazon.com/launchwizard/latest/APIReference/launch-wizard-specifications-sap-netweaver-ha.html).
 
 Some deployments modify resources like route tables (for the HA setup). Use the lifecycle block `ignore_changes` on the route tables and other such route tables depending on the deployment pattern.
 

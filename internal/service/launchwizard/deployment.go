@@ -4,34 +4,36 @@
 package launchwizard
 
 import (
-	"context"
-	"errors"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
-	"github.com/aws/aws-sdk-go-v2/service/launchwizard"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/launchwizard/types"
-	"github.com/aws/smithy-go"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
-	"reflect"
-	"regexp"
-	"time"
+    "context"
+    "errors"
+    "reflect"
+    "time"
+
+	"github.com/YakDriver/regexache"
+    "github.com/aws/aws-sdk-go-v2/aws"
+    awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
+    "github.com/aws/aws-sdk-go-v2/service/launchwizard"
+    awstypes "github.com/aws/aws-sdk-go-v2/service/launchwizard/types"
+    "github.com/aws/smithy-go"
+    "github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+    "github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+    "github.com/hashicorp/terraform-plugin-framework/path"
+    "github.com/hashicorp/terraform-plugin-framework/resource"
+    "github.com/hashicorp/terraform-plugin-framework/resource/schema"
+    "github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
+    "github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+    "github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+    "github.com/hashicorp/terraform-plugin-framework/schema/validator"
+    "github.com/hashicorp/terraform-plugin-framework/types"
+    "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+    "github.com/hashicorp/terraform-provider-aws/internal/create"
+    "github.com/hashicorp/terraform-provider-aws/internal/errs"
+    "github.com/hashicorp/terraform-provider-aws/internal/framework"
+    "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+    "github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+    "github.com/hashicorp/terraform-provider-aws/names"
 )
+
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource(name="Deployment")
@@ -68,7 +70,7 @@ func (r *resourceDeployment) Schema(ctx context.Context, req resource.SchemaRequ
 					stringvalidator.LengthAtLeast(1),
 					stringvalidator.LengthAtMost(50),
 					stringvalidator.RegexMatches(
-						regexp.MustCompile(`^[A-Za-z0-9_\s\.-]+$`),
+						regexache.MustCompile(`^[A-Za-z0-9_\s\.-]+$`),
 						"Name must be alphanumeric, underscores, spaces, dots, and dashes only. Must be between 1 and 50 characters long.",
 					),
 				},
@@ -115,7 +117,7 @@ func (r *resourceDeployment) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"skip_destroy_after_failure": schema.BoolAttribute{
 				Optional:    true,
-				Description: "Ensures the deployment doesn't get deleted immediatelly after a failure. Taints resource.",
+				Description: "Ensures the deployment doesn't get deleted immediately after a failure. Taints resource.",
 			},
 			"resource_group": schema.StringAttribute{
 				Computed:    true,
