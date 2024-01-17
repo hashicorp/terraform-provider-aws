@@ -42,7 +42,7 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Name of the cluster
 * `arn` - ARN of the cluster.
 * `access_config` - Configuration block for access config.
-    * `authentication_mode` - Values returned are CONFIGMAP, API or APIANDCONFIGMAP
+    * `authentication_mode` - Values returned are `CONFIG_MAP`, `API` or `API_AND_CONFIG_MAP`
     * `bootstrap_cluster_creator_admin_permissions` - Default to `true`.
 * `certificate_authority` - Nested attribute containing `certificate-authority-data` for your cluster.
     * `data` - The base64 encoded certificate data required to communicate with your cluster. Add this to the `certificate-authority-data` section of the `kubeconfig` file for your cluster.
