@@ -138,4 +138,4 @@ This data source exports the following attributes in addition to the arguments a
 * `taskArns` - A list of the provisioned task ARNs.
 * `id` - The unique identifier, which is a comma-delimited string joining the `cluster` and `taskDefinition` attributes.
 
-<!-- cache-key: cdktf-0.20.0 input-43e278c1402adce6a7fc73f884efc857a1ca139e84ad68f7ea78a5f8b607b74c -->
+<!-- cache-key: cdktf-0.20.1 input-43e278c1402adce6a7fc73f884efc857a1ca139e84ad68f7ea78a5f8b607b74c -->

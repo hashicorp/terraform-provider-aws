@@ -84,4 +84,4 @@ This data source exports the following attributes in addition to the arguments a
 * `providerName` - Model provider name.
 * `responseStreamingSupported` - Indicates whether the model supports streaming.
 
-<!-- cache-key: cdktf-0.20.0 input-6460f3b0b18394205440301a3c70d60b4b02252dc7a9f84d403f0e812f7a5da5 -->
+<!-- cache-key: cdktf-0.20.1 input-6460f3b0b18394205440301a3c70d60b4b02252dc7a9f84d403f0e812f7a5da5 -->
