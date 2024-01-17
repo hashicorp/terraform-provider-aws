@@ -36,7 +36,6 @@ The following arguments are required:
     * `type` - (Required) Valid values are `namespace` or `cluster`.
     * `namespaces` - (Optional) The namespaces to which the access scope applies when type is namespace.
 
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
@@ -44,7 +43,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `associated_access_policy` - Configuraion block which consists of
     * `associated_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the policy was associated.
     * `modified_at` - Date and time in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8) that the policy was updated.
-
 
 ## Timeouts
 

@@ -32,7 +32,6 @@ The following arguments are optional:
 * `kubernetes_groups` – (Optional) List of string which can optionally specify the Kubernetes groups the user would belong to when creating an access entry.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
