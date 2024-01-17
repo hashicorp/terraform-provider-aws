@@ -1,4 +1,33 @@
-## 5.32.0 (Unreleased)
+## 5.33.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_lexv2models_intent` ([#34891](https://github.com/hashicorp/terraform-provider-aws/issues/34891))
+
+ENHANCEMENTS:
+
+* data-source/aws_secretsmanager_secret: Add `created_date` and `last_changed_date` attributes ([#35117](https://github.com/hashicorp/terraform-provider-aws/issues/35117))
+* data-source/aws_secretsmanager_secret_version: Add `created_date` attribute ([#35117](https://github.com/hashicorp/terraform-provider-aws/issues/35117))
+* resource/aws_backup_plan: Add `rule.lifecycle.opt_in_to_archive_for_supported_resources` and `rule.copy_action.lifecycle.opt_in_to_archive_for_supported_resources` and arguments ([#34994](https://github.com/hashicorp/terraform-provider-aws/issues/34994))
+* resource/aws_lakeformation_resource: Add `use_service_linked_role` argument ([#35284](https://github.com/hashicorp/terraform-provider-aws/issues/35284))
+* resource/aws_secretsmanager_secret_rotation: Add `rotate_immediately` argument ([#35105](https://github.com/hashicorp/terraform-provider-aws/issues/35105))
+
+BUG FIXES:
+
+* resource/aws_datasync_task: Allow `schedule` to be removed successfully ([#35282](https://github.com/hashicorp/terraform-provider-aws/issues/35282))
+* resource/aws_fis_experiment_template: Fix validation error when not using `target.resource_arns` or `target.resource_tag` attributes. ([#35254](https://github.com/hashicorp/terraform-provider-aws/issues/35254))
+* resource/aws_lb_listener: Fix `ValidationError: Mutual Authentication mode passthrough does not support ignoring certificate expiry` errors when `mutual_authentication.mode` is set to `passthrough` ([#35289](https://github.com/hashicorp/terraform-provider-aws/issues/35289))
+* resource/aws_secretsmanager_secret_version: Fix `InvalidParameterException: The parameter RemoveFromVersionId can't be empty. Staging label AWSCURRENT is currently attached to version ..., so you must explicitly reference that version in RemoveFromVersionId` errors when a secret is updated outside Terraform ([#19943](https://github.com/hashicorp/terraform-provider-aws/issues/19943))
+
+## 5.32.1 (January 12, 2024)
+
+BUG FIXES:
+
+* data-source/aws_ecr_image: Fix error when `most_recent` is not also `latest` ([#35269](https://github.com/hashicorp/terraform-provider-aws/issues/35269))
+* resource/aws_iot_ca_certificate: Change `registration_config.role_arn` from `TypeBool` to `TypeString`, fixing `Inappropriate value for attribute "role_arn": a bool is required` errors ([#35234](https://github.com/hashicorp/terraform-provider-aws/issues/35234))
+* resource/aws_mq_broker: Fix `interface conversion: interface {} is *schema.Set, not []string` panic ([#35265](https://github.com/hashicorp/terraform-provider-aws/issues/35265))
+
+## 5.32.0 (January 11, 2024)
 
 FEATURES:
 

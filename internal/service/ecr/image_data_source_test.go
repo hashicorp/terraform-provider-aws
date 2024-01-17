@@ -38,7 +38,6 @@ func TestAccECRImageDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceByDigest, "image_uri"),
 					resource.TestCheckResourceAttrSet(resourceByMostRecent, "image_pushed_at"),
 					resource.TestCheckResourceAttrSet(resourceByMostRecent, "image_size_in_bytes"),
-					resource.TestCheckTypeSetElemAttr(resourceByMostRecent, "image_tags.*", tag),
 				),
 			},
 		},
