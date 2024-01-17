@@ -9,14 +9,15 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/qbusiness"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
+	"github.com/aws/aws-sdk-go-v2/service/qbusiness/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -49,51 +50,42 @@ func ResourceRetriever() *schema.Resource {
 				Computed:    true,
 				Description: "ARN of the the retriever.",
 			},
-			"configuration": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
+			"kendra_index_configuration": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				Description:   "Information on how the Amazon Kendra index used as a retriever for your Amazon Q application is configured.",
+				ConflictsWith: []string{"native_index_configuration"},
+				AtLeastOneOf:  []string{"kendra_index_configuration", "native_index_configuration"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kendra_index_configuration": {
-							Type:          schema.TypeList,
-							Optional:      true,
-							MaxItems:      1,
-							Description:   "Information on how the Amazon Kendra index used as a retriever for your Amazon Q application is configured.",
-							ConflictsWith: []string{"native_index_configuration"},
-							AtLeastOneOf:  []string{"kendra_index_configuration", "native_index_configuration"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"index_id": {
-										Type:        schema.TypeString,
-										Required:    true,
-										Description: "Identifier of the Amazon Kendra index.",
-										ValidateFunc: validation.All(
-											validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must be a valid index ID"),
-										),
-									},
-								},
-							},
+						"index_id": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Identifier of the Amazon Kendra index.",
+							ValidateFunc: validation.All(
+								validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must be a valid index ID"),
+							),
 						},
-						"native_index_configuration": {
-							Type:          schema.TypeList,
-							Optional:      true,
-							MaxItems:      1,
-							Description:   "Information on how a Amazon Q index used as a retriever for your Amazon Q application is configured.",
-							ConflictsWith: []string{"kendra_index_configuration"},
-							AtLeastOneOf:  []string{"kendra_index_configuration", "native_index_configuration"},
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"index_id": {
-										Type:        schema.TypeString,
-										Required:    true,
-										Description: "Identifier for the Amazon Q index.",
-										ValidateFunc: validation.All(
-											validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must be a valid index ID"),
-										),
-									},
-								},
-							},
+					},
+				},
+			},
+			"native_index_configuration": {
+				Type:          schema.TypeList,
+				Optional:      true,
+				MaxItems:      1,
+				Description:   "Information on how a Amazon Q index used as a retriever for your Amazon Q application is configured.",
+				ConflictsWith: []string{"kendra_index_configuration"},
+				AtLeastOneOf:  []string{"kendra_index_configuration", "native_index_configuration"},
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"index_id": {
+							Type:        schema.TypeString,
+							Required:    true,
+							Description: "Identifier for the Amazon Q index.",
+							ValidateFunc: validation.All(
+								validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must be a valid index ID"),
+							),
 						},
 					},
 				},
@@ -118,13 +110,6 @@ func ResourceRetriever() *schema.Resource {
 				Computed:    true,
 				Description: "Identifier of the retriever.",
 			},
-			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				Description:  "Type of retriever.",
-				ValidateFunc: validation.StringInSlice(qbusiness.RetrieverType_Values(), false),
-			},
 
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -135,31 +120,38 @@ func ResourceRetriever() *schema.Resource {
 func resourceRetrieverCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).QBusinessConn(ctx)
+	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
 
 	application_id := d.Get("application_id").(string)
 	input := &qbusiness.CreateRetrieverInput{
 		ApplicationId: aws.String(application_id),
-		Configuration: expandRetrieverConfiguration(d.Get("configuration").([]interface{})),
 		DisplayName:   aws.String(d.Get("display_name").(string)),
-		Type:          aws.String(d.Get("type").(string)),
+		Type:          types.RetrieverType(d.Get("type").(string)),
 	}
 
 	if v, ok := d.GetOk("iam_service_role_arn"); ok {
 		input.RoleArn = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("kendra_index_configuration"); ok {
+		input.Configuration = types.RetrieverConfiguration(expandKendraIndexConfiguration(v.([]interface{})))
+	}
+
+	if v, ok := d.GetOk("native_index_configuration"); ok {
+		input.Configuration = types.RetrieverConfiguration(expandNativeIndexConfiguration(v.([]interface{})))
+	}
+
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateRetrieverWithContext(ctx, input)
+	output, err := conn.CreateRetriever(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating qbusiness retriever: %s", err)
 	}
 
-	d.SetId(application_id + "/" + aws.StringValue(output.RetrieverId))
+	d.SetId(application_id + "/" + aws.ToString(output.RetrieverId))
 
-	if _, err := waitRetrieverCreated(ctx, conn, aws.StringValue(output.RetrieverId), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitRetrieverCreated(ctx, conn, aws.ToString(output.RetrieverId), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for qbusiness retriever (%s) to be created: %s", d.Id(), err)
 	}
 
@@ -169,7 +161,7 @@ func resourceRetrieverCreate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceRetrieverUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).QBusinessConn(ctx)
+	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
 
 	application_id, retriever_id, err := parseRetrieverID(d.Id())
 
@@ -199,7 +191,7 @@ func resourceRetrieverUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if changed {
-		if _, err := conn.UpdateRetrieverWithContext(ctx, input); err != nil {
+		if _, err := conn.UpdateRetriever(ctx, input); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating qbusiness retriever: %s", err)
 		}
 	}
@@ -210,7 +202,7 @@ func resourceRetrieverUpdate(ctx context.Context, d *schema.ResourceData, meta i
 func resourceRetrieverRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).QBusinessConn(ctx)
+	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
 
 	output, err := FindRetrieverByID(ctx, conn, d.Id())
 
@@ -237,7 +229,7 @@ func resourceRetrieverRead(ctx context.Context, d *schema.ResourceData, meta int
 func resourceRetrieverDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).QBusinessConn(ctx)
+	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
 
 	application_id, retriever_id, err := parseRetrieverID(d.Id())
 
@@ -250,7 +242,7 @@ func resourceRetrieverDelete(ctx context.Context, d *schema.ResourceData, meta i
 		RetrieverId:   aws.String(retriever_id),
 	}
 
-	if _, err := conn.DeleteRetrieverWithContext(ctx, input); err != nil {
+	if _, err := conn.DeleteRetriever(ctx, input); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting qbusiness retriever: %s", err)
 	}
 
@@ -271,7 +263,7 @@ func parseRetrieverID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func FindRetrieverByID(ctx context.Context, conn *qbusiness.QBusiness, id string) (*qbusiness.GetRetrieverOutput, error) {
+func FindRetrieverByID(ctx context.Context, conn *qbusiness.Client, id string) (*qbusiness.GetRetrieverOutput, error) {
 	application_id, retriever_id, err := parseRetrieverID(id)
 
 	if err != nil {
@@ -283,9 +275,9 @@ func FindRetrieverByID(ctx context.Context, conn *qbusiness.QBusiness, id string
 		RetrieverId:   aws.String(retriever_id),
 	}
 
-	output, err := conn.GetRetrieverWithContext(ctx, input)
+	output, err := conn.GetRetriever(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, qbusiness.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -303,85 +295,60 @@ func FindRetrieverByID(ctx context.Context, conn *qbusiness.QBusiness, id string
 	return output, nil
 }
 
-func expandRetrieverConfiguration(v []interface{}) *qbusiness.RetrieverConfiguration {
+func expandKendraIndexConfiguration(v []interface{}) *types.RetrieverConfigurationMemberKendraIndexConfiguration {
 	if len(v) == 0 || v[0] == nil {
 		return nil
 	}
-
 	m := v[0].(map[string]interface{})
-
-	return &qbusiness.RetrieverConfiguration{
-		KendraIndexConfiguration: expandKendraIndexConfiguration(m["kendra_index_configuration"].([]interface{})),
-		NativeIndexConfiguration: expandNativeIndexConfiguration(m["native_index_configuration"].([]interface{})),
+	return &types.RetrieverConfigurationMemberKendraIndexConfiguration{
+		Value: types.KendraIndexConfiguration{
+			IndexId: aws.String(m["index_id"].(string)),
+		},
 	}
 }
 
-func expandKendraIndexConfiguration(v []interface{}) *qbusiness.KendraIndexConfiguration {
+func expandNativeIndexConfiguration(v []interface{}) *types.RetrieverConfigurationMemberNativeIndexConfiguration {
 	if len(v) == 0 || v[0] == nil {
 		return nil
 	}
-
 	m := v[0].(map[string]interface{})
-
-	return &qbusiness.KendraIndexConfiguration{
-		IndexId: aws.String(m["index_id"].(string)),
+	return &types.RetrieverConfigurationMemberNativeIndexConfiguration{
+		Value: types.NativeIndexConfiguration{
+			IndexId: aws.String(m["index_id"].(string)),
+		},
 	}
 }
 
-func expandNativeIndexConfiguration(v []interface{}) *qbusiness.NativeIndexConfiguration {
-	if len(v) == 0 || v[0] == nil {
-		return nil
-	}
-
-	m := v[0].(map[string]interface{})
-
-	return &qbusiness.NativeIndexConfiguration{
-		IndexId: aws.String(m["index_id"].(string)),
-	}
-}
-
-func flattenRetrieverConfiguration(c *qbusiness.RetrieverConfiguration) []interface{} {
+func flattenRetrieverConfiguration(c interface{}) []interface{} {
 	if c == nil {
 		return nil
 	}
 
 	m := map[string]interface{}{}
 
-	if c.KendraIndexConfiguration != nil {
-		m["kendra_index_configuration"] = []interface{}{flattenKendraIndexConfiguration(c.KendraIndexConfiguration)}
+	if t, ok := c.(types.RetrieverConfigurationMemberKendraIndexConfiguration); ok {
+		m["kendra_index_configuration"] = []interface{}{flattenKendraIndexConfiguration(t)}
 	}
 
-	if c.NativeIndexConfiguration != nil {
+	if t == types.RetrieverTypeKendraIndex {
+		m["kendra_index_configuration"] = []interface{}{flattenKendraIndexConfiguration(types.KendraIndexConfiguration(c))}
+	}
+
+	if t == types.RetrieverTypeNativeIndex {
 		m["native_index_configuration"] = []interface{}{flattenNativeIndexConfiguration(c.NativeIndexConfiguration)}
 	}
 
 	return []interface{}{m}
 }
 
-func flattenKendraIndexConfiguration(c *qbusiness.KendraIndexConfiguration) map[string]interface{} {
-	if c == nil {
-		return nil
-	}
-
+func flattenKendraIndexConfiguration(c types.RetrieverConfigurationMemberKendraIndexConfiguration) map[string]interface{} {
 	m := map[string]interface{}{}
-
-	if c.IndexId != nil {
-		m["index_id"] = aws.StringValue(c.IndexId)
-	}
-
+	m["index_id"] = aws.ToString(c.Value.IndexId)
 	return m
 }
 
-func flattenNativeIndexConfiguration(c *qbusiness.NativeIndexConfiguration) map[string]interface{} {
-	if c == nil {
-		return nil
-	}
-
+func flattenNativeIndexConfiguration(c types.RetrieverConfigurationMemberNativeIndexConfiguration) map[string]interface{} {
 	m := map[string]interface{}{}
-
-	if c.IndexId != nil {
-		m["index_id"] = aws.StringValue(c.IndexId)
-	}
-
+	m["index_id"] = aws.ToString(c.Value.IndexId)
 	return m
 }
