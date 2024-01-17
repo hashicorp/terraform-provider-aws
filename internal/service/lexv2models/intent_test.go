@@ -1047,7 +1047,7 @@ func TestAccLexV2ModelsIntent_updateClosingSetting(t *testing.T) {
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIntentConfig_updateClosingSetting(rName, "test", "test"),
+				Config: testAccIntentConfig_updateClosingSetting(rName, "test1", "test2", "test3"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntentExists(ctx, resourceName, &intent),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -1057,12 +1057,763 @@ func TestAccLexV2ModelsIntent_updateClosingSetting(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "closing_setting.*", map[string]string{
 						"active": "true",
 					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "closing_setting.*.closing_response.*.message_group.*.message.*.plain_text_message.*", map[string]string{
-						"value": "test",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "closing_setting.*.closing_response.*.conditional.*.conditional_branch.*", map[string]string{
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "closing_setting.*.conditional.*.conditional_branch.*", map[string]string{
 						"name": rName,
 					}),
+					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.conditional.0.conditional_branch.0.next_step.0.session_attributes.slot1", "roligt"),
+					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.conditional.0.default_branch.0.next_step.0.session_attributes.slot1", "hallon"),
+					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.closing_response.0.message_group.0.message.0.plain_text_message.0.value", "test1"),
+					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.conditional.0.conditional_branch.0.response.0.message_group.0.message.0.plain_text_message.0.value", "test2"),
+					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.conditional.0.default_branch.0.response.0.message_group.0.message.0.plain_text_message.0.value", "test3"),
+				),
+			},
+			{
+				Config: testAccIntentConfig_updateClosingSetting(rName, "Hvad", "er", "hygge"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "closing_setting.*", map[string]string{
+						"active": "true",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "closing_setting.*.conditional.*.conditional_branch.*", map[string]string{
+						"name": rName,
+					}),
+					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.conditional.0.conditional_branch.0.next_step.0.session_attributes.slot1", "roligt"),
+					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.conditional.0.default_branch.0.next_step.0.session_attributes.slot1", "hallon"),
+					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.closing_response.0.message_group.0.message.0.plain_text_message.0.value", "Hvad"),
+					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.conditional.0.conditional_branch.0.response.0.message_group.0.message.0.plain_text_message.0.value", "er"),
+					resource.TestCheckResourceAttr(resourceName, "closing_setting.0.conditional.0.default_branch.0.response.0.message_group.0.message.0.plain_text_message.0.value", "hygge"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLexV2ModelsIntent_updateInputContext(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var intent lexmodelsv2.DescribeIntentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_intent.test"
+	botLocaleName := "aws_lexv2models_bot_locale.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntentConfig_updateInputContext(rName, "sammanhang1", "sammanhang2", "sammanhang3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckResourceAttr(resourceName, "input_context.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "input_context.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_context.0.name", "sammanhang1"),
+					resource.TestCheckResourceAttr(resourceName, "input_context.1.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_context.1.name", "sammanhang2"),
+					resource.TestCheckResourceAttr(resourceName, "input_context.2.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_context.2.name", "sammanhang3"),
+				),
+			},
+			{
+				Config: testAccIntentConfig_updateInputContext(rName, "kropp", "utan", "blod"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckResourceAttr(resourceName, "input_context.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "input_context.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_context.0.name", "kropp"),
+					resource.TestCheckResourceAttr(resourceName, "input_context.1.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_context.1.name", "utan"),
+					resource.TestCheckResourceAttr(resourceName, "input_context.2.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "input_context.2.name", "blod"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var intent lexmodelsv2.DescribeIntentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_intent.test"
+	botLocaleName := "aws_lexv2models_bot_locale.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntentConfig_updateInitialResponseSetting(rName, "branch1", "tre", "slumpmässiga", "ord"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.enable_code_hook_invocation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.invocation_label", "test"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.%", "9"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.condition.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.condition.0.expression_string", "slot1 = \"test\""),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.name", "branch1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.slot_to_elicit", "slot1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.type", "CloseIntent"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.session_attributes.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.session_attributes.slot1", "roligt"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.custom_payload.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.image_response_card.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.plain_text_message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.plain_text_message.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.plain_text_message.0.value", "tre"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.ssml_message.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.variation.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.0.dialog_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.0.dialog_action.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.0.dialog_action.0.slot_to_elicit", "slot1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.0.dialog_action.0.type", "CloseIntent"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.0.intent.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.0.session_attributes.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.0.session_attributes.slot1", "hallon"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.custom_payload.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.image_response_card.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.plain_text_message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.plain_text_message.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.plain_text_message.0.value", "slumpmässiga"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.ssml_message.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.variation.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_next_step.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.success_conditional.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.success_next_step.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.success_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.timeout_conditional.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.timeout_next_step.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.timeout_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.conditional.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.message.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.message.0.custom_payload.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.message.0.image_response_card.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.message.0.plain_text_message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.message.0.plain_text_message.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.message.0.plain_text_message.0.value", "ord"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.message.0.ssml_message.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.variation.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.next_step.#", "0"),
+				),
+			},
+			{
+				Config: testAccIntentConfig_updateInitialResponseSetting(rName, "gren1", "några", "olika", "bokstäver"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.enable_code_hook_invocation", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.invocation_label", "test"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.%", "9"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.condition.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.condition.0.expression_string", "slot1 = \"test\""),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.name", "gren1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.slot_to_elicit", "slot1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.type", "CloseIntent"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.session_attributes.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.session_attributes.slot1", "roligt"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.custom_payload.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.image_response_card.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.plain_text_message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.plain_text_message.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.plain_text_message.0.value", "några"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.ssml_message.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.variation.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.0.dialog_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.0.dialog_action.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.0.dialog_action.0.slot_to_elicit", "slot1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.0.dialog_action.0.type", "CloseIntent"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.0.intent.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.0.session_attributes.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.next_step.0.session_attributes.slot1", "hallon"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.custom_payload.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.image_response_card.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.plain_text_message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.plain_text_message.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.plain_text_message.0.value", "olika"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.ssml_message.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.variation.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_next_step.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.failure_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.success_conditional.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.success_next_step.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.success_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.timeout_conditional.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.timeout_next_step.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.code_hook.0.post_code_hook_specification.0.timeout_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.conditional.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.message.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.message.0.custom_payload.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.message.0.image_response_card.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.message.0.plain_text_message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.message.0.plain_text_message.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.message.0.plain_text_message.0.value", "bokstäver"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.message.0.ssml_message.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.initial_response.0.message_group.0.variation.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "initial_response_setting.0.next_step.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var intent lexmodelsv2.DescribeIntentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_intent.test"
+	botLocaleName := "aws_lexv2models_bot_locale.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntentConfig_updateFulfillmentCodeHook(rName, "meddelande", 10, "slumpmässiga", "gren1", "alfanumerisk", "olika"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.delay_in_seconds", "5"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.message.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.message.0.custom_payload.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.message.0.image_response_card.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.message.0.plain_text_message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.message.0.plain_text_message.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.message.0.plain_text_message.0.value", "meddelande"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.message.0.ssml_message.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.variation.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.timeout_in_seconds", "10"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.frequency_in_seconds", "10"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.message.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.message.0.custom_payload.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.message.0.image_response_card.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.message.0.plain_text_message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.message.0.plain_text_message.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.message.0.plain_text_message.0.value", "slumpmässiga"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.message.0.ssml_message.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.variation.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.%", "9"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.condition.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.condition.0.expression_string", "slot1 = \"test\""),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.name", "gren1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.slot_to_elicit", "slot1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.suppress_next_message", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.type", "CloseIntent"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.slot.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.slot.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.slot.0.map_block_key", "test"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.slot.0.shape", "Scalar"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.slot.0.value.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.slot.0.value.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.slot.0.value.0.interpreted_value", "alfanumerisk"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.session_attributes.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.session_attributes.slot1", "roligt"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.session_attributes.slot2", "roligt2"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.custom_payload.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.image_response_card.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.plain_text_message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.plain_text_message.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.plain_text_message.0.value", "olika"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.ssml_message.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.variation.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.0.dialog_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.0.dialog_action.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.0.dialog_action.0.slot_to_elicit", "slot1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.0.dialog_action.0.type", "CloseIntent"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.0.intent.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.0.session_attributes.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.0.session_attributes.slot1", "hallon"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.custom_payload.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.image_response_card.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.plain_text_message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.plain_text_message.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.plain_text_message.0.value", "safriduo"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.ssml_message.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.variation.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_next_step.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.success_conditional.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.success_next_step.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.success_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.timeout_conditional.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.timeout_next_step.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.timeout_response.#", "0"),
+				),
+			},
+			{
+				Config: testAccIntentConfig_updateFulfillmentCodeHook(rName, "dagdröm", 10, "dansa", "dumbom", "gås", "mat"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.delay_in_seconds", "5"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.message.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.message.0.custom_payload.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.message.0.image_response_card.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.message.0.plain_text_message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.message.0.plain_text_message.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.message.0.plain_text_message.0.value", "dagdröm"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.message.0.ssml_message.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.start_response.0.message_group.0.variation.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.timeout_in_seconds", "10"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.frequency_in_seconds", "10"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.message.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.message.0.custom_payload.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.message.0.image_response_card.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.message.0.plain_text_message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.message.0.plain_text_message.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.message.0.plain_text_message.0.value", "dansa"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.message.0.ssml_message.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.fulfillment_updates_specification.0.update_response.0.message_group.0.variation.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.%", "9"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.active", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.condition.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.condition.0.expression_string", "slot1 = \"test\""),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.name", "dumbom"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.slot_to_elicit", "slot1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.suppress_next_message", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.dialog_action.0.type", "CloseIntent"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.name", "test"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.slot.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.slot.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.slot.0.map_block_key", "test"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.slot.0.shape", "Scalar"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.slot.0.value.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.slot.0.value.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.intent.0.slot.0.value.0.interpreted_value", "gås"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.session_attributes.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.session_attributes.slot1", "roligt"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.next_step.0.session_attributes.slot2", "roligt2"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.custom_payload.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.image_response_card.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.plain_text_message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.plain_text_message.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.plain_text_message.0.value", "mat"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.message.0.ssml_message.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.conditional_branch.0.response.0.message_group.0.variation.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.0.dialog_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.0.dialog_action.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.0.dialog_action.0.slot_to_elicit", "slot1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.0.dialog_action.0.type", "CloseIntent"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.0.intent.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.0.session_attributes.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.next_step.0.session_attributes.slot1", "hallon"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.allow_interrupt", "true"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.custom_payload.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.image_response_card.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.plain_text_message.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.plain_text_message.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.plain_text_message.0.value", "safriduo"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.message.0.ssml_message.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_conditional.0.default_branch.0.response.0.message_group.0.variation.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_next_step.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.failure_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.success_conditional.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.success_next_step.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.success_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.timeout_conditional.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.timeout_next_step.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "fulfillment_code_hook.0.post_fulfillment_status_specification.0.timeout_response.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLexV2ModelsIntent_updateDialogCodeHook(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var intent lexmodelsv2.DescribeIntentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_intent.test"
+	botLocaleName := "aws_lexv2models_bot_locale.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntentConfig_updateDialogCodeHook(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.0.enabled", "true"),
+				),
+			},
+			{
+				Config: testAccIntentConfig_updateDialogCodeHook(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "dialog_code_hook.0.enabled", "false"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLexV2ModelsIntent_updateOutputContext(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var intent lexmodelsv2.DescribeIntentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_intent.test"
+	botLocaleName := "aws_lexv2models_bot_locale.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntentConfig_updateOutputContext(rName, "name1", "name2", "name3"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.0.name", "name1"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.0.time_to_live_in_seconds", "300"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.0.turns_to_live", "5"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.1.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.1.name", "name2"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.1.time_to_live_in_seconds", "300"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.1.turns_to_live", "5"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.2.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.2.name", "name3"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.2.time_to_live_in_seconds", "300"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.2.turns_to_live", "5"),
+				),
+			},
+			{
+				Config: testAccIntentConfig_updateOutputContext(rName, "name2", "name3", "name4"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.0.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.0.name", "name2"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.0.time_to_live_in_seconds", "300"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.0.turns_to_live", "5"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.1.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.1.name", "name3"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.1.time_to_live_in_seconds", "300"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.1.turns_to_live", "5"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.2.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.2.name", "name4"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.2.time_to_live_in_seconds", "300"),
+					resource.TestCheckResourceAttr(resourceName, "output_context.2.turns_to_live", "5"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLexV2ModelsIntent_updateSampleUtterance(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var intent lexmodelsv2.DescribeIntentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_intent.test"
+	botLocaleName := "aws_lexv2models_bot_locale.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIntentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIntentConfig_updateSampleUtterance(rName, "yttrande", "twocolors", "danny", "dansa"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckResourceAttr(resourceName, "sample_utterance.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "sample_utterance.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sample_utterance.0.utterance", "yttrande"),
+					resource.TestCheckResourceAttr(resourceName, "sample_utterance.1.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sample_utterance.1.utterance", "twocolors"),
+					resource.TestCheckResourceAttr(resourceName, "sample_utterance.2.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sample_utterance.2.utterance", "danny"),
+					resource.TestCheckResourceAttr(resourceName, "sample_utterance.3.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sample_utterance.3.utterance", "dansa"),
+				),
+			},
+			{
+				Config: testAccIntentConfig_updateSampleUtterance(rName, "rustedroot", "sendme", "onmy", "way"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIntentExists(ctx, resourceName, &intent),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
+					resource.TestCheckResourceAttr(resourceName, "sample_utterance.#", "4"),
+					resource.TestCheckResourceAttr(resourceName, "sample_utterance.0.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sample_utterance.0.utterance", "rustedroot"),
+					resource.TestCheckResourceAttr(resourceName, "sample_utterance.1.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sample_utterance.1.utterance", "sendme"),
+					resource.TestCheckResourceAttr(resourceName, "sample_utterance.2.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sample_utterance.2.utterance", "onmy"),
+					resource.TestCheckResourceAttr(resourceName, "sample_utterance.3.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "sample_utterance.3.utterance", "way"),
 				),
 			},
 		},
@@ -1285,7 +2036,7 @@ resource "aws_lexv2models_intent" "test" {
 `, rName, retries, textMsg, endTOMs1, endTOMs2))
 }
 
-func testAccIntentConfig_updateClosingSetting(rName string, textMsg1, testMsg2 string) string {
+func testAccIntentConfig_updateClosingSetting(rName string, textMsg1, textMsg2, textMsg3 string) string {
 	return acctest.ConfigCompose(
 		testAccIntentConfig_base(rName, 60, true),
 		fmt.Sprintf(`
@@ -1325,6 +2076,10 @@ resource "aws_lexv2models_intent" "test" {
             type = "CloseIntent"
             slot_to_elicit = "slot1"
           }
+
+          session_attributes = {
+            slot1 = "roligt"
+          }
         }
 
         response {
@@ -1339,8 +2094,355 @@ resource "aws_lexv2models_intent" "test" {
           }
         }
       }
+
+      default_branch {
+        next_step {
+          dialog_action {
+            type = "CloseIntent"
+            slot_to_elicit = "slot1"
+          }
+
+          session_attributes = {
+            slot1 = "hallon"
+          }
+        }
+
+        response {
+          allow_interrupt = true
+
+          message_group {
+            message {
+              plain_text_message {
+                value = %[4]q
+              }
+            }
+          }
+        }
+      }
     }
   }
 }
-`, rName, textMsg1, testMsg2))
+`, rName, textMsg1, textMsg2, textMsg3))
+}
+
+func testAccIntentConfig_updateInputContext(rName, inputContext1, inputContext2, inputContext3 string) string {
+	return acctest.ConfigCompose(
+		testAccIntentConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_intent" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  input_context {
+    name = %[2]q
+  }
+
+  input_context {
+    name = %[3]q
+  }
+
+  input_context {
+    name = %[4]q
+  }
+}
+`, rName, inputContext1, inputContext2, inputContext3))
+}
+
+func testAccIntentConfig_updateInitialResponseSetting(rName, branchName, msg1, msg2, msg3 string) string {
+	return acctest.ConfigCompose(
+		testAccIntentConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_intent" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  initial_response_setting {
+    code_hook {
+      active                      = true
+      enable_code_hook_invocation = true
+      invocation_label            = "test"
+
+      post_code_hook_specification {
+        failure_conditional {
+          active = true
+
+          conditional_branch {
+            name = %[2]q
+
+            condition {
+              expression_string = "slot1 = \"test\""
+            }
+
+            next_step {
+              dialog_action {
+                type = "CloseIntent"
+                slot_to_elicit = "slot1"
+              }
+
+              session_attributes = {
+                slot1 = "roligt"
+              }
+            }
+
+            response {
+              allow_interrupt = true
+
+              message_group {
+                message {
+                  plain_text_message {
+                    value = %[3]q
+                  }
+                }
+              }
+            }
+          }
+
+          default_branch {
+            next_step {
+              dialog_action {
+                type = "CloseIntent"
+                slot_to_elicit = "slot1"
+              }
+
+              session_attributes = {
+                slot1 = "hallon"
+              }
+            }
+
+            response {
+              allow_interrupt = true
+
+              message_group {
+                message {
+                  plain_text_message {
+                    value = %[4]q
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+
+    initial_response {
+      allow_interrupt = true
+
+      message_group {
+        message {
+          plain_text_message {
+            value = %[5]q
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, branchName, msg1, msg2, msg3))
+}
+
+func testAccIntentConfig_updateFulfillmentCodeHook(rName, msg1 string, freqSec int, msg2, condBranch, intIntValue, msg3 string) string {
+	return acctest.ConfigCompose(
+		testAccIntentConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_intent" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  fulfillment_code_hook {
+    active  = true
+    enabled = true
+
+    fulfillment_updates_specification {
+      active             = true
+      timeout_in_seconds = 10
+
+      start_response {
+        allow_interrupt  = true
+        delay_in_seconds = 5
+
+        message_group {
+          message {
+            plain_text_message {
+              value = %[2]q
+            }
+          }
+        }
+      }
+
+      update_response {
+        allow_interrupt      = true
+        frequency_in_seconds = %[3]d
+
+        message_group {
+          message {
+            plain_text_message {
+              value = %[4]q
+            }
+          }
+        }
+      }
+    }
+
+    post_fulfillment_status_specification {
+      failure_conditional {
+        active = true
+
+        conditional_branch {
+          name = %[5]q
+
+          condition {
+            expression_string = "slot1 = \"test\""
+          }
+
+          next_step {
+            session_attributes = {
+              slot1 = "roligt"
+              slot2 = "roligt2"
+            }
+
+            dialog_action {
+              type                  = "CloseIntent"
+              slot_to_elicit        = "slot1"
+              suppress_next_message = true
+            }
+
+            intent {
+              name = "test"
+              slot {
+                map_block_key = "test"
+                shape         = "Scalar"
+
+                value {
+                  interpreted_value = %[6]q
+                }
+              }
+            }
+          }
+
+          response {
+            allow_interrupt = true
+
+            message_group {
+              message {
+                plain_text_message {
+                  value = %[7]q
+                }
+              }
+            }
+          }
+        }
+
+        default_branch {
+          next_step {
+            dialog_action {
+              type = "CloseIntent"
+              slot_to_elicit = "slot1"
+            }
+
+            session_attributes = {
+              slot1 = "hallon"
+            }
+          }
+
+          response {
+            allow_interrupt = true
+
+            message_group {
+              message {
+                plain_text_message {
+                  value = "safriduo"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+`, rName, msg1, freqSec, msg2, condBranch, intIntValue, msg3))
+}
+
+func testAccIntentConfig_updateDialogCodeHook(rName string, enabled bool) string {
+	return acctest.ConfigCompose(
+		testAccIntentConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_intent" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  dialog_code_hook {
+    enabled = %[2]t
+  }
+}
+`, rName, enabled))
+}
+
+func testAccIntentConfig_updateOutputContext(rName, name1, name2, name3 string) string {
+	return acctest.ConfigCompose(
+		testAccIntentConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_intent" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  output_context {
+    name                    = %[2]q
+    time_to_live_in_seconds = 300
+    turns_to_live           = 5
+  }
+
+  output_context {
+    name                    = %[3]q
+    time_to_live_in_seconds = 300
+    turns_to_live           = 5
+  }
+
+  output_context {
+    name                    = %[4]q
+    time_to_live_in_seconds = 300
+    turns_to_live           = 5
+  }
+}
+`, rName, name1, name2, name3))
+}
+
+func testAccIntentConfig_updateSampleUtterance(rName, utter1, utter2, utter3, utter4 string) string {
+	return acctest.ConfigCompose(
+		testAccIntentConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_intent" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  sample_utterance {
+    utterance = %[2]q
+  }
+
+  sample_utterance {
+    utterance = %[3]q
+  }
+
+  sample_utterance {
+    utterance = %[4]q
+  }
+
+  sample_utterance {
+    utterance = %[5]q
+  }
+}
+`, rName, utter1, utter2, utter3, utter4))
 }
