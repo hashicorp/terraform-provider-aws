@@ -1644,8 +1644,8 @@ func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...f
 	return err
 }
 
-func findBucketRegion(ctx context.Context, awsClient *conns.AWSClient, bucket string) (string, error) {
-	return manager.GetBucketRegion(ctx, awsClient.S3Client(ctx), bucket,
+func findBucketRegion(ctx context.Context, awsClient *conns.AWSClient, bucket string, optFns ...func(*s3.Options)) (string, error) {
+	optFns = append(slices.Clone(optFns),
 		func(o *s3.Options) {
 			// By default, GetBucketRegion forces virtual host addressing, which
 			// is not compatible with many non-AWS implementations. Instead, pass
@@ -1660,6 +1660,21 @@ func findBucketRegion(ctx context.Context, awsClient *conns.AWSClient, bucket st
 			// Use the current credentials when getting the bucket region.
 			o.Credentials = awsClient.CredentialsProvider()
 		})
+
+	region, err := manager.GetBucketRegion(ctx, awsClient.S3Client(ctx), bucket, optFns...)
+
+	if errs.IsA[manager.BucketNotFound](err) {
+		return "", &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: bucket,
+		}
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	return region, nil
 }
 
 func retryWhenNoSuchBucketError[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {
