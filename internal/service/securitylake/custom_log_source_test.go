@@ -140,7 +140,7 @@ func testAccCustomLogSourceConfig_basic(rName string) string {
 data "aws_caller_identity" "test" {}
 
 resource "aws_iam_role" "custom_log" {
-	name               = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmonx"
+	name               = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
 	path               = "/service-role/"
 	assume_role_policy = <<POLICY
 {
@@ -157,7 +157,7 @@ resource "aws_iam_role" "custom_log" {
 }
 
 resource "aws_iam_role_policy" "custom_log" {
-	name = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmonx"
+	name = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
 	role = aws_iam_role.custom_log.name
   
 	policy = <<POLICY
