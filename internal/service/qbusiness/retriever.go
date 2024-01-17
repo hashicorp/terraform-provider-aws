@@ -31,6 +31,8 @@ func ResourceRetriever() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRetrieverCreate,
 		ReadWithoutTimeout:   resourceRetrieverRead,
+		UpdateWithoutTimeout: resourceRetrieverUpdate,
+		DeleteWithoutTimeout: resourceRetrieverDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,

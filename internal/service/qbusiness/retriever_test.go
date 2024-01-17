@@ -25,10 +25,10 @@ func TestAccQBusinessRetriever_basic(t *testing.T) {
 	resourceName := "aws_qbusiness_retriever.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIndex(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckRetriever(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckRetrieverDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRetrieverConfig_basic(rName),
@@ -56,10 +56,10 @@ func TestAccQBusinessRetriever_disappears(t *testing.T) {
 	resourceName := "aws_qbusiness_retriever.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIndex(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckRetriever(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckRetrieverDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRetrieverConfig_basic(rName),
@@ -80,10 +80,10 @@ func TestAccQBusinessRetriever_tags(t *testing.T) {
 	resourceName := "aws_qbusiness_retriever.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIndex(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckRetriever(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, "qbusiness"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIndexDestroy(ctx),
+		CheckDestroy:             testAccCheckRetrieverDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRetrieverConfig_tags(rName, "key1", "value1", "key2", "value2"),
