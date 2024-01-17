@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccCustomLogSource_basic(t *testing.T) {
+func testAccCustomLogSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -43,6 +43,13 @@ func TestAccCustomLogSource_basic(t *testing.T) {
 				Config: testAccCustomLogSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.crawler_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.crawler_configuration.0.role_arn", "aws_iam_role.custom_log", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.provider_identity.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.provider_identity.0.external_id", "windows-sysmon-test"),
+					resource.TestCheckResourceAttr(resourceName, "source_name", "windows-sysmon"),
+					resource.TestCheckResourceAttr(resourceName, "source_version", "1.0"),
 				),
 			},
 			{
@@ -55,7 +62,7 @@ func TestAccCustomLogSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccCustomLogSource_disappears(t *testing.T) {
+func testAccCustomLogSource_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_securitylake_custom_log_source.test"
@@ -189,7 +196,7 @@ resource "aws_iam_role_policy_attachment" "glue_service_role" {
 resource "aws_securitylake_custom_log_source" "test" {
     source_name    = "windows-sysmon"
     source_version = "1.0"
-	event_classes  = ["FILE_ACTIVITY","PROCESS_ACTIVITY"]
+	event_classes  = ["FILE_ACTIVITY"]
 	configuration {
 		crawler_configuration {
 			role_arn = aws_iam_role.custom_log.arn
