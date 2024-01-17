@@ -1,5 +1,9 @@
 ## 5.33.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_lexv2models_intent` ([#34891](https://github.com/hashicorp/terraform-provider-aws/issues/34891))
+
 ENHANCEMENTS:
 
 * data-source/aws_secretsmanager_secret: Add `created_date` and `last_changed_date` attributes ([#35117](https://github.com/hashicorp/terraform-provider-aws/issues/35117))
