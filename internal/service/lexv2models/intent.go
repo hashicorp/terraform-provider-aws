@@ -7,10 +7,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2/types"
@@ -529,7 +529,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.RegexMatches(
-							regexp.MustCompile(`^[A-D0-9#*]{1}$`),
+							regexache.MustCompile(`^[A-D0-9#*]{1}$`),
 							"alphanumeric characters",
 						),
 					},
@@ -538,7 +538,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 					Required: true,
 					Validators: []validator.String{
 						stringvalidator.RegexMatches(
-							regexp.MustCompile(`^[A-D0-9#*]{1}$`),
+							regexache.MustCompile(`^[A-D0-9#*]{1}$`),
 							"alphanumeric characters",
 						),
 					},
