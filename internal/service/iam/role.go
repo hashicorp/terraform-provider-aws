@@ -45,6 +45,12 @@ const (
 
 // TODO: finish this how does this work?
 
+// @FrameworkResource(name="Example")
+// @Tags(identifierAttribute="arn")
+func newResourceExample(_ context.Context) (resource.ResourceWithConfigure, error) {
+    return &resourceIamRole{}, nil
+}
+
 // @SDKResource("aws_iam_role", name="Role")
 // @Tags
 // func newIamRole(context.Context) (resource.ResourceWithConfigure, error) {
@@ -305,7 +311,18 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
-// TODO: delete/update/import
+func (r resourceIamRole) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+    // TODO: finish this
+}
+
+func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+    // TODO: finish this
+}
+
+func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+    // TODO: finish this
+}
+
 func FindRoleByName(ctx context.Context, conn *iam.IAM, name string) (*iam.Role, error) {
 	input := &iam.GetRoleInput{
 		RoleName: aws.String(name),
