@@ -35,25 +35,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// todo:
-//  x invalid result object
-//  x get basic test working
-//  x disappears
-//  x import/ID
-//  x update autoflex for StringEnum map keys
-//  - test all (reasonable number) attributes
-//  x tags (no tags on intents)
-//  - slot_priority on create
-//  x prompt_attempts_specification schema
-//  x prompt_attempts_specification model
-//  x prompt_attempts_specification test
-//  x intent-slots-slot-value-override schema
-//  x intent-slots-slot-value-override model
-//  x intent-slots-slot-value-override test
-//  x timeouts
-//  - get config with confirmation_setting.prompt_specification.prompt_attempts_specification working
-//  - updates
-
 // @FrameworkResource(name="Intent")
 func newResourceIntent(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIntent{}
