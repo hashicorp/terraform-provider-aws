@@ -400,6 +400,14 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		},
 	}
 
+	nextStepLNB := schema.ListNestedBlock{
+		Validators: []validator.List{
+			listvalidator.SizeAtMost(1),
+		},
+		CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
+		NestedObject: dialogStateNBO,
+	}
+
 	defaultBranchLNB := schema.ListNestedBlock{
 		Validators: []validator.List{
 			listvalidator.SizeBetween(1, 1),
@@ -407,14 +415,8 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		CustomType: fwtypes.NewListNestedObjectTypeOf[DefaultConditionalBranch](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
-				"next_step": schema.ListNestedBlock{
-					Validators: []validator.List{
-						listvalidator.SizeAtMost(1),
-					},
-					CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
-					NestedObject: dialogStateNBO,
-				},
-				"response": responseSpecificationLNB,
+				"next_step": nextStepLNB,
+				"response":  responseSpecificationLNB,
 			},
 		},
 	}
@@ -435,14 +437,6 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 				"default_branch":     defaultBranchLNB,
 			},
 		},
-	}
-
-	nextStepLNB := schema.ListNestedBlock{
-		Validators: []validator.List{
-			listvalidator.SizeAtMost(1),
-		},
-		CustomType:   fwtypes.NewListNestedObjectTypeOf[DialogState](ctx),
-		NestedObject: dialogStateNBO,
 	}
 
 	closingSettingLNB := schema.ListNestedBlock{
