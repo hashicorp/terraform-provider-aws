@@ -37,31 +37,16 @@ import (
 )
 
 const (
-	roleNameMaxLen = 64
-	// TODO: what?
+	roleNameMaxLen       = 64
 	roleNamePrefixMaxLen = roleNameMaxLen - id.UniqueIDSuffixLength
 	ResNameIamRole       = "IAM Role"
 )
 
-// TODO: finish this how does this work?
-
-// @FrameworkResource(name="Example")
+// @FrameworkResource(name="Role")
 // @Tags(identifierAttribute="arn")
-func newResourceExample(_ context.Context) (resource.ResourceWithConfigure, error) {
-    return &resourceIamRole{}, nil
+func newResourceRole(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &resourceIamRole{}, nil
 }
-
-// @SDKResource("aws_iam_role", name="Role")
-// @Tags
-// func newIamRole(context.Context) (resource.ResourceWithConfigure, error) {
-// r := &resourceIamRole{}
-// // TODO
-// // r.create = r.createSecurityGroupRule
-// // r.delete = r.deleteSecurityGroupRule
-// // r.findByID = r.findSecurityGroupRuleByID
-
-// return r, nil
-// }
 
 type resourceIamRole struct {
 	framework.ResourceWithConfigure
@@ -312,16 +297,19 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 }
 
 func (r resourceIamRole) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-    // TODO: finish this
+	// TODO: finish this
 }
 
 func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-    // TODO: finish this
+	// TODO: finish this
 }
 
 func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-    // TODO: finish this
+	// TODO: finish this
 }
+
+// TODO: import state?
+// https://developer.hashicorp.com/terraform/plugin/framework/resources/import
 
 func FindRoleByName(ctx context.Context, conn *iam.IAM, name string) (*iam.Role, error) {
 	input := &iam.GetRoleInput{
