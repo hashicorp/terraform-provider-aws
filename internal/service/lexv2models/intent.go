@@ -278,12 +278,6 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 			Attributes: map[string]schema.Attribute{
 				"map_block_key": schema.StringAttribute{
 					Required: true,
-					Validators: []validator.String{
-						stringvalidator.RegexMatches(
-							regexp.MustCompile(` ^([0-9a-zA-Z][_-]?){1,100}$`),
-							"alphanumeric characters and hyphens (-) and underscores (_) at the end and must be between 1 and 100 characters in length",
-						),
-					},
 				},
 				"shape": schema.StringAttribute{
 					Optional:   true,
@@ -823,7 +817,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"active": schema.BoolAttribute{
-					Computed: true,
+					Optional: true,
 				},
 				"enabled": schema.BoolAttribute{
 					Required: true,
