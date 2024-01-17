@@ -1363,7 +1363,7 @@ resource "aws_lb_listener" "test" {
   }
 
   mutual_authentication {
-    mode            = "passthrough"
+    mode = "passthrough"
   }
 }
 
