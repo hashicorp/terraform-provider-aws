@@ -261,6 +261,12 @@ The following arguments are optional:
 * `intent` - (Optional) Configuration block for override settings to configure the intent state. See [`intent`](#intent).
 * `session_attributes` - (Optional) Map of key/value pairs representing session-specific context information. It contains application information passed between Amazon Lex and a client application.
 
+##### `dialog_action`
+
+* `type` - (Required) Action that the bot should execute. Valid values are `ElicitIntent`, `StartIntent`, `ElicitSlot`, `EvaluateConditional`, `InvokeDialogCodeHook`, `ConfirmIntent`, `FulfillIntent`, `CloseIntent`, `EndConversation`.
+* `slot_to_elicit` - (Optional) If the dialog action is `ElicitSlot`, defines the slot to elicit from the user.
+* `suppress_next_message` - (Optional) Whether the next message for the intent is _not_ used.
+
 ##### `intent`
 
 * `name` - (Optional, Required when switching intents) Name of the intent.
@@ -285,7 +291,7 @@ The following arguments are optional:
 * `confirmation_next_step` - (Optional) Configuration block for the next step that the bot executes when the customer confirms the intent. See [`confirmation_next_step`](#confirmation_next_step).
 * `confirmation_response` - (Optional) Configuration block for message groups that Amazon Lex uses to respond the user input. See [`confirmation_response`](#confirmation_response).
 * `declination_conditional` - (Optional) Configuration block for conditional branches to evaluate after the intent is declined. See [`declination_conditional`](#declination_conditional).
-* `declication_next_step` - (Optional) Configuration block for the next step that the bot executes when the customer declines the intent. See [`declication_next_step`](#declication_next_step).
+* `declination_next_step` - (Optional) Configuration block for the next step that the bot executes when the customer declines the intent. See [`declination_next_step`](#declination_next_step).
 * `declination_response` - (Optional) Configuration block for when the user answers "no" to the question defined in `prompt_specification`, Amazon Lex responds with this response to acknowledge that the intent was canceled. See [`declination_response`](#declination_response).
 * `elicitation_code_hook` - (Optional) Configuration block for when the code hook is invoked during confirmation prompt retries. See [`elicitation_code_hook`](#elicitation_code_hook).
 * `failure_conditional` - (Optional) Configuration block for conditional branches. Branches are evaluated in the order that they are entered in the list. The first branch with a condition that evaluates to true is executed. The last branch in the list is the default branch. The default branch should not have any condition expression. The default branch is executed if no other branch has a matching condition. See [`failure_conditional`](#failure_conditional).
