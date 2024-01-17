@@ -77,12 +77,16 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.SetId(bucket)
-	arn := arn.ARN{
-		Partition: awsClient.Partition,
-		Service:   "s3",
-		Resource:  bucket,
-	}.String()
-	d.Set("arn", arn)
+	if arn.IsARN(bucket) {
+		d.Set("arn", bucket)
+	} else {
+		arn := arn.ARN{
+			Partition: awsClient.Partition,
+			Service:   "s3",
+			Resource:  bucket,
+		}.String()
+		d.Set("arn", arn)
+	}
 	d.Set("bucket_domain_name", awsClient.PartitionHostname(fmt.Sprintf("%s.s3", bucket)))
 	d.Set("bucket_regional_domain_name", bucketRegionalDomainName(bucket, region))
 	if hostedZoneID, err := hostedZoneIDForRegion(region); err == nil {
