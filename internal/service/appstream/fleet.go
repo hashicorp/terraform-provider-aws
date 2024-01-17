@@ -139,7 +139,7 @@ func ResourceFleet() *schema.Resource {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      0,
-				ValidateFunc: validation.IntBetween(60, 3600),
+				ValidateFunc: validation.IntBetween(60, 360000),
 			},
 			"image_arn": {
 				Type:     schema.TypeString,

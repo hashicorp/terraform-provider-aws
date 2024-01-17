@@ -11,7 +11,7 @@ Use the Amazon Web Services (AWS) provider to interact with the
 many resources supported by AWS. You must configure the provider
 with the proper credentials before you can use it.
 
-Use the navigation to the left to read about the available resources. There are currently 1300 resources and 533 data sources available in the provider.
+Use the navigation to the left to read about the available resources. There are currently 1314 resources and 539 data sources available in the provider.
 
 To learn the basics of Terraform using this provider, follow the
 hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
@@ -413,6 +413,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
     - [`aws_elasticache_cluster` resource](/docs/providers/aws/r/elasticache_cluster.html)
     - [`aws_elb` data source](/docs/providers/aws/d/elb.html)
     - [`aws_elb` resource](/docs/providers/aws/r/elb.html)
+    - [`aws_finspace_kx_dataview` resource](/docs/providers/aws/r/finspace_kx_dataview.html)
     - [`aws_flow_log` resource](/docs/providers/aws/r/flow_log.html)
     - [`aws_glue_catalog_database` resource](/docs/providers/aws/r/glue_catalog_database.html)
     - [`aws_glue_catalog_table` resource](/docs/providers/aws/r/glue_catalog_table.html)

@@ -94,4 +94,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `plaintext` - Map containing each `secret` `name` as the key with its decrypted plaintext value
 
-<!-- cache-key: cdktf-0.19.0 input-163ab67c377949aee00b00e3a19b28f529fc14cff02471ea6c0bd31a209a5b1d -->
+<!-- cache-key: cdktf-0.20.1 input-163ab67c377949aee00b00e3a19b28f529fc14cff02471ea6c0bd31a209a5b1d -->

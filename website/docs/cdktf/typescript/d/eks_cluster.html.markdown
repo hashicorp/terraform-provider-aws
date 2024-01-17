@@ -63,26 +63,26 @@ This data source exports the following attributes in addition to the arguments a
     * `oidc` - Nested attribute containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster.
         * `issuer` - Issuer URL for the OpenID Connect identity provider.
 * `kubernetesNetworkConfig` - Nested list containing Kubernetes Network Configuration.
-    * `ip_family` - `ipv4` or `ipv6`.
-    * `service_ipv4_cidr` - The CIDR block to assign Kubernetes pod and service IP addresses from if `ipv4` was specified when the cluster was created.
-    * `service_ipv6_cidr` - The CIDR block to assign Kubernetes pod and service IP addresses from if `ipv6` was specified when the cluster was created. Kubernetes assigns service addresses from the unique local address range (fc00::/7) because you can't specify a custom IPv6 CIDR block when you create the cluster.
+    * `ipFamily` - `ipv4` or `ipv6`.
+    * `serviceIpv4Cidr` - The CIDR block to assign Kubernetes pod and service IP addresses from if `ipv4` was specified when the cluster was created.
+    * `serviceIpv6Cidr` - The CIDR block to assign Kubernetes pod and service IP addresses from if `ipv6` was specified when the cluster was created. Kubernetes assigns service addresses from the unique local address range (fc00::/7) because you can't specify a custom IPv6 CIDR block when you create the cluster.
 * `outpostConfig` - Contains Outpost Configuration.
-    * `control_plane_instance_type` - The Amazon EC2 instance type for all Kubernetes control plane instances.
-    * `control_plane_placement` - An object representing the placement configuration for all the control plane instances of your local Amazon EKS cluster on AWS Outpost.
-        * `group_name` - The name of the placement group for the Kubernetes control plane instances.
-    * `outpost_arns` - List of ARNs of the Outposts hosting the EKS cluster. Only a single ARN is supported currently.
+    * `controlPlaneInstanceType` - The Amazon EC2 instance type for all Kubernetes control plane instances.
+    * `controlPlanePlacement` - An object representing the placement configuration for all the control plane instances of your local Amazon EKS cluster on AWS Outpost.
+        * `groupName` - The name of the placement group for the Kubernetes control plane instances.
+    * `outpostArns` - List of ARNs of the Outposts hosting the EKS cluster. Only a single ARN is supported currently.
 * `platformVersion` - Platform version for the cluster.
 * `roleArn` - ARN of the IAM role that provides permissions for the Kubernetes control plane to make calls to AWS API operations on your behalf.
 * `status` - Status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`.
 * `tags` - Key-value map of resource tags.
 * `version` - Kubernetes server version for the cluster.
 * `vpcConfig` - Nested list containing VPC configuration for the cluster.
-    * `cluster_security_group_id` - The cluster security group that was created by Amazon EKS for the cluster.
-    * `endpoint_private_access` - Indicates whether or not the Amazon EKS private API server endpoint is enabled.
-    * `endpoint_public_access` - Indicates whether or not the Amazon EKS public API server endpoint is enabled.
-    * `public_access_cidrs` - List of CIDR blocks. Indicates which CIDR blocks can access the Amazon EKS public API server endpoint.
-    * `security_group_ids` – List of security group IDs
-    * `subnet_ids` – List of subnet IDs
-    * `vpc_id` – The VPC associated with your cluster.
+    * `clusterSecurityGroupId` - The cluster security group that was created by Amazon EKS for the cluster.
+    * `endpointPrivateAccess` - Indicates whether or not the Amazon EKS private API server endpoint is enabled.
+    * `endpointPublicAccess` - Indicates whether or not the Amazon EKS public API server endpoint is enabled.
+    * `publicAccessCidrs` - List of CIDR blocks. Indicates which CIDR blocks can access the Amazon EKS public API server endpoint.
+    * `securityGroupIds` – List of security group IDs
+    * `subnetIds` – List of subnet IDs
+    * `vpcId` – The VPC associated with your cluster.
 
-<!-- cache-key: cdktf-0.19.0 input-c6c973609d8849dfdbe288511dbb8b53a13192e5d23e4a6f41498b65a5c39508 -->
+<!-- cache-key: cdktf-0.20.1 input-c6c973609d8849dfdbe288511dbb8b53a13192e5d23e4a6f41498b65a5c39508 -->

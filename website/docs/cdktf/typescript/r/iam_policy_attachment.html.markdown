@@ -12,11 +12,11 @@ description: |-
 
 Attaches a Managed IAM Policy to user(s), role(s), and/or group(s)
 
-!> **WARNING:** The aws_iam_policy_attachment resource creates **exclusive** attachments of IAM policies. Across the entire AWS account, all of the users/roles/groups to which a single policy is attached must be declared by a single aws_iam_policy_attachment resource. This means that even any users/roles/groups that have the attached policy via any other mechanism (including other Terraform resources) will have that attached policy revoked by this resource. Consider `awsIamRolePolicyAttachment`, `awsIamUserPolicyAttachment`, or `awsIamGroupPolicyAttachment` instead. These resources do not enforce exclusive attachment of an IAM policy.
+!> **WARNING:** The aws_iam_policy_attachment resource creates **exclusive** attachments of IAM policies. Across the entire AWS account, all of the users/roles/groups to which a single policy is attached must be declared by a single aws_iam_policy_attachment resource. This means that even any users/roles/groups that have the attached policy via any other mechanism (including other Terraform resources) will have that attached policy revoked by this resource. Consider `aws_iam_role_policy_attachment`, `aws_iam_user_policy_attachment`, or `aws_iam_group_policy_attachment` instead. These resources do not enforce exclusive attachment of an IAM policy.
 
-~> **NOTE:** The usage of this resource conflicts with the `awsIamGroupPolicyAttachment`, `awsIamRolePolicyAttachment`, and `awsIamUserPolicyAttachment` resources and will permanently show a difference if both are defined.
+~> **NOTE:** The usage of this resource conflicts with the `aws_iam_group_policy_attachment`, `aws_iam_role_policy_attachment`, and `aws_iam_user_policy_attachment` resources and will permanently show a difference if both are defined.
 
-~> **NOTE:** For a given role, this resource is incompatible with using the [`awsIamRole` resource](/docs/providers/aws/r/iam_role.html) `managedPolicyArns` argument. When using that argument and this resource, both will attempt to manage the role's managed policy attachments and Terraform will show a permanent difference.
+~> **NOTE:** For a given role, this resource is incompatible with using the [`aws_iam_role` resource](/docs/providers/aws/r/iam_role.html) `managedPolicyArns` argument. When using that argument and this resource, both will attempt to manage the role's managed policy attachments and Terraform will show a permanent difference.
 
 ## Example Usage
 
@@ -106,4 +106,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The policy's ID.
 * `name` - The name of the attachment.
 
-<!-- cache-key: cdktf-0.19.0 input-c752eb701a68e4598f3a6661db2c072cd7097ba8d948dc18d4d1833423b0719c -->
+<!-- cache-key: cdktf-0.20.1 input-c752eb701a68e4598f3a6661db2c072cd7097ba8d948dc18d4d1833423b0719c -->
