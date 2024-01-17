@@ -314,6 +314,14 @@ func (r *resourceEnvironment) Update(ctx context.Context, req resource.UpdateReq
 		if !plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow) {
 			in.PreferredMaintenanceWindow = flex.StringFromFramework(ctx, plan.PreferredMaintenanceWindow)
 		}
+
+		if !plan.HighAvailabilityConfig.Equal(state.HighAvailabilityConfig) {
+			v, d := plan.HighAvailabilityConfig.ToSlice(ctx)
+			resp.Diagnostics.Append(d...)
+			if len(v) > 0 {
+				in.DesiredCapacity = flex.Int32FromFramework(ctx, v[0].DesiredCapacity)
+			}
+		}
 	} else {
 		return
 	}
