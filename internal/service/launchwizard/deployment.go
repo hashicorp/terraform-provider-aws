@@ -6,12 +6,11 @@ package launchwizard
 import (
 	"context"
 	"errors"
-	"regexp"
-	"time"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
+	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/launchwizard/types"
+	"github.com/aws/smithy-go"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -29,6 +28,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"reflect"
+	"regexp"
+	"time"
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
@@ -102,11 +104,18 @@ func (r *resourceDeployment) Schema(ctx context.Context, req resource.SchemaRequ
 				Required:    true,
 				ElementType: types.StringType,
 				PlanModifiers: []planmodifier.Map{
-					// mapplanmodifier.RequiresReplace(),
-					mapplanmodifier.RequiresReplaceIf(specificationRequiresReplaceIf, "Specifications", "Specifications"),
+					mapplanmodifier.RequiresReplaceIf(
+						requiresReplaceUnlessPasswordIsEmpty(),
+						"Replace",
+						"Replace",
+					),
 				},
 				Validators:  []validator.Map{},
 				Description: "Specifications",
+			},
+			"skip_destroy_after_failure": schema.BoolAttribute{
+				Optional:    true,
+				Description: "Ensures the deployment doesn't get deleted immediatelly after a failure. Taints resource.",
 			},
 			"resource_group": schema.StringAttribute{
 				Computed:    true,
@@ -127,36 +136,6 @@ func (r *resourceDeployment) Schema(ctx context.Context, req resource.SchemaRequ
 	}
 }
 
-// func specificationRequiresReplaceIf(ctx context.Context, req planmodifier.MapRequest, resp *mapplanmodifier.RequiresReplaceIfFuncResponse) {
-// 	resp.RequiresReplace = true
-
-// 	//get current state
-// 	var state resourceDeploymentData
-// 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-// 	if resp.Diagnostics.HasError() {
-// 		return
-// 	}
-
-// 	spec_state := flex.ExpandFrameworkStringMap(ctx, state.Specifications)
-// 	*spec_state["SaveDeploymentArtifacts"] = "No"
-
-// 	// logging.Log(ctx, logging.Debug, "spec_state: %v", spec_state)
-// 	// logging.Log(ctx, logging.Debug, "req.PlanValue: %v", req.PlanValue)
-
-// 	println("spec_state: ", spec_state)
-// 	// println("req.PlanValue: ", req.PlanValue)
-
-// 	//compare state with config
-// 	// var config resourceDeploymentData
-// 	//spec_config := flex.ExpandFrameworkStringMap(ctx, req.ConfigValue.Elements()["specifications"].Elements())
-	
-// 	// resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
-
-// 	//req.ConfigValue.Get(ctx, "SaveDeploymentArtifacts", func(v types.Value) {
-	
-// }
-
 func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().LaunchWizardClient(ctx)
 
@@ -175,7 +154,7 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 		DryRun:                true,
 	}
 
-	out, err := conn.CreateDeployment(ctx, dry_run_in)
+	_, err := conn.CreateDeployment(ctx, dry_run_in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionCreating, ResNameDeployment, plan.Name.String(), err),
@@ -192,7 +171,7 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 		Specifications:        flex.ExpandFrameworkStringValueMap(ctx, plan.Specifications),
 	}
 
-	out, err = conn.CreateDeployment(ctx, in)
+	create_out, err := conn.CreateDeployment(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionCreating, ResNameDeployment, plan.Name.String(), err),
@@ -200,7 +179,7 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 		)
 		return
 	}
-	if out == nil || out.DeploymentId == nil {
+	if create_out == nil || create_out.DeploymentId == nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionCreating, ResNameDeployment, plan.Name.String(), nil),
 			errors.New("empty output").Error(),
@@ -208,7 +187,19 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	plan.ID = flex.StringToFramework(ctx, out.DeploymentId)
+	plan.ID = flex.StringToFramework(ctx, create_out.DeploymentId)
+
+	check_out, err := findDeploymentByID(ctx, conn, plan.ID.ValueString())
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionWaitingForCreation, ResNameDeployment, plan.Name.String(), err),
+			err.Error(),
+		)
+	}
+
+	plan.ResourceGroup = flex.StringToFramework(ctx, check_out.ResourceGroup)
+	plan.Status = flex.StringToFramework(ctx, (*string)(&check_out.Status))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 
@@ -216,120 +207,72 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 
 	wait_out, err := waitDeploymentCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 
-	plan.ResourceGroup = flex.StringToFramework(ctx, wait_out.ResourceGroup)
-	plan.Status = flex.StringToFramework(ctx, (*string)(&wait_out.Status))
-
-	// spec_temp := flex.ExpandFrameworkStringMap(ctx, flex.FlattenFrameworkStringValueMap(ctx, wait_out.Specifications))
-
-	// //workaround as specification is not returned properly by Get API. TODO: Ask AWS to fix the API
-	// if *spec_temp["SaveDeploymentArtifacts"] == "true" {
-	// 	*spec_temp["SaveDeploymentArtifacts"] = "Yes"
-	// } else {
-	// 	*spec_temp["SaveDeploymentArtifacts"] = "No"
-	// }
-
-	// //bug in API; remove "deploymentScenario" from specifications
-	// delete(spec_temp, "deploymentScenario")
-
-
-	// plan.Specifications = flex.FlattenFrameworkStringMap(ctx, spec_temp)	
-
-	// //the password attribute is not returned by the API when conducting a read operation;
-	// if current_value, ok := spec_temp["DatabasePassword"]; ok {
-	// 	if *current_value != "" {
-	// 		*spec_temp["DatabasePassword"] = db_password
-	// 	}
-	// }
-
-	// sap_password := flex.ExpandFrameworkStringValueMap(ctx, state.Specifications)["SapPassword"]
-
-	// if current_value, ok := spec_temp["SapPassword"]; ok {
-	// 	if *current_value != "" {
-	// 		*spec_temp["SapPassword"] = sap_password
-	// 	}
-	// }
-
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionWaitingForCreation, ResNameDeployment, plan.Name.String(), err),
-			err.Error(),
-		)
 
-		//Delete Deployment if creation failed
-		in := &launchwizard.DeleteDeploymentInput{
-			DeploymentId: aws.String(plan.ID.ValueString()),
-		}
+		session_timeout := false
 
-		_, err := conn.DeleteDeployment(ctx, in)
+		if wait_out == nil {
+			//Creation can take multiple hours
+			//it is likely that the session token expired. Assuming that the Creation is still in Progress.
+			//in that case the deployment should not be tainted and the resource should be checked during next read
+			if opErr, ok := err.(*smithy.OperationError); ok {
 
-		if err != nil {
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-				return
+				if respErr, ok := opErr.Err.(*awshttp.ResponseError); ok {
+					if apiErr, ok := respErr.Err.(*smithy.GenericAPIError); ok && apiErr.ErrorCode() == "ExpiredTokenException" {
+						resp.Diagnostics.AddWarning("Session Timeout", "Session Token expired. Launch Wizard Deployment continues in background")
+						session_timeout = true
+					}
+				}
 			}
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionDeleting, ResNameDeployment, plan.ID.String(), err),
-				err.Error(),
-			)
-			return
 		}
 
-		deleteTimeout := r.DeleteTimeout(ctx, plan.Timeouts)
-		_, err = waitDeploymentDeleted(ctx, conn, plan.ID.ValueString(), deleteTimeout)
-		if err != nil {
+		if plan.SkipDestroyAfterFailure.ValueBool() || session_timeout {
+			if !session_timeout {
+				resp.Diagnostics.AddError("Deployment Failed", "Launch Wizard Deployment failed. Resource will be replaced on next apply to allow troubleshooting.")
+			}
+
+		} else {
+
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionWaitingForDeletion, ResNameDeployment, plan.ID.String(), err),
+				create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionWaitingForCreation, ResNameDeployment, plan.Name.String(), err),
 				err.Error(),
 			)
-			return
+
+			//Delete Deployment if creation failed
+			in := &launchwizard.DeleteDeploymentInput{
+				DeploymentId: aws.String(plan.ID.ValueString()),
+			}
+
+			_, err := conn.DeleteDeployment(ctx, in)
+
+			if err != nil {
+				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+
+				}
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionWaitingForCreation, ResNameDeployment, plan.ID.String(), err),
+					err.Error(),
+				)
+
+			}
+
+			deleteTimeout := r.DeleteTimeout(ctx, plan.Timeouts)
+			_, err = waitDeploymentDeleted(ctx, conn, plan.ID.ValueString(), deleteTimeout)
+			if err != nil {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionWaitingForCreation, ResNameDeployment, plan.ID.String(), err),
+					err.Error(),
+				)
+
+			}
 		}
 
-		return
 	}
+
+	plan.Status = flex.StringToFramework(ctx, (*string)(&wait_out.Status))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
-
-// func (r *resourceDeployment) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-// 	if !request.State.Raw.IsNull() && !request.Plan.Raw.IsNull() {
-// 		var old, new resourceDeploymentData
-
-// 		response.Diagnostics.Append(request.State.Get(ctx, &old)...)
-
-// 		if response.Diagnostics.HasError() {
-// 			return
-// 		}
-
-// 		spec_temp := flex.ExpandFrameworkStringMap(ctx, old.Specifications)
-
-// 		//the password attribute is returned as "******" by the API when conducting a read operation;
-// 		// ensure those values do not cause a replacement
-
-// 		if current_value, ok := spec_temp["DatabasePassword"]; ok {
-// 			if *current_value != "" {
-// 				*spec_temp["DatabasePassword"] = "******"
-// 			}
-// 		}
-
-// 		if current_value, ok := spec_temp["SapPassword"]; ok {
-// 			if *current_value != "" {
-// 				*spec_temp["SapPassword"] = "******"
-// 			}
-// 		}
-
-// 		new.Specifications = flex.FlattenFrameworkStringMap(ctx, spec_temp)
-
-// 		response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
-
-// 		if response.Diagnostics.HasError() {
-// 			return
-// 		}
-
-// 		// // When you modify a rule, you cannot change the rule's source type.
-// 		// if new, old := new.sourceAttributeName(), old.sourceAttributeName(); new != old {
-// 		// 	response.RequiresReplace = []path.Path{path.Root(old), path.Root(new)}
-// 		// }
-// 	}
-// }
 
 func (r *resourceDeployment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LaunchWizardClient(ctx)
@@ -342,10 +285,6 @@ func (r *resourceDeployment) Read(ctx context.Context, req resource.ReadRequest,
 
 	out, err := findDeploymentByID(ctx, conn, state.ID.ValueString())
 
-	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
-		return
-	}
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionSetting, ResNameDeployment, state.ID.String(), err),
@@ -353,11 +292,17 @@ func (r *resourceDeployment) Read(ctx context.Context, req resource.ReadRequest,
 		)
 		return
 	}
+	if tfresource.NotFound(err) || checkDeleted(out.Status) {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
 	state.ID = flex.StringToFramework(ctx, out.Id)
 	state.Name = flex.StringToFramework(ctx, out.Name)
 	state.DeploymentPatternName = flex.StringToFramework(ctx, out.PatternName)
 	state.WorkloadName = flex.StringToFramework(ctx, out.WorkloadName)
+	state.ResourceGroup = flex.StringToFramework(ctx, out.ResourceGroup)
+	state.Status = flex.StringToFramework(ctx, (*string)(&out.Status))
 
 	spec_temp := flex.ExpandFrameworkStringMap(ctx, flex.FlattenFrameworkStringValueMap(ctx, out.Specifications))
 
@@ -374,24 +319,34 @@ func (r *resourceDeployment) Read(ctx context.Context, req resource.ReadRequest,
 	//the password attribute is not returned by the API when conducting a read operation;
 	db_password := flex.ExpandFrameworkStringValueMap(ctx, state.Specifications)["DatabasePassword"]
 
-	if current_value, ok := spec_temp["DatabasePassword"]; ok {
-		if *current_value != "" {
-			*spec_temp["DatabasePassword"] = db_password
-		}
+	if _, ok := spec_temp["DatabasePassword"]; ok {
+		*spec_temp["DatabasePassword"] = db_password
+
 	}
 
 	sap_password := flex.ExpandFrameworkStringValueMap(ctx, state.Specifications)["SapPassword"]
 
-	if current_value, ok := spec_temp["SapPassword"]; ok {
-		if *current_value != "" {
-			*spec_temp["SapPassword"] = sap_password
-		}
+	if _, ok := spec_temp["SapPassword"]; ok {
+		*spec_temp["SapPassword"] = sap_password
 	}
 
 	state.Specifications = flex.FlattenFrameworkStringMap(ctx, spec_temp)
 
-	state.ResourceGroup = flex.StringToFramework(ctx, out.ResourceGroup)
-	state.Status = flex.StringToFramework(ctx, (*string)(&out.Status))
+	//check status as it might be "in progress" (e.g. in case of session timeout)
+	switch awstypes.DeploymentStatus(out.Status) {
+	case
+		awstypes.DeploymentStatusInProgress,
+		awstypes.DeploymentStatusCreating,
+		awstypes.DeploymentStatusValidating:
+		resp.Diagnostics.AddWarning("Deployment still in progress", "Deployment still in progress. Possibly because of previous session timeout.")
+	case
+		awstypes.DeploymentStatusFailed,
+		awstypes.DeploymentStatusDeleteFailed:
+		resp.State.RemoveResource(ctx)
+		// resp.Diagnostics.AddError("Deployment Failed", "Deployment needs to be replaced.")
+		resp.Diagnostics.AddWarning("Deployment Failed", "Deployment needs to be replaced.")
+
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -400,6 +355,25 @@ func (r *resourceDeployment) Update(ctx context.Context, req resource.UpdateRequ
 	var plan, state resourceDeploymentData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+
+	//there is no update API.
+	//possible updates:
+	//1. password in the state after an import, because the password is not returned by the API when conducting a read operation
+	//2. virtual argument "skip_destroy_after_failure" to allow troubleshooting of failed deployments
+
+	//1. show info if user tries to update the password
+	if !reflect.DeepEqual(plan.Specifications, state.Specifications) {
+		resp.Diagnostics.AddWarning("Password Update", "The API does not support updating the stack, incl. the password. The Update operation only writes the specified password to the state.")
+	}
+
+	//2. update virtual argument "skip_destroy_after_failure"
+	if plan.SkipDestroyAfterFailure.ValueBool() != state.SkipDestroyAfterFailure.ValueBool() {
+		state.SkipDestroyAfterFailure = plan.SkipDestroyAfterFailure
+	}
+
+	//pass through resource_group and status
+	plan.ResourceGroup = state.ResourceGroup
+	plan.Status = state.Status
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -415,7 +389,15 @@ func (r *resourceDeployment) Delete(ctx context.Context, req resource.DeleteRequ
 
 	//check if already deleted
 	deployment, err := findDeploymentByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) || deployment.Status == awstypes.DeploymentStatusDeleted {
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionDeleting, ResNameDeployment, state.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	if tfresource.NotFound(err) || checkDeleted(deployment.Status) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -448,21 +430,46 @@ func (r *resourceDeployment) Delete(ctx context.Context, req resource.DeleteRequ
 }
 
 func (r *resourceDeployment) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+	//deployment name is used as the import identifier instead of the deployment id. Deployment Id is not visible from the console
+	conn := r.Meta().LaunchWizardClient(ctx)
+
+	in := &launchwizard.ListDeploymentsInput{}
+
+	pages := launchwizard.NewListDeploymentsPaginator(conn, in)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionImporting, ResNameDeployment, "", err),
+				err.Error(),
+			)
+			return
+		}
+
+		for _, deployment := range page.Deployments {
+
+			if deployment.Name != nil && req.ID == aws.ToString(deployment.Name) {
+				//set the import identifier to the deployment id
+				req.ID = aws.ToString(deployment.Id)
+				resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+				return
+
+			}
+
+		}
+	}
+
+	resp.Diagnostics.AddError(
+		create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionImporting, ResNameDeployment, "", nil),
+		errors.New("deployment not found").Error(),
+	)
 }
 
 func waitDeploymentCreated(ctx context.Context, conn *launchwizard.Client, id string, timeout time.Duration) (*awstypes.DeploymentData, error) {
-	// stateConf := &retry.StateChangeConf{
-	// 	Pending:                   []string{string(awstypes.DeploymentStatusCreating), string(awstypes.DeploymentStatusInProgress), string(awstypes.DeploymentStatusValidating)},
-	// 	Target:                    []string{string(awstypes.DeploymentStatusCompleted)},
-	// 	Refresh:                   statusDeployment(ctx, conn, id),
-	// 	Timeout:                   timeout,
-	// 	NotFoundChecks:            20,
-	// 	ContinuousTargetOccurence: 2,
-	// }
-	stateConf := &retry.StateChangeConf{ //Used during testing. TODO: Remove
-		Pending:                   []string{string(awstypes.DeploymentStatusCreating), string(awstypes.DeploymentStatusValidating)},
-		Target:                    []string{string(awstypes.DeploymentStatusCompleted), string(awstypes.DeploymentStatusInProgress)},
+	stateConf := &retry.StateChangeConf{
+		Pending:                   []string{string(awstypes.DeploymentStatusCreating), string(awstypes.DeploymentStatusInProgress), string(awstypes.DeploymentStatusValidating)},
+		Target:                    []string{string(awstypes.DeploymentStatusCompleted)},
 		Refresh:                   statusDeployment(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -483,6 +490,7 @@ func waitDeploymentDeleted(ctx context.Context, conn *launchwizard.Client, id st
 		Target:  []string{string(awstypes.DeploymentStatusDeleted), string(awstypes.DeploymentStatusCompleted)},
 		Refresh: statusDeployment(ctx, conn, id),
 		Timeout: timeout,
+		Delay:   5 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -532,14 +540,60 @@ func findDeploymentByID(ctx context.Context, conn *launchwizard.Client, id strin
 	return out.Deployment, nil
 }
 
+func requiresReplaceUnlessPasswordIsEmpty() mapplanmodifier.RequiresReplaceIfFunc {
+	return func(ctx context.Context, req planmodifier.MapRequest, resp *mapplanmodifier.RequiresReplaceIfFuncResponse) {
+
+		//drop passwords from both state and config
+		//those are not returned by the API when conducting a read operation, so those shouldn't be used to indicate a replacement (as they will always be different when importing a resource)
+		var state resourceDeploymentData
+		resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		spec_state := flex.ExpandFrameworkStringMap(ctx, state.Specifications)
+
+		delete(spec_state, "DatabasePassword")
+		delete(spec_state, "SapPassword")
+
+		spec_config := flex.ExpandFrameworkStringMap(ctx, req.ConfigValue)
+
+		delete(spec_config, "DatabasePassword")
+		delete(spec_config, "SapPassword")
+
+		//compare state with config
+		if reflect.DeepEqual(spec_state, spec_config) {
+			resp.RequiresReplace = false
+
+		} else {
+
+			resp.RequiresReplace = true
+		}
+		return
+
+	}
+}
+
+func checkDeleted(status awstypes.DeploymentStatus) bool {
+	switch status {
+	case awstypes.DeploymentStatusDeleted,
+		awstypes.DeploymentStatusDeleteFailed,
+		awstypes.DeploymentStatusDeleteInProgress,
+		awstypes.DeploymentStatusDeleteInitiating:
+		return true
+	default:
+		return false
+	}
+}
+
 type resourceDeploymentData struct {
-	ID                    types.String `tfsdk:"id"`
-	Name                  types.String `tfsdk:"name"`
-	DeploymentPatternName types.String `tfsdk:"deployment_pattern"`
-	WorkloadName          types.String `tfsdk:"workload_name"`
-	Specifications        types.Map    `tfsdk:"specifications"`
-	ResourceGroup         types.String `tfsdk:"resource_group"`
-	Status                types.String `tfsdk:"status"`
+	ID                      types.String `tfsdk:"id"`
+	Name                    types.String `tfsdk:"name"`
+	DeploymentPatternName   types.String `tfsdk:"deployment_pattern"`
+	WorkloadName            types.String `tfsdk:"workload_name"`
+	Specifications          types.Map    `tfsdk:"specifications"`
+	SkipDestroyAfterFailure types.Bool   `tfsdk:"skip_destroy_after_failure"`
+	ResourceGroup           types.String `tfsdk:"resource_group"`
+	Status                  types.String `tfsdk:"status"`
 
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
