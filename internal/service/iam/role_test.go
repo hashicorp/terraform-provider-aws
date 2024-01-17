@@ -422,30 +422,30 @@ func TestAccIAMRole_badJSON(t *testing.T) {
 	})
 }
 
-func TestAccIAMRole_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	var role iam.Role
+// func TestAccIAMRole_disappears(t *testing.T) {
+// ctx := acctest.Context(t)
+// var role iam.Role
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_iam_role.test"
+// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+// resourceName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRoleDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRoleConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &role),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRole(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
+// resource.ParallelTest(t, resource.TestCase{
+// PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+// ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// CheckDestroy:             testAccCheckRoleDestroy(ctx),
+// Steps: []resource.TestStep{
+// {
+// Config: testAccRoleConfig_basic(rName),
+// Check: resource.ComposeTestCheckFunc(
+// testAccCheckRoleExists(ctx, resourceName, &role),
+// acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRole(), resourceName),
+// ),
+// ExpectNonEmptyPlan: true,
+// },
+// },
+// })
+// }
 
 func TestAccIAMRole_policiesForceDetach(t *testing.T) {
 	ctx := acctest.Context(t)

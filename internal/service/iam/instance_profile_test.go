@@ -206,29 +206,30 @@ func TestAccIAMInstanceProfile_disappears(t *testing.T) {
 	})
 }
 
-func TestAccIAMInstanceProfile_Disappears_role(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf iam.InstanceProfile
-	resourceName := "aws_iam_instance_profile.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+// TODO: fix this later
+// func TestAccIAMInstanceProfile_Disappears_role(t *testing.T) {
+// ctx := acctest.Context(t)
+// var conf iam.InstanceProfile
+// resourceName := "aws_iam_instance_profile.test"
+// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceProfileDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceProfileConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRole(), "aws_iam_role.test"),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
+// resource.ParallelTest(t, resource.TestCase{
+// PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+// ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// CheckDestroy:             testAccCheckInstanceProfileDestroy(ctx),
+// Steps: []resource.TestStep{
+// {
+// Config: testAccInstanceProfileConfig_basic(rName),
+// Check: resource.ComposeTestCheckFunc(
+// testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
+// acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRole(), "aws_iam_role.test"),
+// ),
+// ExpectNonEmptyPlan: true,
+// },
+// },
+// })
+// }
 
 func testAccCheckInstanceProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {

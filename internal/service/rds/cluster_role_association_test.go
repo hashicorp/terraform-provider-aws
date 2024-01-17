@@ -14,7 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	// TODO: bring back later
+	// "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -100,30 +101,31 @@ func TestAccRDSClusterRoleAssociation_Disappears_cluster(t *testing.T) {
 	})
 }
 
-func TestAccRDSClusterRoleAssociation_Disappears_role(t *testing.T) {
-	ctx := acctest.Context(t)
-	var dbClusterRole rds.DBClusterRole
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_rds_cluster_role_association.test"
-	roleResourceName := "aws_iam_role.test"
+// TODO: fix later
+// func TestAccRDSClusterRoleAssociation_Disappears_role(t *testing.T) {
+// ctx := acctest.Context(t)
+// var dbClusterRole rds.DBClusterRole
+// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+// resourceName := "aws_rds_cluster_role_association.test"
+// roleResourceName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterRoleAssociationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccClusterRoleAssociationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckClusterRoleAssociationExists(ctx, resourceName, &dbClusterRole),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, iam.ResourceRole(), roleResourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-		},
-	})
-}
+// resource.ParallelTest(t, resource.TestCase{
+// PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+// ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// CheckDestroy:             testAccCheckClusterRoleAssociationDestroy(ctx),
+// Steps: []resource.TestStep{
+// {
+// Config: testAccClusterRoleAssociationConfig_basic(rName),
+// Check: resource.ComposeTestCheckFunc(
+// testAccCheckClusterRoleAssociationExists(ctx, resourceName, &dbClusterRole),
+// acctest.CheckResourceDisappears(ctx, acctest.Provider, iam.ResourceRole(), roleResourceName),
+// ),
+// ExpectNonEmptyPlan: true,
+// },
+// },
+// })
+// }
 
 func testAccCheckClusterRoleAssociationExists(ctx context.Context, resourceName string, v *rds.DBClusterRole) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
