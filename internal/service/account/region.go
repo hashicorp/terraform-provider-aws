@@ -12,7 +12,9 @@ import (
 )
 
 func FindRegionOptInStatus(ctx context.Context, conn *account.Client, accountID, region string) (*account.GetRegionOptStatusOutput, error) {
-	input := &account.GetRegionOptStatusInput{}
+	input := &account.GetRegionOptStatusInput{
+		RegionName: aws.String(region),
+	}
 	if accountID != "" {
 		input.AccountId = aws.String(accountID)
 	}
