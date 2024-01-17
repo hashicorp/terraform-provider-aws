@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/efs"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -27,28 +28,27 @@ func TestAccEFSReplicationConfiguration_basic(t *testing.T) {
 
 	resourceName := "aws_efs_replication_configuration.test"
 	fsResourceName := "aws_efs_file_system.test"
-	region := acctest.Region()
-	var providers []*schema.Provider
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroyWithProvider(ctx), &providers),
+		CheckDestroy:             testAccCheckReplicationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfigurationConfig_basic(region),
+				Config: testAccReplicationConfigurationConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "destination.0.file_system_id", regexache.MustCompile(`fs-.+`)),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.region", region),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.status", efs.ReplicationStatusEnabled),
 					resource.TestCheckResourceAttrPair(resourceName, "original_source_file_system_arn", fsResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_file_system_arn", fsResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_file_system_id", fsResourceName, "id"),
-					resource.TestCheckResourceAttr(resourceName, "source_file_system_region", region),
+					resource.TestCheckResourceAttr(resourceName, "source_file_system_region", acctest.Region()),
 				),
 			},
 			{
@@ -63,8 +63,7 @@ func TestAccEFSReplicationConfiguration_basic(t *testing.T) {
 func TestAccEFSReplicationConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_efs_replication_configuration.test"
-	region := acctest.Region()
-	var providers []*schema.Provider
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -72,11 +71,11 @@ func TestAccEFSReplicationConfiguration_disappears(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
-		CheckDestroy:             acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroyWithProvider(ctx), &providers),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfigurationConfig_basic(region),
+				Config: testAccReplicationConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfefs.ResourceReplicationConfiguration(), resourceName),
@@ -96,7 +95,7 @@ func TestAccEFSReplicationConfiguration_allAttributes(t *testing.T) {
 	resourceName := "aws_efs_replication_configuration.test"
 	fsResourceName := "aws_efs_file_system.test"
 	kmsKeyResourceName := "aws_kms_key.test"
-	alternateRegion := acctest.AlternateRegion()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var providers []*schema.Provider
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -109,7 +108,7 @@ func TestAccEFSReplicationConfiguration_allAttributes(t *testing.T) {
 		CheckDestroy:             acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroyWithProvider(ctx), &providers),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfigurationConfig_full(alternateRegion),
+				Config: testAccReplicationConfigurationConfig_full(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
@@ -117,12 +116,46 @@ func TestAccEFSReplicationConfiguration_allAttributes(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "destination.0.availability_zone_name", "data.aws_availability_zones.available", "names.0"),
 					resource.TestMatchResourceAttr(resourceName, "destination.0.file_system_id", regexache.MustCompile(`fs-.+`)),
 					resource.TestCheckResourceAttrPair(resourceName, "destination.0.kms_key_id", kmsKeyResourceName, "key_id"),
-					resource.TestCheckResourceAttr(resourceName, "destination.0.region", alternateRegion),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.status", efs.ReplicationStatusEnabled),
 					resource.TestCheckResourceAttrPair(resourceName, "original_source_file_system_arn", fsResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_file_system_arn", fsResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "source_file_system_id", fsResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "source_file_system_region", acctest.Region()),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEFSReplicationConfiguration_existingDestination(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	resourceName := "aws_efs_replication_configuration.test"
+	destinationFsResourceName := "aws_efs_file_system.destination"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var providers []*schema.Provider
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             acctest.CheckWithProviders(testAccCheckReplicationConfigurationDestroyWithProvider(ctx), &providers),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationConfigurationConfig_existingDestination(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationConfigurationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "creation_time"),
+					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "destination.0.file_system_id", destinationFsResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "destination.0.status", efs.ReplicationStatusEnabled),
 				),
 			},
 		},
@@ -136,15 +169,17 @@ func testAccCheckReplicationConfigurationExists(ctx context.Context, n string) r
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EFS Replication Configuration ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EFSConn(ctx)
 
 		_, err := tfefs.FindReplicationConfigurationByID(ctx, conn, rs.Primary.ID)
 
 		return err
+	}
+}
+
+func testAccCheckReplicationConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return testAccCheckReplicationConfigurationDestroyWithProvider(ctx)(s, acctest.Provider)
 	}
 }
 
@@ -174,24 +209,66 @@ func testAccCheckReplicationConfigurationDestroyWithProvider(ctx context.Context
 	}
 }
 
-func testAccReplicationConfigurationConfig_basic(region string) string {
+func testAccReplicationConfigurationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_efs_file_system" "test" {}
+resource "aws_efs_file_system" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
 
 resource "aws_efs_replication_configuration" "test" {
   source_file_system_id = aws_efs_file_system.test.id
 
   destination {
-    region = %[1]q
+    region = %[2]q
   }
 }
-`, region)
+`, rName, acctest.AlternateRegion())
 }
 
-func testAccReplicationConfigurationConfig_full(region string) string {
+func testAccReplicationConfigurationConfig_existingDestination(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
+resource "aws_efs_file_system" "source" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_efs_file_system" "destination" {
+  provider = "awsalternate"
+
+  protection {
+    replication_overwrite = "DISABLED"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+
+  lifecycle {
+    ignore_changes = [protection]
+  }
+}
+
+resource "aws_efs_replication_configuration" "test" {
+  source_file_system_id = aws_efs_file_system.source.id
+
+  destination {
+    file_system_id = aws_efs_file_system.destination.id
+    region         = %[2]q
+  }
+}
+`, rName, acctest.AlternateRegion()))
+}
+
+func testAccReplicationConfigurationConfig_full(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAlternateRegionProvider(), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   provider = "awsalternate"
+
+  description             = %[1]q
+  deletion_window_in_days = 7
 }
 
 data "aws_availability_zones" "available" {
@@ -205,7 +282,11 @@ data "aws_availability_zones" "available" {
   }
 }
 
-resource "aws_efs_file_system" "test" {}
+resource "aws_efs_file_system" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
 
 resource "aws_efs_replication_configuration" "test" {
   source_file_system_id = aws_efs_file_system.test.id
@@ -213,8 +294,8 @@ resource "aws_efs_replication_configuration" "test" {
   destination {
     availability_zone_name = data.aws_availability_zones.available.names[0]
     kms_key_id             = aws_kms_key.test.key_id
-    region                 = %[1]q
+    region                 = %[2]q
   }
 }
-`, region))
+`, rName, acctest.AlternateRegion()))
 }
