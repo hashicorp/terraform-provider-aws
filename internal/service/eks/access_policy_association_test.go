@@ -213,6 +213,8 @@ resource "aws_eks_cluster" "test" {
 
 func testAccAccessPolicyAssociationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccAccessPolicyAssociationConfig_base(rName), fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_iam_user" "test" {
   name = %[1]q
 }
@@ -226,7 +228,7 @@ resource "aws_eks_access_entry" "test" {
 resource "aws_eks_access_policy_association" "test" {
   cluster_name  = aws_eks_cluster.test.name
   principal_arn = aws_iam_user.test.arn
-  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
+  policy_arn    = "arn:${data.aws_partition.current.partition}:eks::aws:cluster-access-policy/AmazonEKSViewPolicy"
 
   access_scope {
     type = "cluster"
