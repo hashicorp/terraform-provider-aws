@@ -176,6 +176,7 @@ resource "aws_eks_cluster" "example" {
   }
 }
 ```
+
 ### EKS Cluster with Access Config
 
 ```terraform
