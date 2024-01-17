@@ -1959,8 +1959,8 @@ resource "aws_lexv2models_intent" "test" {
     active = true
 
     prompt_specification {
-      allow_interrupt = true
-      max_retries     = %[2]d
+      allow_interrupt            = true
+      max_retries                = %[2]d
       message_selection_strategy = "Ordered"
 
       message_group {
