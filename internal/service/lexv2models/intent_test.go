@@ -2073,7 +2073,7 @@ resource "aws_lexv2models_intent" "test" {
 
         next_step {
           dialog_action {
-            type = "CloseIntent"
+            type           = "CloseIntent"
             slot_to_elicit = "slot1"
           }
 
@@ -2098,7 +2098,7 @@ resource "aws_lexv2models_intent" "test" {
       default_branch {
         next_step {
           dialog_action {
-            type = "CloseIntent"
+            type           = "CloseIntent"
             slot_to_elicit = "slot1"
           }
 
@@ -2179,7 +2179,7 @@ resource "aws_lexv2models_intent" "test" {
 
             next_step {
               dialog_action {
-                type = "CloseIntent"
+                type           = "CloseIntent"
                 slot_to_elicit = "slot1"
               }
 
@@ -2204,7 +2204,7 @@ resource "aws_lexv2models_intent" "test" {
           default_branch {
             next_step {
               dialog_action {
-                type = "CloseIntent"
+                type           = "CloseIntent"
                 slot_to_elicit = "slot1"
               }
 
@@ -2342,7 +2342,7 @@ resource "aws_lexv2models_intent" "test" {
         default_branch {
           next_step {
             dialog_action {
-              type = "CloseIntent"
+              type           = "CloseIntent"
               slot_to_elicit = "slot1"
             }
 
