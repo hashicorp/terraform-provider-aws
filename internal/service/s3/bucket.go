@@ -1644,6 +1644,24 @@ func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...f
 	return err
 }
 
+func findBucketRegion(ctx context.Context, awsClient *conns.AWSClient, bucket string) (string, error) {
+	return manager.GetBucketRegion(ctx, awsClient.S3Client(ctx), bucket,
+		func(o *s3.Options) {
+			// By default, GetBucketRegion forces virtual host addressing, which
+			// is not compatible with many non-AWS implementations. Instead, pass
+			// the provider s3_force_path_style configuration, which defaults to
+			// false, but allows override.
+			o.UsePathStyle = awsClient.S3UsePathStyle()
+		},
+		func(o *s3.Options) {
+			// By default, GetBucketRegion uses anonymous credentials when doing
+			// a HEAD request to get the bucket region. This breaks in aws-cn regions
+			// when the account doesn't have an ICP license to host public content.
+			// Use the current credentials when getting the bucket region.
+			o.Credentials = awsClient.CredentialsProvider()
+		})
+}
+
 func retryWhenNoSuchBucketError[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
 		return f()

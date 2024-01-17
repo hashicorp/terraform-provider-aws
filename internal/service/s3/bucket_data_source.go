@@ -9,8 +9,6 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -72,21 +70,7 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s): %s", bucket, err)
 	}
 
-	region, err := manager.GetBucketRegion(ctx, conn, bucket,
-		func(o *s3.Options) {
-			// By default, GetBucketRegion forces virtual host addressing, which
-			// is not compatible with many non-AWS implementations. Instead, pass
-			// the provider s3_force_path_style configuration, which defaults to
-			// false, but allows override.
-			o.UsePathStyle = awsClient.S3UsePathStyle()
-		},
-		func(o *s3.Options) {
-			// By default, GetBucketRegion uses anonymous credentials when doing
-			// a HEAD request to get the bucket region. This breaks in aws-cn regions
-			// when the account doesn't have an ICP license to host public content.
-			// Use the current credentials when getting the bucket region.
-			o.Credentials = awsClient.CredentialsProvider()
-		})
+	region, err := findBucketRegion(ctx, awsClient, bucket)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Region: %s", bucket, err)
