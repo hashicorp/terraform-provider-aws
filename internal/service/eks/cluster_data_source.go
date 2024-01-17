@@ -29,10 +29,6 @@ func dataSourceCluster() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"bootstrap_cluster_creator_admin_permissions": {
-							Type:     schema.TypeBool,
-							Computed: true,
-						},
 					},
 				},
 			},
@@ -219,9 +215,9 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.SetId(name)
-	//if err := d.Set("access_config", flattenAccessConfigResponse(cluster.AccessConfig)); err != nil {
-	//	return diag.Errorf("setting access_config: %s", err)
-	//}
+	if err := d.Set("access_config", flattenAccessConfigResponse(cluster.AccessConfig, nil)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting access_config: %s", err)
+	}
 	d.Set("arn", cluster.Arn)
 	if err := d.Set("certificate_authority", flattenCertificate(cluster.CertificateAuthority)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting certificate_authority: %s", err)
