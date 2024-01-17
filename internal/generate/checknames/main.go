@@ -177,6 +177,12 @@ func main() {
 			log.Printf("in service data, line %d, for service %s, SdkId is required unless Exclude is set", i+lineOffset, l.HumanFriendly())
 		}
 
+		if l.EndpointAPICall() == "" {
+			if l.ClientSDKV2() && len(l.Aliases()) == 0 && l.DeprecatedEnvVar() == "" && l.TfAwsEnvVar() == "" {
+				log.Printf("in service data, line %d, for service %s, EndpointAPICall is required for SDKv2 services without aliases or custom envvars", i+lineOffset, l.HumanFriendly())
+			}
+		}
+
 		rre := l.ResourcePrefixActual()
 
 		if rre == "" {
@@ -191,7 +197,7 @@ func main() {
 
 		allChecks++
 	}
-	fmt.Printf("  Performed %d checks on service data, 0 errors.\n", (allChecks * 39))
+	fmt.Printf("  Performed %d checks on service data, 0 errors.\n", (allChecks * 40))
 
 	var fileErrs bool
 
