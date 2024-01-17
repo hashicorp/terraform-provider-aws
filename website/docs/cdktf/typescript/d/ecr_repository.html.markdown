@@ -56,10 +56,10 @@ This data source exports the following attributes in addition to the arguments a
 ### Encryption Configuration
 
 * `encryptionType` - Encryption type to use for the repository, either `AES256` or `KMS`.
-* `kmsKey` - If `encryption_type` is `KMS`, the ARN of the KMS key used.
+* `kmsKey` - If `encryptionType` is `KMS`, the ARN of the KMS key used.
 
 ### Image Scanning Configuration
 
 * `scanOnPush` - Whether images are scanned after being pushed to the repository.
 
-<!-- cache-key: cdktf-0.19.0 input-dca647d04d11f3277efe49d65bb6183e2b5b2ad799294faa6fdd90156a3bfee3 -->
+<!-- cache-key: cdktf-0.20.1 input-dca647d04d11f3277efe49d65bb6183e2b5b2ad799294faa6fdd90156a3bfee3 -->

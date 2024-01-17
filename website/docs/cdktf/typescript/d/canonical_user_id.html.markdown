@@ -14,7 +14,7 @@ description: |-
 The Canonical User ID data source allows access to the [canonical user ID](http://docs.aws.amazon.com/general/latest/gr/acct-identifiers.html)
 for the effective account in which Terraform is working.  
 
-~> **NOTE:** To use this data source, you must have the `s3:listAllMyBuckets` permission.
+~> **NOTE:** To use this data source, you must have the `s3:ListAllMyBuckets` permission.
 
 ## Example Usage
 
@@ -51,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `displayName` - Human-friendly name linked to the canonical user ID. The bucket owner's display name. **NOTE:** [This value](https://docs.aws.amazon.com/AmazonS3/latest/API/RESTServiceGET.html) is only included in the response in the US East (N. Virginia), US West (N. California), US West (Oregon), Asia Pacific (Singapore), Asia Pacific (Sydney), Asia Pacific (Tokyo), EU (Ireland), and South America (São Paulo) regions.
 
-<!-- cache-key: cdktf-0.19.0 input-db8220f51071b9966f2634f970bb7fc28053743696bb94d88dcc12f05f864080 -->
+<!-- cache-key: cdktf-0.20.1 input-db8220f51071b9966f2634f970bb7fc28053743696bb94d88dcc12f05f864080 -->

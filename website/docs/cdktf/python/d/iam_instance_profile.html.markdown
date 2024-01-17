@@ -48,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `role_id` - Role ID associated with this instance profile.
 * `role_name` - Role name associated with this instance profile.
 
-<!-- cache-key: cdktf-0.19.0 input-5e845773261432b358ba5aad381e509f7458709c0eda7705643bdfff5097226a -->
+<!-- cache-key: cdktf-0.20.1 input-5e845773261432b358ba5aad381e509f7458709c0eda7705643bdfff5097226a -->
