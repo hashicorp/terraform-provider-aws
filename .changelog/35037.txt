@@ -15,5 +15,5 @@ resource/aws_eks_cluster: Add `access_config` configuration block
 ```
 
 ```release-note:enhancement
-resource/aws_eks_cluster: Add `access_config` attribute
+data-source/aws_eks_cluster: Add `access_config` attribute
 ```
