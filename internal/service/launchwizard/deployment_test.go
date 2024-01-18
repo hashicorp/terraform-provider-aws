@@ -27,20 +27,15 @@ import (
 )
 
 /**
- Before running this test, the following two ENV variables must be set:
+ Most test cases run without any precondition. However, in order to test the full SAP installation (test case basicFullInstallation), the following preconditions must be met:
+
+ Before running this test, the following ENV variable must be set:
 
  LAUNCHWIZARD_SAP_INST_MEDIA_S3_URI     - URI of S3 Partition containing SAP Installation Media (without trailing slash)
 
  Expected structure:
 
-	Inside the S3 Partition, the following structure is expected with content matching the NW version defined below (https://docs.aws.amazon.com/launchwizard/latest/userguide/launch-wizard-sap-software-install-details.html)
-
-	/HANA_DB_Software
-	/SWPM
-	/SAPCAR
-	/Exports
-	/Kernel
-	/HANA_Client_Software
+	Inside the S3 Partition, the content is is expected as described here. We only test with HANA deployments which need to be placed in a folder named "HANA_DB_Software" in the bucket. (https://docs.aws.amazon.com/launchwizard/latest/userguide/launch-wizard-sap-software-install-details.html)
 **/
 
 func TestAccLaunchWizardDeployment_basic(t *testing.T) {
@@ -59,13 +54,12 @@ func TestAccLaunchWizardDeployment_basic(t *testing.T) {
 			VersionConstraint: "4.0.4",
 		},
 	}
-	testSpec := TestSpecSapHanaSingle
+	testSpec := TestSpecSapHanaSingleInfraOnly
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckRegionAvailable(ctx, t)
-			testAccPreCheckEnvironmentVariablesSet(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LaunchWizard),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -73,7 +67,63 @@ func TestAccLaunchWizardDeployment_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentConfig_basic(rName, testSpec["specification_template"], testSpec["deployment_pattern"], testSpec["workload_name"], ""),
+				Config: testAccDeploymentConfig_basic(rName, testSpec["specification_template"], testSpec["deployment_pattern"], testSpec["workload_name"], "", ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_pattern", testSpec["deployment_pattern"]),
+					resource.TestCheckResourceAttr(resourceName, "workload_name", testSpec["workload_name"]),
+					resource.TestCheckResourceAttr(resourceName, "specifications.DatabasePrimaryHostname", "hana-primary"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateId:     rName,
+				ImportStateVerifyIgnore: []string{
+					"specifications.DatabasePassword",
+				},
+			},
+		},
+	})
+}
+
+func TestAccLaunchWizardDeployment_basicFullInstallation(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	if os.Getenv("LAUNCHWIZARD_SAP_INST_MEDIA_S3_URI") == "" {
+		t.Skip("skipping optional acceptance testing: env variable LAUNCHWIZARD_SAP_INST_MEDIA_S3_URI must be set for acceptance test that installs SAP software")
+	}
+
+	var deployment launchwizard.GetDeploymentOutput
+	rName := strings.Replace(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "", -1)
+	resourceName := "aws_launchwizard_deployment.test"
+
+	testExternalProviders := map[string]resource.ExternalProvider{
+		"tls": {
+			Source:            "hashicorp/tls",
+			VersionConstraint: "4.0.4",
+		},
+	}
+	testSpec := TestSpecSapHanaSingleFullInstallation
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckRegionAvailable(ctx, t)
+			testAccPreCheckEnvironmentVariableSetSapInstMedia(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LaunchWizard),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		ExternalProviders:        testExternalProviders,
+		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeploymentConfig_basic(rName, testSpec["specification_template"], testSpec["deployment_pattern"], testSpec["workload_name"], "", os.Getenv("LAUNCHWIZARD_SAP_INST_MEDIA_S3_URI")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -117,7 +167,6 @@ func TestAccLaunchWizardDeployment_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckRegionAvailable(ctx, t)
-			testAccPreCheckEnvironmentVariablesSet(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LaunchWizard),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -125,7 +174,7 @@ func TestAccLaunchWizardDeployment_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentConfig_basic(rName, testSpec["specification_template"], testSpec["deployment_pattern"], testSpec["workload_name"], ""),
+				Config: testAccDeploymentConfig_basic(rName, testSpec["specification_template"], testSpec["deployment_pattern"], testSpec["workload_name"], "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflaunchwizard.ResourceDeployment, resourceName),
@@ -159,7 +208,6 @@ func TestAccLaunchWizardDeployment_SkipDestroyAfterFailure(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckRegionAvailable(ctx, t)
-			testAccPreCheckEnvironmentVariablesSet(t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LaunchWizard),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -167,11 +215,11 @@ func TestAccLaunchWizardDeployment_SkipDestroyAfterFailure(t *testing.T) {
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccDeploymentConfig_basic(rName, testSpecFailure["specification_template"], testSpecFailure["deployment_pattern"], testSpecFailure["workload_name"], "true"),
+				Config:      testAccDeploymentConfig_basic(rName, testSpecFailure["specification_template"], testSpecFailure["deployment_pattern"], testSpecFailure["workload_name"], "true", ""),
 				ExpectError: regexache.MustCompile(".*Resource will be replaced on next apply*"),
 			},
 			{
-				Config: testAccDeploymentConfig_basic(rName, testSpec["specification_template"], testSpec["deployment_pattern"], testSpec["workload_name"], "true"),
+				Config: testAccDeploymentConfig_basic(rName, testSpec["specification_template"], testSpec["deployment_pattern"], testSpec["workload_name"], "true", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "status", "COMPLETED"),
@@ -188,7 +236,7 @@ func TestAccLaunchWizardDeployment_SkipDestroyAfterFailure(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccDeploymentConfig_basic(rName, testSpec["specification_template"], testSpec["deployment_pattern"], testSpec["workload_name"], "false"),
+				Config: testAccDeploymentConfig_basic(rName, testSpec["specification_template"], testSpec["deployment_pattern"], testSpec["workload_name"], "false", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "skip_destroy_after_failure", "false"),
@@ -198,9 +246,13 @@ func TestAccLaunchWizardDeployment_SkipDestroyAfterFailure(t *testing.T) {
 	})
 }
 
-func testAccDeploymentConfig_basic(rName string, specTemplate string, deploymentPattern string, workloadName string, skipDestroyAfterFailure string) string {
-	s3_uri := os.Getenv("LAUNCHWIZARD_SAP_INST_MEDIA_S3_URI")
-	specification_template_computed := fmt.Sprintf(specTemplate, s3_uri)
+func testAccDeploymentConfig_basic(rName string, specTemplate string, deploymentPattern string, workloadName string, skipDestroyAfterFailure string, instMediaURI string) string {
+	var specification_template_computed string
+	if instMediaURI != "" {
+		specification_template_computed = fmt.Sprintf(specTemplate, instMediaURI)
+	} else {
+		specification_template_computed = specTemplate
+	}
 
 	if skipDestroyAfterFailure == "" {
 		return acctest.ConfigCompose(
@@ -441,17 +493,17 @@ func testAccPreCheckRegionAvailable(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccPreCheckEnvironmentVariablesSet(t *testing.T) {
+func testAccPreCheckEnvironmentVariableSetSapInstMedia(t *testing.T) {
 	if v := os.Getenv("LAUNCHWIZARD_SAP_INST_MEDIA_S3_URI"); v == "" {
 		t.Fatal("env variable LAUNCHWIZARD_SAP_INST_MEDIA_S3_URI must be set for acceptance tests")
 	}
 }
 
 // The following are example test specifications for the different SAP deployment patterns. We currently only use the HANA Single Node deployment pattern for testing as it should suffice to verify the functionality of the provider.
-// The other patterns are not automatically tested as they are very long running and error prone while not adding any additional value to the test coverage.
+// The other patterns are not automatically tested as they are very long running and error prone while not adding any additional value to the test coverage. Still, they are included here for reference and for manual testing purposes.
 
 var (
-	TestSpecSapHanaSingle = map[string]string{
+	TestSpecSapHanaSingleFullInstallation = map[string]string{
 		"specification_template": `{
 			"KeyPairName": "${aws_key_pair.key.key_name}",
 			"AvailabilityZone1PrivateSubnet1Id": "${aws_subnet.private.0.id}",
@@ -495,7 +547,6 @@ var (
 			"DatabaseInstanceNumber": "00",
 			"DatabasePassword" :"Password123@",
 			"InstallDatabaseSoftware" :"No",
-			"DatabaseInstallationMediaS3Uri" :"%[1]s/HANA_DB_Software",
 			"DatabaseOperatingSystem": "SuSE-Linux-15-SP4-For-SAP-HVM",
 			"DatabaseAmiId" :"${data.aws_ami.suse.id}",
 			"DatabasePrimaryHostname" :"hana-primary",
@@ -525,7 +576,7 @@ var (
 			"DatabaseInstanceNumber": "00",
 			"DatabasePassword" :"Password123@",
 			"InstallDatabaseSoftware" :"No",
-			"DatabaseInstallationMediaS3Uri" :"%[1]s/HANA_DB_Software/invalid",
+			"DatabaseInstallationMediaS3Uri" :"s3://invalid_uri/HANA_DB_Software",
 			"DatabaseOperatingSystem": "SuSE-Linux-15-SP4-For-SAP-HVM",
 			"DatabaseAmiId" :"${data.aws_ami.suse.id}",
 			"DatabasePrimaryHostname" :"hana-primary",
@@ -541,7 +592,7 @@ var (
 		"deployment_pattern": "SapHanaSingle",
 		"workload_name":      "SAP",
 	}
-	TestSpecSapHanaMulti = map[string]string{
+	TestSpecSapHanaMulti = map[string]string{ //unused
 		"specification_template": `{
 			"KeyPairName": "${aws_key_pair.key.key_name}",
 			"AvailabilityZone1PrivateSubnet1Id": "${aws_subnet.private.0.id}",
@@ -573,7 +624,7 @@ var (
 		"deployment_pattern": "SapHanaMulti",
 		"workload_name":      "SAP",
 	}
-	TestSpecSapHanaHA = map[string]string{
+	TestSpecSapHanaHA = map[string]string{ //unused
 		"specification_template": `{
 			"KeyPairName": "${aws_key_pair.key.key_name}",
 			"AvailabilityZone1PrivateSubnet1Id": "${aws_subnet.private.0.id}",
@@ -608,7 +659,7 @@ var (
 		"deployment_pattern": "SapHanaHA",
 		"workload_name":      "SAP",
 	}
-	TestSpecSapNWOnHanaHA = map[string]string{
+	TestSpecSapNWOnHanaHA = map[string]string{ //unused
 		"specification_template": `{
 			"KeyPairName": "${aws_key_pair.key.key_name}",
 			"VpcId": "${aws_vpc.test.id}",
