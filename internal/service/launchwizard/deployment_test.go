@@ -59,7 +59,6 @@ func TestAccLaunchWizardDeployment_basic(t *testing.T) {
 			VersionConstraint: "4.0.4",
 		},
 	}
-
 	testSpec := TestSpecSapHanaSingle
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -75,7 +74,6 @@ func TestAccLaunchWizardDeployment_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentConfig_basic(rName, testSpec["specification_template"], testSpec["deployment_pattern"], testSpec["workload_name"], ""),
-
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -106,7 +104,6 @@ func TestAccLaunchWizardDeployment_disappears(t *testing.T) {
 	var deployment launchwizard.GetDeploymentOutput
 	rName := strings.Replace(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "", -1)
 	resourceName := "aws_launchwizard_deployment.test"
-
 	testExternalProviders := map[string]resource.ExternalProvider{
 		"tls": {
 			Source:            "hashicorp/tls",
@@ -129,7 +126,6 @@ func TestAccLaunchWizardDeployment_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeploymentConfig_basic(rName, testSpec["specification_template"], testSpec["deployment_pattern"], testSpec["workload_name"], ""),
-
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflaunchwizard.ResourceDeployment, resourceName),
@@ -149,7 +145,6 @@ func TestAccLaunchWizardDeployment_SkipDestroyAfterFailure(t *testing.T) {
 	var deployment launchwizard.GetDeploymentOutput
 	rName := strings.Replace(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix), "-", "", -1)
 	resourceName := "aws_launchwizard_deployment.test"
-
 	testExternalProviders := map[string]resource.ExternalProvider{
 		"tls": {
 			Source:            "hashicorp/tls",
@@ -194,7 +189,6 @@ func TestAccLaunchWizardDeployment_SkipDestroyAfterFailure(t *testing.T) {
 			},
 			{
 				Config: testAccDeploymentConfig_basic(rName, testSpec["specification_template"], testSpec["deployment_pattern"], testSpec["workload_name"], "false"),
-
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "skip_destroy_after_failure", "false"),
@@ -205,17 +199,13 @@ func TestAccLaunchWizardDeployment_SkipDestroyAfterFailure(t *testing.T) {
 }
 
 func testAccDeploymentConfig_basic(rName string, specTemplate string, deploymentPattern string, workloadName string, skipDestroyAfterFailure string) string {
-
 	s3_uri := os.Getenv("LAUNCHWIZARD_SAP_INST_MEDIA_S3_URI")
-
 	specification_template_computed := fmt.Sprintf(specTemplate, s3_uri)
 
 	if skipDestroyAfterFailure == "" {
-
 		return acctest.ConfigCompose(
 			testAccDeploymentConfigBase(rName),
 			fmt.Sprintf(`
-
 resource "aws_launchwizard_deployment" "test" {
   name               = %[1]q
   deployment_pattern = %[3]q
@@ -227,7 +217,6 @@ resource "aws_launchwizard_deployment" "test" {
 		return acctest.ConfigCompose(
 			testAccDeploymentConfigBase(rName),
 			fmt.Sprintf(`
-
 resource "aws_launchwizard_deployment" "test" {
   name                       = %[1]q
   deployment_pattern         = %[3]q
@@ -406,14 +395,11 @@ func testAccCheckDeploymentDestroy(ctx context.Context) resource.TestCheckFunc {
 			if err != nil {
 				return create.Error(names.LaunchWizard, create.ErrActionCheckingDestroyed, tflaunchwizard.ResNameDeployment, rs.Primary.ID, err)
 			}
-
 			if awstypes.DeploymentStatusDeleted == resp.Deployment.Status {
 				return nil
 			}
-
 			return create.Error(names.LaunchWizard, create.ErrActionCheckingDestroyed, tflaunchwizard.ResNameDeployment, rs.Primary.ID, errors.New("not destroyed"))
 		}
-
 		return nil
 	}
 }
@@ -424,7 +410,6 @@ func testAccCheckDeploymentExists(ctx context.Context, name string, deployment *
 		if !ok {
 			return create.Error(names.LaunchWizard, create.ErrActionCheckingExistence, tflaunchwizard.ResNameDeployment, name, errors.New("not found"))
 		}
-
 		if rs.Primary.ID == "" {
 			return create.Error(names.LaunchWizard, create.ErrActionCheckingExistence, tflaunchwizard.ResNameDeployment, name, errors.New("not set"))
 		}
@@ -439,14 +424,12 @@ func testAccCheckDeploymentExists(ctx context.Context, name string, deployment *
 		if err != nil {
 			return create.Error(names.LaunchWizard, create.ErrActionCheckingExistence, tflaunchwizard.ResNameDeployment, rs.Primary.ID, err)
 		}
-
 		return nil
 	}
 }
 
 func testAccPreCheckRegionAvailable(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).LaunchWizardClient(ctx)
-
 	input := &launchwizard.ListDeploymentsInput{}
 	_, err := conn.ListDeployments(ctx, input)
 

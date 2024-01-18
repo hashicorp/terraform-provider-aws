@@ -209,7 +209,6 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 	wait_out, err := waitDeploymentCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 
 	if err != nil {
-
 		session_timeout := false
 
 		if wait_out == nil {
@@ -217,7 +216,6 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 			//it is likely that the session token expired. Assuming that the Creation is still in Progress.
 			//in that case the deployment should not be tainted and the resource should be checked during next read
 			if opErr, ok := err.(*smithy.OperationError); ok {
-
 				if respErr, ok := opErr.Err.(*awshttp.ResponseError); ok {
 					if apiErr, ok := respErr.Err.(*smithy.GenericAPIError); ok && apiErr.ErrorCode() == "ExpiredTokenException" {
 						resp.Diagnostics.AddWarning("Session Timeout", "Session Token expired. Launch Wizard Deployment continues in background")
@@ -231,9 +229,7 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 			if !session_timeout {
 				resp.Diagnostics.AddError("Deployment Failed", "Launch Wizard Deployment failed. Resource will be replaced on next apply to allow troubleshooting.")
 			}
-
 		} else {
-
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionWaitingForCreation, ResNameDeployment, plan.Name.String(), err),
 				err.Error(),
@@ -248,13 +244,9 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 
 			if err != nil {
 				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-
-				}
 				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionWaitingForCreation, ResNameDeployment, plan.ID.String(), err),
-					err.Error(),
-				)
-
+					create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionWaitingForCreation, ResNameDeployment, plan.ID.String(), err),err.Error())
+				}
 			}
 
 			deleteTimeout := r.DeleteTimeout(ctx, plan.Timeouts)
@@ -264,14 +256,12 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 					create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionWaitingForCreation, ResNameDeployment, plan.ID.String(), err),
 					err.Error(),
 				)
-
 			}
 		}
 
 	}
 
 	plan.Status = flex.StringToFramework(ctx, (*string)(&wait_out.Status))
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -292,6 +282,7 @@ func (r *resourceDeployment) Read(ctx context.Context, req resource.ReadRequest,
 		)
 		return
 	}
+	
 	if tfresource.NotFound(err) || checkDeleted(out.Status) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -321,7 +312,6 @@ func (r *resourceDeployment) Read(ctx context.Context, req resource.ReadRequest,
 
 	if _, ok := spec_temp["DatabasePassword"]; ok {
 		*spec_temp["DatabasePassword"] = db_password
-
 	}
 
 	sap_password := flex.ExpandFrameworkStringValueMap(ctx, state.Specifications)["SapPassword"]
@@ -345,7 +335,6 @@ func (r *resourceDeployment) Read(ctx context.Context, req resource.ReadRequest,
 		resp.State.RemoveResource(ctx)
 		// resp.Diagnostics.AddError("Deployment Failed", "Deployment needs to be replaced.")
 		resp.Diagnostics.AddWarning("Deployment Failed", "Deployment needs to be replaced.")
-
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -374,7 +363,6 @@ func (r *resourceDeployment) Update(ctx context.Context, req resource.UpdateRequ
 	//pass through resource_group and status
 	plan.ResourceGroup = state.ResourceGroup
 	plan.Status = state.Status
-
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -411,10 +399,7 @@ func (r *resourceDeployment) Delete(ctx context.Context, req resource.DeleteRequ
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionDeleting, ResNameDeployment, state.ID.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionDeleting, ResNameDeployment, state.ID.String(), err),err.Error()	)
 		return
 	}
 
@@ -432,9 +417,7 @@ func (r *resourceDeployment) Delete(ctx context.Context, req resource.DeleteRequ
 func (r *resourceDeployment) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	//deployment name is used as the import identifier instead of the deployment id. Deployment Id is not visible from the console
 	conn := r.Meta().LaunchWizardClient(ctx)
-
 	in := &launchwizard.ListDeploymentsInput{}
-
 	pages := launchwizard.NewListDeploymentsPaginator(conn, in)
 
 	for pages.HasMorePages() {
@@ -448,22 +431,16 @@ func (r *resourceDeployment) ImportState(ctx context.Context, req resource.Impor
 		}
 
 		for _, deployment := range page.Deployments {
-
 			if deployment.Name != nil && req.ID == aws.ToString(deployment.Name) {
 				//set the import identifier to the deployment id
 				req.ID = aws.ToString(deployment.Id)
 				resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 				return
-
 			}
-
 		}
 	}
 
-	resp.Diagnostics.AddError(
-		create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionImporting, ResNameDeployment, "", nil),
-		errors.New("deployment not found").Error(),
-	)
+	resp.Diagnostics.AddError(		create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionImporting, ResNameDeployment, "", nil),		errors.New("deployment not found").Error()	)
 }
 
 func waitDeploymentCreated(ctx context.Context, conn *launchwizard.Client, id string, timeout time.Duration) (*awstypes.DeploymentData, error) {
@@ -529,7 +506,6 @@ func findDeploymentByID(ctx context.Context, conn *launchwizard.Client, id strin
 				LastRequest: in,
 			}
 		}
-
 		return nil, err
 	}
 
@@ -547,25 +523,23 @@ func requiresReplaceUnlessPasswordIsEmpty() mapplanmodifier.RequiresReplaceIfFun
 		//those are not returned by the API when conducting a read operation, so those shouldn't be used to indicate a replacement (as they will always be different when importing a resource)
 		var state resourceDeploymentData
 		resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		
 		spec_state := flex.ExpandFrameworkStringMap(ctx, state.Specifications)
-
 		delete(spec_state, "DatabasePassword")
 		delete(spec_state, "SapPassword")
 
 		spec_config := flex.ExpandFrameworkStringMap(ctx, req.ConfigValue)
-
 		delete(spec_config, "DatabasePassword")
 		delete(spec_config, "SapPassword")
 
 		//compare state with config
 		if reflect.DeepEqual(spec_state, spec_config) {
 			resp.RequiresReplace = false
-
 		} else {
-
 			resp.RequiresReplace = true
 		}
 	}
@@ -592,6 +566,5 @@ type resourceDeploymentData struct {
 	SkipDestroyAfterFailure types.Bool   `tfsdk:"skip_destroy_after_failure"`
 	ResourceGroup           types.String `tfsdk:"resource_group"`
 	Status                  types.String `tfsdk:"status"`
-
 	Timeouts timeouts.Value `tfsdk:"timeouts"`
 }
