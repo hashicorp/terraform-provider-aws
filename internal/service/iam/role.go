@@ -297,7 +297,37 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 }
 
 func (r resourceIamRole) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	// TODO: finish this
+	conn := r.Meta().IAMConn(ctx)
+
+	var state resourceIamRoleData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	hasInline := false
+	if !state.InlinePolicy.IsNull() && !state.InlinePolicy.IsUnknown() {
+		hasInline = true
+	}
+
+	hasManaged := false
+	if !state.ManagedPolicyArns.IsNull() && !state.ManagedPolicyArns.IsUnknown() {
+		hasManaged = true
+	}
+
+	err := DeleteRole(ctx, conn, state.Name.ValueString(), state.ForceDetachPolicies.ValueBool(), hasInline, hasManaged)
+
+	if err != nil {
+		// TODO: do something like this to skip deletes on roles that are gone?
+		// if err.IsA[*awstypes.ResourceNotFoundException](err) {
+		// return
+		// }
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.IAM, create.ErrActionDeleting, state.Name.String(), state.ARN.String(), err),
+			err.Error(),
+		)
+		return
+	}
 }
 
 func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -305,7 +335,7 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// TODO: finish this
+	// TODO: finish this in later test
 }
 
 // TODO: import state?
