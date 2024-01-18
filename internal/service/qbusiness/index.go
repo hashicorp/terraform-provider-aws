@@ -177,19 +177,17 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "waiting for qbusiness index (%s) to be created: %s", d.Id(), err)
 	}
 
-	if v, ok := d.GetOk("document_attribute_configurations"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		updateInput := &qbusiness.UpdateIndexInput{
-			ApplicationId: aws.String(application_id),
-			IndexId:       output.IndexId,
-		}
+	updateInput := &qbusiness.UpdateIndexInput{
+		ApplicationId: aws.String(application_id),
+		IndexId:       output.IndexId,
+	}
 
-		updateInput.DocumentAttributeConfigurations = expandDocumentAttributeConfigurations(d.Get("document_attribute_configurations").([]interface{}))
+	updateInput.DocumentAttributeConfigurations = expandDocumentAttributeConfigurations(d.Get("document_attribute_configurations").([]interface{}))
 
-		_, err = conn.UpdateIndexWithContext(ctx, updateInput)
+	_, err = conn.UpdateIndexWithContext(ctx, updateInput)
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating qbusiness index (%s): %s", d.Id(), err)
-		}
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating qbusiness index (%s): %s", d.Id(), err)
 	}
 	return append(diags, resourceIndexRead(ctx, d, meta)...)
 }
