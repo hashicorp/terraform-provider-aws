@@ -309,7 +309,7 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 
 	// Ignore UnsupportedOperation errors for AWS China and GovCloud (US).
 	if tfawserr.ErrCodeEquals(err, errCodeUnsupportedOperation) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
