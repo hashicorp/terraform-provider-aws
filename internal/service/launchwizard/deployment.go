@@ -50,6 +50,7 @@ func newResourceDeployment(_ context.Context) (resource.ResourceWithConfigure, e
 const (
 	ResNameDeployment = "Deployment"
 )
+
 type resourceDeployment struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
@@ -244,8 +245,8 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 
 			if err != nil {
 				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionWaitingForCreation, ResNameDeployment, plan.ID.String(), err),err.Error())
+					resp.Diagnostics.AddError(
+						create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionWaitingForCreation, ResNameDeployment, plan.ID.String(), err), err.Error())
 				}
 			}
 
@@ -282,7 +283,7 @@ func (r *resourceDeployment) Read(ctx context.Context, req resource.ReadRequest,
 		)
 		return
 	}
-	
+
 	if tfresource.NotFound(err) || checkDeleted(out.Status) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -399,7 +400,7 @@ func (r *resourceDeployment) Delete(ctx context.Context, req resource.DeleteRequ
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
-		resp.Diagnostics.AddError(create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionDeleting, ResNameDeployment, state.ID.String(), err),err.Error()	)
+		resp.Diagnostics.AddError(create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionDeleting, ResNameDeployment, state.ID.String(), err), err.Error())
 		return
 	}
 
@@ -440,7 +441,7 @@ func (r *resourceDeployment) ImportState(ctx context.Context, req resource.Impor
 		}
 	}
 
-	resp.Diagnostics.AddError(		create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionImporting, ResNameDeployment, "", nil),		errors.New("deployment not found").Error()	)
+	resp.Diagnostics.AddError(create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionImporting, ResNameDeployment, "", nil), errors.New("deployment not found").Error())
 }
 
 func waitDeploymentCreated(ctx context.Context, conn *launchwizard.Client, id string, timeout time.Duration) (*awstypes.DeploymentData, error) {
@@ -527,7 +528,7 @@ func requiresReplaceUnlessPasswordIsEmpty() mapplanmodifier.RequiresReplaceIfFun
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		
+
 		spec_state := flex.ExpandFrameworkStringMap(ctx, state.Specifications)
 		delete(spec_state, "DatabasePassword")
 		delete(spec_state, "SapPassword")
@@ -558,13 +559,13 @@ func checkDeleted(status awstypes.DeploymentStatus) bool {
 }
 
 type resourceDeploymentData struct {
-	ID                      types.String `tfsdk:"id"`
-	Name                    types.String `tfsdk:"name"`
-	DeploymentPatternName   types.String `tfsdk:"deployment_pattern"`
-	WorkloadName            types.String `tfsdk:"workload_name"`
-	Specifications          types.Map    `tfsdk:"specifications"`
-	SkipDestroyAfterFailure types.Bool   `tfsdk:"skip_destroy_after_failure"`
-	ResourceGroup           types.String `tfsdk:"resource_group"`
-	Status                  types.String `tfsdk:"status"`
-	Timeouts timeouts.Value `tfsdk:"timeouts"`
+	ID                      types.String   `tfsdk:"id"`
+	Name                    types.String   `tfsdk:"name"`
+	DeploymentPatternName   types.String   `tfsdk:"deployment_pattern"`
+	WorkloadName            types.String   `tfsdk:"workload_name"`
+	Specifications          types.Map      `tfsdk:"specifications"`
+	SkipDestroyAfterFailure types.Bool     `tfsdk:"skip_destroy_after_failure"`
+	ResourceGroup           types.String   `tfsdk:"resource_group"`
+	Status                  types.String   `tfsdk:"status"`
+	Timeouts                timeouts.Value `tfsdk:"timeouts"`
 }
