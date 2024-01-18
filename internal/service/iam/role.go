@@ -331,7 +331,86 @@ func (r resourceIamRole) Delete(ctx context.Context, req resource.DeleteRequest,
 }
 
 func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// TODO: finish this
+	conn := r.Meta().IAMConn(ctx)
+
+	var state resourceIamRoleData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		// return FindRoleByName(ctx, conn, d.Id())
+	// }, d.IsNewResource())
+
+	// if !d.IsNewResource() && tfresource.NotFound(err) {
+		// log.Printf("[WARN] IAM Role (%s) not found, removing from state", d.Id())
+		// d.SetId("")
+		// return diags
+	// }
+
+	// if err != nil {
+		// return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): %s", d.Id(), err)
+	// }
+
+	// role := outputRaw.(*iam.Role)
+
+	// // occasionally, immediately after a role is created, AWS will give an ARN like AROAQ7SSZBKHREXAMPLE (unique ID)
+	// if role, err = waitRoleARNIsNotUniqueID(ctx, conn, d.Id(), role); err != nil {
+		// return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): waiting for valid ARN: %s", d.Id(), err)
+	// }
+
+	// d.Set("arn", role.Arn)
+	// d.Set("create_date", role.CreateDate.Format(time.RFC3339))
+	// d.Set("description", role.Description)
+	// d.Set("max_session_duration", role.MaxSessionDuration)
+	// d.Set("name", role.RoleName)
+	// d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(role.RoleName)))
+	// d.Set("path", role.Path)
+	// if role.PermissionsBoundary != nil {
+		// d.Set("permissions_boundary", role.PermissionsBoundary.PermissionsBoundaryArn)
+	// } else {
+		// d.Set("permissions_boundary", nil)
+	// }
+	// d.Set("unique_id", role.RoleId)
+
+	// assumeRolePolicy, err := url.QueryUnescape(aws.StringValue(role.AssumeRolePolicyDocument))
+	// if err != nil {
+		// return sdkdiag.AppendFromErr(diags, err)
+	// }
+
+	// policyToSet, err := verify.PolicyToSet(d.Get("assume_role_policy").(string), assumeRolePolicy)
+	// if err != nil {
+		// return sdkdiag.AppendFromErr(diags, err)
+	// }
+
+	// d.Set("assume_role_policy", policyToSet)
+
+	// inlinePolicies, err := readRoleInlinePolicies(ctx, aws.StringValue(role.RoleName), meta)
+	// if err != nil {
+		// return sdkdiag.AppendErrorf(diags, "reading inline policies for IAM role %s, error: %s", d.Id(), err)
+	// }
+
+	// var configPoliciesList []*iam.PutRolePolicyInput
+	// if v := d.Get("inline_policy").(*schema.Set); v.Len() > 0 {
+		// configPoliciesList = expandRoleInlinePolicies(aws.StringValue(role.RoleName), v.List())
+	// }
+
+	// if !inlinePoliciesEquivalent(inlinePolicies, configPoliciesList) {
+		// if err := d.Set("inline_policy", flattenRoleInlinePolicies(inlinePolicies)); err != nil {
+			// return sdkdiag.AppendErrorf(diags, "setting inline_policy: %s", err)
+		// }
+	// }
+
+	// policyARNs, err := findRoleAttachedPolicies(ctx, conn, d.Id())
+	// if err != nil {
+		// return sdkdiag.AppendErrorf(diags, "reading IAM Policies attached to Role (%s): %s", d.Id(), err)
+	// }
+	// d.Set("managed_policy_arns", policyARNs)
+
+	// setTagsOut(ctx, role.Tags)
+
+	// return diags
 }
 
 func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
