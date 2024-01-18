@@ -117,6 +117,7 @@ func ResourceRecord() *schema.Resource {
 				ConflictsWith: []string{
 					"failover_routing_policy",
 					"geolocation_routing_policy",
+					"geoproximity_routing_policy",
 					"latency_routing_policy",
 					"multivalue_answer_routing_policy",
 					"weighted_routing_policy",
@@ -139,6 +140,7 @@ func ResourceRecord() *schema.Resource {
 				ConflictsWith: []string{
 					"cidr_routing_policy",
 					"geolocation_routing_policy",
+					"geoproximity_routing_policy",
 					"latency_routing_policy",
 					"multivalue_answer_routing_policy",
 					"weighted_routing_policy",
@@ -172,6 +174,54 @@ func ResourceRecord() *schema.Resource {
 				ConflictsWith: []string{
 					"cidr_routing_policy",
 					"failover_routing_policy",
+					"geoproximity_routing_policy",
+					"latency_routing_policy",
+					"multivalue_answer_routing_policy",
+					"weighted_routing_policy",
+				},
+				RequiredWith: []string{"set_identifier"},
+			},
+			"geoproximity_routing_policy": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"awsregion": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"bias": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ValidateFunc: validation.IntBetween(-99, 99),
+						},
+						"coordinates": {
+							Type: schema.TypeSet,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"latitude": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"longitude": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
+							Optional: true,
+						},
+						"localzonegroup": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+				ConflictsWith: []string{
+					"cidr_routing_policy",
+					"failover_routing_policy",
+					"geolocation_routing_policy",
 					"latency_routing_policy",
 					"multivalue_answer_routing_policy",
 					"weighted_routing_policy",
@@ -198,6 +248,7 @@ func ResourceRecord() *schema.Resource {
 					"cidr_routing_policy",
 					"failover_routing_policy",
 					"geolocation_routing_policy",
+					"geoproximity_routing_policy",
 					"multivalue_answer_routing_policy",
 					"weighted_routing_policy",
 				},
@@ -210,6 +261,7 @@ func ResourceRecord() *schema.Resource {
 					"cidr_routing_policy",
 					"failover_routing_policy",
 					"geolocation_routing_policy",
+					"geoproximity_routing_policy",
 					"latency_routing_policy",
 					"weighted_routing_policy",
 				},
@@ -264,6 +316,7 @@ func ResourceRecord() *schema.Resource {
 					"cidr_routing_policy",
 					"failover_routing_policy",
 					"geolocation_routing_policy",
+					"geoproximity_routing_policy",
 					"latency_routing_policy",
 					"multivalue_answer_routing_policy",
 				},
@@ -411,6 +464,18 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
+	if record.GeoProximityLocation != nil {
+		v := []map[string]interface{}{{
+			"awsregion":      aws.StringValue(record.GeoProximityLocation.AWSRegion),
+			"bias":           aws.Int64Value((record.GeoProximityLocation.Bias)),
+			"coordinates":    flattenCoordinate(record.GeoProximityLocation.Coordinates),
+			"localzonegroup": aws.StringValue(record.GeoProximityLocation.LocalZoneGroup),
+		}}
+		if err := d.Set("geoproximity_routing_policy", v); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting geoproximity_routing_policy: %s", err)
+		}
+	}
+
 	if record.Region != nil {
 		v := []map[string]interface{}{{
 			"region": aws.StringValue(record.Region),
@@ -512,6 +577,21 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 						ContinentCode:   nilString(v["continent"].(string)),
 						CountryCode:     nilString(v["country"].(string)),
 						SubdivisionCode: nilString(v["subdivision"].(string)),
+					}
+				}
+			}
+		}
+	}
+
+	if v, _ := d.GetChange("geoproximity_routing_policy"); v != nil {
+		if o, ok := v.([]interface{}); ok {
+			if len(o) == 1 {
+				if v, ok := o[0].(map[string]interface{}); ok {
+					oldRec.GeoProximityLocation = &route53.GeoProximityLocation{
+						AWSRegion:      nilString(v["awsregion"].(string)),
+						Bias:           aws.Int64(int64(v["bias"].(int))),
+						Coordinates:    expandCoordinatesValue(v["coordinates"].(*schema.Set).List()),
+						LocalZoneGroup: nilString(v["localzonegroup"].(string)),
 					}
 				}
 			}
@@ -852,6 +932,23 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *route53.R
 		}
 	}
 
+	if v, ok := d.GetOk("geoproximity_routing_policy"); ok {
+		geoproximityvalues := v.([]interface{})
+		geoproximity := geoproximityvalues[0].(map[string]interface{})
+
+		rec.GeoProximityLocation = &route53.GeoProximityLocation{
+			AWSRegion:      nilString(geoproximity["awsregion"].(string)),
+			Bias:           aws.Int64(int64(geoproximity["bias"].(int))),
+			Coordinates:    expandCoordinatesValue(geoproximity["coordinates"].(*schema.Set).List()),
+			LocalZoneGroup: nilString(geoproximity["localzonegroup"].(string)),
+		}
+		// if len(geoproximity["coordinates"].(*schema.Set).List()) > 0 {
+		// 	coordinatesvalue := geoproximity["coordinates"].(*schema.Set).List()
+		// 	coordinates := expandCoordinatesValue(coordinatesvalue)
+		// 	rec.GeoProximityLocation.Coordinates = coordinates
+		// }
+	}
+
 	if v, ok := d.GetOk("health_check_id"); ok {
 		rec.HealthCheckId = aws.String(v.(string))
 	}
@@ -918,6 +1015,22 @@ func ExpandRecordName(name, zone string) string {
 	return rn
 }
 
+func expandCoordinatesValue(tfList []interface{}) *route53.Coordinates {
+	if len(tfList) == 0 {
+		return nil
+	}
+	coordinatesvalue := &route53.Coordinates{}
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		coordinatesvalue.Latitude = aws.String(tfMap["latitude"].(string))
+		coordinatesvalue.Longitude = aws.String(tfMap["longitude"].(string))
+	}
+	return coordinatesvalue
+}
+
 // nilString takes a string as an argument and returns a string
 // pointer. The returned pointer is nil if the string argument is
 // empty. Otherwise, it is a pointer to a copy of the string.
@@ -955,6 +1068,26 @@ func ParseRecordID(id string) [4]string {
 		}
 	}
 	return [4]string{recZone, recName, recType, recSet}
+}
+
+func flattenCoordinate(coordinates *route53.Coordinates) []interface{} {
+	if coordinates == nil {
+		return nil
+	}
+	var tfList []interface{}
+	tfMap := map[string]interface{}{}
+
+	if v := coordinates.Latitude; v != nil {
+		tfMap["latitude"] = aws.StringValue(v)
+	}
+
+	if v := coordinates.Longitude; v != nil {
+		tfMap["longitude"] = aws.StringValue(v)
+	}
+
+	tfList = append(tfList, tfMap)
+
+	return tfList
 }
 
 func validRecordType(s string) bool {
