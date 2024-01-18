@@ -85,4 +85,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `capacity` - Size of the user storage.
 
-<!-- cache-key: cdktf-0.19.0 input-fa51236e05e24e0256f2207788b1148c2c3ccab79c92b51106d255e1b69a9e3d -->
+<!-- cache-key: cdktf-0.20.1 input-fa51236e05e24e0256f2207788b1148c2c3ccab79c92b51106d255e1b69a9e3d -->

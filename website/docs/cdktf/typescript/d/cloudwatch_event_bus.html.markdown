@@ -46,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - ARN.
 
-<!-- cache-key: cdktf-0.19.0 input-6d48ebb9d36b6f8a656ed8f66550b6d3efee3a308c32d635751c6d385e62d112 -->
+<!-- cache-key: cdktf-0.20.1 input-6d48ebb9d36b6f8a656ed8f66550b6d3efee3a308c32d635751c6d385e62d112 -->

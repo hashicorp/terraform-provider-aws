@@ -103,13 +103,28 @@ jobs:
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.STATUS_FIELD_ID }} --single-select-option-id ${{ vars.team_project_status_in_progress }}
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
 
-      - name: 'Labeled Prioritized or Regression'
-        if: contains(fromJSON('["prioritized", "regression"]'), github.event.label.name)
+      - name: 'Labeled Prioritized'
+        if: github.event.label.name == 'prioritized'
         env:
           GH_TOKEN: ${{ steps.token.outputs.token }}
         run: |
           PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
           gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
+
+      - name: 'Labeled Regression'
+        if: github.event.label.name == 'regression'
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          PROJECT_ITEM_ID=$(gh project item-add ${{ env.PROJECT_NUMBER }} --owner "hashicorp" --url ${{ env.ITEM_URL }} --format json | jq '.id')
+          gh project item-edit --id "$PROJECT_ITEM_ID" --project-id ${{ env.PROJECT_ID }} --field-id ${{ env.VIEW_FIELD_ID }} --single-select-option-id ${{ vars.team_project_view_working_board }}
+
+          gh api graphql -F itemId="$PROJECT_ITEM_ID" -F projectId=${{ env.PROJECT_ID }} -f query='
+          mutation($itemId:ID!, $projectId:ID!) {
+            updateProjectV2ItemPosition(input:{itemId:$itemId, projectId:$projectId}) {
+              clientMutationId
+            }
+          }'
 
       - name: 'Labeled Engineering Initiative'
         if: github.event.label.name == 'engineering-initiative'
