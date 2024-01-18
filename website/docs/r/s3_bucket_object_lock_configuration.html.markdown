@@ -10,7 +10,7 @@ description: |-
 
 Provides an S3 bucket Object Lock configuration resource. For more information about Object Locking, go to [Using S3 Object Lock](https://docs.aws.amazon.com/AmazonS3/latest/userguide/object-lock.html) in the Amazon S3 User Guide.
 
--> This resource can be used enable Object Lock for **new** and **existing** buckets. 
+-> This resource can be used enable Object Lock for **new** and **existing** buckets.
 
 -> This resource cannot be used with S3 directory buckets.
 
