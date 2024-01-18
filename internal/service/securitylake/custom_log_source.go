@@ -101,6 +101,7 @@ func (r *resourceCustomLogSource) Schema(ctx context.Context, req resource.Schem
 				CustomType: fwtypes.NewListNestedObjectTypeOf[customLogSourceConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
+					listvalidator.SizeAtLeast(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
@@ -108,6 +109,7 @@ func (r *resourceCustomLogSource) Schema(ctx context.Context, req resource.Schem
 							CustomType: fwtypes.NewListNestedObjectTypeOf[customLogCrawlerConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
+								listvalidator.SizeAtLeast(1),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -123,13 +125,23 @@ func (r *resourceCustomLogSource) Schema(ctx context.Context, req resource.Schem
 						},
 						"provider_identity": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[customLogProviderIdentityModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+								listvalidator.SizeAtLeast(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"external_id": schema.StringAttribute{
-										Optional: true,
+										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"principal": schema.StringAttribute{
-										Optional: true,
+										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 							},
