@@ -569,7 +569,7 @@ func testAccCheckRegion(ctx context.Context, t *testing.T, p **schema.Provider, 
 	}
 }
 
-func testAccCheckSTSRegion(ctx context.Context, t *testing.T, p **schema.Provider, expectedRegion string) resource.TestCheckFunc { //nolint:unparam
+func testAccCheckSTSRegion(ctx context.Context, t *testing.T, p **schema.Provider, expectedRegion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
