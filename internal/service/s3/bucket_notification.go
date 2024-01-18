@@ -141,6 +141,9 @@ func ResourceBucketNotification() *schema.Resource {
 }
 
 func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	const (
+		filterRulesSliceStartLen = 2
+	)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	bucket := d.Get("bucket").(string)

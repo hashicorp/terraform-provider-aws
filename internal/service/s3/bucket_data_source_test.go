@@ -66,7 +66,7 @@ func TestAccS3BucketDataSource_website(t *testing.T) {
 	})
 }
 
-func TestAccS3BucketDataSource_accessPoint(t *testing.T) {
+func TestAccS3BucketDataSource_accessPointARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	accessPointResourceName := "aws_s3_access_point.test"
@@ -78,9 +78,29 @@ func TestAccS3BucketDataSource_accessPoint(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketDataSourceConfig_accessPoint(rName),
+				Config: testAccBucketDataSourceConfig_accessPointARN(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", accessPointResourceName, "arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketDataSource_accessPointAlias(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketDataSourceConfig_accessPointAlias(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceName, "arn"),
 				),
 			},
 		},
@@ -122,7 +142,7 @@ data "aws_s3_bucket" "test" {
 `, rName)
 }
 
-func testAccBucketDataSourceConfig_accessPoint(rName string) string {
+func testAccBucketDataSourceConfig_accessPointARN(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -143,6 +163,31 @@ resource "aws_s3_access_point" "test" {
 
 data "aws_s3_bucket" "test" {
   bucket = aws_s3_access_point.test.arn
+}
+`, rName)
+}
+
+func testAccBucketDataSourceConfig_accessPointAlias(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_access_point" "test" {
+  # Must have bucket versioning enabled first
+  bucket = aws_s3_bucket_versioning.test.bucket
+  name   = %[1]q
+}
+
+data "aws_s3_bucket" "test" {
+  bucket = aws_s3_access_point.test.alias
 }
 `, rName)
 }
