@@ -45,7 +45,7 @@ func TestAccEKSCluster_basic(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "access_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "access_config.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "eks", regexache.MustCompile(fmt.Sprintf("cluster/%s$", rName))),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_authority.0.data"),
@@ -154,7 +154,7 @@ func TestAccEKSCluster_AccessConfig_update(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "access_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "access_config.#", "1"),
 				),
 			},
 			{
@@ -179,7 +179,7 @@ func TestAccEKSCluster_AccessConfig_update(t *testing.T) {
 				Config: testAccClusterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &cluster),
-					resource.TestCheckResourceAttr(resourceName, "access_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "access_config.#", "1"),
 				),
 			},
 		},

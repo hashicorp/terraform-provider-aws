@@ -62,11 +62,13 @@ func resourceCluster() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"authentication_mode": {
 							Type:             schema.TypeString,
 							Optional:         true,
+							Computed:         true,
 							ValidateDiagFunc: enum.Validate[types.AuthenticationMode](),
 						},
 						"bootstrap_cluster_creator_admin_permissions": {
@@ -480,22 +482,25 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if d.HasChange("access_config") {
-		input := &eks.UpdateClusterConfigInput{
-			AccessConfig: expandUpdateAccessConfigRequest(d.Get("access_config").([]interface{})),
-		}
+		if v, ok := d.GetOk("access_config"); ok {
+			input := &eks.UpdateClusterConfigInput{
+				AccessConfig: expandUpdateAccessConfigRequest(v.([]interface{})),
+				Name:         aws.String(d.Id()),
+			}
 
-		output, err := conn.UpdateClusterConfig(ctx, input)
+			output, err := conn.UpdateClusterConfig(ctx, input)
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) access configuration: %s", d.Id(), err)
-		}
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EKS Cluster (%s) access configuration: %s", d.Id(), err)
+			}
 
-		updateID := aws.ToString(output.Update.Id)
+			updateID := aws.ToString(output.Update.Id)
 
-		_, err = waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
+			_, err = waitClusterUpdateSuccessful(ctx, conn, d.Id(), updateID, d.Timeout(schema.TimeoutUpdate))
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) access configuration update (%s): %s", d.Id(), updateID, err)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for EKS Cluster (%s) access configuration update (%s): %s", d.Id(), updateID, err)
+			}
 		}
 	}
 
