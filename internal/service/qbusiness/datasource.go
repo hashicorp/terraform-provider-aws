@@ -560,7 +560,7 @@ func flattenInlineDocumentEnrichmentConfigurations(cfg []types.InlineDocumentEnr
 }
 
 func expandDocumentEnrichmentConfiguration(v []interface{}) *types.DocumentEnrichmentConfiguration {
-	if len(v) == 0 || v[0] == nil {
+	if v == nil || len(v) == 0 {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
@@ -573,7 +573,7 @@ func expandDocumentEnrichmentConfiguration(v []interface{}) *types.DocumentEnric
 }
 
 func expandInlineDocumentEnrichmentConfigurations(v []interface{}) []types.InlineDocumentEnrichmentConfiguration {
-	if len(v) == 0 || v[0] == nil {
+	if v == nil || len(v) == 0 {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
@@ -606,7 +606,7 @@ func flattenHookConfiguration(cfg *types.HookConfiguration) []interface{} {
 }
 
 func expandHookConfiguration(v []interface{}) *types.HookConfiguration {
-	if len(v) == 0 || v[0] == nil {
+	if v == nil || len(v) == 0 {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
@@ -634,7 +634,7 @@ func flattenDocumentAttributeCondition(cfg *types.DocumentAttributeCondition) []
 }
 
 func expandDocumentAttributeTarget(v []interface{}) *types.DocumentAttributeTarget {
-	if len(v) == 0 || v[0] == nil {
+	if v == nil || len(v) == 0 {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
@@ -661,7 +661,7 @@ func flattenDocumentAttributeTarget(cfg *types.DocumentAttributeTarget) []interf
 }
 
 func expandDocumentAttributeCondition(v []interface{}) *types.DocumentAttributeCondition {
-	if len(v) == 0 || v[0] == nil {
+	if v == nil || len(v) == 0 {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
@@ -695,7 +695,7 @@ func flattenValueSchema(v types.DocumentAttributeValue) []interface{} {
 }
 
 func expandValueSchema(v []interface{}) types.DocumentAttributeValue {
-	if len(v) == 0 || v[0] == nil {
+	if v == nil || len(v) == 0 {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
@@ -728,13 +728,13 @@ func expandValueSchema(v []interface{}) types.DocumentAttributeValue {
 }
 
 func expandVPCConfiguration(cfg []interface{}) *types.DataSourceVpcConfiguration {
-	if len(cfg) < 1 {
+	if cfg == nil || len(cfg) == 0 {
 		return nil
 	}
 
 	conf := cfg[0].(map[string]interface{})
 
-	out := types.DataSourceVpcConfiguration{}
+	out := &types.DataSourceVpcConfiguration{}
 
 	if v, ok := conf["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
 		out.SecurityGroupIds = flex.ExpandStringValueSet(v)
@@ -744,7 +744,7 @@ func expandVPCConfiguration(cfg []interface{}) *types.DataSourceVpcConfiguration
 		out.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 
-	return &out
+	return out
 }
 
 func flattenVPCConfiguration(rs *types.DataSourceVpcConfiguration) []interface{} {
