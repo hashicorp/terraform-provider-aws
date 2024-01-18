@@ -384,8 +384,8 @@ func waitApplicationCreated(ctx context.Context, conn *m2.Client, id string, tim
 
 func waitApplicationUpdated(ctx context.Context, conn *m2.Client, id string, version int32, timeout time.Duration) (*m2.GetApplicationVersionOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.ApplicationLifecycleCreating),
-		Target:                    enum.Slice(awstypes.ApplicationLifecycleCreated, awstypes.ApplicationLifecycleAvailable),
+		Pending:                   enum.Slice(awstypes.ApplicationVersionLifecycleCreating),
+		Target:                    enum.Slice(awstypes.ApplicationVersionLifecycleAvailable),
 		Refresh:                   statusApplicationVersion(ctx, conn, id, version),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -402,8 +402,7 @@ func waitApplicationUpdated(ctx context.Context, conn *m2.Client, id string, ver
 
 func waitApplicationDeleted(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetApplicationOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ApplicationLifecycleCreated, awstypes.ApplicationLifecycleDeleting, awstypes.ApplicationLifecycleDeletingFromEnvironment,
-			awstypes.ApplicationLifecycleAvailable, awstypes.ApplicationLifecycleStopped, awstypes.ApplicationLifecycleStopping),
+		Pending: enum.Slice(awstypes.ApplicationLifecycleDeleting, awstypes.ApplicationLifecycleDeletingFromEnvironment),
 		Target:  []string{},
 		Refresh: statusApplication(ctx, conn, id),
 		Timeout: timeout,
