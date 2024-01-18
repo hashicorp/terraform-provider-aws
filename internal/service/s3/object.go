@@ -607,10 +607,10 @@ func resourceObjectSetKMS(ctx context.Context, meta interface{}, d *schema.Resou
 	// Only set non-default KMS key ID (one that doesn't match default).
 	if sseKMSKeyID != "" {
 		// Read S3 KMS default master key.
-		keyMetadata, err := kms.FindKeyByID(ctx, meta.(*conns.AWSClient).KMSConn(ctx), DefaultKMSKeyAlias)
+		keyMetadata, err := kms.FindKeyByID(ctx, meta.(*conns.AWSClient).KMSConn(ctx), defaultKMSKeyAlias)
 
 		if err != nil {
-			return fmt.Errorf("reading default S3 KMS key (%s): %s", DefaultKMSKeyAlias, err)
+			return fmt.Errorf("reading default S3 KMS key (%s): %s", defaultKMSKeyAlias, err)
 		}
 
 		if sseKMSKeyID != aws.ToString(keyMetadata.Arn) {

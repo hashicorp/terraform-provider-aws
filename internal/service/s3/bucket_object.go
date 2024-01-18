@@ -513,9 +513,9 @@ func resourceBucketObjectSetKMS(ctx context.Context, d *schema.ResourceData, met
 	if sseKMSKeyId != nil {
 		// retrieve S3 KMS Default Master Key
 		conn := meta.(*conns.AWSClient).KMSConn(ctx)
-		keyMetadata, err := kms.FindKeyByID(ctx, conn, DefaultKMSKeyAlias)
+		keyMetadata, err := kms.FindKeyByID(ctx, conn, defaultKMSKeyAlias)
 		if err != nil {
-			return fmt.Errorf("Failed to describe default S3 KMS key (%s): %s", DefaultKMSKeyAlias, err)
+			return fmt.Errorf("Failed to describe default S3 KMS key (%s): %s", defaultKMSKeyAlias, err)
 		}
 
 		if kmsKeyID := aws.ToString(sseKMSKeyId); kmsKeyID != aws.ToString(keyMetadata.Arn) {
