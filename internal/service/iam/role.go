@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
@@ -339,78 +340,106 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	// outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		// return FindRoleByName(ctx, conn, d.Id())
-	// }, d.IsNewResource())
+	//NOTE: Have to always set this to true? Else not sure what to do
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return FindRoleByName(ctx, conn, state.Name.ValueString())
+	}, true)
 
+	// NOTE: Same issue here, I left old conditional here as example, not sure what else can/should be done
 	// if !d.IsNewResource() && tfresource.NotFound(err) {
+	if tfresource.NotFound(err) {
 		// log.Printf("[WARN] IAM Role (%s) not found, removing from state", d.Id())
 		// d.SetId("")
 		// return diags
-	// }
+		resp.State.RemoveResource(ctx)
+		return
+	}
 
-	// if err != nil {
-		// return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): %s", d.Id(), err)
-	// }
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.IAM, create.ErrActionSetting, state.Name.String(), state.ARN.String(), err),
+			err.Error(),
+		)
+		return
+	}
 
-	// role := outputRaw.(*iam.Role)
+	role := outputRaw.(*iam.Role)
 
-	// // occasionally, immediately after a role is created, AWS will give an ARN like AROAQ7SSZBKHREXAMPLE (unique ID)
-	// if role, err = waitRoleARNIsNotUniqueID(ctx, conn, d.Id(), role); err != nil {
+	// occasionally, immediately after a role is created, AWS will give an ARN like AROAQ7SSZBKHREXAMPLE (unique ID)
+	if role, err = waitRoleARNIsNotUniqueID(ctx, conn, state.ARN.ValueString(), role); err != nil {
+		// TODO: have to update this error
 		// return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): waiting for valid ARN: %s", d.Id(), err)
-	// }
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.IAM, create.ErrActionSetting, state.Name.String(), state.ARN.String(), err),
+			err.Error(),
+		)
+		return
+	}
 
-	// d.Set("arn", role.Arn)
-	// d.Set("create_date", role.CreateDate.Format(time.RFC3339))
+	// TODO: remove example section later
+	// state.ApplicationAccount = flex.StringToFramework(ctx, out.ApplicationAccount)
+	// state.ApplicationARN = flex.StringToFrameworkARN(ctx, out.ApplicationArn)
+	// state.ApplicationProviderARN = flex.StringToFrameworkARN(ctx, out.ApplicationProviderArn)
+	// state.Description = flex.StringToFramework(ctx, out.Description)
+	// state.ID = flex.StringToFramework(ctx, out.ApplicationArn)
+	// state.InstanceARN = flex.StringToFrameworkARN(ctx, out.InstanceArn)
+	// state.Name = flex.StringToFramework(ctx, out.Name)
+	// state.Status = flex.StringValueToFramework(ctx, out.Status)
+
+	state.ARN = flex.StringToFramework(ctx, role.Arn)
+	state.CreateDate = flex.StringValueToFramework(ctx, role.CreateDate.Format(time.RFC3339))
+	state.Path = flex.StringToFramework(ctx, role.Path)
+	// TODO: add more of these when ready to actually test
+
 	// d.Set("description", role.Description)
 	// d.Set("max_session_duration", role.MaxSessionDuration)
 	// d.Set("name", role.RoleName)
 	// d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(role.RoleName)))
-	// d.Set("path", role.Path)
+
 	// if role.PermissionsBoundary != nil {
-		// d.Set("permissions_boundary", role.PermissionsBoundary.PermissionsBoundaryArn)
+	// d.Set("permissions_boundary", role.PermissionsBoundary.PermissionsBoundaryArn)
 	// } else {
-		// d.Set("permissions_boundary", nil)
+	// d.Set("permissions_boundary", nil)
 	// }
 	// d.Set("unique_id", role.RoleId)
 
 	// assumeRolePolicy, err := url.QueryUnescape(aws.StringValue(role.AssumeRolePolicyDocument))
 	// if err != nil {
-		// return sdkdiag.AppendFromErr(diags, err)
+	// return sdkdiag.AppendFromErr(diags, err)
 	// }
 
 	// policyToSet, err := verify.PolicyToSet(d.Get("assume_role_policy").(string), assumeRolePolicy)
 	// if err != nil {
-		// return sdkdiag.AppendFromErr(diags, err)
+	// return sdkdiag.AppendFromErr(diags, err)
 	// }
 
 	// d.Set("assume_role_policy", policyToSet)
 
 	// inlinePolicies, err := readRoleInlinePolicies(ctx, aws.StringValue(role.RoleName), meta)
 	// if err != nil {
-		// return sdkdiag.AppendErrorf(diags, "reading inline policies for IAM role %s, error: %s", d.Id(), err)
+	// return sdkdiag.AppendErrorf(diags, "reading inline policies for IAM role %s, error: %s", d.Id(), err)
 	// }
 
 	// var configPoliciesList []*iam.PutRolePolicyInput
 	// if v := d.Get("inline_policy").(*schema.Set); v.Len() > 0 {
-		// configPoliciesList = expandRoleInlinePolicies(aws.StringValue(role.RoleName), v.List())
+	// configPoliciesList = expandRoleInlinePolicies(aws.StringValue(role.RoleName), v.List())
 	// }
 
 	// if !inlinePoliciesEquivalent(inlinePolicies, configPoliciesList) {
-		// if err := d.Set("inline_policy", flattenRoleInlinePolicies(inlinePolicies)); err != nil {
-			// return sdkdiag.AppendErrorf(diags, "setting inline_policy: %s", err)
-		// }
+	// if err := d.Set("inline_policy", flattenRoleInlinePolicies(inlinePolicies)); err != nil {
+	// return sdkdiag.AppendErrorf(diags, "setting inline_policy: %s", err)
+	// }
 	// }
 
 	// policyARNs, err := findRoleAttachedPolicies(ctx, conn, d.Id())
 	// if err != nil {
-		// return sdkdiag.AppendErrorf(diags, "reading IAM Policies attached to Role (%s): %s", d.Id(), err)
+	// return sdkdiag.AppendErrorf(diags, "reading IAM Policies attached to Role (%s): %s", d.Id(), err)
 	// }
 	// d.Set("managed_policy_arns", policyARNs)
 
-	// setTagsOut(ctx, role.Tags)
+	setTagsOut(ctx, role.Tags)
 
-	// return diags
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
