@@ -50,7 +50,7 @@ const (
 
 // @SDKResource("aws_s3_bucket", name="Bucket")
 // @Tags
-func ResourceBucket() *schema.Resource {
+func resourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,
 		ReadWithoutTimeout:   resourceBucketRead,
@@ -1142,7 +1142,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	// Bucket Tags.
 	//
 	tags, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (tftags.KeyValueTags, error) {
-		return BucketListTags(ctx, conn, d.Id())
+		return bucketListTags(ctx, conn, d.Id())
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
@@ -1565,7 +1565,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		// Retry due to S3 eventual consistency.
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
-			terr := BucketUpdateTags(ctx, conn, d.Id(), o, n)
+			terr := bucketUpdateTags(ctx, conn, d.Id(), o, n)
 			return nil, terr
 		}, errCodeNoSuchBucket)
 

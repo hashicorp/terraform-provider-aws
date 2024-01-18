@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_s3_bucket")
-func DataSourceBucket() *schema.Resource {
+// @SDKDataSource("aws_s3_bucket", name="Bucket")
+func dataSourceBucket() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBucketRead,
 

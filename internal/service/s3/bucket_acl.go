@@ -28,8 +28,8 @@ import (
 
 const BucketACLSeparator = ","
 
-// @SDKResource("aws_s3_bucket_acl")
-func ResourceBucketACL() *schema.Resource {
+// @SDKResource("aws_s3_bucket_acl", name="Bucket ACL")
+func resourceBucketACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketACLCreate,
 		ReadWithoutTimeout:   resourceBucketACLRead,
