@@ -1,15 +1,5 @@
 {
-  "definition": {
-    "listeners": [
-      {
-        "port": 8196,
-        "type": "http"
-      }
-    ],
-    "ba-application": {
-      "app-location": "$${s3-source}/PlanetsDemo-${version}.zip"
-    }
-  },
+  "template-version": "2.0",
   "source-locations": [
     {
       "source-id": "s3-source",
@@ -20,5 +10,15 @@
       }
     }
   ],
-  "template-version": "2.0"
+  "definition": {
+    "listeners": [
+      {
+        "port": 8196,
+        "type": "http"
+      }
+    ],
+    "ba-application": {
+      "app-location": "$${s3-source}/PlanetsDemo-${version}.zip"
+    }
+  }
 }
