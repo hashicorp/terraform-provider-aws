@@ -14,7 +14,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/launchwizard"
-	"github.com/aws/aws-sdk-go-v2/service/launchwizard/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/launchwizard/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -401,7 +400,7 @@ func testAccCheckDeploymentDestroy(ctx context.Context) resource.TestCheckFunc {
 			resp, err := conn.GetDeployment(ctx, &launchwizard.GetDeploymentInput{
 				DeploymentId: aws.String(rs.Primary.ID),
 			})
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				return nil
 			}
 			if err != nil {

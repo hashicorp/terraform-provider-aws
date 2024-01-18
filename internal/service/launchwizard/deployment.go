@@ -50,7 +50,6 @@ func newResourceDeployment(_ context.Context) (resource.ResourceWithConfigure, e
 const (
 	ResNameDeployment = "Deployment"
 )
-
 type resourceDeployment struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
@@ -278,7 +277,6 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 
 func (r *resourceDeployment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().LaunchWizardClient(ctx)
-
 	var state resourceDeploymentData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -570,8 +568,6 @@ func requiresReplaceUnlessPasswordIsEmpty() mapplanmodifier.RequiresReplaceIfFun
 
 			resp.RequiresReplace = true
 		}
-		return
-
 	}
 }
 
