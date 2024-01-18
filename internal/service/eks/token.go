@@ -187,8 +187,8 @@ func (g generator) GetWithSTS(ctx context.Context, clusterID string, stsAPI *sts
 		po.ClientOptions = []func(*sts.Options){
 			func(o *sts.Options) {
 				o.APIOptions = []func(*middleware.Stack) error{
-					addClusterIdHeaderMiddleware(clusterID),
-					addExpiryHeaderMiddleware(requestPresignParam),
+					addClusterIdHeaderSetterMiddleware(clusterID),
+					addExpiryParamSetterMiddleware(requestPresignParam),
 				}
 			},
 		}
@@ -202,18 +202,18 @@ func (g generator) GetWithSTS(ctx context.Context, clusterID string, stsAPI *sts
 	return Token{v1Prefix + base64.RawURLEncoding.EncodeToString([]byte(request.URL))}, nil
 }
 
-func addClusterIdHeaderMiddleware(clusterID string) func(*middleware.Stack) error {
+func addClusterIdHeaderSetterMiddleware(clusterID string) func(*middleware.Stack) error {
 	return func(stack *middleware.Stack) error {
 		return stack.Build.Add(
-			clusterIdHeaderMiddleware(clusterID),
+			setClusterIdHeaderMiddleware(clusterID),
 			middleware.After,
 		)
 	}
 }
 
-func clusterIdHeaderMiddleware(clusterID string) middleware.BuildMiddleware {
+func setClusterIdHeaderMiddleware(clusterID string) middleware.BuildMiddleware {
 	return middleware.BuildMiddlewareFunc(
-		"foobar",
+		"Test: Set ClusterId",
 		func(ctx context.Context, in middleware.BuildInput, next middleware.BuildHandler) (out middleware.BuildOutput, metadata middleware.Metadata, err error) {
 			switch req := in.Request.(type) {
 			case *smithyhttp.Request:
@@ -227,18 +227,18 @@ func clusterIdHeaderMiddleware(clusterID string) middleware.BuildMiddleware {
 	)
 }
 
-func addExpiryHeaderMiddleware(expire time.Duration) func(*middleware.Stack) error {
+func addExpiryParamSetterMiddleware(expire time.Duration) func(*middleware.Stack) error {
 	return func(stack *middleware.Stack) error {
 		return stack.Build.Add(
-			ExpiryHeaderMiddleware(expire),
+			setExpiryParamMiddleware(expire),
 			middleware.After,
 		)
 	}
 }
 
-func ExpiryHeaderMiddleware(expire time.Duration) middleware.BuildMiddleware {
+func setExpiryParamMiddleware(expire time.Duration) middleware.BuildMiddleware {
 	return middleware.BuildMiddlewareFunc(
-		"foobaz",
+		"Test: Set ExpiryParam",
 		func(ctx context.Context, in middleware.BuildInput, next middleware.BuildHandler) (out middleware.BuildOutput, metadata middleware.Metadata, err error) {
 			switch req := in.Request.(type) {
 			case *smithyhttp.Request:
