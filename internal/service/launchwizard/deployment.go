@@ -228,7 +228,6 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 					}
 				}
 			}
-
 		}
 
 		if plan.SkipDestroyAfterFailure.ValueBool() || session_timeout {
@@ -264,7 +263,6 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 				)
 			}
 		}
-
 	}
 
 	plan.Status = flex.StringToFramework(ctx, (*string)(&wait_out.Status))
@@ -329,7 +327,7 @@ func (r *resourceDeployment) Read(ctx context.Context, req resource.ReadRequest,
 	state.Specifications = flex.FlattenFrameworkStringMap(ctx, spec_temp)
 
 	//check status as it might be "in progress" (e.g. in case of session timeout)
-	switch awstypes.DeploymentStatus(out.Status) {
+	switch out.Status {
 	case
 		awstypes.DeploymentStatusInProgress,
 		awstypes.DeploymentStatusCreating,
