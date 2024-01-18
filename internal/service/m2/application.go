@@ -6,10 +6,10 @@ package m2
 import (
 	"context"
 	"errors"
-	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"time"
@@ -107,26 +107,21 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"definition": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"content": schema.StringAttribute{
-							Optional: true,
-							Validators: []validator.String{
-								stringvalidator.ExactlyOneOf(
-									path.MatchRelative().AtParent().AtName("content"),
-									path.MatchRelative().AtParent().AtName("s3_location"),
-								),
-							},
+			"definition": schema.SingleNestedBlock{
+				Attributes: map[string]schema.Attribute{
+					"content": schema.StringAttribute{
+						Optional: true,
+						Validators: []validator.String{
+							stringvalidator.ExactlyOneOf(
+								path.MatchRelative().AtParent().AtName("content"),
+								path.MatchRelative().AtParent().AtName("s3_location"),
+							),
 						},
-						"s3_location": schema.StringAttribute{
-							Optional: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
+					},
+					"s3_location": schema.StringAttribute{
+						Optional: true,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.UseStateForUnknown(),
 						},
 					},
 				},
@@ -158,14 +153,14 @@ func (r *resourceApplication) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	var definitions []applicationDefinition
-	resp.Diagnostics.Append(plan.Definition.ElementsAs(ctx, &definitions, false)...)
+	var definition applicationDefinition
+	resp.Diagnostics.Append(plan.Definition.As(ctx, &definition, basetypes.ObjectAsOptions{})...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	apiDefinition := expandApplicationDefinition(ctx, definitions)
+	apiDefinition := expandApplicationDefinition(ctx, definition)
 	in.Definition = apiDefinition
 
 	out, err := conn.CreateApplication(ctx, in)
@@ -258,14 +253,14 @@ func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	if !plan.Definition.Equal(state.Definition) {
-		var definitions []applicationDefinition
-		resp.Diagnostics.Append(plan.Definition.ElementsAs(ctx, &definitions, false)...)
+		var definition applicationDefinition
+		resp.Diagnostics.Append(plan.Definition.As(ctx, &definition, basetypes.ObjectAsOptions{})...)
 
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		apiDefinition := expandApplicationDefinition(ctx, definitions)
+		apiDefinition := expandApplicationDefinition(ctx, definition)
 		in.Definition = apiDefinition
 		update = true
 	}
@@ -500,20 +495,16 @@ func findApplicationVersion(ctx context.Context, conn *m2.Client, id string, ver
 
 }
 
-func expandApplicationDefinition(ctx context.Context, definition []applicationDefinition) awstypes.Definition {
-	if len(definition) == 0 {
-		return nil
-	}
-
-	if !definition[0].S3Location.IsNull() {
+func expandApplicationDefinition(ctx context.Context, definition applicationDefinition) awstypes.Definition {
+	if !definition.S3Location.IsNull() {
 		return &awstypes.DefinitionMemberS3Location{
-			Value: *flex.StringFromFramework(ctx, definition[0].S3Location),
+			Value: *flex.StringFromFramework(ctx, definition.S3Location),
 		}
 	}
 
-	if !definition[0].Content.IsNull() {
+	if !definition.Content.IsNull() {
 		return &awstypes.DefinitionMemberContent{
-			Value: *flex.StringFromFramework(ctx, definition[0].Content),
+			Value: *flex.StringFromFramework(ctx, definition.Content),
 		}
 	}
 
@@ -548,28 +539,25 @@ func flattenApplicationDefinition(ctx context.Context, definition awstypes.Defin
 	return definitionValue, diags
 }
 
-func flattenApplicationDefinitionFromVersion(ctx context.Context, version *m2.GetApplicationVersionOutput) (types.List, diag.Diagnostics) {
+func flattenApplicationDefinitionFromVersion(ctx context.Context, version *m2.GetApplicationVersionOutput) (types.Object, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: applicationDefinitionAttrs}
 
 	obj := map[string]attr.Value{
 		"content":     flex.StringToFramework(ctx, version.DefinitionContent),
-		"s3_location": types.StringNull(),
+		"s3_location": types.StringNull(), // This value is never returned...
 	}
 
 	definitionValue, d := types.ObjectValue(applicationDefinitionAttrs, obj)
 	diags.Append(d...)
-	elems := []attr.Value{definitionValue}
-	definitionList, d := types.ListValue(elemType, elems)
 
-	return definitionList, diags
+	return definitionValue, diags
 }
 
 type resourceApplicationData struct {
 	ARN            types.String   `tfsdk:"arn"`
 	ClientToken    types.String   `tfsdk:"client_token"`
 	CurrentVersion types.Int64    `tfsdk:"current_version"`
-	Definition     types.List     `tfsdk:"definition"`
+	Definition     types.Object   `tfsdk:"definition"`
 	Description    types.String   `tfsdk:"description"`
 	ID             types.String   `tfsdk:"id"`
 	EngineType     types.String   `tfsdk:"engine_type"`
