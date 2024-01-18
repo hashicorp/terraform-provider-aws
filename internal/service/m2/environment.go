@@ -587,7 +587,7 @@ func expandStorageConfigurations(ctx context.Context, storageConfigurations []st
 		if !mount.FSX.IsNull() {
 			var fsxMounts []fsx
 			diags.Append(mount.FSX.ElementsAs(ctx, &fsxMounts, false)...)
-			mp := expandFsxMountPoint(ctx, fsxMounts)
+			mp := expandFSxMountPoint(ctx, fsxMounts)
 			storage = append(storage, mp)
 		}
 	}
@@ -607,7 +607,7 @@ func expandEFSMountPoint(ctx context.Context, efs []efs) *awstypes.StorageConfig
 	}
 }
 
-func expandFsxMountPoint(ctx context.Context, fsx []fsx) *awstypes.StorageConfigurationMemberFsx {
+func expandFSxMountPoint(ctx context.Context, fsx []fsx) *awstypes.StorageConfigurationMemberFsx {
 	if len(fsx) == 0 {
 		return nil
 	}
