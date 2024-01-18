@@ -212,7 +212,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 func defaultEndpoint(region string) string {
 	r := docdbelastic_sdkv2.NewDefaultEndpointResolverV2()
 
-	ep, err := r.ResolveEndpoint(context.TODO(), docdbelastic_sdkv2.EndpointParameters{
+	ep, err := r.ResolveEndpoint(context.Background(), docdbelastic_sdkv2.EndpointParameters{
 		Region: aws_sdkv2.String(region),
 	})
 	if err != nil {

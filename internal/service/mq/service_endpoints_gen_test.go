@@ -212,7 +212,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 func defaultEndpoint(region string) string {
 	r := mq_sdkv2.NewDefaultEndpointResolverV2()
 
-	ep, err := r.ResolveEndpoint(context.TODO(), mq_sdkv2.EndpointParameters{
+	ep, err := r.ResolveEndpoint(context.Background(), mq_sdkv2.EndpointParameters{
 		Region: aws_sdkv2.String(region),
 	})
 	if err != nil {
