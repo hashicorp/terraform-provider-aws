@@ -181,7 +181,7 @@ func resourceAccessEntryUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 	}
 
-	return append(diags, resourceFargateProfileRead(ctx, d, meta)...)
+	return append(diags, resourceAccessEntryRead(ctx, d, meta)...)
 }
 
 func resourceAccessEntryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
