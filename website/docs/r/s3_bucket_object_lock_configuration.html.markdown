@@ -16,7 +16,7 @@ Provides an S3 bucket Object Lock configuration resource. For more information a
 
 ## Example Usage
 
-### Object Lock configuration for new and existing bucket
+### Object Lock configuration for new or existing buckets
 
 ```terraform
 resource "aws_s3_bucket" "example" {
