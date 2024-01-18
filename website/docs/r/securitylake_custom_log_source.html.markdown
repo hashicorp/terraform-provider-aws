@@ -18,17 +18,18 @@ Terraform resource for managing an AWS Security Lake Custom Log Source.
 resource "aws_securitylake_custom_log_source" "example" {
   source_name    = "example-name"
   source_version = "1.0"
-	event_classes  = ["FILE_ACTIVITY"]
-	configuration {
-		crawler_configuration {
-			role_arn = aws_iam_role.custom_log.arn
-		}
+  event_classes  = ["FILE_ACTIVITY"]
 
-		provider_identity {
-			external_id = "example-id"
-			principal   = "123456789012"
-		}
-	}
+  configuration {
+    crawler_configuration {
+      role_arn = aws_iam_role.custom_log.arn
+    }
+
+    provider_identity {
+      external_id = "example-id"
+      principal   = "123456789012"
+    }
+  }
 }
 ```
 
