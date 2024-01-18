@@ -63,4 +63,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Tags applied to the product.
 * `type` - Type of product.
 
-<!-- cache-key: cdktf-0.19.0 input-5458573534df92d96787bca1e91a863522fae24c5024caea86faec96b4253984 -->
+<!-- cache-key: cdktf-0.20.1 input-5458573534df92d96787bca1e91a863522fae24c5024caea86faec96b4253984 -->

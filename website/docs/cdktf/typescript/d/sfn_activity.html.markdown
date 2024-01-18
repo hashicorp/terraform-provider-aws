@@ -48,4 +48,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ARN that identifies the activity.
 * `creationDate` - Date the activity was created.
 
-<!-- cache-key: cdktf-0.19.0 input-e2493cc090cc44214dfdcc458776424943b9df2b9c75318cd7718d0ef209f5e1 -->
+<!-- cache-key: cdktf-0.20.1 input-e2493cc090cc44214dfdcc458776424943b9df2b9c75318cd7718d0ef209f5e1 -->

@@ -102,18 +102,6 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	if v, ok := d.Get("most_recent").(bool); ok && v {
-		if len(input.ImageIds) == 0 {
-			input.ImageIds = []*ecr.ImageIdentifier{
-				{
-					ImageTag: aws.String("latest"),
-				},
-			}
-		} else {
-			input.ImageIds[0].ImageTag = aws.String("latest")
-		}
-	}
-
 	if v, ok := d.GetOk("registry_id"); ok {
 		input.RegistryId = aws.String(v.(string))
 	}

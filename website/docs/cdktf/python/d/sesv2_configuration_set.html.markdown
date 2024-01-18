@@ -62,4 +62,4 @@ This data source exports the following attributes in addition to the arguments a
     * `guardian_options` - Specifies additional settings for your VDM configuration as applicable to the Guardian.
         * `optimized_shared_delivery` - Specifies the status of your VDM optimized shared delivery.
 
-<!-- cache-key: cdktf-0.19.0 input-766473cbe249f97d2e59a5938aa348513964c44ef9762f5fa275491b1409c22a -->
+<!-- cache-key: cdktf-0.20.1 input-766473cbe249f97d2e59a5938aa348513964c44ef9762f5fa275491b1409c22a -->

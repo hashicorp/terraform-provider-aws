@@ -217,6 +217,64 @@ rules:
           patterns:
             - pattern-regex: "(?i)RedshiftServerless"
     severity: WARNING
+  - id: rekognition-in-func-name
+    languages:
+      - go
+    message: Do not use "Rekognition" in func name inside rekognition package
+    paths:
+      include:
+        - internal/service/rekognition
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Rekognition"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: rekognition-in-test-name
+    languages:
+      - go
+    message: Include "Rekognition" in test name
+    paths:
+      include:
+        - internal/service/rekognition/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccRekognition"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: rekognition-in-const-name
+    languages:
+      - go
+    message: Do not use "Rekognition" in const name inside rekognition package
+    paths:
+      include:
+        - internal/service/rekognition
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Rekognition"
+    severity: WARNING
+  - id: rekognition-in-var-name
+    languages:
+      - go
+    message: Do not use "Rekognition" in var name inside rekognition package
+    paths:
+      include:
+        - internal/service/rekognition
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Rekognition"
+    severity: WARNING
   - id: resourceexplorer2-in-func-name
     languages:
       - go

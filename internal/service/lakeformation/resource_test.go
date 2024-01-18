@@ -305,7 +305,8 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_lakeformation_resource" "test" {
-  arn = aws_s3_bucket.test.arn
+  arn                     = aws_s3_bucket.test.arn
+  use_service_linked_role = true
 }
 `, rName)
 }
