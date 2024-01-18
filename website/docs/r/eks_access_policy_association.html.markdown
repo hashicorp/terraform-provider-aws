@@ -21,7 +21,7 @@ resource "aws_eks_access_policy_association" "example" {
   access_scope = {
     type       = "namespace"
     namespaces = ["example-namespace"]
-  }  
+  }
 }
 ```
 
