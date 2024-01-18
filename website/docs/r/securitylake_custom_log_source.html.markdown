@@ -29,7 +29,6 @@ resource "aws_securitylake_custom_log_source" "example" {
 			principal   = "123456789012"
 		}
 	}
-
 }
 ```
 
