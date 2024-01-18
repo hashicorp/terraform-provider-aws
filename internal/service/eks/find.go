@@ -13,35 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-func FindAccessEntryByID(ctx context.Context, conn *eks.Client, clusterName, principal_arn string) (*types.AccessEntry, error) {
-	input := &eks.DescribeAccessEntryInput{
-		ClusterName:  aws.String(clusterName),
-		PrincipalArn: aws.String(principal_arn),
-	}
-
-	output, err := conn.DescribeAccessEntry(ctx, input)
-
-	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.AccessEntry == nil {
-		return nil, &retry.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
-	}
-
-	return output.AccessEntry, nil
-}
-
 func FindAddonByClusterNameAndAddonName(ctx context.Context, conn *eks.Client, clusterName, addonName string) (*types.Addon, error) {
 	input := &eks.DescribeAddonInput{
 		AddonName:   aws.String(addonName),

@@ -40,10 +40,15 @@ func TestAccEKSAccessEntry_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessEntryConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestCheckResourceAttrSet(resourceName, "principal_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "access_entry_arn"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "created_at"),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", "0"),
+					acctest.CheckResourceAttrRFC3339(resourceName, "modified_at"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "type"),
+					resource.TestCheckResourceAttrSet(resourceName, "user_name"),
 				),
 			},
 			{
@@ -86,6 +91,59 @@ func TestAccEKSAccessEntry_disappears(t *testing.T) {
 	})
 }
 
+func TestAccEKSAccessEntry_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var accessentry types.AccessEntry
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_access_entry.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessEntryConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAccessEntryConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccAccessEntryConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckAccessEntryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
@@ -95,11 +153,7 @@ func testAccCheckAccessEntryDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			clusterName, principal_arn, err := tfeks.AccessEntryParseResourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-			_, err = tfeks.FindAccessEntryByID(ctx, conn, clusterName, principal_arn)
+			_, err := tfeks.FindAccessEntryByTwoPartKey(ctx, conn, rs.Primary.Attributes["cluster_name"], rs.Primary.Attributes["principal_arn"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -116,27 +170,22 @@ func testAccCheckAccessEntryDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckAccessEntryExists(ctx context.Context, name string, accessentry *types.AccessEntry) resource.TestCheckFunc {
+func testAccCheckAccessEntryExists(ctx context.Context, n string, v *types.AccessEntry) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		clusterName, principal_arn, err := tfeks.AccessEntryParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
 
-		output, err := tfeks.FindAccessEntryByID(ctx, conn, clusterName, principal_arn)
+		output, err := tfeks.FindAccessEntryByTwoPartKey(ctx, conn, rs.Primary.Attributes["cluster_name"], rs.Primary.Attributes["principal_arn"])
 
 		if err != nil {
 			return err
 		}
 
-		*accessentry = *output
+		*v = *output
 
 		return nil
 	}
@@ -220,4 +269,39 @@ resource "aws_eks_access_entry" "test" {
   principal_arn = aws_iam_user.test.arn
 }
 `, rName))
+}
+
+func testAccAccessEntryConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccAccessEntryConfig_base(rName), fmt.Sprintf(`
+resource "aws_iam_user" "test" {
+  name = %[1]q
+}
+
+resource "aws_eks_access_entry" "test" {
+  cluster_name  = aws_eks_cluster.test.name
+  principal_arn = aws_iam_user.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccAccessEntryConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccAccessEntryConfig_base(rName), fmt.Sprintf(`
+resource "aws_iam_user" "test" {
+  name = %[1]q
+}
+
+resource "aws_eks_access_entry" "test" {
+  cluster_name  = aws_eks_cluster.test.name
+  principal_arn = aws_iam_user.test.arn
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

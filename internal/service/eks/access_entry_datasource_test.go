@@ -23,20 +23,18 @@ func TestAccEKSAccessEntryDataSource_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); testAccPreCheckAddon(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAddonDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAccessEntryDataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(resourceName, "cluster_name", dataSourceResourceName, "cluster_name"),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "access_entry_arn", dataSourceResourceName, "access_entry_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_groups", dataSourceResourceName, "kubernetes_groups"),
+					resource.TestCheckResourceAttrPair(resourceName, "cluster_name", dataSourceResourceName, "cluster_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_at", dataSourceResourceName, "created_at"),
-					resource.TestCheckResourceAttrPair(resourceName, "modified_at", dataSourceResourceName, "modified_at"),
+					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_groups.#", dataSourceResourceName, "kubernetes_groups.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "principal_arn", dataSourceResourceName, "principal_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "user_name", dataSourceResourceName, "user_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "type", dataSourceResourceName, "type"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceResourceName, "tags.%"),
+					resource.TestCheckResourceAttrPair(resourceName, "type", dataSourceResourceName, "type"),
+					resource.TestCheckResourceAttrPair(resourceName, "user_name", dataSourceResourceName, "user_name"),
 				),
 			},
 		},

@@ -14,6 +14,7 @@ var (
 	ResourceNodeGroup               = resourceNodeGroup
 	ResourcePodIdentityAssociation  = newPodIdentityAssociationResource
 
+	FindAccessEntryByTwoPartKey                = findAccessEntryByTwoPartKey
 	FindAddonByTwoPartKey                      = findAddonByTwoPartKey
 	FindClusterByName                          = findClusterByName
 	FindFargateProfileByTwoPartKey             = findFargateProfileByTwoPartKey

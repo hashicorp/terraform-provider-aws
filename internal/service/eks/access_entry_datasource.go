@@ -5,7 +5,7 @@ package eks
 
 import (
 	"context"
-	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -13,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -71,28 +70,24 @@ func dataSourceAccessEntryRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	principalArn := d.Get("principal_arn").(string)
 	clusterName := d.Get("cluster_name").(string)
-	id := AccessEntryCreateResourceID(clusterName, principalArn)
-	output, err := FindAccessEntryByID(ctx, conn, clusterName, principalArn)
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] EKS Access Entry (%s) not found, removing from state", id)
-		return diags
-	}
+	principalARN := d.Get("principal_arn").(string)
+	id := accessEntryCreateResourceID(clusterName, principalARN)
+	output, err := findAccessEntryByTwoPartKey(ctx, conn, clusterName, principalARN)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EKS Access Entry (%s): %s", id, err)
 	}
+
 	d.SetId(id)
 	d.Set("access_entry_arn", output.AccessEntryArn)
 	d.Set("cluster_name", output.ClusterName)
-	d.Set("created_at", aws.ToTime(output.CreatedAt).String())
+	d.Set("created_at", aws.ToTime(output.CreatedAt).Format(time.RFC3339))
 	d.Set("kubernetes_groups", output.KubernetesGroups)
-	d.Set("modified_at", aws.ToTime(output.ModifiedAt).String())
+	d.Set("modified_at", aws.ToTime(output.ModifiedAt).Format(time.RFC3339))
 	d.Set("principal_arn", output.PrincipalArn)
-	d.Set("user_name", output.Username)
 	d.Set("type", output.Type)
+	d.Set("user_name", output.Username)
 
 	setTagsOut(ctx, output.Tags)
 
