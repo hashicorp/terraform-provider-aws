@@ -33,8 +33,8 @@ data "aws_iam_policy_document" "example_source" {
     ]
 
     resources = [
-      "arn:aws:s3:::example_source",
-      "arn:aws:s3:::example_source/*",
+      "arn:aws:s3:::example-source",
+      "arn:aws:s3:::example-source/*",
     ]
   }
 }
@@ -74,8 +74,8 @@ data "aws_iam_policy_document" "example_destination" {
     ]
 
     resources = [
-      "arn:aws:s3:::example_destination",
-      "arn:aws:s3:::example_destination/*",
+      "arn:aws:s3:::example-destination",
+      "arn:aws:s3:::example-destination/*",
     ]
   }
 }
@@ -247,6 +247,7 @@ EventBridge, Honeycode, and Marketo destination properties all support the follo
 ###### Aggregation Config
 
 * `aggregation_type` - (Optional) Whether Amazon AppFlow aggregates the flow records into a single file, or leave them unaggregated. Valid values are `None` and `SingleFile`.
+* `target_file_size` - (Optional) The desired file size, in MB, for each output file that Amazon AppFlow writes to the flow destination. Integer value.
 
 ###### Prefix Config
 

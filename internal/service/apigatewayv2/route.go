@@ -178,7 +178,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("authorizer_id", resp.AuthorizerId)
 	d.Set("model_selection_expression", resp.ModelSelectionExpression)
 	d.Set("operation_name", resp.OperationName)
-	if err := d.Set("request_models", flex.PointersMapToStringList(resp.RequestModels)); err != nil {
+	if err := d.Set("request_models", flex.FlattenStringMap(resp.RequestModels)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting request_models: %s", err)
 	}
 	if err := d.Set("request_parameter", flattenRouteRequestParameters(resp.RequestParameters)); err != nil {

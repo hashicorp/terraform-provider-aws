@@ -38,7 +38,7 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-* `arn` - (Required) ARN of the image. The suffix can either be specified with wildcards (`xXX`) to fetch the latest build version or a full build version (e.g., `20201126/1`) to fetch an exact version.
+* `arn` - (Required) ARN of the image. The suffix can either be specified with wildcards (`x.x.x`) to fetch the latest build version or a full build version (e.g., `2020.11.26/1`) to fetch an exact version.
 
 ## Attribute Reference
 
@@ -50,6 +50,11 @@ This data source exports the following attributes in addition to the arguments a
 * `distributionConfigurationArn` - ARN of the Image Builder Distribution Configuration.
 * `enhancedImageMetadataEnabled` - Whether additional information about the image being created is collected.
 * `imageRecipeArn` - ARN of the image recipe.
+* `imageScanningConfiguration` - List of an object with image scanning configuration fields.
+    * `imageScanningEnabled` - Indicates whether Image Builder keeps a snapshot of the vulnerability scans that Amazon Inspector runs against the build instance when you create a new image.
+    * `ecrConfiguration` - Configuration block with ECR configuration.
+        * `repositoryName` - The name of the container repository that Amazon Inspector scans to identify findings for your container images.
+        * `containerTags` - Set of tags for Image Builder to apply to the output container image that that Amazon Inspector scans.
 * `imageTestsConfiguration` - List of an object with image tests configuration.
     * `imageTestsEnabled` - Whether image tests are enabled.
     * `timeoutMinutes` - Number of minutes before image tests time out.
@@ -65,9 +70,9 @@ This data source exports the following attributes in addition to the arguments a
         * `name` - Name of the AMI.
         * `region` - Region of the AMI.
     * `containers` - Set of objects with each container image created and stored in the output repository.
-        * `imageUris` - Set of URIs for created containers.
+        * `image_uris` - Set of URIs for created containers.
         * `region` - Region of the container image.
 * `tags` - Key-value map of resource tags for the image.
 * `version` - Version of the image.
 
-<!-- cache-key: cdktf-0.18.0 input-53a7f339aa6dcc7a25e0208e25307d27d8c96291fcb0093e705d220d99e734c2 -->
+<!-- cache-key: cdktf-0.20.1 input-c16581cc1f73d4143d3834e3f16be4e4ace35e8a4c70a0907ae9057adf65efee -->

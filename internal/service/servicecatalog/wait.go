@@ -461,7 +461,7 @@ func WaitLaunchPathsReady(ctx context.Context, conn *servicecatalog.ServiceCatal
 func WaitProvisionedProductReady(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, id, name string, timeout time.Duration) (*servicecatalog.DescribeProvisionedProductOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{servicecatalog.ProvisionedProductStatusUnderChange, servicecatalog.ProvisionedProductStatusPlanInProgress},
-		Target:                    []string{servicecatalog.StatusAvailable},
+		Target:                    []string{servicecatalog.ProvisionedProductStatusAvailable},
 		Refresh:                   StatusProvisionedProduct(ctx, conn, acceptLanguage, id, name),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: ContinuousTargetOccurrence,
@@ -491,7 +491,7 @@ func WaitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Servi
 
 func WaitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, id, name string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{servicecatalog.StatusAvailable, servicecatalog.ProvisionedProductStatusUnderChange},
+		Pending: []string{servicecatalog.ProvisionedProductStatusAvailable, servicecatalog.ProvisionedProductStatusUnderChange},
 		Target:  []string{},
 		Refresh: StatusProvisionedProduct(ctx, conn, acceptLanguage, id, name),
 		Timeout: timeout,

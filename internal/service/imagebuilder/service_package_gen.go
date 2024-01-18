@@ -138,6 +138,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 				IdentifierAttribute: "id",
 			},
 		},
+		{
+			Factory:  ResourceWorkflow,
+			TypeName: "aws_imagebuilder_workflow",
+			Name:     "Workflow",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
 	}
 }
 

@@ -28,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/sdktypes"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -328,6 +329,8 @@ func resourceCertificate() *schema.Resource {
 }
 
 func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
 	if _, ok := d.GetOk("domain_name"); ok {
@@ -335,7 +338,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		_, v2 := d.GetOk("validation_method")
 
 		if !v1 && !v2 {
-			return diag.Errorf("`certificate_authority_arn` or `validation_method` must be set when creating an ACM certificate")
+			return sdkdiag.AppendErrorf(diags, "`certificate_authority_arn` or `validation_method` must be set when creating an ACM certificate")
 		}
 
 		domainName := d.Get("domain_name").(string)
@@ -372,7 +375,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		output, err := conn.RequestCertificate(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("requesting ACM Certificate (%s): %s", domainName, err)
+			return sdkdiag.AppendErrorf(diags, "requesting ACM Certificate (%s): %s", domainName, err)
 		}
 
 		d.SetId(aws.ToString(output.CertificateArn))
@@ -390,20 +393,22 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		output, err := conn.ImportCertificate(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("importing ACM Certificate: %s", err)
+			return sdkdiag.AppendErrorf(diags, "importing ACM Certificate: %s", err)
 		}
 
 		d.SetId(aws.ToString(output.CertificateArn))
 	}
 
 	if _, err := waitCertificateDomainValidationsAvailable(ctx, conn, d.Id(), certificateDNSValidationAssignmentTimeout); err != nil {
-		return diag.Errorf("waiting for ACM Certificate (%s) to be issued: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for ACM Certificate (%s) to be issued: %s", d.Id(), err)
 	}
 
-	return resourceCertificateRead(ctx, d, meta)
+	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
 func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
 	certificate, err := findCertificateByARN(ctx, conn, d.Id())
@@ -411,11 +416,11 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ACM Certificate %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading ACM Certificate (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ACM Certificate (%s): %s", d.Id(), err)
 	}
 
 	domainValidationOptions, validationEmails := flattenDomainValidations(certificate.DomainValidationOptions)
@@ -425,7 +430,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("domain_name", certificate.DomainName)
 	d.Set("early_renewal_duration", d.Get("early_renewal_duration"))
 	if err := d.Set("domain_validation_options", domainValidationOptions); err != nil {
-		return diag.Errorf("setting domain_validation_options: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting domain_validation_options: %s", err)
 	}
 	keyAlgorithmValue := string(certificate.KeyAlgorithm)
 	// ACM DescribeCertificate returns hyphenated string values instead of underscore separated
@@ -449,7 +454,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	if certificate.Options != nil {
 		if err := d.Set("options", []interface{}{flattenCertificateOptions(certificate.Options)}); err != nil {
-			return diag.Errorf("setting options: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting options: %s", err)
 		}
 	} else {
 		d.Set("options", nil)
@@ -458,7 +463,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("renewal_eligibility", certificate.RenewalEligibility)
 	if certificate.RenewalSummary != nil {
 		if err := d.Set("renewal_summary", []interface{}{flattenRenewalSummary(certificate.RenewalSummary)}); err != nil {
-			return diag.Errorf("setting renewal_summary: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting renewal_summary: %s", err)
 		}
 	} else {
 		d.Set("renewal_summary", nil)
@@ -469,10 +474,12 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("validation_emails", validationEmails)
 	d.Set("validation_method", certificateValidationMethod(certificate))
 
-	return nil
+	return diags
 }
 
 func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
 	if d.HasChanges("private_key", "certificate_body", "certificate_chain") {
@@ -494,7 +501,7 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 			_, err := conn.ImportCertificate(ctx, input)
 
 			if err != nil {
-				return diag.Errorf("importing ACM Certificate (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "importing ACM Certificate (%s): %s", d.Id(), err)
 			}
 		}
 	} else if d.Get("pending_renewal").(bool) {
@@ -503,11 +510,11 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 		})
 
 		if err != nil {
-			return diag.Errorf("renewing ACM Certificate (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "renewing ACM Certificate (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitCertificateRenewed(ctx, conn, d.Get("arn").(string), CertificateRenewalTimeout); err != nil {
-			return diag.Errorf("waiting for ACM Certificate (%s) renewal: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for ACM Certificate (%s) renewal: %s", d.Id(), err)
 		}
 	}
 
@@ -521,14 +528,16 @@ func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta
 		_, err := conn.UpdateCertificateOptions(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating ACM Certificate options (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating ACM Certificate options (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceCertificateRead(ctx, d, meta)
+	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
 func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 
 	log.Printf("[INFO] Deleting ACM Certificate: %s", d.Id())
@@ -540,14 +549,14 @@ func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta
 		})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting ACM Certificate (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting ACM Certificate (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func certificateValidationMethod(certificate *types.CertificateDetail) string {

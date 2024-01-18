@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -25,6 +26,17 @@ type withMeta struct {
 
 func (w *withMeta) Meta() *conns.AWSClient {
 	return w.meta
+}
+
+// RegionalARN returns a regional ARN for the specified service namespace and resource.
+func (w *withMeta) RegionalARN(service, resource string) string {
+	return arn.ARN{
+		Partition: w.meta.Partition,
+		Service:   service,
+		Region:    w.meta.Region,
+		AccountID: w.meta.AccountID,
+		Resource:  resource,
+	}.String()
 }
 
 type withMigratedFromPluginSDK struct {

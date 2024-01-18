@@ -413,6 +413,27 @@ func TestAccIAMUser_permissionsBoundary(t *testing.T) {
 					testAccCheckUserPermissionsBoundary(&user, permissionsBoundary1),
 				),
 			},
+			// Test drift detection
+			{
+				PreConfig: func() {
+					// delete the boundary manually
+					conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+					input := &iam.DeleteUserPermissionsBoundaryInput{
+						UserName: user.UserName,
+					}
+					_, err := conn.DeleteUserPermissionsBoundaryWithContext(ctx, input)
+					if err != nil {
+						t.Fatalf("Failed to delete permission_boundary from user (%s): %s", aws.StringValue(user.UserName), err)
+					}
+				},
+				Config: testAccUserConfig_permissionsBoundary(rName, permissionsBoundary1),
+				// check the boundary was restored
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
+					testAccCheckUserPermissionsBoundary(&user, permissionsBoundary1),
+				),
+			},
 			// Test empty value
 			{
 				Config: testAccUserConfig_permissionsBoundary(rName, ""),

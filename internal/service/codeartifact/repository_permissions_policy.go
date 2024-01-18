@@ -115,7 +115,7 @@ func resourceRepositoryPermissionsPolicyRead(ctx context.Context, d *schema.Reso
 
 	domainOwner, domainName, repoName, err := DecodeRepositoryID(d.Id())
 	if err != nil {
-		return create.DiagError(names.CodeArtifact, create.ErrActionReading, ResNameRepositoryPermissionsPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeArtifact, create.ErrActionReading, ResNameRepositoryPermissionsPolicy, d.Id(), err)
 	}
 
 	dm, err := conn.GetRepositoryPermissionsPolicyWithContext(ctx, &codeartifact.GetRepositoryPermissionsPolicyInput{
@@ -130,7 +130,7 @@ func resourceRepositoryPermissionsPolicyRead(ctx context.Context, d *schema.Reso
 	}
 
 	if err != nil {
-		return create.DiagError(names.CodeArtifact, create.ErrActionReading, ResNameRepositoryPermissionsPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeArtifact, create.ErrActionReading, ResNameRepositoryPermissionsPolicy, d.Id(), err)
 	}
 
 	d.Set("domain", domainName)

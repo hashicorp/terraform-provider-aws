@@ -35,6 +35,9 @@ func TestAccAutoScalingGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "enabled_metrics.#", resourceName, "enabled_metrics.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "health_check_grace_period", resourceName, "health_check_grace_period"),
 					resource.TestCheckResourceAttrPair(datasourceName, "health_check_type", resourceName, "health_check_type"),
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_maintenance_policy.#", resourceName, "instance_maintenance_policy.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_maintenance_policy.0.min_healthy_percentage", resourceName, "instance_maintenance_policy.0.min_healthy_percentage"),
+					resource.TestCheckResourceAttrPair(datasourceName, "instance_maintenance_policy.0.max_healthy_percentage", resourceName, "instance_maintenance_policy.0.max_healthy_percentage"),
 					resource.TestCheckResourceAttrPair(datasourceName, "launch_configuration", resourceName, "launch_configuration"),
 					resource.TestCheckResourceAttrPair(datasourceName, "launch_template.#", resourceName, "launch_template.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "load_balancers.#", resourceName, "load_balancers.#"),
@@ -184,7 +187,7 @@ func TestAccAutoScalingGroupDataSource_tags(t *testing.T) {
 
 func testAccGroupDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -203,8 +206,12 @@ resource "aws_autoscaling_group" "test" {
   desired_capacity          = 0
   enabled_metrics           = ["GroupDesiredCapacity"]
   force_delete              = true
-  launch_configuration      = aws_launch_configuration.test.name
-  availability_zones        = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
+  instance_maintenance_policy {
+    min_healthy_percentage = 90
+    max_healthy_percentage = 120
+  }
+  launch_configuration = aws_launch_configuration.test.name
+  availability_zones   = [data.aws_availability_zones.available.names[0], data.aws_availability_zones.available.names[1]]
 }
 
 resource "aws_autoscaling_group" "no_match" {
@@ -222,7 +229,7 @@ resource "aws_autoscaling_group" "no_match" {
 
 resource "aws_launch_configuration" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 }
 `, rName))
@@ -230,7 +237,7 @@ resource "aws_launch_configuration" "test" {
 
 func testAccGroupDataSourceConfig_launchTemplate(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -253,7 +260,7 @@ resource "aws_autoscaling_group" "test" {
 
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 }
 `, rName))
@@ -261,7 +268,7 @@ resource "aws_launch_template" "test" {
 
 func testAccGroupDataSourceConfig_mixedInstancesPolicy(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -306,7 +313,7 @@ resource "aws_autoscaling_group" "test" {
 
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 }
 `, rName))
@@ -314,7 +321,7 @@ resource "aws_launch_template" "test" {
 
 func testAccGroupDataSourceConfig_warmPool(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -346,7 +353,7 @@ resource "aws_autoscaling_group" "test" {
 
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 }
 `, rName))
@@ -354,7 +361,7 @@ resource "aws_launch_template" "test" {
 
 func testAccGroupDataSourceConfig_tags(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -389,7 +396,7 @@ resource "aws_autoscaling_group" "test" {
 
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 }
 `, rName))

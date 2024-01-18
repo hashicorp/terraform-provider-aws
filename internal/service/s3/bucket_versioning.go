@@ -123,9 +123,13 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 			input.MFA = aws.String(v.(string))
 		}
 
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 			return conn.PutBucketVersioning(ctx, input)
 		}, errCodeNoSuchBucket)
+
+		if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "VersioningConfiguration is not valid, expected CreateBucketConfiguration") {
+			err = errDirectoryBucket(err)
+		}
 
 		if err != nil {
 			return diag.Errorf("creating S3 Bucket (%s) Versioning: %s", bucket, err)
@@ -136,6 +140,8 @@ func resourceBucketVersioningCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
+	// Waiting for the versioning configuration to appear is done in resource Read.
+
 	return resourceBucketVersioningRead(ctx, d, meta)
 }
 
@@ -143,14 +149,12 @@ func resourceBucketVersioningRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 
 	bucket, expectedBucketOwner, err := ParseResourceID(d.Id())
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	var output *s3.GetBucketVersioningOutput
+	output, err := waitForBucketVersioningStatus(ctx, conn, bucket, expectedBucketOwner)
 
-	output, err = waitForBucketVersioningStatus(ctx, conn, bucket, expectedBucketOwner)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Bucket Versioning (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -158,12 +162,12 @@ func resourceBucketVersioningRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return diag.Errorf("getting S3 bucket versioning (%s): %s", d.Id(), err)
+		return diag.Errorf("reading S3 Bucket Versioning (%s): %s", d.Id(), err)
 	}
 
 	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
-	if err := d.Set("versioning_configuration", flattenBucketVersioningConfiguration(output)); err != nil {
+	if err := d.Set("versioning_configuration", flattenVersioning(output)); err != nil {
 		return diag.Errorf("setting versioning_configuration: %s", err)
 	}
 
@@ -239,6 +243,8 @@ func resourceBucketVersioningDelete(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("deleting S3 Bucket Versioning (%s): %s", d.Id(), err)
 	}
 
+	// Don't wait for the versioning configuration to disappear as it still exists after suspension.
+
 	return nil
 }
 
@@ -265,7 +271,7 @@ func expandBucketVersioningConfiguration(l []interface{}) *types.VersioningConfi
 	return result
 }
 
-func flattenBucketVersioningConfiguration(config *s3.GetBucketVersioningOutput) []interface{} {
+func flattenVersioning(config *s3.GetBucketVersioningOutput) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
@@ -333,14 +339,11 @@ func statusBucketVersioning(ctx context.Context, conn *s3.Client, bucket, expect
 }
 
 func waitForBucketVersioningStatus(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketVersioningOutput, error) {
-	const (
-		timeout = 1 * time.Minute
-	)
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{""},
 		Target:                    bucketVersioningStatus_Values(),
 		Refresh:                   statusBucketVersioning(ctx, conn, bucket, expectedBucketOwner),
-		Timeout:                   timeout,
+		Timeout:                   bucketPropagationTimeout,
 		ContinuousTargetOccurence: 3,
 		NotFoundChecks:            3,
 		Delay:                     1 * time.Second,

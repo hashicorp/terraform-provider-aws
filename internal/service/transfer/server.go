@@ -165,13 +165,13 @@ func ResourceServer() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
+				ValidateFunc: validation.StringLenBetween(0, 4096),
 			},
 			"pre_authentication_login_banner": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
+				ValidateFunc: validation.StringLenBetween(0, 4096),
 			},
 			"protocol_details": {
 				Type:     schema.TypeList,

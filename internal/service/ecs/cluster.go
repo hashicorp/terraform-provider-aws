@@ -260,6 +260,8 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	if d.HasChanges("configuration", "service_connect_defaults", "setting") {
@@ -282,15 +284,15 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		_, err := conn.UpdateClusterWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating ECS Cluster (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating ECS Cluster (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitClusterAvailable(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("waiting for ECS Cluster (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for ECS Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func FindClusterByNameOrARN(ctx context.Context, conn *ecs.ECS, nameOrARN string) (*ecs.Cluster, error) {

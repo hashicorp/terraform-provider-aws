@@ -166,7 +166,10 @@ The `iot_events` object takes the following arguments:
 The `kafka` object takes the following arguments:
 
 * `client_properties` - (Required) Properties of the Apache Kafka producer client. For more info, see the [AWS documentation](https://docs.aws.amazon.com/iot/latest/developerguide/apache-kafka-rule-action.html).
-* `destination_arn` - (Required) The ARN of Kafka action's VPC [`aws_iot_topic_rule_destination`](iot_topic_rule_destination.html) .
+* `destination_arn` - (Required) The ARN of Kafka action's VPC [`aws_iot_topic_rule_destination`](iot_topic_rule_destination.html).
+* `header` - (Optional) The list of Kafka headers that you specify. Nested arguments below.
+    * `key` - (Required) The key of the Kafka header.
+    * `value` - (Required) The value of the Kafka header.
 * `key` - (Optional) The Kafka message key.
 * `partition` - (Optional) The Kafka message partition.
 * `topic` - (Optional) The Kafka topic for messages to be sent to the Kafka broker.

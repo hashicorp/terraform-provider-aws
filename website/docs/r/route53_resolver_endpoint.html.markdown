@@ -31,6 +31,8 @@ resource "aws_route53_resolver_endpoint" "foo" {
     ip        = "10.0.64.4"
   }
 
+  protocols = ["Do53", "DoH"]
+
   tags = {
     Environment = "Prod"
   }
@@ -48,6 +50,8 @@ or `OUTBOUND` (resolver forwards DNS queries from the DNS service for a VPC to y
 to your network (for outbound endpoints) or on the way from your network to your VPCs (for inbound endpoints). Described below.
 * `security_group_ids` - (Required) The ID of one or more security groups that you want to use to control access to this VPC.
 * `name` - (Optional) The friendly name of the Route 53 Resolver endpoint.
+* `protocols` - (Optional) The protocols you want to use for the Route 53 Resolver endpoint. Valid values: `DoH`, `Do53`, `DoH-FIPS`.
+* `resolver_endpoint_type` - (Optional) The Route 53 Resolver endpoint IP address type. Valid values: `IPV4`, `IPV6`, `DUALSTACK`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 The `ip_address` object supports the following:

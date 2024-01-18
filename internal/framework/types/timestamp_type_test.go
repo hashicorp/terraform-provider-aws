@@ -6,7 +6,6 @@ package types_test
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -23,31 +22,31 @@ func TestTimestampTypeValueFromTerraform(t *testing.T) {
 	}{
 		"null value": {
 			val:      tftypes.NewValue(tftypes.String, nil),
-			expected: fwtypes.NewTimestampNull(),
+			expected: fwtypes.TimestampNull(),
 		},
 		"unknown value": {
 			val:      tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
-			expected: fwtypes.NewTimestampUnknown(),
+			expected: fwtypes.TimestampUnknown(),
 		},
 		"valid timestamp UTC": {
 			val:      tftypes.NewValue(tftypes.String, "2023-06-07T15:11:34Z"),
-			expected: fwtypes.NewTimestampValue(time.Date(2023, time.June, 7, 15, 11, 34, 0, time.UTC)),
+			expected: fwtypes.TimestampValue("2023-06-07T15:11:34Z"),
 		},
 		"valid timestamp zone": {
 			val:      tftypes.NewValue(tftypes.String, "2023-06-07T15:11:34-06:00"),
-			expected: fwtypes.NewTimestampValue(time.Date(2023, time.June, 7, 15, 11, 34, 0, locationFromString(t, "America/Regina"))), // No DST
+			expected: fwtypes.TimestampValue("2023-06-07T15:11:34-06:00"), // No DST
 		},
 		"invalid value": {
 			val:      tftypes.NewValue(tftypes.String, "not ok"),
-			expected: fwtypes.NewTimestampUnknown(),
+			expected: fwtypes.TimestampUnknown(),
 		},
 		"invalid no zone": {
 			val:      tftypes.NewValue(tftypes.String, "2023-06-07T15:11:34"),
-			expected: fwtypes.NewTimestampUnknown(),
+			expected: fwtypes.TimestampUnknown(),
 		},
 		"invalid date only": {
 			val:      tftypes.NewValue(tftypes.String, "2023-06-07Z"),
-			expected: fwtypes.NewTimestampUnknown(),
+			expected: fwtypes.TimestampUnknown(),
 		},
 	}
 
@@ -57,7 +56,7 @@ func TestTimestampTypeValueFromTerraform(t *testing.T) {
 			t.Parallel()
 
 			ctx := context.Background()
-			val, err := fwtypes.TimestampType{}.ValueFromTerraform(ctx, test.val)
+			val, err := fwtypes.TimestampType.ValueFromTerraform(ctx, test.val)
 
 			if err != nil {
 				t.Fatalf("got unexpected error: %s", err)
@@ -115,7 +114,7 @@ func TestTimestampTypeValidate(t *testing.T) {
 
 			ctx := context.Background()
 
-			diags := fwtypes.TimestampType{}.Validate(ctx, test.val, path.Root("test"))
+			diags := fwtypes.TimestampType.Validate(ctx, test.val, path.Root("test"))
 
 			if !diags.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")
@@ -126,13 +125,4 @@ func TestTimestampTypeValidate(t *testing.T) {
 			}
 		})
 	}
-}
-
-func locationFromString(t *testing.T, s string) *time.Location {
-	location, err := time.LoadLocation(s)
-	if err != nil {
-		t.Fatalf("loading time.Location %q: %s", s, err)
-	}
-
-	return location
 }

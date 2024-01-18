@@ -88,7 +88,7 @@ func TestAccRDSEngineVersionDataSource_preferred(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_preferred(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "version", "8.0.27"),
+					resource.TestCheckResourceAttr(dataSourceName, "version", "8.0.32"),
 				),
 			},
 		},
@@ -168,7 +168,7 @@ func TestAccRDSEngineVersionDataSource_filter(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_filter(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "version", "10.14"),
+					resource.TestCheckResourceAttr(dataSourceName, "version", "13.9"),
 					resource.TestCheckResourceAttr(dataSourceName, "supported_modes.0", "serverless"),
 				),
 			},
@@ -209,7 +209,7 @@ func testAccEngineVersionDataSourceConfig_upgradeTargets() string {
 	return `
 data "aws_rds_engine_version" "test" {
   engine  = "mysql"
-  version = "8.0.27"
+  version = "8.0.32"
 }
 `
 }
@@ -218,7 +218,7 @@ func testAccEngineVersionDataSourceConfig_preferred() string {
 	return `
 data "aws_rds_engine_version" "test" {
   engine             = "mysql"
-  preferred_versions = ["85.9.12", "8.0.27", "8.0.26"]
+  preferred_versions = ["85.9.12", "8.0.32", "8.0.31"]
 }
 `
 }
@@ -255,7 +255,7 @@ func testAccEngineVersionDataSourceConfig_filter() string {
 	return `
 data "aws_rds_engine_version" "test" {
   engine      = "aurora-postgresql"
-  version     = "10.14"
+  version     = "13.9"
   include_all = true
 
   filter {

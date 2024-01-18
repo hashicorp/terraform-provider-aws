@@ -35,8 +35,8 @@ const (
 
 // WaitIAMPropagation retries the specified function if the returned error indicates an IAM eventual consistency issue.
 // If the retries time out the specified function is called one last time.
-func WaitIAMPropagation[T any](ctx context.Context, f func() (T, error)) (T, error) {
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+func WaitIAMPropagation[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
 		return f()
 	},
 		kms.ErrCodeMalformedPolicyDocumentException)

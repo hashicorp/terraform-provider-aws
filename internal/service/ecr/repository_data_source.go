@@ -13,9 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"golang.org/x/exp/slices"
 )
 
@@ -121,7 +121,7 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	tags, err := listTags(ctx, conn, arn)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		log.Printf("[WARN] failed listing tags for ECR Repository (%s): %s", d.Id(), err)
 		return diags
 	}

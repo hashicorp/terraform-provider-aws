@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -303,6 +304,48 @@ func TestAccElastiCacheUser_disappears(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/34002.
+func TestAccElastiCacheUser_oobModify(t *testing.T) {
+	ctx := acctest.Context(t)
+	var user elasticache.User
+	rName := sdkacctest.RandomWithPrefix("tf-acc")
+	resourceName := "aws_elasticache_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_tags(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			// Start to update the user out-of-band.
+			{
+				Config: testAccUserConfig_tags(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserUpdateOOB(ctx, &user),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			// Update tags.
+			{
+				Config: testAccUserConfig_tags(rName, "key1", "value1updated"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, resourceName, &user),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
@@ -351,6 +394,19 @@ func testAccCheckUserExists(ctx context.Context, n string, v *elasticache.User) 
 		*v = *output
 
 		return nil
+	}
+}
+
+func testAccCheckUserUpdateOOB(ctx context.Context, v *elasticache.User) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElastiCacheConn(ctx)
+
+		_, err := conn.ModifyUserWithContext(ctx, &elasticache.ModifyUserInput{
+			AccessString: aws.String("on ~* +@all"),
+			UserId:       v.UserId,
+		})
+
+		return err
 	}
 }
 

@@ -857,6 +857,16 @@ func TestAccStorageGatewayGateway_maintenanceStartTime(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_month", "12"),
 				),
 			},
+			{
+				Config: testAccGatewayConfig_maintenanceStartTime(rName, 21, 10, "0", ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGatewayExists(ctx, resourceName, &gateway),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.hour_of_day", "21"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.minute_of_hour", "10"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_week", "0"),
+					resource.TestCheckResourceAttr(resourceName, "maintenance_start_time.0.day_of_month", ""),
+				),
+			},
 		},
 	})
 }

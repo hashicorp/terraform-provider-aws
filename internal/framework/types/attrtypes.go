@@ -12,16 +12,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-//
-// TODO dedup internal/framework/flex/attrtypes.go.
-//
-
 // AttributeTypes returns a map of attribute types for the specified type T.
 // T must be a struct and reflection is used to find exported fields of T with the `tfsdk` tag.
 func AttributeTypes[T any](ctx context.Context) (map[string]attr.Type, error) {
 	var t T
 	val := reflect.ValueOf(t)
 	typ := val.Type()
+
+	if typ.Kind() == reflect.Ptr && typ.Elem().Kind() == reflect.Struct {
+		val = reflect.New(typ.Elem()).Elem()
+		typ = typ.Elem()
+	}
 
 	if typ.Kind() != reflect.Struct {
 		return nil, fmt.Errorf("%T has unsupported type: %s", t, typ)

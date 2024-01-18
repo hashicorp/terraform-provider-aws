@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -257,6 +258,8 @@ func ResourceJobTemplate() *schema.Resource {
 }
 
 func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
 	name := d.Get("name").(string)
@@ -277,15 +280,17 @@ func resourceJobTemplateCreate(ctx context.Context, d *schema.ResourceData, meta
 	output, err := conn.CreateJobTemplateWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating EMR Containers Job Template (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating EMR Containers Job Template (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Id))
 
-	return resourceJobTemplateRead(ctx, d, meta)
+	return append(diags, resourceJobTemplateRead(ctx, d, meta)...)
 }
 
 func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
 	vc, err := FindJobTemplateByID(ctx, conn, d.Id())
@@ -293,17 +298,17 @@ func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EMR Containers Job Template %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading EMR Containers Job Template (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EMR Containers Job Template (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", vc.Arn)
 	if vc.JobTemplateData != nil {
 		if err := d.Set("job_template_data", []interface{}{flattenJobTemplateData(vc.JobTemplateData)}); err != nil {
-			return diag.Errorf("setting job_template_data: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting job_template_data: %s", err)
 		}
 	} else {
 		d.Set("job_template_data", nil)
@@ -313,15 +318,12 @@ func resourceJobTemplateRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	setTagsOut(ctx, vc.Tags)
 
-	return nil
+	return diags
 }
 
-// func resourceJobTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-// 	// Tags only.
-// 	return resourceJobTemplateRead(ctx, d, meta)
-// }
-
 func resourceJobTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EMRContainersConn(ctx)
 
 	log.Printf("[INFO] Deleting EMR Containers Job Template: %s", d.Id())
@@ -330,18 +332,18 @@ func resourceJobTemplateDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if tfawserr.ErrCodeEquals(err, emrcontainers.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting EMR Containers Job Template (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EMR Containers Job Template (%s): %s", d.Id(), err)
 	}
 
 	// if _, err = waitJobTemplateDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 	// 	return diag.Errorf("waiting for EMR Containers Job Template (%s) delete: %s", d.Id(), err)
 	// }
 
-	return nil
+	return diags
 }
 
 func expandJobTemplateData(tfMap map[string]interface{}) *emrcontainers.JobTemplateData {

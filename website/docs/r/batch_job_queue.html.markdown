@@ -62,9 +62,8 @@ resource "aws_batch_job_queue" "example" {
 This resource supports the following arguments:
 
 * `name` - (Required) Specifies the name of the job queue.
-* `compute_environments` - (Required) Specifies the set of compute environments
-    mapped to a job queue and their order.  The position of the compute environments
-    in the list will dictate the order.
+* `compute_environments` - (Required) List of compute environment ARNs mapped to a job queue.
+  The position of the compute environments in the list will dictate the order.
 * `priority` - (Required) The priority of the job queue. Job queues with a higher priority
     are evaluated first when associated with the same compute environment.
 * `scheduling_policy_arn` - (Optional) The ARN of the fair share scheduling policy. If this parameter is specified, the job queue uses a fair share scheduling policy. If this parameter isn't specified, the job queue uses a first in, first out (FIFO) scheduling policy. After a job queue is created, you can replace but can't remove the fair share scheduling policy.

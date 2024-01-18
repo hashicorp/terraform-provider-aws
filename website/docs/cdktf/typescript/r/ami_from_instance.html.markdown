@@ -67,9 +67,9 @@ This resource supports the following arguments:
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `40M`)
-* `update` - (Default `40M`)
-* `delete` - (Default `90M`)
+* `create` - (Default `40m`)
+* `update` - (Default `40m`)
+* `delete` - (Default `90m`)
 
 ## Attribute Reference
 
@@ -79,7 +79,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - ID of the created AMI.
 
 This resource also exports a full set of attributes corresponding to the arguments of the
-[`awsAmi`](/docs/providers/aws/r/ami.html) resource, allowing the properties of the created AMI to be used elsewhere in the
+[`aws_ami`](/docs/providers/aws/r/ami.html) resource, allowing the properties of the created AMI to be used elsewhere in the
 configuration.
 
-<!-- cache-key: cdktf-0.18.0 input-d3b464f0179fdca5ee710daa9220402ec177617c9090c92a91af04fa0dca1ffa -->
+<!-- cache-key: cdktf-0.20.1 input-d3b464f0179fdca5ee710daa9220402ec177617c9090c92a91af04fa0dca1ffa -->

@@ -19,7 +19,27 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourceBot,
+			Name:    "Bot",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory: newResourceBotLocale,
+			Name:    "Bot Locale",
+		},
+		{
+			Factory: newResourceBotVersion,
+			Name:    "Bot Version",
+		},
+		{
+			Factory: newResourceIntent,
+			Name:    "Intent",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
