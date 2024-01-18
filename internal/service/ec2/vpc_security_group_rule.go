@@ -308,7 +308,6 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 	securityGroupRules, err := FindSecurityGroupRulesBySecurityGroupID(ctx, conn, securityGroupID)
 
 	// Ignore UnsupportedOperation errors for AWS China and GovCloud (US).
-	// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362.
 	if tfawserr.ErrCodeEquals(err, errCodeUnsupportedOperation) {
 		return nil
 	}
