@@ -201,6 +201,19 @@ func TestAccOpenSearchDomain_requireHTTPS(t *testing.T) {
 					testAccCheckDomainEndpointOptions(true, "Policy-Min-TLS-1-2-2019-07", &domain),
 				),
 			},
+			{
+				ResourceName:      "aws_opensearch_domain.test",
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_endpointOptions(rName, true, "Policy-Min-TLS-1-2-PFS-2023-10"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, "aws_opensearch_domain.test", &domain),
+					testAccCheckDomainEndpointOptions(true, "Policy-Min-TLS-1-2-PFS-2023-10", &domain),
+				),
+			},
 		},
 	})
 }
