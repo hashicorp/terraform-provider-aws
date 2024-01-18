@@ -216,14 +216,19 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 			//Creation can take multiple hours
 			//it is likely that the session token expired. Assuming that the Creation is still in Progress.
 			//in that case the deployment should not be tainted and the resource should be checked during next read
-			if opErr, ok := err.(*smithy.OperationError); ok {
-				if respErr, ok := opErr.Err.(*awshttp.ResponseError); ok {
-					if apiErr, ok := respErr.Err.(*smithy.GenericAPIError); ok && apiErr.ErrorCode() == "ExpiredTokenException" {
+			var opErr *smithy.OperationError
+			var respErr *awshttp.ResponseError
+			var apiErr *smithy.GenericAPIError
+
+			if errors.As(err, &opErr) {
+				if errors.As(opErr.Err, &respErr) {
+					if errors.As(respErr.Err, &apiErr) && apiErr.ErrorCode() == "ExpiredTokenException" {
 						resp.Diagnostics.AddWarning("Session Timeout", "Session Token expired. Launch Wizard Deployment continues in background")
 						session_timeout = true
 					}
 				}
 			}
+
 		}
 
 		if plan.SkipDestroyAfterFailure.ValueBool() || session_timeout {
@@ -405,8 +410,16 @@ func (r *resourceDeployment) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitDeploymentDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	wait_out, err := waitDeploymentDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionWaitingForDeletion, ResNameDeployment, state.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	if wait_out.Status != awstypes.DeploymentStatusDeleted {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionWaitingForDeletion, ResNameDeployment, state.ID.String(), err),
 			err.Error(),
@@ -519,7 +532,6 @@ func findDeploymentByID(ctx context.Context, conn *launchwizard.Client, id strin
 
 func requiresReplaceUnlessPasswordIsEmpty() mapplanmodifier.RequiresReplaceIfFunc {
 	return func(ctx context.Context, req planmodifier.MapRequest, resp *mapplanmodifier.RequiresReplaceIfFuncResponse) {
-
 		//drop passwords from both state and config
 		//those are not returned by the API when conducting a read operation, so those shouldn't be used to indicate a replacement (as they will always be different when importing a resource)
 		var state resourceDeploymentData
