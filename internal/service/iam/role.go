@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	// fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -46,7 +47,10 @@ const (
 // @FrameworkResource(name="Role")
 // @Tags(identifierAttribute="arn")
 func newResourceRole(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceIamRole{}, nil
+	r := &resourceIamRole{}
+	r.SetMigratedFromPluginSDK(true)
+
+	return r, nil
 }
 
 type resourceIamRole struct {
@@ -62,6 +66,14 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Computed:   true,
+				Optional:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"id": schema.StringAttribute{
 				Computed: true,
 			},
 			"assume_role_policy": schema.StringAttribute{
@@ -164,9 +176,10 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 }
 
 type resourceIamRoleData struct {
-	ARN              types.String `tfsdk:"arn"`
+	ARN              fwtypes.ARN  `tfsdk:"arn"`
 	AssumeRolePolicy types.String `tfsdk:"assume_role_policy"`
 	CreateDate       types.String `tfsdk:"create_date"`
+	ID               types.String `tfsdk:"id"`
 	// Description         types.String `tfsdk:"description"`
 	// ForceDetachPolicies types.Bool   `tfsdk:"force_detach_policies"`
 	// TODO: still have to think this one out
@@ -295,8 +308,9 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	// TODO: do I have to do this? should look at other resources
-	plan.ARN = flex.StringToFramework(ctx, output.Role.Arn)
+	plan.ARN = fwtypes.ARNValue(*output.Role.Arn)
 	plan.CreateDate = flex.StringValueToFramework(ctx, output.Role.CreateDate.Format(time.RFC3339))
+	plan.ID = flex.StringToFramework(ctx, output.Role.RoleId)
 
 	// last steps?
 	state := plan
@@ -395,10 +409,11 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	// state.Name = flex.StringToFramework(ctx, out.Name)
 	// state.Status = flex.StringValueToFramework(ctx, out.Status)
 
-	state.ARN = flex.StringToFramework(ctx, role.Arn)
+	state.ARN = fwtypes.ARNValue(*role.Arn)
 	state.CreateDate = flex.StringValueToFramework(ctx, role.CreateDate.Format(time.RFC3339))
 	state.Path = flex.StringToFramework(ctx, role.Path)
 	state.Name = flex.StringToFramework(ctx, role.RoleName)
+	state.ID = flex.StringToFramework(ctx, role.RoleId)
 	// TODO: add more of these when ready to actually test
 
 	// d.Set("description", role.Description)
