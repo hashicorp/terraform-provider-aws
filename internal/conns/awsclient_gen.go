@@ -37,6 +37,7 @@ import (
 	ecr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecr"
 	eks_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eks"
 	elasticache_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticache"
+	elasticloadbalancingv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	emr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emr"
 	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
 	evidently_sdkv2 "github.com/aws/aws-sdk-go-v2/service/evidently"
@@ -574,6 +575,10 @@ func (c *AWSClient) ELBConn(ctx context.Context) *elb_sdkv1.ELB {
 
 func (c *AWSClient) ELBV2Conn(ctx context.Context) *elbv2_sdkv1.ELBV2 {
 	return errs.Must(conn[*elbv2_sdkv1.ELBV2](ctx, c, names.ELBV2, make(map[string]any)))
+}
+
+func (c *AWSClient) ELBV2Client(ctx context.Context) *elasticloadbalancingv2_sdkv2.Client {
+	return errs.Must(client[*elasticloadbalancingv2_sdkv2.Client](ctx, c, names.ELBV2, make(map[string]any)))
 }
 
 func (c *AWSClient) EMRConn(ctx context.Context) *emr_sdkv1.EMR {
