@@ -9,19 +9,19 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/YakDriver/regexache"
+	// "github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	// "github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	// "github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
+	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -31,7 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
+	// fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -74,43 +74,43 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			"create_date": schema.StringAttribute{
 				Computed: true,
 			},
-			"description": schema.StringAttribute{
-				Optional: true,
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(0, 1000),
-					// TODO: regex does not match?
-					stringvalidator.RegexMatches(
-						regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`),
-						`must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`,
-					),
-				},
-			},
-			"force_detach_policies": schema.BoolAttribute{
-				Optional: true,
-				Default:  booldefault.StaticBool(false),
-			},
+			// "description": schema.StringAttribute{
+			// Optional: true,
+			// Validators: []validator.String{
+			// stringvalidator.LengthBetween(0, 1000),
+			// // TODO: regex does not match?
+			// stringvalidator.RegexMatches(
+			// regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`),
+			// `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`,
+			// ),
+			// },
+			// },
+			// "force_detach_policies": schema.BoolAttribute{
+			// Optional: true,
+			// // Default:  booldefault.StaticBool(false),
+			// },
 			// TODO: inline policy goes crazy, have to figure what this type should look like
 			// also read article again
-			"inline_policy": schema.MapAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
-				// TODO: maybe some validation?
-			},
-			"managed_policy_arns": schema.SetAttribute{
-				Computed:    true,
-				Optional:    true,
-				ElementType: types.StringType,
-				// TODO: set validator for arn
-				// TODO: validate all elements of set are valid arns
-				// how to do this with helper lib terraform-plugin-framework-validators
-			},
-			"max_session_duration": schema.Int64Attribute{
-				Optional: true,
-				Default:  int64default.StaticInt64(3600),
-				Validators: []validator.Int64{
-					int64validator.Between(3600, 43200),
-				},
-			},
+			// "inline_policy": schema.MapAttribute{
+			// ElementType: types.StringType,
+			// Optional:    true,
+			// // TODO: maybe some validation?
+			// },
+			// "managed_policy_arns": schema.SetAttribute{
+			// Computed:    true,
+			// Optional:    true,
+			// ElementType: types.StringType,
+			// // TODO: set validator for arn
+			// // TODO: validate all elements of set are valid arns
+			// // how to do this with helper lib terraform-plugin-framework-validators
+			// },
+			// "max_session_duration": schema.Int64Attribute{
+			// Optional: true,
+			// // Default:  int64default.StaticInt64(3600),
+			// Validators: []validator.Int64{
+			// int64validator.Between(3600, 43200),
+			// },
+			// },
 			"name": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -119,43 +119,44 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(roleNameMaxLen),
-					stringvalidator.ConflictsWith(
-						path.MatchRelative().AtParent().AtName("name_prefix"),
-					),
+					// TODO: uncomment when ready
+					// stringvalidator.ConflictsWith(
+					// path.MatchRelative().AtParent().AtName("name_prefix"),
+					// ),
 				},
 			},
-			"name_prefix": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplaceIfConfigured(),
-				},
-				Validators: []validator.String{
-					stringvalidator.LengthAtMost(roleNamePrefixMaxLen),
-					stringvalidator.ConflictsWith(
-						path.MatchRelative().AtParent().AtName("name"),
-					),
-				},
-			},
+			// "name_prefix": schema.StringAttribute{
+			// Optional: true,
+			// Computed: true,
+			// PlanModifiers: []planmodifier.String{
+			// stringplanmodifier.RequiresReplaceIfConfigured(),
+			// },
+			// Validators: []validator.String{
+			// stringvalidator.LengthAtMost(roleNamePrefixMaxLen),
+			// stringvalidator.ConflictsWith(
+			// path.MatchRelative().AtParent().AtName("name"),
+			// ),
+			// },
+			// },
 			"path": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
-				Default: stringdefault.StaticString("/"),
+				// Default: stringdefault.StaticString("/"),
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 512),
 				},
 			},
-			"permissions_boundary": schema.StringAttribute{
-				Optional: true,
-				Validators: []validator.String{
-					fwvalidators.ARN(),
-				},
-			},
-			"unique_id": schema.StringAttribute{
-				Computed: true,
-			},
+			// "permissions_boundary": schema.StringAttribute{
+			// Optional: true,
+			// Validators: []validator.String{
+			// fwvalidators.ARN(),
+			// },
+			// },
+			// "unique_id": schema.StringAttribute{
+			// Computed: true,
+			// },
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -163,22 +164,22 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 }
 
 type resourceIamRoleData struct {
-	ARN                 types.String `tfsdk:"arn"`
-	AssumeRolePolicy    types.String `tfsdk:"assume_role_policy"`
-	CreateDate          types.String `tfsdk:"create_date"`
-	Description         types.String `tfsdk:"description"`
-	ForceDetachPolicies types.Bool   `tfsdk:"force_detach_policies"`
+	ARN              types.String `tfsdk:"arn"`
+	AssumeRolePolicy types.String `tfsdk:"assume_role_policy"`
+	CreateDate       types.String `tfsdk:"create_date"`
+	// Description         types.String `tfsdk:"description"`
+	// ForceDetachPolicies types.Bool   `tfsdk:"force_detach_policies"`
 	// TODO: still have to think this one out
-	InlinePolicy        types.Map    `tfsdk:"inline_policy"`
-	ManagedPolicyArns   types.Set    `tfsdk:"managed_policy_arns"`
-	MaxSessionDuration  types.Int64  `tfsdk:"max_session_duration"`
-	Name                types.String `tfsdk:"name"`
-	NamePrefix          types.String `tfsdk:"name_prefix"`
-	Path                types.String `tfsdk:"path"`
-	PermissionsBoundary types.String `tfsdk:"permissions_boundary"`
-	UniqueId            types.String `tfsdk:"unique_id"`
-	Tags                types.Map    `tfsdk:"tags"`
-	TagsAll             types.Map    `tfsdk:"tags_all"`
+	// InlinePolicy        types.Map    `tfsdk:"inline_policy"`
+	// ManagedPolicyArns   types.Set    `tfsdk:"managed_policy_arns"`
+	// MaxSessionDuration  types.Int64  `tfsdk:"max_session_duration"`
+	Name types.String `tfsdk:"name"`
+	// NamePrefix          types.String `tfsdk:"name_prefix"`
+	Path types.String `tfsdk:"path"`
+	// PermissionsBoundary types.String `tfsdk:"permissions_boundary"`
+	// UniqueId            types.String `tfsdk:"unique_id"`
+	Tags    types.Map `tfsdk:"tags"`
+	TagsAll types.Map `tfsdk:"tags_all"`
 }
 
 func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -199,7 +200,9 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	name := create.Name(plan.Name.ValueString(), plan.NamePrefix.ValueString())
+	// TODO: uncomment when we use prefix
+	// name := create.Name(plan.Name.ValueString(), plan.NamePrefix.ValueString())
+	name := plan.Name.ValueString()
 	input := &iam.CreateRoleInput{
 		AssumeRolePolicyDocument: aws.String(assumeRolePolicy),
 		Path:                     aws.String(plan.Path.ValueString()),
@@ -207,18 +210,19 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 		Tags:                     getTagsIn(ctx),
 	}
 
-	if !plan.Description.IsNull() {
-		input.Description = aws.String(plan.Description.ValueString())
-	}
+	// if !plan.Description.IsNull() {
+	// input.Description = aws.String(plan.Description.ValueString())
+	// }
 
-	if !plan.MaxSessionDuration.IsNull() {
-		input.MaxSessionDuration = aws.Int64(plan.MaxSessionDuration.ValueInt64())
-	}
+	// if !plan.MaxSessionDuration.IsNull() {
+	// input.MaxSessionDuration = aws.Int64(plan.MaxSessionDuration.ValueInt64())
+	// }
 
-	if !plan.PermissionsBoundary.IsNull() {
-		input.PermissionsBoundary = aws.String(plan.PermissionsBoundary.ValueString())
-	}
+	// if !plan.PermissionsBoundary.IsNull() {
+	// input.PermissionsBoundary = aws.String(plan.PermissionsBoundary.ValueString())
+	// }
 
+	// TODO: uncomment this
 	output, err := retryCreateRole(ctx, conn, input)
 
 	// TODO: So this needs tags... do we need on resourceIamRoleData?
@@ -236,7 +240,7 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	roleName := aws.StringValue(output.Role.RoleName)
+	// roleName := aws.StringValue(output.Role.RoleName)
 
 	// TODO: has to figure this out because typing of inline policies
 	// if !plan.InlinePolicy.IsNull() && !plan.InlinePolicy.IsUnknown() {
@@ -252,16 +256,16 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	// }
 	// }
 
-	if !plan.ManagedPolicyArns.IsNull() && !plan.ManagedPolicyArns.IsUnknown() {
-		managedPolicies := flex.ExpandFrameworkStringSet(ctx, plan.ManagedPolicyArns)
-		if err := r.addRoleManagedPolicies(ctx, roleName, managedPolicies); err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
-				err.Error(),
-			)
-			return
-		}
-	}
+	// if !plan.ManagedPolicyArns.IsNull() && !plan.ManagedPolicyArns.IsUnknown() {
+	// managedPolicies := flex.ExpandFrameworkStringSet(ctx, plan.ManagedPolicyArns)
+	// if err := r.addRoleManagedPolicies(ctx, roleName, managedPolicies); err != nil {
+	// resp.Diagnostics.AddError(
+	// create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
+	// err.Error(),
+	// )
+	// return
+	// }
+	// }
 
 	// TODO: do something with this?
 	// some resources have been created but not all attributes
@@ -290,6 +294,10 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 		}
 	}
 
+	// TODO: do I have to do this? should look at other resources
+	plan.ARN = flex.StringToFramework(ctx, output.Role.Arn)
+	plan.CreateDate = flex.StringValueToFramework(ctx, output.Role.CreateDate.Format(time.RFC3339))
+
 	// last steps?
 	state := plan
 	// TODO: do we need something?this?
@@ -306,17 +314,18 @@ func (r resourceIamRole) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	hasInline := false
-	if !state.InlinePolicy.IsNull() && !state.InlinePolicy.IsUnknown() {
-		hasInline = true
-	}
+	// hasInline := false
+	// if !state.InlinePolicy.IsNull() && !state.InlinePolicy.IsUnknown() {
+	// hasInline = true
+	// }
 
-	hasManaged := false
-	if !state.ManagedPolicyArns.IsNull() && !state.ManagedPolicyArns.IsUnknown() {
-		hasManaged = true
-	}
+	// hasManaged := false
+	// if !state.ManagedPolicyArns.IsNull() && !state.ManagedPolicyArns.IsUnknown() {
+	// hasManaged = true
+	// }
 
-	err := DeleteRole(ctx, conn, state.Name.ValueString(), state.ForceDetachPolicies.ValueBool(), hasInline, hasManaged)
+	// err := DeleteRole(ctx, conn, state.Name.ValueString(), state.ForceDetachPolicies.ValueBool(), hasInline, hasManaged)
+	err := DeleteRole(ctx, conn, state.Name.ValueString(), false, false, false)
 
 	if err != nil {
 		// TODO: do something like this to skip deletes on roles that are gone?
@@ -389,11 +398,11 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	state.ARN = flex.StringToFramework(ctx, role.Arn)
 	state.CreateDate = flex.StringValueToFramework(ctx, role.CreateDate.Format(time.RFC3339))
 	state.Path = flex.StringToFramework(ctx, role.Path)
+	state.Name = flex.StringToFramework(ctx, role.RoleName)
 	// TODO: add more of these when ready to actually test
 
 	// d.Set("description", role.Description)
 	// d.Set("max_session_duration", role.MaxSessionDuration)
-	// d.Set("name", role.RoleName)
 	// d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(role.RoleName)))
 
 	// if role.PermissionsBoundary != nil {
@@ -403,6 +412,7 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	// }
 	// d.Set("unique_id", role.RoleId)
 
+	// TODO: uncomment
 	// assumeRolePolicy, err := url.QueryUnescape(aws.StringValue(role.AssumeRolePolicyDocument))
 	// if err != nil {
 	// return sdkdiag.AppendFromErr(diags, err)
