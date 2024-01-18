@@ -89,6 +89,38 @@ func TestAccEKSAccessPolicyAssociation_disappears(t *testing.T) {
 	})
 }
 
+func TestAccEKSAccessPolicyAssociation_Disappears_cluster(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var associatedaccesspolicy types.AssociatedAccessPolicy
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_access_policy_association.test"
+	clusterResourceName := "aws_eks_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessPolicyAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessPolicyAssociationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessPolicyAssociationExists(ctx, resourceName, &associatedaccesspolicy),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceCluster(), clusterResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAccessPolicyAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
@@ -98,11 +130,7 @@ func testAccCheckAccessPolicyAssociationDestroy(ctx context.Context) resource.Te
 				continue
 			}
 
-			clusterName, principal_arn, policy_arn, err := tfeks.AssociatePolicyParseResourceID(rs.Primary.ID)
-			if err != nil {
-				return err
-			}
-			_, err = tfeks.FindAccessPolicyByID(ctx, conn, clusterName, principal_arn, policy_arn)
+			_, err := tfeks.FindAccessPolicyAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes["cluster_name"], rs.Primary.Attributes["principal_arn"], rs.Primary.Attributes["policy_arn"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -119,25 +147,22 @@ func testAccCheckAccessPolicyAssociationDestroy(ctx context.Context) resource.Te
 	}
 }
 
-func testAccCheckAccessPolicyAssociationExists(ctx context.Context, name string, associatedaccesspolicy *types.AssociatedAccessPolicy) resource.TestCheckFunc {
+func testAccCheckAccessPolicyAssociationExists(ctx context.Context, n string, v *types.AssociatedAccessPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		clusterName, principal_arn, policy_arn, err := tfeks.AssociatePolicyParseResourceID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EKSClient(ctx)
 
-		output, err := tfeks.FindAccessPolicyByID(ctx, conn, clusterName, principal_arn, policy_arn)
+		output, err := tfeks.FindAccessPolicyAssociationByThreePartKey(ctx, conn, rs.Primary.Attributes["cluster_name"], rs.Primary.Attributes["principal_arn"], rs.Primary.Attributes["policy_arn"])
+
 		if err != nil {
 			return err
 		}
 
-		*associatedaccesspolicy = *output
+		*v = *output
 
 		return nil
 	}
@@ -212,8 +237,6 @@ resource "aws_eks_cluster" "test" {
 
 func testAccAccessPolicyAssociationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccAccessPolicyAssociationConfig_base(rName), fmt.Sprintf(`
-data "aws_partition" "current" {}
-
 resource "aws_iam_user" "test" {
   name = %[1]q
 }

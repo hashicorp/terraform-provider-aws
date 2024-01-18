@@ -15,6 +15,7 @@ var (
 	ResourcePodIdentityAssociation  = newPodIdentityAssociationResource
 
 	FindAccessEntryByTwoPartKey                = findAccessEntryByTwoPartKey
+	FindAccessPolicyAssociationByThreePartKey  = findAccessPolicyAssociationByThreePartKey
 	FindAddonByTwoPartKey                      = findAddonByTwoPartKey
 	FindClusterByName                          = findClusterByName
 	FindFargateProfileByTwoPartKey             = findFargateProfileByTwoPartKey

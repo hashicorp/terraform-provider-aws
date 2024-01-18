@@ -27,25 +27,6 @@ func AddonParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected cluster-name%[2]saddon-name", id, addonResourceIDSeparator)
 }
 
-const associatePolicyResourceIDSeparator = "#"
-
-func AssociatePolicyCreateResourceID(clusterName, principal_arn, policy_arn string) string {
-	parts := []string{clusterName, principal_arn, policy_arn}
-	id := strings.Join(parts, associatePolicyResourceIDSeparator)
-
-	return id
-}
-
-func AssociatePolicyParseResourceID(id string) (string, string, string, error) {
-	parts := strings.SplitN(id, associatePolicyResourceIDSeparator, 3)
-
-	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
-		return parts[0], parts[1], parts[2], nil
-	}
-
-	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected cluster-name%[2]sprincipal_arn", id, associatePolicyResourceIDSeparator)
-}
-
 const fargateProfileResourceIDSeparator = ":"
 
 func FargateProfileCreateResourceID(clusterName, fargateProfileName string) string {

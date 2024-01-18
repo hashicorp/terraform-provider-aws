@@ -91,6 +91,38 @@ func TestAccEKSAccessEntry_disappears(t *testing.T) {
 	})
 }
 
+func TestAccEKSAccessEntry_Disappears_cluster(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var accessentry types.AccessEntry
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_access_entry.test"
+	clusterResourceName := "aws_eks_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessEntryConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfeks.ResourceCluster(), clusterResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccEKSAccessEntry_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
