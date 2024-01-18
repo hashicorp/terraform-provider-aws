@@ -43698,6 +43698,19 @@ var awsisoPartition = partition{
 				}: endpoint{},
 			},
 		},
+		"guardduty": service{
+			IsRegionalized: boxedTrue,
+			Defaults: endpointDefaults{
+				defaultKey{}: endpoint{
+					Protocols: []string{"https"},
+				},
+			},
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-iso-east-1",
+				}: endpoint{},
+			},
+		},
 		"health": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{

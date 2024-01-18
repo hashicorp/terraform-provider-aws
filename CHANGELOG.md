@@ -1,4 +1,18 @@
-## 5.32.0 (Unreleased)
+## 5.33.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_fis_experiment_template: Fix validation error when not using `target.resource_arns` or `target.resource_tag` attributes. ([#35254](https://github.com/hashicorp/terraform-provider-aws/issues/35254))
+
+## 5.32.1 (January 12, 2024)
+
+BUG FIXES:
+
+* data-source/aws_ecr_image: Fix error when `most_recent` is not also `latest` ([#35269](https://github.com/hashicorp/terraform-provider-aws/issues/35269))
+* resource/aws_iot_ca_certificate: Change `registration_config.role_arn` from `TypeBool` to `TypeString`, fixing `Inappropriate value for attribute "role_arn": a bool is required` errors ([#35234](https://github.com/hashicorp/terraform-provider-aws/issues/35234))
+* resource/aws_mq_broker: Fix `interface conversion: interface {} is *schema.Set, not []string` panic ([#35265](https://github.com/hashicorp/terraform-provider-aws/issues/35265))
+
+## 5.32.0 (January 11, 2024)
 
 FEATURES:
 
@@ -48,6 +62,8 @@ ENHANCEMENTS:
 * resource/aws_dms_replication_task: Remove [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) from `replication_instance_arn`, allowing in-place migration between DMS instances ([#30721](https://github.com/hashicorp/terraform-provider-aws/issues/30721))
 * resource/aws_efs_file_system: Add `lifecycle_policy.transition_to_archive` argument ([#35096](https://github.com/hashicorp/terraform-provider-aws/issues/35096))
 * resource/aws_efs_file_system: Add `protection` configuration block ([#35029](https://github.com/hashicorp/terraform-provider-aws/issues/35029))
+* resource/aws_efs_replication_configuration: Increase Create timeout to 20 minutes ([#34955](https://github.com/hashicorp/terraform-provider-aws/issues/34955))
+* resource/aws_efs_replication_configuration: Mark `destination.file_system_id` as Optional, enabling [EFS replication fallback](https://docs.aws.amazon.com/efs/latest/ug/replication-use-cases.html#replicate-existing-destination) ([#34955](https://github.com/hashicorp/terraform-provider-aws/issues/34955))
 * resource/aws_finspace_kx_dataview: Increase default create, update, and delete timeouts to 4 hours ([#35207](https://github.com/hashicorp/terraform-provider-aws/issues/35207))
 * resource/aws_finspace_kx_scaling_group: Increase default create, delete timeouts to 4 hours ([#35206](https://github.com/hashicorp/terraform-provider-aws/issues/35206))
 * resource/aws_fsx_lustre_file_system: Allow `per_unit_storage_throughput` to be updated in-place ([#34932](https://github.com/hashicorp/terraform-provider-aws/issues/34932))
@@ -98,6 +114,7 @@ BUG FIXES:
 * resource/aws_lb: Fix `ValidationError: Attributes cannot be empty` errors ([#35228](https://github.com/hashicorp/terraform-provider-aws/issues/35228))
 * resource/aws_lb_target_group: Fix diff on `stickiness.cookie_name` when `stickiness.type` is `lb_cookie` ([#31436](https://github.com/hashicorp/terraform-provider-aws/issues/31436))
 * resource/aws_memorydb_cluster: Treat `snapshotting` status as pending when creating cluster ([#31077](https://github.com/hashicorp/terraform-provider-aws/issues/31077))
+* resource/aws_ram_principal_association: Fix `reading RAM Resource Share (...) Principal Association (...): couldn't find resource (21 retries)` errors when a high number of principals are associated with a resource share ([#34738](https://github.com/hashicorp/terraform-provider-aws/issues/34738))
 * resource/aws_s3_bucket_object: Remove any leading `./` from `key` to maintain AWS SDK for Go v1 (pre-v5.17.0) compatibility ([#35223](https://github.com/hashicorp/terraform-provider-aws/issues/35223))
 * resource/aws_s3_object: Remove any leading `./` from `key` to maintain AWS SDK for Go v1 (pre-v5.17.0) compatibility ([#35223](https://github.com/hashicorp/terraform-provider-aws/issues/35223))
 * resource/aws_s3_object_copy: Remove any leading `./` from `key` to maintain AWS SDK for Go v1 (pre-v5.17.0) compatibility ([#35223](https://github.com/hashicorp/terraform-provider-aws/issues/35223))

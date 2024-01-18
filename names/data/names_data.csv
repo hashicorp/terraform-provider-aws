@@ -229,7 +229,7 @@ lookoutvision,lookoutvision,lookoutforvision,lookoutvision,,lookoutvision,,looko
 machinelearning,machinelearning,machinelearning,machinelearning,,machinelearning,,,MachineLearning,MachineLearning,,1,,,aws_machinelearning_,,machinelearning_,Machine Learning,Amazon,,x,,,,,
 macie2,macie2,macie2,macie2,,macie2,,,Macie2,Macie2,,1,,,aws_macie2_,,macie2_,Macie,Amazon,,,,,,,
 macie,macie,macie,macie,,macie,,,Macie,Macie,,1,,,aws_macie_,,macie_,Macie Classic,Amazon,,x,,,,,
-,,,,,,,,,,,,,,,,,Mainframe Modernization,AWS,x,,,,,,No SDK support
+m2,m2,m2,m2,,m2,,,M2,M2,,,2,,aws_m2_,,m2_,Mainframe Modernization,AWS,,,,,,,
 managedblockchain,managedblockchain,managedblockchain,managedblockchain,,managedblockchain,,,ManagedBlockchain,ManagedBlockchain,,1,,,aws_managedblockchain_,,managedblockchain_,Managed Blockchain,Amazon,,x,,,,,
 grafana,grafana,managedgrafana,grafana,,grafana,,managedgrafana;amg,Grafana,ManagedGrafana,,1,,,aws_grafana_,,grafana_,Managed Grafana,Amazon,,,,,,,
 kafka,kafka,kafka,kafka,,kafka,,msk,Kafka,Kafka,x,,2,aws_msk_,aws_kafka_,,msk_,Managed Streaming for Kafka,Amazon,,,,,,,
@@ -282,7 +282,7 @@ polly,polly,polly,polly,,polly,,,Polly,Polly,,,2,,aws_polly_,,polly_,Polly,Amazo
 ,,,,,,,,,,,,,,,,,Porting Assistant for .NET,,x,,,,,,No SDK support
 pricing,pricing,pricing,pricing,,pricing,,,Pricing,Pricing,,,2,,aws_pricing_,,pricing_,Pricing Calculator,AWS,,,,,,,
 proton,proton,proton,proton,,proton,,,Proton,Proton,,1,,,aws_proton_,,proton_,Proton,AWS,,x,,,,,
-qbusiness,qbusiness,qbusiness,qbusiness,,qbusiness,,,QBusiness,QBusiness,,1,,,aws_qbusiness_,,qbusiness_,Amazon Q Business,Amazon,,,,,,,
+qbusiness,qbusiness,qbusiness,qbusiness,,qbusiness,,,QBusiness,QBusiness,,,2,,aws_qbusiness_,,qbusiness_,Amazon Q Business,Amazon,,,,,,,
 qldb,qldb,qldb,qldb,,qldb,,,QLDB,QLDB,,,2,,aws_qldb_,,qldb_,QLDB (Quantum Ledger Database),Amazon,,,,,,,
 qldb-session,qldbsession,qldbsession,qldbsession,,qldbsession,,,QLDBSession,QLDBSession,,1,,,aws_qldbsession_,,qldbsession_,QLDB Session,Amazon,,x,,,,,
 quicksight,quicksight,quicksight,quicksight,,quicksight,,,QuickSight,QuickSight,,1,,,aws_quicksight_,,quicksight_,QuickSight,Amazon,,,,,,,
@@ -322,7 +322,7 @@ savingsplans,savingsplans,savingsplans,savingsplans,,savingsplans,,,SavingsPlans
 ,,,,,,,,,,,,,,,,,Schema Conversion Tool,AWS,x,,,,,,No SDK support
 sdb,sdb,simpledb,,simpledb,sdb,,sdb,SimpleDB,SimpleDB,,1,,aws_simpledb_,aws_sdb_,,simpledb_,SDB (SimpleDB),Amazon,,,,,,,
 scheduler,scheduler,scheduler,scheduler,,scheduler,,,Scheduler,Scheduler,,,2,,aws_scheduler_,,scheduler_,EventBridge Scheduler,Amazon,,,,,,,
-secretsmanager,secretsmanager,secretsmanager,secretsmanager,,secretsmanager,,,SecretsManager,SecretsManager,,1,,,aws_secretsmanager_,,secretsmanager_,Secrets Manager,AWS,,,,,,,
+secretsmanager,secretsmanager,secretsmanager,secretsmanager,,secretsmanager,,,SecretsManager,SecretsManager,,,2,,aws_secretsmanager_,,secretsmanager_,Secrets Manager,AWS,,,,,,,
 securityhub,securityhub,securityhub,securityhub,,securityhub,,,SecurityHub,SecurityHub,,,2,,aws_securityhub_,,securityhub_,Security Hub,AWS,,,,,,,
 securitylake,securitylake,securitylake,securitylake,,securitylake,,,SecurityLake,SecurityLake,,,2,,aws_securitylake_,,securitylake_,Security Lake,Amazon,,,,,,,
 serverlessrepo,serverlessrepo,serverlessapplicationrepository,serverlessapplicationrepository,,serverlessrepo,,serverlessapprepo;serverlessapplicationrepository,ServerlessRepo,ServerlessApplicationRepository,,1,,aws_serverlessapplicationrepository_,aws_serverlessrepo_,,serverlessapplicationrepository_,Serverless Application Repository,AWS,,,,,,,
