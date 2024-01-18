@@ -5,14 +5,7 @@ page_title: "AWS: aws_securitylake_custom_log_source"
 description: |-
   Terraform resource for managing an AWS Security Lake Custom Log Source.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_securitylake_custom_log_source
 
 Terraform resource for managing an AWS Security Lake Custom Log Source.
@@ -23,6 +16,20 @@ Terraform resource for managing an AWS Security Lake Custom Log Source.
 
 ```terraform
 resource "aws_securitylake_custom_log_source" "example" {
+  source_name    = "example-name"
+  source_version = "1.0"
+	event_classes  = ["FILE_ACTIVITY"]
+	configuration {
+		crawler_configuration {
+			role_arn = aws_iam_role.custom_log.arn
+		}
+
+		provider_identity {
+			external_id = "example-id"
+			principal   = "123456789012"
+		}
+	}
+
 }
 ```
 
@@ -30,31 +37,42 @@ resource "aws_securitylake_custom_log_source" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `event_classes` - (Required) The Open Cybersecurity Schema Framework (OCSF) event classes which describes the type of data that the custom source will send to Security Lake.
+* `configuration` - (Required) SThe configuration for the third-party custom source.
+* `source_name` - (Required) Specify the name for a third-party custom source. This must be a Regionally unique value.
+* `source_version` - (Optional) Specify the source version for the third-party custom source, to limit log collection to a specific version of custom data source.
 
-The following arguments are optional:
+Configurations support the following:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `crawler_configuration` - (Required) The configuration for the Glue Crawler for the third-party custom source.
+* `provider_identity` - (Optional) The identity of the log provider for the third-party custom source.
 
-## Attributes Reference
+Crawler Configuration support the following:
 
-In addition to all arguments above, the following attributes are exported:
+* `role_arn` - (Required) The Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role to be used by the AWS Glue crawler.
 
-* `arn` - ARN of the Custom Log Source. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+Provider Identity support the following:
 
-## Timeouts
+* `external_id` - (Required) The external ID used to estalish trust relationship with the AWS identity.
+* `principal` - (Required) The AWS identity principal.
 
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+## Attribute Reference
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+This resource exports no additional attributes.
 
 ## Import
 
-Security Lake Custom Log Source can be imported using the `example_id_arg`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS log sources using the source name. For example:
 
+```terraform
+import {
+  to = aws_securitylake_custom_log_source.example
+  id = "example-name"
+}
 ```
-$ terraform import aws_securitylake_custom_log_source.example rft-8012925589
+
+Using `terraform import`, import Custom log sources using the source name. For example:
+
+```console
+% terraform import aws_securitylake_custom_log_source.example example-name
 ```

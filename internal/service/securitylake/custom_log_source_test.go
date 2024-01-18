@@ -144,12 +144,13 @@ func testAccCheckCustomLogSourceExists(ctx context.Context, name string, logSour
 func testAccCustomLogSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccDataLakeConfig_basic(rName), `
 
+
 data "aws_caller_identity" "test" {}
 
 resource "aws_iam_role" "custom_log" {
-	name               = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
-	path               = "/service-role/"
-	assume_role_policy = <<POLICY
+  name               = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
+  path               = "/service-role/"
+  assume_role_policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [{
@@ -164,10 +165,10 @@ resource "aws_iam_role" "custom_log" {
 }
 
 resource "aws_iam_role_policy" "custom_log" {
-	name = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
-	role = aws_iam_role.custom_log.name
-  
-	policy = <<POLICY
+  name = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
+  role = aws_iam_role.custom_log.name
+
+  policy     = <<POLICY
 {
 "Version": "2012-10-17",
 "Statement": [
@@ -189,26 +190,26 @@ resource "aws_iam_role_policy" "custom_log" {
 }
 
 resource "aws_iam_role_policy_attachment" "glue_service_role" {
-	policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
-	role       = aws_iam_role.custom_log.name
-  }
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSGlueServiceRole"
+  role       = aws_iam_role.custom_log.name
+}
 
 resource "aws_securitylake_custom_log_source" "test" {
-    source_name    = "windows-sysmon"
-    source_version = "1.0"
-	event_classes  = ["FILE_ACTIVITY"]
-	configuration {
-		crawler_configuration {
-			role_arn = aws_iam_role.custom_log.arn
-		}
+  source_name    = "windows-sysmon"
+  source_version = "1.0"
+  event_classes  = ["FILE_ACTIVITY"]
+  configuration {
+    crawler_configuration {
+      role_arn = aws_iam_role.custom_log.arn
+    }
 
-		provider_identity {
-			external_id = "windows-sysmon-test"
-			principal   = data.aws_caller_identity.test.account_id
-		}
-	}
+    provider_identity {
+      external_id = "windows-sysmon-test"
+      principal   = data.aws_caller_identity.test.account_id
+    }
+  }
 
-	depends_on = [aws_securitylake_data_lake.test, aws_iam_role.custom_log]
+  depends_on = [aws_securitylake_data_lake.test, aws_iam_role.custom_log]
 }
 `)
 }
