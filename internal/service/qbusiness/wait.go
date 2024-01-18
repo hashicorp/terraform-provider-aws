@@ -90,3 +90,59 @@ func waitIndexDeleted(ctx context.Context, conn *qbusiness.Client, index_id stri
 	}
 	return nil, err
 }
+
+func waitDatasourceCreated(ctx context.Context, conn *qbusiness.Client, datasource_id string, timeout time.Duration) (*qbusiness.GetDataSourceOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.DataSourceStatusCreating, types.DataSourceStatusPendingCreation),
+		Target:     enum.Slice(types.DataSourceStatusActive),
+		Refresh:    statusDatasourceAvailability(ctx, conn, datasource_id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*qbusiness.GetDataSourceOutput); ok {
+		tfresource.SetLastError(err, errors.New(string(output.Status)))
+
+		return output, err
+	}
+	return nil, err
+}
+
+func waitDatasourceUpdated(ctx context.Context, conn *qbusiness.Client, datasource_id string, timeout time.Duration) (*qbusiness.GetDataSourceOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.DataSourceStatusUpdating),
+		Target:     enum.Slice(types.DataSourceStatusActive),
+		Refresh:    statusDatasourceAvailability(ctx, conn, datasource_id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*qbusiness.GetDataSourceOutput); ok {
+		tfresource.SetLastError(err, errors.New(string(output.Status)))
+
+		return output, err
+	}
+	return nil, err
+}
+
+func waitDatasourceDeleted(ctx context.Context, conn *qbusiness.Client, datasource_id string, timeout time.Duration) (*qbusiness.GetDataSourceOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.DataSourceStatusActive, types.DataSourceStatusDeleting),
+		Target:     []string{},
+		Refresh:    statusDatasourceAvailability(ctx, conn, datasource_id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+	}
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*qbusiness.GetDataSourceOutput); ok {
+		tfresource.SetLastError(err, errors.New(string(output.Status)))
+
+		return output, err
+	}
+	return nil, err
+}

@@ -5,16 +5,27 @@ package qbusiness
 
 import (
 	"context"
+	"encoding/json"
+	"fmt"
+	"log"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/qbusiness"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
+	"github.com/aws/aws-sdk-go-v2/service/qbusiness/document"
+	"github.com/aws/aws-sdk-go-v2/service/qbusiness/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -79,9 +90,9 @@ func documentAttributeConditionSchema() *schema.Schema {
 			Schema: map[string]*schema.Schema{
 				"key": keySchema(),
 				"operator": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringInSlice(qbusiness.DocumentEnrichmentConditionOperator_Values(), false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: enum.Validate[types.DocumentEnrichmentConditionOperator](),
 				},
 				"value": valueSchema(),
 			},
@@ -123,6 +134,13 @@ func ResourceDatasource() *schema.Resource {
 	return &schema.Resource{
 
 		CreateWithoutTimeout: resourceDatasourceCreate,
+		ReadWithoutTimeout:   resourceDatasourceRead,
+		UpdateWithoutTimeout: resourceDatasourceUpdate,
+		DeleteWithoutTimeout: resourceDatasourceDelete,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"application_id": {
@@ -133,11 +151,21 @@ func ResourceDatasource() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9-]{35}$`), "must be a valid application ID"),
 				),
 			},
+			"arn": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "ARN of the Amazon Q datasource.",
+			},
 			"configration": {
 				Type:         schema.TypeString,
 				Required:     true,
 				Description:  "Configuration information (JSON) to connect to your data source repository.",
 				ValidateFunc: validation.StringIsJSON,
+			},
+			"datasource_id": {
+				Type:        schema.TypeString,
+				Computed:    true,
+				Description: "Datasource identifier",
 			},
 			"description": {
 				Type:        schema.TypeString,
@@ -179,9 +207,9 @@ func ResourceDatasource() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"condition": documentAttributeConditionSchema(),
 												"document_content_operator": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(qbusiness.DocumentContentOperator_Values(), false),
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.DocumentContentOperator](),
 												},
 												"target": {
 													Type:     schema.TypeList,
@@ -191,9 +219,9 @@ func ResourceDatasource() *schema.Resource {
 														Schema: map[string]*schema.Schema{
 															"key": keySchema(),
 															"attribute_value_operator": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringInSlice(qbusiness.AttributeValueOperator_Values(), false),
+																Type:             schema.TypeString,
+																Required:         true,
+																ValidateDiagFunc: enum.Validate[types.AttributeValueOperator](),
 															},
 															"value": valueSchema(),
 														},
@@ -259,53 +287,331 @@ func ResourceDatasource() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceDatasourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
+
+	application_id := d.Get("application_id").(string)
+	index_id := d.Get("index_id").(string)
+
+	var conf map[string]interface{}
+
+	err := json.Unmarshal([]byte(d.Get("configration").(string)), &conf)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "unmarshal configration: %s", err)
+	}
+
+	input := qbusiness.CreateDataSourceInput{
+		ApplicationId:                   aws.String(application_id),
+		IndexId:                         aws.String(index_id),
+		DisplayName:                     aws.String(d.Get("display_name").(string)),
+		DocumentEnrichmentConfiguration: expandDocumentEnrichmentConfiguration(d.Get("document_enrichment_configuration").([]interface{})),
+		Configuration:                   document.NewLazyDocument(conf),
+		Tags:                            getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("iam_service_role_arn"); ok {
+		input.RoleArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("sync_schedule"); ok {
+		input.SyncSchedule = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("vpc_configuration"); ok {
+		input.VpcConfiguration = expandVPCConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
+	}
+
+	output, err := conn.CreateDataSource(ctx, &input)
+
+	d.SetId(application_id + "/" + index_id + "/" + aws.ToString(output.DataSourceId))
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Amazon Q datasource: %s", err)
+	}
+
+	if _, err := waitDatasourceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for qbusiness datasource (%s) to be created: %s", d.Id(), err)
+	}
+
+	return append(diags, resourceDatasourceRead(ctx, d, meta)...)
+}
+
+func resourceDatasourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
+
+	output, err := FindDatasourceByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] qbusiness datasource (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading qbusiness datasource (%s): %s", d.Id(), err)
+	}
+
+	conf, err := output.Configuration.MarshalSmithyDocument()
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "marshal qbusiness datasource configuration: %s", err)
+	}
+
+	d.Set("application_id", output.ApplicationId)
+	d.Set("arn", output.DataSourceArn)
+	d.Set("configration", string(conf))
+	d.Set("document_enrichment_configuration", flattenDocumentEnrichmentConfiguration(output.DocumentEnrichmentConfiguration))
+	d.Set("iam_service_role_arn", output.RoleArn)
+	d.Set("index_id", output.IndexId)
+	d.Set("datasource_id", output.DataSourceId)
+	d.Set("display_name", output.DisplayName)
+	d.Set("description", output.Description)
+	d.Set("sync_schedule", output.SyncSchedule)
+	d.Set("vpc_configuration", flattenVPCConfiguration(output.VpcConfiguration))
+
 	return diags
 }
 
-func expandDocumentEnrichmentConfiguration(v []interface{}) *qbusiness.DocumentEnrichmentConfiguration {
+func resourceDatasourceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
+
+	application_id, index_id, datasource_id, err := parseDatasourceID(d.Id())
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "parse qbusiness datasource ID: %s", err)
+	}
+
+	input := qbusiness.UpdateDataSourceInput{
+		ApplicationId: aws.String(application_id),
+		IndexId:       aws.String(index_id),
+		DataSourceId:  aws.String(datasource_id),
+	}
+
+	if d.HasChange("document_enrichment_configuration") {
+		input.DocumentEnrichmentConfiguration = expandDocumentEnrichmentConfiguration(d.Get("document_enrichment_configuration").([]interface{}))
+	}
+
+	if d.HasChange("configration") {
+		var conf map[string]interface{}
+		err = json.Unmarshal([]byte(d.Get("configration").(string)), &conf)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "unmarshal qbusiness datasource configration: %s", err)
+		}
+
+		input.Configuration = document.NewLazyDocument(conf)
+	}
+
+	if d.HasChange("display_name") {
+		input.DisplayName = aws.String(d.Get("display_name").(string))
+	}
+
+	if d.HasChange("iam_service_role_arn") {
+		input.RoleArn = aws.String(d.Get("iam_service_role_arn").(string))
+	}
+
+	if d.HasChange("sync_schedule") {
+		input.SyncSchedule = aws.String(d.Get("sync_schedule").(string))
+	}
+
+	if d.HasChange("vpc_configuration") {
+		input.VpcConfiguration = expandVPCConfiguration(d.Get("vpc_configuration").([]interface{}))
+	}
+
+	if d.HasChange("description") {
+		input.Description = aws.String(d.Get("description").(string))
+	}
+
+	_, err = conn.UpdateDataSource(ctx, &input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating qbusiness datasource (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitDatasourceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for qbusiness datasource (%s) to be updated: %s", d.Id(), err)
+	}
+
+	return append(diags, resourceDatasourceRead(ctx, d, meta)...)
+}
+
+func resourceDatasourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
+
+	application_id, index_id, datasource_id, err := parseDatasourceID(d.Id())
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "parse qbusiness datasource ID: %s", err)
+	}
+
+	input := qbusiness.DeleteDataSourceInput{
+		ApplicationId: aws.String(application_id),
+		IndexId:       aws.String(index_id),
+		DataSourceId:  aws.String(datasource_id),
+	}
+
+	_, err = conn.DeleteDataSource(ctx, &input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting qbusiness datasource (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitDatasourceDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for qbusiness datasource (%s) to be deleted: %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func parseDatasourceID(id string) (string, string, string, error) {
+	parts := strings.Split(id, "/")
+
+	if len(parts) != 3 {
+		return "", "", "", fmt.Errorf("invalid datasource ID: %s", id)
+	}
+
+	return parts[0], parts[1], parts[2], nil
+}
+
+func FindDatasourceByID(ctx context.Context, conn *qbusiness.Client, id string) (*qbusiness.GetDataSourceOutput, error) {
+	application_id, index_id, datasource_id, err := parseDatasourceID(id)
+
+	if err != nil {
+		return nil, err
+	}
+
+	input := qbusiness.GetDataSourceInput{
+		ApplicationId: aws.String(application_id),
+		IndexId:       aws.String(index_id),
+		DataSourceId:  aws.String(datasource_id),
+	}
+
+	output, err := conn.GetDataSource(ctx, &input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func flattenDocumentEnrichmentConfiguration(cfg *types.DocumentEnrichmentConfiguration) []interface{} {
+	if cfg == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+
+	if cfg.InlineConfigurations != nil {
+		m["inline_configurations"] = flattenInlineDocumentEnrichmentConfigurations(cfg.InlineConfigurations)
+	}
+
+	if cfg.PostExtractionHookConfiguration != nil {
+		m["post_extraction_hook_configuration"] = flattenHookConfiguration(cfg.PostExtractionHookConfiguration)
+	}
+
+	if cfg.PreExtractionHookConfiguration != nil {
+		m["pre_extraction_hook_configuration"] = flattenHookConfiguration(cfg.PreExtractionHookConfiguration)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInlineDocumentEnrichmentConfigurations(cfg []types.InlineDocumentEnrichmentConfiguration) []interface{} {
+	if cfg == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+
+	var conf []interface{}
+
+	for _, c := range cfg {
+		conf = append(conf, map[string]interface{}{
+			"condition":                 flattenDocumentAttributeCondition(c.Condition),
+			"document_content_operator": string(c.DocumentContentOperator),
+			"target":                    flattenDocumentAttributeTarget(c.Target),
+		})
+	}
+
+	m["configuration"] = conf
+
+	return []interface{}{m}
+}
+
+func expandDocumentEnrichmentConfiguration(v []interface{}) *types.DocumentEnrichmentConfiguration {
 	if len(v) == 0 || v[0] == nil {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
 
-	return &qbusiness.DocumentEnrichmentConfiguration{
+	return &types.DocumentEnrichmentConfiguration{
 		InlineConfigurations:            expandInlineDocumentEnrichmentConfigurations(m["inline_configurations"].([]interface{})),
 		PostExtractionHookConfiguration: expandHookConfiguration(m["post_extraction_hook_configuration"].([]interface{})),
 		PreExtractionHookConfiguration:  expandHookConfiguration(m["pre_extraction_hook_configuration"].([]interface{})),
 	}
 }
 
-func expandInlineDocumentEnrichmentConfigurations(v []interface{}) []*qbusiness.InlineDocumentEnrichmentConfiguration {
+func expandInlineDocumentEnrichmentConfigurations(v []interface{}) []types.InlineDocumentEnrichmentConfiguration {
 	if len(v) == 0 || v[0] == nil {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
 
-	var conf []*qbusiness.InlineDocumentEnrichmentConfiguration
+	var conf []types.InlineDocumentEnrichmentConfiguration
 
 	for _, c := range m["configuration"].([]interface{}) {
-		conf = append(conf, &qbusiness.InlineDocumentEnrichmentConfiguration{
+		conf = append(conf, types.InlineDocumentEnrichmentConfiguration{
 			Condition:               expandDocumentAttributeCondition(c.(map[string]interface{})["condition"].([]interface{})),
-			DocumentContentOperator: aws.String(c.(map[string]interface{})["document_content_operator"].(string)),
-			Target:                  expandDocuemntAttributeTarget(c.(map[string]interface{})["target"].([]interface{})),
+			DocumentContentOperator: types.DocumentContentOperator(c.(map[string]interface{})["document_content_operator"].(string)),
+			Target:                  expandDocumentAttributeTarget(c.(map[string]interface{})["target"].([]interface{})),
 		})
 	}
-
 	return conf
 }
-func expandHookConfiguration(v []interface{}) *qbusiness.HookConfiguration {
+
+func flattenHookConfiguration(cfg *types.HookConfiguration) []interface{} {
+	if cfg == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+
+	m["invocation_condition"] = flattenDocumentAttributeCondition(cfg.InvocationCondition)
+	m["role_arn"] = aws.ToString(cfg.RoleArn)
+	m["lambda_arn"] = aws.ToString(cfg.LambdaArn)
+	m["s3_bucket_name"] = aws.ToString(cfg.S3BucketName)
+
+	return []interface{}{m}
+}
+
+func expandHookConfiguration(v []interface{}) *types.HookConfiguration {
 	if len(v) == 0 || v[0] == nil {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
 
-	return &qbusiness.HookConfiguration{
+	return &types.HookConfiguration{
 		InvocationCondition: expandDocumentAttributeCondition(m["invocation_condition"].([]interface{})),
 		RoleArn:             aws.String(m["role_arn"].(string)),
 		LambdaArn:           aws.String(m["lambda_arn"].(string)),
@@ -313,79 +619,145 @@ func expandHookConfiguration(v []interface{}) *qbusiness.HookConfiguration {
 	}
 }
 
-func expandDocuemntAttributeTarget(v []interface{}) *qbusiness.DocumentAttributeTarget {
+func flattenDocumentAttributeCondition(cfg *types.DocumentAttributeCondition) []interface{} {
+	if cfg == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+
+	m["key"] = aws.ToString(cfg.Key)
+	m["operator"] = string(cfg.Operator)
+	m["value"] = flattenValueSchema(cfg.Value)
+
+	return []interface{}{m}
+}
+
+func expandDocumentAttributeTarget(v []interface{}) *types.DocumentAttributeTarget {
 	if len(v) == 0 || v[0] == nil {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
 
-	return &qbusiness.DocumentAttributeTarget{
+	return &types.DocumentAttributeTarget{
 		Key:                    aws.String(m["key"].(string)),
-		AttributeValueOperator: aws.String(m["attributeValueOperator"].(string)),
+		AttributeValueOperator: types.AttributeValueOperator(m["attributeValueOperator"].(string)),
 		Value:                  expandValueSchema(m["value"].([]interface{})),
 	}
 }
 
-func expandDocumentAttributeCondition(v []interface{}) *qbusiness.DocumentAttributeCondition {
+func flattenDocumentAttributeTarget(cfg *types.DocumentAttributeTarget) []interface{} {
+	if cfg == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+
+	m["key"] = aws.ToString(cfg.Key)
+	m["attributeValueOperator"] = string(cfg.AttributeValueOperator)
+	m["value"] = flattenValueSchema(cfg.Value)
+
+	return []interface{}{m}
+}
+
+func expandDocumentAttributeCondition(v []interface{}) *types.DocumentAttributeCondition {
 	if len(v) == 0 || v[0] == nil {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
 
-	return &qbusiness.DocumentAttributeCondition{
+	return &types.DocumentAttributeCondition{
 		Key:      aws.String(m["key"].(string)),
-		Operator: aws.String(m["operator"].(string)),
+		Operator: types.DocumentEnrichmentConditionOperator(m["operator"].(string)),
 		Value:    expandValueSchema(m["value"].([]interface{})),
 	}
 }
 
-func expandValueSchema(v []interface{}) *qbusiness.DocumentAttributeValue {
+func flattenValueSchema(v types.DocumentAttributeValue) []interface{} {
+	if v == nil {
+		return []interface{}{}
+	}
+
+	m := make(map[string]interface{})
+
+	switch v := v.(type) {
+	case *types.DocumentAttributeValueMemberDateValue:
+		m["date_value"] = v.Value.Format(time.RFC3339)
+	case *types.DocumentAttributeValueMemberLongValue:
+		m["long_value"] = v.Value
+	case *types.DocumentAttributeValueMemberStringListValue:
+		m["string_list_value"] = flex.FlattenStringValueList(v.Value)
+	case *types.DocumentAttributeValueMemberStringValue:
+		m["strings_value"] = v.Value
+	}
+
+	return []interface{}{m}
+}
+
+func expandValueSchema(v []interface{}) types.DocumentAttributeValue {
 	if len(v) == 0 || v[0] == nil {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
 
-	t, _ := time.Parse(time.RFC3339, m["date_value"].(string))
-
-	return &qbusiness.DocumentAttributeValue{
-		DateValue:       aws.Time(t),
-		LongValue:       aws.Int64(int64(m["long_value"].(int))),
-		StringListValue: flex.ExpandStringList(m["string_list_value"].([]interface{})),
-		StringValue:     aws.String(m["strings_value"].(string)),
+	if v, ok := m["date_value"]; ok {
+		t, _ := time.Parse(time.RFC3339, v.(string))
+		return &types.DocumentAttributeValueMemberDateValue{
+			Value: t,
+		}
 	}
+
+	if v, ok := m["long_value"]; ok {
+		return &types.DocumentAttributeValueMemberLongValue{
+			Value: int64(v.(int)),
+		}
+	}
+
+	if v, ok := m["string_list_value"]; ok {
+		return &types.DocumentAttributeValueMemberStringListValue{
+			Value: flex.ExpandStringValueList(v.([]interface{})),
+		}
+	}
+
+	if v, ok := m["strings_value"]; ok {
+		return &types.DocumentAttributeValueMemberStringValue{
+			Value: v.(string),
+		}
+	}
+	return nil
 }
 
-func expandVPCConfiguration(cfg []interface{}) *qbusiness.DataSourceVpcConfiguration {
+func expandVPCConfiguration(cfg []interface{}) *types.DataSourceVpcConfiguration {
 	if len(cfg) < 1 {
 		return nil
 	}
 
 	conf := cfg[0].(map[string]interface{})
 
-	out := qbusiness.DataSourceVpcConfiguration{}
+	out := types.DataSourceVpcConfiguration{}
 
 	if v, ok := conf["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
-		out.SecurityGroupIds = flex.ExpandStringSet(v)
+		out.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := conf["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
-		out.SubnetIds = flex.ExpandStringSet(v)
+		out.SubnetIds = flex.ExpandStringValueSet(v)
 	}
 
 	return &out
 }
 
-func flattenVPCConfiguration(rs *qbusiness.DataSourceVpcConfiguration) []interface{} {
+func flattenVPCConfiguration(rs *types.DataSourceVpcConfiguration) []interface{} {
 	if rs == nil {
 		return []interface{}{}
 	}
 
 	m := make(map[string]interface{})
 	if rs.SecurityGroupIds != nil {
-		m["security_group_ids"] = flex.FlattenStringSet(rs.SecurityGroupIds)
+		m["security_group_ids"] = flex.FlattenStringValueSet(rs.SecurityGroupIds)
 	}
 	if rs.SubnetIds != nil {
-		m["subnet_ids"] = flex.FlattenStringSet(rs.SubnetIds)
+		m["subnet_ids"] = flex.FlattenStringValueSet(rs.SubnetIds)
 	}
 
 	return []interface{}{m}
