@@ -246,3 +246,36 @@ func waitLandingZoneOperationSucceeded(ctx context.Context, conn *controltower.C
 
 	return nil, err
 }
+
+// https://mholt.github.io/json-to-go/
+// https://docs.aws.amazon.com/controltower/latest/userguide/lz-api-launch.html
+type landingZoneManifest struct {
+	GovernedRegions       []string `json:"governedRegions,omitempty"`
+	OrganizationStructure struct {
+		Security struct {
+			Name string `json:"name,omitempty"`
+		} `json:"security,omitempty"`
+		Sandbox struct {
+			Name string `json:"name,omitempty"`
+		} `json:"sandbox,omitempty"`
+	} `json:"organizationStructure,omitempty"`
+	CentralizedLogging struct {
+		AccountID      string `json:"accountId,omitempty"`
+		Configurations struct {
+			LoggingBucket struct {
+				RetentionDays int `json:"retentionDays,omitempty"`
+			} `json:"loggingBucket,omitempty"`
+			AccessLoggingBucket struct {
+				RetentionDays int `json:"retentionDays,omitempty"`
+			} `json:"accessLoggingBucket,omitempty"`
+			KmsKeyARN string `json:"kmsKeyArn,omitempty"`
+		} `json:"configurations,omitempty"`
+		Enabled bool `json:"enabled,omitempty"`
+	} `json:"centralizedLogging,omitempty"`
+	SecurityRoles struct {
+		AccountID string `json:"accountId,omitempty"`
+	} `json:"securityRoles,omitempty"`
+	AccessManagement struct {
+		Enabled bool `json:"enabled,omitempty"`
+	} `json:"accessManagement,omitempty"`
+}
