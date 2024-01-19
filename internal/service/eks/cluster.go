@@ -136,7 +136,7 @@ func resourceCluster() *schema.Resource {
 							Required: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(Resources_Values(), false),
+								ValidateFunc: validation.StringInSlice(resources_Values(), false),
 							},
 						},
 					},

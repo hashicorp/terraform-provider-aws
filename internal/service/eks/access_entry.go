@@ -82,16 +82,11 @@ func resourceAccessEntry() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "STANDARD",
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"EC2_LINUX",
-					"EC2_WINDOWS",
-					"STANDARD",
-					"FARGATE_LINUX",
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      accessEntryTypeStandard,
+				ValidateFunc: validation.StringInSlice(accessEntryType_Values(), false),
 			},
 			"user_name": {
 				Type:     schema.TypeString,
