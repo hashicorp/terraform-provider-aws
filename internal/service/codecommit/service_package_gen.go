@@ -38,8 +38,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceApprovalRuleTemplate,
+			Factory:  resourceApprovalRuleTemplate,
 			TypeName: "aws_codecommit_approval_rule_template",
+			Name:     "Approval Rule Template",
 		},
 		{
 			Factory:  ResourceApprovalRuleTemplateAssociation,
