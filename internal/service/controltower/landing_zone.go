@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -52,9 +53,156 @@ func resourceLandingZone() *schema.Resource {
 				Computed: true,
 			},
 			"manifest": {
-				Type:     schema.TypeString,
+				Type:     schema.TypeList,
+				MaxItems: 1,
 				Required: true,
-				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"access_management": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"centralized_logging": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"account_id": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+									"configurations": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"access_logging_bucket": {
+													Type:     schema.TypeList,
+													MaxItems: 1,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"retention_days": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+														},
+													},
+												},
+												"kms_key_arn": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
+												"logging_bucket": {
+													Type:     schema.TypeList,
+													MaxItems: 1,
+													Optional: true,
+													Computed: true,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"retention_days": {
+																Type:     schema.TypeInt,
+																Optional: true,
+																Computed: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"enabled": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"governed_regions": {
+							Type:     schema.TypeSet,
+							Required: true,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"organization_structure": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"sandbox": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"name": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
+									},
+									"security": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Computed: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"name": {
+													Type:     schema.TypeString,
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"security_roles": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"account_id": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
 			},
 			"version": {
 				Type:     schema.TypeString,
@@ -74,7 +222,7 @@ func resourceLandingZoneCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 	input := &controltower.CreateLandingZoneInput{
-		Manifest: document.NewLazyDocument(d.Get("manifest").(string)),
+		Manifest: document.NewLazyDocument(expandLandingZoneManifest(d.Get("manifest").([]interface{})[0].(map[string]interface{}))),
 		Tags:     getTagsIn(ctx),
 		Version:  aws.String(d.Get("version").(string)),
 	}
@@ -278,4 +426,18 @@ type landingZoneManifest struct {
 	AccessManagement struct {
 		Enabled bool `json:"enabled,omitempty"`
 	} `json:"accessManagement,omitempty"`
+}
+
+func expandLandingZoneManifest(tfMap map[string]interface{}) *landingZoneManifest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &landingZoneManifest{}
+
+	if v, ok := tfMap["governed_regions"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.GovernedRegions = flex.ExpandStringValueSet(v)
+	}
+
+	return apiObject
 }
