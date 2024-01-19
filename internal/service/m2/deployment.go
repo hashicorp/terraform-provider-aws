@@ -195,7 +195,7 @@ func (r *resourceDeployment) Read(ctx context.Context, req resource.ReadRequest,
 		)
 		return
 	}
-	state.refreshFromApplicationOutput(ctx, app)
+	state.refreshFromApplicationOutput(app)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -272,7 +272,7 @@ func (r *resourceDeployment) Update(ctx context.Context, req resource.UpdateRequ
 			)
 			return
 		}
-		plan.refreshFromApplicationOutput(ctx, app)
+		plan.refreshFromApplicationOutput(app)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
@@ -339,7 +339,7 @@ func (r *resourceDeploymentData) refreshFromOutput(ctx context.Context, out *m2.
 	r.EnvironmentId = flex.StringToFramework(ctx, out.EnvironmentId)
 }
 
-func (r *resourceDeploymentData) refreshFromApplicationOutput(ctx context.Context, app *m2.GetApplicationOutput) {
+func (r *resourceDeploymentData) refreshFromApplicationOutput(app *m2.GetApplicationOutput) {
 	r.Start = types.BoolValue(app.Status == awstypes.ApplicationLifecycleRunning)
 }
 
