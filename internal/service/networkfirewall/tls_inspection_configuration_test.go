@@ -175,22 +175,22 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_egressBasic(t *testing.T) 
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.check_certificate_revocation_status.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.check_certificate_revocation_status.0.revoked_status_action", "REJECT"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.check_certificate_revocation_status.0.unknown_status_action", "PASS"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scope.0.destinations.0.address_definition", "0.0.0.0/0"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scope.0.destination_ports.0.from_port", "443"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scope.0.destination_ports.0.to_port", "443"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scope.0.protocols.0", "6"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scope.0.sources.0.address_definition", "0.0.0.0/0"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scope.0.source_ports.0.from_port", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scope.0.source_ports.0.to_port", "65535"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.destinations.0.address_definition", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.destination_ports.0.from_port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.destination_ports.0.to_port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.protocols.0", "6"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.sources.0.address_definition", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.source_ports.0.from_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.source_ports.0.to_port", "65535"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "network-firewall", regexache.MustCompile(`tls-configuration/+.`)),
 				),
 			},
-			// {
-			// 	ResourceName:      resourceName,
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// 	// ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
-			// },
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
 		},
 	})
 }
@@ -234,25 +234,25 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_ingressBasic(t *testing.T)
 						"type":   "AWS_OWNED_KMS_KEY",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.server_certificates.0.resource_arn", certificateArn),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scope.0.destinations.0.address_definition", "0.0.0.0/0"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scope.0.destination_ports.0.from_port", "443"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scope.0.destination_ports.0.to_port", "443"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scope.0.protocols.0", "6"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scope.0.sources.0.address_definition", "0.0.0.0/0"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scope.0.source_ports.0.from_port", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scope.0.source_ports.0.to_port", "65535"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.destinations.0.address_definition", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.destination_ports.0.from_port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.destination_ports.0.to_port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.protocols.0", "6"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.sources.0.address_definition", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.source_ports.0.from_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.source_ports.0.to_port", "65535"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.check_certificate_revocation_status.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", "0"),
 					// resource.TestCheckResourceAttr(resourceName, "certificates.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "network-firewall", regexache.MustCompile(`tls-configuration/+.`)),
 				),
 			},
-			// {
-			// 	ResourceName:      resourceName,
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// 	// ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
-			// },
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
 		},
 	})
 }
@@ -295,25 +295,25 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_ingressWithEncryptionConfi
 					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "encryption_configuration.0.key_id", keyName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.server_certificates.0.resource_arn", certificateArn),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scope.0.destinations.0.address_definition", "0.0.0.0/0"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scope.0.destination_ports.0.from_port", "443"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scope.0.destination_ports.0.to_port", "443"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scope.0.protocols.0", "6"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scope.0.sources.0.address_definition", "0.0.0.0/0"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scope.0.source_ports.0.from_port", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scope.0.source_ports.0.to_port", "65535"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.destinations.0.address_definition", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.destination_ports.0.from_port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.destination_ports.0.to_port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.protocols.0", "6"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.sources.0.address_definition", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.source_ports.0.from_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.source_ports.0.to_port", "65535"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.check_certificate_revocation_status.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", "0"),
 					// resource.TestCheckResourceAttr(resourceName, "certificates.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "network-firewall", regexache.MustCompile(`tls-configuration/+.`)),
 				),
 			},
-			// {
-			// 	ResourceName:      resourceName,
-			// 	ImportState:       true,
-			// 	ImportStateVerify: true,
-			// 	// ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
-			// },
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				// ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
 		},
 	})
 }
@@ -448,7 +448,7 @@ resource "aws_networkfirewall_tls_inspection_configuration" "test" {
       server_certificates {
         resource_arn = %[2]q
       }
-      scope {
+      scopes {
         protocols = [ 6 ]
         destination_ports {
             from_port = 443
@@ -494,7 +494,7 @@ resource "aws_networkfirewall_tls_inspection_configuration" "test" {
       server_certificates {
         resource_arn = %[2]q
       }
-      scope {
+      scopes {
         protocols = [ 6 ]
         destination_ports {
           from_port = 443
@@ -539,7 +539,7 @@ resource "aws_networkfirewall_tls_inspection_configuration" "test" {
         revoked_status_action = "REJECT"
         unknown_status_action = "PASS"
       }
-      scope {
+      scopes {
         protocols = [ 6 ]
         destination_ports {
           from_port = 443
