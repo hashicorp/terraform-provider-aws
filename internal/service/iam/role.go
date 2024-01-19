@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"time"
 
 	// "github.com/YakDriver/regexache"
@@ -33,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	// fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -77,7 +79,8 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				Computed: true,
 			},
 			"assume_role_policy": schema.StringAttribute{
-				Required: true,
+				Required:   true,
+				CustomType: fwtypes.IAMPolicyType,
 				// Validators: []validator.String{
 				// // TODO: json validator
 				// },
@@ -176,10 +179,10 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 }
 
 type resourceIamRoleData struct {
-	ARN              fwtypes.ARN  `tfsdk:"arn"`
-	AssumeRolePolicy types.String `tfsdk:"assume_role_policy"`
-	CreateDate       types.String `tfsdk:"create_date"`
-	ID               types.String `tfsdk:"id"`
+	ARN              fwtypes.ARN       `tfsdk:"arn"`
+	AssumeRolePolicy fwtypes.IAMPolicy `tfsdk:"assume_role_policy"`
+	CreateDate       types.String      `tfsdk:"create_date"`
+	ID               types.String      `tfsdk:"id"`
 	// Description         types.String `tfsdk:"description"`
 	// ForceDetachPolicies types.Bool   `tfsdk:"force_detach_policies"`
 	// TODO: still have to think this one out
@@ -359,6 +362,7 @@ func (r resourceIamRole) Delete(ctx context.Context, req resource.DeleteRequest,
 }
 
 func (r *resourceIamRole) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	fmt.Println("Top of Import")
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
 }
 
@@ -367,6 +371,7 @@ func (r *resourceIamRole) ModifyPlan(ctx context.Context, request resource.Modif
 }
 
 func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	fmt.Println("Top of Read")
 	conn := r.Meta().IAMConn(ctx)
 
 	var state resourceIamRoleData
@@ -377,7 +382,7 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 
 	//NOTE: Have to always set this to true? Else not sure what to do
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return FindRoleByName(ctx, conn, state.Name.ValueString())
+		return FindRoleByName(ctx, conn, state.ID.ValueString())
 	}, true)
 
 	// NOTE: Same issue here, I left old conditional here as example, not sure what else can/should be done
@@ -426,7 +431,6 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	state.Path = flex.StringToFramework(ctx, role.Path)
 	state.Name = flex.StringToFramework(ctx, role.RoleName)
 	state.ID = flex.StringToFramework(ctx, role.RoleName)
-	// TODO: add more of these when ready to actually test
 
 	// d.Set("description", role.Description)
 	// d.Set("max_session_duration", role.MaxSessionDuration)
@@ -439,16 +443,26 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	// }
 	// d.Set("unique_id", role.RoleId)
 
-	// TODO: uncomment
-	// assumeRolePolicy, err := url.QueryUnescape(aws.StringValue(role.AssumeRolePolicyDocument))
-	// if err != nil {
-	// return sdkdiag.AppendFromErr(diags, err)
-	// }
+	assumeRolePolicy, err := url.QueryUnescape(aws.StringValue(role.AssumeRolePolicyDocument))
+	if err != nil {
+		// TODO: I don't this this is right error, should look more into it
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.IAM, create.ErrActionReading, state.ID.String(), state.AssumeRolePolicy.String(), err),
+			err.Error(),
+		)
+		return
+	}
 
-	// policyToSet, err := verify.PolicyToSet(d.Get("assume_role_policy").(string), assumeRolePolicy)
-	// if err != nil {
-	// return sdkdiag.AppendFromErr(diags, err)
-	// }
+	policyToSet, err := verify.PolicyToSet(state.AssumeRolePolicy.ValueString(), assumeRolePolicy)
+	if err != nil {
+		// TODO: I don't this this is right error, should look more into it
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.IAM, create.ErrActionReading, state.ID.String(), state.AssumeRolePolicy.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	state.AssumeRolePolicy = fwtypes.IAMPolicyValue(policyToSet)
 
 	// d.Set("assume_role_policy", policyToSet)
 

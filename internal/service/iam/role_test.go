@@ -42,12 +42,11 @@ func TestAccIAMRole_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
 				),
 			},
-			// TODO: next step
-			// {
-			// ResourceName:      resourceName,
-			// ImportState:       true,
-			// ImportStateVerify: true,
-			// },
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
