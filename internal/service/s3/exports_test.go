@@ -25,9 +25,7 @@ var (
 	ResourceBucketServerSideEncryptionConfiguration = resourceBucketServerSideEncryptionConfiguration
 	ResourceBucketVersioning                        = resourceBucketVersioning
 	ResourceBucketWebsiteConfiguration              = resourceBucketWebsiteConfiguration
-	ResourceBucket                                  = resourceBucket
 	ResourceDirectoryBucket                         = newDirectoryBucketResource
-	ResourceObject                                  = resourceObject
 	ResourceObjectCopy                              = resourceObjectCopy
 
 	BucketListTags                        = bucketListTags
