@@ -486,6 +486,7 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	fmt.Println("Top of Update")
 	conn := r.Meta().IAMConn(ctx)
 
 	var plan, state resourceIamRoleData
@@ -504,7 +505,7 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 		}
 
 		input := &iam.UpdateAssumeRolePolicyInput{
-			RoleName:       aws.String(plan.ID.ValueString()),
+			RoleName:       aws.String(state.ID.ValueString()),
 			PolicyDocument: aws.String(assumeRolePolicy),
 		}
 
@@ -529,8 +530,10 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	if !plan.Description.Equal(state.Description) {
+		fmt.Println("Found description change!")
+		fmt.Println(fmt.Sprintf("Updating to %s", plan.Description.ValueString()))
 		input := &iam.UpdateRoleDescriptionInput{
-			RoleName:    aws.String(plan.ID.ValueString()),
+			RoleName:    aws.String(state.ID.ValueString()),
 			Description: aws.String(plan.Description.ValueString()),
 		}
 
@@ -539,6 +542,11 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 		if err != nil {
 			// TODO: put something there
 			// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s) description: %s", d.Id(), err)
+			fmt.Println("Error updating description")
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionReading, state.ID.String(), plan.Description.String(), err),
+				err.Error(),
+			)
 			return
 		}
 	}
@@ -560,7 +568,12 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 		}
 	}
 
+	// TODO: Do we need these?
+	plan.ID = state.ID
+	plan.CreateDate = state.CreateDate
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	fmt.Println("Hit bottom of update")
 }
 
 // TODO: import state?

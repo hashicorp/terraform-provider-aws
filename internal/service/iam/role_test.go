@@ -51,41 +51,6 @@ func TestAccIAMRole_basic(t *testing.T) {
 	})
 }
 
-// TODO: comment out later
-// func TestAccIAMRole_basic_migration_sdk_to_framework(t *testing.T) {
-// ctx := acctest.Context(t)
-// var conf iam.Role
-// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// resourceName := "aws_iam_role.test"
-
-// resource.ParallelTest(t, resource.TestCase{
-// PreCheck:     func() { acctest.PreCheck(ctx, t) },
-// ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-// CheckDestroy: testAccCheckRoleDestroy(ctx),
-// Steps: []resource.TestStep{
-// {
-// ExternalProviders: map[string]resource.ExternalProvider{
-// "<provider>": {
-// VersionConstraint: "5.17.0",
-// Source:            "hashicorp/terraform-provider-aws",
-// },
-// },
-// Config: testAccRoleConfig_basic(rName),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &conf),
-// resource.TestCheckResourceAttr(resourceName, "path", "/"),
-// resource.TestCheckResourceAttrSet(resourceName, "create_date"),
-// ),
-// },
-// {
-// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// Config:                   testAccRoleConfig_basic(rName),
-// PlanOnly:                 true,
-// },
-// },
-// })
-// }
-
 func TestAccIAMRole_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf iam.Role
@@ -111,14 +76,14 @@ func TestAccIAMRole_description(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			// {
-			// Config: testAccRoleConfig_updatedDescription(rName),
-			// Check: resource.ComposeTestCheckFunc(
-			// testAccCheckRoleExists(ctx, resourceName, &conf),
-			// resource.TestCheckResourceAttr(resourceName, "path", "/"),
-			// resource.TestCheckResourceAttr(resourceName, "description", "This 1s an Upd@ted D3scr!pti0n with weird content: &90ë\"'{«¡Çø}"),
-			// ),
-			// },
+			{
+				Config: testAccRoleConfig_updatedDescription(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "path", "/"),
+					resource.TestCheckResourceAttr(resourceName, "description", "This 1s an Upd@ted D3scr!pti0n with weird content: &90ë\"'{«¡Çø}"),
+				),
+			},
 			// {
 			// Config: testAccRoleConfig_basic(rName),
 			// Check: resource.ComposeTestCheckFunc(
