@@ -53,6 +53,10 @@ func resourceLandingZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"latest_available_version": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"manifest": {
 				Type:     schema.TypeList,
 				MaxItems: 1,
@@ -265,6 +269,7 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("arn", landingZone.Arn)
+	d.Set("latest_available_version", landingZone.LatestAvailableVersion)
 	if landingZone.Manifest != nil {
 		var v landingZoneManifest
 
