@@ -58,6 +58,25 @@ resource "aws_route53_record" "www-live" {
 }
 ```
 
+### Geoproximity routing policy
+
+```terraform
+resource "aws_route53_record" "www" {
+  zone_id = aws_route53_zone.primary.zone_id
+  name    = "www.example.com"
+  type    = "CNAME"
+  ttl     = 300
+  geoproximity_routing_policy {
+    coordinates {
+			latitude = "49.22"
+			longitude = "-74.01"
+		}
+  } 
+  set_identifier = "dev"
+  records = ["dev.example.com"]
+}
+```
+
 ### Alias record
 
 See [related part of Amazon Route 53 Developer Guide](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/resource-record-sets-choosing-alias-non-alias.html)
