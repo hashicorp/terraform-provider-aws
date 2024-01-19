@@ -213,16 +213,6 @@ func testAccApplicationPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckApplicationNotRecreated(before, after *m2.GetApplicationOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.ApplicationId), aws.ToString(after.ApplicationId); before != after {
-			return create.Error(names.M2, create.ErrActionCheckingNotRecreated, tfm2.ResNameApplication, before, errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
 func testAccApplicationConfig_basic(rName, engineType string) string {
 	return testAccApplicationConfig_versioned(rName, engineType, "1")
 }
@@ -253,7 +243,6 @@ resource "aws_m2_application" "test" {
   depends_on = [aws_s3_object.test]
 }
 `, rName, engineType, version)
-
 }
 
 func skipIfDemoAppMissing(t *testing.T) {

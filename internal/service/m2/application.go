@@ -353,7 +353,6 @@ func (r *resourceApplicationData) refreshFromOutput(ctx context.Context, app *m2
 	r.CurrentVersion = flex.Int32ToFramework(ctx, app.LatestVersion.ApplicationVersion)
 
 	return diags
-
 }
 func (r *resourceApplicationData) refreshFromVersion(ctx context.Context, version *m2.GetApplicationVersionOutput) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -491,7 +490,6 @@ func findApplicationVersion(ctx context.Context, conn *m2.Client, id string, ver
 	}
 
 	return out, nil
-
 }
 
 func expandApplicationDefinition(ctx context.Context, definition applicationDefinition) awstypes.Definition {
@@ -508,34 +506,6 @@ func expandApplicationDefinition(ctx context.Context, definition applicationDefi
 	}
 
 	return nil
-}
-
-func flattenApplicationDefinition(ctx context.Context, definition awstypes.Definition) (attr.Value, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	content := types.StringNull()
-	s3Location := types.StringNull()
-
-	switch v := definition.(type) {
-	case *awstypes.DefinitionMemberS3Location:
-		s3Location = flex.StringValueToFramework(ctx, v.Value)
-	case *awstypes.DefinitionMemberContent:
-		content = flex.StringValueToFramework(ctx, v.Value)
-
-	}
-
-	obj := map[string]attr.Value{
-		"content":     content,
-		"s3_location": s3Location,
-	}
-
-	definitionValue, d := types.ObjectValue(applicationDefinitionAttrs, obj)
-	diags.Append(d...)
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	return definitionValue, diags
 }
 
 func flattenApplicationDefinitionFromVersion(ctx context.Context, version *m2.GetApplicationVersionOutput) (types.Object, diag.Diagnostics) {
