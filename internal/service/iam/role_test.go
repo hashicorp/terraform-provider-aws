@@ -1133,6 +1133,9 @@ func testAccCheckRoleExists(ctx context.Context, n string, v *iam.Role) resource
 			return fmt.Errorf("No IAM Role ID is set")
 		}
 
+		// TODO: Debugging
+		fmt.Println(fmt.Sprintf("testAccCheckRoleExists ID: %s", rs.Primary.ID))
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
 		output, err := tfiam.FindRoleByName(ctx, conn, rs.Primary.ID)

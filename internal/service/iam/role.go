@@ -45,8 +45,7 @@ const (
 	ResNameIamRole       = "IAM Role"
 )
 
-// @FrameworkResource(name="Role")
-// @Tags(identifierAttribute="arn")
+// @FrameworkResource
 func newResourceRole(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIamRole{}
 	r.SetMigratedFromPluginSDK(true)
@@ -197,6 +196,7 @@ type resourceIamRoleData struct {
 }
 
 func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	fmt.Println("Hitting top of Create")
 	conn := r.Meta().IAMConn(ctx)
 
 	var plan resourceIamRoleData
@@ -311,13 +311,16 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	// TODO: do I have to do this? should look at other resources
 	plan.ARN = fwtypes.ARNValue(*output.Role.Arn)
 	plan.CreateDate = flex.StringValueToFramework(ctx, output.Role.CreateDate.Format(time.RFC3339))
-	plan.ID = flex.StringToFramework(ctx, output.Role.RoleId)
+	plan.ID = flex.StringToFramework(ctx, output.Role.RoleName)
 
 	// last steps?
-	state := plan
 	// TODO: do we need something?this?
 	// state.refreshFromOutput(ctx, out)
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	// fmt.Println(plan.ARN)
+	// fmt.Println(plan.ID)
+	// fmt.Println(plan.Name)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	fmt.Println("Bottom of Create")
 }
 
 func (r resourceIamRole) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -422,7 +425,7 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	state.CreateDate = flex.StringValueToFramework(ctx, role.CreateDate.Format(time.RFC3339))
 	state.Path = flex.StringToFramework(ctx, role.Path)
 	state.Name = flex.StringToFramework(ctx, role.RoleName)
-	state.ID = flex.StringToFramework(ctx, role.RoleId)
+	state.ID = flex.StringToFramework(ctx, role.RoleName)
 	// TODO: add more of these when ready to actually test
 
 	// d.Set("description", role.Description)
