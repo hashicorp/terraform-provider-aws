@@ -14,16 +14,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+
 	// "github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	// "github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+
 	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -36,6 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+
 	// fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -78,6 +80,9 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"id": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"assume_role_policy": schema.StringAttribute{
 				Required:   true,
@@ -89,6 +94,9 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"create_date": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
@@ -101,6 +109,7 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 					// `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`,
 					// ),
 				},
+				// TODO: do something here
 			},
 			// "force_detach_policies": schema.BoolAttribute{
 			// Optional: true,
@@ -549,6 +558,9 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 			)
 			return
 		}
+
+		// TODO: is this the silver bullet?
+		state.Description = plan.Description
 	}
 
 	if !plan.TagsAll.Equal(state.TagsAll) {
@@ -569,8 +581,8 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	// TODO: Do we need these?
-	plan.ID = state.ID
-	plan.CreateDate = state.CreateDate
+	// plan.ID = state.ID
+	// plan.CreateDate = state.CreateDate
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 	fmt.Println("Hit bottom of update")
