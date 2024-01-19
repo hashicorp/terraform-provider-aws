@@ -307,6 +307,11 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 	// Attempt to find the single matching AWS Security Group Rule resource ID.
 	securityGroupRules, err := FindSecurityGroupRulesBySecurityGroupID(ctx, conn, securityGroupID)
 
+	// Ignore UnsupportedOperation errors for AWS China and GovCloud (US).
+	if tfawserr.ErrCodeEquals(err, errCodeUnsupportedOperation) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s) Rules: %s", securityGroupID, err)
 	}
