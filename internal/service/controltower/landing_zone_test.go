@@ -173,7 +173,7 @@ resource "aws_controltower_landing_zone" "test" {
     governed_regions = [%[1]q]
   }
 
-  version  = %[2]q
+  version = %[2]q
 }
 `, acctest.Region(), landingZoneVersion)
 
@@ -184,7 +184,7 @@ resource "aws_controltower_landing_zone" "test" {
     governed_regions = [%[1]q]
   }
 
-  version  = %[2]q
+  version = %[2]q
 
   tags = {
     %[3]q = %[4]q
@@ -200,7 +200,7 @@ resource "aws_controltower_landing_zone" "test" {
     governed_regions = [%[1]q]
   }
 
-  version  = %[2]q
+  version = %[2]q
 
   tags = {
     %[3]q = %[4]q
