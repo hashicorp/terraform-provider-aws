@@ -222,7 +222,7 @@ resource "aws_route53_resolver_rule" "test" {
 }
 
 data "aws_route53_resolver_rules" "test" {
-  name_regex = ".*\.example\.org\."
+  domain_regex = "%[2]s\\.example\\.org\\."
 
   depends_on = [aws_route53_resolver_rule.test]
 }
