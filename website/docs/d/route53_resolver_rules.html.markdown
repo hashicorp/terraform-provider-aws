@@ -41,11 +41,24 @@ data "aws_route53_resolver_rules" "example" {
 }
 ```
 
+### Retrieving rules by domain regex
+
+Resolver rules whose domain contains `abc`.
+
+```terraform
+data "aws_route53_resolver_rules" "example" {
+  domain_regex = ".*abc.*"
+}
+```
+
 ## Argument Reference
 
 The arguments of this data source act as filters for querying the available resolver rules in the current region.
 
 * `name_regex` - (Optional) Regex string to filter resolver rule names.
+  The filtering is done locally, so could have a performance impact if the result is large.
+  This argument should be used along with other arguments to limit the number of results returned.
+* `domain_regex` - (Optional) Regex string to filter resolver rule domains.
   The filtering is done locally, so could have a performance impact if the result is large.
   This argument should be used along with other arguments to limit the number of results returned.
 * `owner_id` (Optional) When the desired resolver rules are shared with another AWS account, the account ID of the account that the rules are shared with.
