@@ -1,18 +1,6 @@
 package networkfirewall
 
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/networkfirewall/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
 	"errors"
 	"fmt"
@@ -47,16 +35,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// TIP: ==== FILE STRUCTURE ====
-// All resources should follow this basic outline. Improve this resource's
-// maintainability by sticking to it.
-//
-// 1. Package declaration
-// 2. Imports
-// 3. Main resource struct with schema method
-// 4. Create, read, update, delete methods (in that order)
-// 5. Other functions (flatteners, expanders, waiters, finders, etc.)
-
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource(name="TLS Inspection Configuration")
 func newResourceTLSInspectionConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
@@ -87,50 +65,6 @@ func (r *resourceTLSInspectionConfiguration) Metadata(_ context.Context, req res
 	resp.TypeName = "aws_networkfirewall_tls_inspection_configuration"
 }
 
-// TIP: ==== SCHEMA ====
-// In the schema, add each of the attributes in snake case (e.g.,
-// delete_automated_backups).
-//
-// Formatting rules:
-// * Alphabetize attributes to make them easier to find.
-// * Do not add a blank line between attributes.
-//
-// Attribute basics:
-//   - If a user can provide a value ("configure a value") for an
-//     attribute (e.g., instances = 5), we call the attribute an
-//     "argument."
-//   - You change the way users interact with attributes using:
-//   - Required
-//   - Optional
-//   - Computed
-//   - There are only four valid combinations:
-//
-// 1. Required only - the user must provide a value
-// Required: true,
-//
-//  2. Optional only - the user can configure or omit a value; do not
-//     use Default or DefaultFunc
-//
-// Optional: true,
-//
-//  3. Computed only - the provider can provide a value but the user
-//     cannot, i.e., read-only
-//
-// Computed: true,
-//
-//  4. Optional AND Computed - the provider or user can provide a value;
-//     use this combination if you are using Default
-//
-// Optional: true,
-// Computed: true,
-//
-// You will typically find arguments in the input struct
-// (e.g., CreateDBInstanceInput) for the create operation. Sometimes
-// they are only in the input struct (e.g., ModifyDBInstanceInput) for
-// the modify operation.
-//
-// For more about schema options, visit
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/schemas?page=schemas
 func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -142,15 +76,6 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 			// Map name to TLSInspectionConfigurationName
 			"name": schema.StringAttribute{
 				Required: true,
-				// TIP: ==== PLAN MODIFIERS ====
-				// Plan modifiers were introduced with Plugin-Framework to provide a mechanism
-				// for adjusting planned changes prior to apply. The planmodifier subpackage
-				// provides built-in modifiers for many common use cases such as
-				// requiring replacement on a value change ("ForceNew: true" in Plugin-SDK
-				// resources).
-				//
-				// See more:
-				// https://developer.hashicorp.com/terraform/plugin/framework/resources/plan-modification
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -217,23 +142,6 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 						},
 					},
 				},
-
-				// NestedObject: schema.NestedBlockObject{
-				// 	Attributes: map[string]schema.Attribute{
-				// 		"certificate_arn": schema.StringAttribute{
-				// 			Computed: true,
-				// 		},
-				// 		"certificate_serial": schema.StringAttribute{
-				// 			Computed: true,
-				// 		},
-				// 		"status": schema.StringAttribute{
-				// 			Computed: true,
-				// 		},
-				// 		"status_message": schema.StringAttribute{
-				// 			Computed: true,
-				// 		},
-				// 	},
-				// },
 			},
 			"encryption_configuration": schema.ListNestedBlock{
 				NestedObject: schema.NestedBlockObject{
@@ -347,33 +255,6 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 					},
 				},
 			},
-			// "complex_argument": schema.ListNestedBlock{
-			// 	// TIP: ==== LIST VALIDATORS ====
-			// 	// List and set validators take the place of MaxItems and MinItems in
-			// 	// Plugin-Framework based resources. Use listvalidator.SizeAtLeast(1) to
-			// 	// make a nested object required. Similar to Plugin-SDK, complex objects
-			// 	// can be represented as lists or sets with listvalidator.SizeAtMost(1).
-			// 	//
-			// 	// For a complete mapping of Plugin-SDK to Plugin-Framework schema fields,
-			// 	// see:
-			// 	// https://developer.hashicorp.com/terraform/plugin/framework/migrating/attributes-blocks/blocks
-			// 	Validators: []validator.List{
-			// 		listvalidator.SizeAtMost(1),
-			// 	},
-			// 	NestedObject: schema.NestedBlockObject{
-			// 		Attributes: map[string]schema.Attribute{
-			// 			"nested_required": schema.StringAttribute{
-			// 				Required: true,
-			// 			},
-			// 			"nested_computed": schema.StringAttribute{
-			// 				Computed: true,
-			// 				PlanModifiers: []planmodifier.String{
-			// 					stringplanmodifier.UseStateForUnknown(),
-			// 				},
-			// 			},
-			// 		},
-			// 	},
-			// },
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -384,31 +265,14 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 }
 
 func (r *resourceTLSInspectionConfiguration) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	// TIP: ==== RESOURCE CREATE ====
-	// Generally, the Create function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the plan
-	// 3. Populate a create input structure
-	// 4. Call the AWS create/put function
-	// 5. Using the output from the create function, set the minimum arguments
-	//    and attributes for the Read function to work, as well as any computed
-	//    only attributes.
-	// 6. Use a waiter to wait for create to complete
-	// 7. Save the request plan to response state
-
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().NetworkFirewallConn(ctx)
 
-	// TIP: -- 2. Fetch the plan
 	var plan resourceTLSInspectionConfigurationData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Populate a create input structure
 	in := &networkfirewall.CreateTLSInspectionConfigurationInput{
 		// NOTE: Name is mandatory
 		TLSInspectionConfigurationName: aws.String(plan.Name.ValueString()),
@@ -419,23 +283,17 @@ func (r *resourceTLSInspectionConfiguration) Create(ctx context.Context, req res
 		in.Description = aws.String(plan.Description.ValueString())
 	}
 
-	// Complex arguments
 	if !plan.TLSInspectionConfiguration.IsNull() {
-		// TIP: Use an expander to assign a complex argument. The elements must be
-		// deserialized into the appropriate struct before being passed to the expander.
 		var tfList []tlsInspectionConfigurationData
 		resp.Diagnostics.Append(plan.TLSInspectionConfiguration.ElementsAs(ctx, &tfList, false)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		// in.TLSInspectionConfiguration = expandComplexArgument(tfList)
 		in.TLSInspectionConfiguration = expandTLSInspectionConfiguration(ctx, tfList)
 	}
 
 	if !plan.EncryptionConfiguration.IsNull() {
-		// TIP: Use an expander to assign a complex argument. The elements must be
-		// deserialized into the appropriate struct before being passed to the expander.
 		var tfList []encryptionConfigurationData
 		resp.Diagnostics.Append(plan.EncryptionConfiguration.ElementsAs(ctx, &tfList, false)...)
 		if resp.Diagnostics.HasError() {
@@ -445,11 +303,8 @@ func (r *resourceTLSInspectionConfiguration) Create(ctx context.Context, req res
 		in.EncryptionConfiguration = expandTLSEncryptionConfiguration(tfList)
 	}
 
-	// TIP: -- 4. Call the AWS create function
 	out, err := conn.CreateTLSInspectionConfiguration(in)
 	if err != nil {
-		// TIP: Since ID has not been set yet, you cannot use plan.ID.String()
-		// in error messages at this point.
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.NetworkFirewall, create.ErrActionCreating, ResNameTLSInspectionConfiguration, plan.Name.String(), err),
 			err.Error(),
@@ -464,10 +319,8 @@ func (r *resourceTLSInspectionConfiguration) Create(ctx context.Context, req res
 		return
 	}
 
-	// TIP: -- 5. Using the output from the create function, set the minimum attributes
-	// Output consists only of TLSInspectionConfigurationResponse
 	plan.ARN = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationArn)
-	// Set ID to ARN since ID value is not used for Describe, Update, Delete or List calls
+	// Set ID to ARN since ID value is not used for describe, update, delete or list API calls
 	plan.ID = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationArn)
 	plan.UpdateToken = flex.StringToFramework(ctx, out.UpdateToken)
 
@@ -483,7 +336,6 @@ func (r *resourceTLSInspectionConfiguration) Create(ctx context.Context, req res
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, readComputed.TLSInspectionConfigurationResponse.Certificates, &plan.Certificates)...)
 
-	// TIP: -- 6. Use a waiter to wait for create to complete
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitTLSInspectionConfigurationCreated(ctx, conn, plan.ARN.ValueString(), createTimeout)
 	if err != nil {
@@ -494,7 +346,6 @@ func (r *resourceTLSInspectionConfiguration) Create(ctx context.Context, req res
 		return
 	}
 
-	// TIP: -- 7. Save the request plan to response state
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -536,18 +387,6 @@ func (r *resourceTLSInspectionConfiguration) Read(ctx context.Context, req resou
 		return
 	}
 
-	// TIP: -- 5. Set the arguments and attributes
-	//
-	// For simple data types (i.e., schema.StringAttribute, schema.BoolAttribute,
-	// schema.Int64Attribute, and schema.Float64Attribue), simply setting the
-	// appropriate data struct field is sufficient. The flex package implements
-	// helpers for converting between Go and Plugin-Framework types seamlessly. No
-	// error or nil checking is necessary.
-	//
-	// However, there are some situations where more handling is needed such as
-	// complex data types (e.g., schema.ListAttribute, schema.SetAttribute). In
-	// these cases the flatten function may have a diagnostics return value, which
-	// should be appended to resp.Diagnostics.
 	state.ARN = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationArn)
 	state.Description = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.Description)
 
@@ -588,43 +427,12 @@ func (r *resourceTLSInspectionConfiguration) Read(ctx context.Context, req resou
 	state.TLSInspectionConfiguration = tlsInspectionConfiguration
 	fmt.Printf("diags for tls: %v\n", resp.Diagnostics)
 
-	// TIP: Setting a complex type.
-	// complexArgument, d := flattenComplexArgument(ctx, out.ComplexArgument)
-	// resp.Diagnostics.Append(d...)
-	// state.ComplexArgument = complexArgument
-
-	// TIP: -- 6. Set the state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-
-	// Print diagnostics
-
 }
 
 func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// TIP: ==== RESOURCE UPDATE ====
-	// Not all resources have Update functions. There are a few reasons:
-	// a. The AWS API does not support changing a resource
-	// b. All arguments have RequiresReplace() plan modifiers
-	// c. The AWS API uses a create call to modify an existing resource
-	//
-	// In the cases of a. and b., the resource will not have an update method
-	// defined. In the case of c., Update and Create can be refactored to call
-	// the same underlying function.
-	//
-	// The rest of the time, there should be an Update function and it should
-	// do the following things. Make sure there is a good reason if you don't
-	// do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the plan and state
-	// 3. Populate a modify input structure and check for changes
-	// 4. Call the AWS modify/update function
-	// 5. Use a waiter to wait for update to complete
-	// 6. Save the request plan to response state
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().NetworkFirewallConn(ctx)
 
-	// TIP: -- 2. Fetch the plan
 	var plan, state resourceTLSInspectionConfigurationData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -632,35 +440,19 @@ func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req res
 		return
 	}
 
-	// TIP: -- 3. Populate a modify input structure and check for changes
 	if !plan.Description.Equal(state.Description) ||
 		!plan.TLSInspectionConfiguration.Equal(state.TLSInspectionConfiguration) ||
 		!plan.EncryptionConfiguration.Equal(state.EncryptionConfiguration) {
 
 		in := &networkfirewall.UpdateTLSInspectionConfigurationInput{
-			// TIP: Mandatory or fields that will always be present can be set when
-			// you create the Input structure. (Replace these with real fields.)
 			TLSInspectionConfigurationArn:  aws.String(plan.ARN.ValueString()),
 			TLSInspectionConfigurationName: aws.String(plan.Name.ValueString()),
 			UpdateToken:                    aws.String(plan.UpdateToken.ValueString()),
 		}
 
 		if !plan.Description.IsNull() {
-			// TIP: Optional fields should be set based on whether or not they are
-			// used.
 			in.Description = aws.String(plan.Description.ValueString())
 		}
-		// if !plan.ComplexArgument.IsNull() {
-		// 	// TIP: Use an expander to assign a complex argument. The elements must be
-		// 	// deserialized into the appropriate struct before being passed to the expander.
-		// 	var tfList []complexArgumentData
-		// 	resp.Diagnostics.Append(plan.ComplexArgument.ElementsAs(ctx, &tfList, false)...)
-		// 	if resp.Diagnostics.HasError() {
-		// 		return
-		// 	}
-
-		// 	in.ComplexArgument = expandComplexArgument(tfList)
-		// }
 
 		if !plan.TLSInspectionConfiguration.IsNull() {
 			var tfList []tlsInspectionConfigurationData
@@ -681,7 +473,6 @@ func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req res
 			in.EncryptionConfiguration = expandTLSEncryptionConfiguration(tfList)
 		}
 
-		// TIP: -- 4. Call the AWS modify/update function
 		out, err := conn.UpdateTLSInspectionConfigurationWithContext(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
@@ -698,7 +489,6 @@ func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req res
 			return
 		}
 
-		// TIP: Using the output from the update function, re-set any computed attributes
 		plan.ARN = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationArn)
 		plan.ID = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationId)
 
@@ -708,7 +498,6 @@ func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req res
 		plan.Status = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationStatus)
 	}
 
-	// TIP: -- 5. Use a waiter to wait for update to complete
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 	_, err := waitTLSInspectionConfigurationUpdated(ctx, conn, plan.ARN.ValueString(), updateTimeout)
 	if err != nil {
@@ -719,7 +508,6 @@ func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req res
 		return
 	}
 
-	// TIP: -- 6. Save the request plan to response state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -732,15 +520,11 @@ func (r *resourceTLSInspectionConfiguration) Delete(ctx context.Context, req res
 		return
 	}
 
-	// TIP: -- 3. Populate a delete input structure
 	in := &networkfirewall.DeleteTLSInspectionConfigurationInput{
 		TLSInspectionConfigurationArn: aws.String(state.ARN.ValueString()),
 	}
 
-	// TIP: -- 4. Call the AWS delete function
 	_, err := conn.DeleteTLSInspectionConfigurationWithContext(ctx, in)
-	// TIP: On rare occassions, the API returns a not found error after deleting a
-	// resource. If that happens, we don't want it to show up as an error.
 	if err != nil {
 		if errs.IsA[*networkfirewall.ResourceNotFoundException](err) {
 			return
@@ -752,7 +536,6 @@ func (r *resourceTLSInspectionConfiguration) Delete(ctx context.Context, req res
 		return
 	}
 
-	// TIP: -- 5. Use a waiter to wait for delete to complete
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitTLSInspectionConfigurationDeleted(ctx, conn, state.ARN.ValueString(), deleteTimeout)
 	if err != nil {
@@ -767,13 +550,6 @@ func (r *resourceTLSInspectionConfiguration) Delete(ctx context.Context, req res
 	}
 }
 
-// TIP: ==== TERRAFORM IMPORTING ====
-// If Read can get all the information it needs from the Identifier
-// (i.e., path.Root("id")), you can use the PassthroughID importer. Otherwise,
-// you'll need a custom import function.
-//
-// See more:
-// https://developer.hashicorp.com/terraform/plugin/framework/resources/import
 func (r *resourceTLSInspectionConfiguration) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
@@ -789,19 +565,6 @@ const (
 	statusUpdated       = "Updated"
 )
 
-// TIP: ==== WAITERS ====
-// Some resources of some services have waiters provided by the AWS API.
-// Unless they do not work properly, use them rather than defining new ones
-// here.
-//
-// Sometimes we define the wait, status, and find functions in separate
-// files, wait.go, status.go, and find.go. Follow the pattern set out in the
-// service and define these where it makes the most sense.
-//
-// If these functions are used in the _test.go file, they will need to be
-// exported (i.e., capitalized).
-//
-// You will need to adjust the parameters and names to fit the service.
 func waitTLSInspectionConfigurationCreated(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string, timeout time.Duration) (*networkfirewall.TLSInspectionConfiguration, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
@@ -820,10 +583,6 @@ func waitTLSInspectionConfigurationCreated(ctx context.Context, conn *networkfir
 	return nil, err
 }
 
-// TIP: It is easier to determine whether a resource is updated for some
-// resources than others. The best case is a status flag that tells you when
-// the update has been fully realized. Other times, you can check to see if a
-// key resource argument is updated to a new value or not.
 func waitTLSInspectionConfigurationUpdated(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string, timeout time.Duration) (*networkfirewall.TLSInspectionConfiguration, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
@@ -842,8 +601,6 @@ func waitTLSInspectionConfigurationUpdated(ctx context.Context, conn *networkfir
 	return nil, err
 }
 
-// TIP: A deleted waiter is almost like a backwards created waiter. There may
-// be additional pending states, however.
 func waitTLSInspectionConfigurationDeleted(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string, timeout time.Duration) (*networkfirewall.TLSInspectionConfiguration, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{networkfirewall.ResourceStatusDeleting, networkfirewall.ResourceStatusActive},
@@ -860,13 +617,6 @@ func waitTLSInspectionConfigurationDeleted(ctx context.Context, conn *networkfir
 	return nil, err
 }
 
-// TIP: ==== STATUS ====
-// The status function can return an actual status when that field is
-// available from the API (e.g., out.Status). Otherwise, you can use custom
-// statuses to communicate the states of the resource.
-//
-// Waiters consume the values returned by status functions. Design status so
-// that it can be reused by a create, update, and delete waiter, if possible.
 func statusTLSInspectionConfiguration(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := findTLSInspectionConfigurationByNameAndARN(ctx, conn, arn)
@@ -882,11 +632,6 @@ func statusTLSInspectionConfiguration(ctx context.Context, conn *networkfirewall
 	}
 }
 
-// TIP: ==== FINDERS ====
-// The find function is not strictly necessary. You could do the API
-// request from the status function. However, we have found that find often
-// comes in handy in other places besides the status function. As a result, it
-// is good practice to define it separately.
 func findTLSInspectionConfigurationByNameAndARN(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) (*networkfirewall.DescribeTLSInspectionConfigurationOutput, error) {
 	in := &networkfirewall.DescribeTLSInspectionConfigurationInput{
 		TLSInspectionConfigurationArn: aws.String(arn),
@@ -935,38 +680,6 @@ func findTLSInspectionConfigurationByID(ctx context.Context, conn *networkfirewa
 	return out, nil
 }
 
-// TIP: ==== FLEX ====
-// Flatteners and expanders ("flex" functions) help handle complex data
-// types. Flatteners take an API data type and return the equivalent Plugin-Framework
-// type. In other words, flatteners translate from AWS -> Terraform.
-//
-// On the other hand, expanders take a Terraform data structure and return
-// something that you can send to the AWS API. In other words, expanders
-// translate from Terraform -> AWS.
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
-// func flattenComplexArgument(ctx context.Context, apiObject *awstypes.ComplexArgument) (types.List, diag.Diagnostics) {
-// 	var diags diag.Diagnostics
-// 	elemType := types.ObjectType{AttrTypes: complexArgumentAttrTypes}
-
-// 	if apiObject == nil {
-// 		return types.ListNull(elemType), diags
-// 	}
-
-// 	obj := map[string]attr.Value{
-// 		"nested_required": flex.StringValueToFramework(ctx, apiObject.NestedRequired),
-// 		"nested_optional": flex.StringValueToFramework(ctx, apiObject.NestedOptional),
-// 	}
-// 	objVal, d := types.ObjectValue(complexArgumentAttrTypes, obj)
-// 	diags.Append(d...)
-
-// 	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-// 	diags.Append(d...)
-
-// 	return listVal, diags
-// }
-
 func flattenTLSInspectionConfiguration(ctx context.Context, tlsInspectionConfiguration *networkfirewall.TLSInspectionConfiguration) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: tlsInspectionConfigurationAttrTypes}
@@ -990,28 +703,6 @@ func flattenTLSInspectionConfiguration(ctx context.Context, tlsInspectionConfigu
 	return listVal, diags
 
 }
-
-// func flattenTLSEncryptionConfiguration(ctx context.Context, encryptionConfiguration *networkfirewall.EncryptionConfiguration) (types.List, diag.Diagnostics) {
-// 	var diags diag.Diagnostics
-// 	elemType := types.ObjectType{AttrTypes: encryptionConfigurationAttrTypes}
-
-// 	if encryptionConfiguration == nil {
-// 		return types.ListNull(elemType), diags
-// 	}
-
-// 	obj := map[string]attr.Value{
-// 		"key_id": flex.StringToFramework(ctx, encryptionConfiguration.KeyId),
-// 		"type":   flex.StringToFramework(ctx, encryptionConfiguration.Type),
-// 	}
-// 	objVal, d := types.ObjectValue(encryptionConfigurationAttrTypes, obj)
-// 	diags.Append(d...)
-
-// 	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-// 	diags.Append(d...)
-
-// 	return listVal, diags
-
-// }
 
 func flattenServerCertificateConfigurations(ctx context.Context, serverCertificateConfigurations []*networkfirewall.ServerCertificateConfiguration) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
@@ -1299,62 +990,6 @@ func flattenTLSEncryptionConfiguration(ctx context.Context, encryptionConfigurat
 
 }
 
-// TIP: Often the AWS API will return a slice of structures in response to a
-// request for information. Sometimes you will have set criteria (e.g., the ID)
-// that means you'll get back a one-length slice. This plural function works
-// brilliantly for that situation too.
-// func flattenComplexArguments(ctx context.Context, apiObjects []*awstypes.ComplexArgument) (types.List, diag.Diagnostics) {
-// 	var diags diag.Diagnostics
-// 	elemType := types.ObjectType{AttrTypes: complexArgumentAttrTypes}
-
-// 	if len(apiObjects) == 0 {
-// 		return types.ListNull(elemType), diags
-// 	}
-
-// 	elems := []attr.Value{}
-// 	for _, apiObject := range apiObjects {
-// 		if apiObject == nil {
-// 			continue
-// 		}
-
-// 		obj := map[string]attr.Value{
-// 			"nested_required": flex.StringValueToFramework(ctx, apiObject.NestedRequired),
-// 			"nested_optional": flex.StringValueToFramework(ctx, apiObject.NestedOptional),
-// 		}
-// 		objVal, d := types.ObjectValue(complexArgumentAttrTypes, obj)
-// 		diags.Append(d...)
-
-// 		elems = append(elems, objVal)
-// 	}
-
-// 	listVal, d := types.ListValue(elemType, elems)
-// 	diags.Append(d...)
-
-// 	return listVal, diags
-// }
-
-// TIP: Remember, as mentioned above, expanders take a Terraform data structure
-// and return something that you can send to the AWS API. In other words,
-// expanders translate from Terraform -> AWS.
-//
-// See more:
-// https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
-// func expandComplexArgument(tfList []complexArgumentData) *awstypes.ComplexArgument {
-// 	if len(tfList) == 0 {
-// 		return nil
-// 	}
-
-// 	tfObj := tfList[0]
-// 	apiObject := &awstypes.ComplexArgument{
-// 		NestedRequired: aws.String(tfObj.NestedRequired.ValueString()),
-// 	}
-// 	if !tfObj.NestedOptional.IsNull() {
-// 		apiObject.NestedOptional = aws.String(tfObj.NestedOptional.ValueString())
-// 	}
-
-// 	return apiObject
-// }
-
 // TODO: add note explaining why not using existing expandEncryptionConfiguration()
 func expandTLSEncryptionConfiguration(tfList []encryptionConfigurationData) *networkfirewall.EncryptionConfiguration {
 	if len(tfList) == 0 {
@@ -1516,66 +1151,6 @@ func expandSourceDestinations(ctx context.Context, tfList []sourceDestinationDat
 	return apiObject
 }
 
-// func expandTLSCertificateData(tfObj certificatesData) *networkfirewall.TlsCertificateData {
-// 	item := &networkfirewall.TlsCertificateData{
-// 		CertificateArn: aws.String(tfObj.CertificateArn.ValueString()),
-// 		CertificateSerial: aws.String(tfObj.CertificateSerial.ValueString()),
-// 		Status: aws.String(tfObj.Status.ValueString()),
-// 		StatusMessage: aws.String(tfObj.StatusMessage.ValueString()),
-// 	}
-// 	return item
-// }
-
-// TIP: Even when you have a list with max length of 1, this plural function
-// works brilliantly. However, if the AWS API takes a structure rather than a
-// slice of structures, you will not need it.
-// func expandComplexArguments(tfList []complexArgumentData) []*networkfirewall.ComplexArgument {
-// 	// TIP: The AWS API can be picky about whether you send a nil or zero-
-// 	// length for an argument that should be cleared. For example, in some
-// 	// cases, if you send a nil value, the AWS API interprets that as "make no
-// 	// changes" when what you want to say is "remove everything." Sometimes
-// 	// using a zero-length list will cause an error.
-// 	//
-// 	// As a result, here are two options. Usually, option 1, nil, will work as
-// 	// expected, clearing the field. But, test going from something to nothing
-// 	// to make sure it works. If not, try the second option.
-// 	// TIP: Option 1: Returning nil for zero-length list
-//     if len(tfList) == 0 {
-//         return nil
-//     }
-//     var apiObject []*awstypes.ComplexArgument
-// 	// TIP: Option 2: Return zero-length list for zero-length list. If option 1 does
-// 	// not work, after testing going from something to nothing (if that is
-// 	// possible), uncomment out the next line and remove option 1.
-// 	//
-// 	// apiObject := make([]*networkfirewall.ComplexArgument, 0)
-
-// 	for _, tfObj := range tfList {
-// 		item := &networkfirewall.ComplexArgument{
-// 			NestedRequired: aws.String(tfObj.NestedRequired.ValueString()),
-// 		}
-// 		if !tfObj.NestedOptional.IsNull() {
-// 			item.NestedOptional = aws.String(tfObj.NestedOptional.ValueString())
-// 		}
-
-// 		apiObject = append(apiObject, item)
-// 	}
-
-// 	return apiObject
-// }
-
-// TIP: ==== DATA STRUCTURES ====
-// With Terraform Plugin-Framework configurations are deserialized into
-// Go types, providing type safety without the need for type assertions.
-// These structs should match the schema definition exactly, and the `tfsdk`
-// tag value should match the attribute name.
-//
-// Nested objects are represented in their own data struct. These will
-// also have a corresponding attribute type mapping for use inside flex
-// functions.
-//
-// See more:
-// https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type resourceTLSInspectionConfigurationData struct {
 	ARN                     types.String `tfsdk:"arn"`
 	EncryptionConfiguration types.List   `tfsdk:"encryption_configuration"`
@@ -1616,11 +1191,6 @@ type serverCertificateConfigurationsData struct {
 	ServerCertificates                types.List   `tfsdk:"server_certificates"`
 }
 
-// type complexArgumentData struct {
-// 	NestedRequired types.String `tfsdk:"nested_required"`
-// 	NestedOptional types.String `tfsdk:"nested_optional"`
-// }
-
 type scopeData struct {
 	DestinationPorts types.List `tfsdk:"destination_ports"`
 	Destinations     types.List `tfsdk:"destinations"`
@@ -1647,19 +1217,12 @@ type serverCertificatesData struct {
 	ResourceARN types.String `tfsdk:"resource_arn"`
 }
 
-//////////////
-
 var certificatesAttrTypes = map[string]attr.Type{
 	"certificate_arn":    types.StringType,
 	"certificate_serial": types.StringType,
 	"status":             types.StringType,
 	"status_message":     types.StringType,
 }
-
-// var complexArgumentAttrTypes = map[string]attr.Type{
-// 	"nested_required": types.StringType,
-// 	"nested_optional": types.StringType,
-// }
 
 var encryptionConfigurationAttrTypes = map[string]attr.Type{
 	"type":   types.StringType,
@@ -1668,7 +1231,6 @@ var encryptionConfigurationAttrTypes = map[string]attr.Type{
 
 var tlsInspectionConfigurationAttrTypes = map[string]attr.Type{
 	"server_certificate_configurations": types.ListType{ElemType: types.ObjectType{AttrTypes: serverCertificateConfigurationAttrTypes}},
-	//"server_certificate_configurations": fwtypes.ListNestedObjectValueOf[serverCertificateConfigurationAttrTypes],
 }
 
 var serverCertificateConfigurationAttrTypes = map[string]attr.Type{
