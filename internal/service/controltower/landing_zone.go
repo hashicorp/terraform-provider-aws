@@ -398,34 +398,52 @@ func waitLandingZoneOperationSucceeded(ctx context.Context, conn *controltower.C
 // https://mholt.github.io/json-to-go/
 // https://docs.aws.amazon.com/controltower/latest/userguide/lz-api-launch.html
 type landingZoneManifest struct {
-	GovernedRegions       []string `json:"governedRegions,omitempty"`
-	OrganizationStructure struct {
-		Security struct {
-			Name string `json:"name,omitempty"`
-		} `json:"security,omitempty"`
-		Sandbox struct {
-			Name string `json:"name,omitempty"`
-		} `json:"sandbox,omitempty"`
-	} `json:"organizationStructure,omitempty"`
-	CentralizedLogging struct {
-		AccountID      string `json:"accountId,omitempty"`
-		Configurations struct {
-			LoggingBucket struct {
-				RetentionDays int `json:"retentionDays,omitempty"`
-			} `json:"loggingBucket,omitempty"`
-			AccessLoggingBucket struct {
-				RetentionDays int `json:"retentionDays,omitempty"`
-			} `json:"accessLoggingBucket,omitempty"`
-			KmsKeyARN string `json:"kmsKeyArn,omitempty"`
-		} `json:"configurations,omitempty"`
-		Enabled bool `json:"enabled,omitempty"`
-	} `json:"centralizedLogging,omitempty"`
-	SecurityRoles struct {
-		AccountID string `json:"accountId,omitempty"`
-	} `json:"securityRoles,omitempty"`
-	AccessManagement struct {
-		Enabled bool `json:"enabled,omitempty"`
-	} `json:"accessManagement,omitempty"`
+	AccessManagement      landingZoneManifestAccessManagement      `json:"accessManagement,omitempty"`
+	CentralizedLogging    landingZoneManifestCentralizedLogging    `json:"centralizedLogging,omitempty"`
+	GovernedRegions       []string                                 `json:"governedRegions,omitempty"`
+	OrganizationStructure landingZoneManifestOrganizationStructure `json:"organizationStructure,omitempty"`
+	SecurityRoles         landingZoneManifestSecurityRoles         `json:"securityRoles,omitempty"`
+}
+
+type landingZoneManifestAccessManagement struct {
+	Enabled bool `json:"enabled,omitempty"`
+}
+
+type landingZoneManifestCentralizedLogging struct {
+	AccountID      string                                              `json:"accountId,omitempty"`
+	Configurations landingZoneManifestCentralizedLoggingConfigurations `json:"configurations,omitempty"`
+	Enabled        bool                                                `json:"enabled,omitempty"`
+}
+
+type landingZoneManifestCentralizedLoggingConfigurations struct {
+	AccessLoggingBucket landingZoneManifestCentralizedLoggingConfigurationsAccessLoggingBucket `json:"accessLoggingBucket,omitempty"`
+	KmsKeyARN           string                                                                 `json:"kmsKeyArn,omitempty"`
+	LoggingBucket       landingZoneManifestCentralizedLoggingConfigurationsLoggingBucket       `json:"loggingBucket,omitempty"`
+}
+
+type landingZoneManifestCentralizedLoggingConfigurationsAccessLoggingBucket struct {
+	RetentionDays int `json:"retentionDays,omitempty"`
+}
+
+type landingZoneManifestCentralizedLoggingConfigurationsLoggingBucket struct {
+	RetentionDays int `json:"retentionDays,omitempty"`
+}
+
+type landingZoneManifestOrganizationStructure struct {
+	Sandbox  landingZoneManifestOrganizationStructureSandbox  `json:"sandbox,omitempty"`
+	Security landingZoneManifestOrganizationStructureSecurity `json:"security,omitempty"`
+}
+
+type landingZoneManifestOrganizationStructureSandbox struct {
+	Name string `json:"name,omitempty"`
+}
+
+type landingZoneManifestOrganizationStructureSecurity struct {
+	Name string `json:"name,omitempty"`
+}
+
+type landingZoneManifestSecurityRoles struct {
+	AccountID string `json:"accountId,omitempty"`
 }
 
 func expandLandingZoneManifest(tfMap map[string]interface{}) *landingZoneManifest {
