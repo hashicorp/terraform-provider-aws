@@ -573,7 +573,7 @@ func expandDocumentEnrichmentConfiguration(v []interface{}) *types.DocumentEnric
 }
 
 func expandInlineDocumentEnrichmentConfigurations(v []interface{}) []types.InlineDocumentEnrichmentConfiguration {
-	if v == nil || len(v) == 0 {
+	if v == nil || v[0] == nil {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
@@ -606,7 +606,7 @@ func flattenHookConfiguration(cfg *types.HookConfiguration) []interface{} {
 }
 
 func expandHookConfiguration(v []interface{}) *types.HookConfiguration {
-	if v == nil || len(v) == 0 {
+	if v == nil || v[0] == nil {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
@@ -634,7 +634,7 @@ func flattenDocumentAttributeCondition(cfg *types.DocumentAttributeCondition) []
 }
 
 func expandDocumentAttributeTarget(v []interface{}) *types.DocumentAttributeTarget {
-	if v == nil || len(v) == 0 {
+	if v == nil || v[0] == nil {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
@@ -661,7 +661,7 @@ func flattenDocumentAttributeTarget(cfg *types.DocumentAttributeTarget) []interf
 }
 
 func expandDocumentAttributeCondition(v []interface{}) *types.DocumentAttributeCondition {
-	if v == nil || len(v) == 0 {
+	if v == nil || v[0] == nil {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
@@ -695,7 +695,7 @@ func flattenValueSchema(v types.DocumentAttributeValue) []interface{} {
 }
 
 func expandValueSchema(v []interface{}) types.DocumentAttributeValue {
-	if v == nil || len(v) == 0 {
+	if v == nil || v[0] == nil {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
@@ -728,7 +728,7 @@ func expandValueSchema(v []interface{}) types.DocumentAttributeValue {
 }
 
 func expandVPCConfiguration(cfg []interface{}) *types.DataSourceVpcConfiguration {
-	if cfg == nil || len(cfg) == 0 {
+	if cfg == nil || cfg[0] == nil {
 		return nil
 	}
 
