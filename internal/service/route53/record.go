@@ -590,7 +590,7 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 					oldRec.GeoProximityLocation = &route53.GeoProximityLocation{
 						AWSRegion:      nilString(v["awsregion"].(string)),
 						Bias:           aws.Int64(int64(v["bias"].(int))),
-						Coordinates:    expandCoordinatesValue(v["coordinates"].(*schema.Set).List()),
+						Coordinates:    ExpandCoordinatesValue(v["coordinates"].(*schema.Set).List()),
 						LocalZoneGroup: nilString(v["localzonegroup"].(string)),
 					}
 				}
@@ -939,7 +939,7 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *route53.R
 		rec.GeoProximityLocation = &route53.GeoProximityLocation{
 			AWSRegion:      nilString(geoproximity["awsregion"].(string)),
 			Bias:           aws.Int64(int64(geoproximity["bias"].(int))),
-			Coordinates:    expandCoordinatesValue(geoproximity["coordinates"].(*schema.Set).List()),
+			Coordinates:    ExpandCoordinatesValue(geoproximity["coordinates"].(*schema.Set).List()),
 			LocalZoneGroup: nilString(geoproximity["localzonegroup"].(string)),
 		}
 		// if len(geoproximity["coordinates"].(*schema.Set).List()) > 0 {
@@ -1015,7 +1015,7 @@ func ExpandRecordName(name, zone string) string {
 	return rn
 }
 
-func expandCoordinatesValue(tfList []interface{}) *route53.Coordinates {
+func ExpandCoordinatesValue(tfList []interface{}) *route53.Coordinates {
 	if len(tfList) == 0 {
 		return nil
 	}
