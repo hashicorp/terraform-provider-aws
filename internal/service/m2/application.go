@@ -560,7 +560,7 @@ func startApplication(ctx context.Context, conn *m2.Client, id string, timeout t
 	return app, nil
 }
 
-func stopApplication(ctx context.Context, conn *m2.Client, id string, forceStop bool, timeout time.Duration) (*m2.GetApplicationOutput, error) {
+func stopApplication(ctx context.Context, conn *m2.Client, id string, forceStop bool, timeout time.Duration) error {
 	stopInput := &m2.StopApplicationInput{
 		ApplicationId: &id,
 		ForceStop:     forceStop,
@@ -568,15 +568,15 @@ func stopApplication(ctx context.Context, conn *m2.Client, id string, forceStop 
 
 	_, err := conn.StopApplication(ctx, stopInput)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	app, err := waitApplicationStopped(ctx, conn, id, timeout)
+	_, err = waitApplicationStopped(ctx, conn, id, timeout)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return app, nil
+	return nil
 }
 
 func expandApplicationDefinition(ctx context.Context, definition applicationDefinition) awstypes.Definition {
