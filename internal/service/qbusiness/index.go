@@ -151,6 +151,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &qbusiness.CreateIndexInput{
 		ApplicationId: aws.String(application_id),
 		DisplayName:   aws.String(display_name),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -162,8 +163,6 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			Units: aws.Int64(int64(v.([]interface{})[0].(map[string]interface{})["units"].(int))),
 		}
 	}
-
-	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateIndexWithContext(ctx, input)
 
