@@ -258,11 +258,11 @@ func testAccDeploymentConfig_basic(rName, engineType, engineVersion, appVersion,
 		testAccDeploymentConfig_secretsManagerEndpoint(rName),
 		fmt.Sprintf(`
 resource "aws_m2_deployment" "test" {
-    environment_id      = aws_m2_environment.test.id
-	application_id      = aws_m2_application.test.id
-    application_version = %[2]q
-    start               = %[3]q
-    depends_on          = [aws_vpc_endpoint.secretsmanager]
+  environment_id      = aws_m2_environment.test.id
+  application_id      = aws_m2_application.test.id
+  application_version = %[2]q
+  start               = %[3]q
+  depends_on          = [aws_vpc_endpoint.secretsmanager]
 }
 `, rName, deployVersion, start))
 }
@@ -280,7 +280,7 @@ resource "aws_vpc_endpoint" "secretsmanager" {
   subnet_ids = aws_subnet.test[*].id
 
   private_dns_enabled = true
-  
+
   tags = {
     Name = %[1]q
   }
