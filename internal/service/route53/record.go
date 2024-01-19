@@ -942,11 +942,6 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *route53.R
 			Coordinates:    ExpandCoordinatesValue(geoproximity["coordinates"].(*schema.Set).List()),
 			LocalZoneGroup: nilString(geoproximity["localzonegroup"].(string)),
 		}
-		// if len(geoproximity["coordinates"].(*schema.Set).List()) > 0 {
-		// 	coordinatesvalue := geoproximity["coordinates"].(*schema.Set).List()
-		// 	coordinates := expandCoordinatesValue(coordinatesvalue)
-		// 	rec.GeoProximityLocation.Coordinates = coordinates
-		// }
 	}
 
 	if v, ok := d.GetOk("health_check_id"); ok {
