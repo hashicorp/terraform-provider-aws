@@ -215,7 +215,6 @@ func (r *resourceDeployment) Update(ctx context.Context, req resource.UpdateRequ
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 
 	if !plan.ApplicationVersion.Equal(state.ApplicationVersion) {
-
 		applicationId := flex.StringFromFramework(ctx, plan.ApplicationId)
 
 		// Stop the application if it was running
@@ -227,7 +226,6 @@ func (r *resourceDeployment) Update(ctx context.Context, req resource.UpdateRequ
 					err.Error(),
 				)
 				return
-
 			}
 		}
 
@@ -278,7 +276,6 @@ func (r *resourceDeployment) Update(ctx context.Context, req resource.UpdateRequ
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
-
 }
 
 func (r *resourceDeployment) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -347,7 +344,6 @@ func (r *resourceDeploymentData) refreshFromApplicationOutput(ctx context.Contex
 }
 
 func (r *resourceDeploymentData) createDeploymentInput(ctx context.Context) *m2.CreateDeploymentInput {
-
 	in := &m2.CreateDeploymentInput{
 		ApplicationId:      r.ApplicationId.ValueStringPointer(),
 		ApplicationVersion: flex.Int32FromFramework(ctx, r.ApplicationVersion),
@@ -418,7 +414,6 @@ func statusDeployment(ctx context.Context, conn *m2.Client, id string) retry.Sta
 }
 
 func findDeploymentByID(ctx context.Context, conn *m2.Client, id string) (*m2.GetDeploymentOutput, error) {
-
 	applicationId, deploymentId, err := DeploymentParseResourceId(id)
 	if err != nil {
 		return nil, err
@@ -437,7 +432,6 @@ func findDeploymentByID(ctx context.Context, conn *m2.Client, id string) (*m2.Ge
 				LastRequest: in,
 			}
 		}
-
 		return nil, err
 	}
 
@@ -475,5 +469,4 @@ func DeploymentParseResourceId(id string) (string, string, error) {
 	}
 
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected APPLICATION-ID%[2]sDEPLOYMENT-ID", id, deploymentIDSeparator)
-
 }
