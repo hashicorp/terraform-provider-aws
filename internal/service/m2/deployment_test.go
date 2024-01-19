@@ -239,16 +239,6 @@ func testAccCheckDeploymentExists(ctx context.Context, name string, deployment *
 	}
 }
 
-func testAccCheckDeploymentNotRecreated(before, after *m2.GetDeploymentOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.DeploymentId), aws.ToString(after.DeploymentId); before != after {
-			return create.Error(names.M2, create.ErrActionCheckingNotRecreated, tfm2.ResNameDeployment, before, errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
 func testAccDeploymentConfig_basic(rName, engineType, engineVersion, appVersion, deployVersion, start string) string {
 	return acctest.ConfigCompose(testAccEnvironmentConfig_basic(rName, engineType, engineVersion),
 		testAccApplicationConfig_versioned(rName, engineType, appVersion),
