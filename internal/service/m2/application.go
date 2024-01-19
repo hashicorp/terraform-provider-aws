@@ -572,11 +572,7 @@ func stopApplication(ctx context.Context, conn *m2.Client, id string, forceStop 
 	}
 
 	_, err = waitApplicationStopped(ctx, conn, id, timeout)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }
 
 func expandApplicationDefinition(ctx context.Context, definition applicationDefinition) awstypes.Definition {
