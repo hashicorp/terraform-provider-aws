@@ -28,7 +28,7 @@ The following arguments are required:
 
 * `environment_id` - (Required) Environment to deploy application to.
 * `application_id` - (Required) Application to deploy.
-* `application_verison` - (Required) Version to application to deploy
+* `application_version` - (Required) Version to application to deploy
 * `start` - (Required) Start the application once deployed.
 
 ## Timeouts
