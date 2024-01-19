@@ -169,34 +169,43 @@ const landingZoneVersion = "3.3"
 
 var testAccLandingZoneConfig_basic = fmt.Sprintf(`
 resource "aws_controltower_landing_zone" "test" {
-  manifest = file("test-fixtures/LandingZoneManifest.json")
-  version  = %[1]q
+  manifest {
+    governed_regions = [%[1]q]
+  }
+
+  version  = %[2]q
 }
-`, landingZoneVersion)
+`, acctest.Region(), landingZoneVersion)
 
 func testAccLandingZoneConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_controltower_landing_zone" "test" {
-  manifest = jsondecode(file("${path.module}/fixtures/LandingZoneManifest.json"))
-  version  = %[1]q
+  manifest {
+    governed_regions = [%[1]q]
+  }
+
+  version  = %[2]q
 
   tags = {
-    %[2]q = %[3]q
+    %[3]q = %[4]q
   }
 }
-`, landingZoneVersion, tagKey1, tagValue1)
+`, acctest.Region(), landingZoneVersion, tagKey1, tagValue1)
 }
 
 func testAccLandingZoneConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_controltower_landing_zone" "test" {
-  manifest = jsondecode(file("${path.module}/fixtures/LandingZoneManifest.json"))
-  version  = %[1]q
+  manifest {
+    governed_regions = [%[1]q]
+  }
+
+  version  = %[2]q
 
   tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
+    %[3]q = %[4]q
+    %[5]q = %[6]q
   }
 }
-`, landingZoneVersion, tagKey1, tagValue1, tagKey2, tagValue2)
+`, acctest.Region(), landingZoneVersion, tagKey1, tagValue1, tagKey2, tagValue2)
 }
