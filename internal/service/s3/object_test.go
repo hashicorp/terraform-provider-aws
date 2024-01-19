@@ -1857,8 +1857,6 @@ func TestAccS3Object_prefix(t *testing.T) {
 // S3 bucket is created in the alternate Region.
 func TestAccS3Object_crossRegion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var obj s3.GetObjectOutput
-	resourceName := "aws_s3_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -1871,19 +1869,8 @@ func TestAccS3Object_crossRegion(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectConfig_crossRegion(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
-					resource.TestCheckResourceAttr(resourceName, "key", "test-key"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
-				ImportStateId:           fmt.Sprintf("s3://%s/test-key", rName),
+				Config:      testAccObjectConfig_crossRegion(rName),
+				ExpectError: regexache.MustCompile(`PermanentRedirect`),
 			},
 		},
 	})
