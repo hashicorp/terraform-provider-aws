@@ -80,7 +80,7 @@ func ResourceIndex() *schema.Resource {
 			"display_name": {
 				Type:        schema.TypeString,
 				Required:    true,
-				Description: "The name of the Amazon Q application.",
+				Description: "The name of the Amazon Q index.",
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 100),
 					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9][a-zA-Z0-9_-]*$`), "must begin with a letter or number and contain only alphanumeric, underscore, or hyphen characters"),
