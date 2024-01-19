@@ -605,11 +605,11 @@ func TestAccELBV2ListenerRule_priority(t *testing.T) {
 			},
 			{
 				Config:      testAccListenerRuleConfig_priority50001(rName),
-				ExpectError: regexache.MustCompile(`creating ELBv2 Listener Rule: ValidationError`),
+				ExpectError: regexache.MustCompile(`creating ELBv2 Listener Rule:.*api error ValidationError:`),
 			},
 			{
 				Config:      testAccListenerRuleConfig_priorityInUse(rName),
-				ExpectError: regexache.MustCompile(`creating ELBv2 Listener Rule: PriorityInUse`),
+				ExpectError: regexache.MustCompile(`creating ELBv2 Listener Rule:.*PriorityInUse:`),
 			},
 		},
 	})

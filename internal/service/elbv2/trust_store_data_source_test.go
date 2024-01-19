@@ -10,7 +10,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	_ "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 )
 
 func TestAccELBV2TrustStoreDataSource_basic(t *testing.T) {
