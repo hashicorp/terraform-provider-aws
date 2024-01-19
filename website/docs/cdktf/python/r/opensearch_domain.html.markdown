@@ -311,7 +311,7 @@ class MyConvertedCode(TerraformStack):
             ),
             domain_endpoint_options=OpensearchDomainDomainEndpointOptions(
                 enforce_https=True,
-                tls_security_policy="Policy-Min-TLS-1-2-2019-07"
+                tls_security_policy="Policy-Min-TLS-1-2-PFS-2023-10"
             ),
             domain_name="ggkitty",
             ebs_options=OpensearchDomainEbsOptions(
@@ -359,7 +359,7 @@ class MyConvertedCode(TerraformStack):
             ),
             domain_endpoint_options=OpensearchDomainDomainEndpointOptions(
                 enforce_https=True,
-                tls_security_policy="Policy-Min-TLS-1-2-2019-07"
+                tls_security_policy="Policy-Min-TLS-1-2-PFS-2023-10"
             ),
             domain_name="ggkitty",
             ebs_options=OpensearchDomainEbsOptions(

@@ -239,7 +239,7 @@ func TestAccOpenSearchDomain_customEndpoint(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_customEndpoint(rName, true, "Policy-Min-TLS-1-0-2019-07", true, customEndpoint, certKey, certificate),
+				Config: testAccDomainConfig_customEndpoint(rName, true, "Policy-Min-TLS-1-2-PFS-2023-10", true, customEndpoint, certKey, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_endpoint_options.#", "1"),
@@ -255,18 +255,18 @@ func TestAccOpenSearchDomain_customEndpoint(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDomainConfig_customEndpoint(rName, true, "Policy-Min-TLS-1-0-2019-07", true, customEndpoint, certKey, certificate),
+				Config: testAccDomainConfig_customEndpoint(rName, true, "Policy-Min-TLS-1-2-PFS-2023-10", true, customEndpoint, certKey, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					testAccCheckDomainEndpointOptions(true, "Policy-Min-TLS-1-0-2019-07", &domain),
+					testAccCheckDomainEndpointOptions(true, "Policy-Min-TLS-1-2-PFS-2023-10", &domain),
 					testAccCheckCustomEndpoint(resourceName, true, customEndpoint, &domain),
 				),
 			},
 			{
-				Config: testAccDomainConfig_customEndpoint(rName, true, "Policy-Min-TLS-1-0-2019-07", false, customEndpoint, certKey, certificate),
+				Config: testAccDomainConfig_customEndpoint(rName, true, "Policy-Min-TLS-1-2-PFS-2023-10", false, customEndpoint, certKey, certificate),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
-					testAccCheckDomainEndpointOptions(true, "Policy-Min-TLS-1-0-2019-07", &domain),
+					testAccCheckDomainEndpointOptions(true, "Policy-Min-TLS-1-2-PFS-2023-10", &domain),
 					testAccCheckCustomEndpoint(resourceName, false, customEndpoint, &domain),
 				),
 			},
@@ -2448,7 +2448,7 @@ resource "aws_opensearch_domain" "test" {
 
   domain_endpoint_options {
     enforce_https       = true
-    tls_security_policy = "Policy-Min-TLS-1-0-2019-07"
+    tls_security_policy = "Policy-Min-TLS-1-2-PFS-2023-10"
   }
 
   ebs_options {
@@ -3232,7 +3232,7 @@ resource "aws_opensearch_domain" "test" {
 
   domain_endpoint_options {
     enforce_https       = true
-    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+    tls_security_policy = "Policy-Min-TLS-1-2-PFS-2023-10"
   }
 
   node_to_node_encryption {
@@ -3273,7 +3273,7 @@ resource "aws_opensearch_domain" "test" {
 
   domain_endpoint_options {
     enforce_https       = true
-    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+    tls_security_policy = "Policy-Min-TLS-1-2-PFS-2023-10"
   }
 
   node_to_node_encryption {
@@ -3316,7 +3316,7 @@ resource "aws_opensearch_domain" "test" {
 
   domain_endpoint_options {
     enforce_https       = true
-    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+    tls_security_policy = "Policy-Min-TLS-1-2-PFS-2023-10"
   }
 
   node_to_node_encryption {
@@ -3356,7 +3356,7 @@ resource "aws_opensearch_domain" "test" {
 
   domain_endpoint_options {
     enforce_https       = true
-    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+    tls_security_policy = "Policy-Min-TLS-1-2-PFS-2023-10"
   }
 
   node_to_node_encryption {
@@ -3418,7 +3418,7 @@ func testAccDomainConfig_logPublishingOptions(rName, logType string) string {
 	
 		domain_endpoint_options {
 	  		enforce_https       = true
-	  		tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+	  		tls_security_policy = "Policy-Min-TLS-1-2-PFS-2023-10"
 		}
 	
 		encrypt_at_rest {
