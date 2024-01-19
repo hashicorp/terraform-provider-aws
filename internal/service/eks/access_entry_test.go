@@ -199,6 +199,7 @@ func TestAccEKSAccessEntry_type(t *testing.T) {
 				Config: testAccAccessEntryConfig_type(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(resourceName, "kubernetes_groups.#", 1),
 					resource.TestCheckResourceAttr(resourceName, "type", "EC2_LINUX"),
 					resource.TestCheckResourceAttrSet(resourceName, "user_name"),
 				),

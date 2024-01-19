@@ -65,6 +65,7 @@ func resourceAccessEntry() *schema.Resource {
 			"kubernetes_groups": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
