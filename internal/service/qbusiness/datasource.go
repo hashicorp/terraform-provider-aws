@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/qbusiness/document"
 	"github.com/aws/aws-sdk-go-v2/service/qbusiness/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -49,32 +50,24 @@ func valueSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"date_value": {
-					Type:          schema.TypeString,
-					Optional:      true,
-					ValidateFunc:  validation.IsRFC3339Time,
-					ConflictsWith: []string{"long_value", "string_list_value", "strings_value"},
-					AtLeastOneOf:  []string{"date_value", "long_value", "string_list_value", "strings_value"},
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.IsRFC3339Time,
 				},
 				"long_value": {
-					Type:          schema.TypeInt,
-					Optional:      true,
-					ConflictsWith: []string{"date_value", "string_list_value", "strings_value"},
-					AtLeastOneOf:  []string{"date_value", "long_value", "string_list_value", "strings_value"},
+					Type:     schema.TypeInt,
+					Optional: true,
 				},
 				"string_list_value": {
-					Type:          schema.TypeList,
-					Optional:      true,
-					MinItems:      1,
-					MaxItems:      2048,
-					Elem:          &schema.Schema{Type: schema.TypeString},
-					ConflictsWith: []string{"date_value", "long_value", "strings_value"},
-					AtLeastOneOf:  []string{"date_value", "long_value", "string_list_value", "strings_value"},
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 1,
+					MaxItems: 2048,
+					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
 				"strings_value": {
-					Type:          schema.TypeString,
-					Optional:      true,
-					ConflictsWith: []string{"date_value", "long_value", "string_list_value"},
-					AtLeastOneOf:  []string{"date_value", "long_value", "string_list_value", "strings_value"},
+					Type:     schema.TypeString,
+					Optional: true,
 				},
 			},
 		},
@@ -142,6 +135,11 @@ func ResourceDatasource() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Delete:  schema.DefaultTimeout(40 * time.Minute),
+			Default: schema.DefaultTimeout(10 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"application_id": {
 				Type:        schema.TypeString,
@@ -156,7 +154,7 @@ func ResourceDatasource() *schema.Resource {
 				Computed:    true,
 				Description: "ARN of the Amazon Q datasource.",
 			},
-			"configration": {
+			"configuration": {
 				Type:         schema.TypeString,
 				Required:     true,
 				Description:  "Configuration information (JSON) to connect to your data source repository.",
@@ -203,6 +201,7 @@ func ResourceDatasource() *schema.Resource {
 										Type:     schema.TypeList,
 										MinItems: 1,
 										MaxItems: 100,
+										Required: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"condition": documentAttributeConditionSchema(),
@@ -240,7 +239,7 @@ func ResourceDatasource() *schema.Resource {
 			},
 			"iam_service_role_arn": {
 				Type:         schema.TypeString,
-				Optional:     true,
+				Required:     true,
 				Description:  "Amazon Resource Name (ARN) of an IAM role with permission to access the data source and required resources.",
 				ValidateFunc: verify.ValidARN,
 			},
@@ -301,23 +300,23 @@ func resourceDatasourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	var conf map[string]interface{}
 
-	err := json.Unmarshal([]byte(d.Get("configration").(string)), &conf)
+	err := json.Unmarshal([]byte(d.Get("configuration").(string)), &conf)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "unmarshal configration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "unmarshal configuration: %s", err)
 	}
 
 	input := qbusiness.CreateDataSourceInput{
-		ApplicationId:                   aws.String(application_id),
-		IndexId:                         aws.String(index_id),
-		DisplayName:                     aws.String(d.Get("display_name").(string)),
-		DocumentEnrichmentConfiguration: expandDocumentEnrichmentConfiguration(d.Get("document_enrichment_configuration").([]interface{})),
-		Configuration:                   document.NewLazyDocument(conf),
-		Tags:                            getTagsIn(ctx),
+		ApplicationId: aws.String(application_id),
+		IndexId:       aws.String(index_id),
+		DisplayName:   aws.String(d.Get("display_name").(string)),
+		Configuration: document.NewLazyDocument(conf),
+		RoleArn:       aws.String(d.Get("iam_service_role_arn").(string)),
+		Tags:          getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("iam_service_role_arn"); ok {
-		input.RoleArn = aws.String(v.(string))
+	if v, ok := d.GetOk("document_enrichment_configuration"); ok {
+		input.DocumentEnrichmentConfiguration = expandDocumentEnrichmentConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("sync_schedule"); ok {
@@ -334,11 +333,11 @@ func resourceDatasourceCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	output, err := conn.CreateDataSource(ctx, &input)
 
-	d.SetId(application_id + "/" + index_id + "/" + aws.ToString(output.DataSourceId))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Amazon Q datasource: %s", err)
 	}
+
+	d.SetId(application_id + "/" + index_id + "/" + aws.ToString(output.DataSourceId))
 
 	if _, err := waitDatasourceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for qbusiness datasource (%s) to be created: %s", d.Id(), err)
@@ -372,7 +371,7 @@ func resourceDatasourceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("application_id", output.ApplicationId)
 	d.Set("arn", output.DataSourceArn)
-	d.Set("configration", string(conf))
+	d.Set("configuration", string(conf))
 	d.Set("document_enrichment_configuration", flattenDocumentEnrichmentConfiguration(output.DocumentEnrichmentConfiguration))
 	d.Set("iam_service_role_arn", output.RoleArn)
 	d.Set("index_id", output.IndexId)
@@ -406,11 +405,11 @@ func resourceDatasourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		input.DocumentEnrichmentConfiguration = expandDocumentEnrichmentConfiguration(d.Get("document_enrichment_configuration").([]interface{}))
 	}
 
-	if d.HasChange("configration") {
+	if d.HasChange("configuration") {
 		var conf map[string]interface{}
-		err = json.Unmarshal([]byte(d.Get("configration").(string)), &conf)
+		err = json.Unmarshal([]byte(d.Get("configuration").(string)), &conf)
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "unmarshal qbusiness datasource configration: %s", err)
+			return sdkdiag.AppendErrorf(diags, "unmarshal qbusiness datasource configuration: %s", err)
 		}
 
 		input.Configuration = document.NewLazyDocument(conf)
@@ -508,6 +507,13 @@ func FindDatasourceByID(ctx context.Context, conn *qbusiness.Client, id string) 
 
 	output, err := conn.GetDataSource(ctx, &input)
 
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -560,7 +566,7 @@ func flattenInlineDocumentEnrichmentConfigurations(cfg []types.InlineDocumentEnr
 }
 
 func expandDocumentEnrichmentConfiguration(v []interface{}) *types.DocumentEnrichmentConfiguration {
-	if v == nil || len(v) == 0 {
+	if len(v) == 0 || v[0] == nil {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
@@ -573,7 +579,7 @@ func expandDocumentEnrichmentConfiguration(v []interface{}) *types.DocumentEnric
 }
 
 func expandInlineDocumentEnrichmentConfigurations(v []interface{}) []types.InlineDocumentEnrichmentConfiguration {
-	if v == nil || v[0] == nil {
+	if len(v) == 0 || v[0] == nil {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
@@ -606,7 +612,7 @@ func flattenHookConfiguration(cfg *types.HookConfiguration) []interface{} {
 }
 
 func expandHookConfiguration(v []interface{}) *types.HookConfiguration {
-	if v == nil || v[0] == nil {
+	if len(v) == 0 || v[0] == nil {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
@@ -634,7 +640,7 @@ func flattenDocumentAttributeCondition(cfg *types.DocumentAttributeCondition) []
 }
 
 func expandDocumentAttributeTarget(v []interface{}) *types.DocumentAttributeTarget {
-	if v == nil || v[0] == nil {
+	if len(v) == 0 || v[0] == nil {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
@@ -661,7 +667,7 @@ func flattenDocumentAttributeTarget(cfg *types.DocumentAttributeTarget) []interf
 }
 
 func expandDocumentAttributeCondition(v []interface{}) *types.DocumentAttributeCondition {
-	if v == nil || v[0] == nil {
+	if len(v) == 0 || v[0] == nil {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
@@ -695,7 +701,7 @@ func flattenValueSchema(v types.DocumentAttributeValue) []interface{} {
 }
 
 func expandValueSchema(v []interface{}) types.DocumentAttributeValue {
-	if v == nil || v[0] == nil {
+	if len(v) == 0 || v[0] == nil {
 		return nil
 	}
 	m := v[0].(map[string]interface{})
@@ -728,7 +734,7 @@ func expandValueSchema(v []interface{}) types.DocumentAttributeValue {
 }
 
 func expandVPCConfiguration(cfg []interface{}) *types.DataSourceVpcConfiguration {
-	if cfg == nil || cfg[0] == nil {
+	if len(cfg) == 0 || cfg[0] == nil {
 		return nil
 	}
 

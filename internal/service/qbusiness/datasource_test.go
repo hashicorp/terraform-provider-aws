@@ -39,7 +39,6 @@ func TestAccQBusinessDatasource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "datasource_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
 				),
 			},
 			{
@@ -185,11 +184,12 @@ resource "aws_qbusiness_datasource" "test" {
   application_id       = aws_qbusiness_app.test.application_id
   index_id             = aws_qbusiness_index.test.index_id
   display_name         = %[1]q
+  iam_service_role_arn = aws_iam_role.test.arn
   configuration        = jsonencode({
 	type                     = "S3"
     connectionConfiguration  = {
       repositoryEndpointMetadata = {
-		BucketName = "test"
+		BucketName = aws_s3_bucket.test.bucket
 	  }
     }
     syncMode                 = "FULL_CRAWL"
@@ -199,6 +199,11 @@ resource "aws_qbusiness_datasource" "test" {
 	  }
 	}
   })
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  force_destroy = true
 }
 
 resource "aws_qbusiness_app" "test" {
@@ -241,6 +246,36 @@ func testAccDatasourceConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+resource "aws_qbusiness_datasource" "test" {
+  application_id       = aws_qbusiness_app.test.application_id
+  index_id             = aws_qbusiness_index.test.index_id
+  display_name         = %[1]q
+  iam_service_role_arn = aws_iam_role.test.arn
+  configuration        = jsonencode({
+	type                     = "S3"
+    connectionConfiguration  = {
+      repositoryEndpointMetadata = {
+		BucketName = aws_s3_bucket.test.bucket
+	  }
+    }
+    syncMode                 = "FULL_CRAWL"
+    repositoryConfigurations = {
+      document = {
+	    fieldMappings = []
+	  }
+	}
+  })
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }  
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+  force_destroy = true
+}
+
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
@@ -274,5 +309,5 @@ resource "aws_qbusiness_index" "test" {
   }
   description          = "Index name"
 }
-`, rName)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
