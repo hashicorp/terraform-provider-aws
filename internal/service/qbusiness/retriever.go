@@ -38,6 +38,8 @@ func ResourceRetriever() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		CustomizeDiff: verify.SetTagsDiff,
+
 		Schema: map[string]*schema.Schema{
 			"application_id": {
 				Type:        schema.TypeString,
