@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -64,6 +65,7 @@ func resourceAccessEntry() *schema.Resource {
 			"kubernetes_groups": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Schema{
 					Type: schema.TypeString,
 				},
@@ -81,12 +83,16 @@ func resourceAccessEntry() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
-				Type:     schema.TypeString,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      accessEntryTypeStandard,
+				ValidateFunc: validation.StringInSlice(accessEntryType_Values(), false),
 			},
 			"user_name": {
 				Type:     schema.TypeString,
 				Computed: true,
+				Optional: true,
 			},
 		},
 	}
@@ -103,10 +109,15 @@ func resourceAccessEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 		ClusterName:  aws.String(clusterName),
 		PrincipalArn: aws.String(principalARN),
 		Tags:         getTagsIn(ctx),
+		Type:         aws.String(d.Get("type").(string)),
 	}
 
 	if v, ok := d.GetOk("kubernetes_groups"); ok {
 		input.KubernetesGroups = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("user_name"); ok {
+		input.Username = aws.String(v.(string))
 	}
 
 	_, err := conn.CreateAccessEntry(ctx, input)
@@ -172,6 +183,10 @@ func resourceAccessEntryUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if d.HasChange("kubernetes_groups") {
 			input.KubernetesGroups = flex.ExpandStringValueSet(d.Get("kubernetes_groups").(*schema.Set))
+		}
+
+		if d.HasChange("user_name") {
+			input.Username = aws.String(d.Get("user_name").(string))
 		}
 
 		_, err = conn.UpdateAccessEntry(ctx, input)
