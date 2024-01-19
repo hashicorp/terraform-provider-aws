@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -435,9 +436,146 @@ func expandLandingZoneManifest(tfMap map[string]interface{}) *landingZoneManifes
 
 	apiObject := &landingZoneManifest{}
 
+	if v, ok := tfMap["access_management"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]interface{})
+
+		if v, ok := tfMap["enabled"].(bool); ok {
+			apiObject.AccessManagement.Enabled = v
+		}
+	}
+
+	if v, ok := tfMap["centralized_logging"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]interface{})
+
+		if v, ok := tfMap["account_id"].(string); ok {
+			apiObject.CentralizedLogging.AccountID = v
+		}
+
+		if v, ok := tfMap["configurations"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			tfMap := v[0].(map[string]interface{})
+
+			if v, ok := tfMap["access_logging_bucket"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+				tfMap := v[0].(map[string]interface{})
+
+				if v, ok := tfMap["retention_days"].(int); ok {
+					apiObject.CentralizedLogging.Configurations.AccessLoggingBucket.RetentionDays = v
+				}
+			}
+
+			if v, ok := tfMap["kms_key_arn"].(string); ok {
+				apiObject.CentralizedLogging.Configurations.KmsKeyARN = v
+			}
+
+			if v, ok := tfMap["logging_bucket"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+				tfMap := v[0].(map[string]interface{})
+
+				if v, ok := tfMap["retention_days"].(int); ok {
+					apiObject.CentralizedLogging.Configurations.AccessLoggingBucket.RetentionDays = v
+				}
+			}
+		}
+
+		if v, ok := tfMap["enabled"].(bool); ok {
+			apiObject.CentralizedLogging.Enabled = v
+		}
+	}
+
 	if v, ok := tfMap["governed_regions"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.GovernedRegions = flex.ExpandStringValueSet(v)
 	}
 
+	if v, ok := tfMap["organization_structure"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]interface{})
+
+		if v, ok := tfMap["sandbox"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			tfMap := v[0].(map[string]interface{})
+
+			if v, ok := tfMap["name"].(string); ok {
+				apiObject.OrganizationStructure.Sandbox.Name = v
+			}
+		}
+
+		if v, ok := tfMap["security"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			tfMap := v[0].(map[string]interface{})
+
+			if v, ok := tfMap["name"].(string); ok {
+				apiObject.OrganizationStructure.Security.Name = v
+			}
+		}
+	}
+
+	if v, ok := tfMap["security_roles"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]interface{})
+
+		if v, ok := tfMap["account_id"].(string); ok {
+			apiObject.SecurityRoles.AccountID = v
+		}
+	}
+
 	return apiObject
+}
+
+func flattenLandingZoneManifest(apiObject *landingZoneManifest) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"governed_regions": apiObject.GovernedRegions,
+	}
+
+	if !itypes.IsZero(&apiObject.AccessManagement) {
+		tfMap["access_management"] = []interface{}{map[string]interface{}{
+			"enabled": apiObject.AccessManagement.Enabled,
+		}}
+	}
+
+	if !itypes.IsZero(&apiObject.CentralizedLogging) {
+		tfMap["centralized_logging"] = []interface{}{map[string]interface{}{
+			"account_id": apiObject.CentralizedLogging.AccountID,
+			"enabled":    apiObject.CentralizedLogging.Enabled,
+		}}
+
+		if !itypes.IsZero(&apiObject.CentralizedLogging.Configurations) {
+			tfMap["centralized_logging"].([]interface{})[0].(map[string]interface{})["configurations"] = []interface{}{map[string]interface{}{
+				"kms_key_arn": apiObject.CentralizedLogging.Configurations.KmsKeyARN,
+			}}
+
+			if !itypes.IsZero(&apiObject.CentralizedLogging.Configurations.AccessLoggingBucket) {
+				tfMap["centralized_logging"].([]interface{})[0].(map[string]interface{})["configurations"].([]interface{})[0].(map[string]interface{})["access_logging_bucket"] = []interface{}{map[string]interface{}{
+					"retention_days": apiObject.CentralizedLogging.Configurations.AccessLoggingBucket.RetentionDays,
+				}}
+			}
+
+			if !itypes.IsZero(&apiObject.CentralizedLogging.Configurations.LoggingBucket) {
+				tfMap["centralized_logging"].([]interface{})[0].(map[string]interface{})["configurations"].([]interface{})[0].(map[string]interface{})["logging_bucket"] = []interface{}{map[string]interface{}{
+					"retention_days": apiObject.CentralizedLogging.Configurations.LoggingBucket.RetentionDays,
+				}}
+			}
+		}
+	}
+
+	if !itypes.IsZero(&apiObject.OrganizationStructure) {
+		tfMap["organization_structure"] = []interface{}{map[string]interface{}{}}
+
+		if !itypes.IsZero(&apiObject.OrganizationStructure.Sandbox) {
+			tfMap["organization_structure"].([]interface{})[0].(map[string]interface{})["sandbox"] = []interface{}{map[string]interface{}{
+				"name": apiObject.OrganizationStructure.Sandbox.Name,
+			}}
+		}
+
+		if !itypes.IsZero(&apiObject.OrganizationStructure.Security) {
+			tfMap["organization_structure"].([]interface{})[0].(map[string]interface{})["security"] = []interface{}{map[string]interface{}{
+				"name": apiObject.OrganizationStructure.Security.Name,
+			}}
+		}
+	}
+
+	if !itypes.IsZero(&apiObject.SecurityRoles) {
+		tfMap["security_roles"] = []interface{}{map[string]interface{}{
+			"account_id": apiObject.SecurityRoles.AccountID,
+		}}
+	}
+
+	return tfMap
 }
