@@ -45,6 +45,7 @@ func resourceLandingZone() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(120 * time.Minute),
+			Update: schema.DefaultTimeout(120 * time.Minute),
 			Delete: schema.DefaultTimeout(120 * time.Minute),
 		},
 
@@ -224,7 +225,6 @@ func resourceLandingZone() *schema.Resource {
 			"version": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -308,8 +308,25 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceLandingZoneUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
-	// Tags only.
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &controltower.UpdateLandingZoneInput{
+			LandingZoneIdentifier: aws.String(d.Id()),
+			Manifest:              document.NewLazyDocument(expandLandingZoneManifest(d.Get("manifest").([]interface{})[0].(map[string]interface{}))),
+			Version:               aws.String(d.Get("version").(string)),
+		}
+
+		output, err := conn.UpdateLandingZone(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating ControlTower Landing Zone (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitLandingZoneOperationSucceeded(ctx, conn, aws.ToString(output.OperationIdentifier), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for ControlTower Landing Zone (%s) update: %s", d.Id(), err)
+		}
+	}
 
 	return append(diags, resourceLandingZoneRead(ctx, d, meta)...)
 }

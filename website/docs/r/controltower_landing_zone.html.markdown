@@ -81,6 +81,14 @@ This resource exports the following attributes in addition to the arguments abov
 * `latest_available_version` - The latest available version of the landing zone.
 * `tags_all` - A map of tags assigned to the landing zone, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `120m`)
+- `update` - (Default `120m`)
+- `delete` - (Default `120m`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a Control Tower Landing Zone using the `id`. For example:
