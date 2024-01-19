@@ -31,12 +31,6 @@ The following arguments are required:
 * `application_verison` - (Required) Version to application to deploy
 * `start` - (Required) Start the application once deployed.
 
-
-## Attribute Reference
-
-This resource exports the following attributes in addition to the arguments above:
-
-
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
