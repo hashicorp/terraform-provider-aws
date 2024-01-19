@@ -7,4 +7,5 @@ package m2
 var (
 	ResourceEnvironment = newResourceEnvironment
 	ResourceApplication = newResourceApplication
+	ResourceDeployment  = newResourceDeployment
 )

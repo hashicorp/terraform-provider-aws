@@ -416,6 +416,56 @@ func waitApplicationDeleted(ctx context.Context, conn *m2.Client, id string, tim
 	return nil, err
 }
 
+func waitApplicationDeletedFromEnvironment(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetApplicationOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ApplicationLifecycleDeletingFromEnvironment),
+		Target:  enum.Slice(awstypes.ApplicationLifecycleAvailable),
+		Refresh: statusApplication(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*m2.GetApplicationOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitApplicationStopped(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetApplicationOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.ApplicationLifecycleStopping),
+		Target:                    enum.Slice(awstypes.ApplicationLifecycleStopped),
+		Refresh:                   statusApplication(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*m2.GetApplicationOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
+func waitApplicationRunning(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetApplicationOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(awstypes.ApplicationLifecycleStarting),
+		Target:                    enum.Slice(awstypes.ApplicationLifecycleRunning),
+		Refresh:                   statusApplication(ctx, conn, id),
+		Timeout:                   timeout,
+		ContinuousTargetOccurence: 2,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*m2.GetApplicationOutput); ok {
+		return out, err
+	}
+
+	return nil, err
+}
+
 func statusApplication(ctx context.Context, conn *m2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := findApplicationByID(ctx, conn, id)
@@ -492,6 +542,43 @@ func findApplicationVersion(ctx context.Context, conn *m2.Client, id string, ver
 
 	return out, nil
 
+}
+
+func startApplication(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetApplicationOutput, error) {
+	stopInput := &m2.StartApplicationInput{
+		ApplicationId: &id,
+	}
+
+	_, err := conn.StartApplication(ctx, stopInput)
+	if err != nil {
+		return nil, err
+	}
+
+	app, err := waitApplicationRunning(ctx, conn, id, timeout)
+	if err != nil {
+		return nil, err
+	}
+
+	return app, nil
+}
+
+func stopApplication(ctx context.Context, conn *m2.Client, id string, forceStop bool, timeout time.Duration) (*m2.GetApplicationOutput, error) {
+	stopInput := &m2.StopApplicationInput{
+		ApplicationId: &id,
+		ForceStop:     forceStop,
+	}
+
+	_, err := conn.StopApplication(ctx, stopInput)
+	if err != nil {
+		return nil, err
+	}
+
+	app, err := waitApplicationStopped(ctx, conn, id, timeout)
+	if err != nil {
+		return nil, err
+	}
+
+	return app, nil
 }
 
 func expandApplicationDefinition(ctx context.Context, definition applicationDefinition) awstypes.Definition {
