@@ -47,7 +47,7 @@ func TestAccEKSAccessEntry_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", "0"),
 					acctest.CheckResourceAttrRFC3339(resourceName, "modified_at"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "type"),
+					resource.TestCheckResourceAttr(resourceName, "type", "STANDARD"),
 					resource.TestCheckResourceAttrSet(resourceName, "user_name"),
 				),
 			},
@@ -170,6 +170,50 @@ func TestAccEKSAccessEntry_tags(t *testing.T) {
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEKSAccessEntry_username(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var accessentry types.AccessEntry
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_access_entry.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessEntryConfig_username(rName, "user1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
+					resource.TestCheckResourceAttr(resourceName, "type", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "user_name", "user1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAccessEntryConfig_username(rName, "user2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
+					resource.TestCheckResourceAttr(resourceName, "type", "STANDARD"),
+					resource.TestCheckResourceAttr(resourceName, "user_name", "user2"),
 				),
 			},
 		},
@@ -336,4 +380,20 @@ resource "aws_eks_access_entry" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccAccessEntryConfig_username(rName, username string) string {
+	return acctest.ConfigCompose(testAccAccessEntryConfig_base(rName), fmt.Sprintf(`
+resource "aws_iam_user" "test" {
+  name = %[1]q
+}
+
+resource "aws_eks_access_entry" "test" {
+  cluster_name  = aws_eks_cluster.test.name
+  principal_arn = aws_iam_user.test.arn
+
+  type      = "EC2_LINUX"
+  user_name = %[2]q
+}
+`, rName, username))
 }
