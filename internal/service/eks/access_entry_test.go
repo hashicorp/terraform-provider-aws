@@ -392,7 +392,7 @@ resource "aws_eks_access_entry" "test" {
   cluster_name  = aws_eks_cluster.test.name
   principal_arn = aws_iam_user.test.arn
 
-  type      = "EC2_LINUX"
+  type      = "STANDARD"
   user_name = %[2]q
 }
 `, rName, username))
