@@ -14,6 +14,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -1856,8 +1857,6 @@ func TestAccS3Object_prefix(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/35325.
 func TestAccS3Object_optInRegion(t *testing.T) {
 	ctx := acctest.Context(t)
-	var obj s3.GetObjectOutput
-	resourceName := "aws_s3_object.object"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	optInRegion := names.APEast1RegionID // Hong Kong.
 	providers := make(map[string]*schema.Provider)
@@ -1874,12 +1873,8 @@ func TestAccS3Object_optInRegion(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectConfig_optInRegion(rName, optInRegion),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckObjectExists(ctx, resourceName, &obj),
-					resource.TestCheckResourceAttr(resourceName, "content_type", "application/x-directory"),
-					resource.TestCheckResourceAttr(resourceName, "key", "pfx/"),
-				),
+				Config:      testAccObjectConfig_optInRegion(rName, optInRegion),
+				ExpectError: regexache.MustCompile(`IllegalLocationConstraintException`),
 			},
 		},
 	})
