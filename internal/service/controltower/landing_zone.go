@@ -443,8 +443,8 @@ func flattenLandingZoneDriftStatusSummary(apiObject *types.LandingZoneDriftStatu
 	return tfMap
 }
 
-// https://mholt.github.io/json-to-go/
-// https://docs.aws.amazon.com/controltower/latest/userguide/lz-api-launch.html
+// Manifest example JSON https://docs.aws.amazon.com/controltower/latest/userguide/lz-api-launch.html, using https://mholt.github.io/json-to-go/.
+// Some description of the fields https://docs.aws.amazon.com/controltower/latest/userguide/lz-apis-cfn-launch.html.
 type landingZoneManifest struct {
 	GovernedRegions       []string `json:"governedRegions,omitempty"`
 	OrganizationStructure struct {
