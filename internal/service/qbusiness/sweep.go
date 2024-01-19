@@ -38,7 +38,7 @@ func sweepApps(region string) error {
 				log.Printf("[WARN] Skipping QBusiness app sweep for %s: %s", region, err)
 				return nil
 			}
-			return fmt.Errorf("Error retrieving Qbusiness apps: %s", err)
+			return fmt.Errorf("error retrieving Qbusiness apps: %s", err)
 		}
 
 		if len(output.Applications) == 0 {
@@ -54,7 +54,7 @@ func sweepApps(region string) error {
 				ApplicationId: item.ApplicationId,
 			})
 			if err != nil {
-				return fmt.Errorf("Error deleting QBusiness app %s: %s", aws.ToString(name), err)
+				return fmt.Errorf("error deleting QBusiness app %s: %s", aws.ToString(name), err)
 			}
 		}
 
