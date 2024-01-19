@@ -250,7 +250,7 @@ resource "aws_m2_application" "test" {
     engine = %[2]q
   }
 
-  depends_on = [ aws_s3_object.test ]
+  depends_on = [aws_s3_object.test]
 }
 `, rName, engineType, version)
 
