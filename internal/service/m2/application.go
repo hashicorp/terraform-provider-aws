@@ -6,30 +6,30 @@ package m2
 import (
 	"context"
 	"errors"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/m2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/m2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -353,7 +353,6 @@ func (r *resourceApplicationData) refreshFromOutput(ctx context.Context, app *m2
 	r.CurrentVersion = flex.Int32ToFramework(ctx, app.LatestVersion.ApplicationVersion)
 
 	return diags
-
 }
 func (r *resourceApplicationData) refreshFromVersion(ctx context.Context, version *m2.GetApplicationVersionOutput) diag.Diagnostics {
 	var diags diag.Diagnostics
@@ -541,7 +540,6 @@ func findApplicationVersion(ctx context.Context, conn *m2.Client, id string, ver
 	}
 
 	return out, nil
-
 }
 
 func startApplication(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetApplicationOutput, error) {
@@ -595,34 +593,6 @@ func expandApplicationDefinition(ctx context.Context, definition applicationDefi
 	}
 
 	return nil
-}
-
-func flattenApplicationDefinition(ctx context.Context, definition awstypes.Definition) (attr.Value, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	content := types.StringNull()
-	s3Location := types.StringNull()
-
-	switch v := definition.(type) {
-	case *awstypes.DefinitionMemberS3Location:
-		s3Location = flex.StringValueToFramework(ctx, v.Value)
-	case *awstypes.DefinitionMemberContent:
-		content = flex.StringValueToFramework(ctx, v.Value)
-
-	}
-
-	obj := map[string]attr.Value{
-		"content":     content,
-		"s3_location": s3Location,
-	}
-
-	definitionValue, d := types.ObjectValue(applicationDefinitionAttrs, obj)
-	diags.Append(d...)
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	return definitionValue, diags
 }
 
 func flattenApplicationDefinitionFromVersion(ctx context.Context, version *m2.GetApplicationVersionOutput) (types.Object, diag.Diagnostics) {

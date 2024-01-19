@@ -57,7 +57,6 @@ The following arguments are required:
 * `name` - (Required) Unique identifier of the application.
 * `engine_type` - (Required) Engine type must be `microfocus | bluage`.
 
-
 The following arguments are optional:
 
 * `description` - (Optional) Description of the application
