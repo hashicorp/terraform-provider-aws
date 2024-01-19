@@ -53,6 +53,18 @@ func resourceLandingZone() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"drift_status": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"latest_available_version": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -269,6 +281,13 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("arn", landingZone.Arn)
+	if landingZone.DriftStatus != nil {
+		if err := d.Set("drift_status", []interface{}{flattenLandingZoneDriftStatusSummary(landingZone.DriftStatus)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting drift_status: %s", err)
+		}
+	} else {
+		d.Set("drift_status", nil)
+	}
 	d.Set("latest_available_version", landingZone.LatestAvailableVersion)
 	if landingZone.Manifest != nil {
 		var v landingZoneManifest
@@ -410,6 +429,18 @@ func waitLandingZoneOperationSucceeded(ctx context.Context, conn *controltower.C
 	}
 
 	return nil, err
+}
+
+func flattenLandingZoneDriftStatusSummary(apiObject *types.LandingZoneDriftStatusSummary) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"status": apiObject.Status,
+	}
+
+	return tfMap
 }
 
 // https://mholt.github.io/json-to-go/

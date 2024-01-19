@@ -34,6 +34,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The identifier of the landing zone.
 * `arn` - The ARN of the landing zone.
+* `drift_status` - The drift status summary of the landing zone.
+  * `status` - The drift status of the landing zone.
 * `latest_available_version` - The latest available version of the landing zone.
 * `tags_all` - A map of tags assigned to the landing zone, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
