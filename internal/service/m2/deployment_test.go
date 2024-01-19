@@ -256,9 +256,12 @@ resource "aws_m2_deployment" "test" {
 
 func testAccDeploymentConfig_secretsManagerEndpoint(rName string) string {
 	return fmt.Sprintf(`
+
+data "aws_region" "current" {}
+
 resource "aws_vpc_endpoint" "secretsmanager" {
   vpc_id            = aws_vpc.test.id
-  service_name      = "com.amazonaws.eu-west-1.secretsmanager"
+  service_name      = "com.amazonaws.${data.aws_region.current.name}.secretsmanager"
   vpc_endpoint_type = "Interface"
 
   security_group_ids = [
