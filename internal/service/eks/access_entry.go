@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -82,11 +83,20 @@ func resourceAccessEntry() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Optional: true,
+				Default:  "STANDARD",
+				ForceNew: true,
+				ValidateFunc: validation.StringInSlice([]string{
+					"EC2_LINUX",
+					"EC2_WINDOWS",
+					"STANDARD",
+					"FARGATE_LINUX",
+				}, false),
 			},
 			"user_name": {
 				Type:     schema.TypeString,
 				Computed: true,
+				Optional: true,
 			},
 		},
 	}
@@ -98,11 +108,17 @@ func resourceAccessEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	clusterName := d.Get("cluster_name").(string)
 	principalARN := d.Get("principal_arn").(string)
+	entryType := d.Get("type").(string)
 	id := accessEntryCreateResourceID(clusterName, principalARN)
 	input := &eks.CreateAccessEntryInput{
 		ClusterName:  aws.String(clusterName),
 		PrincipalArn: aws.String(principalARN),
+		Type:         aws.String(entryType),
 		Tags:         getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("user_name"); ok {
+		input.Username = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("kubernetes_groups"); ok {
@@ -168,6 +184,10 @@ func resourceAccessEntryUpdate(ctx context.Context, d *schema.ResourceData, meta
 		input := &eks.UpdateAccessEntryInput{
 			ClusterName:  aws.String(clusterName),
 			PrincipalArn: aws.String(principalARN),
+		}
+
+		if d.HasChange("user_name") {
+			input.Username = aws.String(d.Get("user_name").(string))
 		}
 
 		if d.HasChange("kubernetes_groups") {
