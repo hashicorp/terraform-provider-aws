@@ -42,6 +42,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -199,6 +200,7 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 				},
 			},
 			"certificates": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[certificatesData](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"certificate_arn": schema.StringAttribute{
@@ -215,6 +217,23 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 						},
 					},
 				},
+
+				// NestedObject: schema.NestedBlockObject{
+				// 	Attributes: map[string]schema.Attribute{
+				// 		"certificate_arn": schema.StringAttribute{
+				// 			Computed: true,
+				// 		},
+				// 		"certificate_serial": schema.StringAttribute{
+				// 			Computed: true,
+				// 		},
+				// 		"status": schema.StringAttribute{
+				// 			Computed: true,
+				// 		},
+				// 		"status_message": schema.StringAttribute{
+				// 			Computed: true,
+				// 		},
+				// 	},
+				// },
 			},
 			"encryption_configuration": schema.ListNestedBlock{
 				NestedObject: schema.NestedBlockObject{
@@ -454,10 +473,14 @@ func (r *resourceTLSInspectionConfiguration) Create(ctx context.Context, req res
 	// Read to get computed attributes not returned from create
 	readComputed, err := findTLSInspectionConfigurationByNameAndARN(ctx, conn, plan.ARN.ValueString())
 
+	fmt.Println("Output from readComputed: ", readComputed)
+
 	// Set computed attributes
 	plan.LastModifiedTime = flex.StringValueToFramework(ctx, readComputed.TLSInspectionConfigurationResponse.LastModifiedTime.Format(time.RFC3339))
 	plan.NumberOfAssociations = flex.Int64ToFramework(ctx, readComputed.TLSInspectionConfigurationResponse.NumberOfAssociations)
 	plan.Status = flex.StringToFramework(ctx, readComputed.TLSInspectionConfigurationResponse.TLSInspectionConfigurationStatus)
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, readComputed.TLSInspectionConfigurationResponse.Certificates, &plan.Certificates)...)
 
 	// TIP: -- 6. Use a waiter to wait for create to complete
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
@@ -545,12 +568,14 @@ func (r *resourceTLSInspectionConfiguration) Read(ctx context.Context, req resou
 	state.CertificateAuthority = certificateAuthority
 	fmt.Printf("diags for certificate authority: %v\n", resp.Diagnostics)
 
-	certificates, d := flattenCertificates(ctx, out.TLSInspectionConfigurationResponse.Certificates)
-	resp.Diagnostics.Append(d...)
-	state.Certificates = certificates
-	fmt.Printf("diags for certificates: %v\n", resp.Diagnostics)
+	// certificates, d := flattenCertificates(ctx, out.TLSInspectionConfigurationResponse.Certificates)
+	// resp.Diagnostics.Append(d...)
+	// state.Certificates = certificates
+	// fmt.Printf("diags for certificates: %v\n", resp.Diagnostics)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	resp.Diagnostics.Append(flex.Flatten(ctx, out.TLSInspectionConfigurationResponse.Certificates, &state.Certificates)...)
+	fmt.Printf("Attempting to flatten Certificates: %v\n", resp.Diagnostics)
 
 	// tlsInspectionConfiguration, d := flattenTLSInspectionConfiguration(ctx, out.TLSInspectionConfiguration)
 	// resp.Diagnostics.Append(d...)
@@ -1506,19 +1531,20 @@ func expandSourceDestinations(ctx context.Context, tfList []sourceDestinationDat
 // See more:
 // https://developer.hashicorp.com/terraform/plugin/framework/handling-data/accessing-values
 type resourceTLSInspectionConfigurationData struct {
-	ARN                        types.String   `tfsdk:"arn"`
-	EncryptionConfiguration    types.List     `tfsdk:"encryption_configuration"`
-	Certificates               types.List     `tfsdk:"certificates"`
-	CertificateAuthority       types.List     `tfsdk:"certificate_authority"`
-	Description                types.String   `tfsdk:"description"`
-	ID                         types.String   `tfsdk:"id"`
-	LastModifiedTime           types.String   `tfsdk:"last_modified_time"`
-	Name                       types.String   `tfsdk:"name"`
-	NumberOfAssociations       types.Int64    `tfsdk:"number_of_associations"`
-	Status                     types.String   `tfsdk:"status"`
-	TLSInspectionConfiguration types.List     `tfsdk:"tls_inspection_configuration"`
-	Timeouts                   timeouts.Value `tfsdk:"timeouts"`
-	UpdateToken                types.String   `tfsdk:"update_token"`
+	ARN                     types.String `tfsdk:"arn"`
+	EncryptionConfiguration types.List   `tfsdk:"encryption_configuration"`
+	// Certificates               types.List     `tfsdk:"certificates"`
+	Certificates               fwtypes.ListNestedObjectValueOf[certificatesData] `tfsdk:"certificates"`
+	CertificateAuthority       types.List                                        `tfsdk:"certificate_authority"`
+	Description                types.String                                      `tfsdk:"description"`
+	ID                         types.String                                      `tfsdk:"id"`
+	LastModifiedTime           types.String                                      `tfsdk:"last_modified_time"`
+	Name                       types.String                                      `tfsdk:"name"`
+	NumberOfAssociations       types.Int64                                       `tfsdk:"number_of_associations"`
+	Status                     types.String                                      `tfsdk:"status"`
+	TLSInspectionConfiguration types.List                                        `tfsdk:"tls_inspection_configuration"`
+	Timeouts                   timeouts.Value                                    `tfsdk:"timeouts"`
+	UpdateToken                types.String                                      `tfsdk:"update_token"`
 }
 
 type encryptionConfigurationData struct {
@@ -1526,12 +1552,12 @@ type encryptionConfigurationData struct {
 	KeyId types.String `tfsdk:"key_id"`
 }
 
-// type certificatesData struct {
-// 	CertificateArn types.String `tfsdk:"certificate_arn"`
-// 	CertificateSerial types.String `tfsdk:"certificate_serial"`
-// 	Status types.String `tfsdk:"status"`
-// 	StatusMessage types.String `tfsdk:"status_message"`
-// }
+type certificatesData struct {
+	CertificateArn    types.String `tfsdk:"certificate_arn"`
+	CertificateSerial types.String `tfsdk:"certificate_serial"`
+	Status            types.String `tfsdk:"status"`
+	StatusMessage     types.String `tfsdk:"status_message"`
+}
 
 type tlsInspectionConfigurationData struct {
 	ServerCertificateConfiguration types.List `tfsdk:"server_certificate_configurations"`
