@@ -103,21 +103,20 @@ func resourceAccessEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	clusterName := d.Get("cluster_name").(string)
 	principalARN := d.Get("principal_arn").(string)
-	entryType := d.Get("type").(string)
 	id := accessEntryCreateResourceID(clusterName, principalARN)
 	input := &eks.CreateAccessEntryInput{
 		ClusterName:  aws.String(clusterName),
 		PrincipalArn: aws.String(principalARN),
-		Type:         aws.String(entryType),
 		Tags:         getTagsIn(ctx),
-	}
-
-	if v, ok := d.GetOk("user_name"); ok {
-		input.Username = aws.String(v.(string))
+		Type:         aws.String(d.Get("type").(string)),
 	}
 
 	if v, ok := d.GetOk("kubernetes_groups"); ok {
 		input.KubernetesGroups = flex.ExpandStringValueSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("user_name"); ok {
+		input.Username = aws.String(v.(string))
 	}
 
 	_, err := conn.CreateAccessEntry(ctx, input)
@@ -181,12 +180,12 @@ func resourceAccessEntryUpdate(ctx context.Context, d *schema.ResourceData, meta
 			PrincipalArn: aws.String(principalARN),
 		}
 
-		if d.HasChange("user_name") {
-			input.Username = aws.String(d.Get("user_name").(string))
-		}
-
 		if d.HasChange("kubernetes_groups") {
 			input.KubernetesGroups = flex.ExpandStringValueSet(d.Get("kubernetes_groups").(*schema.Set))
+		}
+
+		if d.HasChange("user_name") {
+			input.Username = aws.String(d.Get("user_name").(string))
 		}
 
 		_, err = conn.UpdateAccessEntry(ctx, input)
