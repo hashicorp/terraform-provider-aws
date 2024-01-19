@@ -265,7 +265,18 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	d.Set("arn", landingZone.Arn)
-	d.Set("manifest", landingZone.Manifest)
+	if landingZone.Manifest != nil {
+		var v landingZoneManifest
+
+		if err := landingZone.Manifest.UnmarshalSmithyDocument(&v); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+		if err := d.Set("manifest", []interface{}{flattenLandingZoneManifest(&v)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting manifest: %s", err)
+		}
+	} else {
+		d.Set("manifest", nil)
+	}
 	d.Set("version", landingZone.Version)
 
 	return diags
