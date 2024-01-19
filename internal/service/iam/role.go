@@ -45,7 +45,7 @@ const (
 	ResNameIamRole       = "IAM Role"
 )
 
-// @FrameworkResource
+// @FrameworkResource(name="Role")
 func newResourceRole(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIamRole{}
 	r.SetMigratedFromPluginSDK(true)
