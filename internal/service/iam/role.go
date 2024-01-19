@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -89,17 +90,18 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			"create_date": schema.StringAttribute{
 				Computed: true,
 			},
-			// "description": schema.StringAttribute{
-			// Optional: true,
-			// Validators: []validator.String{
-			// stringvalidator.LengthBetween(0, 1000),
-			// // TODO: regex does not match?
-			// stringvalidator.RegexMatches(
-			// regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`),
-			// `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`,
-			// ),
-			// },
-			// },
+			"description": schema.StringAttribute{
+				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(0, 1000),
+					// TODO: figure this out later for both validators
+					// stringvalidator.RegexMatches(
+					// regexache.MustCompile(
+					// `[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`),
+					// `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`,
+					// ),
+				},
+			},
 			// "force_detach_policies": schema.BoolAttribute{
 			// Optional: true,
 			// // Default:  booldefault.StaticBool(false),
@@ -183,7 +185,7 @@ type resourceIamRoleData struct {
 	AssumeRolePolicy fwtypes.IAMPolicy `tfsdk:"assume_role_policy"`
 	CreateDate       types.String      `tfsdk:"create_date"`
 	ID               types.String      `tfsdk:"id"`
-	// Description         types.String `tfsdk:"description"`
+	Description      types.String      `tfsdk:"description"`
 	// ForceDetachPolicies types.Bool   `tfsdk:"force_detach_policies"`
 	// TODO: still have to think this one out
 	// InlinePolicy        types.Map    `tfsdk:"inline_policy"`
@@ -227,9 +229,9 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 		Tags:                     getTagsIn(ctx),
 	}
 
-	// if !plan.Description.IsNull() {
-	// input.Description = aws.String(plan.Description.ValueString())
-	// }
+	if !plan.Description.IsNull() {
+		input.Description = aws.String(plan.Description.ValueString())
+	}
 
 	// if !plan.MaxSessionDuration.IsNull() {
 	// input.MaxSessionDuration = aws.Int64(plan.MaxSessionDuration.ValueInt64())
@@ -416,23 +418,13 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	// TODO: remove example section later
-	// state.ApplicationAccount = flex.StringToFramework(ctx, out.ApplicationAccount)
-	// state.ApplicationARN = flex.StringToFrameworkARN(ctx, out.ApplicationArn)
-	// state.ApplicationProviderARN = flex.StringToFrameworkARN(ctx, out.ApplicationProviderArn)
-	// state.Description = flex.StringToFramework(ctx, out.Description)
-	// state.ID = flex.StringToFramework(ctx, out.ApplicationArn)
-	// state.InstanceARN = flex.StringToFrameworkARN(ctx, out.InstanceArn)
-	// state.Name = flex.StringToFramework(ctx, out.Name)
-	// state.Status = flex.StringValueToFramework(ctx, out.Status)
-
 	state.ARN = fwtypes.ARNValue(*role.Arn)
 	state.CreateDate = flex.StringValueToFramework(ctx, role.CreateDate.Format(time.RFC3339))
 	state.Path = flex.StringToFramework(ctx, role.Path)
 	state.Name = flex.StringToFramework(ctx, role.RoleName)
 	state.ID = flex.StringToFramework(ctx, role.RoleName)
+	state.Description = flex.StringToFramework(ctx, role.Description)
 
-	// d.Set("description", role.Description)
 	// d.Set("max_session_duration", role.MaxSessionDuration)
 	// d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(role.RoleName)))
 
@@ -494,7 +486,81 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 }
 
 func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	// TODO: finish this in later test
+	conn := r.Meta().IAMConn(ctx)
+
+	var plan, state resourceIamRoleData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	if !plan.AssumeRolePolicy.Equal(state.AssumeRolePolicy) {
+		assumeRolePolicy, err := structure.NormalizeJsonString(plan.AssumeRolePolicy.ValueString())
+		if err != nil {
+			// TODO: update error here
+			// return sdkdiag.AppendErrorf(diags, "assume_role_policy (%s) is invalid JSON: %s", assumeRolePolicy, err)
+			return
+		}
+
+		input := &iam.UpdateAssumeRolePolicyInput{
+			RoleName:       aws.String(plan.ID.ValueString()),
+			PolicyDocument: aws.String(assumeRolePolicy),
+		}
+
+		_, err = tfresource.RetryWhen(ctx, propagationTimeout,
+			func() (interface{}, error) {
+				return conn.UpdateAssumeRolePolicyWithContext(ctx, input)
+			},
+			func(err error) (bool, error) {
+				if tfawserr.ErrMessageContains(err, iam.ErrCodeMalformedPolicyDocumentException, "Invalid principal in policy") {
+					return true, err
+				}
+
+				return false, err
+			},
+		)
+
+		if err != nil {
+			// TODO: update error
+			// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s) assume role policy: %s", d.Id(), err)
+			return
+		}
+	}
+
+	if !plan.Description.Equal(state.Description) {
+		input := &iam.UpdateRoleDescriptionInput{
+			RoleName:    aws.String(plan.ID.ValueString()),
+			Description: aws.String(plan.Description.ValueString()),
+		}
+
+		_, err := conn.UpdateRoleDescriptionWithContext(ctx, input)
+
+		if err != nil {
+			// TODO: put something there
+			// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s) description: %s", d.Id(), err)
+			return
+		}
+	}
+
+	if !plan.TagsAll.Equal(state.TagsAll) {
+		err := roleUpdateTags(ctx, conn, plan.ID.ValueString(), state.TagsAll.Elements(), plan.TagsAll.Elements())
+
+		// Some partitions (e.g. ISO) may not support tagging.
+		if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+			// TODO: implement error here
+			return
+			// return append(diags, resourceRoleRead(ctx, d, meta)...)
+		}
+
+		if err != nil {
+			// TODO: implement error here
+			// return sdkdiag.AppendErrorf(diags, "updating tags for IAM Role (%s): %s", d.Id(), err)
+			return
+		}
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 // TODO: import state?
