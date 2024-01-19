@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -1293,19 +1294,27 @@ func TestAccELBV2TargetGroup_Stickiness_invalidALB(t *testing.T) {
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "HTTP", "source_ip", true),
+				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "HTTP", "source_ip", true, "round_robin"),
 				ExpectError: regexache.MustCompile("Stickiness type 'source_ip' is not supported for target groups with"),
 			},
 			{
-				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "HTTPS", "source_ip", true),
+				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "HTTPS", "source_ip", true, "round_robin"),
 				ExpectError: regexache.MustCompile("Stickiness type 'source_ip' is not supported for target groups with"),
 			},
 			{
-				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "TLS", "lb_cookie", true),
-				ExpectError: regexache.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
+				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "HTTP", "lb_cookie", true, "weighted_random"),
+				ExpectError: regexache.MustCompile("You cannot have both stickiness and weighted random algorithm enabled on the same target group."),
 			},
 			{
-				Config:             testAccTargetGroupConfig_stickinessValidity(rName, "TCP_UDP", "lb_cookie", false),
+				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "HTTPS", "lb_cookie", true, "weighted_random"),
+				ExpectError: regexache.MustCompile("You cannot have both stickiness and weighted random algorithm enabled on the same target group."),
+			},
+			{
+				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "TLS", "lb_cookie", true, "round_robin"),
+				ExpectError: regexache.MustCompile("You cannot enable stickiness on target groups with the TLS protocol"),
+			},
+			{
+				Config:             testAccTargetGroupConfig_stickinessValidity(rName, "TCP_UDP", "lb_cookie", false, "round_robin"),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
 			},
@@ -1324,19 +1333,19 @@ func TestAccELBV2TargetGroup_Stickiness_invalidNLB(t *testing.T) {
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "TCP", "lb_cookie", true),
+				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "TCP", "lb_cookie", true, "round_robin"),
 				ExpectError: regexache.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
 			},
 			{
-				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "TCP", "lb_cookie", false),
+				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "TCP", "lb_cookie", false, "round_robin"),
 				ExpectError: regexache.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
 			},
 			{
-				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "UDP", "lb_cookie", true),
+				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "UDP", "lb_cookie", true, "round_robin"),
 				ExpectError: regexache.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
 			},
 			{
-				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "TCP_UDP", "lb_cookie", true),
+				Config:      testAccTargetGroupConfig_stickinessValidity(rName, "TCP_UDP", "lb_cookie", true, "round_robin"),
 				ExpectError: regexache.MustCompile("Stickiness type 'lb_cookie' is not supported for target groups with"),
 			},
 		},
@@ -1356,7 +1365,7 @@ func TestAccELBV2TargetGroup_Stickiness_validALB(t *testing.T) {
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_stickinessValidity(rName, "HTTP", "lb_cookie", true),
+				Config: testAccTargetGroupConfig_stickinessValidity(rName, "HTTP", "lb_cookie", true, "round_robin"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
@@ -1366,7 +1375,7 @@ func TestAccELBV2TargetGroup_Stickiness_validALB(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_stickinessValidity(rName, "HTTPS", "lb_cookie", true),
+				Config: testAccTargetGroupConfig_stickinessValidity(rName, "HTTPS", "lb_cookie", true, "round_robin"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
@@ -1392,7 +1401,7 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP", "source_ip", false),
+				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP", "source_ip", false, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
@@ -1401,7 +1410,7 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP", "source_ip", true),
+				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP", "source_ip", true, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
@@ -1410,7 +1419,7 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_stickinessValidity(rName, "UDP", "source_ip", true),
+				Config: testAccTargetGroupConfig_stickinessValidity(rName, "UDP", "source_ip", true, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
@@ -1419,7 +1428,7 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP_UDP", "source_ip", true),
+				Config: testAccTargetGroupConfig_stickinessValidity(rName, "TCP_UDP", "source_ip", true, ""),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "stickiness.#", "1"),
@@ -2147,18 +2156,36 @@ func TestAccELBV2TargetGroup_ALBAlias_setAndUpdateSlowStart(t *testing.T) {
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTargetGroupConfig_albUpdateSlowStart(rName, 30),
+				Config: testAccTargetGroupConfig_albUpdateSlowStart(rName, 30, "round_robin"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "30"),
 				),
 			},
 			{
-				Config: testAccTargetGroupConfig_albUpdateSlowStart(rName, 60),
+				Config: testAccTargetGroupConfig_albUpdateSlowStart(rName, 60, "round_robin"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "slow_start", "60"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroup_ALBAlias_InvalidSlowStart(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTargetGroupConfig_albUpdateSlowStart(rName, 30, "weighted_random"),
+				ExpectError: regexache.MustCompile("You cannot enable both slow start and weighted random algorithm on a target group"),
 			},
 		},
 	})
@@ -2298,6 +2325,80 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "load_balancing_algorithm_type", "least_outstanding_requests"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_albLoadBalancingAlgorithm(rName, true, "weighted_random"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "load_balancing_algorithm_type", "weighted_random"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroup_ALBAlias_InvalidAnomalyMitigation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTargetGroupConfig_albLoadBalancingAnomalyMitigation(rName, true, "round_robin", "on"),
+				ExpectError: regexache.MustCompile("You cannot enable both anomaly mitigation and round robin algorithm on a target group"),
+			},
+			{
+				Config:      testAccTargetGroupConfig_albLoadBalancingAnomalyMitigation(rName, true, "least_outstanding_requests", "on"),
+				ExpectError: regexache.MustCompile("You cannot enable both anomaly mitigation and least outstanding requests algorithm on a target group"),
+			},
+		},
+	})
+}
+
+func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAnomalyMitigation(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf elbv2.TargetGroup
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_alb_target_group.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTargetGroupConfig_albLoadBalancingAnomalyMitigation(rName, false, "weighted_random", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "load_balancing_anomaly_mitigation", "off"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_albLoadBalancingAnomalyMitigation(rName, true, "weighted_random", "off"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "load_balancing_anomaly_mitigation", "off"),
+				),
+			},
+			{
+				Config: testAccTargetGroupConfig_albLoadBalancingAnomalyMitigation(rName, true, "weighted_random", "on"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "load_balancing_anomaly_mitigation", "on"),
 				),
 			},
 		},
@@ -4836,7 +4937,13 @@ resource "aws_vpc" "test" {
 `, rName, protocol)
 }
 
-func testAccTargetGroupConfig_stickinessValidity(rName, protocol, stickyType string, enabled bool) string {
+func testAccTargetGroupConfig_stickinessValidity(rName, protocol, stickyType string, enabled bool, loadBalanceAlgorithmType string) string {
+	if loadBalanceAlgorithmType == "" {
+		loadBalanceAlgorithmType = "null"
+	} else {
+		loadBalanceAlgorithmType = strconv.Quote(loadBalanceAlgorithmType)
+	}
+
 	return fmt.Sprintf(`
 resource "aws_lb_target_group" "test" {
   name_prefix = "tf-"
@@ -4848,16 +4955,18 @@ resource "aws_lb_target_group" "test" {
     type    = %[2]q
     enabled = %[3]t
   }
+
+  load_balancing_algorithm_type = %[4]s
 }
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = %[4]q
+    Name = %[5]q
   }
 }
-`, protocol, stickyType, enabled, rName)
+`, protocol, stickyType, enabled, loadBalanceAlgorithmType, rName)
 }
 
 func testAccTargetGroupConfig_targetHealthStateConnectionTermination(rName, protocol string, enabled bool) string {
@@ -5398,6 +5507,34 @@ resource "aws_vpc" "test" {
 }`, rName, algoTypeParam)
 }
 
+func testAccTargetGroupConfig_albLoadBalancingAnomalyMitigation(rName string, nonDefault bool, loadBalanceAlgorithmType string, anomalyMitigationSetting string) string {
+	var migitgationParam string
+
+	if nonDefault {
+		migitgationParam = fmt.Sprintf(`load_balancing_anomaly_mitigation = "%s"`, anomalyMitigationSetting)
+	}
+
+	return fmt.Sprintf(`
+resource "aws_alb_target_group" "test" {
+  name     = %[1]q
+  port     = 443
+  protocol = "HTTPS"
+  vpc_id   = aws_vpc.test.id
+
+  load_balancing_algorithm_type = %[2]q
+
+  %[3]s
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}`, rName, loadBalanceAlgorithmType, migitgationParam)
+}
+
 func testAccTargetGroupConfig_albLoadBalancingCrossZoneEnabled(rName string, nonDefault bool, enabled bool) string {
 	var crossZoneParam string
 
@@ -5558,7 +5695,7 @@ resource "aws_vpc" "test" {
 }`, rName)
 }
 
-func testAccTargetGroupConfig_albUpdateSlowStart(rName string, slowStartDuration int) string {
+func testAccTargetGroupConfig_albUpdateSlowStart(rName string, slowStartDuration int, loadBalanceAlgorithmType string) string {
 	return fmt.Sprintf(`
 resource "aws_alb_target_group" "test" {
   name     = %[1]q
@@ -5566,8 +5703,9 @@ resource "aws_alb_target_group" "test" {
   protocol = "HTTP"
   vpc_id   = aws_vpc.test.id
 
-  deregistration_delay = 200
-  slow_start           = %[2]d
+  deregistration_delay          = 200
+  load_balancing_algorithm_type = %[2]q
+  slow_start                    = %[3]d
 
   stickiness {
     type            = "lb_cookie"
@@ -5596,7 +5734,7 @@ resource "aws_vpc" "test" {
   tags = {
     Name = %[1]q
   }
-}`, rName, slowStartDuration)
+}`, rName, loadBalanceAlgorithmType, slowStartDuration)
 }
 
 func testAccTargetGroupConfig_albUpdateTags(rName string) string {

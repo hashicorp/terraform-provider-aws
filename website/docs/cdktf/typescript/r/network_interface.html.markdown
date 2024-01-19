@@ -50,7 +50,7 @@ In order to manage the private IPs as a sequentially ordered list, configure `pr
 
 If you are managing a specific set or list of IPs, instead of just using `privateIpsCount`, this is a potential workflow for also leveraging `privateIpsCount` to have AWS automatically assign additional IP addresses:
 
-1. Comment out `privateIps`, `private_ip_list`, `private_ip_list_enabled` in your configuration
+1. Comment out `privateIps`, `privateIpList`, `privateIpListEnabled` in your configuration
 2. Set the desired `privateIpsCount` (count of the number of secondaries, the primary is not included)
 3. Apply to assign the extra IPs
 4. Remove `privateIpsCount` and restore your settings from the first step
@@ -69,22 +69,22 @@ The following arguments are optional:
 
 * `attachment` - (Optional) Configuration block to define the attachment of the ENI. See [Attachment](#attachment) below for more details!
 * `description` - (Optional) Description for the network interface.
-* `interfaceType` - (Optional) Type of network interface to create. Set to `efa` for Elastic Fabric Adapter. Changing `interface_type` will cause the resource to be destroyed and re-created.
+* `interfaceType` - (Optional) Type of network interface to create. Set to `efa` for Elastic Fabric Adapter. Changing `interfaceType` will cause the resource to be destroyed and re-created.
 * `ipv4PrefixCount` - (Optional) Number of IPv4 prefixes that AWS automatically assigns to the network interface.
 * `ipv4Prefixes` - (Optional) One or more IPv4 prefixes assigned to the network interface.
-* `ipv6AddressCount` - (Optional) Number of IPv6 addresses to assign to a network interface. You can't use this option if specifying specific `ipv6_addresses`. If your subnet has the AssignIpv6AddressOnCreation attribute set to `true`, you can specify `0` to override this setting.
-* `ipv6AddressListEnabled` - (Optional) Whether `ipv6_address_list` is allowed and controls the IPs to assign to the ENI and `ipv6_addresses` and `ipv6_address_count` become read-only. Default false.
+* `ipv6AddressCount` - (Optional) Number of IPv6 addresses to assign to a network interface. You can't use this option if specifying specific `ipv6Addresses`. If your subnet has the AssignIpv6AddressOnCreation attribute set to `true`, you can specify `0` to override this setting.
+* `ipv6AddressListEnabled` - (Optional) Whether `ipv6AddressList` is allowed and controls the IPs to assign to the ENI and `ipv6Addresses` and `ipv6AddressCount` become read-only. Default false.
 * `ipv6AddressList` - (Optional) List of private IPs to assign to the ENI in sequential order.
-* `ipv6Addresses` - (Optional) One or more specific IPv6 addresses from the IPv6 CIDR block range of your subnet. Addresses are assigned without regard to order. You can't use this option if you're specifying `ipv6_address_count`.
+* `ipv6Addresses` - (Optional) One or more specific IPv6 addresses from the IPv6 CIDR block range of your subnet. Addresses are assigned without regard to order. You can't use this option if you're specifying `ipv6AddressCount`.
 * `ipv6PrefixCount` - (Optional) Number of IPv6 prefixes that AWS automatically assigns to the network interface.
 * `ipv6Prefixes` - (Optional) One or more IPv6 prefixes assigned to the network interface.
-* `privateIpList` - (Optional) List of private IPs to assign to the ENI in sequential order. Requires setting `private_ip_list_enabled` to `true`.
-* `privateIpListEnabled` - (Optional) Whether `private_ip_list` is allowed and controls the IPs to assign to the ENI and `private_ips` and `private_ips_count` become read-only. Default false.
+* `privateIpList` - (Optional) List of private IPs to assign to the ENI in sequential order. Requires setting `privateIpListEnabled` to `true`.
+* `privateIpListEnabled` - (Optional) Whether `privateIpList` is allowed and controls the IPs to assign to the ENI and `privateIps` and `privateIpsCount` become read-only. Default false.
 * `privateIps` - (Optional) List of private IPs to assign to the ENI without regard to order.
-* `privateIpsCount` - (Optional) Number of secondary private IPs to assign to the ENI. The total number of private IPs will be 1 + `private_ips_count`, as a primary private IP will be assiged to an ENI by default.
+* `privateIpsCount` - (Optional) Number of secondary private IPs to assign to the ENI. The total number of private IPs will be 1 + `privateIpsCount`, as a primary private IP will be assiged to an ENI by default.
 * `securityGroups` - (Optional) List of security group IDs to assign to the ENI.
 * `sourceDestCheck` - (Optional) Whether to enable source destination checking for the ENI. Default true.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Attachment
 
@@ -102,7 +102,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `macAddress` - MAC address of the network interface.
 * `ownerId` - AWS account ID of the owner of the network interface.
 * `privateDnsName` - Private DNS name of the network interface (IPv4).
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -112,9 +112,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { NetworkInterface } from "./.gen/providers/aws/network-interface";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    NetworkInterface.generateConfigForImport(this, "test", "eni-e5aa89a3");
   }
 }
 
@@ -126,4 +132,4 @@ Using `terraform import`, import Network Interfaces using the `id`. For example:
 % terraform import aws_network_interface.test eni-e5aa89a3
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-7f2ff19c4ccb49477839bee2fe3fa02741d97eacf5edb9c2e7ff7560c3a15031 -->
+<!-- cache-key: cdktf-0.20.1 input-7f2ff19c4ccb49477839bee2fe3fa02741d97eacf5edb9c2e7ff7560c3a15031 -->

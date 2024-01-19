@@ -369,9 +369,10 @@ func ResourceFunction() *schema.Resource {
 				},
 			},
 			"source_code_hash": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
 			"source_code_size": {
 				Type:     schema.TypeInt,

@@ -18,7 +18,7 @@ import (
 )
 
 // @SDKDataSource("aws_mq_broker_engine_types", name="Broker Engine Types")
-func DataSourceBrokerEngineTypes() *schema.Resource {
+func dataSourceBrokerEngineTypes() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBrokerEngineTypesRead,
 

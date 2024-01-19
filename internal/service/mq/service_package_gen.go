@@ -7,9 +7,6 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	mq_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mq"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	mq_sdkv1 "github.com/aws/aws-sdk-go/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -28,17 +25,19 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceBroker,
+			Factory:  dataSourceBroker,
 			TypeName: "aws_mq_broker",
+			Name:     "Broker",
 		},
 		{
-			Factory:  DataSourceBrokerEngineTypes,
+			Factory:  dataSourceBrokerEngineTypes,
 			TypeName: "aws_mq_broker_engine_types",
 			Name:     "Broker Engine Types",
 		},
 		{
-			Factory:  DataSourceBrokerInstanceTypeOfferings,
+			Factory:  dataSourceBrokerInstanceTypeOfferings,
 			TypeName: "aws_mq_broker_instance_type_offerings",
+			Name:     "Broker Instance Type Offerings",
 		},
 	}
 }
@@ -46,7 +45,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceBroker,
+			Factory:  resourceBroker,
 			TypeName: "aws_mq_broker",
 			Name:     "Broker",
 			Tags: &types.ServicePackageResourceTags{
@@ -54,7 +53,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceConfiguration,
+			Factory:  resourceConfiguration,
 			TypeName: "aws_mq_configuration",
 			Name:     "Configuration",
 			Tags: &types.ServicePackageResourceTags{
@@ -66,13 +65,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.MQ
-}
-
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*mq_sdkv1.MQ, error) {
-	sess := config["session"].(*session_sdkv1.Session)
-
-	return mq_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.

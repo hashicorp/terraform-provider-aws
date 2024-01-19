@@ -10,8 +10,10 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/mq"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/mq"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -20,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidateBrokerName(t *testing.T) {
@@ -112,9 +115,9 @@ func TestDiffUsers(t *testing.T) {
 		OldUsers []interface{}
 		NewUsers []interface{}
 
-		Creations []*mq.CreateUserRequest
+		Creations []*mq.CreateUserInput
 		Deletions []*mq.DeleteUserInput
-		Updates   []*mq.UpdateUserRequest
+		Updates   []*mq.UpdateUserInput
 	}{
 		{
 			OldUsers: []interface{}{},
@@ -127,18 +130,18 @@ func TestDiffUsers(t *testing.T) {
 					"replication_user": false,
 				},
 			},
-			Creations: []*mq.CreateUserRequest{
+			Creations: []*mq.CreateUserInput{
 				{
 					BrokerId:        aws.String("test"),
 					ConsoleAccess:   aws.Bool(false),
 					Username:        aws.String("second"),
 					Password:        aws.String("TestTest2222"),
-					Groups:          aws.StringSlice([]string{"admin"}),
+					Groups:          []string{"admin"},
 					ReplicationUser: aws.Bool(false),
 				},
 			},
-			Deletions: []*mq.DeleteUserInput{},
-			Updates:   []*mq.UpdateUserRequest{},
+			Deletions: nil,
+			Updates:   nil,
 		},
 		{
 			OldUsers: []interface{}{
@@ -157,7 +160,7 @@ func TestDiffUsers(t *testing.T) {
 					"replication_user": false,
 				},
 			},
-			Creations: []*mq.CreateUserRequest{
+			Creations: []*mq.CreateUserInput{
 				{
 					BrokerId:        aws.String("test"),
 					ConsoleAccess:   aws.Bool(false),
@@ -169,7 +172,7 @@ func TestDiffUsers(t *testing.T) {
 			Deletions: []*mq.DeleteUserInput{
 				{BrokerId: aws.String("test"), Username: aws.String("first")},
 			},
-			Updates: []*mq.UpdateUserRequest{},
+			Updates: nil,
 		},
 		{
 			OldUsers: []interface{}{
@@ -195,17 +198,17 @@ func TestDiffUsers(t *testing.T) {
 					"replication_user": false,
 				},
 			},
-			Creations: []*mq.CreateUserRequest{},
+			Creations: nil,
 			Deletions: []*mq.DeleteUserInput{
 				{BrokerId: aws.String("test"), Username: aws.String("first")},
 			},
-			Updates: []*mq.UpdateUserRequest{
+			Updates: []*mq.UpdateUserInput{
 				{
 					BrokerId:        aws.String("test"),
 					ConsoleAccess:   aws.Bool(false),
 					Username:        aws.String("second"),
 					Password:        aws.String("TestTest2222"),
-					Groups:          aws.StringSlice([]string{"admin"}),
+					Groups:          []string{"admin"},
 					ReplicationUser: aws.Bool(false),
 				},
 			},
@@ -218,22 +221,19 @@ func TestDiffUsers(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		expectedCreations := fmt.Sprintf("%s", tc.Creations)
-		creationsString := fmt.Sprintf("%s", creations)
-		if creationsString != expectedCreations {
-			t.Fatalf("Expected creations: %s\nGiven: %s", expectedCreations, creationsString)
+		var got, want any = creations, tc.Creations
+		if diff := cmp.Diff(got, want, cmpopts.IgnoreUnexported(mq.CreateUserInput{})); diff != "" {
+			t.Fatalf("unexpected CreateUserInput diff (+wanted, -got): %s", diff)
 		}
 
-		expectedDeletions := fmt.Sprintf("%s", tc.Deletions)
-		deletionsString := fmt.Sprintf("%s", deletions)
-		if deletionsString != expectedDeletions {
-			t.Fatalf("Expected deletions: %s\nGiven: %s", expectedDeletions, deletionsString)
+		got, want = deletions, tc.Deletions
+		if diff := cmp.Diff(got, want, cmpopts.IgnoreUnexported(mq.DeleteUserInput{})); diff != "" {
+			t.Fatalf("unexpected DeleteUserInput diff (+wanted, -got): %s", diff)
 		}
 
-		expectedUpdates := fmt.Sprintf("%s", tc.Updates)
-		updatesString := fmt.Sprintf("%s", updates)
-		if updatesString != expectedUpdates {
-			t.Fatalf("Expected updates: %s\nGiven: %s", expectedUpdates, updatesString)
+		got, want = updates, tc.Updates
+		if diff := cmp.Diff(got, want, cmpopts.IgnoreUnexported(mq.UpdateUserInput{})); diff != "" {
+			t.Fatalf("unexpected UpdateUserInput diff (+wanted, -got): %s", diff)
 		}
 	}
 }
@@ -250,17 +250,17 @@ func TestAccMQBroker_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -329,17 +329,17 @@ func TestAccMQBroker_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -361,17 +361,17 @@ func TestAccMQBroker_tags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -416,17 +416,17 @@ func TestAccMQBroker_throughputOptimized(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -487,7 +487,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
 	resourceName := "aws_mq_broker.test"
@@ -507,10 +507,10 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -616,7 +616,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
 	resourceName := "aws_mq_broker.test"
@@ -636,10 +636,10 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -749,7 +749,7 @@ func TestAccMQBroker_EncryptionOptions_kmsKeyID(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_mq_broker.test"
@@ -757,10 +757,10 @@ func TestAccMQBroker_EncryptionOptions_kmsKeyID(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -789,17 +789,17 @@ func TestAccMQBroker_EncryptionOptions_managedKeyDisabled(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -827,17 +827,17 @@ func TestAccMQBroker_EncryptionOptions_managedKeyEnabled(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -865,17 +865,17 @@ func TestAccMQBroker_Update_users(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -943,17 +943,17 @@ func TestAccMQBroker_Update_securityGroup(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1001,17 +1001,17 @@ func TestAccMQBroker_Update_engineVersion(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1045,17 +1045,17 @@ func TestAccMQBroker_Update_hostInstanceType(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker1, broker2 mq.DescribeBrokerResponse
+	var broker1, broker2 mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1084,17 +1084,17 @@ func TestAccMQBroker_RabbitMQ_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1130,17 +1130,17 @@ func TestAccMQBroker_RabbitMQ_config(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1178,17 +1178,17 @@ func TestAccMQBroker_RabbitMQ_logs(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1224,17 +1224,17 @@ func TestAccMQBroker_RabbitMQ_validationAuditLog(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1263,17 +1263,17 @@ func TestAccMQBroker_RabbitMQ_cluster(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1330,17 +1330,17 @@ func TestAccMQBroker_ldap(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1371,7 +1371,7 @@ func TestAccMQBroker_ldap(t *testing.T) {
 
 func testAccCheckBrokerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MQClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_mq_broker" {
@@ -1395,18 +1395,14 @@ func testAccCheckBrokerDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckBrokerExists(ctx context.Context, n string, v *mq.DescribeBrokerResponse) resource.TestCheckFunc {
+func testAccCheckBrokerExists(ctx context.Context, n string, v *mq.DescribeBrokerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No MQ Broker ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MQClient(ctx)
 
 		output, err := tfmq.FindBrokerByID(ctx, conn, rs.Primary.ID)
 
@@ -1421,11 +1417,11 @@ func testAccCheckBrokerExists(ctx context.Context, n string, v *mq.DescribeBroke
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MQClient(ctx)
 
 	input := &mq.ListBrokersInput{}
 
-	_, err := conn.ListBrokersWithContext(ctx, input)
+	_, err := conn.ListBrokers(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -1436,9 +1432,9 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckBrokerNotRecreated(before, after *mq.DescribeBrokerResponse) resource.TestCheckFunc {
+func testAccCheckBrokerNotRecreated(before, after *mq.DescribeBrokerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.BrokerId), aws.StringValue(after.BrokerId); before != after {
+		if before, after := aws.ToString(before.BrokerId), aws.ToString(after.BrokerId); before != after {
 			return fmt.Errorf("MQ Broker (%s/%s) recreated", before, after)
 		}
 

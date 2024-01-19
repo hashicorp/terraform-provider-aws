@@ -177,18 +177,18 @@ The following arguments are optional:
 
 The following arguments are required:
 
-* `columnNames` - (Required, at least one of `column_names` or `wildcard`) Set of column names for the table.
+* `columnNames` - (Required, at least one of `columnNames` or `wildcard`) Set of column names for the table.
 * `databaseName` – (Required) Name of the database for the table with columns resource. Unique to the Data Catalog.
 * `name` – (Required) Name of the table resource.
-* `wildcard` - (Required, at least one of `column_names` or `wildcard`) Whether to use a column wildcard. If `excluded_column_names` is included, `wildcard` must be set to `true` to avoid Terraform reporting a difference.
+* `wildcard` - (Required, at least one of `columnNames` or `wildcard`) Whether to use a column wildcard. If `excludedColumnNames` is included, `wildcard` must be set to `true` to avoid Terraform reporting a difference.
 
 The following arguments are optional:
 
 * `catalogId` - (Optional) Identifier for the Data Catalog. By default, it is the account ID of the caller.
-* `excludedColumnNames` - (Optional) Set of column names for the table to exclude. If `excluded_column_names` is included, `wildcard` must be set to `true` to avoid Terraform reporting a difference.
+* `excludedColumnNames` - (Optional) Set of column names for the table to exclude. If `excludedColumnNames` is included, `wildcard` must be set to `true` to avoid Terraform reporting a difference.
 
 ## Attribute Reference
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.19.0 input-c545a08beff672f6286efb5bcffb1247151c3c8aba0ba2aa227296062430ce8a -->
+<!-- cache-key: cdktf-0.20.1 input-c545a08beff672f6286efb5bcffb1247151c3c8aba0ba2aa227296062430ce8a -->

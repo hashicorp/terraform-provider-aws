@@ -72,6 +72,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The Instance identifier
 * `kms_key_arn` - The ARN for the KMS encryption key if one is set to the neptune cluster.
 * `storage_encrypted` - Specifies whether the neptune cluster is encrypted.
+* `storage_type` - Storage type associated with the cluster `standard/iopt1`.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `writer` – Boolean indicating if this instance is writable. `False` indicates this instance is a read replica.
 

@@ -51,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `availability_zones` - Availability zones where the instance is available.
 
-<!-- cache-key: cdktf-0.19.0 input-e0d401d073f27bb9d79b27ff7639257efd1b7f3f54817d94de7fdf271020db6f -->
+<!-- cache-key: cdktf-0.20.1 input-e0d401d073f27bb9d79b27ff7639257efd1b7f3f54817d94de7fdf271020db6f -->

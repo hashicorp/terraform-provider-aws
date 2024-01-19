@@ -115,3 +115,4 @@ This data source exports the following attributes in addition to the arguments a
 * `catalog_id` - ID of the Data Catalog in which the table resides.
 * `database_name` - Name of the catalog database that contains the target table.
 * `name` - Name of the target table.
+* `region` - Region of the target table.
