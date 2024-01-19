@@ -25,7 +25,7 @@ func TestAccEKSClusterAuthDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterAuthDataSourceConfig_basic,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceResourceName, "name", "foobar"),
 					resource.TestCheckResourceAttrSet(dataSourceResourceName, "token"),
 					testAccCheckClusterAuthToken(dataSourceResourceName),
