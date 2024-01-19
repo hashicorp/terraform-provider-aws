@@ -331,6 +331,48 @@ func ResourceEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"mysql_settings": {
+				Type: schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"after_connect_script": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"clean_source_metadata_on_mismatch": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"events_poll_interval": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"execute_timeout": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"max_file_size": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"parallel_load_threads": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"server_timezone": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"target_db_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"password": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -806,19 +848,20 @@ func resourceEndpointCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	switch d.Get("engine_name").(string) {
 	case engineNameAurora, engineNameMariadb, engineNameMySQL:
+		settings := &dms.MySQLSettings{}
+		if _, ok := d.GetOk("mysql_settings"); ok {
+			settings = expandMySQLSettings(d.Get("mysql_settings").([]interface{})[0].(map[string]interface{}))
+		}
+
 		if _, ok := d.GetOk("secrets_manager_arn"); ok {
-			input.MySQLSettings = &dms.MySQLSettings{
-				SecretsManagerAccessRoleArn: aws.String(d.Get("secrets_manager_access_role_arn").(string)),
-				SecretsManagerSecretId:      aws.String(d.Get("secrets_manager_arn").(string)),
-			}
+			settings.SecretsManagerAccessRoleArn = aws.String(d.Get("secrets_manager_access_role_arn").(string))
+			settings.SecretsManagerSecretId = aws.String(d.Get("secrets_manager_arn").(string))
 		} else {
-			input.MySQLSettings = &dms.MySQLSettings{
-				Username:     aws.String(d.Get("username").(string)),
-				Password:     aws.String(d.Get("password").(string)),
-				ServerName:   aws.String(d.Get("server_name").(string)),
-				Port:         aws.Int64(int64(d.Get("port").(int))),
-				DatabaseName: aws.String(d.Get("database_name").(string)),
-			}
+			settings.Username = aws.String(d.Get("username").(string))
+			settings.Password = aws.String(d.Get("password").(string))
+			settings.ServerName = aws.String(d.Get("server_name").(string))
+			settings.Port = aws.Int64(int64(d.Get("port").(int)))
+			settings.DatabaseName = aws.String(d.Get("database_name").(string))
 
 			// Set connection info in top-level namespace as well
 			expandTopLevelConnectionInfo(d, input)
@@ -1550,6 +1593,9 @@ func resourceEndpointSetState(d *schema.ResourceData, endpoint *dms.Endpoint) er
 		} else {
 			flattenTopLevelConnectionInfo(d, endpoint)
 		}
+		if err := d.Set("mysql_settings", flattenMySQLSettings(endpoint.MySQLSettings)); err != nil {
+			return fmt.Errorf("setting mysql_settings: %w", err)
+		}
 	case engineNameAuroraPostgresql, engineNamePostgres:
 		if endpoint.PostgreSQLSettings != nil {
 			d.Set("username", endpoint.PostgreSQLSettings.Username)
@@ -2081,6 +2127,76 @@ func flattenMongoDBSettings(settings *dms.MongoDbSettings) []map[string]interfac
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func expandMySQLSettings(tfMap map[string]interface{}) *dms.MySQLSettings {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &dms.MySQLSettings{}
+
+	if v, ok := tfMap["after_connect_script"].(string); ok && v != "" {
+		apiObject.AfterConnectScript = aws.String(v)
+	}
+	if v, ok := tfMap["clean_source_metadata_on_mismatch"].(bool); ok {
+		apiObject.CleanSourceMetadataOnMismatch = aws.Bool(v)
+	}
+	if v, ok := tfMap["events_poll_interval"].(int); ok {
+		apiObject.EventsPollInterval = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["execute_timeout"].(int); ok {
+		apiObject.ExecuteTimeout = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["max_file_size"].(int); ok {
+		apiObject.MaxFileSize = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["parallel_load_threads"].(int); ok {
+		apiObject.ParallelLoadThreads = aws.Int64(int64(v))
+	}
+	if v, ok := tfMap["server_timezone"].(string); ok && v != "" {
+		apiObject.ServerTimezone = aws.String(v)
+	}
+	if v, ok := tfMap["target_db_type"].(string); ok && v != "" {
+		apiObject.TargetDbType = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenMySQLSettings(apiObject *dms.MySQLSettings) []map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.AfterConnectScript; v != nil {
+		tfMap["after_connect_script"] = aws.StringValue(v)
+	}
+	if v := apiObject.CleanSourceMetadataOnMismatch; v != nil {
+		tfMap["clean_source_metadata_on_mismatch"] = aws.BoolValue(v)
+	}
+	if v := apiObject.EventsPollInterval; v != nil {
+		tfMap["events_poll_interval"] = aws.Int64Value(v)
+	}
+	if v := apiObject.ExecuteTimeout; v != nil {
+		tfMap["execute_timeout"] = aws.Int64Value(v)
+	}
+	if v := apiObject.MaxFileSize; v != nil {
+		tfMap["max_file_size"] = aws.Int64Value(v)
+	}
+	if v := apiObject.ParallelLoadThreads; v != nil {
+		tfMap["parallel_load_threads"] = aws.Int64Value(v)
+	}
+	if v := apiObject.ServerTimezone; v != nil {
+		tfMap["server_timezone"] = aws.StringValue(v)
+	}
+	if v := apiObject.TargetDbType; v != nil {
+		tfMap["target_db_type"] = aws.StringValue(v)
+	}
+
+	return []map[string]interface{}{tfMap}
 }
 
 func expandRedisSettings(tfMap map[string]interface{}) *dms.RedisSettings {

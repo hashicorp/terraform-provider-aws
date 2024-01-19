@@ -232,6 +232,46 @@ func DataSourceEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"mysql_settings": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"after_connect_script": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"clean_source_metadata_on_mismatch": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"events_poll_interval": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"execute_timeout": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"max_file_size": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"parallel_load_threads": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"server_timezone": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"target_db_type": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
 			"password": {
 				Type:     schema.TypeString,
 				Computed: true,
