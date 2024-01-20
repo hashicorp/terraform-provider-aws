@@ -14,19 +14,14 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-
-	// "github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	// "github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-
-	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-
-	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -40,11 +35,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-
-	// fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -70,7 +63,6 @@ func (r *resourceIamRole) Metadata(_ context.Context, request resource.MetadataR
 	response.TypeName = "aws_iam_role"
 }
 
-// TODO: Update this
 func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -140,13 +132,17 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			// // TODO: validate all elements of set are valid arns
 			// // how to do this with helper lib terraform-plugin-framework-validators
 			// },
-			// "max_session_duration": schema.Int64Attribute{
-			// Optional: true,
-			// // Default:  int64default.StaticInt64(3600),
-			// Validators: []validator.Int64{
-			// int64validator.Between(3600, 43200),
-			// },
-			// },
+			"max_session_duration": schema.Int64Attribute{
+				Optional: true,
+				Computed: true,
+				Default:  int64default.StaticInt64(3600),
+				Validators: []validator.Int64{
+					int64validator.Between(3600, 43200),
+				},
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
+			},
 			"name": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -213,17 +209,18 @@ type resourceIamRoleData struct {
 	ID                  types.String      `tfsdk:"id"`
 	Description         types.String      `tfsdk:"description"`
 	ForceDetachPolicies types.Bool        `tfsdk:"force_detach_policies"`
+	MaxSessionDuration  types.Int64       `tfsdk:"max_session_duration"`
+	Name                types.String      `tfsdk:"name"`
+	NamePrefix          types.String      `tfsdk:"name_prefix"`
+	Path                types.String      `tfsdk:"path"`
+	Tags                types.Map         `tfsdk:"tags"`
+	TagsAll             types.Map         `tfsdk:"tags_all"`
+
 	// TODO: still have to think this one out
 	// InlinePolicy        types.Map    `tfsdk:"inline_policy"`
 	// ManagedPolicyArns   types.Set    `tfsdk:"managed_policy_arns"`
-	// MaxSessionDuration  types.Int64  `tfsdk:"max_session_duration"`
-	Name       types.String `tfsdk:"name"`
-	NamePrefix types.String `tfsdk:"name_prefix"`
-	Path       types.String `tfsdk:"path"`
 	// PermissionsBoundary types.String `tfsdk:"permissions_boundary"`
 	// UniqueId            types.String `tfsdk:"unique_id"`
-	Tags    types.Map `tfsdk:"tags"`
-	TagsAll types.Map `tfsdk:"tags_all"`
 }
 
 func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -257,9 +254,9 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 		input.Description = aws.String(plan.Description.ValueString())
 	}
 
-	// if !plan.MaxSessionDuration.IsNull() {
-	// input.MaxSessionDuration = aws.Int64(plan.MaxSessionDuration.ValueInt64())
-	// }
+	if !plan.MaxSessionDuration.IsNull() {
+		input.MaxSessionDuration = aws.Int64(plan.MaxSessionDuration.ValueInt64())
+	}
 
 	// if !plan.PermissionsBoundary.IsNull() {
 	// input.PermissionsBoundary = aws.String(plan.PermissionsBoundary.ValueString())
@@ -449,6 +446,7 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	state.ID = flex.StringToFramework(ctx, role.RoleName)
 	state.Description = flex.StringToFramework(ctx, role.Description)
 	state.NamePrefix = flex.StringToFramework(ctx, create.NamePrefixFromName(aws.StringValue(role.RoleName)))
+	state.MaxSessionDuration = flex.Int64ToFramework(ctx, role.MaxSessionDuration)
 
 	if state.ForceDetachPolicies.IsNull() {
 		// TODO: better way to do this that is more framework friendly?
@@ -456,8 +454,6 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 		state.ForceDetachPolicies = flex.BoolToFramework(ctx, &temp)
 	}
 	// fmt.Println(fmt.Sprintf("force detach: %v", state.ForceDetachPolicies.ValueBool()))
-
-	// d.Set("max_session_duration", role.MaxSessionDuration)
 
 	// if role.PermissionsBoundary != nil {
 	// d.Set("permissions_boundary", role.PermissionsBoundary.PermissionsBoundaryArn)
@@ -579,8 +575,27 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 			return
 		}
 
-		// TODO: is this the silver bullet?
 		state.Description = plan.Description
+	}
+
+	if !plan.MaxSessionDuration.Equal(state.MaxSessionDuration) {
+		fmt.Println("Hitting duration update")
+		fmt.Println(fmt.Sprintf("state: %v", state.MaxSessionDuration.ValueInt64()))
+		fmt.Println(fmt.Sprintf("plan: %v", plan.MaxSessionDuration.ValueInt64()))
+		input := &iam.UpdateRoleInput{
+			RoleName:           aws.String(state.ID.ValueString()),
+			MaxSessionDuration: aws.Int64(plan.MaxSessionDuration.ValueInt64()),
+		}
+
+		_, err := conn.UpdateRoleWithContext(ctx, input)
+
+		if err != nil {
+			// TODO: add error here
+			fmt.Println("Hit update max session duration error")
+			return
+			// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s) MaxSessionDuration: %s", d.Id(), err)
+		}
+		state.MaxSessionDuration = plan.MaxSessionDuration
 	}
 
 	if !plan.TagsAll.Equal(state.TagsAll) {
