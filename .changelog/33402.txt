@@ -1,4 +1,7 @@
 ```release-note:enhancement
-resource/patch_baseline: Adding json attribute
-datasource/patch_baseline: Adding json attribute
+resource/aws_ssm_patch_baseline: Add `json` attribute to facilitate use with S3 buckets
+```
+
+```release-note:enhancement
+data-source/aws_ssm_patch_baseline: Add `json` attribute to facilitate use with S3 buckets
 ```
