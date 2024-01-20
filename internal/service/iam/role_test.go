@@ -324,51 +324,51 @@ func TestAccIAMRole_diffs(t *testing.T) {
 }
 
 // // https://github.com/hashicorp/terraform-provider-aws/issues/28835
-// func TestAccIAMRole_diffsCondition(t *testing.T) {
-// ctx := acctest.Context(t)
-// var conf iam.Role
-// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// resourceName := "aws_iam_role.test"
+func TestAccIAMRole_diffsCondition(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
 
-// resource.ParallelTest(t, resource.TestCase{
-// PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// CheckDestroy:             testAccCheckRoleDestroy(ctx),
-// Steps: []resource.TestStep{
-// {
-// Config: testAccRoleConfig_diffsCondition(rName),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &conf),
-// ),
-// },
-// {
-// Config:   testAccRoleConfig_diffsCondition(rName),
-// PlanOnly: true,
-// },
-// {
-// Config: testAccRoleConfig_diffsCondition(rName),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &conf),
-// ),
-// },
-// {
-// Config:   testAccRoleConfig_diffsCondition(rName),
-// PlanOnly: true,
-// },
-// {
-// Config: testAccRoleConfig_diffsCondition(rName),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &conf),
-// ),
-// },
-// {
-// Config:   testAccRoleConfig_diffsCondition(rName),
-// PlanOnly: true,
-// },
-// },
-// })
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoleConfig_diffsCondition(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffsCondition(rName),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccRoleConfig_diffsCondition(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffsCondition(rName),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccRoleConfig_diffsCondition(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffsCondition(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
 
 // func TestAccIAMRole_badJSON(t *testing.T) {
 // ctx := acctest.Context(t)
