@@ -115,11 +115,11 @@ func TestAccIAMRole_nameGenerated(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
 				),
 			},
-			// {
-			// ResourceName:      resourceName,
-			// ImportState:       true,
-			// ImportStateVerify: true,
-			// },
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
