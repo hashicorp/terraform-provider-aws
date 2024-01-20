@@ -683,6 +683,8 @@ func CheckResourceAttrJMES(name, key, jmesPath, value string) resource.TestCheck
 			v = x
 		case float64:
 			v = strconv.FormatFloat(x, 'f', -1, 64)
+		case bool:
+			v = fmt.Sprint(x)
 		default:
 			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T)`, name, key, jmesPath, result)
 		}
@@ -729,6 +731,8 @@ func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySec
 			value = x
 		case float64:
 			value = strconv.FormatFloat(x, 'f', -1, 64)
+		case bool:
+			value = fmt.Sprint(x)
 		default:
 			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T)`, nameFirst, keyFirst, jmesPath, result)
 		}
