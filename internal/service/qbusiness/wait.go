@@ -8,16 +8,17 @@ import (
 	"errors"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/qbusiness"
+	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
+	"github.com/aws/aws-sdk-go-v2/service/qbusiness/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func waitApplicationCreated(ctx context.Context, conn *qbusiness.QBusiness, id string, timeout time.Duration) (*qbusiness.GetApplicationOutput, error) {
+func waitApplicationCreated(ctx context.Context, conn *qbusiness.Client, id string, timeout time.Duration) (*qbusiness.GetApplicationOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{qbusiness.ApplicationStatusCreating, qbusiness.ApplicationStatusUpdating},
-		Target:     []string{qbusiness.ApplicationStatusActive},
+		Pending:    enum.Slice(types.ApplicationStatusCreating, types.ApplicationStatusUpdating),
+		Target:     enum.Slice(types.ApplicationStatusActive),
 		Refresh:    statusAppAvailability(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
@@ -26,16 +27,16 @@ func waitApplicationCreated(ctx context.Context, conn *qbusiness.QBusiness, id s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*qbusiness.GetApplicationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status)))
+		tfresource.SetLastError(err, errors.New(string(output.Status)))
 
 		return output, err
 	}
 	return nil, err
 }
 
-func waitApplicationDeleted(ctx context.Context, conn *qbusiness.QBusiness, id string, timeout time.Duration) (*qbusiness.GetApplicationOutput, error) {
+func waitApplicationDeleted(ctx context.Context, conn *qbusiness.Client, id string, timeout time.Duration) (*qbusiness.GetApplicationOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{qbusiness.ApplicationStatusActive, qbusiness.ApplicationStatusDeleting},
+		Pending:    enum.Slice(types.ApplicationStatusActive, types.ApplicationStatusDeleting),
 		Target:     []string{},
 		Refresh:    statusAppAvailability(ctx, conn, id),
 		Timeout:    timeout,
@@ -45,17 +46,17 @@ func waitApplicationDeleted(ctx context.Context, conn *qbusiness.QBusiness, id s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*qbusiness.GetApplicationOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status)))
+		tfresource.SetLastError(err, errors.New(string(output.Status)))
 
 		return output, err
 	}
 	return nil, err
 }
 
-func waitIndexCreated(ctx context.Context, conn *qbusiness.QBusiness, index_id string, timeout time.Duration) (*qbusiness.GetIndexOutput, error) {
+func waitIndexCreated(ctx context.Context, conn *qbusiness.Client, index_id string, timeout time.Duration) (*qbusiness.GetIndexOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{qbusiness.IndexStatusCreating, qbusiness.IndexStatusUpdating},
-		Target:     []string{qbusiness.IndexStatusActive},
+		Pending:    enum.Slice(types.IndexStatusCreating, types.IndexStatusUpdating),
+		Target:     enum.Slice(types.IndexStatusActive),
 		Refresh:    statusIndexAvailability(ctx, conn, index_id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
@@ -64,16 +65,16 @@ func waitIndexCreated(ctx context.Context, conn *qbusiness.QBusiness, index_id s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*qbusiness.GetIndexOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status)))
+		tfresource.SetLastError(err, errors.New(string(output.Status)))
 
 		return output, err
 	}
 	return nil, err
 }
 
-func waitIndexDeleted(ctx context.Context, conn *qbusiness.QBusiness, index_id string, timeout time.Duration) (*qbusiness.GetIndexOutput, error) {
+func waitIndexDeleted(ctx context.Context, conn *qbusiness.Client, index_id string, timeout time.Duration) (*qbusiness.GetIndexOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{qbusiness.IndexStatusActive, qbusiness.IndexStatusDeleting},
+		Pending:    enum.Slice(types.IndexStatusActive, types.IndexStatusDeleting),
 		Target:     []string{},
 		Refresh:    statusIndexAvailability(ctx, conn, index_id),
 		Timeout:    timeout,
@@ -83,7 +84,7 @@ func waitIndexDeleted(ctx context.Context, conn *qbusiness.QBusiness, index_id s
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*qbusiness.GetIndexOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.Status)))
+		tfresource.SetLastError(err, errors.New(string(output.Status)))
 
 		return output, err
 	}

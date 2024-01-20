@@ -9,14 +9,16 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/qbusiness"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
+	"github.com/aws/aws-sdk-go-v2/service/qbusiness/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -112,16 +114,16 @@ func ResourceIndex() *schema.Resource {
 										),
 									},
 									"search": {
-										Type:         schema.TypeString,
-										Required:     true,
-										Description:  "Information about whether the document attribute can be used by an end user to search for information on their web experience.",
-										ValidateFunc: validation.StringInSlice(qbusiness.Status_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										Description:      "Information about whether the document attribute can be used by an end user to search for information on their web experience.",
+										ValidateDiagFunc: enum.Validate[types.Status](),
 									},
 									"type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										Description:  "The type of document attribute.",
-										ValidateFunc: validation.StringInSlice(qbusiness.AttributeType_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										Description:      "The type of document attribute.",
+										ValidateDiagFunc: enum.Validate[types.AttributeType](),
 									},
 								},
 							},
@@ -137,13 +139,14 @@ func ResourceIndex() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
 func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).QBusinessConn(ctx)
+	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
 
 	application_id := d.Get("application_id").(string)
 	display_name := d.Get("display_name").(string)
@@ -151,6 +154,7 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	input := &qbusiness.CreateIndexInput{
 		ApplicationId: aws.String(application_id),
 		DisplayName:   aws.String(display_name),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -158,20 +162,18 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("capacity_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.CapacityConfiguration = &qbusiness.IndexCapacityConfiguration{
-			Units: aws.Int64(int64(v.([]interface{})[0].(map[string]interface{})["units"].(int))),
+		input.CapacityConfiguration = &types.IndexCapacityConfiguration{
+			Units: aws.Int32(int32(v.([]interface{})[0].(map[string]interface{})["units"].(int))),
 		}
 	}
 
-	input.Tags = getTagsIn(ctx)
-
-	output, err := conn.CreateIndexWithContext(ctx, input)
+	output, err := conn.CreateIndex(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating qbusiness index: %s", err)
 	}
 
-	d.SetId(application_id + "/" + aws.StringValue(output.IndexId))
+	d.SetId(application_id + "/" + aws.ToString(output.IndexId))
 
 	if _, err := waitIndexCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for qbusiness index (%s) to be created: %s", d.Id(), err)
@@ -185,23 +187,24 @@ func resourceIndexCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		updateInput.DocumentAttributeConfigurations = expandDocumentAttributeConfigurations(d.Get("document_attribute_configurations").([]interface{}))
 
-		_, err = conn.UpdateIndexWithContext(ctx, updateInput)
+		_, err = conn.UpdateIndex(ctx, updateInput)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating qbusiness index (%s): %s", d.Id(), err)
 		}
 	}
+
 	return append(diags, resourceIndexRead(ctx, d, meta)...)
 }
 
 func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).QBusinessConn(ctx)
+	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
 
 	output, err := FindIndexByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, qbusiness.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && errs.IsA[*types.ResourceNotFoundException](err) {
 		log.Printf("[WARN] qbusiness index (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -232,7 +235,7 @@ func resourceIndexRead(ctx context.Context, d *schema.ResourceData, meta interfa
 func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).QBusinessConn(ctx)
+	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
 
 	id := strings.Split(d.Id(), "/")
 	input := &qbusiness.UpdateIndexInput{
@@ -252,27 +255,27 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.CapacityConfiguration = expandIndexCapacityConfiguration(d.Get("capacity_configuration").([]interface{}))
 	}
 
-	_, err := conn.UpdateIndexWithContext(ctx, input)
+	_, err := conn.UpdateIndex(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating qbusiness index (%s): %s", d.Id(), err)
 	}
 
-	return diags
+	return append(diags, resourceIndexRead(ctx, d, meta)...)
 }
 
 func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).QBusinessConn(ctx)
+	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
 
 	id := strings.Split(d.Id(), "/")
-	_, err := conn.DeleteIndexWithContext(ctx, &qbusiness.DeleteIndexInput{
+	_, err := conn.DeleteIndex(ctx, &qbusiness.DeleteIndexInput{
 		ApplicationId: aws.String(id[0]),
 		IndexId:       aws.String(id[1]),
 	})
 
-	if tfawserr.ErrCodeEquals(err, qbusiness.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -286,7 +289,7 @@ func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func FindIndexByID(ctx context.Context, conn *qbusiness.QBusiness, index_id string) (*qbusiness.GetIndexOutput, error) {
+func FindIndexByID(ctx context.Context, conn *qbusiness.Client, index_id string) (*qbusiness.GetIndexOutput, error) {
 
 	id := strings.Split(index_id, "/")
 	input := &qbusiness.GetIndexInput{
@@ -294,9 +297,9 @@ func FindIndexByID(ctx context.Context, conn *qbusiness.QBusiness, index_id stri
 		IndexId:       aws.String(id[1]),
 	}
 
-	output, err := conn.GetIndexWithContext(ctx, input)
+	output, err := conn.GetIndex(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, qbusiness.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -314,38 +317,38 @@ func FindIndexByID(ctx context.Context, conn *qbusiness.QBusiness, index_id stri
 	return output, nil
 }
 
-func expandIndexCapacityConfiguration(v []interface{}) *qbusiness.IndexCapacityConfiguration {
+func expandIndexCapacityConfiguration(v []interface{}) *types.IndexCapacityConfiguration {
 	if len(v) == 0 || v[0] == nil {
 		return nil
 	}
 
-	return &qbusiness.IndexCapacityConfiguration{
-		Units: aws.Int64(int64(v[0].(map[string]interface{})["units"].(int))),
+	return &types.IndexCapacityConfiguration{
+		Units: aws.Int32(int32(v[0].(map[string]interface{})["units"].(int))),
 	}
 }
 
-func flattenIndexCapacityConfiguration(v *qbusiness.IndexCapacityConfiguration) []interface{} {
+func flattenIndexCapacityConfiguration(v *types.IndexCapacityConfiguration) []interface{} {
 	if v == nil {
 		return nil
 	}
 
 	return []interface{}{
 		map[string]interface{}{
-			"units": aws.Int64Value(v.Units),
+			"units": aws.ToInt32(v.Units),
 		},
 	}
 }
 
-func flattenDocumentAttributeConfigurations(v []*qbusiness.DocumentAttributeConfiguration) []interface{} {
+func flattenDocumentAttributeConfigurations(v []types.DocumentAttributeConfiguration) []interface{} {
 	if v == nil {
 		return nil
 	}
 	var attributes []interface{}
 	for _, attribute := range v {
 		attributes = append(attributes, map[string]interface{}{
-			"name":   aws.StringValue(attribute.Name),
-			"search": aws.StringValue(attribute.Search),
-			"type":   aws.StringValue(attribute.Type),
+			"name":   aws.ToString(attribute.Name),
+			"search": string(attribute.Search),
+			"type":   string(attribute.Type),
 		})
 	}
 	return []interface{}{
@@ -355,31 +358,31 @@ func flattenDocumentAttributeConfigurations(v []*qbusiness.DocumentAttributeConf
 	}
 }
 
-func expandDocumentAttributeConfigurations(v []interface{}) []*qbusiness.DocumentAttributeConfiguration {
+func expandDocumentAttributeConfigurations(v []interface{}) []types.DocumentAttributeConfiguration {
 	if len(v) == 0 || v[0] == nil {
 		return nil
 	}
 	m := v[0].(map[string]interface{})["attribute"].([]interface{})
 
-	var attributes []*qbusiness.DocumentAttributeConfiguration
+	var attributes []types.DocumentAttributeConfiguration
 	for _, attribute := range m {
-		attributes = append(attributes, &qbusiness.DocumentAttributeConfiguration{
+		attributes = append(attributes, types.DocumentAttributeConfiguration{
 			Name:   aws.String(attribute.(map[string]interface{})["name"].(string)),
-			Search: aws.String(attribute.(map[string]interface{})["search"].(string)),
-			Type:   aws.String(attribute.(map[string]interface{})["type"].(string)),
+			Search: types.Status(attribute.(map[string]interface{})["search"].(string)),
+			Type:   types.AttributeType(attribute.(map[string]interface{})["type"].(string)),
 		})
 	}
 	return attributes
 }
 
-func filterDefaultDocumentAttributeConfigurations(conf []*qbusiness.DocumentAttributeConfiguration) []*qbusiness.DocumentAttributeConfiguration {
-	var attributes []*qbusiness.DocumentAttributeConfiguration
+func filterDefaultDocumentAttributeConfigurations(conf []types.DocumentAttributeConfiguration) []types.DocumentAttributeConfiguration {
+	var attributes []types.DocumentAttributeConfiguration
 	for _, attribute := range conf {
 		filter := false
-		if strings.HasPrefix(aws.StringValue(attribute.Name), "_") {
+		if strings.HasPrefix(aws.ToString(attribute.Name), "_") {
 			filter = true
 		}
-		if aws.StringValue(attribute.Name) == "_document_title" && aws.StringValue(attribute.Search) == qbusiness.StatusDisabled {
+		if aws.ToString(attribute.Name) == "_document_title" && attribute.Search == types.StatusDisabled {
 			filter = false
 		}
 		if filter {

@@ -135,6 +135,7 @@ const (
 	Location                     = "location"
 	Logs                         = "logs"
 	LookoutMetrics               = "lookoutmetrics"
+	M2                           = "m2"
 	MQ                           = "mq"
 	MWAA                         = "mwaa"
 	Macie2                       = "macie2"
