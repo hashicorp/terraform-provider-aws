@@ -281,7 +281,11 @@ func testAccSpace_storageSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "space_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.space_storage_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.space_storage_settings.0.ebs_storage_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.code_editor_app_settings.0.ebs_storage_settings.0.ebs_volume_size_in_gb", "10"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.space_storage_settings.0.ebs_storage_settings.0.ebs_volume_size_in_gb", "10"),
+					resource.TestCheckResourceAttr(resourceName, "space_sharing_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "space_sharing_settings.0.sharing_type", "Private"),
+					resource.TestCheckResourceAttr(resourceName, "ownership_settings.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "ownership_settings.0.owner_user_profile_name", "aws_sagemaker_user_profile.test", "user_profile_name"),
 				),
 			},
 			{
@@ -547,11 +551,25 @@ resource "aws_sagemaker_space" "test" {
 
 func testAccSpaceConfig_storageSettings(rName string) string {
 	return acctest.ConfigCompose(testAccSpaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_user_profile" "test" {
+  domain_id         = aws_sagemaker_domain.test.id
+  user_profile_name = "%[1]s-2"
+}
+
 resource "aws_sagemaker_space" "test" {
   domain_id  = aws_sagemaker_domain.test.id
   space_name = %[1]q
 
+  space_sharing_settings {
+    sharing_type = "Private"
+  }
+
+  ownership_settings {
+    owner_user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
+  }
+
   space_settings {
+	app_type = "CodeEditor"
     space_storage_settings {
       ebs_storage_settings {
         ebs_volume_size_in_gb = 10

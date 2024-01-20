@@ -55,6 +55,23 @@ func ResourceSpace() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"home_efs_file_system_uid": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ownership_settings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"owner_user_profile_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			"space_display_name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -349,12 +366,22 @@ func ResourceSpace() *schema.Resource {
 					},
 				},
 			},
+			"space_sharing_settings": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"sharing_type": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(sagemaker.SharingType_Values(), false),
+						},
+					},
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"home_efs_file_system_uid": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"url": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -377,8 +404,16 @@ func resourceSpaceCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Tags:      getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("ownership_settings"); ok && len(v.([]interface{})) > 0 {
+		input.OwnershipSettings = expandOwnershipSettings(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("space_settings"); ok && len(v.([]interface{})) > 0 {
 		input.SpaceSettings = expandSpaceSettings(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("space_sharing_settings"); ok && len(v.([]interface{})) > 0 {
+		input.SpaceSharingSettings = expandSpaceSharingSettings(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("space_display_name"); ok {
@@ -409,7 +444,7 @@ func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading SageMaker Space (%s): %s", d.Id(), err)
 	}
 
-	Space, err := FindSpaceByName(ctx, conn, domainID, name)
+	space, err := FindSpaceByName(ctx, conn, domainID, name)
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
 			d.SetId("")
@@ -419,16 +454,24 @@ func resourceSpaceRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading SageMaker Space (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(Space.SpaceArn)
+	arn := aws.StringValue(space.SpaceArn)
 	d.Set("arn", arn)
-	d.Set("domain_id", Space.DomainId)
-	d.Set("home_efs_file_system_uid", Space.HomeEfsFileSystemUid)
-	d.Set("space_display_name", Space.SpaceDisplayName)
-	d.Set("space_name", Space.SpaceName)
-	d.Set("url", Space.Url)
+	d.Set("domain_id", space.DomainId)
+	d.Set("home_efs_file_system_uid", space.HomeEfsFileSystemUid)
+	d.Set("space_display_name", space.SpaceDisplayName)
+	d.Set("space_name", space.SpaceName)
+	d.Set("url", space.Url)
 
-	if err := d.Set("space_settings", flattenSpaceSettings(Space.SpaceSettings)); err != nil {
+	if err := d.Set("ownership_settings", flattenOwnershipSettings(space.OwnershipSettings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting ownership_settings for SageMaker Space (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("space_settings", flattenSpaceSettings(space.SpaceSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting space_settings for SageMaker Space (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("space_sharing_settings", flattenSpaceSharingSettings(space.SpaceSharingSettings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting space_sharing_settings for SageMaker Space (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -819,4 +862,64 @@ func flattenEFSFileSystem(apiObject *sagemaker.EFSFileSystem) []map[string]inter
 	}
 
 	return []map[string]interface{}{tfMap}
+}
+
+func expandOwnershipSettings(l []interface{}) *sagemaker.OwnershipSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.OwnershipSettings{}
+
+	if v, ok := m["owner_user_profile_name"].(string); ok {
+		config.OwnerUserProfileName = aws.String(v)
+	}
+
+	return config
+}
+
+func flattenOwnershipSettings(config *sagemaker.OwnershipSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.OwnerUserProfileName != nil {
+		m["owner_user_profile_name"] = aws.StringValue(config.OwnerUserProfileName)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandSpaceSharingSettings(l []interface{}) *sagemaker.SpaceSharingSettings {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.SpaceSharingSettings{}
+
+	if v, ok := m["sharing_type"].(string); ok {
+		config.SharingType = aws.String(v)
+	}
+
+	return config
+}
+
+func flattenSpaceSharingSettings(config *sagemaker.SpaceSharingSettings) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{}
+
+	if config.SharingType != nil {
+		m["sharing_type"] = aws.StringValue(config.SharingType)
+	}
+
+	return []map[string]interface{}{m}
 }

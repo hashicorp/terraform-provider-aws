@@ -26,25 +26,35 @@ resource "aws_sagemaker_space" "example" {
 This resource supports the following arguments:
 
 * `domain_id` - (Required) The ID of the associated Domain.
+* `ownership_settings` - (Optional) A collection of ownership settings. See [Ownership Settings](#ownership-settings) below.
 * `space_display_name` - (Optional) The name of the space that appears in the SageMaker Studio UI.
 * `space_name` - (Required) The name of the space.
 * `space_settings` - (Required) A collection of space settings. See [Space Settings](#space-settings) below.
+* `space_sharing_settings` - (Optional) A collection of space sharing settings. See [Space Sharing Settings](#space-sharing-settings) below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### Ownership Settings
+
+* `owner_user_profile_name` - (Required) The user profile who is the owner of the private space.
+
+### Space Sharing Settings
+
+* `sharing_type` - (Required) Specifies the sharing type of the space. Valid values are `Private` and `Shared`.
 
 ### Space Settings
 
 * `app_type` - (Optional) The type of app created within the space.
-* `code_editor_app_settings` - (Optional) The Code Editor application settings. See [Code Editor App Settings](#code_editor_app_settings) below.
-* `jupyter_lab_app_settings` - (Optional) The settings for the JupyterLab application. See [Jupyter Lab App Settings](#jupyter_lab_app_settings) below.
+* `code_editor_app_settings` - (Optional) The Code Editor application settings. See [Code Editor App Settings](#code-editor-app-settings) below.
+* `jupyter_lab_app_settings` - (Optional) The settings for the JupyterLab application. See [Jupyter Lab App Settings](#jupyter-lab-app-settings) below.
 * `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [Jupyter Server App Settings](#jupyter-server-app-settings) below.
 * `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [Kernel Gateway App Settings](#kernel-gateway-app-settings) below.
 
-#### code_editor_app_settings
+#### Code Editor App Settings
 
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
 * `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
 
-#### jupyter_lab_app_settings
+#### Jupyter Lab App Settings
 
 * `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. see [Code Repository](#code-repository) below.
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
