@@ -42,6 +42,7 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", "Baseline containing all updates approved for production systems"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_enable_non_security", "false"),
+					acctest.CheckResourceAttrJMES(resourceName, "json", "ApprovedPatchesEnableNonSecurity", "false"),
 					acctest.CheckResourceAttrJMES(resourceName, "json", "ApprovedPatches|length(@)", "1"),
 					acctest.CheckResourceAttrJMESPair(resourceName, "json", "ApprovedPatches[0]", resourceName, "approved_patches.0"),
 					acctest.CheckResourceAttrJMESPair(resourceName, "json", "Name", resourceName, "name"),
