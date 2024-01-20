@@ -661,11 +661,11 @@ func findListener(ctx context.Context, conn *elasticloadbalancingv2.Client, inpu
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findListeners(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeListenersInput, filter tfslices.Predicate[*awstypes.Listener]) ([]*awstypes.Listener, error) {
-	var output []*awstypes.Listener
+func findListeners(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeListenersInput, filter tfslices.Predicate[*awstypes.Listener]) ([]awstypes.Listener, error) {
+	var output []awstypes.Listener
 
 	paginator := elasticloadbalancingv2.NewDescribeListenersPaginator(conn, input)
 	for paginator.HasMorePages() {
@@ -682,7 +682,7 @@ func findListeners(ctx context.Context, conn *elasticloadbalancingv2.Client, inp
 
 		for _, v := range page.Listeners {
 			if filter(&v) {
-				output = append(output, &v)
+				output = append(output, v)
 			}
 		}
 	}

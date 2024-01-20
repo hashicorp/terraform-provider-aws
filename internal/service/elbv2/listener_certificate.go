@@ -164,8 +164,7 @@ func resourceListenerCertificateDelete(ctx context.Context, d *schema.ResourceDa
 	if err != nil {
 		if errs.IsA[*awstypes.CertificateNotFoundException](err) {
 			return diags
-		}
-		if errs.IsA[*awstypes.ListenerNotFoundException](err) {
+		} else if errs.IsA[*awstypes.ListenerNotFoundException](err) {
 			return diags
 		}
 		// Even though we're not trying to remove the default certificate, AWS started returning this error around 2023-12-09

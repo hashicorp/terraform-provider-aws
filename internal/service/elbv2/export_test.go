@@ -5,7 +5,7 @@ package elbv2
 
 // Exports for use in tests only.
 var (
-	AwsSdkId                      = awsSdkId
+	AwsSdkId                      = awsSdkId // nosemgrep:ci.aws-in-var-name
 	FindListenerByARN             = findListenerByARN
 	HealthCheckProtocolEnumValues = healthCheckProtocolEnumValues
 	ProtocolVersionEnumValues     = protocolVersionEnumValues
