@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	// "github.com/YakDriver/regexache"
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -370,23 +370,23 @@ func TestAccIAMRole_diffsCondition(t *testing.T) {
 	})
 }
 
-// func TestAccIAMRole_badJSON(t *testing.T) {
-// ctx := acctest.Context(t)
-// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+func TestAccIAMRole_badJSON(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-// resource.ParallelTest(t, resource.TestCase{
-// PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// CheckDestroy:             testAccCheckRoleDestroy(ctx),
-// Steps: []resource.TestStep{
-// {
-// Config:      testAccRoleConfig_badJSON(rName),
-// ExpectError: regexache.MustCompile(`.*contains an invalid JSON policy:.*`),
-// },
-// },
-// })
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRoleConfig_badJSON(rName),
+				ExpectError: regexache.MustCompile(`.*Invalid JSON String Value*`),
+			},
+		},
+	})
+}
 
 // func TestAccIAMRole_disappears(t *testing.T) {
 // ctx := acctest.Context(t)
