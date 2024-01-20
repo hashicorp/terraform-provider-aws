@@ -5,11 +5,13 @@ package qbusiness
 
 import (
 	"context"
+	"fmt"
+	"log"
 	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go/service/qbusiness"
+	"github.com/aws/aws-sdk-go-v2/service/qbusiness"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -113,6 +115,7 @@ func ResourcePlugin() *schema.Resource {
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
+				ForceNew:     true,
 				Description:  "Type of plugin. Valid value are `SERVICE_NOW`, `SALESFORCE`, `JIRA`, and `ZENDESK`",
 				ValidateFunc: validation.StringInSlice(qbusiness.PluginType_Values(), false),
 			},
@@ -167,26 +170,125 @@ func resourcePluginCreate(ctx context.Context, d *schema.ResourceData, meta inte
 func resourcePluginRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	conn := meta.(*conns.AWSClient).QBusinessConn(ctx)
+
+	output, err := FindPluginByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, qbusiness.ErrCodeResourceNotFoundException) {
+		log.Printf("[WARN] qbusiness plugin (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading qbusiness plugin (%s): %s", d.Id(), err)
+	}
+
+	d.Set("application_id", output.ApplicationId)
+	d.Set("arn", output.PluginArn)
+	d.Set("display_name", output.DisplayName)
+
+	if output.AuthConfiguration != nil {
+		if err := d.Set("basic_auth_configuration",
+			flattenBasicAuthConfiguration(output.AuthConfiguration.BasicAuthConfiguration)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting qbusiness plugin basic_auth_configuration: %s", err)
+		}
+		if err := d.Set("oauth2_client_credential_configuration",
+			flattenOAuth2ClientCredentialConfiguration(output.AuthConfiguration.OAuth2ClientCredentialConfiguration)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting qbusiness plugin oauth2_client_credential_configuration: %s", err)
+		}
+	}
+
+	d.Set("plugin_id", output.PluginId)
+	d.Set("server_url", output.ServerUrl)
+	d.Set("state", output.State)
+	d.Set("type", output.Type)
+
 	return diags
 }
 
 func resourcePluginUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	return diags
+	conn := meta.(*conns.AWSClient).QBusinessConn(ctx)
+
+	application_id, plugin_id, err := parsePluginID(d.Id())
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "parsing qbusiness plugin ID (%s): %s", d.Id(), err)
+	}
+
+	input := &qbusiness.UpdatePluginInput{
+		ApplicationId: aws.String(application_id),
+		PluginId:      aws.String(plugin_id),
+	}
+
+	if d.HasChange("display_name") {
+		input.DisplayName = aws.String(d.Get("display_name").(string))
+	}
+	if d.HasChange("server_url") {
+		input.ServerUrl = aws.String(d.Get("server_url").(string))
+	}
+	if d.HasChange("state") {
+		input.State = aws.String(d.Get("state").(string))
+	}
+
+	_, err = conn.UpdatePlugin(input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating qbusiness plugin: %s", err)
+	}
+
+	return append(diags, resourcePluginRead(ctx, d, meta)...)
 }
 
 func resourcePluginDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
+	conn := meta.(*conns.AWSClient).QBusinessConn(ctx)
+
+	application_id, plugin_id, err := parsePluginID(d.Id())
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "parsing qbusiness plugin ID (%s): %s", d.Id(), err)
+	}
+
+	_, err = conn.DeletePlugin(&qbusiness.DeletePluginInput{
+		ApplicationId: aws.String(application_id),
+		PluginId:      aws.String(plugin_id),
+	})
+
+	if tfawserr.ErrCodeEquals(err, qbusiness.ErrCodeResourceNotFoundException) {
+		return nil
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting qbusiness plugin (%s): %s", d.Id(), err)
+	}
+
 	return diags
 }
 
-func FindPluginByID(ctx context.Context, conn *qbusiness.QBusiness, plugin_id string) (*qbusiness.GetPluginOutput, error) {
-	id := strings.Split(plugin_id, "/")
+func parsePluginID(id string) (string, string, error) {
+	parts := strings.Split(id, "/")
+
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("invalid plugin ID: %s", id)
+	}
+
+	return parts[0], parts[1], nil
+}
+
+func FindPluginByID(ctx context.Context, conn *qbusiness.QBusiness, id string) (*qbusiness.GetPluginOutput, error) {
+	application_id, plugin_id, err := parsePluginID(id)
+
+	if err != nil {
+		return nil, err
+	}
+
 	input := &qbusiness.GetPluginInput{
-		ApplicationId: aws.String(id[0]),
-		PluginId:      aws.String(id[1]),
+		ApplicationId: aws.String(application_id),
+		PluginId:      aws.String(plugin_id),
 	}
 
 	output, err := conn.GetPlugin(input)
