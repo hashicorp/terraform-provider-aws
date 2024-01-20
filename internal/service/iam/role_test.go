@@ -490,100 +490,101 @@ func TestAccIAMRole_maxSessionDuration(t *testing.T) {
 	})
 }
 
-// func TestAccIAMRole_permissionsBoundary(t *testing.T) {
-// ctx := acctest.Context(t)
-// var role iam.Role
+func TestAccIAMRole_permissionsBoundary(t *testing.T) {
+	ctx := acctest.Context(t)
+	var role iam.Role
 
-// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// resourceName := "aws_iam_role.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
 
-// permissionsBoundary1 := fmt.Sprintf("arn:%s:iam::aws:policy/AdministratorAccess", acctest.Partition())
-// permissionsBoundary2 := fmt.Sprintf("arn:%s:iam::aws:policy/ReadOnlyAccess", acctest.Partition())
+	permissionsBoundary1 := fmt.Sprintf("arn:%s:iam::aws:policy/AdministratorAccess", acctest.Partition())
+	permissionsBoundary2 := fmt.Sprintf("arn:%s:iam::aws:policy/ReadOnlyAccess", acctest.Partition())
 
-// resource.ParallelTest(t, resource.TestCase{
-// PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// CheckDestroy:             testAccCheckUserDestroy(ctx),
-// Steps: []resource.TestStep{
-// // Test creation
-// {
-// Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
-// testAccCheckRolePermissionsBoundary(&role, permissionsBoundary1),
-// ),
-// },
-// // Test update
-// {
-// Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary2),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary2),
-// testAccCheckRolePermissionsBoundary(&role, permissionsBoundary2),
-// ),
-// },
-// // Test import
-// {
-// ResourceName:      resourceName,
-// ImportState:       true,
-// ImportStateVerify: true,
-// ImportStateVerifyIgnore: []string{
-// "force_destroy",
-// },
-// },
-// // Test removal
-// {
-// Config: testAccRoleConfig_basic(rName),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
-// testAccCheckRolePermissionsBoundary(&role, ""),
-// ),
-// },
-// // Test addition
-// {
-// Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
-// testAccCheckRolePermissionsBoundary(&role, permissionsBoundary1),
-// ),
-// },
-// // Test drift detection
-// {
-// PreConfig: func() {
-// // delete the boundary manually
-// conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
-// input := &iam.DeleteRolePermissionsBoundaryInput{
-// RoleName: role.RoleName,
-// }
-// _, err := conn.DeleteRolePermissionsBoundaryWithContext(ctx, input)
-// if err != nil {
-// t.Fatalf("Failed to delete permission_boundary from role (%s): %s", aws.StringValue(role.RoleName), err)
-// }
-// },
-// Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
-// // check the boundary was restored
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
-// testAccCheckRolePermissionsBoundary(&role, permissionsBoundary1),
-// ),
-// },
-// // Test empty value
-// {
-// Config: testAccRoleConfig_permissionsBoundary(rName, ""),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
-// testAccCheckRolePermissionsBoundary(&role, ""),
-// ),
-// },
-// },
-// })
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Test creation
+			{
+				Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
+					testAccCheckRolePermissionsBoundary(&role, permissionsBoundary1),
+				),
+			},
+			// Test update
+			{
+				Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary2),
+					testAccCheckRolePermissionsBoundary(&role, permissionsBoundary2),
+				),
+			},
+			// Test import
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy",
+				},
+			},
+			// Test removal
+			{
+				Config: testAccRoleConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					// TODO: what to do here?
+					resource.TestCheckNoResourceAttr(resourceName, "permissions_boundary"),
+					testAccCheckRolePermissionsBoundary(&role, ""),
+				),
+			},
+			// Test addition
+			{
+				Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
+					testAccCheckRolePermissionsBoundary(&role, permissionsBoundary1),
+				),
+			},
+			// Test drift detection
+			// {
+			// PreConfig: func() {
+			// // delete the boundary manually
+			// conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+			// input := &iam.DeleteRolePermissionsBoundaryInput{
+			// RoleName: role.RoleName,
+			// }
+			// _, err := conn.DeleteRolePermissionsBoundaryWithContext(ctx, input)
+			// if err != nil {
+			// t.Fatalf("Failed to delete permission_boundary from role (%s): %s", aws.StringValue(role.RoleName), err)
+			// }
+			// },
+			// Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
+			// // check the boundary was restored
+			// Check: resource.ComposeTestCheckFunc(
+			// testAccCheckRoleExists(ctx, resourceName, &role),
+			// resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
+			// testAccCheckRolePermissionsBoundary(&role, permissionsBoundary1),
+			// ),
+			// },
+			// // Test empty value
+			// {
+			// Config: testAccRoleConfig_permissionsBoundary(rName, ""),
+			// Check: resource.ComposeTestCheckFunc(
+			// testAccCheckRoleExists(ctx, resourceName, &role),
+			// resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
+			// testAccCheckRolePermissionsBoundary(&role, ""),
+			// ),
+			// },
+		},
+	})
+}
 
 // func TestAccIAMRole_tags(t *testing.T) {
 // ctx := acctest.Context(t)

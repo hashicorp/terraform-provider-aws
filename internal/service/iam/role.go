@@ -187,12 +187,15 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 					stringvalidator.LengthBetween(0, 512),
 				},
 			},
-			// "permissions_boundary": schema.StringAttribute{
-			// Optional: true,
-			// Validators: []validator.String{
-			// fwvalidators.ARN(),
-			// },
-			// },
+			"permissions_boundary": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
+				// Computed:   true,
+				// Default:    stringdefault.StaticString(""),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			// "unique_id": schema.StringAttribute{
 			// Computed: true,
 			// },
@@ -213,13 +216,13 @@ type resourceIamRoleData struct {
 	Name                types.String      `tfsdk:"name"`
 	NamePrefix          types.String      `tfsdk:"name_prefix"`
 	Path                types.String      `tfsdk:"path"`
+	PermissionsBoundary fwtypes.ARN       `tfsdk:"permissions_boundary"`
 	Tags                types.Map         `tfsdk:"tags"`
 	TagsAll             types.Map         `tfsdk:"tags_all"`
 
 	// TODO: still have to think this one out
 	// InlinePolicy        types.Map    `tfsdk:"inline_policy"`
 	// ManagedPolicyArns   types.Set    `tfsdk:"managed_policy_arns"`
-	// PermissionsBoundary types.String `tfsdk:"permissions_boundary"`
 	// UniqueId            types.String `tfsdk:"unique_id"`
 }
 
@@ -258,9 +261,9 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 		input.MaxSessionDuration = aws.Int64(plan.MaxSessionDuration.ValueInt64())
 	}
 
-	// if !plan.PermissionsBoundary.IsNull() {
-	// input.PermissionsBoundary = aws.String(plan.PermissionsBoundary.ValueString())
-	// }
+	if !plan.PermissionsBoundary.IsNull() {
+		input.PermissionsBoundary = aws.String(plan.PermissionsBoundary.ValueString())
+	}
 
 	// TODO: uncomment this
 	output, err := retryCreateRole(ctx, conn, input)
@@ -453,13 +456,11 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 		temp := false
 		state.ForceDetachPolicies = flex.BoolToFramework(ctx, &temp)
 	}
-	// fmt.Println(fmt.Sprintf("force detach: %v", state.ForceDetachPolicies.ValueBool()))
 
-	// if role.PermissionsBoundary != nil {
-	// d.Set("permissions_boundary", role.PermissionsBoundary.PermissionsBoundaryArn)
-	// } else {
-	// d.Set("permissions_boundary", nil)
-	// }
+	if role.PermissionsBoundary != nil {
+		fmt.Println(fmt.Sprintf("permission boundary arn: %v", *role.PermissionsBoundary.PermissionsBoundaryArn))
+		state.PermissionsBoundary = fwtypes.ARNValue(*role.PermissionsBoundary.PermissionsBoundaryArn)
+	}
 	// d.Set("unique_id", role.RoleId)
 
 	assumeRolePolicy, err := url.QueryUnescape(aws.StringValue(role.AssumeRolePolicyDocument))
@@ -596,6 +597,41 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 			// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s) MaxSessionDuration: %s", d.Id(), err)
 		}
 		state.MaxSessionDuration = plan.MaxSessionDuration
+	}
+
+	if !plan.PermissionsBoundary.Equal(state.PermissionsBoundary) {
+		fmt.Println("Found PermissionsBoundary diff!")
+		if !plan.PermissionsBoundary.IsNull() {
+			fmt.Println("PermissionsBoundary is non empty in plan...")
+			fmt.Println(fmt.Sprintf("plan pb: %v", plan.PermissionsBoundary.ValueString()))
+			input := &iam.PutRolePermissionsBoundaryInput{
+				PermissionsBoundary: aws.String(plan.PermissionsBoundary.ValueString()),
+				RoleName:            aws.String(state.ID.ValueString()),
+			}
+
+			_, err := conn.PutRolePermissionsBoundaryWithContext(ctx, input)
+
+			if err != nil {
+				// TODO: implement this error
+				return
+				// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s) permissions boundary: %s", d.Id(), err)
+			}
+		} else {
+			fmt.Println("PermissionsBoundary is empty removing...")
+			input := &iam.DeleteRolePermissionsBoundaryInput{
+				RoleName: aws.String(state.ID.ValueString()),
+			}
+
+			_, err := conn.DeleteRolePermissionsBoundaryWithContext(ctx, input)
+
+			if err != nil {
+				// TODO: implement error
+				return
+				// return sdkdiag.AppendErrorf(diags, "deleting IAM Role (%s) permissions boundary: %s", d.Id(), err)
+			}
+		}
+
+		state.PermissionsBoundary = plan.PermissionsBoundary
 	}
 
 	if !plan.TagsAll.Equal(state.TagsAll) {
