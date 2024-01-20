@@ -96,33 +96,33 @@ func TestAccIAMRole_description(t *testing.T) {
 	})
 }
 
-// func TestAccIAMRole_nameGenerated(t *testing.T) {
-// ctx := acctest.Context(t)
-// var conf iam.Role
-// resourceName := "aws_iam_role.test"
+func TestAccIAMRole_nameGenerated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf iam.Role
+	resourceName := "aws_iam_role.test"
 
-// resource.ParallelTest(t, resource.TestCase{
-// PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// CheckDestroy:             testAccCheckRoleDestroy(ctx),
-// Steps: []resource.TestStep{
-// {
-// Config: testAccRoleConfig_nameGenerated(),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &conf),
-// acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
-// resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
-// ),
-// },
-// {
-// ResourceName:      resourceName,
-// ImportState:       true,
-// ImportStateVerify: true,
-// },
-// },
-// })
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoleConfig_nameGenerated(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+					acctest.CheckResourceAttrNameGenerated(resourceName, "name"),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", "terraform-"),
+				),
+			},
+			// {
+			// ResourceName:      resourceName,
+			// ImportState:       true,
+			// ImportStateVerify: true,
+			// },
+		},
+	})
+}
 
 // func TestAccIAMRole_namePrefix(t *testing.T) {
 // ctx := acctest.Context(t)

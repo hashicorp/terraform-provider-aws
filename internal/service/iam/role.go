@@ -145,7 +145,9 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
+				// Default: stringdefault.StaticString(""),
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(roleNameMaxLen),
 					// TODO: uncomment when ready
@@ -154,23 +156,26 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 					// ),
 				},
 			},
-			// "name_prefix": schema.StringAttribute{
-			// Optional: true,
-			// Computed: true,
-			// PlanModifiers: []planmodifier.String{
-			// stringplanmodifier.RequiresReplaceIfConfigured(),
-			// },
-			// Validators: []validator.String{
-			// stringvalidator.LengthAtMost(roleNamePrefixMaxLen),
-			// stringvalidator.ConflictsWith(
-			// path.MatchRelative().AtParent().AtName("name"),
-			// ),
-			// },
-			// },
+			"name_prefix": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthAtMost(roleNamePrefixMaxLen),
+					stringvalidator.ConflictsWith(
+						path.MatchRelative().AtParent().AtName("name"),
+					),
+				},
+			},
 			"path": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
+					// TODO: can I do this and remove setting in Update/read?
+					// stringplanmodifier.UseStateForUnknown(),
 				},
 				// Default: stringdefault.StaticString("/"),
 				Validators: []validator.String{
@@ -203,9 +208,9 @@ type resourceIamRoleData struct {
 	// InlinePolicy        types.Map    `tfsdk:"inline_policy"`
 	// ManagedPolicyArns   types.Set    `tfsdk:"managed_policy_arns"`
 	// MaxSessionDuration  types.Int64  `tfsdk:"max_session_duration"`
-	Name types.String `tfsdk:"name"`
-	// NamePrefix          types.String `tfsdk:"name_prefix"`
-	Path types.String `tfsdk:"path"`
+	Name       types.String `tfsdk:"name"`
+	NamePrefix types.String `tfsdk:"name_prefix"`
+	Path       types.String `tfsdk:"path"`
 	// PermissionsBoundary types.String `tfsdk:"permissions_boundary"`
 	// UniqueId            types.String `tfsdk:"unique_id"`
 	Tags    types.Map `tfsdk:"tags"`
@@ -232,8 +237,8 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	// TODO: uncomment when we use prefix
-	// name := create.Name(plan.Name.ValueString(), plan.NamePrefix.ValueString())
-	name := plan.Name.ValueString()
+	name := create.Name(plan.Name.ValueString(), plan.NamePrefix.ValueString())
+	// name := plan.Name.ValueString()
 	input := &iam.CreateRoleInput{
 		AssumeRolePolicyDocument: aws.String(assumeRolePolicy),
 		Path:                     aws.String(plan.Path.ValueString()),
@@ -329,6 +334,17 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	plan.ARN = fwtypes.ARNValue(*output.Role.Arn)
 	plan.CreateDate = flex.StringValueToFramework(ctx, output.Role.CreateDate.Format(time.RFC3339))
 	plan.ID = flex.StringToFramework(ctx, output.Role.RoleName)
+
+	if plan.Name.IsUnknown() {
+		fmt.Println("Name is Unknown! Setting in plan")
+		plan.Name = flex.StringToFramework(ctx, output.Role.RoleName)
+
+		if plan.NamePrefix.IsUnknown() {
+			plan.NamePrefix = flex.StringValueToFramework(ctx, "terraform-")
+		}
+	} else {
+		fmt.Println(fmt.Sprintf("Name: %s", plan.Name.ValueString()))
+	}
 
 	// last steps?
 	// TODO: do we need something?this?
