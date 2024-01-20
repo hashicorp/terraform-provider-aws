@@ -353,3 +353,26 @@ func findSecretVersionByTwoPartKey(ctx context.Context, conn *secretsmanager.Cli
 
 	return findSecretVersion(ctx, conn, input)
 }
+
+func findSecretVersions(ctx context.Context, conn *secretsmanager.Client, input *secretsmanager.ListSecretVersionIdsInput) (*secretsmanager.ListSecretVersionIdsOutput, error) {
+	output, err := conn.ListSecretVersionIds(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) ||
+		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "You can’t perform this operation on the secret because it was deleted") ||
+		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "You can't perform this operation on the secret because it was marked for deletion") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
