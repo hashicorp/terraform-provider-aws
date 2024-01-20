@@ -548,7 +548,7 @@ resource "aws_sagemaker_space" "test" {
   }
 
   space_settings {
-	app_type = "CodeEditor"
+    app_type = "CodeEditor"
     space_storage_settings {
       ebs_storage_settings {
         ebs_volume_size_in_gb = 10
@@ -566,7 +566,7 @@ resource "aws_sagemaker_space" "test" {
   space_name = %[1]q
 
   space_settings {
-	app_type = "CodeEditor"
+    app_type = "CodeEditor"
     code_editor_app_settings {
       default_resource_spec {
         instance_type = "system"
