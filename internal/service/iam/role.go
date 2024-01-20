@@ -460,7 +460,11 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	if role.PermissionsBoundary != nil {
 		fmt.Println(fmt.Sprintf("permission boundary arn: %v", *role.PermissionsBoundary.PermissionsBoundaryArn))
 		state.PermissionsBoundary = fwtypes.ARNValue(*role.PermissionsBoundary.PermissionsBoundaryArn)
+	} else {
+		fmt.Println("permission boundary is empty")
+		state.PermissionsBoundary = fwtypes.ARNNull()
 	}
+
 	// d.Set("unique_id", role.RoleId)
 
 	assumeRolePolicy, err := url.QueryUnescape(aws.StringValue(role.AssumeRolePolicyDocument))

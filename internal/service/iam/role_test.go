@@ -533,6 +533,11 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 					"force_destroy",
 				},
 			},
+			// Test empty value
+			{
+				Config:      testAccRoleConfig_permissionsBoundary(rName, ""),
+				ExpectError: regexache.MustCompile(`Value "" cannot be parsed as an ARN.`),
+			},
 			// Test removal
 			{
 				Config: testAccRoleConfig_basic(rName),
@@ -553,35 +558,27 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 				),
 			},
 			// Test drift detection
-			// {
-			// PreConfig: func() {
-			// // delete the boundary manually
-			// conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
-			// input := &iam.DeleteRolePermissionsBoundaryInput{
-			// RoleName: role.RoleName,
-			// }
-			// _, err := conn.DeleteRolePermissionsBoundaryWithContext(ctx, input)
-			// if err != nil {
-			// t.Fatalf("Failed to delete permission_boundary from role (%s): %s", aws.StringValue(role.RoleName), err)
-			// }
-			// },
-			// Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
-			// // check the boundary was restored
-			// Check: resource.ComposeTestCheckFunc(
-			// testAccCheckRoleExists(ctx, resourceName, &role),
-			// resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
-			// testAccCheckRolePermissionsBoundary(&role, permissionsBoundary1),
-			// ),
-			// },
-			// // Test empty value
-			// {
-			// Config: testAccRoleConfig_permissionsBoundary(rName, ""),
-			// Check: resource.ComposeTestCheckFunc(
-			// testAccCheckRoleExists(ctx, resourceName, &role),
-			// resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
-			// testAccCheckRolePermissionsBoundary(&role, ""),
-			// ),
-			// },
+			{
+				PreConfig: func() {
+					// delete the boundary manually
+					conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+					fmt.Println(fmt.Sprintf("test role name: %s", *role.RoleName))
+					input := &iam.DeleteRolePermissionsBoundaryInput{
+						RoleName: role.RoleName,
+					}
+					_, err := conn.DeleteRolePermissionsBoundaryWithContext(ctx, input)
+					if err != nil {
+						t.Fatalf("Failed to delete permission_boundary from role (%s): %s", aws.StringValue(role.RoleName), err)
+					}
+				},
+				Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
+				// check the boundary was restored
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
+					testAccCheckRolePermissionsBoundary(&role, permissionsBoundary1),
+				),
+			},
 		},
 	})
 }
