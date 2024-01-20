@@ -257,7 +257,7 @@ func resourceIndexUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "updating qbusiness index (%s): %s", d.Id(), err)
 	}
 
-	return diags
+	return append(diags, resourceIndexRead(ctx, d, meta)...)
 }
 
 func resourceIndexDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
