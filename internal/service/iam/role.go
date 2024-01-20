@@ -450,14 +450,12 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	state.Description = flex.StringToFramework(ctx, role.Description)
 	state.NamePrefix = flex.StringToFramework(ctx, create.NamePrefixFromName(aws.StringValue(role.RoleName)))
 
-	// TODO: how to get around this?
 	if state.ForceDetachPolicies.IsNull() {
-		fmt.Println("Hitting here! 2")
-		// TODO: what?
+		// TODO: better way to do this that is more framework friendly?
 		temp := false
 		state.ForceDetachPolicies = flex.BoolToFramework(ctx, &temp)
 	}
-	fmt.Println(fmt.Sprintf("force detach: %v", state.ForceDetachPolicies.ValueBool()))
+	// fmt.Println(fmt.Sprintf("force detach: %v", state.ForceDetachPolicies.ValueBool()))
 
 	// d.Set("max_session_duration", role.MaxSessionDuration)
 
