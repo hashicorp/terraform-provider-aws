@@ -50,7 +50,6 @@ func authConfigurationSchema() *schema.Schema {
 			},
 		},
 	}
-
 }
 
 // @SDKResource("aws_qbusiness_plugin", name="Plugin")
