@@ -20,8 +20,11 @@ import (
 	// "github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 
-	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+
 	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -114,10 +117,14 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 				// TODO: do something here
 			},
-			// "force_detach_policies": schema.BoolAttribute{
-			// Optional: true,
-			// // Default:  booldefault.StaticBool(false),
-			// },
+			"force_detach_policies": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				// PlanModifiers: []planmodifier.Bool{
+				// boolplanmodifier.UseStateForUnknown(),
+				// },
+			},
 			// TODO: inline policy goes crazy, have to figure what this type should look like
 			// also read article again
 			// "inline_policy": schema.MapAttribute{
@@ -172,10 +179,12 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			"path": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
+				Default:  stringdefault.StaticString("/"),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 					// TODO: can I do this and remove setting in Update/read?
-					// stringplanmodifier.UseStateForUnknown(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 				// Default: stringdefault.StaticString("/"),
 				Validators: []validator.String{
@@ -198,12 +207,12 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 }
 
 type resourceIamRoleData struct {
-	ARN              fwtypes.ARN       `tfsdk:"arn"`
-	AssumeRolePolicy fwtypes.IAMPolicy `tfsdk:"assume_role_policy"`
-	CreateDate       types.String      `tfsdk:"create_date"`
-	ID               types.String      `tfsdk:"id"`
-	Description      types.String      `tfsdk:"description"`
-	// ForceDetachPolicies types.Bool   `tfsdk:"force_detach_policies"`
+	ARN                 fwtypes.ARN       `tfsdk:"arn"`
+	AssumeRolePolicy    fwtypes.IAMPolicy `tfsdk:"assume_role_policy"`
+	CreateDate          types.String      `tfsdk:"create_date"`
+	ID                  types.String      `tfsdk:"id"`
+	Description         types.String      `tfsdk:"description"`
+	ForceDetachPolicies types.Bool        `tfsdk:"force_detach_policies"`
 	// TODO: still have to think this one out
 	// InlinePolicy        types.Map    `tfsdk:"inline_policy"`
 	// ManagedPolicyArns   types.Set    `tfsdk:"managed_policy_arns"`
@@ -332,17 +341,6 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	plan.Name = flex.StringToFramework(ctx, output.Role.RoleName)
 	plan.NamePrefix = flex.StringToFramework(ctx, create.NamePrefixFromName(aws.StringValue(output.Role.RoleName)))
 
-	// if plan.Name.IsUnknown() {
-	// fmt.Println("Name is Unknown! Setting in plan")
-	// plan.Name = flex.StringToFramework(ctx, output.Role.RoleName)
-
-	// // if plan.NamePrefix.IsUnknown() {
-	// // plan.NamePrefix = flex.StringValueToFramework(ctx, "terraform-")
-	// // }
-	// } else {
-	// fmt.Println(fmt.Sprintf("Name: %s", plan.Name.ValueString()))
-	// }
-
 	// last steps?
 	// TODO: do we need something?this?
 	// state.refreshFromOutput(ctx, out)
@@ -373,7 +371,8 @@ func (r resourceIamRole) Delete(ctx context.Context, req resource.DeleteRequest,
 	// }
 
 	// err := DeleteRole(ctx, conn, state.Name.ValueString(), state.ForceDetachPolicies.ValueBool(), hasInline, hasManaged)
-	err := DeleteRole(ctx, conn, state.Name.ValueString(), false, false, false)
+	// TODO: should name be ID here?
+	err := DeleteRole(ctx, conn, state.Name.ValueString(), state.ForceDetachPolicies.ValueBool(), false, false)
 
 	if err != nil {
 		// TODO: do something like this to skip deletes on roles that are gone?
@@ -451,6 +450,15 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	state.Description = flex.StringToFramework(ctx, role.Description)
 	state.NamePrefix = flex.StringToFramework(ctx, create.NamePrefixFromName(aws.StringValue(role.RoleName)))
 
+	// TODO: how to get around this?
+	if state.ForceDetachPolicies.IsNull() {
+		fmt.Println("Hitting here! 2")
+		// TODO: what?
+		temp := false
+		state.ForceDetachPolicies = flex.BoolToFramework(ctx, &temp)
+	}
+	fmt.Println(fmt.Sprintf("force detach: %v", state.ForceDetachPolicies.ValueBool()))
+
 	// d.Set("max_session_duration", role.MaxSessionDuration)
 
 	// if role.PermissionsBoundary != nil {
@@ -480,8 +488,6 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 	state.AssumeRolePolicy = fwtypes.IAMPolicyValue(policyToSet)
-
-	// d.Set("assume_role_policy", policyToSet)
 
 	// inlinePolicies, err := readRoleInlinePolicies(ctx, aws.StringValue(role.RoleName), meta)
 	// if err != nil {
