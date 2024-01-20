@@ -40,6 +40,8 @@ func testAccSpace_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "space_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_id", "aws_sagemaker_domain.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "space_sharing_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ownership_settings.#", "0"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexache.MustCompile(`space/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "home_efs_file_system_uid"),
@@ -95,35 +97,6 @@ func testAccSpace_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
-			},
-		},
-	})
-}
-
-func testAccSpace_appType(t *testing.T) {
-	ctx := acctest.Context(t)
-	var domain sagemaker.DescribeSpaceOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_sagemaker_space.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSpaceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSpaceConfig_appType(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSpaceExists(ctx, resourceName, &domain),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.app_type.#", "JupyterLab"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -279,6 +252,7 @@ func testAccSpace_storageSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.app_type", "CodeEditor"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.space_storage_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.space_storage_settings.0.ebs_storage_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.space_storage_settings.0.ebs_storage_settings.0.ebs_volume_size_in_gb", "10"),
@@ -345,9 +319,14 @@ func testAccSpace_jupyterLabAppSettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSpaceExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.app_type", "JupyterLab"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "system"),
+					resource.TestCheckResourceAttr(resourceName, "space_sharing_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "space_sharing_settings.0.sharing_type", "Private"),
+					resource.TestCheckResourceAttr(resourceName, "ownership_settings.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "ownership_settings.0.owner_user_profile_name", "aws_sagemaker_user_profile.test", "user_profile_name"),
 				),
 			},
 			{
@@ -587,6 +566,7 @@ resource "aws_sagemaker_space" "test" {
   space_name = %[1]q
 
   space_settings {
+	app_type = "CodeEditor"
     code_editor_app_settings {
       default_resource_spec {
         instance_type = "system"
@@ -599,11 +579,25 @@ resource "aws_sagemaker_space" "test" {
 
 func testAccSpaceConfig_jupyterLabAppSettings(rName string) string {
 	return acctest.ConfigCompose(testAccSpaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_user_profile" "test" {
+  domain_id         = aws_sagemaker_domain.test.id
+  user_profile_name = "%[1]s-2"
+}
+
 resource "aws_sagemaker_space" "test" {
   domain_id  = aws_sagemaker_domain.test.id
   space_name = %[1]q
 
+  space_sharing_settings {
+    sharing_type = "Shared"
+  }
+
+  ownership_settings {
+    owner_user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
+  }
+
   space_settings {
+    app_type = "JupyterLab"
     jupyter_lab_app_settings {
       default_resource_spec {
         instance_type = "system"
@@ -626,19 +620,6 @@ resource "aws_sagemaker_space" "test" {
         instance_type = "system"
       }
     }
-  }
-}
-`, rName))
-}
-
-func testAccSpaceConfig_appType(rName string) string {
-	return acctest.ConfigCompose(testAccSpaceConfig_base(rName), fmt.Sprintf(`
-resource "aws_sagemaker_space" "test" {
-  domain_id  = aws_sagemaker_domain.test.id
-  space_name = %[1]q
-
-  space_settings {
-    app_type = "JupyterLab"
   }
 }
 `, rName))

@@ -60,9 +60,10 @@ func ResourceSpace() *schema.Resource {
 				Computed: true,
 			},
 			"ownership_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:         schema.TypeList,
+				RequiredWith: []string{"space_sharing_settings"},
+				Optional:     true,
+				MaxItems:     1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"owner_user_profile_name": {
@@ -367,9 +368,10 @@ func ResourceSpace() *schema.Resource {
 				},
 			},
 			"space_sharing_settings": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:         schema.TypeList,
+				RequiredWith: []string{"ownership_settings"},
+				Optional:     true,
+				MaxItems:     1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"sharing_type": {

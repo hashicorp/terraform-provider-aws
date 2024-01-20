@@ -87,7 +87,6 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"jupyterLabAppSettings":                    testAccSpace_jupyterLabAppSettings,
 			"codeEditorAppSettings":                    testAccSpace_codeEditorAppSettings,
 			"storageSettings":                          testAccSpace_storageSettings,
-			"appType":                                  testAccSpace_appType,
 			"customFileSystem":                         testAccSpace_customFileSystem,
 		},
 		"UserProfile": {
