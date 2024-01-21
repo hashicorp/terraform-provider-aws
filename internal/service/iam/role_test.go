@@ -40,6 +40,7 @@ func TestAccIAMRole_basic(t *testing.T) {
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "path", "/"),
 					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
 				),
 			},
 			{

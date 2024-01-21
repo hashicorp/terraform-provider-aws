@@ -199,9 +199,12 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			// "unique_id": schema.StringAttribute{
-			// Computed: true,
-			// },
+			"unique_id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -223,10 +226,10 @@ type resourceIamRoleData struct {
 	Tags                types.Map         `tfsdk:"tags"`
 	TagsAll             types.Map         `tfsdk:"tags_all"`
 	InlinePolicies      types.Map         `tfsdk:"inline_policies"`
+	UniqueId            types.String      `tfsdk:"unique_id"`
 
 	// TODO: still have to think this one out
 	// ManagedPolicyArns   types.Set    `tfsdk:"managed_policy_arns"`
-	// UniqueId            types.String `tfsdk:"unique_id"`
 }
 
 func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -339,6 +342,7 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	plan.ID = flex.StringToFramework(ctx, output.Role.RoleName)
 	plan.Name = flex.StringToFramework(ctx, output.Role.RoleName)
 	plan.NamePrefix = flex.StringToFramework(ctx, create.NamePrefixFromName(aws.StringValue(output.Role.RoleName)))
+	plan.UniqueId = flex.StringToFramework(ctx, output.Role.RoleId)
 
 	// last steps?
 	// TODO: do we need something?this?
@@ -449,6 +453,7 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	state.Description = flex.StringToFramework(ctx, role.Description)
 	state.NamePrefix = flex.StringToFramework(ctx, create.NamePrefixFromName(aws.StringValue(role.RoleName)))
 	state.MaxSessionDuration = flex.Int64ToFramework(ctx, role.MaxSessionDuration)
+	state.UniqueId = flex.StringToFramework(ctx, role.RoleId)
 
 	if state.ForceDetachPolicies.IsNull() {
 		// TODO: better way to do this that is more framework friendly?
