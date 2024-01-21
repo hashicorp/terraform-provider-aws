@@ -675,12 +675,12 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 				// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 				),
 			},
-			// {
-			// ResourceName:            resourceName,
-			// ImportState:             true,
-			// ImportStateVerify:       true,
-			// ImportStateVerifyIgnore: []string{"inline_policies"},
-			// },
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{fmt.Sprintf("inline_policies.%s", policyName3)},
+			},
 		},
 	})
 }
