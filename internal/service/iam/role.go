@@ -462,6 +462,7 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 		state.PermissionsBoundary = fwtypes.ARNNull()
 	}
 
+	// TODO: have to add this and maybe a test to validate this is non empty in basic
 	// d.Set("unique_id", role.RoleId)
 
 	assumeRolePolicy, err := url.QueryUnescape(aws.StringValue(role.AssumeRolePolicyDocument))
@@ -485,23 +486,30 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 	state.AssumeRolePolicy = fwtypes.IAMPolicyValue(policyToSet)
 
-	// inlinePolicies, err := readRoleInlinePolicies(ctx, aws.StringValue(role.RoleName), meta)
-	// if err != nil {
-	// // TODO: figure out this error
-	// return
-	// // return sdkdiag.AppendErrorf(diags, "reading inline policies for IAM role %s, error: %s", d.Id(), err)
-	// }
+	inlinePolicies, err := r.readRoleInlinePolicies(ctx, aws.StringValue(role.RoleName))
+	if err != nil {
+		// TODO: figure out this error
+		return
+		// return sdkdiag.AppendErrorf(diags, "reading inline policies for IAM role %s, error: %s", d.Id(), err)
+	}
 
-	// var configPoliciesList []*iam.PutRolePolicyInput
-	// if v := d.Get("inline_policy").(*schema.Set); v.Len() > 0 {
-	// configPoliciesList = expandRoleInlinePolicies(aws.StringValue(role.RoleName), v.List())
-	// }
+	var configPoliciesList []*iam.PutRolePolicyInput
+	if !state.InlinePolicies.IsNull() && !state.ARN.IsUnknown() {
+		inline_policies_map := make(map[string]string)
+		state.InlinePolicies.ElementsAs(ctx, &inline_policies_map, false)
+		configPoliciesList = expandRoleInlinePolicies(aws.StringValue(role.RoleName), inline_policies_map)
+	}
 
-	// if !inlinePoliciesEquivalent(inlinePolicies, configPoliciesList) {
-	// if err := d.Set("inline_policy", flattenRoleInlinePolicies(inlinePolicies)); err != nil {
-	// return sdkdiag.AppendErrorf(diags, "setting inline_policy: %s", err)
-	// }
-	// }
+	if !inlinePoliciesEquivalent(inlinePolicies, configPoliciesList) {
+		fmt.Println("found different inline policies!")
+		state.InlinePolicies = flex.FlattenFrameworkStringValueMap(ctx, flattenRoleInlinePolicies(inlinePolicies))
+		// if err := d.Set("inline_policy", flattenRoleInlinePolicies(inlinePolicies)); err != nil {
+		// // TODO: make error here
+		// fmt.Printf("error flattening inline policies in read")
+		// return
+		// // return sdkdiag.AppendErrorf(diags, "setting inline_policy: %s", err)
+		// }
+	}
 
 	// policyARNs, err := findRoleAttachedPolicies(ctx, conn, d.Id())
 	// if err != nil {
@@ -639,45 +647,73 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 		new_inline_policies_map := make(map[string]string)
 		plan.InlinePolicies.ElementsAs(ctx, &new_inline_policies_map, false)
 
-		var remove []string
-		// TODO: get diffs correctly
+		fmt.Println(fmt.Sprintf("len old_inline_policies_map: %v", len(old_inline_policies_map)))
+		fmt.Println(fmt.Sprintf("len new_inline_policies_map: %v", len(new_inline_policies_map)))
+
+		var remove_policy_names []string
 		for k := range old_inline_policies_map {
-			_, ok := new_inline_policies_map[k]
-			// If the key exists
-			if !ok {
-				fmt.Println(fmt.Sprintf("Adding inline policy to remove: %s", k))
-				remove = append(remove, k)
+			if _, ok := new_inline_policies_map[k]; !ok {
+				fmt.Println(fmt.Sprintf("Found inline policy to remove: %s", k))
+				remove_policy_names = append(remove_policy_names, k)
 			}
 		}
 
-		// var add []string
-		// remove := os.Difference(ns).List()
-		// add := ns.Difference(os).List()
+		// need set like object to store policy names we want to add
+		add_policy_names := make(map[string]int64)
+		fmt.Println("Going into add_policy_names loop...")
+		for k, v := range new_inline_policies_map {
+			fmt.Println(fmt.Sprintf("Looking at key: %s", k))
+			val, ok := old_inline_policies_map[k]
+			// If the key exists
+			if !ok {
+				fmt.Println(fmt.Sprintf("Found inline policy to add that does not exist: %s", k))
+				add_policy_names[k] = 0
+				continue
+			}
 
-		// roleName := state.Name.ValueString()
-		// osPolicies := expandRoleInlinePolicies(roleName, old_inline_policies_map)
-		// nsPolicies := expandRoleInlinePolicies(roleName, new_inline_policies_map)
+			if equivalent, err := awspolicy.PoliciesAreEquivalent(aws.StringValue(&v), aws.StringValue(&val)); err != nil || !equivalent {
+				fmt.Println(fmt.Sprintf("Found inline policy to add that needs update: %s", k))
+				add_policy_names[k] = 0
+			}
+		}
 
-		// var policyNames []string
-		// for _, policy := range remove {
-		// tfMap, ok := policy.(map[string]interface{})
+		fmt.Println(fmt.Sprintf("len add_policy_names: %v", len(add_policy_names)))
+		fmt.Println(fmt.Sprintf("add_policy_names values: %+v", add_policy_names))
+		fmt.Println(fmt.Sprintf("new_inline_policies_map: %+v", new_inline_policies_map))
 
-		// if !ok {
-		// continue
-		// }
+		roleName := state.Name.ValueString()
+		nsPolicies := expandRoleInlinePolicies(roleName, new_inline_policies_map)
+		fmt.Println(fmt.Sprintf("nsPolicies: %+v", nsPolicies))
 
-		// if v, ok := tfMap["name"].(string); ok && v != "" {
-		// policyNames = append(policyNames, tfMap["name"].(string))
-		// }
-		// }
-		// if err := deleteRoleInlinePolicies(ctx, conn, roleName, policyNames); err != nil {
-		// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s): %s", d.Id(), err)
-		// }
+		// getting policy objects we want to add based on add_policy_names map
+		var add_policies []*iam.PutRolePolicyInput
+		fmt.Println("Going into add_policies names loop...")
+		for _, val := range nsPolicies {
+			fmt.Println(fmt.Sprintf("Looking at: %s", *val.PolicyName))
+			if _, ok := add_policy_names[*val.PolicyName]; ok {
+				fmt.Println("adding")
+				add_policies = append(add_policies, val)
+			} else {
+				fmt.Println("not found")
+			}
+		}
 
-		// policies := expandRoleInlinePolicies(roleName, add)
-		// if err := addRoleInlinePolicies(ctx, policies, meta); err != nil {
-		// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s): %s", d.Id(), err)
-		// }
+		fmt.Println(fmt.Sprintf("len add_policies: %v", len(add_policies)))
+		fmt.Println(fmt.Sprintf("len remove_policy_names: %v", len(remove_policy_names)))
+
+		// Always add before delete
+		if err := r.addRoleInlinePolicies(ctx, add_policies); err != nil {
+			// TODO: add error here
+			return
+			// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s): %s", d.Id(), err)
+		}
+
+		if err := deleteRoleInlinePolicies(ctx, conn, roleName, remove_policy_names); err != nil {
+			// TODO: add error here
+			return
+			// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s): %s", d.Id(), err)
+		}
+
 	}
 
 	if !plan.TagsAll.Equal(state.TagsAll) {
@@ -700,9 +736,6 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 		}
 	} else {
 		fmt.Println("Tags are equal")
-	}
-
-	if !plan.TagsAll.Equal(state.TagsAll) {
 	}
 
 	plan.NamePrefix = flex.StringToFramework(ctx, create.NamePrefixFromName(plan.Name.ValueString()))
@@ -983,7 +1016,7 @@ func expandRoleInlinePolicies(roleName string, tfPoliciesMap map[string]string) 
 
 	for policyName, policyDocument := range tfPoliciesMap {
 		fmt.Println(fmt.Sprintf("policyName: %s", policyName))
-		fmt.Println(fmt.Sprintf("policyDocument: %s", policyDocument))
+		// fmt.Println(fmt.Sprintf("policyDocument: %s", policyDocument))
 		apiObject := expandRoleInlinePolicy(roleName, policyName, policyDocument)
 
 		if apiObject == nil {
@@ -1069,4 +1102,64 @@ func inlinePoliciesEquivalent(readPolicies, configPolicies []*iam.PutRolePolicyI
 	}
 
 	return matches == len(readPolicies)
+}
+
+func (r resourceIamRole) readRoleInlinePolicies(ctx context.Context, roleName string) ([]*iam.PutRolePolicyInput, error) {
+	conn := r.Meta().IAMConn(ctx)
+
+	policyNames, err := findRolePolicyNames(ctx, conn, roleName)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var apiObjects []*iam.PutRolePolicyInput
+	for _, policyName := range policyNames {
+		output, err := conn.GetRolePolicyWithContext(ctx, &iam.GetRolePolicyInput{
+			RoleName:   aws.String(roleName),
+			PolicyName: aws.String(policyName),
+		})
+
+		if err != nil {
+			return nil, err
+		}
+
+		policy, err := url.QueryUnescape(aws.StringValue(output.PolicyDocument))
+		if err != nil {
+			return nil, err
+		}
+
+		p, err := verify.LegacyPolicyNormalize(policy)
+		if err != nil {
+			return nil, fmt.Errorf("policy (%s) is invalid JSON: %w", p, err)
+		}
+
+		apiObject := &iam.PutRolePolicyInput{
+			RoleName:       aws.String(roleName),
+			PolicyDocument: aws.String(p),
+			PolicyName:     aws.String(policyName),
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects, nil
+}
+
+func flattenRoleInlinePolicies(apiObjects []*iam.PutRolePolicyInput) map[string]string {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	tfMap := make(map[string]string)
+
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		tfMap[aws.StringValue(apiObject.PolicyName)] = aws.StringValue(apiObject.PolicyDocument)
+	}
+
+	return tfMap
 }

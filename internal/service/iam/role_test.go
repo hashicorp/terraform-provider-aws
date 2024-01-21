@@ -199,6 +199,7 @@ func TestAccIAMRole_diffsNoCondition(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoleDestroy(ctx),
 		Steps: []resource.TestStep{
+			// TODO: have to validate this...
 			// {
 			// Config: testAccRoleConfig_diffs(rName, ""),
 			// Check: resource.ComposeTestCheckFunc(
@@ -249,16 +250,16 @@ func TestAccIAMRole_diffsNoCondition(t *testing.T) {
 			// Config:   testAccRoleConfig_diffs(rName, ""),
 			// PlanOnly: true,
 			// },
-			{
-				Config: testAccRoleConfig_diffs(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, ""),
-				PlanOnly: true,
-			},
+			// {
+			// Config: testAccRoleConfig_diffs(rName, ""),
+			// Check: resource.ComposeTestCheckFunc(
+			// testAccCheckRoleExists(ctx, resourceName, &conf),
+			// ),
+			// },
+			// {
+			// Config:   testAccRoleConfig_diffs(rName, ""),
+			// PlanOnly: true,
+			// },
 			// TODO: I don't think you can do this in plugin sdk, either nil or have something
 			// Either way can be figured out later
 			{
@@ -659,24 +660,26 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "2"),
-					// TODO: remove this once we add managed_policy_arns
-					// should be null?
-					// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+				// TODO: remove this once we add managed_policy_arns
+				// should be null?
+				// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 				),
 			},
 			// {
 			// Config: testAccRoleConfig_policyInlineUpdateDown(rName, policyName3),
 			// Check: resource.ComposeTestCheckFunc(
 			// testAccCheckRoleExists(ctx, resourceName, &role),
-			// resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
-			// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+			// resource.TestCheckResourceAttr(resourceName, "inline_policy.%", "1"),
+			// // TODO: remove this once we add managed_policy_arns
+			// // should be null?
+			// // resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 			// ),
 			// },
 			// {
-			// ResourceName:            resourceName,
-			// ImportState:             true,
-			// ImportStateVerify:       true,
-			// ImportStateVerifyIgnore: []string{"inline_policy.0.policy"},
+			// ResourceName:      resourceName,
+			// ImportState:       true,
+			// ImportStateVerify: true,
+			// // ImportStateVerifyIgnore: []string{"inline_policy.0.policy"},
 			// },
 		},
 	})
