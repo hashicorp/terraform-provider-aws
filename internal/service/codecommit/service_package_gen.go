@@ -57,8 +57,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTrigger,
+			Factory:  resourceTrigger,
 			TypeName: "aws_codecommit_trigger",
+			Name:     "Trigger",
 		},
 	}
 }
