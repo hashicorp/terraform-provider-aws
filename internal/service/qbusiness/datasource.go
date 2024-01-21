@@ -65,9 +65,12 @@ func valueSchema() *schema.Schema {
 					MaxItems: 2048,
 					Elem:     &schema.Schema{Type: schema.TypeString},
 				},
-				"strings_value": {
+				"string_value": {
 					Type:     schema.TypeString,
 					Optional: true,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 2048),
+					),
 				},
 			},
 		},
@@ -647,7 +650,7 @@ func expandDocumentAttributeTarget(v []interface{}) *types.DocumentAttributeTarg
 
 	return &types.DocumentAttributeTarget{
 		Key:                    aws.String(m["key"].(string)),
-		AttributeValueOperator: types.AttributeValueOperator(m["attributeValueOperator"].(string)),
+		AttributeValueOperator: types.AttributeValueOperator(m["attribute_value_operator"].(string)),
 		Value:                  expandValueSchema(m["value"].([]interface{})),
 	}
 }
@@ -660,7 +663,7 @@ func flattenDocumentAttributeTarget(cfg *types.DocumentAttributeTarget) []interf
 	m := make(map[string]interface{})
 
 	m["key"] = aws.ToString(cfg.Key)
-	m["attributeValueOperator"] = string(cfg.AttributeValueOperator)
+	m["attribute_value_operator"] = string(cfg.AttributeValueOperator)
 	m["value"] = flattenValueSchema(cfg.Value)
 
 	return []interface{}{m}
@@ -694,7 +697,7 @@ func flattenValueSchema(v types.DocumentAttributeValue) []interface{} {
 	case *types.DocumentAttributeValueMemberStringListValue:
 		m["string_list_value"] = flex.FlattenStringValueList(v.Value)
 	case *types.DocumentAttributeValueMemberStringValue:
-		m["strings_value"] = v.Value
+		m["string_value"] = v.Value
 	}
 
 	return []interface{}{m}
@@ -706,30 +709,32 @@ func expandValueSchema(v []interface{}) types.DocumentAttributeValue {
 	}
 	m := v[0].(map[string]interface{})
 
-	if v, ok := m["date_value"]; ok {
-		t, _ := time.Parse(time.RFC3339, v.(string))
-		return &types.DocumentAttributeValueMemberDateValue{
-			Value: t,
+	if date_value, ok := m["date_value"].(string); ok {
+		if t, err := time.Parse(time.RFC3339, date_value); err == nil {
+			return &types.DocumentAttributeValueMemberDateValue{
+				Value: t,
+			}
 		}
 	}
 
-	if v, ok := m["long_value"]; ok {
-		return &types.DocumentAttributeValueMemberLongValue{
-			Value: int64(v.(int)),
-		}
-	}
-
-	if v, ok := m["string_list_value"]; ok {
+	if string_list_value, ok := m["string_list_value"].([]interface{}); ok && len(string_list_value) > 0 {
 		return &types.DocumentAttributeValueMemberStringListValue{
-			Value: flex.ExpandStringValueList(v.([]interface{})),
+			Value: flex.ExpandStringValueList(string_list_value),
 		}
 	}
 
-	if v, ok := m["strings_value"]; ok {
+	if string_value, ok := m["string_value"].(string); ok && string_value != "" {
 		return &types.DocumentAttributeValueMemberStringValue{
-			Value: v.(string),
+			Value: string_value,
 		}
 	}
+
+	if long_value, ok := m["long_value"].(int); ok {
+		return &types.DocumentAttributeValueMemberLongValue{
+			Value: int64(long_value),
+		}
+	}
+
 	return nil
 }
 
