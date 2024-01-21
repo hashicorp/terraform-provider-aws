@@ -665,21 +665,21 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 				// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 				),
 			},
+			{
+				Config: testAccRoleConfig_policyInlineUpdateDown(rName, policyName3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "1"),
+				// TODO: remove this once we add managed_policy_arns
+				// should be null?
+				// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+				),
+			},
 			// {
-			// Config: testAccRoleConfig_policyInlineUpdateDown(rName, policyName3),
-			// Check: resource.ComposeTestCheckFunc(
-			// testAccCheckRoleExists(ctx, resourceName, &role),
-			// resource.TestCheckResourceAttr(resourceName, "inline_policy.%", "1"),
-			// // TODO: remove this once we add managed_policy_arns
-			// // should be null?
-			// // resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
-			// ),
-			// },
-			// {
-			// ResourceName:      resourceName,
-			// ImportState:       true,
-			// ImportStateVerify: true,
-			// // ImportStateVerifyIgnore: []string{"inline_policy.0.policy"},
+			// ResourceName:            resourceName,
+			// ImportState:             true,
+			// ImportStateVerify:       true,
+			// ImportStateVerifyIgnore: []string{"inline_policies"},
 			// },
 		},
 	})
@@ -1906,10 +1906,8 @@ resource "aws_iam_role" "test" {
     }]
   })
 
-  inline_policy {
-    name = %[2]q
-
-    policy = <<EOF
+  inline_policies = {
+    %[2]q = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": {
