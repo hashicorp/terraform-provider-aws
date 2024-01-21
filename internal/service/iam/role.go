@@ -486,29 +486,33 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 	state.AssumeRolePolicy = fwtypes.IAMPolicyValue(policyToSet)
 
-	inlinePolicies, err := r.readRoleInlinePolicies(ctx, aws.StringValue(role.RoleName))
-	if err != nil {
-		// TODO: figure out this error
-		return
-		// return sdkdiag.AppendErrorf(diags, "reading inline policies for IAM role %s, error: %s", d.Id(), err)
-	}
+	// Unforunately because of `aws_iam_role_policy` and those like it, we have to ignore unless
+	// added via create
+	if !state.InlinePolicies.IsNull() && !state.InlinePolicies.IsUnknown() {
+		inlinePolicies, err := r.readRoleInlinePolicies(ctx, aws.StringValue(role.RoleName))
+		if err != nil {
+			// TODO: figure out this error
+			return
+			// return sdkdiag.AppendErrorf(diags, "reading inline policies for IAM role %s, error: %s", d.Id(), err)
+		}
+		fmt.Println(fmt.Sprintf("inlinePolicies: %+v", inlinePolicies))
 
-	var configPoliciesList []*iam.PutRolePolicyInput
-	if !state.InlinePolicies.IsNull() && !state.ARN.IsUnknown() {
+		var configPoliciesList []*iam.PutRolePolicyInput
 		inline_policies_map := make(map[string]string)
 		state.InlinePolicies.ElementsAs(ctx, &inline_policies_map, false)
 		configPoliciesList = expandRoleInlinePolicies(aws.StringValue(role.RoleName), inline_policies_map)
-	}
+		fmt.Println(fmt.Sprintf("configPoliciesList: %+v", configPoliciesList))
 
-	if !inlinePoliciesEquivalent(inlinePolicies, configPoliciesList) {
-		fmt.Println("found different inline policies!")
-		state.InlinePolicies = flex.FlattenFrameworkStringValueMap(ctx, flattenRoleInlinePolicies(inlinePolicies))
-		// if err := d.Set("inline_policy", flattenRoleInlinePolicies(inlinePolicies)); err != nil {
-		// // TODO: make error here
-		// fmt.Printf("error flattening inline policies in read")
-		// return
-		// // return sdkdiag.AppendErrorf(diags, "setting inline_policy: %s", err)
-		// }
+		if !inlinePoliciesEquivalent(inlinePolicies, configPoliciesList) {
+			fmt.Println("found different inline policies!")
+			state.InlinePolicies = flex.FlattenFrameworkStringValueMap(ctx, flattenRoleInlinePolicies(inlinePolicies))
+			// if err := d.Set("inline_policy", flattenRoleInlinePolicies(inlinePolicies)); err != nil {
+			// // TODO: make error here
+			// fmt.Printf("error flattening inline policies in read")
+			// return
+			// // return sdkdiag.AppendErrorf(diags, "setting inline_policy: %s", err)
+			// }
+		}
 	}
 
 	// policyARNs, err := findRoleAttachedPolicies(ctx, conn, d.Id())

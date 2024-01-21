@@ -200,66 +200,66 @@ func TestAccIAMRole_diffsNoCondition(t *testing.T) {
 		CheckDestroy:             testAccCheckRoleDestroy(ctx),
 		Steps: []resource.TestStep{
 			// TODO: have to validate this...
-			// {
-			// Config: testAccRoleConfig_diffs(rName, ""),
-			// Check: resource.ComposeTestCheckFunc(
-			// testAccCheckRoleExists(ctx, resourceName, &conf),
-			// ),
-			// },
-			// {
-			// Config:   testAccRoleConfig_diffs(rName, ""),
-			// PlanOnly: true,
-			// },
-			// {
-			// Config: testAccRoleConfig_diffs(rName, ""),
-			// Check: resource.ComposeTestCheckFunc(
-			// testAccCheckRoleExists(ctx, resourceName, &conf),
-			// ),
-			// },
-			// {
-			// Config:   testAccRoleConfig_diffs(rName, ""),
-			// PlanOnly: true,
-			// },
-			// {
-			// Config: testAccRoleConfig_diffs(rName, ""),
-			// Check: resource.ComposeTestCheckFunc(
-			// testAccCheckRoleExists(ctx, resourceName, &conf),
-			// ),
-			// },
-			// {
-			// Config:   testAccRoleConfig_diffs(rName, ""),
-			// PlanOnly: true,
-			// },
-			// {
-			// Config: testAccRoleConfig_diffs(rName, ""),
-			// Check: resource.ComposeTestCheckFunc(
-			// testAccCheckRoleExists(ctx, resourceName, &conf),
-			// ),
-			// },
-			// {
-			// Config:   testAccRoleConfig_diffs(rName, ""),
-			// PlanOnly: true,
-			// },
-			// {
-			// Config: testAccRoleConfig_diffs(rName, ""),
-			// Check: resource.ComposeTestCheckFunc(
-			// testAccCheckRoleExists(ctx, resourceName, &conf),
-			// ),
-			// },
-			// {
-			// Config:   testAccRoleConfig_diffs(rName, ""),
-			// PlanOnly: true,
-			// },
-			// {
-			// Config: testAccRoleConfig_diffs(rName, ""),
-			// Check: resource.ComposeTestCheckFunc(
-			// testAccCheckRoleExists(ctx, resourceName, &conf),
-			// ),
-			// },
-			// {
-			// Config:   testAccRoleConfig_diffs(rName, ""),
-			// PlanOnly: true,
-			// },
+			{
+				Config: testAccRoleConfig_diffs(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffs(rName, ""),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccRoleConfig_diffs(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffs(rName, ""),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccRoleConfig_diffs(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffs(rName, ""),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccRoleConfig_diffs(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffs(rName, ""),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccRoleConfig_diffs(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffs(rName, ""),
+				PlanOnly: true,
+			},
+			{
+				Config: testAccRoleConfig_diffs(rName, ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_diffs(rName, ""),
+				PlanOnly: true,
+			},
 			// TODO: I don't think you can do this in plugin sdk, either nil or have something
 			// Either way can be figured out later
 			{
@@ -676,10 +676,15 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{fmt.Sprintf("inline_policies.%s", policyName3)},
+				// As stated in other comments, to allow other resources that
+				// attach inlinen policies we have to ignore inline_policies on import
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					fmt.Sprintf("inline_policies.%s", policyName3),
+					"inline_policies.%",
+				},
 			},
 		},
 	})
