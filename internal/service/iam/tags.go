@@ -153,6 +153,9 @@ func policyCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier stri
 func roleUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
+	fmt.Println("In update role tags")
+	fmt.Println(fmt.Sprintf("Old tags: %+v", oldTags))
+	fmt.Println(fmt.Sprintf("Old tags: %+v", newTags))
 
 	if removedTags := oldTags.Removed(newTags).IgnoreSystem(names.IAM); len(removedTags) > 0 {
 		input := &iam.UntagRoleInput{

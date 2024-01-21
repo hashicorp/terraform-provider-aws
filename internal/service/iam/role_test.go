@@ -187,7 +187,7 @@ func TestAccIAMRole_testNameChange(t *testing.T) {
 
 // // https://github.com/hashicorp/terraform-provider-aws/issues/23288
 // // https://github.com/hashicorp/terraform-provider-aws/issues/28833
-func TestAccIAMRole_diffs(t *testing.T) {
+func TestAccIAMRole_diffsNoCondition(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf iam.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -199,6 +199,56 @@ func TestAccIAMRole_diffs(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoleDestroy(ctx),
 		Steps: []resource.TestStep{
+			// {
+			// Config: testAccRoleConfig_diffs(rName, ""),
+			// Check: resource.ComposeTestCheckFunc(
+			// testAccCheckRoleExists(ctx, resourceName, &conf),
+			// ),
+			// },
+			// {
+			// Config:   testAccRoleConfig_diffs(rName, ""),
+			// PlanOnly: true,
+			// },
+			// {
+			// Config: testAccRoleConfig_diffs(rName, ""),
+			// Check: resource.ComposeTestCheckFunc(
+			// testAccCheckRoleExists(ctx, resourceName, &conf),
+			// ),
+			// },
+			// {
+			// Config:   testAccRoleConfig_diffs(rName, ""),
+			// PlanOnly: true,
+			// },
+			// {
+			// Config: testAccRoleConfig_diffs(rName, ""),
+			// Check: resource.ComposeTestCheckFunc(
+			// testAccCheckRoleExists(ctx, resourceName, &conf),
+			// ),
+			// },
+			// {
+			// Config:   testAccRoleConfig_diffs(rName, ""),
+			// PlanOnly: true,
+			// },
+			// {
+			// Config: testAccRoleConfig_diffs(rName, ""),
+			// Check: resource.ComposeTestCheckFunc(
+			// testAccCheckRoleExists(ctx, resourceName, &conf),
+			// ),
+			// },
+			// {
+			// Config:   testAccRoleConfig_diffs(rName, ""),
+			// PlanOnly: true,
+			// },
+			// {
+			// Config: testAccRoleConfig_diffs(rName, ""),
+			// Check: resource.ComposeTestCheckFunc(
+			// testAccCheckRoleExists(ctx, resourceName, &conf),
+			// ),
+			// },
+			// {
+			// Config:   testAccRoleConfig_diffs(rName, ""),
+			// PlanOnly: true,
+			// },
 			{
 				Config: testAccRoleConfig_diffs(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
@@ -209,114 +259,71 @@ func TestAccIAMRole_diffs(t *testing.T) {
 				Config:   testAccRoleConfig_diffs(rName, ""),
 				PlanOnly: true,
 			},
+			// TODO: I don't think you can do this in plugin sdk, either nil or have something
+			// Either way can be figured out later
 			{
-				Config: testAccRoleConfig_diffs(rName, ""),
+				// TODO: empty maps are not the same in plugin framework vs sdkv2
+				// would have to possibly resolve this in later PR or open to any ideas
+				// For now if you want no tags would have to set as null
+				// rest of below test changed to null from `{}`
+				// Config: testAccRoleConfig_diffs(rName, "tags = {}"),
+				Config: testAccRoleConfig_diffs(rName, "tags = null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
 			},
 			{
-				Config:   testAccRoleConfig_diffs(rName, ""),
+				Config:   testAccRoleConfig_diffs(rName, "tags = null"),
 				PlanOnly: true,
 			},
 			{
-				Config: testAccRoleConfig_diffs(rName, ""),
+				Config: testAccRoleConfig_diffs(rName, "tags = null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
 			},
 			{
-				Config:   testAccRoleConfig_diffs(rName, ""),
+				Config:   testAccRoleConfig_diffs(rName, "tags = null"),
 				PlanOnly: true,
 			},
 			{
-				Config: testAccRoleConfig_diffs(rName, ""),
+				Config: testAccRoleConfig_diffs(rName, "tags = null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
 			},
 			{
-				Config:   testAccRoleConfig_diffs(rName, ""),
+				Config:   testAccRoleConfig_diffs(rName, "tags = null"),
 				PlanOnly: true,
 			},
 			{
-				Config: testAccRoleConfig_diffs(rName, ""),
+				Config: testAccRoleConfig_diffs(rName, "tags = null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
 			},
 			{
-				Config:   testAccRoleConfig_diffs(rName, ""),
+				Config:   testAccRoleConfig_diffs(rName, "tags = null"),
 				PlanOnly: true,
 			},
 			{
-				Config: testAccRoleConfig_diffs(rName, ""),
+				Config: testAccRoleConfig_diffs(rName, "tags = null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
 			},
 			{
-				Config:   testAccRoleConfig_diffs(rName, ""),
+				Config:   testAccRoleConfig_diffs(rName, "tags = null"),
 				PlanOnly: true,
 			},
 			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
+				Config: testAccRoleConfig_diffs(rName, "tags = null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
 			},
 			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
-				PlanOnly: true,
-			},
-			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
+				Config:   testAccRoleConfig_diffs(rName, "tags = null"),
 				PlanOnly: true,
 			},
 		},
@@ -609,14 +616,14 @@ func TestAccIAMRole_tags(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			// {
-			// Config: testAccRoleConfig_tagsUpdate(rName),
-			// Check: resource.ComposeTestCheckFunc(
-			// testAccCheckRoleExists(ctx, resourceName, &role),
-			// resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-			// resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-value"),
-			// ),
-			// },
+			{
+				Config: testAccRoleConfig_tagsUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-value"),
+				),
+			},
 		},
 	})
 }

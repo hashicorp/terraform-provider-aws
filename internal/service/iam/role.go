@@ -248,17 +248,11 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 
 	name := create.Name(plan.Name.ValueString(), plan.NamePrefix.ValueString())
 
-	fmt.Println("Loop thru tags in Create...")
-	tags := getTagsIn(ctx)
-	fmt.Println(fmt.Sprintf("len tags: %v", len(tags)))
-	for i := 0; i < len(tags); i++ {
-		fmt.Println(tags[i])
-	}
 	input := &iam.CreateRoleInput{
 		AssumeRolePolicyDocument: aws.String(assumeRolePolicy),
 		Path:                     aws.String(plan.Path.ValueString()),
 		RoleName:                 aws.String(name),
-		Tags:                     tags,
+		Tags:                     getTagsIn(ctx),
 	}
 
 	if !plan.Description.IsNull() {
@@ -515,11 +509,6 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	// return sdkdiag.AppendErrorf(diags, "reading IAM Policies attached to Role (%s): %s", d.Id(), err)
 	// }
 	// d.Set("managed_policy_arns", policyARNs)
-	fmt.Println("Loop thru tags in Read...")
-	fmt.Println(fmt.Sprintf("len tags: %v", len(role.Tags)))
-	for i := 0; i < len(role.Tags); i++ {
-		fmt.Println(role.Tags[i])
-	}
 
 	setTagsOut(ctx, role.Tags)
 	// state.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, KeyValueTags(ctx, role.Tags).Map())
@@ -573,8 +562,6 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	if !plan.Description.Equal(state.Description) {
-		fmt.Println("Found description change!")
-		fmt.Println(fmt.Sprintf("Updating to %s", plan.Description.ValueString()))
 		input := &iam.UpdateRoleDescriptionInput{
 			RoleName:    aws.String(state.ID.ValueString()),
 			Description: aws.String(plan.Description.ValueString()),
@@ -597,9 +584,6 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	if !plan.MaxSessionDuration.Equal(state.MaxSessionDuration) {
-		fmt.Println("Hitting duration update")
-		fmt.Println(fmt.Sprintf("state: %v", state.MaxSessionDuration.ValueInt64()))
-		fmt.Println(fmt.Sprintf("plan: %v", plan.MaxSessionDuration.ValueInt64()))
 		input := &iam.UpdateRoleInput{
 			RoleName:           aws.String(state.ID.ValueString()),
 			MaxSessionDuration: aws.Int64(plan.MaxSessionDuration.ValueInt64()),
@@ -617,10 +601,7 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	if !plan.PermissionsBoundary.Equal(state.PermissionsBoundary) {
-		fmt.Println("Found PermissionsBoundary diff!")
 		if !plan.PermissionsBoundary.IsNull() {
-			fmt.Println("PermissionsBoundary is non empty in plan...")
-			fmt.Println(fmt.Sprintf("plan pb: %v", plan.PermissionsBoundary.ValueString()))
 			input := &iam.PutRolePermissionsBoundaryInput{
 				PermissionsBoundary: aws.String(plan.PermissionsBoundary.ValueString()),
 				RoleName:            aws.String(state.ID.ValueString()),
@@ -634,7 +615,6 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 				// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s) permissions boundary: %s", d.Id(), err)
 			}
 		} else {
-			fmt.Println("PermissionsBoundary is empty removing...")
 			input := &iam.DeleteRolePermissionsBoundaryInput{
 				RoleName: aws.String(state.ID.ValueString()),
 			}
@@ -652,20 +632,25 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	if !plan.TagsAll.Equal(state.TagsAll) {
-		err := roleUpdateTags(ctx, conn, plan.ID.ValueString(), state.TagsAll.Elements(), plan.TagsAll.Elements())
+		fmt.Println("Tags are not equal!")
+		err := roleUpdateTags(ctx, conn, plan.ID.ValueString(), state.TagsAll, plan.TagsAll)
 
 		// Some partitions (e.g. ISO) may not support tagging.
 		if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 			// TODO: implement error here
+			fmt.Println("Hit error parition updating!")
 			return
 			// return append(diags, resourceRoleRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
+			fmt.Println("Hit error updating!")
 			// TODO: implement error here
 			// return sdkdiag.AppendErrorf(diags, "updating tags for IAM Role (%s): %s", d.Id(), err)
 			return
 		}
+	} else {
+		fmt.Println("Tags are equal")
 	}
 
 	// TODO: do I need this? If so huh?
