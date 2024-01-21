@@ -633,8 +633,8 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	// policyName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	// policyName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -650,17 +650,20 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					// TODO: remove this once we add managed_policy_arns
+					// should be null?
 					// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 				),
 			},
-			// {
-			// Config: testAccRoleConfig_policyInlineUpdate(rName, policyName2, policyName3),
-			// Check: resource.ComposeTestCheckFunc(
-			// testAccCheckRoleExists(ctx, resourceName, &role),
-			// resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "2"),
-			// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
-			// ),
-			// },
+			{
+				Config: testAccRoleConfig_policyInlineUpdate(rName, policyName2, policyName3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "2"),
+					// TODO: remove this once we add managed_policy_arns
+					// should be null?
+					// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+				),
+			},
 			// {
 			// Config: testAccRoleConfig_policyInlineUpdateDown(rName, policyName3),
 			// Check: resource.ComposeTestCheckFunc(
@@ -1815,6 +1818,23 @@ func testAccRoleConfig_policyInlineUpdate(roleName, policyName2, policyName3 str
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+locals {
+    inline_policy_doc = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -1830,10 +1850,8 @@ resource "aws_iam_role" "test" {
     }]
   })
 
-  inline_policy {
-    name = %[2]q
-
-    policy = <<EOF
+  inline_policies = {
+    %[2]q = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -1847,12 +1865,7 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-  }
-
-  inline_policy {
-    name = %[3]q
-
-    policy = <<EOF
+    %[3]q = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
