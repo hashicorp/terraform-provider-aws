@@ -664,7 +664,7 @@ resource "aws_sagemaker_space" "test" {
         instance_type = "ml.t3.micro"
       }
     }
-	
+
     custom_file_system {
       efs_file_system {
         file_system_id = aws_efs_mount_target.test.file_system_id
