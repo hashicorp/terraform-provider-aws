@@ -30,8 +30,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Approval Rule Template",
 		},
 		{
-			Factory:  DataSourceRepository,
+			Factory:  dataSourceRepository,
 			TypeName: "aws_codecommit_repository",
+			Name:     "Repository",
 		},
 	}
 }
