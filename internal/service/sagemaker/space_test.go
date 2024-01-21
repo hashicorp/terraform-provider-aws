@@ -290,7 +290,7 @@ func testAccSpace_codeEditorAppSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "space_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.code_editor_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.code_editor_app_settings.0.default_resource_spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.code_editor_app_settings.0.default_resource_spec.0.instance_type", "system"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.code_editor_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
 				),
 			},
 			{
@@ -582,7 +582,7 @@ resource "aws_sagemaker_space" "test" {
     app_type = "CodeEditor"
     code_editor_app_settings {
       default_resource_spec {
-        instance_type = "system"
+        instance_type = "ml.t3.micro"
       }
     }
   }
