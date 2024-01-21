@@ -45,6 +45,7 @@ This resource supports the following arguments:
 
 * `app_type` - (Optional) The type of app created within the space.
 * `code_editor_app_settings` - (Optional) The Code Editor application settings. See [Code Editor App Settings](#code-editor-app-settings) below.
+* `custom_file_system` - (Optional) A file system, created by you, that you assign to a space for an Amazon SageMaker Domain. See [Custom File System](#custom-file-system) below.
 * `jupyter_lab_app_settings` - (Optional) The settings for the JupyterLab application. See [Jupyter Lab App Settings](#jupyter-lab-app-settings) below.
 * `jupyter_server_app_settings` - (Optional) The Jupyter server's app settings. See [Jupyter Server App Settings](#jupyter-server-app-settings) below.
 * `kernel_gateway_app_settings` - (Optional) The kernel gateway app settings. See [Kernel Gateway App Settings](#kernel-gateway-app-settings) below.
@@ -53,6 +54,10 @@ This resource supports the following arguments:
 
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
 * `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
+
+#### Custom File System
+
+* `efs_file_system` - (Optional) A custom file system in Amazon EFS. see [EFS File System](#efs-file-system) below.
 
 #### Jupyter Lab App Settings
 
@@ -71,6 +76,10 @@ This resource supports the following arguments:
 * `code_repository` - (Optional) A list of Git repositories that SageMaker automatically displays to users for cloning in the JupyterServer application. see [Code Repository](#code-repository) below.
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [Default Resource Spec](#default-resource-spec) below.
 * `lifecycle_config_arns` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configurations.
+
+#### EFS File System
+
+* `file_system_id` - (Optional) The ID of your Amazon EFS file system.
 
 ##### Code Repository
 

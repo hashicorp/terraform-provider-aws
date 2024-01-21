@@ -322,7 +322,7 @@ func testAccSpace_jupyterLabAppSettings(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.app_type", "JupyterLab"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "system"),
+					resource.TestCheckResourceAttr(resourceName, "space_settings.0.jupyter_lab_app_settings.0.default_resource_spec.0.instance_type", "ml.t3.micro"),
 					resource.TestCheckResourceAttr(resourceName, "space_sharing_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "space_sharing_settings.0.sharing_type", "Private"),
 					resource.TestCheckResourceAttr(resourceName, "ownership_settings.#", "1"),
@@ -561,9 +561,22 @@ resource "aws_sagemaker_space" "test" {
 
 func testAccSpaceConfig_codeEditorAppSettings(rName string) string {
 	return acctest.ConfigCompose(testAccSpaceConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_user_profile" "test" {
+  domain_id         = aws_sagemaker_domain.test.id
+  user_profile_name = "%[1]s-2"
+}
+
 resource "aws_sagemaker_space" "test" {
   domain_id  = aws_sagemaker_domain.test.id
   space_name = %[1]q
+
+  space_sharing_settings {
+    sharing_type = "Private"
+  }
+
+  ownership_settings {
+    owner_user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
+  }
 
   space_settings {
     app_type = "CodeEditor"
@@ -589,7 +602,7 @@ resource "aws_sagemaker_space" "test" {
   space_name = %[1]q
 
   space_sharing_settings {
-    sharing_type = "Shared"
+    sharing_type = "Private"
   }
 
   ownership_settings {
@@ -600,7 +613,7 @@ resource "aws_sagemaker_space" "test" {
     app_type = "JupyterLab"
     jupyter_lab_app_settings {
       default_resource_spec {
-        instance_type = "system"
+        instance_type = "ml.t3.micro"
       }
     }
   }
@@ -626,23 +639,32 @@ resource "aws_sagemaker_space" "test" {
 }
 
 func testAccSpaceConfig_customFileConfig(rName string) string {
-	return acctest.ConfigCompose(testAccSpaceConfig_base(rName), fmt.Sprintf(`
-resource "aws_efs_file_system" "test" {
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_efs_mount_target" "test" {
-  file_system_id = aws_efs_file_system.test.id
-  subnet_id      = aws_subnet.test[0].id
+	return acctest.ConfigCompose(testAccDomainConfig_efs(rName), fmt.Sprintf(`
+resource "aws_sagemaker_user_profile" "test" {
+  domain_id         = aws_sagemaker_domain.test.id
+  user_profile_name = "%[1]s-2"
 }
 
 resource "aws_sagemaker_space" "test" {
   domain_id  = aws_sagemaker_domain.test.id
   space_name = %[1]q
 
+  space_sharing_settings {
+    sharing_type = "Private"
+  }
+
+  ownership_settings {
+    owner_user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
+  }
+
   space_settings {
+    app_type = "JupyterLab"
+    jupyter_lab_app_settings {
+      default_resource_spec {
+        instance_type = "ml.t3.micro"
+      }
+    }
+	
     custom_file_system {
       efs_file_system {
         file_system_id = aws_efs_mount_target.test.file_system_id

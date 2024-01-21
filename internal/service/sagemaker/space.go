@@ -74,8 +74,9 @@ func ResourceSpace() *schema.Resource {
 				},
 			},
 			"space_display_name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 64),
 			},
 			"space_settings": {
 				Type:     schema.TypeList,
@@ -345,6 +346,7 @@ func ResourceSpace() *schema.Resource {
 						"space_storage_settings": {
 							Type:     schema.TypeList,
 							Optional: true,
+							Computed: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -355,8 +357,9 @@ func ResourceSpace() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"ebs_volume_size_in_gb": {
-													Type:     schema.TypeInt,
-													Required: true,
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntBetween(5, 16384),
 												},
 											},
 										},
@@ -569,7 +572,7 @@ func expandSpaceSettings(l []interface{}) *sagemaker.SpaceSettings {
 
 	config := &sagemaker.SpaceSettings{}
 
-	if v, ok := m["app_type"].(string); ok {
+	if v, ok := m["app_type"].(string); ok && len(v) > 0 {
 		config.AppType = aws.String(v)
 	}
 
@@ -773,7 +776,7 @@ func expandCustomFileSystem(tfMap map[string]interface{}) *sagemaker.CustomFileS
 
 	apiObject := &sagemaker.CustomFileSystem{}
 
-	if v, ok := tfMap["efs_file_system_config"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+	if v, ok := tfMap["efs_file_system"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.EFSFileSystem = expandEFSFileSystem(v[0].(map[string]interface{}))
 	}
 
