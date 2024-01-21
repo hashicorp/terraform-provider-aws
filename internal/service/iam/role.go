@@ -291,16 +291,16 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 		plan.InlinePolicies.ElementsAs(ctx, &inline_policies_map, false)
 		// v, _ := plan.InlinePolicies.ToMapValue(ctx)
 		fmt.Println(fmt.Sprintf("len inline_policies_map: %v", len(inline_policies_map)))
-		fmt.Println(fmt.Sprintf("inline_policies_map: %+v", inline_policies_map))
+		// fmt.Println(fmt.Sprintf("inline_policies_map: %+v", inline_policies_map))
 		policies := expandRoleInlinePolicies(roleName, inline_policies_map)
-		fmt.Println(fmt.Sprintf("policies: %+v", policies))
-		// if err := r.addRoleInlinePolicies(ctx, policies); err != nil {
-		// resp.Diagnostics.AddError(
-		// create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
-		// err.Error(),
-		// )
-		// return
-		// }
+		// fmt.Println(fmt.Sprintf("policies: %+v", policies))
+		if err := r.addRoleInlinePolicies(ctx, policies); err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
+				err.Error(),
+			)
+			return
+		}
 	}
 
 	// if !plan.ManagedPolicyArns.IsNull() && !plan.ManagedPolicyArns.IsUnknown() {

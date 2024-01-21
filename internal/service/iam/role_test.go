@@ -647,9 +647,10 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 				Config: testAccRoleConfig_policyInline(rName, policyName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+					// TODO: remove this once we add managed_policy_arns
+					// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 				),
 			},
 			// {
@@ -1789,10 +1790,6 @@ resource "aws_iam_role" "test" {
       Sid    = ""
     }]
   })
-
-  // inline_policies = {
-    // "derp" = %[2]q
-  // }
 
   inline_policies = {
     %[2]q = <<EOF
