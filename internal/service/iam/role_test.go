@@ -628,55 +628,55 @@ func TestAccIAMRole_tags(t *testing.T) {
 	})
 }
 
-// func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
-// ctx := acctest.Context(t)
-// var role iam.Role
-// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// policyName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// policyName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// resourceName := "aws_iam_role.test"
+func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var role iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	// policyName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	// policyName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
 
-// resource.ParallelTest(t, resource.TestCase{
-// PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// CheckDestroy:             testAccCheckRoleDestroy(ctx),
-// Steps: []resource.TestStep{
-// {
-// Config: testAccRoleConfig_policyInline(rName, policyName1),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
-// resource.TestCheckResourceAttr(resourceName, "name", rName),
-// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
-// ),
-// },
-// {
-// Config: testAccRoleConfig_policyInlineUpdate(rName, policyName2, policyName3),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "2"),
-// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
-// ),
-// },
-// {
-// Config: testAccRoleConfig_policyInlineUpdateDown(rName, policyName3),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
-// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
-// ),
-// },
-// {
-// ResourceName:            resourceName,
-// ImportState:             true,
-// ImportStateVerify:       true,
-// ImportStateVerifyIgnore: []string{"inline_policy.0.policy"},
-// },
-// },
-// })
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoleConfig_policyInline(rName, policyName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+				),
+			},
+			// {
+			// Config: testAccRoleConfig_policyInlineUpdate(rName, policyName2, policyName3),
+			// Check: resource.ComposeTestCheckFunc(
+			// testAccCheckRoleExists(ctx, resourceName, &role),
+			// resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "2"),
+			// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+			// ),
+			// },
+			// {
+			// Config: testAccRoleConfig_policyInlineUpdateDown(rName, policyName3),
+			// Check: resource.ComposeTestCheckFunc(
+			// testAccCheckRoleExists(ctx, resourceName, &role),
+			// resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
+			// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+			// ),
+			// },
+			// {
+			// ResourceName:            resourceName,
+			// ImportState:             true,
+			// ImportStateVerify:       true,
+			// ImportStateVerifyIgnore: []string{"inline_policy.0.policy"},
+			// },
+		},
+	})
+}
 
 // // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19444
 // func TestAccIAMRole_InlinePolicy_ignoreOrder(t *testing.T) {
@@ -1790,10 +1790,12 @@ resource "aws_iam_role" "test" {
     }]
   })
 
-  inline_policy {
-    name = %[2]q
+  // inline_policies = {
+    // "derp" = %[2]q
+  // }
 
-    policy = <<EOF
+  inline_policies = {
+    %[2]q = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [

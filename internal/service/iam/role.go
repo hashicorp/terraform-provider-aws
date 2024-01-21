@@ -14,6 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -75,6 +76,9 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
+			// TODO: should this be this?
+			// "github.com/hashicorp/terraform-provider-aws/internal/framework"
+			//framework.IDAttribute()
 			"id": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -118,13 +122,10 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				// boolplanmodifier.UseStateForUnknown(),
 				// },
 			},
-			// TODO: inline policy goes crazy, have to figure what this type should look like
-			// also read article again
-			// "inline_policy": schema.MapAttribute{
-			// ElementType: types.StringType,
-			// Optional:    true,
-			// // TODO: maybe some validation?
-			// },
+			"inline_policies": schema.MapAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+			},
 			// "managed_policy_arns": schema.SetAttribute{
 			// Computed:    true,
 			// Optional:    true,
@@ -220,9 +221,9 @@ type resourceIamRoleData struct {
 	PermissionsBoundary fwtypes.ARN       `tfsdk:"permissions_boundary"`
 	Tags                types.Map         `tfsdk:"tags"`
 	TagsAll             types.Map         `tfsdk:"tags_all"`
+	InlinePolicies      types.Map         `tfsdk:"inline_policies"`
 
 	// TODO: still have to think this one out
-	// InlinePolicy        types.Map    `tfsdk:"inline_policy"`
 	// ManagedPolicyArns   types.Set    `tfsdk:"managed_policy_arns"`
 	// UniqueId            types.String `tfsdk:"unique_id"`
 }
@@ -282,21 +283,25 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	// roleName := aws.StringValue(output.Role.RoleName)
+	roleName := aws.StringValue(output.Role.RoleName)
 
-	// TODO: has to figure this out because typing of inline policies
-	// if !plan.InlinePolicy.IsNull() && !plan.InlinePolicy.IsUnknown() {
-	// inline_policies_map := make(map[string]string)
-	// plan.InlinePolicy.ElementsAs(ctx, inline_policies_map, false)
-	// policies := expandRoleInlinePolicies(roleName, inline_policies_map)
-	// if err := addRoleInlinePolicies(ctx, policies, meta); err != nil {
-	// resp.Diagnostics.AddError(
-	// create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
-	// err.Error(),
-	// )
-	// return
-	// }
-	// }
+	if !plan.InlinePolicies.IsNull() && !plan.InlinePolicies.IsUnknown() {
+		fmt.Println("Found Inline Policies!")
+		inline_policies_map := make(map[string]string)
+		plan.InlinePolicies.ElementsAs(ctx, &inline_policies_map, false)
+		// v, _ := plan.InlinePolicies.ToMapValue(ctx)
+		fmt.Println(fmt.Sprintf("len inline_policies_map: %v", len(inline_policies_map)))
+		fmt.Println(fmt.Sprintf("inline_policies_map: %+v", inline_policies_map))
+		policies := expandRoleInlinePolicies(roleName, inline_policies_map)
+		fmt.Println(fmt.Sprintf("policies: %+v", policies))
+		// if err := r.addRoleInlinePolicies(ctx, policies); err != nil {
+		// resp.Diagnostics.AddError(
+		// create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
+		// err.Error(),
+		// )
+		// return
+		// }
+	}
 
 	// if !plan.ManagedPolicyArns.IsNull() && !plan.ManagedPolicyArns.IsUnknown() {
 	// managedPolicies := flex.ExpandFrameworkStringSet(ctx, plan.ManagedPolicyArns)
@@ -308,14 +313,6 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	// return
 	// }
 	// }
-
-	// TODO: do something with this?
-	// some resources have been created but not all attributes
-	// d.SetId(roleName)
-	// state := plan
-	// // TODO: do we need this?
-	// // state.refreshFromOutput(ctx, out)
-	// resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
@@ -362,10 +359,10 @@ func (r resourceIamRole) Delete(ctx context.Context, req resource.DeleteRequest,
 		return
 	}
 
-	// hasInline := false
-	// if !state.InlinePolicy.IsNull() && !state.InlinePolicy.IsUnknown() {
-	// hasInline = true
-	// }
+	hasInline := false
+	if !state.InlinePolicies.IsNull() && !state.InlinePolicies.IsUnknown() {
+		hasInline = true
+	}
 
 	// hasManaged := false
 	// if !state.ManagedPolicyArns.IsNull() && !state.ManagedPolicyArns.IsUnknown() {
@@ -374,7 +371,7 @@ func (r resourceIamRole) Delete(ctx context.Context, req resource.DeleteRequest,
 
 	// err := DeleteRole(ctx, conn, state.Name.ValueString(), state.ForceDetachPolicies.ValueBool(), hasInline, hasManaged)
 	// TODO: should name be ID here?
-	err := DeleteRole(ctx, conn, state.Name.ValueString(), state.ForceDetachPolicies.ValueBool(), false, false)
+	err := DeleteRole(ctx, conn, state.Name.ValueString(), state.ForceDetachPolicies.ValueBool(), hasInline, false)
 
 	if err != nil {
 		// TODO: do something like this to skip deletes on roles that are gone?
@@ -490,7 +487,9 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 
 	// inlinePolicies, err := readRoleInlinePolicies(ctx, aws.StringValue(role.RoleName), meta)
 	// if err != nil {
-	// return sdkdiag.AppendErrorf(diags, "reading inline policies for IAM role %s, error: %s", d.Id(), err)
+	// // TODO: figure out this error
+	// return
+	// // return sdkdiag.AppendErrorf(diags, "reading inline policies for IAM role %s, error: %s", d.Id(), err)
 	// }
 
 	// var configPoliciesList []*iam.PutRolePolicyInput
@@ -653,15 +652,15 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 		fmt.Println("Tags are equal")
 	}
 
+	if !plan.TagsAll.Equal(state.TagsAll) {
+	}
+
 	// TODO: do I need this? If so huh?
 	plan.NamePrefix = flex.StringToFramework(ctx, create.NamePrefixFromName(plan.Name.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 	fmt.Println("Hit bottom of update")
 }
-
-// TODO: import state?
-// https://developer.hashicorp.com/terraform/plugin/framework/resources/import
 
 func FindRoleByName(ctx context.Context, conn *iam.IAM, name string) (*iam.Role, error) {
 	input := &iam.GetRoleInput{
@@ -925,3 +924,95 @@ func deleteRoleInlinePolicies(ctx context.Context, conn *iam.IAM, roleName strin
 
 	return errors.Join(errs...)
 }
+
+func expandRoleInlinePolicies(roleName string, tfPoliciesMap map[string]string) []*iam.PutRolePolicyInput {
+	if len(tfPoliciesMap) == 0 {
+		return nil
+	}
+
+	var apiObjects []*iam.PutRolePolicyInput
+
+	for policyName, policyDocument := range tfPoliciesMap {
+		fmt.Println(fmt.Sprintf("policyName: %s", policyName))
+		fmt.Println(fmt.Sprintf("policyDocument: %s", policyDocument))
+		apiObject := expandRoleInlinePolicy(roleName, policyName, policyDocument)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandRoleInlinePolicy(roleName string, policyName string, policyDocument string) *iam.PutRolePolicyInput {
+	apiObject := &iam.PutRolePolicyInput{}
+
+	apiObject.PolicyName = aws.String(policyName)
+	apiObject.PolicyDocument = aws.String(policyDocument)
+	apiObject.RoleName = aws.String(roleName)
+
+	return apiObject
+}
+
+func (r resourceIamRole) addRoleInlinePolicies(ctx context.Context, policies []*iam.PutRolePolicyInput) error {
+	conn := r.Meta().IAMConn(ctx)
+
+	var errs *multierror.Error
+	for _, policy := range policies {
+		if len(aws.StringValue(policy.PolicyName)) == 0 || len(aws.StringValue(policy.PolicyDocument)) == 0 {
+			continue
+		}
+
+		if _, err := conn.PutRolePolicyWithContext(ctx, policy); err != nil {
+			newErr := fmt.Errorf("adding inline policy (%s): %w", aws.StringValue(policy.PolicyName), err)
+			errs = multierror.Append(errs, newErr)
+		}
+	}
+
+	return errs.ErrorOrNil()
+}
+
+// func (r resourceIamRole) readRoleInlinePolicies(ctx context.Context, roleName string) ([]*iam.PutRolePolicyInput, error) {
+// conn := r.Meta().IAMConn(ctx)
+
+// policyNames, err := findRolePolicyNames(ctx, conn, roleName)
+
+// if err != nil {
+// return nil, err
+// }
+
+// var apiObjects []*iam.PutRolePolicyInput
+// for _, policyName := range policyNames {
+// output, err := conn.GetRolePolicyWithContext(ctx, &iam.GetRolePolicyInput{
+// RoleName:   aws.String(roleName),
+// PolicyName: aws.String(policyName),
+// })
+
+// if err != nil {
+// return nil, err
+// }
+
+// policy, err := url.QueryUnescape(aws.StringValue(output.PolicyDocument))
+// if err != nil {
+// return nil, err
+// }
+
+// p, err := verify.LegacyPolicyNormalize(policy)
+// if err != nil {
+// return nil, fmt.Errorf("policy (%s) is invalid JSON: %w", p, err)
+// }
+
+// apiObject := &iam.PutRolePolicyInput{
+// RoleName:       aws.String(roleName),
+// PolicyDocument: aws.String(p),
+// PolicyName:     aws.String(policyName),
+// }
+
+// apiObjects = append(apiObjects, apiObject)
+// }
+
+// return apiObjects, nil
+// }
