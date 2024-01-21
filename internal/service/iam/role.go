@@ -126,6 +126,7 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			"inline_policies": schema.MapAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
+				// TODO: have to add plan modifier here to suppress func
 			},
 			// "managed_policy_arns": schema.SetAttribute{
 			// Computed:    true,
@@ -153,7 +154,6 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 					stringplanmodifier.RequiresReplaceIfConfigured(),
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				// Default: stringdefault.StaticString(""),
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(roleNameMaxLen),
 					// TODO: uncomment when ready

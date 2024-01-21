@@ -690,6 +690,9 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 	})
 }
 
+// TODO: have to do some plan modification for this, have to read up on the docs more
+// Ideally only show diffs for each policy that actually changed
+
 // // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19444
 // func TestAccIAMRole_InlinePolicy_ignoreOrder(t *testing.T) {
 // ctx := acctest.Context(t)
