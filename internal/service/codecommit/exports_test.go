@@ -5,7 +5,9 @@ package codecommit
 
 // Exports for use in tests only.
 var (
-	ResourceApprovalRuleTemplate = resourceApprovalRuleTemplate
+	ResourceApprovalRuleTemplate            = resourceApprovalRuleTemplate
+	ResourceApprovalRuleTemplateAssociation = resourceApprovalRuleTemplateAssociation
 
-	FindApprovalRuleTemplateByName = findApprovalRuleTemplateByName
+	FindApprovalRuleTemplateAssociationByTwoPartKey = findApprovalRuleTemplateAssociationByTwoPartKey
+	FindApprovalRuleTemplateByName                  = findApprovalRuleTemplateByName
 )

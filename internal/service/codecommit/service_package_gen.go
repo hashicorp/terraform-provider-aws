@@ -44,8 +44,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Approval Rule Template",
 		},
 		{
-			Factory:  ResourceApprovalRuleTemplateAssociation,
+			Factory:  resourceApprovalRuleTemplateAssociation,
 			TypeName: "aws_codecommit_approval_rule_template_association",
+			Name:     "Approval Rule Template Association",
 		},
 		{
 			Factory:  ResourceRepository,
