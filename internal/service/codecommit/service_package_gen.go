@@ -49,7 +49,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Approval Rule Template Association",
 		},
 		{
-			Factory:  ResourceRepository,
+			Factory:  resourceRepository,
 			TypeName: "aws_codecommit_repository",
 			Name:     "Repository",
 			Tags: &types.ServicePackageResourceTags{

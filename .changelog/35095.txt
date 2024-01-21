@@ -1,5 +1,5 @@
 ```release-note:enhancement
-resource/aws_codecommit_repository: Add `kms_key_id` argument, enabling encryption at-rest using AWS KMS Customer Managed Keys (CMK)
+resource/aws_codecommit_repository: Add `kms_key_id` argument
 ```
 
 ```release-note:enhancement

@@ -7,6 +7,7 @@ package codecommit
 var (
 	ResourceApprovalRuleTemplate            = resourceApprovalRuleTemplate
 	ResourceApprovalRuleTemplateAssociation = resourceApprovalRuleTemplateAssociation
+	ResourceRepository                      = resourceRepository
 	ResourceTrigger                         = resourceTrigger
 
 	FindApprovalRuleTemplateAssociationByTwoPartKey = findApprovalRuleTemplateAssociationByTwoPartKey
