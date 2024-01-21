@@ -25,8 +25,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceApprovalRuleTemplate,
+			Factory:  dataSourceApprovalRuleTemplate,
 			TypeName: "aws_codecommit_approval_rule_template",
+			Name:     "Approval Rule Template",
 		},
 		{
 			Factory:  DataSourceRepository,
