@@ -24,6 +24,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newResourceRole,
 			Name:    "Role",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 	}
 }

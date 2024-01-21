@@ -583,43 +583,43 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 	})
 }
 
-// func TestAccIAMRole_tags(t *testing.T) {
-// ctx := acctest.Context(t)
-// var role iam.Role
-// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// resourceName := "aws_iam_role.test"
+func TestAccIAMRole_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var role iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
 
-// resource.ParallelTest(t, resource.TestCase{
-// PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// CheckDestroy:             testAccCheckUserDestroy(ctx),
-// Steps: []resource.TestStep{
-// {
-// Config: testAccRoleConfig_tags(rName),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-// resource.TestCheckResourceAttr(resourceName, "tags.tag1", "test-value1"),
-// resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-value2"),
-// ),
-// },
-// {
-// ResourceName:      resourceName,
-// ImportState:       true,
-// ImportStateVerify: true,
-// },
-// {
-// Config: testAccRoleConfig_tagsUpdate(rName),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-// resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-value"),
-// ),
-// },
-// },
-// })
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoleConfig_tags(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "test-value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-value2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			// {
+			// Config: testAccRoleConfig_tagsUpdate(rName),
+			// Check: resource.ComposeTestCheckFunc(
+			// testAccCheckRoleExists(ctx, resourceName, &role),
+			// resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+			// resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-value"),
+			// ),
+			// },
+		},
+	})
+}
 
 // func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 // ctx := acctest.Context(t)

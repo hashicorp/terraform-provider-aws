@@ -48,6 +48,7 @@ const (
 )
 
 // @FrameworkResource(name="Role")
+// @Tags(identifierAttribute="id")
 func newResourceRole(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIamRole{}
 	r.SetMigratedFromPluginSDK(true)
@@ -246,11 +247,18 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	name := create.Name(plan.Name.ValueString(), plan.NamePrefix.ValueString())
+
+	fmt.Println("Loop thru tags in Create...")
+	tags := getTagsIn(ctx)
+	fmt.Println(fmt.Sprintf("len tags: %v", len(tags)))
+	for i := 0; i < len(tags); i++ {
+		fmt.Println(tags[i])
+	}
 	input := &iam.CreateRoleInput{
 		AssumeRolePolicyDocument: aws.String(assumeRolePolicy),
 		Path:                     aws.String(plan.Path.ValueString()),
 		RoleName:                 aws.String(name),
-		Tags:                     getTagsIn(ctx),
+		Tags:                     tags,
 	}
 
 	if !plan.Description.IsNull() {
@@ -458,10 +466,8 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 
 	if role.PermissionsBoundary != nil {
-		fmt.Println(fmt.Sprintf("permission boundary arn: %v", *role.PermissionsBoundary.PermissionsBoundaryArn))
 		state.PermissionsBoundary = fwtypes.ARNValue(*role.PermissionsBoundary.PermissionsBoundaryArn)
 	} else {
-		fmt.Println("permission boundary is empty")
 		state.PermissionsBoundary = fwtypes.ARNNull()
 	}
 
@@ -509,8 +515,15 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	// return sdkdiag.AppendErrorf(diags, "reading IAM Policies attached to Role (%s): %s", d.Id(), err)
 	// }
 	// d.Set("managed_policy_arns", policyARNs)
+	fmt.Println("Loop thru tags in Read...")
+	fmt.Println(fmt.Sprintf("len tags: %v", len(role.Tags)))
+	for i := 0; i < len(role.Tags); i++ {
+		fmt.Println(role.Tags[i])
+	}
 
 	setTagsOut(ctx, role.Tags)
+	// state.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, KeyValueTags(ctx, role.Tags).Map())
+	// data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
