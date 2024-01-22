@@ -1873,7 +1873,6 @@ func flattenVPCConfig(apiObject *types.VpcConfig) []interface{} {
 	tfMap["security_group_ids"] = apiObject.SecurityGroupIds
 
 	return []interface{}{tfMap}
-
 }
 
 func flattenBuildBatchConfig(apiObject *types.ProjectBuildBatchConfig) []interface{} {

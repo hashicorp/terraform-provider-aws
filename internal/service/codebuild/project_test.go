@@ -3488,7 +3488,6 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_buildBatchConfigDelete(rName string, withBuildBatchConfig bool) string {
-
 	template := `
 resource "aws_codebuild_project" "test" {
 	name         = %[1]q
