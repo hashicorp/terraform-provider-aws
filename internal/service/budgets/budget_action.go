@@ -525,7 +525,7 @@ func expandBudgetActionActionScpActionDefinition(l []interface{}) *awstypes.ScpA
 	}
 
 	if v, ok := m["target_ids"].(*schema.Set); ok && v.Len() > 0 {
-		config.TargetIds = flex.ExpandStringValueList(v.List())
+		config.TargetIds = flex.ExpandStringValueSet(v)
 	}
 
 	return config
@@ -549,7 +549,7 @@ func expandBudgetActionActionSSMActionDefinition(l []interface{}) *awstypes.SsmA
 	}
 
 	if v, ok := m["instance_ids"].(*schema.Set); ok && v.Len() > 0 {
-		config.InstanceIds = flex.ExpandStringValueList(v.List())
+		config.InstanceIds = flex.ExpandStringValueSet(v)
 	}
 
 	return config
@@ -569,15 +569,15 @@ func expandBudgetActionActionIAMActionDefinition(l []interface{}) *awstypes.IamA
 	}
 
 	if v, ok := m["groups"].(*schema.Set); ok && v.Len() > 0 {
-		config.Groups = flex.ExpandStringValueList(v.List())
+		config.Groups = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := m["roles"].(*schema.Set); ok && v.Len() > 0 {
-		config.Roles = flex.ExpandStringValueList(v.List())
+		config.Roles = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := m["users"].(*schema.Set); ok && v.Len() > 0 {
-		config.Users = flex.ExpandStringValueList(v.List())
+		config.Users = flex.ExpandStringValueSet(v)
 	}
 
 	return config
