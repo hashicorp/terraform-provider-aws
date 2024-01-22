@@ -561,7 +561,6 @@ func startApplication(ctx context.Context, conn *m2.Client, id string, timeout t
 }
 
 func stopApplicationIfRunning(ctx context.Context, conn *m2.Client, id string, forceStop bool, timeout time.Duration) error {
-
 	app, err := findApplicationByID(ctx, conn, id)
 	if err != nil {
 		if tfresource.NotFound(err) {
