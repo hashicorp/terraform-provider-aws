@@ -987,36 +987,36 @@ func TestAccIAMRole_InlinePolicy_outOfBandAdditionIgnored(t *testing.T) {
 
 // // TestAccIAMRole_PolicyOutOfBandAdditionIgnored_managedNonExistent: if there is no
 // // managed_policy_arns attribute, out of band changes should be ignored.
-// func TestAccIAMRole_ManagedPolicy_outOfBandAdditionIgnored(t *testing.T) {
-// ctx := acctest.Context(t)
-// var role iam.Role
-// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// resourceName := "aws_iam_role.test"
+func TestAccIAMRole_ManagedPolicy_outOfBandAdditionIgnored(t *testing.T) {
+	ctx := acctest.Context(t)
+	var role iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
 
-// resource.ParallelTest(t, resource.TestCase{
-// PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// CheckDestroy:             testAccCheckRoleDestroy(ctx),
-// Steps: []resource.TestStep{
-// {
-// Config: testAccRoleConfig_policyNoManaged(rName, policyName),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// testAccCheckRolePolicyAttachManagedPolicy(ctx, &role, policyName),
-// ),
-// },
-// {
-// Config: testAccRoleConfig_policyNoManaged(rName, policyName),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// testAccCheckRolePolicyDetachManagedPolicy(ctx, &role, policyName),
-// ),
-// },
-// },
-// })
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoleConfig_policyNoManaged(rName, policyName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					testAccCheckRolePolicyAttachManagedPolicy(ctx, &role, policyName),
+				),
+			},
+			{
+				Config: testAccRoleConfig_policyNoManaged(rName, policyName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					testAccCheckRolePolicyDetachManagedPolicy(ctx, &role, policyName),
+				),
+			},
+		},
+	})
+}
 
 // // TestAccIAMRole_PolicyOutOfBandAdditionRemoved_inlineEmpty: if inline is added
 // // out of band with empty inline arg, should be removed
