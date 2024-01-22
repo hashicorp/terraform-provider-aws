@@ -39,6 +39,7 @@ const (
 	ChimeSDKMediaPipelinesEndpointID     = "media-pipelines-chime"
 	CleanRoomsEndpointID                 = "cleanrooms"
 	CloudWatchLogsEndpointID             = "logs"
+	CodeCommitEndpointID                 = "codecommit"
 	CodeDeployEndpointID                 = "codedeploy"
 	CodeGuruProfilerEndpointID           = "codeguru-profiler"
 	CodePipelineEndpointID               = "codepipeline"
@@ -182,6 +183,23 @@ func DNSSuffixForPartition(partition string) string {
 		return "csp.hci.ic.gov"
 	default:
 		return "amazonaws.com"
+	}
+}
+
+func IsOptInRegion(region string) bool {
+	switch region {
+	case AFSouth1RegionID,
+		APEast1RegionID, APSouth2RegionID,
+		APSoutheast3RegionID, APSoutheast4RegionID,
+		CAWest1RegionID,
+		EUCentral2RegionID,
+		EUSouth1RegionID, EUSouth2RegionID,
+		ILCentral1RegionID,
+		MECentral1RegionID,
+		MESouth1RegionID:
+		return true
+	default:
+		return false
 	}
 }
 

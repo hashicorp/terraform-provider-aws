@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_s3_bucket_replication_configuration")
-func ResourceBucketReplicationConfiguration() *schema.Resource {
+// @SDKResource("aws_s3_bucket_replication_configuration", name="Bucket Replication Configuration")
+func resourceBucketReplicationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketReplicationConfigurationCreate,
 		ReadWithoutTimeout:   resourceBucketReplicationConfigurationRead,
