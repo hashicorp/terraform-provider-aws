@@ -99,7 +99,6 @@ This resource exports no additional attributes.
 
 - `create` - (Default `3m`)
 - `read` - (Default `3m`)
-- `update` - (Default `3m`)
 - `delete` - (Default `3m`)
 
 ## Import
