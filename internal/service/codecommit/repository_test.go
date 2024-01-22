@@ -36,13 +36,14 @@ func TestAccCodeCommitRepository_basic(t *testing.T) {
 				Config: testAccRepositoryConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRepositoryExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "repository_name", rName),
-					resource.TestCheckNoResourceAttr(resourceName, "default_branch"),
-					resource.TestCheckResourceAttr(resourceName, "description", "This is a test description"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codecommit", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "repository_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "clone_url_http"),
 					resource.TestCheckResourceAttrSet(resourceName, "clone_url_ssh"),
+					resource.TestCheckNoResourceAttr(resourceName, "default_branch"),
+					resource.TestCheckResourceAttr(resourceName, "description", "This is a test description"),
+					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "repository_id"),
+					resource.TestCheckResourceAttr(resourceName, "repository_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -260,6 +261,42 @@ func TestAccCodeCommitRepository_UpdateNameAndTags(t *testing.T) {
 	})
 }
 
+func TestAccCodeCommitRepository_kmsKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codecommit_repository.test"
+	var v1, v2 types.RepositoryMetadata
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRepositoryConfig_kmsKey(rName, 0),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRepositoryExists(ctx, resourceName, &v1),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test.0", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRepositoryConfig_kmsKey(rName, 1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRepositoryExists(ctx, resourceName, &v2),
+					testAccCheckRepositoryNotRecreated(&v1, &v2),
+					resource.TestCheckResourceAttrPair(resourceName, "kms_key_id", "aws_kms_key.test.1", "arn"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckRepositoryExists(ctx context.Context, n string, v *types.RepositoryMetadata) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -367,4 +404,20 @@ resource "aws_codecommit_repository" "test" {
   }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)
+}
+
+func testAccRepositoryConfig_kmsKey(rName string, idx int) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  count = 2
+
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_codecommit_repository" "test" {
+  repository_name = %[1]q
+  kms_key_id      = aws_kms_key.test[%[2]d].arn
+}
+`, rName, idx)
 }

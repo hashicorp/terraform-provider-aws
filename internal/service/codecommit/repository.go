@@ -60,9 +60,10 @@ func resourceRepository() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(0, 1000),
 			},
 			"kms_key_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 			"repository_id": {
 				Type:     schema.TypeString,
