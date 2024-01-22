@@ -597,7 +597,6 @@ func findNotifications(ctx context.Context, conn *budgets.Client, accountID, bud
 			}
 
 			output = append(output, np)
-
 		}
 	}
 
@@ -765,9 +764,8 @@ func convertCostFiltersToMap(costFilters map[string][]string) []map[string]inter
 	for k, v := range costFilters {
 		convertedCostFilter := make(map[string]interface{})
 		filterValues := make([]string, 0)
-		for _, singleFilterValue := range v {
-			filterValues = append(filterValues, singleFilterValue)
-		}
+		filterValues = append(filterValues, v...)
+
 		convertedCostFilter["values"] = filterValues
 		convertedCostFilter["name"] = k
 		convertedCostFilters = append(convertedCostFilters, convertedCostFilter)
