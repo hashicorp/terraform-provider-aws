@@ -874,38 +874,38 @@ func TestAccIAMRole_InlinePolicy_outOfBandRemovalAddedBack(t *testing.T) {
 
 // // TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemoved: if managed_policy_arns arg
 // // exists and is non-empty, policy attached out of band should be removed
-// func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemoved(t *testing.T) {
-// ctx := acctest.Context(t)
-// var role iam.Role
-// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// policyName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// resourceName := "aws_iam_role.test"
+func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemoved(t *testing.T) {
+	ctx := acctest.Context(t)
+	var role iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
 
-// resource.ParallelTest(t, resource.TestCase{
-// PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// CheckDestroy:             testAccCheckRoleDestroy(ctx),
-// Steps: []resource.TestStep{
-// {
-// Config: testAccRoleConfig_policyExtraManaged(rName, policyName1, policyName2),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// testAccCheckRolePolicyAttachManagedPolicy(ctx, &role, policyName2),
-// ),
-// ExpectNonEmptyPlan: true,
-// },
-// {
-// Config: testAccRoleConfig_policyExtraManaged(rName, policyName1, policyName2),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
-// ),
-// },
-// },
-// })
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoleConfig_policyExtraManaged(rName, policyName1, policyName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					testAccCheckRolePolicyAttachManagedPolicy(ctx, &role, policyName2),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccRoleConfig_policyExtraManaged(rName, policyName1, policyName2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
+				),
+			},
+		},
+	})
+}
 
 // // TestAccIAMRole_PolicyOutOfBandAdditionRemoved_inlineNonEmpty: if inline_policy arg
 // // exists and is non-empty, policy added out of band should be removed
