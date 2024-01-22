@@ -943,47 +943,47 @@ func TestAccIAMRole_InlinePolicy_outOfBandAdditionRemoved(t *testing.T) {
 	})
 }
 
-// // TestAccIAMRole_PolicyOutOfBandAdditionIgnored_inlineNonExistent: if there is no
-// // inline_policy attribute, out of band changes should be ignored.
-// func TestAccIAMRole_InlinePolicy_outOfBandAdditionIgnored(t *testing.T) {
-// ctx := acctest.Context(t)
-// var role iam.Role
-// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// policyName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// resourceName := "aws_iam_role.test"
+// TestAccIAMRole_PolicyOutOfBandAdditionIgnored_inlineNonExistent: if there is no
+// inline_policy attribute, out of band changes should be ignored.
+func TestAccIAMRole_InlinePolicy_outOfBandAdditionIgnored(t *testing.T) {
+	ctx := acctest.Context(t)
+	var role iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
 
-// resource.ParallelTest(t, resource.TestCase{
-// PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// CheckDestroy:             testAccCheckRoleDestroy(ctx),
-// Steps: []resource.TestStep{
-// {
-// Config: testAccRoleConfig_policyNoInline(rName),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// testAccCheckRolePolicyAddInlinePolicy(ctx, &role, policyName1),
-// ),
-// },
-// {
-// Config: testAccRoleConfig_policyNoInline(rName),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// testAccCheckRolePolicyAddInlinePolicy(ctx, &role, policyName2),
-// ),
-// },
-// {
-// Config: testAccRoleConfig_policyNoInline(rName),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// testAccCheckRolePolicyRemoveInlinePolicy(ctx, &role, policyName1),
-// testAccCheckRolePolicyRemoveInlinePolicy(ctx, &role, policyName2),
-// ),
-// },
-// },
-// })
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoleConfig_policyNoInline(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					testAccCheckRolePolicyAddInlinePolicy(ctx, &role, policyName1),
+				),
+			},
+			{
+				Config: testAccRoleConfig_policyNoInline(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					testAccCheckRolePolicyAddInlinePolicy(ctx, &role, policyName2),
+				),
+			},
+			{
+				Config: testAccRoleConfig_policyNoInline(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					testAccCheckRolePolicyRemoveInlinePolicy(ctx, &role, policyName1),
+					testAccCheckRolePolicyRemoveInlinePolicy(ctx, &role, policyName2),
+				),
+			},
+		},
+	})
+}
 
 // // TestAccIAMRole_PolicyOutOfBandAdditionIgnored_managedNonExistent: if there is no
 // // managed_policy_arns attribute, out of band changes should be ignored.
