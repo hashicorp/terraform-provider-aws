@@ -569,22 +569,6 @@ func FindBudgetByTwoPartKey(ctx context.Context, conn *budgets.Client, accountID
 	return output.Budget, nil
 }
 
-func FindBudgetWithDelay[T any](ctx context.Context, f func() (T, error)) (T, error) {
-	var resp T
-	err := tfresource.Retry(ctx, 30*time.Second, func() *retry.RetryError {
-		var err error
-		resp, err = f()
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	}, tfresource.WithDelay(5*time.Second))
-
-	return resp, err
-}
-
 func findNotifications(ctx context.Context, conn *budgets.Client, accountID, budgetName string) ([]awstypes.Notification, error) {
 	input := &budgets.DescribeNotificationsForBudgetInput{
 		AccountId:  aws.String(accountID),
