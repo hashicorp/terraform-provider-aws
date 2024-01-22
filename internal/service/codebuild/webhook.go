@@ -297,7 +297,10 @@ func flattenWebhookFilterGroups(apiObjects [][]types.WebhookFilter) []interface{
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenWebhookFilters(apiObject))
+		tfMap := map[string]interface{}{
+			"filter": flattenWebhookFilters(apiObject),
+		}
+		tfList = append(tfList, tfMap)
 	}
 
 	return tfList
