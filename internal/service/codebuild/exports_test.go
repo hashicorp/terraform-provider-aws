@@ -5,9 +5,11 @@ package codebuild
 
 // Exports for use in tests only.
 var (
+	ResourceReportGroup      = resourceReportGroup
 	ResourceResourcePolicy   = resourceResourcePolicy
 	ResourceSourceCredential = resourceSourceCredential
 
+	FindReportGroupByARN       = findReportGroupByARN
 	FindResourcePolicyByARN    = findResourcePolicyByARN
 	FindSourceCredentialsByARN = findSourceCredentialsByARN
 )

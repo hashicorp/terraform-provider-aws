@@ -8,8 +8,7 @@ import (
 )
 
 const (
-	ResNameReportGroup = "Report Group"
-	ResNameWebhook     = "Webhook"
+	ResNameWebhook = "Webhook"
 )
 
 const (
