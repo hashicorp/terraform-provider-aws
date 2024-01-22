@@ -1,5 +1,13 @@
 ## 5.34.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* data-source/aws_codecommit_repository: Add `kms_key_id` attribute ([#35095](https://github.com/hashicorp/terraform-provider-aws/issues/35095))
+* data-source/aws_ssm_patch_baseline: Add `json` attribute to facilitate use with S3 buckets ([#33402](https://github.com/hashicorp/terraform-provider-aws/issues/33402))
+* resource/aws_codecommit_repository: Add `kms_key_id` argument ([#35095](https://github.com/hashicorp/terraform-provider-aws/issues/35095))
+* resource/aws_codecommit_trigger: Add plan-time validation of `trigger.destination_arn` and `trigger.events` ([#35095](https://github.com/hashicorp/terraform-provider-aws/issues/35095))
+* resource/aws_ssm_patch_baseline: Add `json` attribute to facilitate use with S3 buckets ([#33402](https://github.com/hashicorp/terraform-provider-aws/issues/33402))
+
 BUG FIXES:
 
 * resource/aws_eks_access_entry: Mark `kubernetes_groups` as Computed ([#35391](https://github.com/hashicorp/terraform-provider-aws/issues/35391))
