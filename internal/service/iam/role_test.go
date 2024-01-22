@@ -758,8 +758,8 @@ func TestAccIAMRole_ManagedPolicy_basic(t *testing.T) {
 	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	// policyName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	// policyName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -776,24 +776,29 @@ func TestAccIAMRole_ManagedPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
 				),
 			},
-			// {
-			// Config: testAccRoleConfig_policyManagedUpdate(rName, policyName1, policyName2, policyName3),
-			// Check: resource.ComposeTestCheckFunc(
-			// testAccCheckRoleExists(ctx, resourceName, &role),
-			// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "2"),
-			// ),
-			// },
-			// {
-			// Config: testAccRoleConfig_policyManagedUpdateDown(rName, policyName1, policyName2, policyName3),
-			// Check: resource.ComposeTestCheckFunc(
-			// testAccCheckRoleExists(ctx, resourceName, &role),
-			// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
-			// ),
-			// },
+			{
+				Config: testAccRoleConfig_policyManagedUpdate(rName, policyName1, policyName2, policyName3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "2"),
+				),
+			},
+			{
+				Config: testAccRoleConfig_policyManagedUpdateDown(rName, policyName1, policyName2, policyName3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
+				),
+			},
+			// NOTE: Can't import managed arns unless they are already in state because of things like
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"managed_policy_arns.0",
+					"managed_policy_arns.#",
+				},
 			},
 		},
 	})

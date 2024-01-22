@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -131,9 +132,11 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			"managed_policy_arns": schema.SetAttribute{
 				// TODO: maybe use setof custom type with arn?
 				// Then don't need validator
-				Computed:    true,
 				Optional:    true,
 				ElementType: types.StringType,
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"max_session_duration": schema.Int64Attribute{
 				Optional: true,
@@ -304,7 +307,12 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	if !plan.ManagedPolicyArns.IsNull() && !plan.ManagedPolicyArns.IsUnknown() {
-		managedPolicies := flex.ExpandFrameworkStringSet(ctx, plan.ManagedPolicyArns)
+		fmt.Println("Hitting here!")
+		var managedPolicies []string
+		resp.Diagnostics.Append(plan.ManagedPolicyArns.ElementsAs(ctx, &managedPolicies, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 		if err := r.addRoleManagedPolicies(ctx, roleName, managedPolicies); err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
@@ -512,13 +520,16 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 		}
 	}
 
-	policyARNs, err := findRoleAttachedPolicies(ctx, conn, state.ID.ValueString())
-	if err != nil {
-		// TODO: implement error
-		return
-		// return sdkdiag.AppendErrorf(diags, "reading IAM Policies attached to Role (%s): %s", d.Id(), err)
+	// like Inline policies, only reading if set in state already via updates, create, etc
+	if !state.ManagedPolicyArns.IsNull() && !state.ManagedPolicyArns.IsUnknown() {
+		policyARNs, err := findRoleAttachedPolicies(ctx, conn, state.ID.ValueString())
+		if err != nil {
+			// TODO: implement error
+			return
+			// return sdkdiag.AppendErrorf(diags, "reading IAM Policies attached to Role (%s): %s", d.Id(), err)
+		}
+		state.ManagedPolicyArns = flex.FlattenFrameworkStringValueSet(ctx, policyARNs)
 	}
-	state.ManagedPolicyArns = flex.FlattenFrameworkStringValueSet(ctx, policyARNs)
 
 	setTagsOut(ctx, role.Tags)
 
@@ -643,9 +654,11 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 		fmt.Println("Found inline policies changes!")
 
 		old_inline_policies_map := make(map[string]string)
+		// TODO: add wrapper to this
 		state.InlinePolicies.ElementsAs(ctx, &old_inline_policies_map, false)
 
 		new_inline_policies_map := make(map[string]string)
+		// TODO: add wrapper to this
 		plan.InlinePolicies.ElementsAs(ctx, &new_inline_policies_map, false)
 
 		fmt.Println(fmt.Sprintf("len old_inline_policies_map: %v", len(old_inline_policies_map)))
@@ -717,20 +730,66 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 
 	}
 
-	// if !plan.ManagedPolicyArns.Equal(state.ManagedPolicyArns) {
-	// o, n := d.GetChange("managed_policy_arns")
-	// os, ns := o.(*schema.Set), n.(*schema.Set)
-	// add, del := flex.ExpandStringSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
+	if !plan.ManagedPolicyArns.Equal(state.ManagedPolicyArns) {
+		var oldManagedARNs, newManagedARNs []string
+		resp.Diagnostics.Append(state.ManagedPolicyArns.ElementsAs(ctx, &oldManagedARNs, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
-	// // TODO: fix this, we are doing it again. Always add then delete to prevent issues
-	// if err := deleteRolePolicyAttachments(ctx, conn, d.Id(), del); err != nil {
-	// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s): %s", d.Id(), err)
-	// }
+		resp.Diagnostics.Append(plan.ManagedPolicyArns.ElementsAs(ctx, &newManagedARNs, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
-	// if err := addRoleManagedPolicies(ctx, d.Id(), add, meta); err != nil {
-	// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s): %s", d.Id(), err)
-	// }
-	// }
+		fmt.Println(fmt.Sprintf("oldManagedARNs: %+v", oldManagedARNs))
+		fmt.Println(fmt.Sprintf("newManagedARNs: %+v", newManagedARNs))
+
+		var add, del []string
+
+		oldPolicyArnMap := make(map[string]int64)
+		for _, v := range oldManagedARNs {
+			fmt.Println(fmt.Sprintf("oldPolicyArnMap loop on %s", v))
+			oldPolicyArnMap[v] = 0
+		}
+
+		for _, v := range newManagedARNs {
+			fmt.Println(fmt.Sprintf("newManagedARNs loop on %s", v))
+			if _, ok := oldPolicyArnMap[v]; !ok {
+				fmt.Println(fmt.Sprintf("adding %s", v))
+				add = append(add, v)
+			}
+		}
+
+		newPolicyArnMap := make(map[string]int64)
+		for _, v := range newManagedARNs {
+			fmt.Println(fmt.Sprintf("newPolicyArnMap loop on %s", v))
+			newPolicyArnMap[v] = 0
+		}
+
+		for _, v := range oldManagedARNs {
+			if _, ok := newPolicyArnMap[v]; !ok {
+				del = append(del, v)
+			}
+		}
+
+		// fmt.Println(fmt.Sprintf("add: %+v", add))
+		fmt.Println(fmt.Sprintf("del: %+v", del))
+		fmt.Println(fmt.Sprintf("add: %+v", del))
+
+		// // TODO: fix this, we are doing it again. Always add then delete to prevent issues
+		if err := r.addRoleManagedPolicies(ctx, state.ID.ValueString(), add); err != nil {
+			// TODO: implement error
+			return
+			// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s): %s", d.Id(), err)
+		}
+
+		if err := deleteRolePolicyAttachments(ctx, conn, state.ID.ValueString(), del); err != nil {
+			// TODO: implement error
+			return
+			// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s): %s", d.Id(), err)
+		}
+	}
 
 	if !plan.TagsAll.Equal(state.TagsAll) {
 		fmt.Println("Tags are not equal!")
@@ -815,12 +874,12 @@ func retryCreateRole(ctx context.Context, conn *iam.IAM, input *iam.CreateRoleIn
 	return output, err
 }
 
-func (r resourceIamRole) addRoleManagedPolicies(ctx context.Context, roleName string, policies []*string) error {
+func (r resourceIamRole) addRoleManagedPolicies(ctx context.Context, roleName string, policies []string) error {
 	conn := r.Meta().IAMConn(ctx)
 	var errs []error
 
 	for _, arn := range policies {
-		if err := attachPolicyToRole(ctx, conn, roleName, aws.StringValue(arn)); err != nil {
+		if err := attachPolicyToRole(ctx, conn, roleName, arn); err != nil {
 			errs = append(errs, err)
 		}
 	}
