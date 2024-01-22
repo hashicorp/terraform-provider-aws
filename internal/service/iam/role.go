@@ -78,15 +78,7 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			// TODO: should this be this?
-			// "github.com/hashicorp/terraform-provider-aws/internal/framework"
-			//framework.IDAttribute()
-			"id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			"id": framework.IDAttribute(),
 			"assume_role_policy": schema.StringAttribute{
 				Required:   true,
 				CustomType: fwtypes.IAMPolicyType,
