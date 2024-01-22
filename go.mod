@@ -66,6 +66,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.1.6
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.38.6
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.33.0
+	github.com/aws/aws-sdk-go-v2/service/location v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.25.6
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.10.7
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.25.1

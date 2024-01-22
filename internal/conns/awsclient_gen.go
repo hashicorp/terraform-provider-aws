@@ -60,6 +60,7 @@ import (
 	launchwizard_sdkv2 "github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	lexmodelsv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	lightsail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lightsail"
+	location_sdkv2 "github.com/aws/aws-sdk-go-v2/service/location"
 	lookoutmetrics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lookoutmetrics"
 	m2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/m2"
 	mediaconnect_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediaconnect"
@@ -789,6 +790,10 @@ func (c *AWSClient) LightsailClient(ctx context.Context) *lightsail_sdkv2.Client
 
 func (c *AWSClient) LocationConn(ctx context.Context) *locationservice_sdkv1.LocationService {
 	return errs.Must(conn[*locationservice_sdkv1.LocationService](ctx, c, names.Location, make(map[string]any)))
+}
+
+func (c *AWSClient) LocationClient(ctx context.Context) *location_sdkv2.Client {
+	return errs.Must(client[*location_sdkv2.Client](ctx, c, names.Location, make(map[string]any)))
 }
 
 func (c *AWSClient) LogsClient(ctx context.Context) *cloudwatchlogs_sdkv2.Client {
