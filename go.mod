@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.49.24
+	github.com/aws/aws-sdk-go v1.50.0
 	github.com/aws/aws-sdk-go-v2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/config v1.26.5
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.11
@@ -18,7 +18,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.5.6
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.26.1
-	github.com/aws/aws-sdk-go-v2/service/athena v1.37.4
+	github.com/aws/aws-sdk-go-v2/service/athena v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.30.6
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.5.7
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.20.6
@@ -107,7 +107,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.20.6
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.27.6
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.10.6
-	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.23.6
+	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.23.7
 	github.com/aws/aws-sdk-go-v2/service/sts v1.26.7
 	github.com/aws/aws-sdk-go-v2/service/swf v1.20.7
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.23.7
