@@ -128,14 +128,13 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				Optional:    true,
 				// TODO: have to add plan modifier here to suppress func
 			},
-			// "managed_policy_arns": schema.SetAttribute{
-			// Computed:    true,
-			// Optional:    true,
-			// ElementType: types.StringType,
-			// // TODO: set validator for arn
-			// // TODO: validate all elements of set are valid arns
-			// // how to do this with helper lib terraform-plugin-framework-validators
-			// },
+			"managed_policy_arns": schema.SetAttribute{
+				// TODO: maybe use setof custom type with arn?
+				// Then don't need validator
+				Computed:    true,
+				Optional:    true,
+				ElementType: types.StringType,
+			},
 			"max_session_duration": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
@@ -223,13 +222,11 @@ type resourceIamRoleData struct {
 	NamePrefix          types.String      `tfsdk:"name_prefix"`
 	Path                types.String      `tfsdk:"path"`
 	PermissionsBoundary fwtypes.ARN       `tfsdk:"permissions_boundary"`
-	Tags                types.Map         `tfsdk:"tags"`
-	TagsAll             types.Map         `tfsdk:"tags_all"`
 	InlinePolicies      types.Map         `tfsdk:"inline_policies"`
 	UniqueId            types.String      `tfsdk:"unique_id"`
-
-	// TODO: still have to think this one out
-	// ManagedPolicyArns   types.Set    `tfsdk:"managed_policy_arns"`
+	ManagedPolicyArns   types.Set         `tfsdk:"managed_policy_arns"`
+	Tags                types.Map         `tfsdk:"tags"`
+	TagsAll             types.Map         `tfsdk:"tags_all"`
 }
 
 func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -306,16 +303,16 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 		}
 	}
 
-	// if !plan.ManagedPolicyArns.IsNull() && !plan.ManagedPolicyArns.IsUnknown() {
-	// managedPolicies := flex.ExpandFrameworkStringSet(ctx, plan.ManagedPolicyArns)
-	// if err := r.addRoleManagedPolicies(ctx, roleName, managedPolicies); err != nil {
-	// resp.Diagnostics.AddError(
-	// create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
-	// err.Error(),
-	// )
-	// return
-	// }
-	// }
+	if !plan.ManagedPolicyArns.IsNull() && !plan.ManagedPolicyArns.IsUnknown() {
+		managedPolicies := flex.ExpandFrameworkStringSet(ctx, plan.ManagedPolicyArns)
+		if err := r.addRoleManagedPolicies(ctx, roleName, managedPolicies); err != nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
+				err.Error(),
+			)
+			return
+		}
+	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
@@ -368,14 +365,12 @@ func (r resourceIamRole) Delete(ctx context.Context, req resource.DeleteRequest,
 		hasInline = true
 	}
 
-	// hasManaged := false
-	// if !state.ManagedPolicyArns.IsNull() && !state.ManagedPolicyArns.IsUnknown() {
-	// hasManaged = true
-	// }
+	hasManaged := false
+	if !state.ManagedPolicyArns.IsNull() && !state.ManagedPolicyArns.IsUnknown() {
+		hasManaged = true
+	}
 
-	// err := DeleteRole(ctx, conn, state.Name.ValueString(), state.ForceDetachPolicies.ValueBool(), hasInline, hasManaged)
-	// TODO: should name be ID here?
-	err := DeleteRole(ctx, conn, state.Name.ValueString(), state.ForceDetachPolicies.ValueBool(), hasInline, false)
+	err := DeleteRole(ctx, conn, state.Name.ValueString(), state.ForceDetachPolicies.ValueBool(), hasInline, hasManaged)
 
 	if err != nil {
 		// TODO: do something like this to skip deletes on roles that are gone?
@@ -467,9 +462,6 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 		state.PermissionsBoundary = fwtypes.ARNNull()
 	}
 
-	// TODO: have to add this and maybe a test to validate this is non empty in basic
-	// d.Set("unique_id", role.RoleId)
-
 	assumeRolePolicy, err := url.QueryUnescape(aws.StringValue(role.AssumeRolePolicyDocument))
 	if err != nil {
 		// TODO: I don't this this is right error, should look more into it
@@ -520,15 +512,15 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 		}
 	}
 
-	// policyARNs, err := findRoleAttachedPolicies(ctx, conn, d.Id())
-	// if err != nil {
-	// return sdkdiag.AppendErrorf(diags, "reading IAM Policies attached to Role (%s): %s", d.Id(), err)
-	// }
-	// d.Set("managed_policy_arns", policyARNs)
+	policyARNs, err := findRoleAttachedPolicies(ctx, conn, state.ID.ValueString())
+	if err != nil {
+		// TODO: implement error
+		return
+		// return sdkdiag.AppendErrorf(diags, "reading IAM Policies attached to Role (%s): %s", d.Id(), err)
+	}
+	state.ManagedPolicyArns = flex.FlattenFrameworkStringValueSet(ctx, policyARNs)
 
 	setTagsOut(ctx, role.Tags)
-	// state.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, KeyValueTags(ctx, role.Tags).Map())
-	// data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -724,6 +716,21 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 		}
 
 	}
+
+	// if !plan.ManagedPolicyArns.Equal(state.ManagedPolicyArns) {
+	// o, n := d.GetChange("managed_policy_arns")
+	// os, ns := o.(*schema.Set), n.(*schema.Set)
+	// add, del := flex.ExpandStringSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
+
+	// // TODO: fix this, we are doing it again. Always add then delete to prevent issues
+	// if err := deleteRolePolicyAttachments(ctx, conn, d.Id(), del); err != nil {
+	// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s): %s", d.Id(), err)
+	// }
+
+	// if err := addRoleManagedPolicies(ctx, d.Id(), add, meta); err != nil {
+	// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s): %s", d.Id(), err)
+	// }
+	// }
 
 	if !plan.TagsAll.Equal(state.TagsAll) {
 		fmt.Println("Tags are not equal!")

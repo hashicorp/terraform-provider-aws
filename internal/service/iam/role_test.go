@@ -261,10 +261,8 @@ func TestAccIAMRole_diffsNoCondition(t *testing.T) {
 				Config:   testAccRoleConfig_diffs(rName, ""),
 				PlanOnly: true,
 			},
-			// TODO: I don't think you can do this in plugin sdk, either nil or have something
-			// Either way can be figured out later
 			{
-				// TODO: empty maps are not the same in plugin framework vs sdkv2
+				// NOTE: empty maps are not the same in plugin framework vs sdkv2
 				// would have to possibly resolve this in later PR or open to any ideas
 				// For now if you want no tags would have to set as null
 				// rest of below test changed to null from `{}`
@@ -755,85 +753,85 @@ func TestAccIAMRole_InlinePolicy_empty(t *testing.T) {
 	})
 }
 
-// func TestAccIAMRole_ManagedPolicy_basic(t *testing.T) {
-// ctx := acctest.Context(t)
-// var role iam.Role
-// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// policyName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// policyName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// resourceName := "aws_iam_role.test"
+func TestAccIAMRole_ManagedPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var role iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	// policyName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	// policyName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
 
-// resource.ParallelTest(t, resource.TestCase{
-// PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// CheckDestroy:             testAccCheckRoleDestroy(ctx),
-// Steps: []resource.TestStep{
-// {
-// Config: testAccRoleConfig_policyManaged(rName, policyName1),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// resource.TestCheckResourceAttr(resourceName, "name", rName),
-// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
-// ),
-// },
-// {
-// Config: testAccRoleConfig_policyManagedUpdate(rName, policyName1, policyName2, policyName3),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "2"),
-// ),
-// },
-// {
-// Config: testAccRoleConfig_policyManagedUpdateDown(rName, policyName1, policyName2, policyName3),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
-// ),
-// },
-// {
-// ResourceName:      resourceName,
-// ImportState:       true,
-// ImportStateVerify: true,
-// },
-// },
-// })
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoleConfig_policyManaged(rName, policyName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
+				),
+			},
+			// {
+			// Config: testAccRoleConfig_policyManagedUpdate(rName, policyName1, policyName2, policyName3),
+			// Check: resource.ComposeTestCheckFunc(
+			// testAccCheckRoleExists(ctx, resourceName, &role),
+			// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "2"),
+			// ),
+			// },
+			// {
+			// Config: testAccRoleConfig_policyManagedUpdateDown(rName, policyName1, policyName2, policyName3),
+			// Check: resource.ComposeTestCheckFunc(
+			// testAccCheckRoleExists(ctx, resourceName, &role),
+			// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
+			// ),
+			// },
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 
-// // TestAccIAMRole_PolicyOutOfBandRemovalAddedBack_managedNonEmpty: if a policy is detached
-// // out of band, it should be reattached.
-// func TestAccIAMRole_ManagedPolicy_outOfBandRemovalAddedBack(t *testing.T) {
-// ctx := acctest.Context(t)
-// var role iam.Role
-// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// resourceName := "aws_iam_role.test"
+// TestAccIAMRole_PolicyOutOfBandRemovalAddedBack_managedNonEmpty: if a policy is detached
+// out of band, it should be reattached.
+func TestAccIAMRole_ManagedPolicy_outOfBandRemovalAddedBack(t *testing.T) {
+	ctx := acctest.Context(t)
+	var role iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
 
-// resource.ParallelTest(t, resource.TestCase{
-// PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// CheckDestroy:             testAccCheckRoleDestroy(ctx),
-// Steps: []resource.TestStep{
-// {
-// Config: testAccRoleConfig_policyManaged(rName, policyName),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// testAccCheckRolePolicyDetachManagedPolicy(ctx, &role, policyName),
-// ),
-// ExpectNonEmptyPlan: true,
-// },
-// {
-// Config: testAccRoleConfig_policyManaged(rName, policyName),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
-// ),
-// },
-// },
-// })
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoleConfig_policyManaged(rName, policyName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					testAccCheckRolePolicyDetachManagedPolicy(ctx, &role, policyName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccRoleConfig_policyManaged(rName, policyName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
+				),
+			},
+		},
+	})
+}
 
 // // TestAccIAMRole_PolicyOutOfBandRemovalAddedBack_inlineNonEmpty: if a policy is removed
 // // out of band, it should be recreated.
