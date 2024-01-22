@@ -327,6 +327,23 @@ func (r *resourceDeployment) ImportState(ctx context.Context, req resource.Impor
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
+func (r *resourceDeployment) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	if !req.State.Raw.IsNull() && !req.Plan.Raw.IsNull() {
+		var plan, state resourceDeploymentData
+		resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+		resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		if !plan.ApplicationVersion.Equal(state.ApplicationVersion) {
+			// if the ApplicationVersion changes, ID becomes unknown
+			plan.ID = types.StringUnknown()
+		}
+		resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
+	}
+}
+
 func (r *resourceDeploymentData) refreshFromOutput(ctx context.Context, out *m2.GetDeploymentOutput) {
 	combinedId := DeploymentId(*out.ApplicationId, *out.DeploymentId)
 	r.ID = flex.StringValueToFramework(ctx, combinedId)

@@ -6,7 +6,7 @@
       "source-type": "s3",
       "properties": {
         "s3-bucket": "${s3_bucket}",
-        "s3-key-prefix": "${version}"
+        "s3-key-prefix": "v${version}"
       }
     }
   ],
@@ -18,7 +18,7 @@
       }
     ],
     "ba-application": {
-      "app-location": "$${s3-source}/PlanetsDemo-${version}.zip"
+      "app-location": "$${s3-source}/PlanetsDemo-v${version}.zip"
     }
   }
 }

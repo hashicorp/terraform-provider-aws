@@ -87,7 +87,7 @@ func TestAccM2Application_update(t *testing.T) {
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccApplicationConfig_versioned(rName, "bluage", "v1"),
+				Config: testAccApplicationConfig_versioned(rName, "bluage", 1, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -96,7 +96,7 @@ func TestAccM2Application_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccApplicationConfig_versioned(rName, "bluage", "v2"),
+				Config: testAccApplicationConfig_versioned(rName, "bluage", 2, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -214,26 +214,20 @@ func testAccApplicationPreCheck(ctx context.Context, t *testing.T) {
 }
 
 func testAccApplicationConfig_basic(rName, engineType string) string {
-	return testAccApplicationConfig_versioned(rName, engineType, "1")
+	return testAccApplicationConfig_versioned(rName, engineType, 1, 1)
 }
 
-func testAccApplicationConfig_versioned(rName, engineType, version string) string {
-	return fmt.Sprintf(`
+func testAccApplicationConfig_versioned(rName, engineType string, version int32, versions int32) string {
+	return acctest.ConfigCompose(fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
-}
-
-resource "aws_s3_object" "test" {
-  bucket = aws_s3_bucket.test.id
-  key    = "%[3]s/PlanetsDemo-%[3]s.zip"
-  source = "test-fixtures/PlanetsDemo-v1.zip"
 }
 
 resource "aws_m2_application" "test" {
   name        = %[1]q
   engine_type = %[2]q
   definition {
-    content = templatefile("test-fixtures/application-definition.json", { s3_bucket = aws_s3_bucket.test.id, version = %[3]q })
+    content = templatefile("test-fixtures/application-definition.json", { s3_bucket = aws_s3_bucket.test.id, version = %[3]d })
   }
 
   tags = {
@@ -242,7 +236,19 @@ resource "aws_m2_application" "test" {
 
   depends_on = [aws_s3_object.test]
 }
-`, rName, engineType, version)
+`, rName, engineType, version),
+		testAccApplicationConfig_resources(versions))
+}
+
+func testAccApplicationConfig_resources(versions int32) string {
+	return fmt.Sprintf(`
+resource "aws_s3_object" "test" {
+  count  = %[1]d
+  bucket = aws_s3_bucket.test.id
+  key    = "v${count.index+1}/PlanetsDemo-v${count.index+1}.zip"
+  source = "test-fixtures/PlanetsDemo-v1.zip"
+}
+`, versions)
 }
 
 func skipIfDemoAppMissing(t *testing.T) {
