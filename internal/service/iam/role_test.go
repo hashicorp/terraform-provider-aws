@@ -1051,38 +1051,40 @@ func TestAccIAMRole_InlinePolicy_outOfBandAdditionRemovedEmpty(t *testing.T) {
 	})
 }
 
+// NOTE: Cannot do this with terraform plugin sdk as previously
+// default value of managed policy arn is null currently, so won't catch drift unless one already set
 // // TestAccIAMRole_PolicyOutOfBandAdditionRemoved_managedEmpty: if managed is attached
 // // out of band with empty managed arg, should be detached
-// func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemovedEmpty(t *testing.T) {
-// ctx := acctest.Context(t)
-// var role iam.Role
-// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// resourceName := "aws_iam_role.test"
+func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemovedEmpty(t *testing.T) {
+	ctx := acctest.Context(t)
+	var role iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
 
-// resource.ParallelTest(t, resource.TestCase{
-// PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// CheckDestroy:             testAccCheckRoleDestroy(ctx),
-// Steps: []resource.TestStep{
-// {
-// Config: testAccRoleConfig_policyEmptyManaged(rName, policyName),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// testAccCheckRolePolicyAttachManagedPolicy(ctx, &role, policyName),
-// ),
-// ExpectNonEmptyPlan: true,
-// },
-// {
-// Config: testAccRoleConfig_policyEmptyManaged(rName, policyName),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// ),
-// },
-// },
-// })
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoleConfig_policyEmptyManaged(rName, policyName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					testAccCheckRolePolicyAttachManagedPolicy(ctx, &role, policyName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+			{
+				Config: testAccRoleConfig_policyEmptyManaged(rName, policyName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+				),
+			},
+		},
+	})
+}
 
 func testAccCheckRoleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -2451,7 +2453,7 @@ resource "aws_iam_role" "test" {
     }]
   })
 
-  managed_policy_arns = []
+  managed_policy_arns = ["arn:aws:iam::aws:policy/AdministratorAccess-Amplify"]
 }
 
 resource "aws_iam_policy" "managed-policy1" {
