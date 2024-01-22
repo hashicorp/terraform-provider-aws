@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/codebuild"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -56,37 +55,4 @@ func FindProjectByARN(ctx context.Context, conn *codebuild.CodeBuild, arn string
 	}
 
 	return output.Projects[0], nil
-}
-
-func FindSourceCredentialByARN(ctx context.Context, conn *codebuild.CodeBuild, arn string) (*codebuild.SourceCredentialsInfo, error) {
-	var result *codebuild.SourceCredentialsInfo
-	input := &codebuild.ListSourceCredentialsInput{}
-	output, err := conn.ListSourceCredentialsWithContext(ctx, input)
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	for _, sourceCred := range output.SourceCredentialsInfos {
-		if sourceCred == nil {
-			continue
-		}
-
-		if aws.StringValue(sourceCred.Arn) == arn {
-			result = sourceCred
-			break
-		}
-	}
-
-	if result == nil {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	return result, nil
 }

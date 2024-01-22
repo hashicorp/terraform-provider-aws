@@ -5,7 +5,9 @@ package codebuild
 
 // Exports for use in tests only.
 var (
-	ResourceResourcePolicy = resourceResourcePolicy
+	ResourceResourcePolicy   = resourceResourcePolicy
+	ResourceSourceCredential = resourceSourceCredential
 
-	FindResourcePolicyByARN = findResourcePolicyByARN
+	FindResourcePolicyByARN    = findResourcePolicyByARN
+	FindSourceCredentialsByARN = findSourceCredentialsByARN
 )
