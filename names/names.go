@@ -35,6 +35,7 @@ const (
 	AthenaEndpointID                     = "athena"
 	AuditManagerEndpointID               = "auditmanager"
 	BedrockEndpointID                    = "bedrock"
+	BudgetsEndpointID                    = "budgets"
 	ChimeSDKVoiceEndpointID              = "voice-chime"
 	ChimeSDKMediaPipelinesEndpointID     = "media-pipelines-chime"
 	CleanRoomsEndpointID                 = "cleanrooms"
