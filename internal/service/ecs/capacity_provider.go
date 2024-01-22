@@ -103,6 +103,12 @@ func ResourceCapacityProvider() *schema.Resource {
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice(ecs.ManagedTerminationProtection_Values(), false),
 						},
+						"managed_draining": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(ecs.ManagedDraining_Values(), false),
+						},
 					},
 				},
 			},
@@ -285,6 +291,10 @@ func expandAutoScalingGroupProviderCreate(configured interface{}) *ecs.AutoScali
 		prov.ManagedTerminationProtection = aws.String(mtp)
 	}
 
+	if mtp := p["managed_draining"].(string); len(mtp) > 0 {
+		prov.ManagedDraining = aws.String(mtp)
+	}
+
 	prov.ManagedScaling = expandManagedScaling(p["managed_scaling"])
 
 	return &prov
@@ -304,6 +314,10 @@ func expandAutoScalingGroupProviderUpdate(configured interface{}) *ecs.AutoScali
 
 	if mtp := p["managed_termination_protection"].(string); len(mtp) > 0 {
 		prov.ManagedTerminationProtection = aws.String(mtp)
+	}
+
+	if mtp := p["managed_draining"].(string); len(mtp) > 0 {
+		prov.ManagedDraining = aws.String(mtp)
 	}
 
 	prov.ManagedScaling = expandManagedScaling(p["managed_scaling"])
@@ -351,6 +365,7 @@ func flattenAutoScalingGroupProvider(provider *ecs.AutoScalingGroupProvider) []m
 	p := map[string]interface{}{
 		"auto_scaling_group_arn":         aws.StringValue(provider.AutoScalingGroupArn),
 		"managed_termination_protection": aws.StringValue(provider.ManagedTerminationProtection),
+		"managed_draining":               aws.StringValue(provider.ManagedDraining),
 		"managed_scaling":                []map[string]interface{}{},
 	}
 
