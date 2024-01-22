@@ -122,7 +122,7 @@ func resourceTriggerRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set("configuration_id", output.ConfigurationId)
-	d.Set("respository_name", d.Id())
+	d.Set("repository_name", d.Id())
 	if err := d.Set("trigger", flattenRepositoryTriggers(output.Triggers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting trigger: %s", err)
 	}
@@ -193,7 +193,8 @@ func expandRepositoryTriggers(tfList []interface{}) []types.RepositoryTrigger {
 
 		apiObject := types.RepositoryTrigger{}
 
-		if v, ok := tfMap["branches"].([]interface{}); ok && len(v) > 0 {
+		// "RepositoryTriggerBranchNameListRequiredException: Repository trigger branch name list cannot be null".
+		if v, ok := tfMap["branches"].([]interface{}); ok {
 			apiObject.Branches = flex.ExpandStringValueList(v)
 		}
 

@@ -31,9 +31,64 @@ func TestAccCodeCommitTrigger_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTriggerConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTriggerExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "trigger.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.0", "all"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.name", rName),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCodeCommitTrigger_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codecommit_trigger.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTriggerConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTriggerExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodecommit.ResourceTrigger(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccCodeCommitTrigger_branches(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_codecommit_trigger.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeCommitEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTriggerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTriggerConfig_branches(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTriggerExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.0", "main"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.branches.1", "develop"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.0", "updateReference"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.events.1", "createReference"),
+					resource.TestCheckResourceAttr(resourceName, "trigger.0.name", rName),
 				),
 			},
 		},
@@ -98,6 +153,29 @@ resource "aws_codecommit_trigger" "test" {
     name            = %[1]q
     events          = ["all"]
     destination_arn = aws_sns_topic.test.arn
+  }
+}
+`, rName)
+}
+
+func testAccTriggerConfig_branches(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_sns_topic" "test" {
+  name = %[1]q
+}
+
+resource "aws_codecommit_repository" "test" {
+  repository_name = %[1]q
+}
+
+resource "aws_codecommit_trigger" "test" {
+  repository_name = aws_codecommit_repository.test.id
+
+  trigger {
+    name            = %[1]q
+    events          = ["updateReference", "createReference"]
+    destination_arn = aws_sns_topic.test.arn
+    branches        = ["main", "develop"]
   }
 }
 `, rName)
