@@ -186,6 +186,23 @@ func DNSSuffixForPartition(partition string) string {
 	}
 }
 
+func IsOptInRegion(region string) bool {
+	switch region {
+	case AFSouth1RegionID,
+		APEast1RegionID, APSouth2RegionID,
+		APSoutheast3RegionID, APSoutheast4RegionID,
+		CAWest1RegionID,
+		EUCentral2RegionID,
+		EUSouth1RegionID, EUSouth2RegionID,
+		ILCentral1RegionID,
+		MECentral1RegionID,
+		MESouth1RegionID:
+		return true
+	default:
+		return false
+	}
+}
+
 func PartitionForRegion(region string) string {
 	switch region {
 	case "":

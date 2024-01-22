@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_s3_bucket_metric")
-func ResourceBucketMetric() *schema.Resource {
+// @SDKResource("aws_s3_bucket_metric", name="Bucket Metric")
+func resourceBucketMetric() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketMetricPut,
 		ReadWithoutTimeout:   resourceBucketMetricRead,
