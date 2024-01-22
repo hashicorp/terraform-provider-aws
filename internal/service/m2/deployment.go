@@ -215,7 +215,7 @@ func (r *resourceDeployment) Update(ctx context.Context, req resource.UpdateRequ
 
 		// Stop the application if it was running
 		if state.Start.ValueBool() {
-			err := stopApplication(ctx, conn, *applicationId, plan.ForceStop.ValueBool(), updateTimeout)
+			err := stopApplicationIfRunning(ctx, conn, *applicationId, plan.ForceStop.ValueBool(), updateTimeout)
 			if err != nil {
 				resp.Diagnostics.AddError(
 					create.ProblemStandardMessage(names.M2, create.ErrActionUpdating, ResNameDeployment, plan.ApplicationId.String(), err),
@@ -286,7 +286,7 @@ func (r *resourceDeployment) Delete(ctx context.Context, req resource.DeleteRequ
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 
 	if state.Start.ValueBool() {
-		err := stopApplication(ctx, conn, state.ApplicationId.ValueString(), state.ForceStop.ValueBool(), deleteTimeout)
+		err := stopApplicationIfRunning(ctx, conn, state.ApplicationId.ValueString(), state.ForceStop.ValueBool(), deleteTimeout)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.M2, create.ErrActionDeleting, ResNameDeployment, state.ApplicationId.String(), err),

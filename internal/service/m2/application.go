@@ -560,13 +560,26 @@ func startApplication(ctx context.Context, conn *m2.Client, id string, timeout t
 	return app, nil
 }
 
-func stopApplication(ctx context.Context, conn *m2.Client, id string, forceStop bool, timeout time.Duration) error {
+func stopApplicationIfRunning(ctx context.Context, conn *m2.Client, id string, forceStop bool, timeout time.Duration) error {
+
+	app, err := findApplicationByID(ctx, conn, id)
+	if err != nil {
+		if tfresource.NotFound(err) {
+			return nil
+		}
+		return err
+	}
+
+	if app.Status != awstypes.ApplicationLifecycleRunning {
+		return nil
+	}
+
 	stopInput := &m2.StopApplicationInput{
 		ApplicationId: &id,
 		ForceStop:     forceStop,
 	}
 
-	_, err := conn.StopApplication(ctx, stopInput)
+	_, err = conn.StopApplication(ctx, stopInput)
 	if err != nil {
 		return err
 	}
