@@ -171,7 +171,7 @@ func findRepositoryTriggersByName(ctx context.Context, conn *codecommit.Client, 
 		return nil, err
 	}
 
-	if output == nil {
+	if output == nil || len(output.Triggers) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 

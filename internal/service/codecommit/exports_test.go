@@ -12,5 +12,6 @@ var (
 
 	FindApprovalRuleTemplateAssociationByTwoPartKey = findApprovalRuleTemplateAssociationByTwoPartKey
 	FindApprovalRuleTemplateByName                  = findApprovalRuleTemplateByName
+	FindRepositoryByName                            = findRepositoryByName
 	FindRepositoryTriggersByName                    = findRepositoryTriggersByName
 )
