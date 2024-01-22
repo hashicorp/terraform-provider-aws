@@ -102,9 +102,9 @@ func ResourceWebexperience() *schema.Resource {
 			},
 			"sample_propmpts_control_mode": {
 				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: enum.Validate[types.WebExperienceSamplePromptsControlMode](),
+				Required:         true,
 				Description:      "Sample prompts control mode for Amazon Q web experience.",
+				ValidateDiagFunc: enum.Validate[types.WebExperienceSamplePromptsControlMode](),
 			},
 			"subtitle": {
 				Type:        schema.TypeString,
@@ -175,7 +175,7 @@ func resourceWebexperienceCreate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "creating qbusiness webexperience: %s", err)
 	}
 
-	d.SetId(application_id + "/" + *output.WebExperienceId)
+	d.SetId(application_id + "/" + aws.ToString(output.WebExperienceId))
 
 	if _, err := waitWebexperienceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating qbusiness webexperience (%s): waiting for completion: %s", d.Id(), err)
@@ -248,7 +248,7 @@ func resourceWebexperienceRead(ctx context.Context, d *schema.ResourceData, meta
 
 	conn := meta.(*conns.AWSClient).QBusinessClient(ctx)
 
-	webex, err := FindWebexperianceByID(ctx, conn, d.Id())
+	webex, err := FindWebexperienceByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] qbusiness webexperience (%s) not found, removing from state", d.Id())
@@ -317,7 +317,7 @@ func parseWebexperienceID(id string) (string, string, error) {
 	return parts[0], parts[1], nil
 }
 
-func FindWebexperianceByID(ctx context.Context, conn *qbusiness.Client, webexperience_id string) (*qbusiness.GetWebExperienceOutput, error) {
+func FindWebexperienceByID(ctx context.Context, conn *qbusiness.Client, webexperience_id string) (*qbusiness.GetWebExperienceOutput, error) {
 	application_d, webex_id, err := parseWebexperienceID(webexperience_id)
 
 	if err != nil {

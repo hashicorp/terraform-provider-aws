@@ -29,7 +29,7 @@ func statusAppAvailability(ctx context.Context, conn *qbusiness.Client, id strin
 
 func statusWebexperienceAvailability(ctx context.Context, conn *qbusiness.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindWebexperianceByID(ctx, conn, id)
+		output, err := FindWebexperienceByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
