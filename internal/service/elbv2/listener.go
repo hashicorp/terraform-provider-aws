@@ -59,15 +59,9 @@ func ResourceListener() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"alpn_policy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					"HTTP1Only",
-					"HTTP2Only",
-					"HTTP2Optional",
-					"HTTP2Preferred",
-					"None",
-				}, true),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(alpnPolicyEnum_Values(), true),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -1164,5 +1158,23 @@ func mutualAuthenticationModeEnum_Values() []string {
 		mutualAuthenticationOff,
 		mutualAuthenticationVerify,
 		mutualAuthenticationPassthrough,
+	}
+}
+
+const (
+	alpnPolicyHTTP1Only      = "HTTP1Only"
+	alpnPolicyHTTP2Only      = "HTTP2Only"
+	alpnPolicyHTTP2Optional  = "HTTP2Optional"
+	alpnPolicyHTTP2Preferred = "HTTP2Preferred"
+	alpnPolicyNone           = "None"
+)
+
+func alpnPolicyEnum_Values() []string {
+	return []string{
+		alpnPolicyHTTP1Only,
+		alpnPolicyHTTP2Only,
+		alpnPolicyHTTP2Optional,
+		alpnPolicyHTTP2Preferred,
+		alpnPolicyNone,
 	}
 }
