@@ -29,7 +29,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceProject,
+			Factory:  resourceProject,
 			TypeName: "aws_codebuild_project",
 			Name:     "Project",
 			Tags:     &types.ServicePackageResourceTags{},

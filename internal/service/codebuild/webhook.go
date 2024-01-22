@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -209,7 +208,7 @@ func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func findWebhookByProjectName(ctx context.Context, conn *codebuild.Client, name string) (*types.Webhook, error) {
-	output, err := findProjectByName(ctx, conn, name)
+	output, err := findProjectByNameOrARN(ctx, conn, name)
 
 	if err != nil {
 		return nil, err
@@ -220,38 +219,6 @@ func findWebhookByProjectName(ctx context.Context, conn *codebuild.Client, name 
 	}
 
 	return output.Webhook, nil
-}
-
-func findProjectByName(ctx context.Context, conn *codebuild.Client, name string) (*types.Project, error) {
-	input := &codebuild.BatchGetProjectsInput{
-		Names: tfslices.Of(name),
-	}
-
-	return findProject(ctx, conn, input)
-}
-
-func findProject(ctx context.Context, conn *codebuild.Client, input *codebuild.BatchGetProjectsInput) (*types.Project, error) {
-	output, err := findProjects(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSingleValueResult(output)
-}
-
-func findProjects(ctx context.Context, conn *codebuild.Client, input *codebuild.BatchGetProjectsInput) ([]types.Project, error) {
-	output, err := conn.BatchGetProjects(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Projects, nil
 }
 
 func expandWebhookFilterGroups(tfList []interface{}) [][]types.WebhookFilter {
