@@ -180,8 +180,8 @@ func testAccProjectConfig_contentModeration(rProjectId string, autoUpdate string
 	return fmt.Sprintf(`
 resource "aws_rekognition_project" "test" {
   name        = "%s"
-	auto_update = "%s" 
-	feature     = "CONTENT_MODERATION"
+  auto_update = "%s"
+  feature     = "CONTENT_MODERATION"
 }
 `, rProjectId, autoUpdate)
 }
@@ -190,8 +190,8 @@ resource "aws_rekognition_project" "test" {
 func testAccProjectConfig_customLabels(rProjectId string) string {
 	return fmt.Sprintf(`
 resource "aws_rekognition_project" "test" {
-  name        = "%s"
-	feature     = "CUSTOM_LABELS"
+  name    = "%s"
+  feature = "CUSTOM_LABELS"
 }
 `, rProjectId)
 }
