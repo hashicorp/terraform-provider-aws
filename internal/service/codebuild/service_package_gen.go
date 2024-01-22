@@ -51,8 +51,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Source Credential",
 		},
 		{
-			Factory:  ResourceWebhook,
+			Factory:  resourceWebhook,
 			TypeName: "aws_codebuild_webhook",
+			Name:     "Webhook",
 		},
 	}
 }

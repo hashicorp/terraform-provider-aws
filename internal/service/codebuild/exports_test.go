@@ -8,8 +8,10 @@ var (
 	ResourceReportGroup      = resourceReportGroup
 	ResourceResourcePolicy   = resourceResourcePolicy
 	ResourceSourceCredential = resourceSourceCredential
+	ResourceWebhook          = resourceWebhook
 
 	FindReportGroupByARN       = findReportGroupByARN
 	FindResourcePolicyByARN    = findResourcePolicyByARN
 	FindSourceCredentialsByARN = findSourceCredentialsByARN
+	FindWebhookByProjectName   = findWebhookByProjectName
 )

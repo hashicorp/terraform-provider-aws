@@ -8,9 +8,5 @@ import (
 )
 
 const (
-	ResNameWebhook = "Webhook"
-)
-
-const (
 	propagationTimeout = 2 * time.Minute
 )
