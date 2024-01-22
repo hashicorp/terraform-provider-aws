@@ -405,7 +405,7 @@ func resourceStorageLensConfigurationCreate(ctx context.Context, d *schema.Resou
 	input := &s3control.PutStorageLensConfigurationInput{
 		AccountId: aws.String(accountID),
 		ConfigId:  aws.String(configID),
-		Tags:      storageLensTags(KeyValueTags(ctx, getTagsIn(ctx))),
+		Tags:      storageLensTags(keyValueTagsS3(ctx, getTagsInS3(ctx))),
 	}
 
 	if v, ok := d.GetOk("storage_lens_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -457,7 +457,7 @@ func resourceStorageLensConfigurationRead(ctx context.Context, d *schema.Resourc
 		return diag.Errorf("listing tags for S3 Storage Lens Configuration (%s): %s", d.Id(), err)
 	}
 
-	setTagsOut(ctx, Tags(tags))
+	setTagsOutS3(ctx, tagsS3(tags))
 
 	return nil
 }
@@ -846,11 +846,11 @@ func expandSelectionCriteria(tfMap map[string]interface{}) *types.SelectionCrite
 	}
 
 	if v, ok := tfMap["max_depth"].(int); ok && v != 0 {
-		apiObject.MaxDepth = int32(v)
+		apiObject.MaxDepth = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["min_storage_bytes_percentage"].(float64); ok && v != 0.0 {
-		apiObject.MinStorageBytesPercentage = v
+		apiObject.MinStorageBytesPercentage = aws.Float64(v)
 	}
 
 	return apiObject
@@ -1185,8 +1185,8 @@ func flattenSelectionCriteria(apiObject *types.SelectionCriteria) map[string]int
 		tfMap["delimiter"] = aws.ToString(v)
 	}
 
-	tfMap["max_depth"] = apiObject.MaxDepth
-	tfMap["min_storage_bytes_percentage"] = apiObject.MinStorageBytesPercentage
+	tfMap["max_depth"] = aws.ToInt32(apiObject.MaxDepth)
+	tfMap["min_storage_bytes_percentage"] = aws.ToFloat64(apiObject.MinStorageBytesPercentage)
 
 	return tfMap
 }

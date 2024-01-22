@@ -3,13 +3,17 @@
 All practitioner focused documentation is found in the `/website` folder of the repository.
 
 ```
-├── website/
+├── website/docs
     ├── r/                     # Documentation for resources
     ├── d/                     # Documentation for data sources
     ├── guides/                # Long format guides for provider level configuration or provider upgrades.
+    ├── cdktf/                 # Documentation for CDKTF generated in other programming languages
     └── index.html.markdown    # Home page and all provider level documentation.
 └── examples/                  # Large example configurations
 ```
+
+!!!note
+    The CDKTF documentation is generated based on resource and data source documentation. Files in the `cdktf/` folder should not be edited directly.
 
 For any documentation change please raise a pull request including and adhering to the following:
 

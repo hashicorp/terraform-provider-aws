@@ -11,6 +11,7 @@ import (
 )
 
 // NestedObjectType extends the Type interface for types that represent nested Objects.
+// It isn't generic on the Go struct type as it's referenced within AutoFlEx.
 type NestedObjectType interface {
 	attr.Type
 
@@ -31,6 +32,7 @@ type NestedObjectType interface {
 }
 
 // NestedObjectValue extends the Value interface for values that represent nested Objects.
+// It isn't generic on the Go struct type as it's referenced within AutoFlEx.
 type NestedObjectValue interface {
 	attr.Value
 

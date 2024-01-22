@@ -30,7 +30,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
-	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -138,33 +138,81 @@ func ResourceGroup() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"default_result": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Computed: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(lifecycleHookDefaultResult_Values(), false),
 						},
 						"heartbeat_timeout": {
-							Type:     schema.TypeInt,
-							Optional: true,
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IntBetween(30, 7200),
 						},
 						"lifecycle_transition": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(lifecycleHookLifecycleTransition_Values(), false),
 						},
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
+							ForceNew: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 255),
+								validation.StringMatch(regexache.MustCompile(`[A-Za-z0-9\-_\/]+`),
+									`no spaces or special characters except "-", "_", and "/"`),
+							),
 						},
 						"notification_metadata": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 						},
 						"notification_target_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 						"role_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
+			"instance_maintenance_policy": {
+				Type:             schema.TypeList,
+				MaxItems:         1,
+				Optional:         true,
+				DiffSuppressFunc: instanceMaintenancePolicyDiffSupress,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"max_healthy_percentage": {
+							Type:     schema.TypeInt,
+							Required: true,
+							ValidateFunc: validation.Any(
+								validation.IntBetween(100, 200),
+								validation.IntBetween(-1, -1),
+							),
+							// When value is -1, instance maintenance policy is removed, state file will not contain any value.
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return old == "" && new == "-1"
+							},
+						},
+						"min_healthy_percentage": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ValidateFunc: validation.IntBetween(-1, 100),
+							// When value is -1, instance maintenance policy is removed, state file will not contain any value.
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								return old == "" && new == "-1"
+							},
 						},
 					},
 				},
@@ -201,6 +249,12 @@ func ResourceGroup() *schema.Resource {
 										Type:         nullable.TypeNullableInt,
 										Optional:     true,
 										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
+									},
+									"max_healthy_percentage": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      100,
+										ValidateFunc: validation.IntBetween(100, 200),
 									},
 									"min_healthy_percentage": {
 										Type:         schema.TypeInt,
@@ -875,6 +929,20 @@ func ResourceGroup() *schema.Resource {
 	}
 }
 
+func instanceMaintenancePolicyDiffSupress(k, old, new string, d *schema.ResourceData) bool {
+	o, n := d.GetChange("instance_maintenance_policy")
+	oList := o.([]interface{})
+	nList := n.([]interface{})
+
+	if len(oList) == 0 && len(nList) != 0 {
+		tfMap := nList[0].(map[string]interface{})
+		if int64(tfMap["min_healthy_percentage"].(int)) == -1 || int64(tfMap["max_healthy_percentage"].(int)) == -1 {
+			return true
+		}
+	}
+	return false
+}
+
 func launchTemplateCustomDiff(baseAttribute, subAttribute string) schema.CustomizeDiffFunc {
 	return func(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
 		if diff.HasChange(subAttribute) {
@@ -1002,6 +1070,10 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		createInput.HealthCheckGracePeriod = aws.Int64(int64(v.(int)))
 	}
 
+	if v, ok := d.GetOk("instance_maintenance_policy"); ok {
+		createInput.InstanceMaintenancePolicy = expandInstanceMaintenancePolicy(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("launch_configuration"); ok {
 		createInput.LaunchConfigurationName = aws.String(v.(string))
 	}
@@ -1055,7 +1127,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			return conn.CreateAutoScalingGroupWithContext(ctx, createInput)
 		},
 		// ValidationError: You must use a valid fully-formed launch template. Value (tf-acc-test-6643732652421074386) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
-		ErrCodeValidationError, "Invalid IAM Instance Profile")
+		errCodeValidationError, "Invalid IAM Instance Profile")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Group (%s): %s", asgName, err)
@@ -1069,7 +1141,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 				func() (interface{}, error) {
 					return conn.PutLifecycleHookWithContext(ctx, input)
 				},
-				ErrCodeValidationError, "Unable to publish test message to notification target")
+				errCodeValidationError, "Unable to publish test message to notification target")
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Group (%s) Lifecycle Hook: %s", d.Id(), err)
@@ -1186,6 +1258,9 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	d.Set("health_check_grace_period", g.HealthCheckGracePeriod)
 	d.Set("health_check_type", g.HealthCheckType)
+	if err := d.Set("instance_maintenance_policy", flattenInstanceMaintenancePolicy(g.InstanceMaintenancePolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting instance_maintenance_policy: %s", err)
+	}
 	d.Set("launch_configuration", g.LaunchConfigurationName)
 	if g.LaunchTemplate != nil {
 		if err := d.Set("launch_template", []interface{}{flattenLaunchTemplateSpecification(g.LaunchTemplate)}); err != nil {
@@ -1315,6 +1390,10 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.HealthCheckType = aws.String(d.Get("health_check_type").(string))
 		}
 
+		if d.HasChange("instance_maintenance_policy") {
+			input.InstanceMaintenancePolicy = expandInstanceMaintenancePolicy(d.Get("instance_maintenance_policy").([]interface{}))
+		}
+
 		if d.HasChange("launch_configuration") {
 			if v, ok := d.GetOk("launch_configuration"); ok {
 				input.LaunchConfigurationName = aws.String(v.(string))
@@ -1403,7 +1482,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
-		for _, chunk := range slices.Chunks(expandTrafficSourceIdentifiers(os.Difference(ns).List()), batchSize) {
+		for _, chunk := range tfslices.Chunks(expandTrafficSourceIdentifiers(os.Difference(ns).List()), batchSize) {
 			_, err := conn.DetachTrafficSourcesWithContext(ctx, &autoscaling.DetachTrafficSourcesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TrafficSources:       chunk,
@@ -1418,7 +1497,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		for _, chunk := range slices.Chunks(expandTrafficSourceIdentifiers(ns.Difference(os).List()), batchSize) {
+		for _, chunk := range tfslices.Chunks(expandTrafficSourceIdentifiers(ns.Difference(os).List()), batchSize) {
 			_, err := conn.AttachTrafficSourcesWithContext(ctx, &autoscaling.AttachTrafficSourcesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TrafficSources:       chunk,
@@ -1447,7 +1526,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
-		for _, chunk := range slices.Chunks(flex.ExpandStringSet(os.Difference(ns)), batchSize) {
+		for _, chunk := range tfslices.Chunks(flex.ExpandStringSet(os.Difference(ns)), batchSize) {
 			_, err := conn.DetachLoadBalancersWithContext(ctx, &autoscaling.DetachLoadBalancersInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				LoadBalancerNames:    chunk,
@@ -1462,7 +1541,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		for _, chunk := range slices.Chunks(flex.ExpandStringSet(ns.Difference(os)), batchSize) {
+		for _, chunk := range tfslices.Chunks(flex.ExpandStringSet(ns.Difference(os)), batchSize) {
 			_, err := conn.AttachLoadBalancersWithContext(ctx, &autoscaling.AttachLoadBalancersInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				LoadBalancerNames:    chunk,
@@ -1491,7 +1570,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
-		for _, chunk := range slices.Chunks(flex.ExpandStringSet(os.Difference(ns)), batchSize) {
+		for _, chunk := range tfslices.Chunks(flex.ExpandStringSet(os.Difference(ns)), batchSize) {
 			_, err := conn.DetachLoadBalancerTargetGroupsWithContext(ctx, &autoscaling.DetachLoadBalancerTargetGroupsInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TargetGroupARNs:      chunk,
@@ -1506,7 +1585,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		for _, chunk := range slices.Chunks(flex.ExpandStringSet(ns.Difference(os)), batchSize) {
+		for _, chunk := range tfslices.Chunks(flex.ExpandStringSet(ns.Difference(os)), batchSize) {
 			_, err := conn.AttachLoadBalancerTargetGroupsWithContext(ctx, &autoscaling.AttachLoadBalancerTargetGroupsInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TargetGroupARNs:      chunk,
@@ -1730,7 +1809,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		},
 		autoscaling.ErrCodeResourceInUseFault, autoscaling.ErrCodeScalingActivityInProgressFault)
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return diags
 	}
 
@@ -1771,26 +1850,26 @@ func drainGroup(ctx context.Context, conn *autoscaling.AutoScaling, name string,
 	// no longer applies scale-in protection to new instances, but there's still
 	// old ones that have it.
 
-	const chunkSize = 50 // API limit.
-	for i, n := 0, len(instances); i < n; i += chunkSize {
-		j := i + chunkSize
-		if j > n {
-			j = n
-		}
-
-		var instanceIDs []string
-
-		for k := i; k < j; k++ {
-			instanceIDs = append(instanceIDs, aws.StringValue(instances[k].InstanceId))
-		}
-
+	const batchSize = 50 // API limit.
+	for _, chunk := range tfslices.Chunks(instances, batchSize) {
+		instanceIDs := tfslices.ApplyToAll(chunk, func(v *autoscaling.Instance) string {
+			return aws.StringValue(v.InstanceId)
+		})
 		input := &autoscaling.SetInstanceProtectionInput{
 			AutoScalingGroupName: aws.String(name),
 			InstanceIds:          aws.StringSlice(instanceIDs),
 			ProtectedFromScaleIn: aws.Bool(false),
 		}
 
-		if _, err := conn.SetInstanceProtectionWithContext(ctx, input); err != nil {
+		_, err := conn.SetInstanceProtectionWithContext(ctx, input)
+
+		// Ignore ValidationError when instance is already fully terminated
+		// and is not a part of Auto Scaling Group anymore.
+		if tfawserr.ErrMessageContains(err, errCodeValidationError, "not part of Auto Scaling group") {
+			continue
+		}
+
+		if err != nil {
 			return fmt.Errorf("disabling Auto Scaling Group (%s) scale-in protections: %w", name, err)
 		}
 	}
@@ -1819,7 +1898,7 @@ func deleteWarmPool(ctx context.Context, conn *autoscaling.AutoScaling, name str
 		},
 		autoscaling.ErrCodeResourceInUseFault, autoscaling.ErrCodeScalingActivityInProgressFault)
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "No warm pool found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "No warm pool found") {
 		return nil
 	}
 
@@ -2027,7 +2106,7 @@ func FindInstanceRefreshes(ctx context.Context, conn *autoscaling.AutoScaling, i
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2063,7 +2142,7 @@ func findLoadBalancerStates(ctx context.Context, conn *autoscaling.AutoScaling, 
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2099,7 +2178,7 @@ func findLoadBalancerTargetGroupStates(ctx context.Context, conn *autoscaling.Au
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2134,7 +2213,7 @@ func findScalingActivities(ctx context.Context, conn *autoscaling.AutoScaling, i
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2175,7 +2254,7 @@ func findTrafficSourceStates(ctx context.Context, conn *autoscaling.AutoScaling,
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2220,7 +2299,7 @@ func findWarmPool(ctx context.Context, conn *autoscaling.AutoScaling, name strin
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -3301,6 +3380,10 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *autoscaling.Refresh
 		}
 	}
 
+	if v, ok := tfMap["max_healthy_percentage"].(int); ok {
+		apiObject.MaxHealthyPercentage = aws.Int64(int64(v))
+	}
+
 	if v, ok := tfMap["min_healthy_percentage"].(int); ok {
 		apiObject.MinHealthyPercentage = aws.Int64(int64(v))
 	}
@@ -3462,6 +3545,36 @@ func flattenInstancesDistribution(apiObject *autoscaling.InstancesDistribution) 
 	}
 
 	return tfMap
+}
+
+func expandInstanceMaintenancePolicy(l []interface{}) *autoscaling.InstanceMaintenancePolicy {
+	if len(l) == 0 {
+		//Empty InstanceMaintenancePolicy block will reset already assigned values
+		return &autoscaling.InstanceMaintenancePolicy{
+			MinHealthyPercentage: aws.Int64(-1),
+			MaxHealthyPercentage: aws.Int64(-1),
+		}
+	}
+
+	tfMap := l[0].(map[string]interface{})
+
+	return &autoscaling.InstanceMaintenancePolicy{
+		MinHealthyPercentage: aws.Int64(int64(tfMap["min_healthy_percentage"].(int))),
+		MaxHealthyPercentage: aws.Int64(int64(tfMap["max_healthy_percentage"].(int))),
+	}
+}
+
+func flattenInstanceMaintenancePolicy(instanceMaintenancePolicy *autoscaling.InstanceMaintenancePolicy) []interface{} {
+	if instanceMaintenancePolicy == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"min_healthy_percentage": instanceMaintenancePolicy.MinHealthyPercentage,
+		"max_healthy_percentage": instanceMaintenancePolicy.MaxHealthyPercentage,
+	}
+
+	return []interface{}{m}
 }
 
 func flattenLaunchTemplate(apiObject *autoscaling.LaunchTemplate) map[string]interface{} {
@@ -3957,9 +4070,11 @@ func startInstanceRefresh(ctx context.Context, conn *autoscaling.AutoScaling, in
 }
 
 func validateGroupInstanceRefreshTriggerFields(i interface{}, path cty.Path) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	v, ok := i.(string)
 	if !ok {
-		return diag.Errorf("expected type to be string")
+		return sdkdiag.AppendErrorf(diags, "expected type to be string")
 	}
 
 	if v == "launch_configuration" || v == "launch_template" || v == "mixed_instances_policy" {
@@ -3975,11 +4090,11 @@ func validateGroupInstanceRefreshTriggerFields(i interface{}, path cty.Path) dia
 	for attr, attrSchema := range schema {
 		if v == attr {
 			if attrSchema.Computed && !attrSchema.Optional {
-				return diag.Errorf("'%s' is a read-only parameter and cannot be used to trigger an instance refresh", v)
+				return sdkdiag.AppendErrorf(diags, "'%s' is a read-only parameter and cannot be used to trigger an instance refresh", v)
 			}
-			return nil
+			return diags
 		}
 	}
 
-	return diag.Errorf("'%s' is not a recognized parameter name for aws_autoscaling_group", v)
+	return sdkdiag.AppendErrorf(diags, "'%s' is not a recognized parameter name for aws_autoscaling_group", v)
 }

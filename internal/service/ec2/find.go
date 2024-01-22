@@ -7046,6 +7046,30 @@ func FindVerifiedAccessGroupPolicyByID(ctx context.Context, conn *ec2_sdkv2.Clie
 	return output, nil
 }
 
+func FindVerifiedAccessEndpointPolicyByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*ec2_sdkv2.GetVerifiedAccessEndpointPolicyOutput, error) {
+	input := &ec2_sdkv2.GetVerifiedAccessEndpointPolicyInput{
+		VerifiedAccessEndpointId: &id,
+	}
+	output, err := conn.GetVerifiedAccessEndpointPolicy(ctx, input)
+
+	if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidVerifiedAccessEndpointIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 func FindVerifiedAccessGroup(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeVerifiedAccessGroupsInput) (*awstypes.VerifiedAccessGroup, error) {
 	output, err := FindVerifiedAccessGroups(ctx, conn, input)
 
@@ -7293,4 +7317,65 @@ func FindImageBlockPublicAccessState(ctx context.Context, conn *ec2_sdkv2.Client
 	}
 
 	return output.ImageBlockPublicAccessState, nil
+}
+
+func FindVerifiedAccessEndpoint(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeVerifiedAccessEndpointsInput) (*awstypes.VerifiedAccessEndpoint, error) {
+	output, err := FindVerifiedAccessEndpoints(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func FindVerifiedAccessEndpoints(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeVerifiedAccessEndpointsInput) ([]awstypes.VerifiedAccessEndpoint, error) {
+	var output []awstypes.VerifiedAccessEndpoint
+	paginator := ec2_sdkv2.NewDescribeVerifiedAccessEndpointsPaginator(conn, input)
+
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidVerifiedAccessEndpointIdNotFound) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.VerifiedAccessEndpoints...)
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessEndpointByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*awstypes.VerifiedAccessEndpoint, error) {
+	input := &ec2_sdkv2.DescribeVerifiedAccessEndpointsInput{
+		VerifiedAccessEndpointIds: []string{id},
+	}
+	output, err := FindVerifiedAccessEndpoint(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := output.Status; status != nil && status.Code == awstypes.VerifiedAccessEndpointStatusCodeDeleted {
+		return nil, &retry.NotFoundError{
+			Message:     string(status.Code),
+			LastRequest: input,
+		}
+	}
+
+	// Eventual consistency check.
+	if aws_sdkv2.ToString(output.VerifiedAccessEndpointId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
 }

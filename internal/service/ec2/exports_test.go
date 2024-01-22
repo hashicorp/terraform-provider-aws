@@ -8,7 +8,12 @@ var (
 	ResourceInstanceConnectEndpoint  = newResourceInstanceConnectEndpoint
 	ResourceSecurityGroupEgressRule  = newResourceSecurityGroupEgressRule
 	ResourceSecurityGroupIngressRule = newResourceSecurityGroupIngressRule
+	ResourceEBSFastSnapshotRestore   = newResourceEBSFastSnapshotRestore
+
+	FindEBSFastSnapshotRestoreByID = findEBSFastSnapshotRestoreByID
 
 	UpdateTags   = updateTags
 	UpdateTagsV2 = updateTagsV2
+
+	StopInstance = stopInstance
 )

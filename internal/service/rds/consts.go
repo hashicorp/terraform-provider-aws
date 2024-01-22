@@ -54,6 +54,9 @@ func StorageType_Values() []string {
 }
 
 const (
+	InstanceEngineCustomPrefix        = "custom-"
+	InstanceEngineDB2Advanced         = "db2-ae"
+	InstanceEngineDB2Standard         = "db2-se"
 	InstanceEngineMariaDB             = "mariadb"
 	InstanceEngineMySQL               = "mysql"
 	InstanceEngineOracleEnterprise    = "oracle-ee"
@@ -65,7 +68,6 @@ const (
 	InstanceEngineSQLServerExpress    = "sqlserver-ex"
 	InstanceEngineSQLServerStandard   = "sqlserver-se"
 	InstanceEngineSQLServerWeb        = "sqlserver-ewb"
-	InstanceEngineCustomPrefix        = "custom-"
 )
 
 // https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/accessing-monitoring.html#Overview.DBInstance.Status.
@@ -137,6 +139,13 @@ func ClusterEngine_Values() []string {
 		ClusterEngineAuroraPostgreSQL,
 		ClusterEngineMySQL,
 		ClusterEnginePostgres,
+	}
+}
+
+func ClusterInstanceEngine_Values() []string {
+	return []string{
+		ClusterEngineAuroraMySQL,
+		ClusterEngineAuroraPostgreSQL,
 	}
 }
 

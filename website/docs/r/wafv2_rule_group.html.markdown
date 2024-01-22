@@ -516,7 +516,7 @@ A rule statement used to search web request components for a match against a sin
 
 The `regex_match_statement` block supports the following arguments:
 
-* `regex_string` - (Required) The string representing the regular expression. Minimum of `1` and maximum of `512` characters.
+* `regex_string` - (Required) The string representing the regular expression. **Note:** The fixed quota for the maximum number of characters in each regex pattern is 200, which can't be changed. See [AWS WAF quotas](https://docs.aws.amazon.com/waf/latest/developerguide/limits.html) for details.
 * `field_to_match` - (Required) The part of a web request that you want AWS WAF to inspect. See [Field to Match](#field-to-match) below for details.
 * `text_transformation` - (Required) Text transformations eliminate some of the unusual formatting that attackers use in web requests in an effort to bypass detection.
   At least one required.

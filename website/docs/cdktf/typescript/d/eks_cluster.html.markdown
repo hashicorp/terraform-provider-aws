@@ -53,13 +53,13 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - Name of the cluster
 * `arn` - ARN of the cluster.
-* `certificateAuthority` - Nested attribute containing `certificateAuthorityData` for your cluster.
-    * `data` - The base64 encoded certificate data required to communicate with your cluster. Add this to the `certificateAuthorityData` section of the `kubeconfig` file for your cluster.
+* `certificateAuthority` - Nested attribute containing `certificate-authority-data` for your cluster.
+    * `data` - The base64 encoded certificate data required to communicate with your cluster. Add this to the `certificate-authority-data` section of the `kubeconfig` file for your cluster.
 * `clusterId` - The ID of your local Amazon EKS cluster on the AWS Outpost. This attribute isn't available for an AWS EKS cluster on AWS cloud.
 * `createdAt` - Unix epoch time stamp in seconds for when the cluster was created.
 * `enabledClusterLogTypes` - The enabled control plane logs.
 * `endpoint` - Endpoint for your Kubernetes API server.
-* `identity` - Nested attribute containing identity provider information for your cluster. Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019. For an example using this information to enable IAM Roles for Service Accounts, see the [`awsEksCluster` resource documentation](/docs/providers/aws/r/eks_cluster.html).
+* `identity` - Nested attribute containing identity provider information for your cluster. Only available on Kubernetes version 1.13 and 1.14 clusters created or upgraded on or after September 3, 2019. For an example using this information to enable IAM Roles for Service Accounts, see the [`aws_eks_cluster` resource documentation](/docs/providers/aws/r/eks_cluster.html).
     * `oidc` - Nested attribute containing [OpenID Connect](https://openid.net/connect/) identity provider information for the cluster.
         * `issuer` - Issuer URL for the OpenID Connect identity provider.
 * `kubernetesNetworkConfig` - Nested list containing Kubernetes Network Configuration.
@@ -73,7 +73,7 @@ This data source exports the following attributes in addition to the arguments a
     * `outpostArns` - List of ARNs of the Outposts hosting the EKS cluster. Only a single ARN is supported currently.
 * `platformVersion` - Platform version for the cluster.
 * `roleArn` - ARN of the IAM role that provides permissions for the Kubernetes control plane to make calls to AWS API operations on your behalf.
-* `status` - Status of the EKS cluster. One of `creating`, `active`, `deleting`, `failed`.
+* `status` - Status of the EKS cluster. One of `CREATING`, `ACTIVE`, `DELETING`, `FAILED`.
 * `tags` - Key-value map of resource tags.
 * `version` - Kubernetes server version for the cluster.
 * `vpcConfig` - Nested list containing VPC configuration for the cluster.
@@ -85,4 +85,4 @@ This data source exports the following attributes in addition to the arguments a
     * `subnetIds` – List of subnet IDs
     * `vpcId` – The VPC associated with your cluster.
 
-<!-- cache-key: cdktf-0.18.0 input-c6c973609d8849dfdbe288511dbb8b53a13192e5d23e4a6f41498b65a5c39508 -->
+<!-- cache-key: cdktf-0.20.1 input-c6c973609d8849dfdbe288511dbb8b53a13192e5d23e4a6f41498b65a5c39508 -->

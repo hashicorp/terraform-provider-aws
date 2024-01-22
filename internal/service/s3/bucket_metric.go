@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_s3_bucket_metric")
-func ResourceBucketMetric() *schema.Resource {
+// @SDKResource("aws_s3_bucket_metric", name="Bucket Metric")
+func resourceBucketMetric() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketMetricPut,
 		ReadWithoutTimeout:   resourceBucketMetricRead,
@@ -93,9 +93,13 @@ func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta i
 		MetricsConfiguration: metricsConfiguration,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketMetricsConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "MetricsConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating S3 Bucket (%s) Metric: %s", bucket, err)
@@ -104,7 +108,7 @@ func resourceBucketMetricPut(ctx context.Context, d *schema.ResourceData, meta i
 	if d.IsNewResource() {
 		d.SetId(fmt.Sprintf("%s:%s", bucket, name))
 
-		_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 			return findMetricsConfiguration(ctx, conn, bucket, name)
 		})
 
@@ -171,7 +175,7 @@ func resourceBucketMetricDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Metric (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findMetricsConfiguration(ctx, conn, bucket, name)
 	})
 
@@ -190,7 +194,7 @@ func expandMetricsFilter(ctx context.Context, m map[string]interface{}) types.Me
 
 	var tags []types.Tag
 	if v, ok := m["tags"]; ok {
-		tags = tagsV2(tftags.New(ctx, v).IgnoreAWS())
+		tags = Tags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
 	var metricsFilter types.MetricsFilter
@@ -229,7 +233,7 @@ func flattenMetricsFilter(ctx context.Context, metricsFilter types.MetricsFilter
 			m["prefix"] = aws.ToString(v)
 		}
 		if v := v.Value.Tags; v != nil {
-			m["tags"] = keyValueTagsV2(ctx, v).IgnoreAWS().Map()
+			m["tags"] = keyValueTags(ctx, v).IgnoreAWS().Map()
 		}
 	case *types.MetricsFilterMemberPrefix:
 		m["prefix"] = v.Value
@@ -237,7 +241,7 @@ func flattenMetricsFilter(ctx context.Context, metricsFilter types.MetricsFilter
 		tags := []types.Tag{
 			v.Value,
 		}
-		m["tags"] = keyValueTagsV2(ctx, tags).IgnoreAWS().Map()
+		m["tags"] = keyValueTags(ctx, tags).IgnoreAWS().Map()
 	default:
 		return nil
 	}

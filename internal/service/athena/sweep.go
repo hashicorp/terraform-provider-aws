@@ -7,11 +7,11 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/athena"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/athena"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -27,40 +27,37 @@ func sweepDatabases(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.AthenaConn(ctx)
+	conn := client.AthenaClient(ctx)
 	input := &athena.ListDatabasesInput{
 		CatalogName: aws.String("AwsDataCatalog"),
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListDatabasesPagesWithContext(ctx, input, func(page *athena.ListDatabasesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := athena.NewListDatabasesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Athena Database sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing Athena Databases (%s): %w", region, err)
 		}
 
 		for _, v := range page.DatabaseList {
-			name := aws.StringValue(v.Name)
+			name := aws.ToString(v.Name)
 			if name == "default" {
 				continue
 			}
-			r := ResourceDatabase()
+			r := resourceDatabase()
 			d := r.Data(nil)
 			d.SetId(name)
 			d.Set("force_destroy", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Athena Database sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing Athena Databases (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)

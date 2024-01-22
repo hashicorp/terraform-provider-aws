@@ -255,6 +255,11 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Default:  "current",
 			},
+			"manage_master_password": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				ConflictsWith: []string{"master_password"},
+			},
 			"manual_snapshot_retention_period": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -272,6 +277,17 @@ func ResourceCluster() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^.*[0-9].*`), "must contain at least one number"),
 					validation.StringMatch(regexache.MustCompile(`^[^\@\/'" ]*$`), "cannot contain [/@\"' ]"),
 				),
+				ConflictsWith: []string{"manage_master_password"},
+			},
+			"master_password_secret_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"master_password_secret_kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidKMSKeyID,
 			},
 			"master_username": {
 				Type:     schema.TypeString,
@@ -325,6 +341,13 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"snapshot_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ValidateFunc:  verify.ValidARN,
+				ConflictsWith: []string{"snapshot_identifier"},
+			},
 			"snapshot_cluster_identifier": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -353,9 +376,10 @@ func ResourceCluster() *schema.Resource {
 				},
 			},
 			"snapshot_identifier": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"snapshot_arn"},
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -407,7 +431,6 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		ClusterVersion:                   aws.String(d.Get("cluster_version").(string)),
 		DBName:                           aws.String(d.Get("database_name").(string)),
 		MasterUsername:                   aws.String(d.Get("master_username").(string)),
-		MasterUserPassword:               aws.String(d.Get("master_password").(string)),
 		NodeType:                         aws.String(d.Get("node_type").(string)),
 		Port:                             aws.Int64(int64(d.Get("port").(int))),
 		PubliclyAccessible:               aws.Bool(d.Get("publicly_accessible").(bool)),
@@ -469,9 +492,23 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.MaintenanceTrackName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("manage_master_password"); ok {
+		backupInput.ManageMasterPassword = aws.Bool(v.(bool))
+		input.ManageMasterPassword = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("manual_snapshot_retention_period"); ok {
 		backupInput.ManualSnapshotRetentionPeriod = aws.Int64(int64(v.(int)))
 		input.ManualSnapshotRetentionPeriod = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("master_password"); ok {
+		input.MasterUserPassword = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("master_password_secret_kms_key_id"); ok {
+		backupInput.MasterPasswordSecretKmsKeyId = aws.String(v.(string))
+		input.MasterPasswordSecretKmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("number_of_nodes"); ok {
@@ -491,7 +528,13 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("snapshot_identifier"); ok {
 		backupInput.SnapshotIdentifier = aws.String(v.(string))
+	}
 
+	if v, ok := d.GetOk("snapshot_arn"); ok {
+		backupInput.SnapshotArn = aws.String(v.(string))
+	}
+
+	if backupInput.SnapshotArn != nil || backupInput.SnapshotIdentifier != nil {
 		if v, ok := d.GetOk("owner_account"); ok {
 			backupInput.OwnerAccount = aws.String(v.(string))
 		}
@@ -510,7 +553,9 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		d.SetId(aws.StringValue(output.Cluster.ClusterIdentifier))
 	} else {
 		if _, ok := d.GetOk("master_password"); !ok {
-			return sdkdiag.AppendErrorf(diags, `provider.aws: aws_redshift_cluster: %s: "master_password": required field is not set`, d.Get("cluster_identifier").(string))
+			if _, ok := d.GetOk("manage_master_password"); !ok {
+				return sdkdiag.AppendErrorf(diags, `provider.aws: aws_redshift_cluster: %s: one of "manage_master_password" or "master_password" is required`, d.Get("cluster_identifier").(string))
+			}
 		}
 
 		if _, ok := d.GetOk("master_username"); !ok {
@@ -633,6 +678,8 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("maintenance_track_name", rsc.MaintenanceTrackName)
 	d.Set("manual_snapshot_retention_period", rsc.ManualSnapshotRetentionPeriod)
 	d.Set("master_username", rsc.MasterUsername)
+	d.Set("master_password_secret_arn", rsc.MasterPasswordSecretArn)
+	d.Set("master_password_secret_kms_key_id", rsc.MasterPasswordSecretKmsKeyId)
 	d.Set("node_type", rsc.NodeType)
 	d.Set("number_of_nodes", rsc.NumberOfNodes)
 	d.Set("preferred_maintenance_window", rsc.PreferredMaintenanceWindow)
@@ -739,6 +786,14 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("master_password") {
 			input.MasterUserPassword = aws.String(d.Get("master_password").(string))
+		}
+
+		if d.HasChange("master_password_secret_kms_key_id") {
+			input.MasterPasswordSecretKmsKeyId = aws.String(d.Get("master_password_secret_kms_key_id").(string))
+		}
+
+		if d.HasChange("manage_master_password") {
+			input.ManageMasterPassword = aws.Bool(d.Get("manage_master_password").(bool))
 		}
 
 		if d.HasChange("preferred_maintenance_window") {

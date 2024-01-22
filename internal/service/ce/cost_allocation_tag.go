@@ -47,6 +47,8 @@ func ResourceCostAllocationTag() *schema.Resource {
 }
 
 func resourceCostAllocationTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	costAllocTag, err := FindCostAllocationTagByKey(ctx, conn, d.Id())
@@ -54,28 +56,30 @@ func resourceCostAllocationTagRead(ctx context.Context, d *schema.ResourceData, 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.CE, create.ErrActionReading, ResNameCostAllocationTag, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.CE, create.ErrActionReading, ResNameCostAllocationTag, d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, create.ErrActionReading, ResNameCostAllocationTag, d.Id(), err)
 	}
 
 	d.Set("tag_key", costAllocTag.TagKey)
 	d.Set("status", costAllocTag.Status)
 	d.Set("type", costAllocTag.Type)
 
-	return nil
+	return diags
 }
 
 func resourceCostAllocationTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	key := d.Get("tag_key").(string)
 
 	updateTagStatus(ctx, d, meta, false)
 
 	d.SetId(key)
 
-	return resourceCostAllocationTagRead(ctx, d, meta)
+	return append(diags, resourceCostAllocationTagRead(ctx, d, meta)...)
 }
 
 func resourceCostAllocationTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -83,6 +87,8 @@ func resourceCostAllocationTagDelete(ctx context.Context, d *schema.ResourceData
 }
 
 func updateTagStatus(ctx context.Context, d *schema.ResourceData, meta interface{}, delete bool) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	key := d.Get("tag_key").(string)
@@ -102,8 +108,8 @@ func updateTagStatus(ctx context.Context, d *schema.ResourceData, meta interface
 	_, err := conn.UpdateCostAllocationTagsStatusWithContext(ctx, input)
 
 	if err != nil {
-		return create.DiagError(names.CE, create.ErrActionUpdating, ResNameCostAllocationTag, d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, create.ErrActionUpdating, ResNameCostAllocationTag, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

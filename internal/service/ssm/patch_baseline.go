@@ -5,6 +5,7 @@ package ssm
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -220,6 +221,10 @@ func ResourcePatchBaseline() *schema.Resource {
 					},
 				},
 			},
+			"json": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -313,9 +318,18 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("patchbaseline/%s", strings.TrimPrefix(d.Id(), "/")),
 	}
+
+	jsonDoc, err := json.MarshalIndent(resp, "", "  ")
+	if err != nil {
+		// should never happen if the above code is correct
+		return sdkdiag.AppendErrorf(diags, "Formatting json representation: formatting JSON: %s", err)
+	}
+	jsonString := string(jsonDoc)
+
 	d.Set("arn", arn.String())
 	d.Set("name", resp.Name)
 	d.Set("description", resp.Description)
+	d.Set("json", jsonString)
 	d.Set("operating_system", resp.OperatingSystem)
 	d.Set("approved_patches_compliance_level", resp.ApprovedPatchesComplianceLevel)
 	d.Set("approved_patches", flex.FlattenStringList(resp.ApprovedPatches))
