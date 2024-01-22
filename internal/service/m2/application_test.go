@@ -245,7 +245,7 @@ func testAccApplicationConfig_resources(versions int32) string {
 resource "aws_s3_object" "test" {
   count  = %[1]d
   bucket = aws_s3_bucket.test.id
-  key    = "v${count.index+1}/PlanetsDemo-v${count.index+1}.zip"
+  key    = "v${count.index + 1}/PlanetsDemo-v${count.index + 1}.zip"
   source = "test-fixtures/PlanetsDemo-v1.zip"
 }
 `, versions)
