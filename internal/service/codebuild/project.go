@@ -734,9 +734,10 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	name := d.Get("name").(string)
 	input := &codebuild.CreateProjectInput{
-		Name:   aws.String(name),
-		Source: projectSource,
-		Tags:   getTagsIn(ctx),
+		LogsConfig: expandProjectLogsConfig(d.Get("logs_config")),
+		Name:       aws.String(name),
+		Source:     projectSource,
+		Tags:       getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("artifacts"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -773,10 +774,6 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if v, ok := d.GetOk("file_system_locations"); ok && v.(*schema.Set).Len() > 0 {
 		input.FileSystemLocations = expandProjectFileSystemLocations(v.(*schema.Set).List())
-	}
-
-	if v, ok := d.GetOk("logs_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.LogsConfig = expandProjectLogsConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("queued_timeout"); ok {
@@ -1006,9 +1003,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("logs_config") {
-			if v, ok := d.GetOk("logs_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.LogsConfig = expandProjectLogsConfig(v.([]interface{})[0].(map[string]interface{}))
-			}
+			input.LogsConfig = expandProjectLogsConfig(d.Get("logs_config"))
 		}
 
 		if d.HasChange("queued_timeout") {
@@ -1060,6 +1055,8 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if d.HasChange("vpc_config") {
 			if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.VpcConfig = expandVPCConfig(v.([]interface{})[0].(map[string]interface{}))
+			} else {
+				input.VpcConfig = &types.VpcConfig{}
 			}
 		}
 
@@ -1394,19 +1391,19 @@ func expandProjectEnvironment(tfMap map[string]interface{}) *types.ProjectEnviro
 	return apiObject
 }
 
-func expandProjectLogsConfig(tfMap map[string]interface{}) *types.LogsConfig {
-	if tfMap == nil {
-		return nil
-	}
-
+func expandProjectLogsConfig(v interface{}) *types.LogsConfig {
 	apiObject := &types.LogsConfig{}
 
-	if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.CloudWatchLogs = expandCloudWatchLogsConfig(v[0].(map[string]interface{}))
-	}
+	if v, ok := v.([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		if tfMap := v[0].(map[string]interface{}); tfMap != nil {
+			if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+				apiObject.CloudWatchLogs = expandCloudWatchLogsConfig(v[0].(map[string]interface{}))
+			}
 
-	if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		apiObject.S3Logs = expandS3LogsConfig(v[0].(map[string]interface{}))
+			if v, ok := tfMap["s3_logs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+				apiObject.S3Logs = expandS3LogsConfig(v[0].(map[string]interface{}))
+			}
+		}
 	}
 
 	if apiObject.CloudWatchLogs == nil {
@@ -1625,7 +1622,7 @@ func flattenProjectFileSystemLocations(apiObjects []types.ProjectFileSystemLocat
 
 func flattenProjectFileSystemLocation(apiObject types.ProjectFileSystemLocation) map[string]interface{} {
 	tfMap := map[string]interface{}{
-		"types": apiObject.Type,
+		"type": apiObject.Type,
 	}
 
 	if v := apiObject.Identifier; v != nil {
