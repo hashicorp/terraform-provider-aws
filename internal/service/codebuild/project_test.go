@@ -99,11 +99,12 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccProjectConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codebuild", fmt.Sprintf("project/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "artifacts.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "badge_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "build_batch_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "build_timeout", "60"),
 					resource.TestCheckResourceAttr(resourceName, "queued_timeout", "480"),
 					resource.TestCheckResourceAttr(resourceName, "cache.#", "1"),
@@ -120,19 +121,18 @@ func TestAccCodeBuildProject_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.cloudwatch_logs.0.status", string(types.LogsConfigStatusTypeEnabled)),
 					resource.TestCheckResourceAttr(resourceName, "logs_config.0.s3_logs.0.status", string(types.LogsConfigStatusTypeDisabled)),
 					resource.TestCheckResourceAttr(resourceName, "project_visibility", "PRIVATE"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "secondary_source_version.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_role", roleResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.git_clone_depth", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.insecure_ssl", "false"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.location", "https://github.com/hashibot-test/aws-test.git"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.location", testAccGitHubSourceLocationFromEnv()),
 					resource.TestCheckResourceAttr(resourceName, "source.0.report_build_status", "false"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.type", "GITHUB"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_source_version.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "build_batch_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_artifacts.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "secondary_sources.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
 			},
 			{
@@ -4618,7 +4618,7 @@ resource "aws_codebuild_project" "test" {
 
   vpc_config {
     security_group_ids = [aws_security_group.test.id]
-    subnets            = aws_subnet.test[0].id
+    subnets            = [aws_subnet.test[0].id]
     vpc_id             = aws_vpc.test.id
   }
 }
