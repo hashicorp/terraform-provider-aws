@@ -282,7 +282,7 @@ func expandWebhookFilter(tfMap map[string]interface{}) *types.WebhookFilter {
 		apiObject.Pattern = aws.String(v)
 	}
 
-	if v, ok := tfMap["types"].(string); ok && v != "" {
+	if v, ok := tfMap["type"].(string); ok && v != "" {
 		apiObject.Type = types.WebhookFilterType(v)
 	}
 

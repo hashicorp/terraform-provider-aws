@@ -6,12 +6,13 @@ package codebuild_test
 import (
 	"context"
 	"fmt"
-	"reflect"
 	"testing"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -259,7 +260,7 @@ func TestAccCodeBuildWebhook_filterGroup(t *testing.T) {
 				Config: testAccWebhookConfig_filterGroup(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebhookExists(ctx, resourceName, &webhook),
-					testAccCheckWebhookFilter(&webhook, [][]*types.WebhookFilter{
+					testAccCheckWebhookFilter(&webhook, [][]types.WebhookFilter{
 						{
 							{
 								Type:                  types.WebhookFilterTypeEvent,
@@ -349,14 +350,11 @@ func TestAccCodeBuildWebhook_Disappears_project(t *testing.T) {
 	})
 }
 
-func testAccCheckWebhookFilter(webhook *types.Webhook, expectedFilters [][]*types.WebhookFilter) resource.TestCheckFunc {
+func testAccCheckWebhookFilter(webhook *types.Webhook, expectedFilters [][]types.WebhookFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if webhook == nil {
-			return fmt.Errorf("webhook missing")
-		}
-
-		if !reflect.DeepEqual(webhook.FilterGroups, expectedFilters) {
-			return fmt.Errorf("expected webhook filter configuration (%v), got: %v", expectedFilters, webhook.FilterGroups)
+		got, want := webhook.FilterGroups, expectedFilters
+		if diff := cmp.Diff(got, want, cmpopts.IgnoreUnexported(types.WebhookFilter{})); diff != "" {
+			return fmt.Errorf("unexpected WebhookFilter diff (+wanted, -got): %s", diff)
 		}
 
 		return nil
