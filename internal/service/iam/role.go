@@ -140,7 +140,7 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				// },
 			},
 			"managed_policy_arns": schema.SetAttribute{
-				Optional: true,
+				Optional:    true,
 				ElementType: fwtypes.ARNType,
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.UseStateForUnknown(),
