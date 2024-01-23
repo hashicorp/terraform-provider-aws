@@ -5,11 +5,11 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.49.24
+	github.com/aws/aws-sdk-go v1.50.1
 	github.com/aws/aws-sdk-go-v2 v1.24.1
-	github.com/aws/aws-sdk-go-v2/config v1.26.5
+	github.com/aws/aws-sdk-go-v2/config v1.26.6
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.11
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.15.13
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.15.14
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.26.7
 	github.com/aws/aws-sdk-go-v2/service/account v1.14.6
 	github.com/aws/aws-sdk-go-v2/service/acm v1.22.7
@@ -18,7 +18,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.5.6
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.26.1
-	github.com/aws/aws-sdk-go-v2/service/athena v1.37.4
+	github.com/aws/aws-sdk-go-v2/service/athena v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.30.6
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.5.7
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.20.6
@@ -37,12 +37,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.20.6
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.29.6
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.31.6
-	github.com/aws/aws-sdk-go-v2/service/connectcases v1.12.6
+	github.com/aws/aws-sdk-go-v2/service/connectcases v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.10.7
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.34.6
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.22.8
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.6.6
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.144.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.144.1
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/eks v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.34.7
@@ -84,7 +84,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.1.7
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.19.6
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.14.5
-	github.com/aws/aws-sdk-go-v2/service/rds v1.66.2
+	github.com/aws/aws-sdk-go-v2/service/rds v1.67.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.23.6
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.8.6
@@ -108,7 +108,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.20.6
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.27.6
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.10.6
-	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.23.6
+	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.23.7
 	github.com/aws/aws-sdk-go-v2/service/sts v1.26.7
 	github.com/aws/aws-sdk-go-v2/service/swf v1.20.7
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.23.7
@@ -171,7 +171,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.16.16 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.2.10 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.5.10 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/ini v1.7.2 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/ini v1.7.3 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.2.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.26.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/iam v1.28.6 // indirect
