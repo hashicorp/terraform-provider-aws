@@ -112,9 +112,6 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				Optional: true,
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
-				// PlanModifiers: []planmodifier.Bool{
-				// boolplanmodifier.UseStateForUnknown(),
-				// },
 			},
 			"inline_policies": schema.MapAttribute{
 				ElementType: types.StringType,
@@ -281,14 +278,8 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	roleName := aws.StringValue(output.Role.RoleName)
 
 	if !plan.InlinePolicies.IsNull() && !plan.InlinePolicies.IsUnknown() {
-		fmt.Println("Found Inline Policies!")
-		inline_policies_map := make(map[string]string)
-		plan.InlinePolicies.ElementsAs(ctx, &inline_policies_map, false)
-		// v, _ := plan.InlinePolicies.ToMapValue(ctx)
-		fmt.Println(fmt.Sprintf("len inline_policies_map: %v", len(inline_policies_map)))
-		// fmt.Println(fmt.Sprintf("inline_policies_map: %+v", inline_policies_map))
+		inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, plan.InlinePolicies)
 		policies := expandRoleInlinePolicies(roleName, inline_policies_map)
-		// fmt.Println(fmt.Sprintf("policies: %+v", policies))
 		if err := r.addRoleInlinePolicies(ctx, policies); err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
