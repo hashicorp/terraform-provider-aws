@@ -4,6 +4,7 @@
 package codebuild
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -17,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -83,10 +85,10 @@ func resourceProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if d.Get("artifacts.0.type") == types.ArtifactsTypeS3 {
+								if artifactType := types.ArtifactsType(d.Get("artifacts.0.type").(string)); artifactType == types.ArtifactsTypeS3 {
 									return types.ArtifactNamespace(old) == types.ArtifactNamespaceNone && new == ""
 								}
-								return false
+								return old == new
 							},
 							ValidateDiagFunc: enum.Validate[types.ArtifactNamespace](),
 						},
@@ -99,13 +101,14 @@ func resourceProject() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								switch d.Get("artifacts.0.type") {
+								switch artifactType := types.ArtifactsType(d.Get("artifacts.0.type").(string)); artifactType {
 								case types.ArtifactsTypeCodepipeline:
 									return new == ""
 								case types.ArtifactsTypeS3:
 									return types.ArtifactPackaging(old) == types.ArtifactPackagingNone && new == ""
+								default:
+									return old == new
 								}
-								return false
 							},
 							ValidateDiagFunc: enum.Validate[types.ArtifactPackaging](),
 						},
@@ -181,13 +184,12 @@ func resourceProject() *schema.Resource {
 				Default:      60,
 				ValidateFunc: validation.IntBetween(5, 480),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if d.Get("environment.0.type") == types.EnvironmentTypeArmLambdaContainer {
+					switch environmentType := types.EnvironmentType(d.Get("environment.0.type").(string)); environmentType {
+					case types.EnvironmentTypeArmLambdaContainer, types.EnvironmentTypeLinuxLambdaContainer:
 						return true
+					default:
+						return old == new
 					}
-					if d.Get("environment.0.type") == types.EnvironmentTypeLinuxLambdaContainer {
-						return true
-					}
-					return false
 				},
 			},
 			"cache": {
@@ -430,13 +432,12 @@ func resourceProject() *schema.Resource {
 				Default:      480,
 				ValidateFunc: validation.IntBetween(5, 480),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if d.Get("environment.0.type") == types.EnvironmentTypeArmLambdaContainer {
+					switch environmentType := types.EnvironmentType(d.Get("environment.0.type").(string)); environmentType {
+					case types.EnvironmentTypeArmLambdaContainer, types.EnvironmentTypeLinuxLambdaContainer:
 						return true
+					default:
+						return old == new
 					}
-					if d.Get("environment.0.type") == types.EnvironmentTypeLinuxLambdaContainer {
-						return true
-					}
-					return false
 				},
 			},
 			"resource_access_role": {
@@ -448,6 +449,7 @@ func resourceProject() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				MaxItems: 12,
+				Set:      resourceProjectArtifactsHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"artifact_identifier": {
@@ -861,7 +863,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set("arn", project.Arn)
 	if project.Artifacts != nil {
-		if err := d.Set("artifacts", []interface{}{flattenProjectArtifacts(*project.Artifacts)}); err != nil {
+		if err := d.Set("artifacts", []interface{}{flattenProjectArtifacts(project.Artifacts)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting artifacts: %s", err)
 		}
 	} else {
@@ -909,7 +911,7 @@ func resourceProjectRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 	d.Set("service_role", project.ServiceRole)
 	if project.Source != nil {
-		if err := d.Set("source", []interface{}{flattenProjectSource(*project.Source)}); err != nil {
+		if err := d.Set("source", []interface{}{flattenProjectSource(project.Source)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting source: %s", err)
 		}
 	} else {
@@ -1696,12 +1698,16 @@ func flattenProjectSecondaryArtifacts(apiObjects []types.ProjectArtifacts) []int
 	tfList := []interface{}{}
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenProjectArtifacts(apiObject))
+		tfList = append(tfList, flattenProjectArtifacts(&apiObject))
 	}
 	return tfList
 }
 
-func flattenProjectArtifacts(apiObject types.ProjectArtifacts) map[string]interface{} {
+func flattenProjectArtifacts(apiObject *types.ProjectArtifacts) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
 	tfMap := map[string]interface{}{
 		"bucket_owner_access": apiObject.BucketOwnerAccess,
 		"namespace_type":      apiObject.NamespaceType,
@@ -1734,6 +1740,49 @@ func flattenProjectArtifacts(apiObject types.ProjectArtifacts) map[string]interf
 	}
 
 	return tfMap
+}
+
+func resourceProjectArtifactsHash(v interface{}) int {
+	var buf bytes.Buffer
+	tfMap := v.(map[string]interface{})
+
+	if v, ok := tfMap["artifact_identifier"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := tfMap["bucket_owner_access"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := tfMap["encryption_disabled"]; ok {
+		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
+	}
+
+	if v, ok := tfMap["location"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := tfMap["namespace_type"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := tfMap["override_artifact_name"]; ok {
+		buf.WriteString(fmt.Sprintf("%t-", v.(bool)))
+	}
+
+	if v, ok := tfMap["packaging"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := tfMap["path"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	if v, ok := tfMap["type"]; ok {
+		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
+	}
+
+	return create.StringHashcode(buf.String())
 }
 
 func flattenProjectCache(apiObject *types.ProjectCache) []interface{} {
@@ -1786,13 +1835,17 @@ func flattenProjectSecondarySources(apiObject []types.ProjectSource) []interface
 	tfList := make([]interface{}, 0)
 
 	for _, apiObject := range apiObject {
-		tfList = append(tfList, flattenProjectSource(apiObject))
+		tfList = append(tfList, flattenProjectSource(&apiObject))
 	}
 
 	return tfList
 }
 
-func flattenProjectSource(apiObject types.ProjectSource) interface{} {
+func flattenProjectSource(apiObject *types.ProjectSource) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
 	tfMap := map[string]interface{}{
 		"buildspec":           aws.ToString(apiObject.Buildspec),
 		"location":            aws.ToString(apiObject.Location),
