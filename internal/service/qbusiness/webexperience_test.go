@@ -128,9 +128,9 @@ func TestAccQBusinessWebexperience_authenticationConfiguration(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebexperienceExists(ctx, resourceName, &webex),
 					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.0.metadata_xml", "<xml/>"),
-					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.0.user_id_attribute", "email"),
-					resource.TestCheckResourceAttrSet(resourceName, "authentication_configuration.0.iam_role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.0.saml_configuration.0.metadata_xml", "<xml/>"),
+					resource.TestCheckResourceAttr(resourceName, "authentication_configuration.0.saml_configuration.0.user_id_attribute", "email"),
+					resource.TestCheckResourceAttrSet(resourceName, "authentication_configuration.0.saml_configuration.0.iam_role_arn"),
 				),
 			},
 		},
@@ -294,7 +294,7 @@ resource "aws_qbusiness_webexperience" "test" {
 
   authentication_configuration {
     saml_configuration {
-      metadata_xml = "<xml/>"
+      metadata_xml = file("test-fixtures/saml_metadata.xml")
       iam_role_arn = aws_iam_role.test.arn
       user_id_attribute = "email"
     }
