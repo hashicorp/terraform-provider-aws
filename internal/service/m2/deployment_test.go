@@ -119,14 +119,14 @@ func TestAccM2Deployment_update(t *testing.T) {
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentConfig_basic(rName, "bluage", "3.8.0", 1, 1, "true"),
+				Config: testAccDeploymentConfig_basic(rName, "bluage", "3.7.0", 1, 1, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "application_version", "1"),
 				),
 			},
 			{
-				Config: testAccDeploymentConfig_basic(rName, "bluage", "3.8.0", 2, 2, "false"),
+				Config: testAccDeploymentConfig_basic(rName, "bluage", "3.7.0", 2, 2, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "application_version", "2"),
