@@ -3886,23 +3886,23 @@ resource "aws_codebuild_project" "test" {
 func testAccProjectConfig_buildBatchConfigDelete(rName string, withBuildBatchConfig bool) string {
 	template := `
 resource "aws_codebuild_project" "test" {
-	name         = %[1]q
-	service_role = aws_iam_role.test.arn
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
 
-	artifacts {
-	type = "NO_ARTIFACTS"
-	}
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
 
-	environment {
-	compute_type = "BUILD_GENERAL1_SMALL"
-	image        = "2"
-	type         = "LINUX_CONTAINER"
-	}
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
 
-	source {
-	location = "https://github.com/hashicorp/packer.git"
-	type     = "GITHUB"
-	}
+  source {
+    location = "https://github.com/hashicorp/packer.git"
+    type     = "GITHUB"
+  }
 
 	%[2]s
 }
@@ -3910,17 +3910,17 @@ resource "aws_codebuild_project" "test" {
 
 	buildBatchConfig := `
 build_batch_config {
-	combine_artifacts = true
+  combine_artifacts = true
 
-	restrictions {
-		compute_types_allowed  = []
-		maximum_builds_allowed = 10
-	}
+  restrictions {
+    compute_types_allowed  = []
+    maximum_builds_allowed = 10
+  }
 
-	service_role    = aws_iam_role.test.arn
-	timeout_in_mins = 480
+  service_role    = aws_iam_role.test.arn
+  timeout_in_mins = 480
 }
-	`
+`
 
 	if withBuildBatchConfig {
 		return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(template, rName, buildBatchConfig))
