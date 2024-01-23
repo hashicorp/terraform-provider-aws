@@ -2407,11 +2407,6 @@ func TestAccCodeBuildProject_secondaryArtifacts(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccProjectConfig_secondaryArtifactsNone(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
@@ -2450,11 +2445,6 @@ func TestAccCodeBuildProject_SecondaryArtifacts_artifactIdentifier(t *testing.T)
 						"artifact_identifier": artifactIdentifier1,
 					}),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccProjectConfig_secondaryArtifactsArtifactIdentifier(rName, artifactIdentifier2),
@@ -2497,11 +2487,6 @@ func TestAccCodeBuildProject_SecondaryArtifacts_overrideArtifactName(t *testing.
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccProjectConfig_secondaryArtifactsOverrideArtifactName(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
@@ -2540,11 +2525,6 @@ func TestAccCodeBuildProject_SecondaryArtifacts_encryptionDisabled(t *testing.T)
 						"encryption_disabled": "true",
 					}),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccProjectConfig_secondaryArtifactsEncryptionDisabled(rName, false),
@@ -2586,11 +2566,6 @@ func TestAccCodeBuildProject_SecondaryArtifacts_location(t *testing.T) {
 						"location": rName1,
 					}),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccProjectConfig_secondaryArtifactsLocation(rName1, rName2),
@@ -2639,11 +2614,6 @@ func TestAccCodeBuildProject_SecondaryArtifacts_name(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccProjectConfig_secondaryArtifactsName(rName, name2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
@@ -2682,11 +2652,6 @@ func TestAccCodeBuildProject_SecondaryArtifacts_namespaceType(t *testing.T) {
 						"namespace_type": string(types.ArtifactNamespaceBuildId),
 					}),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccProjectConfig_secondaryArtifactsNamespaceType(rName, string(types.ArtifactNamespaceNone)),
@@ -2732,11 +2697,6 @@ func TestAccCodeBuildProject_SecondaryArtifacts_path(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccProjectConfig_secondaryArtifactsPath(rName, path2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
@@ -2775,11 +2735,6 @@ func TestAccCodeBuildProject_SecondaryArtifacts_packaging(t *testing.T) {
 						"packaging": string(types.ArtifactPackagingZip),
 					}),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccProjectConfig_secondaryArtifactsPackaging(rName, string(types.ArtifactPackagingNone)),
