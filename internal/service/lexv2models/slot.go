@@ -100,6 +100,12 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"multiple_values_setting":   lexschema.MultipleValuesSettingBlock(ctx),
 			"obfuscation_setting":       lexschema.ObfuscationSettingBlock(ctx),
 			"value_elicitation_setting": lexschema.ValueElicitationSettingBlock(ctx),
+			//sub_slot_setting
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 }
@@ -204,21 +210,17 @@ func (r *resourceSlot) Update(ctx context.Context, req resource.UpdateRequest, r
 		return
 	}
 
-	if !plan.Name.Equal(state.Name) ||
-		!plan.Description.Equal(state.Description) ||
-		!plan.SlotTypeID.Equal(state.SlotTypeID) {
-		in := &lexmodelsv2.UpdateSlotInput{
-			SlotId:   aws.String(plan.ID.ValueString()),
-			SlotName: aws.String(plan.Name.ValueString()),
-		}
+	if slotHasChanges(ctx, plan, state) {
+		input := &lexmodelsv2.UpdateSlotInput{}
 
 		// TODO: expand here, or check for updatable arguments individually?
-		resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
+
+		resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), &plan, input)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
 
-		out, err := conn.UpdateSlot(ctx, in)
+		out, err := conn.UpdateSlot(ctx, input)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.LexV2Models, create.ErrActionUpdating, ResNameSlot, plan.ID.String(), err),
@@ -234,7 +236,7 @@ func (r *resourceSlot) Update(ctx context.Context, req resource.UpdateRequest, r
 			return
 		}
 
-		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+		// resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -253,7 +255,11 @@ func (r *resourceSlot) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 
 	in := &lexmodelsv2.DeleteSlotInput{
-		SlotId: aws.String(state.ID.ValueString()),
+		BotId:      aws.String(state.ID.ValueString()),
+		BotVersion: aws.String(state.ID.ValueString()),
+		IntentId:   aws.String(state.ID.ValueString()),
+		LocaleId:   aws.String(state.ID.ValueString()),
+		SlotId:     aws.String(state.ID.ValueString()),
 	}
 
 	_, err := conn.DeleteSlot(ctx, in)
@@ -321,4 +327,11 @@ type resourceSlotData struct {
 	Timeouts                 timeouts.Value                                                         `tfsdk:"timeouts"`
 	SlotTypeID               types.String                                                           `tfsdk:"slot_type_id"`
 	ValueElicitationSettings fwtypes.ListNestedObjectValueOf[lexschema.ValueElicitationSettingData] `tfsdk:"value_elicitation_settings"`
+}
+
+func slotHasChanges(_ context.Context, plan, state resourceSlotData) bool {
+	return !plan.Description.Equal(state.Description) ||
+		!plan.Name.Equal(state.Name) ||
+		!plan.Description.Equal(state.Description) ||
+		!plan.SlotTypeID.Equal(state.SlotTypeID)
 }

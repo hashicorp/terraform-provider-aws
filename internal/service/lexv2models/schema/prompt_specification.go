@@ -8,7 +8,6 @@ import (
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -23,11 +22,11 @@ func PromptSpecificationBlock(ctx context.Context) schema.ListNestedBlock {
 		},
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
-				"max_retries": schema.Int64Attribute{
-					Required: true,
-				},
 				"allow_interrupt": schema.BoolAttribute{
 					Optional: true,
+				},
+				"max_retries": schema.Int64Attribute{
+					Required: true,
 				},
 				"message_selection_strategy": schema.StringAttribute{
 					Optional: true,
@@ -35,47 +34,10 @@ func PromptSpecificationBlock(ctx context.Context) schema.ListNestedBlock {
 						enum.FrameworkValidate[awstypes.MessageSelectionStrategy](),
 					},
 				},
-				"prompt_attempts_specification": schema.MapAttribute{
-					Optional: true,
-					ElementType: types.ObjectType{
-						AttrTypes: map[string]attr.Type{
-							"allow_input_types": types.ObjectType{
-								AttrTypes: map[string]attr.Type{
-									"allow_audio_input": types.BoolType,
-									"allow_dtmf_input":  types.BoolType,
-								},
-							},
-							"allow_interrupts": types.BoolType,
-							"audio_and_dtmf_input_specification": types.ObjectType{
-								AttrTypes: map[string]attr.Type{
-									"start_timeout_ms": types.Int64Type,
-									"audio_specification": types.ObjectType{
-										AttrTypes: map[string]attr.Type{
-											"end_timeout_ms": types.Int64Type,
-											"max_length_ms":  types.Int64Type,
-										},
-									},
-									"dtmf_specification": types.ObjectType{
-										AttrTypes: map[string]attr.Type{
-											"deletion_character": types.StringType,
-											"end_character":      types.StringType,
-											"end_timeout_ms":     types.Int64Type,
-											"max_length":         types.Int64Type,
-										},
-									},
-								},
-							},
-							"text_input_specification": types.ObjectType{
-								AttrTypes: map[string]attr.Type{
-									"start_timeout_ms": types.Int64Type,
-								},
-							},
-						},
-					},
-				},
 			},
 			Blocks: map[string]schema.Block{
-				"message_groups": MessageGroupsBlock(ctx),
+				"message_groups":                MessageGroupsBlock(ctx),
+				"prompt_attempts_specification": PromptAttemptsSpecificationBlock(ctx),
 			},
 		},
 	}

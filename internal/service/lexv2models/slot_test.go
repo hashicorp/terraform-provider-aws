@@ -24,18 +24,17 @@ import (
 
 func TestAccLexV2ModelsSlot_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var slot lexmodelsv2.DescribeSlotOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_slot.test"
+	botLocaleName := "aws_lexv2models_bot_locale.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -46,6 +45,9 @@ func TestAccLexV2ModelsSlot_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSlotExists(ctx, resourceName, &slot),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
 				),
 			},
 			{
@@ -136,10 +138,85 @@ func testAccCheckSlotExists(ctx context.Context, name string, slot *lexmodelsv2.
 	}
 }
 
-func testAccSlotConfig_basic(rName string) string {
+func testAccSlotConfig_base(rName string, ttl int, dp bool) string {
 	return fmt.Sprintf(`
-resource "aws_lexv2models_slot" "test" {
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
   name = %[1]q
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "lexv2.amazonaws.com"
+        }
+      },
+    ]
+  })
 }
-`, rName)
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonLexFullAccess"
+}
+
+resource "aws_lexv2models_bot" "test" {
+  name                        = %[1]q
+  idle_session_ttl_in_seconds = %[2]d
+  role_arn                    = aws_iam_role.test.arn
+
+  data_privacy {
+    child_directed = %[3]t
+  }
+}
+
+resource "aws_lexv2models_bot_locale" "test" {
+  locale_id                        = "en_US"
+  bot_id                           = aws_lexv2models_bot.test.id
+  bot_version                      = "DRAFT"
+  n_lu_intent_confidence_threshold = 0.7
+}
+
+resource "aws_lexv2models_bot_version" "test" {
+  bot_id = aws_lexv2models_bot.test.id
+  locale_specification = {
+    (aws_lexv2models_bot_locale.test.locale_id) = {
+      source_bot_version = "DRAFT"
+    }
+  }
+}
+
+resource "aws_lexv2models_intent" "test" {
+	bot_id      = aws_lexv2models_bot.test.id
+	bot_version = aws_lexv2models_bot_locale.test.bot_version
+	name        = %[1]q
+	locale_id   = aws_lexv2models_bot_locale.test.locale_id
+  }
+`, rName, ttl, dp)
+}
+
+func testAccSlotConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccSlotConfig_base(rName, 60, true),
+		fmt.Sprintf(`
+resource "aws_lexv2models_slot" "test" {
+  bot_id      = aws_lexv2models_bot.test.id
+  bot_version = aws_lexv2models_bot_locale.test.bot_version
+  intent_id   = aws_lexv2models_intent.test.id
+  name        = %[1]q
+  locale_id   = aws_lexv2models_bot_locale.test.locale_id
+
+  value_elicitation_setting {
+    default_value_specification {
+      default_value_list {
+        default_value = "default"
+      }
+	}
+  }
+}
+`, rName))
 }

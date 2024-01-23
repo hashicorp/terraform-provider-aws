@@ -7,6 +7,7 @@ import (
 	"context"
 
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/provider/schema"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -27,6 +28,9 @@ func DefaultValueSpecificationBlock(ctx context.Context) schema.ListNestedBlock 
 						Attributes: map[string]schema.Attribute{
 							"default_value": schema.StringAttribute{
 								Required: true,
+								Validators: []validator.String{
+									stringvalidator.LengthBetween(1, 202),
+								},
 							},
 						},
 					},
