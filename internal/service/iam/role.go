@@ -116,7 +116,8 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			// TODO: maybe mapof of IAMPolicytype?
 			"inline_policies": schema.MapAttribute{
-				ElementType: types.StringType,
+				// ElementType: types.StringType,
+				ElementType: fwtypes.IAMPolicyType,
 				Optional:    true,
 				// TODO: validators and name func for both
 				// "name": {

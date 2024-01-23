@@ -689,6 +689,24 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccIAMRole_InlinePolicy_badJSON(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRoleConfig_policyInline_badJSON(rName),
+				ExpectError: regexache.MustCompile(`.*Invalid JSON String Value*`),
+			},
+		},
+	})
+}
+
 // TODO: have to do some plan modification for this, have to read up on the docs more
 // Ideally only show diffs for each policy that actually changed
 
@@ -1808,6 +1826,46 @@ resource "aws_iam_role" "test" {
   }
 }
 `, rName)
+}
+
+func testAccRoleConfig_policyInline_badJSON(roleName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+
+  inline_policies = {
+    "validName" = <<EOF
+this will be bad oh no!
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+  }
+}
+`, roleName)
 }
 
 func testAccRoleConfig_policyInline(roleName, policyName string) string {
