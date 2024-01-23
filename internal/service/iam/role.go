@@ -119,6 +119,7 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				// ElementType: types.StringType,
 				ElementType: fwtypes.IAMPolicyType,
 				Optional:    true,
+				// TODO: custom validator for name stuff?
 				// TODO: validators and name func for both
 				// "name": {
 				// Type:     schema.TypeString,
