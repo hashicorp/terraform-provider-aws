@@ -45,7 +45,7 @@ func TestAccM2Deployment_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentConfig_basic(rName, "bluage", "3.8.0", 1, 1, "true"),
+				Config: testAccDeploymentConfig_basic(rName, "bluage", "3.9.0", 1, 1, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "application_version", "1"),
@@ -82,7 +82,7 @@ func TestAccM2Deployment_nostart(t *testing.T) {
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentConfig_basic(rName, "bluage", "3.8.0", 1, 1, "false"),
+				Config: testAccDeploymentConfig_basic(rName, "bluage", "3.9.0", 1, 1, "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "application_version", "1"),
@@ -119,14 +119,14 @@ func TestAccM2Deployment_update(t *testing.T) {
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentConfig_basic(rName, "bluage", "3.7.0", 1, 1, "true"),
+				Config: testAccDeploymentConfig_basic(rName, "bluage", "3.9.0", 1, 1, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "application_version", "1"),
 				),
 			},
 			{
-				Config: testAccDeploymentConfig_basic(rName, "bluage", "3.7.0", 2, 2, "true"),
+				Config: testAccDeploymentConfig_basic(rName, "bluage", "3.9.0", 2, 2, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "application_version", "2"),
@@ -163,7 +163,7 @@ func TestAccM2Deployment_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentConfig_basic(rName, "bluage", "3.8.0", 1, 1, "false"),
+				Config: testAccDeploymentConfig_basic(rName, "bluage", "3.9.0", 1, 1, "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfm2.ResourceDeployment, resourceName),
