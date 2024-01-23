@@ -82,10 +82,13 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			"assume_role_policy": schema.StringAttribute{
 				Required:   true,
 				CustomType: fwtypes.IAMPolicyType,
-				// Validators: []validator.String{
-				// // TODO: json validator
+				// TODO: possible plan validator? Or normalize what is going into state
+				// DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				// DiffSuppressOnRefresh: true,
+				// StateFunc: func(v interface{}) string {
+				// json, _ := structure.NormalizeJsonString(v)
+				// return json
 				// },
-				// TODO: finish this, it get complicated
 			},
 			"create_date": schema.StringAttribute{
 				Computed: true,
@@ -99,14 +102,12 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				Default:  stringdefault.StaticString(""),
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 1000),
-					// TODO: figure this out later for both validators
-					// stringvalidator.RegexMatches(
-					// regexache.MustCompile(
-					// `[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`),
-					// `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`,
-					// ),
 				},
-				// TODO: do something here
+				// TODO: need to add validators and test
+				// ValidateFunc: validation.All(
+				// validation.StringDoesNotMatch(regexache.MustCompile("[“‘]"), "cannot contain specially formatted single or double quotes: [“‘]"),
+				// validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`),
+				// ),
 			},
 			"force_detach_policies": schema.BoolAttribute{
 				Optional: true,
@@ -114,9 +115,28 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				Default:  booldefault.StaticBool(false),
 			},
 			"inline_policies": schema.MapAttribute{
-				ElementType: types.StringType,
+				ElementType: fwtypes.IAMPolicyType,
 				Optional:    true,
-				// TODO: have to add plan modifier here to suppress func
+				// TODO: validators and name func for both
+				// "name": {
+				// Type:     schema.TypeString,
+				// Optional: true, // semantically required but syntactically optional to allow empty inline_policy
+				// ValidateFunc: validation.All(
+				// validation.StringIsNotEmpty,
+				// validRolePolicyName,
+				// ),
+				// },
+				// "policy": {
+				// Type:                  schema.TypeString,
+				// Optional:              true, // semantically required but syntactically optional to allow empty inline_policy
+				// ValidateFunc:          verify.ValidIAMPolicyJSON,
+				// DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				// DiffSuppressOnRefresh: true,
+				// StateFunc: func(v interface{}) string {
+				// json, _ := verify.LegacyPolicyNormalize(v)
+				// return json
+				// },
+				// },
 			},
 			"managed_policy_arns": schema.SetAttribute{
 				// TODO: maybe use setof custom type with arn?
