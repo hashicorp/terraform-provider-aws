@@ -3407,7 +3407,7 @@ resource "aws_subnet" "public" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "%[1]s-public"
+    Name = %[1]q
   }
 }
 
@@ -3415,7 +3415,7 @@ resource "aws_route_table" "public" {
   vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "%[1]s-public"
+    Name = %[1]q
   }
 }
 
@@ -3436,7 +3436,7 @@ resource "aws_subnet" "private" {
   vpc_id            = aws_vpc.test.id
 
   tags = {
-    Name = "%[1]s-private"
+    Name = %[1]q
   }
 }
 
@@ -3463,7 +3463,7 @@ resource "aws_route_table" "private" {
   vpc_id = aws_vpc.test.id
 
   tags = {
-    Name = "%[1]s-private"
+    Name = %[1]q
   }
 }
 
@@ -3481,6 +3481,10 @@ resource "aws_route" "private" {
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_codebuild_project" "test" {
@@ -4620,36 +4624,24 @@ resource "aws_codebuild_project" "test" {
 `, rName, rLocation, rBuildspec))
 }
 
-func testAccProjectConfig_vpc1(rName string) string {
-	return acctest.ConfigCompose(
-		testAccProjectConfig_baseServiceRole(rName),
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 1
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.0.0.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccProjectConfig_baseVPC(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
 
+func testAccProjectConfig_vpc1(rName string) string {
+	return acctest.ConfigCompose(
+		testAccProjectConfig_baseServiceRole(rName),
+		testAccProjectConfig_baseVPC(rName),
+		fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4671,7 +4663,7 @@ resource "aws_codebuild_project" "test" {
 
   vpc_config {
     security_group_ids = [aws_security_group.test.id]
-    subnets            = aws_subnet.test[*].id
+    subnets            = aws_subnet.test[0].id
     vpc_id             = aws_vpc.test.id
   }
 }
@@ -4681,33 +4673,8 @@ resource "aws_codebuild_project" "test" {
 func testAccProjectConfig_vpc2(rName string) string {
 	return acctest.ConfigCompose(
 		testAccProjectConfig_baseServiceRole(rName),
-		acctest.ConfigAvailableAZsNoOptIn(),
+		testAccProjectConfig_baseVPC(rName),
 		fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.0.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test" {
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
-}
-
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
