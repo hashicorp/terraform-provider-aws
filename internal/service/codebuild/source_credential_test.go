@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/codebuild"
 	"github.com/aws/aws-sdk-go-v2/service/codebuild/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -121,6 +122,27 @@ func TestAccCodeBuildSourceCredential_disappears(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccPreCheckSourceCredentialsForServerType(ctx context.Context, t *testing.T, serverType types.ServerType) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CodeBuildClient(ctx)
+
+	input := &codebuild.ListSourceCredentialsInput{}
+	output, err := tfcodebuild.FindSourceCredentials(ctx, conn, input, func(v *types.SourceCredentialsInfo) bool {
+		return v.ServerType == serverType
+	})
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+
+	if len(output) == 0 {
+		t.Skipf("skipping acceptance testing: Source Credentials (%s) not found", serverType)
+	}
 }
 
 func testAccCheckSourceCredentialDestroy(ctx context.Context) resource.TestCheckFunc {

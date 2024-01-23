@@ -15,5 +15,6 @@ var (
 	FindReportGroupByARN       = findReportGroupByARN
 	FindResourcePolicyByARN    = findResourcePolicyByARN
 	FindSourceCredentialsByARN = findSourceCredentialsByARN
+	FindSourceCredentials      = findSourceCredentials
 	FindWebhookByProjectName   = findWebhookByProjectName
 )
