@@ -70,6 +70,9 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
+			"role_arn": schema.StringAttribute{
+				Computed: true,
+			},
 			"scrape_configuration": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -274,6 +277,7 @@ func (r *scraperResource) Create(ctx context.Context, req resource.CreateRequest
 	// Set values for unknowns after creation is complete.
 	sourceData.EKS = fwtypes.NewListNestedObjectValueOfPtr(ctx, eksSourceData)
 	data.Source = fwtypes.NewListNestedObjectValueOfPtr(ctx, sourceData)
+	data.RoleArn = flex.StringToFramework(ctx, scraper.RoleArn)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -305,6 +309,7 @@ func (r *scraperResource) Read(ctx context.Context, req resource.ReadRequest, re
 	// We can't use AutoFlEx with the top-level resource model because the API structure uses Go interfaces.
 	data.ARN = flex.StringToFramework(ctx, scraper.Arn)
 	data.Alias = flex.StringToFramework(ctx, scraper.Alias)
+	data.RoleArn = flex.StringToFramework(ctx, scraper.RoleArn)
 	if v, ok := scraper.Destination.(*awstypes.DestinationMemberAmpConfiguration); ok {
 		var ampDestinationData scraperAMPDestinationModel
 		resp.Diagnostics.Append(flex.Flatten(ctx, &v.Value, &ampDestinationData)...)
@@ -392,6 +397,7 @@ type scraperResourceModel struct {
 	ARN                 types.String                                             `tfsdk:"arn"`
 	Destination         fwtypes.ListNestedObjectValueOf[scraperDestinationModel] `tfsdk:"destination"`
 	ID                  types.String                                             `tfsdk:"id"`
+	RoleArn             types.String                                             `tfsdk:"role_arn"`
 	ScrapeConfiguration types.String                                             `tfsdk:"scrape_configuration"`
 	Source              fwtypes.ListNestedObjectValueOf[scraperSourceModel]      `tfsdk:"source"`
 	Tags                types.Map                                                `tfsdk:"tags"`

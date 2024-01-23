@@ -44,6 +44,7 @@ func TestAccAMPScraper_basic(t *testing.T) {
 					testAccCheckScraperExists(ctx, resourceName, &scraper),
 					resource.TestCheckNoResourceAttr(resourceName, "alias"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.amp.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "scrape_configuration"),
