@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
@@ -15,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tffinspace "github.com/hashicorp/terraform-provider-aws/internal/service/finspace"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -80,7 +80,7 @@ func TestAccFinSpaceKxVolume_disappears(t *testing.T) {
 				Config: testAccKxVolumeConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxVolumeExists(ctx, resourceName, &volume),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxVolume(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxVolume, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -353,6 +353,7 @@ resource "aws_finspace_kx_volume" "test" {
   availability_zones = [aws_finspace_kx_environment.test.availability_zones[0]]
   az_mode            = "SINGLE"
   type               = "NAS_1"
+
   nas1_configuration {
     type = "SSD_250"
     size = 1200

@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
@@ -15,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tffinspace "github.com/hashicorp/terraform-provider-aws/internal/service/finspace"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -80,7 +80,7 @@ func TestAccFinSpaceKxDataview_disappears(t *testing.T) {
 				Config: testAccKxDataviewConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKxDataviewExists(ctx, resourceName, &dataview),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxDataview(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tffinspace.ResourceKxDataview, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -201,12 +201,11 @@ func testAccCheckKxDataviewExists(ctx context.Context, name string, dataview *fi
 
 func testAccCheckKxDataviewDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_finspace_kx_dataview" {
 				continue
 			}
-
-			conn := acctest.Provider.Meta().(*conns.AWSClient).FinSpaceClient(ctx)
 
 			_, err := tffinspace.FindKxDataviewById(ctx, conn, rs.Primary.ID)
 			if err != nil {

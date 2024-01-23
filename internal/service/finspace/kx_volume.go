@@ -5,157 +5,212 @@ package finspace
 import (
 	"context"
 	"errors"
-	"log"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
-	"github.com/aws/aws-sdk-go-v2/service/finspace/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/finspace/types"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	//"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	//"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	//"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_finspace_kx_volume", name="Kx Volume")
+// @FrameworkResource(name="Kx Volume")
 // @Tags(identifierAttribute="arn")
-func ResourceKxVolume() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceKxVolumeCreate,
-		ReadWithoutTimeout:   resourceKxVolumeRead,
-		UpdateWithoutTimeout: resourceKxVolumeUpdate,
-		DeleteWithoutTimeout: resourceKxVolumeDelete,
+func newResourceKxVolume(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceKxVolume{}
+	r.SetDefaultCreateTimeout(30 * time.Minute)
+	r.SetDefaultReadTimeout(30 * time.Minute)
+	r.SetDefaultDeleteTimeout(45 * time.Minute)
+	r.SetMigratedFromPluginSDK(true)
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+	return r, nil
+}
 
-		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(45 * time.Minute),
-		},
+type resourceKxVolume struct {
+	framework.ResourceWithConfigure
+	framework.WithTimeouts
+}
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"attached_clusters": {
-				Type: schema.TypeList,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"cluster_name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringLenBetween(3, 63),
-						},
-						"cluster_status": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.KxClusterStatus](),
-						},
-						"cluster_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.KxClusterType](),
-						},
-					},
+func (r *resourceKxVolume) Metadata(ctx context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = "aws_finspace_kx_volume"
+}
+
+func (r *resourceKxVolume) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *resourceKxVolume) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"id":  framework.IDAttribute(),
+			"arn": framework.ARNAttributeComputedOnly(),
+			"availability_zones": schema.ListAttribute{
+				ElementType: types.StringType,
+				Required:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
 				},
-				Computed: true,
 			},
-			"availability_zones": {
-				Type: schema.TypeList,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
+			"az_mode": schema.StringAttribute{
 				Required: true,
-				ForceNew: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					enum.FrameworkValidate[awstypes.KxAzMode](),
+				},
 			},
-			"az_mode": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.KxAzMode](),
-			},
-			"created_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 1000),
-			},
-			"environment_id": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(1, 32),
-			},
-			"last_modified_timestamp": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"nas1_configuration": {
-				Type:     schema.TypeList,
+			"description": schema.StringAttribute{
 				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"size": {
-							Type:         schema.TypeInt,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.IntBetween(1200, 33600),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 1000),
+				},
+			},
+			"environment_id": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 63),
+				},
+			},
+			"name": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(3, 63),
+				},
+			},
+			"status": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"status_reason": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"type": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					enum.FrameworkValidate[awstypes.KxVolumeType](),
+				},
+			},
+			"created_timestamp": schema.StringAttribute{
+				Computed: true,
+			},
+			"last_modified_timestamp": schema.StringAttribute{
+				Computed: true,
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+		},
+		Blocks: map[string]schema.Block{
+			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
+			"attached_clusters": schema.ListNestedBlock{
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"cluster_name": schema.StringAttribute{
+							Required: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(3, 63),
+							},
 						},
-						"type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ForceNew:         true,
-							ValidateDiagFunc: enum.Validate[types.KxNAS1Type](),
+						"cluster_status": schema.StringAttribute{
+							Required: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+							Validators: []validator.String{
+								enum.FrameworkValidate[awstypes.KxClusterStatus](),
+							},
+						},
+						"cluster_type": schema.StringAttribute{
+							Required: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+							Validators: []validator.String{
+								enum.FrameworkValidate[awstypes.KxClusterType](),
+							},
 						},
 					},
 				},
 			},
-			"name": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringLenBetween(3, 63),
-			},
-			"status": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status_reason": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.KxVolumeType](),
+			"nas1_configuration": schema.SingleNestedBlock{
+				Attributes: map[string]schema.Attribute{
+					"size": schema.Int64Attribute{
+						Required: true,
+						PlanModifiers: []planmodifier.Int64{
+							int64planmodifier.RequiresReplace(),
+						},
+						Validators: []validator.Int64{
+							int64validator.Between(1200, 33600),
+						},
+					},
+					"type": schema.StringAttribute{
+						Required: true,
+						PlanModifiers: []planmodifier.String{
+							stringplanmodifier.RequiresReplace(),
+						},
+						Validators: []validator.String{
+							enum.FrameworkValidate[awstypes.KxNAS1Type](),
+						},
+					},
+				},
 			},
 		},
-		CustomizeDiff: verify.SetTagsDiff,
 	}
+}
+
+func (r *resourceKxVolume) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, req, resp)
 }
 
 const (
@@ -163,175 +218,243 @@ const (
 	kxVolumeIDPartCount = 2
 )
 
-func resourceKxVolumeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
+type resourceKxVolumeModel struct {
+	ARN                   types.String   `tfsdk:"arn"`
+	ID                    types.String   `tfsdk:"id"`
+	EnvironmentId         types.String   `tfsdk:"environment_id"`
+	Name                  types.String   `tfsdk:"name"`
+	Description           types.String   `tfsdk:"description"`
+	AvailabilityZones     types.List     `tfsdk:"availability_zones"`
+	Type                  types.String   `tfsdk:"type"`
+	AzMode                types.String   `tfsdk:"az_mode"`
+	AttachedClusters      types.List     `tfsdk:"attached_clusters"`
+	Nas1Configuration     types.Object   `tfsdk:"nas1_configuration"`
+	Status                types.String   `tfsdk:"status"`
+	StatusReason          types.String   `tfsdk:"status_reason"`
+	CreatedTimestamp      types.String   `tfsdk:"created_timestamp"`
+	LastModifiedTimestamp types.String   `tfsdk:"last_modified_timestamp"`
+	Tags                  types.Map      `tfsdk:"tags"`
+	TagsAll               types.Map      `tfsdk:"tags_all"`
+	Timeouts              timeouts.Value `tfsdk:"timeouts"`
+}
 
-	environmentId := d.Get("environment_id").(string)
-	volumeName := d.Get("name").(string)
+type attachedClustersModel struct {
+	ClusterName   types.String `tfsdk:"cluster_name"`
+	ClusterType   types.String `tfsdk:"cluster_type"`
+	ClusterStatus types.String `tfsdk:"cluster_status"`
+}
+
+type nas1ConfigurationModel struct {
+	Size types.Int64  `tfsdk:"size"`
+	Type types.String `tfsdk:"type"`
+}
+
+func (r *resourceKxVolume) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var plan resourceKxVolumeModel
+	conn := r.Meta().FinSpaceClient(ctx)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 	idParts := []string{
-		environmentId,
-		volumeName,
+		plan.EnvironmentId.ValueString(),
+		plan.Name.ValueString(),
 	}
-	rID, err := flex.FlattenResourceId(idParts, kxVolumeIDPartCount, false)
-	if err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxVolume, d.Get("name").(string), err)
-	}
-	d.SetId(rID)
+	rId, _ := flex.FlattenResourceId(idParts, kxVolumeIDPartCount, false)
+	plan.ID = fwflex.StringValueToFramework(ctx, rId)
 
-	in := &finspace.CreateKxVolumeInput{
-		ClientToken:         aws.String(id.UniqueId()),
-		AvailabilityZoneIds: flex.ExpandStringValueList(d.Get("availability_zones").([]interface{})),
-		EnvironmentId:       aws.String(environmentId),
-		VolumeType:          types.KxVolumeType(d.Get("type").(string)),
-		VolumeName:          aws.String(volumeName),
-		AzMode:              types.KxAzMode(d.Get("az_mode").(string)),
+	input := &finspace.CreateKxVolumeInput{
+		EnvironmentId:       aws.String(plan.EnvironmentId.ValueString()),
+		VolumeName:          aws.String(plan.Name.ValueString()),
+		AvailabilityZoneIds: fwflex.ExpandFrameworkStringValueList(ctx, plan.AvailabilityZones),
+		VolumeType:          awstypes.KxVolumeType(plan.Type.ValueString()),
+		AzMode:              awstypes.KxAzMode(plan.AzMode.ValueString()),
 		Tags:                getTagsIn(ctx),
+		ClientToken:         aws.String(id.UniqueId()),
+	}
+	if !(plan.Description.IsNull() || plan.Description.IsUnknown()) {
+		input.Description = aws.String(plan.Description.ValueString())
 	}
 
-	if v, ok := d.GetOk("description"); ok {
-		in.Description = aws.String(v.(string))
+	if !(plan.Nas1Configuration.IsNull() || plan.Nas1Configuration.IsUnknown()) {
+		input.Nas1Configuration = expandNas1Configuration(ctx, plan.Nas1Configuration, resp.Diagnostics)
 	}
-
-	if v, ok := d.GetOk("nas1_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		in.Nas1Configuration = expandNas1Configuration(v.([]interface{}))
-	}
-
-	out, err := conn.CreateKxVolume(ctx, in)
+	output, err := conn.CreateKxVolume(ctx, input)
 	if err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxVolume, d.Get("name").(string), err)
+		resp.Diagnostics.AddError("Error creating volume", err.Error())
+		return
 	}
 
-	if out == nil || out.VolumeName == nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxVolume, d.Get("name").(string), errors.New("empty output"))
+	if output == nil || output.VolumeName == nil {
+		resp.Diagnostics.AddError("Error creating volume", "Empty output")
+		return
 	}
 
-	if _, err := waitKxVolumeCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForCreation, ResNameKxVolume, d.Id(), err)
+	state := plan
+	state.EnvironmentId = fwflex.StringToFramework(ctx, output.EnvironmentId)
+	state.Name = fwflex.StringToFramework(ctx, output.VolumeName)
+	state.AvailabilityZones = fwflex.FlattenFrameworkStringValueList(ctx, output.AvailabilityZoneIds)
+	state.Type = fwflex.StringValueToFramework(ctx, output.VolumeType)
+	state.AzMode = fwflex.StringValueToFramework(ctx, output.AzMode)
+	state.CreatedTimestamp = fwflex.StringValueToFramework(ctx, output.CreatedTimestamp.String())
+	state.ARN = fwflex.StringToFramework(ctx, output.VolumeArn)
+	if output.Description != nil {
+		state.Description = fwflex.StringToFramework(ctx, output.Description)
 	}
-
-	// The CreateKxVolume API currently fails to tag the Volume when the
-	// Tags field is set. Until the API is fixed, tag after creation instead.
-	if err := createTags(ctx, conn, aws.ToString(out.VolumeArn), getTagsIn(ctx)); err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxVolume, d.Id(), err)
+	if output.Nas1Configuration != nil {
+		state.Nas1Configuration = flattenNas1Configuration(ctx, output.Nas1Configuration)
 	}
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	createdVolume, err := waitKxVolumeCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError("Error waiting for volume creation", err.Error())
+		return
+	}
+	state.Status = fwflex.StringValueToFramework(ctx, createdVolume.Status)
+	state.StatusReason = fwflex.StringToFramework(ctx, createdVolume.StatusReason)
+	state.LastModifiedTimestamp = fwflex.StringValueToFramework(ctx, createdVolume.LastModifiedTimestamp.String())
+	// currently tags are not included in createKxVolume Output
+	// setTagsOut(ctx, output.Tags)
 
-	return append(diags, resourceKxVolumeRead(ctx, d, meta)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func resourceKxVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
-
-	out, err := FindKxVolumeByID(ctx, conn, d.Id())
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] FinSpace KxVolume (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+func (r *resourceKxVolume) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var state resourceKxVolumeModel
+	conn := r.Meta().FinSpaceClient(ctx)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
+	output, err := FindKxVolumeByID(ctx, conn, state.ID.ValueString())
+	if tfresource.NotFound(err) {
+		create.LogNotFoundRemoveState(names.FinSpace, create.ErrActionReading, ResNameKxVolume, state.ID.ValueString())
+		resp.State.RemoveResource(ctx)
+		return
+	}
 	if err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxVolume, d.Id(), err)
+		resp.Diagnostics.AddError("Error reading volume", err.Error())
+		return
 	}
 
-	d.Set("arn", out.VolumeArn)
-	d.Set("name", out.VolumeName)
-	d.Set("description", out.Description)
-	d.Set("type", out.VolumeType)
-	d.Set("status", out.Status)
-	d.Set("status_reason", out.StatusReason)
-	d.Set("az_mode", out.AzMode)
-	d.Set("description", out.Description)
-	d.Set("created_timestamp", out.CreatedTimestamp.String())
-	d.Set("last_modified_timestamp", out.LastModifiedTimestamp.String())
-	d.Set("availability_zones", aws.StringSlice(out.AvailabilityZoneIds))
-
-	if err := d.Set("nas1_configuration", flattenNas1Configuration(out.Nas1Configuration)); err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxVolume, d.Id(), err)
+	if output == nil || output.VolumeName == nil {
+		resp.Diagnostics.AddError("Error reading volume", "Empty output")
+		return
 	}
 
-	if err := d.Set("attached_clusters", flattenAttachedClusters(out.AttachedClusters)); err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxVolume, d.Id(), err)
+	state.EnvironmentId = fwflex.StringToFramework(ctx, output.EnvironmentId)
+	state.Name = fwflex.StringToFramework(ctx, output.VolumeName)
+	state.AvailabilityZones = fwflex.FlattenFrameworkStringValueList(ctx, output.AvailabilityZoneIds)
+	state.Type = fwflex.StringValueToFramework(ctx, output.VolumeType)
+	state.AzMode = fwflex.StringValueToFramework(ctx, output.AzMode)
+	state.CreatedTimestamp = fwflex.StringValueToFramework(ctx, output.CreatedTimestamp.String())
+	state.Status = fwflex.StringValueToFramework(ctx, output.Status)
+	state.StatusReason = fwflex.StringToFramework(ctx, output.StatusReason)
+	state.LastModifiedTimestamp = fwflex.StringValueToFramework(ctx, output.LastModifiedTimestamp.String())
+	state.ARN = fwflex.StringToFramework(ctx, output.VolumeArn)
+	if output.Nas1Configuration != nil {
+		state.Nas1Configuration = flattenNas1Configuration(ctx, output.Nas1Configuration)
+	}
+	if output.AttachedClusters != nil {
+		state.AttachedClusters = flattenAttachedClusters(ctx, output.AttachedClusters)
+	}
+	if output.Description != nil {
+		state.Description = fwflex.StringToFramework(ctx, output.Description)
+	}
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	parts, err := flex.ExpandResourceId(d.Id(), kxVolumeIDPartCount, false)
-	if err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxVolume, d.Id(), err)
-	}
-	d.Set("environment_id", parts[0])
+	// currently tags are not included in getKxVolume Output
+	// setTagsOut(ctx, output.Tags)
 
-	return diags
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func resourceKxVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
-
-	updateVolume := false
-
-	in := &finspace.UpdateKxVolumeInput{
-		EnvironmentId: aws.String(d.Get("environment_id").(string)),
-		VolumeName:    aws.String(d.Get("name").(string)),
+func (r *resourceKxVolume) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state resourceKxVolumeModel
+	conn := r.Meta().FinSpaceClient(ctx)
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if v, ok := d.GetOk("description"); ok && d.HasChanges("description") {
-		in.Description = aws.String(v.(string))
-		updateVolume = true
+	updateReq := &finspace.UpdateKxVolumeInput{
+		EnvironmentId: aws.String(plan.EnvironmentId.ValueString()),
+		VolumeName:    aws.String(plan.Name.ValueString()),
+		ClientToken:   aws.String(id.UniqueId()),
 	}
 
-	if v, ok := d.GetOk("nas1_configuration"); ok && len(v.([]interface{})) > 0 && d.HasChanges("nas1_configuration") {
-		in.Nas1Configuration = expandNas1Configuration(v.([]interface{}))
-		updateVolume = true
+	if !(plan.Description.IsNull() || plan.Description.IsUnknown()) {
+		updateReq.Description = aws.String(plan.Description.ValueString())
+	}
+	if !(plan.Nas1Configuration.IsNull() || plan.Nas1Configuration.IsUnknown()) && !plan.Nas1Configuration.Equal(state.Nas1Configuration) {
+		updateReq.Nas1Configuration = expandNas1ConfigurationForUpdate(ctx, plan.Nas1Configuration, resp.Diagnostics)
+	}
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	if !updateVolume {
-		return diags
+	if _, err := conn.UpdateKxVolume(ctx, updateReq); err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating volume", err.Error(),
+		)
+		return
 	}
 
-	log.Printf("[DEBUG] Updating FinSpace KxVolume (%s): %#v", d.Id(), in)
-
-	if _, err := conn.UpdateKxVolume(ctx, in); err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionUpdating, ResNameKxVolume, d.Id(), err)
+	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+	volume, err := waitKxVolumeUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			"Error updating volume", err.Error(),
+		)
+		return
 	}
-	if _, err := waitKxVolumeUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionUpdating, ResNameKxVolume, d.Id(), err)
+	if err != nil {
+		resp.Diagnostics.AddError("Error waiting for volume creation", err.Error())
+		return
 	}
+	plan.Nas1Configuration = flattenNas1Configuration(ctx, volume.Nas1Configuration)
+	plan.Status = fwflex.StringValueToFramework(ctx, volume.Status)
+	plan.StatusReason = fwflex.StringToFramework(ctx, volume.StatusReason)
+	plan.LastModifiedTimestamp = fwflex.StringValueToFramework(ctx, volume.LastModifiedTimestamp.String())
 
-	return append(diags, resourceKxVolumeRead(ctx, d, meta)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func resourceKxVolumeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FinSpaceClient(ctx)
+func (r *resourceKxVolume) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state resourceKxVolumeModel
+	conn := r.Meta().FinSpaceClient(ctx)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-	log.Printf("[INFO] Deleting FinSpace Kx Volume: %s", d.Id())
-	_, err := conn.DeleteKxVolume(ctx, &finspace.DeleteKxVolumeInput{
-		VolumeName:    aws.String(d.Get("name").(string)),
-		EnvironmentId: aws.String(d.Get("environment_id").(string)),
-	})
-
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
+	if _, err := conn.DeleteKxVolume(ctx, &finspace.DeleteKxVolumeInput{
+		VolumeName:    aws.String(state.Name.ValueString()),
+		EnvironmentId: aws.String(state.EnvironmentId.ValueString()),
+		ClientToken:   aws.String(id.UniqueId()),
+	}); err != nil {
+		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return diags
+			return
 		}
-
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionDeleting, ResNameKxVolume, d.Id(), err)
+		resp.Diagnostics.AddError("Error deleting volume", err.Error())
+		return
 	}
-
-	_, err = waitKxVolumeDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
-	if err != nil && !tfresource.NotFound(err) {
-		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionWaitingForDeletion, ResNameKxVolume, d.Id(), err)
-	}
-
-	return diags
 }
 
 func waitKxVolumeCreated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxVolumeOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.KxVolumeStatusCreating),
-		Target:                    enum.Slice(types.KxVolumeStatusActive),
+		Pending:                   enum.Slice(awstypes.KxVolumeStatusCreating),
+		Target:                    enum.Slice(awstypes.KxVolumeStatusActive),
 		Refresh:                   statusKxVolume(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -348,28 +471,12 @@ func waitKxVolumeCreated(ctx context.Context, conn *finspace.Client, id string, 
 
 func waitKxVolumeUpdated(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxVolumeOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.KxVolumeStatusCreating, types.KxVolumeStatusUpdating),
-		Target:                    enum.Slice(types.KxVolumeStatusActive),
+		Pending:                   enum.Slice(awstypes.KxVolumeStatusUpdating),
+		Target:                    enum.Slice(awstypes.KxVolumeStatusActive),
 		Refresh:                   statusKxVolume(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*finspace.GetKxVolumeOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitKxVolumeDeleted(ctx context.Context, conn *finspace.Client, id string, timeout time.Duration) (*finspace.GetKxVolumeOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.KxVolumeStatusDeleting),
-		Target:  enum.Slice(types.KxVolumeStatusDeleted),
-		Refresh: statusKxVolume(ctx, conn, id),
-		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -408,7 +515,7 @@ func FindKxVolumeByID(ctx context.Context, conn *finspace.Client, id string) (*f
 
 	out, err := conn.GetKxVolume(ctx, in)
 	if err != nil {
-		var nfe *types.ResourceNotFoundException
+		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
@@ -426,75 +533,102 @@ func FindKxVolumeByID(ctx context.Context, conn *finspace.Client, id string) (*f
 	return out, nil
 }
 
-func expandNas1Configuration(tfList []interface{}) *types.KxNAS1Configuration {
-	if len(tfList) == 0 || tfList[0] == nil {
+func flattenNas1Configuration(ctx context.Context, apiObject *awstypes.KxNAS1Configuration) types.Object {
+	attributeTypes := fwtypes.AttributeTypesMust[nas1ConfigurationModel](ctx)
+	attrs := map[string]attr.Value{
+		"size": fwflex.Int32ToFramework(ctx, apiObject.Size),
+		"type": fwflex.StringValueToFramework(ctx, apiObject.Type),
+	}
+	return types.ObjectValueMust(attributeTypes, attrs)
+}
+
+func expandAttachedClusters(ctx context.Context, tfList []attachedClustersModel) []awstypes.KxAttachedCluster {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
-
-	a := &types.KxNAS1Configuration{}
-
-	if v, ok := tfMap["size"].(int); ok && v != 0 {
-		a.Size = aws.Int32(int32(v))
+	apiObjects := make([]awstypes.KxAttachedCluster, len(tfList))
+	for i, item := range tfList {
+		apiObjects[i] = item.expand(ctx)
 	}
-
-	if v, ok := tfMap["type"].(string); ok && v != "" {
-		a.Type = types.KxNAS1Type(v)
+	return apiObjects
+}
+func flattenAttachedCluster(ctx context.Context, apiObject awstypes.KxAttachedCluster) *attachedClustersModel {
+	return &attachedClustersModel{
+		ClusterName:   fwflex.StringToFramework(ctx, apiObject.ClusterName),
+		ClusterType:   fwflex.StringValueToFramework(ctx, apiObject.ClusterType),
+		ClusterStatus: fwflex.StringValueToFramework(ctx, apiObject.ClusterStatus),
 	}
-	return a
 }
 
-func flattenNas1Configuration(apiObject *types.KxNAS1Configuration) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
+func flattenAttachedClusters(ctx context.Context, apiObjects []awstypes.KxAttachedCluster) types.List {
+	elemType := fwtypes.NewObjectTypeOf[attachedClustersModel](ctx).ObjectType
 
-	m := map[string]interface{}{}
-
-	if v := apiObject.Size; v != nil {
-		m["size"] = aws.ToInt32(v)
-	}
-
-	if v := apiObject.Type; v != "" {
-		m["type"] = v
-	}
-
-	return []interface{}{m}
-}
-
-func flattenCluster(apiObject *types.KxAttachedCluster) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	m := map[string]interface{}{}
-
-	if v := apiObject.ClusterName; aws.ToString(v) != "" {
-		m["cluster_name"] = aws.ToString(v)
-	}
-
-	if v := apiObject.ClusterStatus; v != "" {
-		m["cluster_status"] = string(v)
-	}
-
-	if v := apiObject.ClusterType; v != "" {
-		m["cluster_type"] = string(v)
-	}
-
-	return m
-}
-
-func flattenAttachedClusters(apiObjects []types.KxAttachedCluster) []interface{} {
 	if len(apiObjects) == 0 {
+		return types.ListValueMust(elemType, []attr.Value{})
+	}
+
+	values := make([]attr.Value, len(apiObjects))
+	for i, o := range apiObjects {
+		values[i] = flattenAttachedCluster(ctx, o).value(ctx)
+	}
+
+	result, _ := types.ListValueFrom(ctx, elemType, values)
+
+	return result
+}
+
+func (m *nas1ConfigurationModel) expand(ctx context.Context) *awstypes.KxNAS1Configuration {
+	return &awstypes.KxNAS1Configuration{
+		Size: aws.Int32(int32(m.Size.ValueInt64())),
+		Type: awstypes.KxNAS1Type(m.Type.String()),
+	}
+}
+func (m *nas1ConfigurationModel) value(ctx context.Context) types.Object {
+	return fwtypes.NewObjectValueOf[nas1ConfigurationModel](ctx, m).ObjectValue
+}
+
+func (m *attachedClustersModel) expand(ctx context.Context) awstypes.KxAttachedCluster {
+	return awstypes.KxAttachedCluster{
+		ClusterName:   aws.String(m.ClusterName.String()),
+		ClusterType:   awstypes.KxClusterType(m.ClusterType.String()),
+		ClusterStatus: awstypes.KxClusterStatus(m.ClusterStatus.String()),
+	}
+}
+
+func expandNas1Configuration(ctx context.Context, object types.Object, diags diag.Diagnostics) *awstypes.KxNAS1Configuration {
+	if object.IsNull() {
 		return nil
 	}
 
-	var l []interface{}
-
-	for _, apiObject := range apiObjects {
-		l = append(l, flattenCluster(&apiObject))
+	var config nas1ConfigurationModel
+	diags.Append(object.As(ctx, &config, basetypes.ObjectAsOptions{})...)
+	if diags.HasError() {
+		return nil
 	}
 
-	return l
+	return &awstypes.KxNAS1Configuration{
+		Type: awstypes.KxNAS1Type(config.Type.ValueString()),
+		Size: aws.Int32(int32(config.Size.ValueInt64())),
+	}
+}
+
+func expandNas1ConfigurationForUpdate(ctx context.Context, object types.Object, diags diag.Diagnostics) *awstypes.KxNAS1Configuration {
+	if object.IsNull() {
+		return nil
+	}
+
+	var config nas1ConfigurationModel
+	diags.Append(object.As(ctx, &config, basetypes.ObjectAsOptions{})...)
+	if diags.HasError() {
+		return nil
+	}
+
+	return &awstypes.KxNAS1Configuration{
+		Size: aws.Int32(int32(config.Size.ValueInt64())),
+	}
+}
+
+func (m *attachedClustersModel) value(ctx context.Context) types.Object {
+	return fwtypes.NewObjectValueOf[attachedClustersModel](ctx, m).ObjectValue
 }
