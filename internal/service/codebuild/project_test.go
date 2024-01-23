@@ -173,7 +173,6 @@ func TestAccCodeBuildProject_disappears(t *testing.T) {
 	})
 }
 
-// TODO
 func TestAccCodeBuildProject_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var project types.Project
@@ -191,12 +190,11 @@ func TestAccCodeBuildProject_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckProjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectConfig_tags(rName, "tag2", "tag2value"),
+				Config: testAccProjectConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "tag1value"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "tag2value"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
@@ -205,12 +203,20 @@ func TestAccCodeBuildProject_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccProjectConfig_tags(rName, "tag2", "tag2value-updated"),
+				Config: testAccProjectConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProjectExists(ctx, resourceName, &project),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "tag1value"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "tag2value-updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccProjectConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName, &project),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 		},
@@ -2983,7 +2989,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccProjectConfig_Base_ServiceRole(rName string) string {
+func testAccProjectConfig_baseServiceRole(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = %[1]q
@@ -3064,7 +3070,7 @@ POLICY
 }
 
 func testAccProjectConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3087,8 +3093,65 @@ resource "aws_codebuild_project" "test" {
 `, rName, testAccGitHubSourceLocationFromEnv()))
 }
 
+func testAccProjectConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = "https://github.com/hashicorp/packer.git"
+    type     = "GITHUB"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccProjectConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
+resource "aws_codebuild_project" "test" {
+  name         = %[1]q
+  service_role = aws_iam_role.test.arn
+
+  artifacts {
+    type = "NO_ARTIFACTS"
+  }
+
+  environment {
+    compute_type = "BUILD_GENERAL1_SMALL"
+    image        = "2"
+    type         = "LINUX_CONTAINER"
+  }
+
+  source {
+    location = "https://github.com/hashicorp/packer.git"
+    type     = "GITHUB"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
 func testAccProjectConfig_visibility(rName, visibility string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name               = %[1]q
   service_role       = aws_iam_role.test.arn
@@ -3113,7 +3176,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_visibilityResourceRole(rName, visibility string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name                 = %[1]q
   service_role         = aws_iam_role.test.arn
@@ -3139,7 +3202,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_badgeEnabled(rName string, badgeEnabled bool) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   badge_enabled = %[1]t
   name          = %[2]q
@@ -3164,7 +3227,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_buildTimeout(rName string, buildTimeout int) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   build_timeout = %[1]d
   name          = %[2]q
@@ -3189,7 +3252,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_queuedTimeout(rName string, queuedTimeout int) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   queued_timeout = %[1]d
   name           = %[2]q
@@ -3214,7 +3277,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_cache(rName, cacheLocation, cacheType string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test1" {
   bucket        = "%[1]s-1"
   force_destroy = true
@@ -3255,7 +3318,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_localCache(rName, modeType string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3284,7 +3347,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_s3ComputedLocation(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket_prefix = "cache"
 }
@@ -3317,7 +3380,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_description(rName, description string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   description  = %[1]q
   name         = %[2]q
@@ -3343,7 +3406,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_fileSystemLocations(rName, mountPoint string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
@@ -3489,7 +3552,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_sourceVersion(rName, sourceVersion string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3515,7 +3578,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_encryptionKey(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
@@ -3545,7 +3608,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_environmentVariableOne(rName, key1, value1 string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3574,7 +3637,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_environmentVariableTwo(rName, key1, value1, key2, value2 string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3608,7 +3671,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_environmentVariableZero(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3632,7 +3695,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_environmentVariableType(rName, environmentVariableType string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3668,7 +3731,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_environmentCertificate(rName string, oName string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[2]q
@@ -3705,7 +3768,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_environmentRegistryCredential1(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3745,7 +3808,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 }
 
 func testAccProjectConfig_environmentRegistryCredential2(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3785,7 +3848,7 @@ resource "aws_secretsmanager_secret_version" "test" {
 }
 
 func testAccProjectConfig_cloudWatchLogs(rName, status, gName, sName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3818,7 +3881,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_s3Logs(rName, status, location string, encryptionDisabled bool) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -3856,7 +3919,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_buildBatch(rName string, combineArtifacts bool, computeTypesAllowed string, maximumBuildsAllowed, timeoutInMins int) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3931,13 +3994,13 @@ build_batch_config {
 	`
 
 	if withBuildBatchConfig {
-		return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(template, rName, buildBatchConfig))
+		return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(template, rName, buildBatchConfig))
 	}
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(template, rName, ""))
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(template, rName, ""))
 }
 
 func testAccProjectConfig_sourceGitCloneDepth(rName string, gitCloneDepth int) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3962,7 +4025,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_sourceGitSubmodulesCodeCommit(rName string, fetchSubmodules bool) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -3990,7 +4053,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_sourceGitSubmodulesGitHub(rName string, fetchSubmodules bool) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4018,7 +4081,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_sourceGitSubmodulesGitHubEnterprise(rName string, fetchSubmodules bool) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4046,7 +4109,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_secondarySourcesGitSubmodulesCodeCommit(rName string, fetchSubmodules bool) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4094,7 +4157,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_secondarySourcesNone(rName string, fetchSubmodules bool) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4122,7 +4185,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_secondarySourcesGitSubmodulesGitHub(rName string, fetchSubmodules bool) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4170,7 +4233,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_secondarySourcesGitSubmodulesGitHubEnterprise(rName string, fetchSubmodules bool) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4218,7 +4281,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_secondarySourceVersionsCodeCommit(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4259,7 +4322,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_secondarySourceVersionsCodeCommitUpdated(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4305,7 +4368,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_sourceInsecureSSL(rName string, insecureSSL bool) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4330,7 +4393,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_sourceBuildStatusGitHubEnterprise(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4359,7 +4422,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_sourceReportBuildStatusGitHubEnterprise(rName string, reportBuildStatus bool) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4384,7 +4447,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_sourceReportBuildStatusBitbucket(rName, sourceLocation string, reportBuildStatus bool) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4409,7 +4472,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_sourceReportBuildStatusGitHub(rName string, reportBuildStatus bool) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4434,7 +4497,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_sourceTypeBitbucket(rName, sourceLocation string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4458,7 +4521,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_sourceTypeCodeCommit(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4482,7 +4545,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_sourceTypeCodePipeline(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4505,7 +4568,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_sourceTypeGitHubEnterprise(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4529,7 +4592,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_sourceTypeS3(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
@@ -4563,7 +4626,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_sourceTypeNoSource(rName string, rLocation string, rBuildspec string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4587,39 +4650,9 @@ resource "aws_codebuild_project" "test" {
 `, rName, rLocation, rBuildspec))
 }
 
-func testAccProjectConfig_tags(rName, tagKey, tagValue string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
-resource "aws_codebuild_project" "test" {
-  name         = %[1]q
-  service_role = aws_iam_role.test.arn
-
-  artifacts {
-    type = "NO_ARTIFACTS"
-  }
-
-  environment {
-    compute_type = "BUILD_GENERAL1_SMALL"
-    image        = "2"
-    type         = "LINUX_CONTAINER"
-  }
-
-  source {
-    location = "https://github.com/hashicorp/packer.git"
-    type     = "GITHUB"
-  }
-
-  tags = {
-    tag1 = "tag1value"
-
-    %[2]s = %[3]q
-  }
-}
-`, rName, tagKey, tagValue))
-}
-
 func testAccProjectConfig_vpc1(rName string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -4677,7 +4710,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_vpc2(rName string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -4734,7 +4767,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_windowsServer2019Container(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4758,7 +4791,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_armContainer(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4782,7 +4815,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_linuxLambdaContainer(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -4807,7 +4840,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_artifactsArtifactIdentifier(rName string, artifactIdentifier string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -4840,7 +4873,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_artifactsEncryptionDisabled(rName string, encryptionDisabled bool) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -4873,7 +4906,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_artifactsLocation(rName, bucketName string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[2]q
@@ -4905,7 +4938,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_artifactsName(rName string, name string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -4938,7 +4971,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_artifactsNamespaceType(rName, namespaceType string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -4971,7 +5004,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_artifactsOverrideArtifactName(rName string, overrideArtifactName bool) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -5004,7 +5037,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_artifactsPackaging(rName, packaging string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -5037,7 +5070,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_artifactsPath(rName, path string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -5070,7 +5103,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_artifactsType(rName string, artifactType string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -5102,7 +5135,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_artifactsBucketOwnerAccess(rName string, typ string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -5135,7 +5168,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_secondaryArtifacts(rName string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -5179,7 +5212,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_secondaryArtifactsNone(rName string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -5211,7 +5244,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_secondaryArtifactsArtifactIdentifier(rName string, artifactIdentifier string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -5249,7 +5282,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_secondaryArtifactsEncryptionDisabled(rName string, encryptionDisabled bool) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -5288,7 +5321,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_secondaryArtifactsLocation(rName, bucketName string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[2]q
@@ -5326,7 +5359,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_secondaryArtifactsName(rName string, name string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -5365,7 +5398,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_secondaryArtifactsNamespaceType(rName, namespaceType string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -5404,7 +5437,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_secondaryArtifactsOverrideArtifactName(rName string, overrideArtifactName bool) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -5443,7 +5476,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_secondaryArtifactsPath(rName, path string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -5482,7 +5515,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_secondaryArtifactsPackaging(rName, packaging string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -5521,7 +5554,7 @@ resource "aws_codebuild_project" "test" {
 
 func testAccProjectConfig_secondaryArtifactsType(rName string, artifactType string) string {
 	return acctest.ConfigCompose(
-		testAccProjectConfig_Base_ServiceRole(rName),
+		testAccProjectConfig_baseServiceRole(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
@@ -5558,7 +5591,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_secondarySourcesCodeCommit(rName string) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   name         = %[1]q
   service_role = aws_iam_role.test.arn
@@ -5594,7 +5627,7 @@ resource "aws_codebuild_project" "test" {
 }
 
 func testAccProjectConfig_concurrentBuildLimit(rName string, concurrentBuildLimit int) string {
-	return acctest.ConfigCompose(testAccProjectConfig_Base_ServiceRole(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccProjectConfig_baseServiceRole(rName), fmt.Sprintf(`
 resource "aws_codebuild_project" "test" {
   concurrent_build_limit = %[1]d
   name                   = %[2]q
