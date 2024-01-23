@@ -486,8 +486,7 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 		fmt.Println(fmt.Sprintf("inlinePolicies: %+v", inlinePolicies))
 
 		var configPoliciesList []*iam.PutRolePolicyInput
-		inline_policies_map := make(map[string]string)
-		state.InlinePolicies.ElementsAs(ctx, &inline_policies_map, false)
+		inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, state.InlinePolicies)
 		configPoliciesList = expandRoleInlinePolicies(aws.StringValue(role.RoleName), inline_policies_map)
 		fmt.Println(fmt.Sprintf("configPoliciesList: %+v", configPoliciesList))
 
@@ -636,67 +635,42 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 	if !plan.InlinePolicies.Equal(state.InlinePolicies) && inlinePoliciesActualDiff(ctx, &plan, &state) {
 		fmt.Println("Found inline policies changes!")
 
-		old_inline_policies_map := make(map[string]string)
-		// TODO: add wrapper to this
-		state.InlinePolicies.ElementsAs(ctx, &old_inline_policies_map, false)
-
-		new_inline_policies_map := make(map[string]string)
-		// TODO: add wrapper to this
-		plan.InlinePolicies.ElementsAs(ctx, &new_inline_policies_map, false)
-
-		fmt.Println(fmt.Sprintf("len old_inline_policies_map: %v", len(old_inline_policies_map)))
-		fmt.Println(fmt.Sprintf("len new_inline_policies_map: %v", len(new_inline_policies_map)))
+		old_inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, state.InlinePolicies)
+		new_inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, plan.InlinePolicies)
 
 		var remove_policy_names []string
 		for k := range old_inline_policies_map {
 			if _, ok := new_inline_policies_map[k]; !ok {
-				fmt.Println(fmt.Sprintf("Found inline policy to remove: %s", k))
 				remove_policy_names = append(remove_policy_names, k)
 			}
 		}
 
 		// need set like object to store policy names we want to add
 		add_policy_names := make(map[string]int64)
-		fmt.Println("Going into add_policy_names loop...")
 		for k, v := range new_inline_policies_map {
-			fmt.Println(fmt.Sprintf("Looking at key: %s", k))
 			val, ok := old_inline_policies_map[k]
 			// If the key exists
 			if !ok {
-				fmt.Println(fmt.Sprintf("Found inline policy to add that does not exist: %s", k))
 				add_policy_names[k] = 0
 				continue
 			}
 
 			if equivalent, err := awspolicy.PoliciesAreEquivalent(aws.StringValue(&v), aws.StringValue(&val)); err != nil || !equivalent {
-				fmt.Println(fmt.Sprintf("Found inline policy to add that needs update: %s", k))
 				add_policy_names[k] = 0
 			}
 		}
 
-		fmt.Println(fmt.Sprintf("len add_policy_names: %v", len(add_policy_names)))
-		fmt.Println(fmt.Sprintf("add_policy_names values: %+v", add_policy_names))
-		fmt.Println(fmt.Sprintf("new_inline_policies_map: %+v", new_inline_policies_map))
-
 		roleName := state.Name.ValueString()
 		nsPolicies := expandRoleInlinePolicies(roleName, new_inline_policies_map)
-		fmt.Println(fmt.Sprintf("nsPolicies: %+v", nsPolicies))
 
 		// getting policy objects we want to add based on add_policy_names map
 		var add_policies []*iam.PutRolePolicyInput
-		fmt.Println("Going into add_policies names loop...")
 		for _, val := range nsPolicies {
-			fmt.Println(fmt.Sprintf("Looking at: %s", *val.PolicyName))
 			if _, ok := add_policy_names[*val.PolicyName]; ok {
-				fmt.Println("adding")
 				add_policies = append(add_policies, val)
 			} else {
-				fmt.Println("not found")
 			}
 		}
-
-		fmt.Println(fmt.Sprintf("len add_policies: %v", len(add_policies)))
-		fmt.Println(fmt.Sprintf("len remove_policy_names: %v", len(remove_policy_names)))
 
 		// Always add before delete
 		if err := r.addRoleInlinePolicies(ctx, add_policies); err != nil {
@@ -1118,11 +1092,8 @@ func (r resourceIamRole) addRoleInlinePolicies(ctx context.Context, policies []*
 func inlinePoliciesActualDiff(ctx context.Context, plan *resourceIamRoleData, state *resourceIamRoleData) bool {
 	roleName := state.Name.ValueString()
 
-	old_inline_policies_map := make(map[string]string)
-	state.InlinePolicies.ElementsAs(ctx, &old_inline_policies_map, false)
-
-	new_inline_policies_map := make(map[string]string)
-	plan.InlinePolicies.ElementsAs(ctx, &new_inline_policies_map, false)
+	old_inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, state.InlinePolicies)
+	new_inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, plan.InlinePolicies)
 
 	osPolicies := expandRoleInlinePolicies(roleName, old_inline_policies_map)
 	nsPolicies := expandRoleInlinePolicies(roleName, new_inline_policies_map)
