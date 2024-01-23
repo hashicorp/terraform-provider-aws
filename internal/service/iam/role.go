@@ -140,10 +140,8 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				// },
 			},
 			"managed_policy_arns": schema.SetAttribute{
-				// TODO: maybe use setof custom type with arn?
-				// Then don't need validator
-				Optional:    true,
-				ElementType: types.StringType,
+				Optional: true,
+				ElementType: fwtypes.ARNType,
 				PlanModifiers: []planmodifier.Set{
 					setplanmodifier.UseStateForUnknown(),
 				},

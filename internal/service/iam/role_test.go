@@ -804,6 +804,24 @@ func TestAccIAMRole_ManagedPolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccIAMRole_ManagedPolicy_badARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRoleConfig_policyManaged_badARN(rName),
+				ExpectError: regexache.MustCompile(`.*ARN Type Validation Error*`),
+			},
+		},
+	})
+}
+
 // TestAccIAMRole_PolicyOutOfBandRemovalAddedBack_managedNonEmpty: if a policy is detached
 // out of band, it should be reattached.
 func TestAccIAMRole_ManagedPolicy_outOfBandRemovalAddedBack(t *testing.T) {
@@ -2055,6 +2073,29 @@ resource "aws_iam_role" "test" {
       }]
     })
   }
+}
+`, roleName)
+}
+
+func testAccRoleConfig_policyManaged_badARN(roleName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name                = %[1]q
+  managed_policy_arns = ["iamabadarn"]
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 }
 `, roleName)
 }
