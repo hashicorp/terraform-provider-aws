@@ -807,7 +807,7 @@ func resourceProjectCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.TimeoutInMinutes = aws.Int32(int32(v.(int)))
 	}
 
-	if v, ok := d.GetOk("environvpc_configment"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.VpcConfig = expandVPCConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
@@ -1058,7 +1058,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("vpc_config") {
-			if v, ok := d.GetOk("environvpc_configment"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.VpcConfig = expandVPCConfig(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
@@ -1652,14 +1652,9 @@ func flattenLogsConfig(apiObject *types.LogsConfig) []interface{} {
 		return []interface{}{}
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.CloudWatchLogs; v != nil {
-		tfMap["cloudwatch_logs"] = flattenCloudWatchLogs(v)
-	}
-
-	if v := apiObject.S3Logs; v != nil {
-		tfMap["s3_logs"] = flattenS3Logs(v)
+	tfMap := map[string]interface{}{
+		"cloudwatch_logs": flattenCloudWatchLogs(apiObject.CloudWatchLogs),
+		"s3_logs":         flattenS3Logs(apiObject.S3Logs),
 	}
 
 	return []interface{}{tfMap}
@@ -1671,8 +1666,8 @@ func flattenCloudWatchLogs(apiObject *types.CloudWatchLogsConfig) []interface{} 
 	if apiObject == nil {
 		tfMap["status"] = types.LogsConfigStatusTypeDisabled
 	} else {
-		tfMap["status"] = apiObject.Status
 		tfMap["group_name"] = aws.ToString(apiObject.GroupName)
+		tfMap["status"] = apiObject.Status
 		tfMap["stream_name"] = aws.ToString(apiObject.StreamName)
 	}
 
@@ -1685,10 +1680,10 @@ func flattenS3Logs(apiObject *types.S3LogsConfig) []interface{} {
 	if apiObject == nil {
 		tfMap["status"] = types.LogsConfigStatusTypeDisabled
 	} else {
-		tfMap["status"] = apiObject.Status
-		tfMap["location"] = aws.ToString(apiObject.Location)
-		tfMap["encryption_disabled"] = aws.ToBool(apiObject.EncryptionDisabled)
 		tfMap["bucket_owner_access"] = apiObject.BucketOwnerAccess
+		tfMap["encryption_disabled"] = aws.ToBool(apiObject.EncryptionDisabled)
+		tfMap["location"] = aws.ToString(apiObject.Location)
+		tfMap["status"] = apiObject.Status
 	}
 
 	return []interface{}{tfMap}
