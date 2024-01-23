@@ -114,8 +114,9 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
+			// TODO: maybe mapof of IAMPolicytype?
 			"inline_policies": schema.MapAttribute{
-				ElementType: fwtypes.IAMPolicyType,
+				ElementType: types.StringType,
 				Optional:    true,
 				// TODO: validators and name func for both
 				// "name": {
@@ -344,7 +345,6 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 		}
 	}
 
-	// TODO: do I have to do this? should look at other resources
 	plan.ARN = fwtypes.ARNValue(*output.Role.Arn)
 	plan.CreateDate = flex.StringValueToFramework(ctx, output.Role.CreateDate.Format(time.RFC3339))
 	plan.ID = flex.StringToFramework(ctx, output.Role.RoleName)
@@ -353,11 +353,6 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	plan.UniqueId = flex.StringToFramework(ctx, output.Role.RoleId)
 
 	// last steps?
-	// TODO: do we need something?this?
-	// state.refreshFromOutput(ctx, out)
-	// fmt.Println(plan.ARN)
-	// fmt.Println(plan.ID)
-	// fmt.Println(plan.Name)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 	fmt.Println("Bottom of Create")
 }
@@ -442,8 +437,6 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 
 	// occasionally, immediately after a role is created, AWS will give an ARN like AROAQ7SSZBKHREXAMPLE (unique ID)
 	if role, err = waitRoleARNIsNotUniqueID(ctx, conn, state.ARN.ValueString(), role); err != nil {
-		// TODO: have to update this error
-		// return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): waiting for valid ARN: %s", d.Id(), err)
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.IAM, create.ErrActionSetting, state.Name.String(), state.ARN.String(), err),
 			err.Error(),
@@ -475,7 +468,6 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 
 	assumeRolePolicy, err := url.QueryUnescape(aws.StringValue(role.AssumeRolePolicyDocument))
 	if err != nil {
-		// TODO: I don't this this is right error, should look more into it
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.IAM, create.ErrActionReading, state.ID.String(), state.AssumeRolePolicy.String(), err),
 			err.Error(),
@@ -485,7 +477,6 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 
 	policyToSet, err := verify.PolicyToSet(state.AssumeRolePolicy.ValueString(), assumeRolePolicy)
 	if err != nil {
-		// TODO: I don't this this is right error, should look more into it
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.IAM, create.ErrActionReading, state.ID.String(), state.AssumeRolePolicy.String(), err),
 			err.Error(),
@@ -499,11 +490,12 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	if !state.InlinePolicies.IsNull() && !state.InlinePolicies.IsUnknown() {
 		inlinePolicies, err := r.readRoleInlinePolicies(ctx, aws.StringValue(role.RoleName))
 		if err != nil {
-			// TODO: figure out this error
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionReading, state.InlinePolicies.String(), state.ID.String(), err),
+				err.Error(),
+			)
 			return
-			// return sdkdiag.AppendErrorf(diags, "reading inline policies for IAM role %s, error: %s", d.Id(), err)
 		}
-		fmt.Println(fmt.Sprintf("inlinePolicies: %+v", inlinePolicies))
 
 		var configPoliciesList []*iam.PutRolePolicyInput
 		inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, state.InlinePolicies)
@@ -513,12 +505,6 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 		if !inlinePoliciesEquivalent(inlinePolicies, configPoliciesList) {
 			fmt.Println("found different inline policies!")
 			state.InlinePolicies = flex.FlattenFrameworkStringValueMap(ctx, flattenRoleInlinePolicies(inlinePolicies))
-			// if err := d.Set("inline_policy", flattenRoleInlinePolicies(inlinePolicies)); err != nil {
-			// // TODO: make error here
-			// fmt.Printf("error flattening inline policies in read")
-			// return
-			// // return sdkdiag.AppendErrorf(diags, "setting inline_policy: %s", err)
-			// }
 		}
 	}
 
@@ -526,9 +512,11 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	if !state.ManagedPolicyArns.IsNull() && !state.ManagedPolicyArns.IsUnknown() {
 		policyARNs, err := findRoleAttachedPolicies(ctx, conn, state.ID.ValueString())
 		if err != nil {
-			// TODO: implement error
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionReading, state.ManagedPolicyArns.String(), state.ID.String(), err),
+				err.Error(),
+			)
 			return
-			// return sdkdiag.AppendErrorf(diags, "reading IAM Policies attached to Role (%s): %s", d.Id(), err)
 		}
 		state.ManagedPolicyArns = flex.FlattenFrameworkStringValueSet(ctx, policyARNs)
 	}
@@ -552,8 +540,10 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 	if !plan.AssumeRolePolicy.Equal(state.AssumeRolePolicy) {
 		assumeRolePolicy, err := structure.NormalizeJsonString(plan.AssumeRolePolicy.ValueString())
 		if err != nil {
-			// TODO: update error here
-			// return sdkdiag.AppendErrorf(diags, "assume_role_policy (%s) is invalid JSON: %s", assumeRolePolicy, err)
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.AssumeRolePolicy.String(), plan.ID.String(), err),
+				err.Error(),
+			)
 			return
 		}
 
@@ -576,8 +566,10 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 		)
 
 		if err != nil {
-			// TODO: update error
-			// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s) assume role policy: %s", d.Id(), err)
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.AssumeRolePolicy.String(), state.ID.String(), err),
+				err.Error(),
+			)
 			return
 		}
 	}
@@ -591,9 +583,6 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 		_, err := conn.UpdateRoleDescriptionWithContext(ctx, input)
 
 		if err != nil {
-			// TODO: put something there
-			// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s) description: %s", d.Id(), err)
-			fmt.Println("Error updating description")
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.IAM, create.ErrActionReading, state.ID.String(), plan.Description.String(), err),
 				err.Error(),
@@ -613,10 +602,11 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 		_, err := conn.UpdateRoleWithContext(ctx, input)
 
 		if err != nil {
-			// TODO: add error here
-			fmt.Println("Hit update max session duration error")
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.ID.String(), plan.MaxSessionDuration.String(), err),
+				err.Error(),
+			)
 			return
-			// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s) MaxSessionDuration: %s", d.Id(), err)
 		}
 		state.MaxSessionDuration = plan.MaxSessionDuration
 	}
@@ -631,9 +621,11 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 			_, err := conn.PutRolePermissionsBoundaryWithContext(ctx, input)
 
 			if err != nil {
-				// TODO: implement this error
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.ID.String(), plan.PermissionsBoundary.String(), err),
+					err.Error(),
+				)
 				return
-				// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s) permissions boundary: %s", d.Id(), err)
 			}
 		} else {
 			input := &iam.DeleteRolePermissionsBoundaryInput{
@@ -643,9 +635,11 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 			_, err := conn.DeleteRolePermissionsBoundaryWithContext(ctx, input)
 
 			if err != nil {
-				// TODO: implement error
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.IAM, create.ErrActionDeleting, state.ID.String(), plan.PermissionsBoundary.String(), err),
+					err.Error(),
+				)
 				return
-				// return sdkdiag.AppendErrorf(diags, "deleting IAM Role (%s) permissions boundary: %s", d.Id(), err)
 			}
 		}
 
@@ -694,15 +688,19 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 
 		// Always add before delete
 		if err := r.addRoleInlinePolicies(ctx, add_policies); err != nil {
-			// TODO: add error here
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.ID.String(), plan.InlinePolicies.String(), err),
+				err.Error(),
+			)
 			return
-			// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s): %s", d.Id(), err)
 		}
 
 		if err := deleteRoleInlinePolicies(ctx, conn, roleName, remove_policy_names); err != nil {
-			// TODO: add error here
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.ID.String(), plan.InlinePolicies.String(), err),
+				err.Error(),
+			)
 			return
-			// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s): %s", d.Id(), err)
 		}
 
 	}
@@ -754,17 +752,20 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 		fmt.Println(fmt.Sprintf("del: %+v", del))
 		fmt.Println(fmt.Sprintf("add: %+v", del))
 
-		// // TODO: fix this, we are doing it again. Always add then delete to prevent issues
 		if err := r.addRoleManagedPolicies(ctx, state.ID.ValueString(), add); err != nil {
-			// TODO: implement error
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.ID.String(), plan.ManagedPolicyArns.String(), err),
+				err.Error(),
+			)
 			return
-			// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s): %s", d.Id(), err)
 		}
 
 		if err := deleteRolePolicyAttachments(ctx, conn, state.ID.ValueString(), del); err != nil {
-			// TODO: implement error
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.ID.String(), plan.ManagedPolicyArns.String(), err),
+				err.Error(),
+			)
 			return
-			// return sdkdiag.AppendErrorf(diags, "updating IAM Role (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -774,16 +775,18 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 
 		// Some partitions (e.g. ISO) may not support tagging.
 		if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-			// TODO: implement error here
-			fmt.Println("Hit error parition updating!")
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.ID.String(), plan.TagsAll.String(), err),
+				err.Error(),
+			)
 			return
-			// return append(diags, resourceRoleRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			fmt.Println("Hit error updating!")
-			// TODO: implement error here
-			// return sdkdiag.AppendErrorf(diags, "updating tags for IAM Role (%s): %s", d.Id(), err)
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.ID.String(), plan.TagsAll.String(), err),
+				err.Error(),
+			)
 			return
 		}
 	} else {
