@@ -54,17 +54,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS add-on using the `cluster_name`, `policy_arn` and `principal_arn` separated by a colon (`:`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS add-on using the `cluster_name`, `principal_arn`and `policy_arn` separated by a colon (`#`). For example:
 
 ```terraform
 import {
   to = aws_eks_access_policy_association.my_eks_entry
-  id = "my_cluster_name:my_policy_arn:my_principal_arn"
+  id = "my_cluster_name#my_principal_arn#my_policy_arn"
 }
 ```
 
-Using `terraform import`, import EKS access entry using the `cluster_name` `policy_arn` and `principal_arn` separated by a colon (`:`). For example:
+Using `terraform import`, import EKS access entry using the `cluster_name` `principal_arn` and `policy_arn` separated by a colon (`#`). For example:
 
 ```console
-% terraform import aws_eks_access_policy_association.my_eks_access_entry my_cluster_name:my_policy_arn:my_principal_arn
+% terraform import aws_eks_access_policy_association.my_eks_access_entry my_cluster_name#my_principal_arn#my_policy_arn
 ```
