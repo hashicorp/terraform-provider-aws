@@ -114,22 +114,16 @@ func resourceAnalyzerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		Type:         types.Type(d.Get("type").(string)),
 	}
 
-	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 {
-		input.Configuration = expandConfiguration(v.([]interface{}))
+	if v, ok := d.GetOk("configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Configuration = expandAnalyzerConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	// Handle Organizations eventual consistency.
-	_, err := tfresource.RetryWhen(ctx, organizationCreationTimeout,
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.ValidationException](ctx, organizationCreationTimeout,
 		func() (interface{}, error) {
 			return conn.CreateAnalyzer(ctx, input)
 		},
-		func(err error) (bool, error) {
-			if errs.IsAErrorMessageContains[*types.ValidationException](err, "You must create an organization") {
-				return true, err
-			}
-
-			return false, err
-		},
+		"You must create an organization",
 	)
 
 	if err != nil {
@@ -159,7 +153,13 @@ func resourceAnalyzerRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("analyzer_name", analyzer.Name)
 	d.Set("arn", analyzer.Arn)
-	d.Set("configuration", flattenConfiguration(analyzer.Configuration))
+	if analyzer.Configuration != nil {
+		if err := d.Set("configuration", []interface{}{flattenConfiguration(analyzer.Configuration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting configuration: %s", err)
+		}
+	} else {
+		d.Set("configuration", nil)
+	}
 	d.Set("type", analyzer.Type)
 
 	setTagsOut(ctx, analyzer.Tags)
@@ -221,33 +221,31 @@ func findAnalyzerByName(ctx context.Context, conn *accessanalyzer.Client, name s
 	return output.Analyzer, nil
 }
 
-func expandConfiguration(tfMap []interface{}) types.AnalyzerConfiguration {
-	tfList, ok := tfMap[0].(map[string]interface{})
-	if !ok {
+func expandAnalyzerConfiguration(tfMap map[string]interface{}) types.AnalyzerConfiguration {
+	if tfMap == nil {
 		return nil
 	}
 
 	apiObject := &types.AnalyzerConfigurationMemberUnusedAccess{}
 
-	if v, ok := tfList["unused_access"]; ok && len(v.([]interface{})) > 0 {
-		apiObject.Value = expandUnusedAccess(v.([]interface{}))
+	if v, ok := tfMap["unused_access"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Value = expandUnusedAccess(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandUnusedAccess(tfMap []interface{}) types.UnusedAccessConfiguration {
-	tfList := tfMap[0].(map[string]interface{})
+func expandUnusedAccess(tfMap map[string]interface{}) types.UnusedAccessConfiguration {
 	apiObject := types.UnusedAccessConfiguration{}
 
-	if v, ok := tfList["unused_access_age"]; ok {
-		apiObject.UnusedAccessAge = aws.Int32(int32(v.(int)))
+	if v, ok := tfMap["unused_access_age"].(int); ok && v != 0 {
+		apiObject.UnusedAccessAge = aws.Int32(int32(v))
 	}
 
 	return apiObject
 }
 
-func flattenConfiguration(apiObject types.AnalyzerConfiguration) []interface{} {
+func flattenConfiguration(apiObject types.AnalyzerConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -256,17 +254,13 @@ func flattenConfiguration(apiObject types.AnalyzerConfiguration) []interface{} {
 
 	switch v := apiObject.(type) {
 	case *types.AnalyzerConfigurationMemberUnusedAccess:
-		analyzerConfigurationMemberUnusedAccess := flattenUnusedAccessConfiguration(&v.Value)
-		tfMap["unused_access"] = analyzerConfigurationMemberUnusedAccess
-
-	default:
-		log.Println("union is nil or unknown type")
+		tfMap["unused_access"] = []interface{}{flattenUnusedAccessConfiguration(&v.Value)}
 	}
 
-	return []interface{}{tfMap}
+	return tfMap
 }
 
-func flattenUnusedAccessConfiguration(apiObject *types.UnusedAccessConfiguration) []interface{} {
+func flattenUnusedAccessConfiguration(apiObject *types.UnusedAccessConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -277,5 +271,5 @@ func flattenUnusedAccessConfiguration(apiObject *types.UnusedAccessConfiguration
 		tfMap["unused_access_age"] = aws.ToInt32(v)
 	}
 
-	return []interface{}{tfMap}
+	return tfMap
 }
