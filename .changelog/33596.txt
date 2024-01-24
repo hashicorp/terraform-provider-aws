@@ -1,3 +1,7 @@
 ```release-note:new-resource
 aws_route53domains_ds_association
 ```
+
+```release-note:enhancement
+resource/aws_route53domains_registered_domain: Support resource import
+```

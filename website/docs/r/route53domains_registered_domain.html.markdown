@@ -101,3 +101,20 @@ This resource exports the following attributes in addition to the arguments abov
 
 - `create` - (Default `30m`)
 - `update` - (Default `30m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import domains using the domain_name. For example:
+
+```terraform
+import {
+  to = aws_route53domains_registered_domain.example
+  id = "example.com"
+}
+```
+
+Using `terraform import`, import domains using the domain name. For example:
+
+```console
+% terraform import aws_route53domains_registered_domain.example example.com
+```

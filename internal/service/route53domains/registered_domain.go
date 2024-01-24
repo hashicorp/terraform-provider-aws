@@ -132,6 +132,10 @@ func ResourceRegisteredDomain() *schema.Resource {
 		UpdateWithoutTimeout: resourceRegisteredDomainUpdate,
 		DeleteWithoutTimeout: schema.NoopContext,
 
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
 			Update: schema.DefaultTimeout(30 * time.Minute),
