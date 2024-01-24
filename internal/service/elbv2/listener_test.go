@@ -787,7 +787,7 @@ func TestAccELBV2Listener_DefaultAction_order(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6171
-func TestAccELBV2Listener_DefaultAction_orderRecreates(t *testing.T) {
+func TestAccELBV2Listener_DefaultAction_actionDisappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var listener awstypes.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
