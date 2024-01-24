@@ -74,6 +74,32 @@ func expandCaptchaConfig(l []interface{}) *wafv2.CaptchaConfig {
 	return configuration
 }
 
+func expandChallengeConfig(l []interface{}) *wafv2.ChallengeConfig {
+	configuration := &wafv2.ChallengeConfig{}
+
+	if len(l) == 0 || l[0] == nil {
+		return configuration
+	}
+
+	m := l[0].(map[string]interface{})
+	if v, ok := m["immunity_time_property"]; ok {
+		inner := v.([]interface{})
+		if len(inner) == 0 || inner[0] == nil {
+			return configuration
+		}
+
+		m = inner[0].(map[string]interface{})
+
+		if v, ok := m["immunity_time"]; ok {
+			configuration.ImmunityTimeProperty = &wafv2.ImmunityTimeProperty{
+				ImmunityTime: aws.Int64(int64(v.(int))),
+			}
+		}
+	}
+
+	return configuration
+}
+
 func expandAssociationConfig(l []interface{}) *wafv2.AssociationConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -1639,6 +1665,23 @@ func flattenCaptcha(a *wafv2.CaptchaAction) []interface{} {
 }
 
 func flattenCaptchaConfig(config *wafv2.CaptchaConfig) interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+	if config.ImmunityTimeProperty == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"immunity_time_property": []interface{}{map[string]interface{}{
+			"immunity_time": aws.Int64Value(config.ImmunityTimeProperty.ImmunityTime),
+		}},
+	}
+
+	return []interface{}{m}
+}
+
+func flattenChallengeConfig(config *wafv2.ChallengeConfig) interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
