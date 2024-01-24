@@ -15,6 +15,7 @@ const (
 	errCodeBucketAlreadyExists                  = "BucketAlreadyExists"
 	errCodeBucketAlreadyOwnedByYou              = "BucketAlreadyOwnedByYou"
 	errCodeBucketNotEmpty                       = "BucketNotEmpty"
+	errCodeIllegalLocationConstraintException   = "IllegalLocationConstraintException"
 	errCodeInvalidArgument                      = "InvalidArgument"
 	errCodeInvalidBucketState                   = "InvalidBucketState"
 	errCodeInvalidRequest                       = "InvalidRequest"

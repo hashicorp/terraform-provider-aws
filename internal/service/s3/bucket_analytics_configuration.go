@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_s3_bucket_analytics_configuration")
-func ResourceBucketAnalyticsConfiguration() *schema.Resource {
+// @SDKResource("aws_s3_bucket_analytics_configuration", name="Bucket Analytics Configuration")
+func resourceBucketAnalyticsConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketAnalyticsConfigurationPut,
 		ReadWithoutTimeout:   resourceBucketAnalyticsConfigurationRead,

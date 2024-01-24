@@ -31,9 +31,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_object_copy", name="Object")
+// @SDKResource("aws_s3_object_copy", name="Object Copy")
 // @Tags
-func ResourceObjectCopy() *schema.Resource {
+func resourceObjectCopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCopyCreate,
 		ReadWithoutTimeout:   resourceObjectCopyRead,
@@ -387,11 +387,11 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect", output.WebsiteRedirectLocation)
 
-	if err := resourceObjectSetKMS(ctx, meta, d, aws.ToString(output.SSEKMSKeyId)); err != nil {
+	if err := setObjectKMSKeyID(ctx, meta, d, aws.ToString(output.SSEKMSKeyId)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if tags, err := ObjectListTags(ctx, conn, bucket, key, optFns...); err == nil {
+	if tags, err := objectListTags(ctx, conn, bucket, key, optFns...); err == nil {
 		setTagsOut(ctx, Tags(tags))
 	} else if !tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
