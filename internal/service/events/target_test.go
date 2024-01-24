@@ -1883,7 +1883,7 @@ resource "aws_ecs_capacity_provider" "test" {
   auto_scaling_group_provider {
     auto_scaling_group_arn         = aws_autoscaling_group.test.arn
     managed_termination_protection = "DISABLED"
-	managed_draining			   = "ENABLED"
+    managed_draining			   = "ENABLED"
 
     managed_scaling {
       maximum_scaling_step_size = 1
@@ -1920,7 +1920,6 @@ resource "aws_cloudwatch_event_target" "test" {
       type  = "spread"
       field = "instanceId"
     }
-
   }
 }
 
@@ -1955,7 +1954,7 @@ resource "aws_ecs_capacity_provider" "test" {
   auto_scaling_group_provider {
     auto_scaling_group_arn         = aws_autoscaling_group.test.arn
     managed_termination_protection = "DISABLED"
-	managed_draining			   = "ENABLED"
+    managed_draining			   = "ENABLED"
 
     managed_scaling {
       maximum_scaling_step_size = 1
