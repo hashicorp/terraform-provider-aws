@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccVPCNetworkInterfaceSgAttachment_basic(t *testing.T) {
+func TestAccVPCNetworkInterfaceSGAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	networkInterfaceResourceName := "aws_network_interface.test"
 	securityGroupResourceName := "aws_security_group.test"
@@ -49,7 +49,7 @@ func TestAccVPCNetworkInterfaceSgAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCNetworkInterfaceSgAttachment_disappears(t *testing.T) {
+func TestAccVPCNetworkInterfaceSGAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_network_interface_sg_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -72,7 +72,7 @@ func TestAccVPCNetworkInterfaceSgAttachment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccVPCNetworkInterfaceSgAttachment_instance(t *testing.T) {
+func TestAccVPCNetworkInterfaceSGAttachment_instance(t *testing.T) {
 	ctx := acctest.Context(t)
 	instanceResourceName := "aws_instance.test"
 	securityGroupResourceName := "aws_security_group.test"
@@ -97,7 +97,7 @@ func TestAccVPCNetworkInterfaceSgAttachment_instance(t *testing.T) {
 	})
 }
 
-func TestAccVPCNetworkInterfaceSgAttachment_multiple(t *testing.T) {
+func TestAccVPCNetworkInterfaceSGAttachment_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	networkInterfaceResourceName := "aws_network_interface.test"
 	securityGroupResourceName1 := "aws_security_group.test.0"

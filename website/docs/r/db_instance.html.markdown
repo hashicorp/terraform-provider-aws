@@ -144,8 +144,8 @@ data "aws_kms_key" "by_id" {
 
 resource "aws_db_instance" "example" {
   allocated_storage           = 500
-  auto_minor_version_upgrade  = false                               # Custom for SQL Server does not support minor version upgrades
-  custom_iam_instance_profile = "AWSRDSCustomSQLServerInstanceRole" # Instance profile is required for Custom for SQL Server. See: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-setup-sqlserver.html#custom-setup-sqlserver.iam
+  auto_minor_version_upgrade  = false                                  # Custom for SQL Server does not support minor version upgrades
+  custom_iam_instance_profile = "AWSRDSCustomSQLServerInstanceProfile" # Instance profile is required for Custom for SQL Server. See: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-setup-sqlserver.html#custom-setup-sqlserver.iam
   backup_retention_period     = 7
   db_subnet_group_name        = local.db_subnet_group_name # Copy the subnet group from the RDS Console
   engine                      = data.aws_rds_orderable_db_instance.custom-sqlserver.engine

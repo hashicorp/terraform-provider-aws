@@ -144,6 +144,7 @@ Lookout for Metrics
 MQ
 MWAA (Managed Workflows for Apache Airflow)
 Macie
+Mainframe Modernization
 Managed Grafana
 Managed Streaming for Kafka
 Managed Streaming for Kafka Connect
@@ -171,6 +172,7 @@ Recycle Bin (RBin)
 Redshift
 Redshift Data
 Redshift Serverless
+Rekognition
 Resource Explorer
 Resource Groups
 Resource Groups Tagging
