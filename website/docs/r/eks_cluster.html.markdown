@@ -177,6 +177,31 @@ resource "aws_eks_cluster" "example" {
 }
 ```
 
+### EKS Cluster with Access Config
+
+```terraform
+resource "aws_iam_role" "example" {
+  assume_role_policy = data.aws_iam_policy_document.example_assume_role_policy.json
+  name               = "example"
+}
+
+resource "aws_eks_cluster" "example" {
+  name     = "example-cluster"
+  role_arn = aws_iam_role.example.arn
+
+  vpc_config {
+    endpoint_private_access = true
+    endpoint_public_access  = false
+    # ... other configuration ...
+  }
+
+  access_config {
+    authentication_mode                         = "CONFIG_MAP"
+    bootstrap_cluster_creator_admin_permissions = true
+  }
+}
+```
+
 After adding inline IAM Policies (e.g., [`aws_iam_role_policy` resource](/docs/providers/aws/r/iam_role_policy.html)) or attaching IAM Policies (e.g., [`aws_iam_policy` resource](/docs/providers/aws/r/iam_policy.html) and [`aws_iam_role_policy_attachment` resource](/docs/providers/aws/r/iam_role_policy_attachment.html)) with the desired permissions to the IAM Role, annotate the Kubernetes service account (e.g., [`kubernetes_service_account` resource](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/service_account)) and recreate any pods.
 
 ## Argument Reference
@@ -189,12 +214,20 @@ The following arguments are required:
 
 The following arguments are optional:
 
+* `access_config` - (Optional) Configuration block for the access config associated with your cluster, see [Amazon EKS Access Entries](https://docs.aws.amazon.com/eks/latest/userguide/access-entries.html).
 * `enabled_cluster_log_types` - (Optional) List of the desired control plane logging to enable. For more information, see [Amazon EKS Control Plane Logging](https://docs.aws.amazon.com/eks/latest/userguide/control-plane-logs.html).
 * `encryption_config` - (Optional) Configuration block with encryption configuration for the cluster. Only available on Kubernetes 1.13 and above clusters created after March 6, 2020. Detailed below.
 * `kubernetes_network_config` - (Optional) Configuration block with kubernetes network configuration for the cluster. Detailed below. If removed, Terraform will only perform drift detection if a configuration value is provided.
 * `outpost_config` - (Optional) Configuration block representing the configuration of your local Amazon EKS cluster on an AWS Outpost. This block isn't available for creating Amazon EKS clusters on the AWS cloud.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `version` – (Optional) Desired Kubernetes master version. If you do not specify a value, the latest available version at resource creation is used and no upgrades will occur except those automatically triggered by EKS. The value must be configured and increased to upgrade the version when desired. Downgrades are not supported by EKS.
+
+### access_config
+
+The `access_config` configuration block supports the following arguments:
+
+* `authentication_mode` - (Optional) The authentication mode for the cluster. Valid values are `CONFIG_MAP`, `API` or `API_AND_CONFIG_MAP`
+* `bootstrap_cluster_creator_admin_permissions` - (Optional) Whether or not to bootstrap the access config values to the cluster. Default is `true`.
 
 ### encryption_config
 

@@ -203,6 +203,7 @@ provider "aws" {
   <li><code>location</code> (or <code>locationservice</code>)</li>
   <li><code>logs</code> (or <code>cloudwatchlog</code> or <code>cloudwatchlogs</code>)</li>
   <li><code>lookoutmetrics</code></li>
+  <li><code>m2</code></li>
   <li><code>macie2</code></li>
   <li><code>mediaconnect</code></li>
   <li><code>mediaconvert</code></li>
@@ -237,6 +238,7 @@ provider "aws" {
   <li><code>redshift</code></li>
   <li><code>redshiftdata</code> (or <code>redshiftdataapiservice</code>)</li>
   <li><code>redshiftserverless</code></li>
+  <li><code>rekognition</code></li>
   <li><code>resourceexplorer2</code></li>
   <li><code>resourcegroups</code></li>
   <li><code>resourcegroupstaggingapi</code> (or <code>resourcegroupstagging</code>)</li>

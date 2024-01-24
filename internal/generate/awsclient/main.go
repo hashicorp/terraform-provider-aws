@@ -57,16 +57,9 @@ func main() {
 			GoV2Package:       l.GoV2Package(),
 		}
 
-		if l.ClientSDKV1() != "" {
-			s.SDKVersion = "1"
+		s.SDKVersion = l.SDKVersion()
+		if l.ClientSDKV1() {
 			s.GoV1ClientTypeName = l.GoV1ClientTypeName()
-		}
-		if l.ClientSDKV2() != "" {
-			if l.ClientSDKV1() != "" {
-				s.SDKVersion = "1,2"
-			} else {
-				s.SDKVersion = "2"
-			}
 		}
 
 		td.Services = append(td.Services, s)

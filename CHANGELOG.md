@@ -1,8 +1,50 @@
-## 5.33.0 (Unreleased)
+## 5.34.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_codecommit_repository: Add `kms_key_id` attribute ([#35095](https://github.com/hashicorp/terraform-provider-aws/issues/35095))
+* data-source/aws_ssm_patch_baseline: Add `json` attribute to facilitate use with S3 buckets ([#33402](https://github.com/hashicorp/terraform-provider-aws/issues/33402))
+* resource/aws_codecommit_repository: Add `kms_key_id` argument ([#35095](https://github.com/hashicorp/terraform-provider-aws/issues/35095))
+* resource/aws_codecommit_trigger: Add plan-time validation of `trigger.destination_arn` and `trigger.events` ([#35095](https://github.com/hashicorp/terraform-provider-aws/issues/35095))
+* resource/aws_ecs_capacity_provider: Add `auto_scaling_group_provider.managed_draining` argument ([#35421](https://github.com/hashicorp/terraform-provider-aws/issues/35421))
+* resource/aws_fsx_openzfs_file_system: Add `skip_final_backup` argument ([#35320](https://github.com/hashicorp/terraform-provider-aws/issues/35320))
+* resource/aws_network_interface_sg_attachment: Increase default timeouts to 3 minutes and allow them to be configured ([#35435](https://github.com/hashicorp/terraform-provider-aws/issues/35435))
+* resource/aws_prometheus_scraper: Add `role_arn` attribute ([#35453](https://github.com/hashicorp/terraform-provider-aws/issues/35453))
+* resource/aws_ssm_patch_baseline: Add `json` attribute to facilitate use with S3 buckets ([#33402](https://github.com/hashicorp/terraform-provider-aws/issues/33402))
+* resource/aws_wafv2_web_acl: Add `challenge_config` argument ([#35367](https://github.com/hashicorp/terraform-provider-aws/issues/35367))
 
 BUG FIXES:
 
+* resource/aws_codebuild_project: Allow `build_batch_config` to be removed on Update ([#34121](https://github.com/hashicorp/terraform-provider-aws/issues/34121))
+* resource/aws_eks_access_entry: Mark `kubernetes_groups` as Computed ([#35391](https://github.com/hashicorp/terraform-provider-aws/issues/35391))
+* resource/aws_eks_access_entry: Mark `type` and `user_name` as Optional, allowing values to be configured ([#35391](https://github.com/hashicorp/terraform-provider-aws/issues/35391))
+* resource/aws_security_group_rule: Fix `UnsupportedOperation: The functionality you requested is not available in this region` errors on Read in certain partitions ([#33484](https://github.com/hashicorp/terraform-provider-aws/issues/33484))
+
+## 5.33.0 (January 18, 2024)
+
+FEATURES:
+
+* **New Data Source:** `aws_eks_access_entry` ([#35037](https://github.com/hashicorp/terraform-provider-aws/issues/35037))
+* **New Resource:** `aws_eks_access_entry` ([#35037](https://github.com/hashicorp/terraform-provider-aws/issues/35037))
+* **New Resource:** `aws_eks_access_policy_association` ([#35037](https://github.com/hashicorp/terraform-provider-aws/issues/35037))
+* **New Resource:** `aws_lexv2models_intent` ([#34891](https://github.com/hashicorp/terraform-provider-aws/issues/34891))
+
+ENHANCEMENTS:
+
+* data-source/aws_eks_cluster: Add `access_config` attribute ([#35037](https://github.com/hashicorp/terraform-provider-aws/issues/35037))
+* data-source/aws_secretsmanager_secret: Add `created_date` and `last_changed_date` attributes ([#35117](https://github.com/hashicorp/terraform-provider-aws/issues/35117))
+* data-source/aws_secretsmanager_secret_version: Add `created_date` attribute ([#35117](https://github.com/hashicorp/terraform-provider-aws/issues/35117))
+* resource/aws_backup_plan: Add `rule.lifecycle.opt_in_to_archive_for_supported_resources` and `rule.copy_action.lifecycle.opt_in_to_archive_for_supported_resources` and arguments ([#34994](https://github.com/hashicorp/terraform-provider-aws/issues/34994))
+* resource/aws_eks_cluster: Add `access_config` configuration block ([#35037](https://github.com/hashicorp/terraform-provider-aws/issues/35037))
+* resource/aws_lakeformation_resource: Add `use_service_linked_role` argument ([#35284](https://github.com/hashicorp/terraform-provider-aws/issues/35284))
+* resource/aws_secretsmanager_secret_rotation: Add `rotate_immediately` argument ([#35105](https://github.com/hashicorp/terraform-provider-aws/issues/35105))
+
+BUG FIXES:
+
+* resource/aws_datasync_task: Allow `schedule` to be removed successfully ([#35282](https://github.com/hashicorp/terraform-provider-aws/issues/35282))
 * resource/aws_fis_experiment_template: Fix validation error when not using `target.resource_arns` or `target.resource_tag` attributes. ([#35254](https://github.com/hashicorp/terraform-provider-aws/issues/35254))
+* resource/aws_lb_listener: Fix `ValidationError: Mutual Authentication mode passthrough does not support ignoring certificate expiry` errors when `mutual_authentication.mode` is set to `passthrough` ([#35289](https://github.com/hashicorp/terraform-provider-aws/issues/35289))
+* resource/aws_secretsmanager_secret_version: Fix `InvalidParameterException: The parameter RemoveFromVersionId can't be empty. Staging label AWSCURRENT is currently attached to version ..., so you must explicitly reference that version in RemoveFromVersionId` errors when a secret is updated outside Terraform ([#19943](https://github.com/hashicorp/terraform-provider-aws/issues/19943))
 
 ## 5.32.1 (January 12, 2024)
 

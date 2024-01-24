@@ -133,6 +133,10 @@ func resourceGroupAssociationDelete(ctx context.Context, d *schema.ResourceData,
 		return diags
 	}
 
+	if tfawserr.ErrMessageContains(err, synthetics.ErrCodeValidationException, "does not exist in group") {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "disassociating Synthetics Group (%s) from canary (%s): %s", groupName, canaryArn, err)
 	}
