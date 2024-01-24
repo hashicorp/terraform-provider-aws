@@ -667,6 +667,10 @@ func modifyLoadBalancerAttributes(ctx context.Context, conn *elbv2.ELBV2, arn st
 
 	// Not all attributes are supported in all partitions.
 	for {
+		if len(input.Attributes) == 0 {
+			return nil
+		}
+
 		_, err := conn.ModifyLoadBalancerAttributesWithContext(ctx, input)
 
 		if err != nil {

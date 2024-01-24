@@ -27,7 +27,7 @@ func TestAccELBV2TargetGroupAttachment_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -48,7 +48,7 @@ func TestAccELBV2TargetGroupAttachment_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -71,7 +71,7 @@ func TestAccELBV2TargetGroupAttachment_backwardsCompatibility(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -92,7 +92,7 @@ func TestAccELBV2TargetGroupAttachment_port(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -113,7 +113,7 @@ func TestAccELBV2TargetGroupAttachment_ipAddress(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -134,7 +134,7 @@ func TestAccELBV2TargetGroupAttachment_lambda(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -220,9 +220,9 @@ func testAccCheckTargetGroupAttachmentDestroy(ctx context.Context) resource.Test
 }
 
 func testAccTargetGroupAttachmentCongig_baseEC2Instance(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.test[0].id
 

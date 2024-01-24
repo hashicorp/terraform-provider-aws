@@ -50,4 +50,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - The name used for this domain
 * `arn` - The ARN of the Lightsail domain
 
-<!-- cache-key: cdktf-0.19.0 input-ffbbbe97ecce19529f1dc27d99e86dc419c73490e72176bbf4fd342ce0c31d6d -->
+<!-- cache-key: cdktf-0.20.1 input-ffbbbe97ecce19529f1dc27d99e86dc419c73490e72176bbf4fd342ce0c31d6d -->

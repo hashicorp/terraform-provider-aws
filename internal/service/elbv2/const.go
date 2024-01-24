@@ -10,6 +10,10 @@ import (
 )
 
 const (
+	awsSdkId = "Elastic Load Balancing v2" // nosemgrep:ci.aws-in-const-name,ci.aws-in-var-name
+)
+
+const (
 	propagationTimeout = 2 * time.Minute
 )
 
@@ -137,8 +141,19 @@ func loadBalancingAlgorithmType_Values() []string {
 	return []string{
 		loadBalancingAlgorithmTypeRoundRobin,
 		loadBalancingAlgorithmTypeLeastOutstandingRequests,
-		// TODO
-		// loadBalancingAlgorithmTypeWeightedRandom,
+		loadBalancingAlgorithmTypeWeightedRandom,
+	}
+}
+
+const (
+	loadBalancingAnomalyMitigationOn  = "on"
+	loadBalancingAnomalyMitigationOff = "off"
+)
+
+func loadBalancingAnomalyMitigationType_Values() []string {
+	return []string{
+		loadBalancingAnomalyMitigationOn,
+		loadBalancingAnomalyMitigationOff,
 	}
 }
 
