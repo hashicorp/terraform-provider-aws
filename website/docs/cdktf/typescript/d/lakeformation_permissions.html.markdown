@@ -201,4 +201,4 @@ In addition to the above arguments, the following attribute is exported:
 * `permissions` – List of permissions granted to the principal. For details on permissions, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
 * `permissionsWithGrantOption` - Subset of `permissions` which the principal can pass.
 
-<!-- cache-key: cdktf-0.20.0 input-f820afbcf35bc80d4121f086cb449534cf9844817817f907e94a928ec49659fd -->
+<!-- cache-key: cdktf-0.20.1 input-f820afbcf35bc80d4121f086cb449534cf9844817817f907e94a928ec49659fd -->

@@ -405,6 +405,8 @@ service/lookoutmetrics:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lookoutmetrics_'
 service/lookoutvision:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lookoutvision_'
+service/m2:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_m2_'
 service/machinelearning:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_machinelearning_'
 service/macie:
