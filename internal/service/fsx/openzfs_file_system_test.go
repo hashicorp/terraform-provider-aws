@@ -76,7 +76,7 @@ func TestAccFSxOpenZFSFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "root_volume_id"),
 					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", "true"),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", "false"),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "64"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeSsd),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
@@ -1041,7 +1041,6 @@ func testAccOpenZFSFileSystemConfig_baseMultiAZ(rName string) string {
 func testAccOpenZFSFileSystemConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), `
 resource "aws_fsx_openzfs_file_system" "test" {
-  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
