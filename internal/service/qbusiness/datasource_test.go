@@ -186,18 +186,18 @@ resource "aws_qbusiness_datasource" "test" {
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
   configuration        = jsonencode({
-	type                     = "S3"
+    type                     = "S3"
     connectionConfiguration  = {
       repositoryEndpointMetadata = {
-		BucketName = aws_s3_bucket.test.bucket
-	  }
+        BucketName = aws_s3_bucket.test.bucket
+      }
     }
     syncMode                 = "FULL_CRAWL"
     repositoryConfigurations = {
       document = {
-	    fieldMappings = []
-	  }
-	}
+        fieldMappings = []
+      }
+    }
   })
 }
 
@@ -218,15 +218,15 @@ resource "aws_iam_role" "test" {
 {
 "Version": "2012-10-17",
 "Statement": [
-	{
-	"Action": "sts:AssumeRole",
-	"Principal": {
-		"Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-	},
-	"Effect": "Allow",
-	"Sid": ""
-	}
-	]
+    {
+    "Action": "sts:AssumeRole",
+    "Principal": {
+        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
+    },
+    "Effect": "Allow",
+    "Sid": ""
+    }
+    ]
 }
 EOF
 }
@@ -252,23 +252,23 @@ resource "aws_qbusiness_datasource" "test" {
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
   configuration        = jsonencode({
-	type                     = "S3"
+    type                     = "S3"
     connectionConfiguration  = {
       repositoryEndpointMetadata = {
-		BucketName = aws_s3_bucket.test.bucket
-	  }
+        BucketName = aws_s3_bucket.test.bucket
+      }
     }
     syncMode                 = "FULL_CRAWL"
     repositoryConfigurations = {
       document = {
-	    fieldMappings = []
-	  }
-	}
+        fieldMappings = []
+      }
+    }
   })
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
-  }  
+  }
 }
 
 resource "aws_s3_bucket" "test" {
@@ -288,15 +288,15 @@ resource "aws_iam_role" "test" {
 {
 "Version": "2012-10-17",
 "Statement": [
-	{
-	"Action": "sts:AssumeRole",
-	"Principal": {
-		"Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
-	},
-	"Effect": "Allow",
-	"Sid": ""
-	}
-	]
+    {
+    "Action": "sts:AssumeRole",
+    "Principal": {
+        "Service": "qbusiness.${data.aws_partition.current.dns_suffix}"
+    },
+    "Effect": "Allow",
+    "Sid": ""
+    }
+    ]
 }
 EOF
 }

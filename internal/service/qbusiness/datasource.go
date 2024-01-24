@@ -240,7 +240,7 @@ func ResourceDatasource() *schema.Resource {
 			"iam_service_role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
-				Description:  "Amazon Resource Name (ARN) of an IAM role with permission to access the data source and required resources.",
+				Description:  "ARN of an IAM role with permission to access the data source and required resources.",
 				ValidateFunc: verify.ValidARN,
 			},
 			"index_id": {
