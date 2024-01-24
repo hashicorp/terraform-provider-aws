@@ -5,13 +5,12 @@ package route53domains
 
 import (
 	"context"
-	"errors"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -22,16 +21,14 @@ func findDomainDetailByName(ctx context.Context, conn *route53domains.Client, na
 
 	output, err := conn.GetDomainDetail(ctx, input)
 
-	if err != nil {
-		var invalidInput *types.InvalidInput
-
-		if errors.As(err, &invalidInput) && strings.Contains(invalidInput.ErrorMessage(), "not found") {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
+	if errs.IsAErrorMessageContains[*types.InvalidInput](err, "not found") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
+	}
 
+	if err != nil {
 		return nil, err
 	}
 

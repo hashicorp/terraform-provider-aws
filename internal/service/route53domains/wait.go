@@ -6,7 +6,6 @@ package route53domains
 import (
 	"context"
 	"errors"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -14,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -59,17 +59,11 @@ func findOperationDetailByID(ctx context.Context, conn *route53domains.Client, i
 
 	output, err := conn.GetOperationDetail(ctx, input)
 
-	if err != nil {
-		var invalidInput *types.InvalidInput
-
-		if errors.As(err, &invalidInput) && strings.Contains(invalidInput.ErrorMessage(), "not found") {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
+	if errs.IsAErrorMessageContains[*types.InvalidInput](err, "not found") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
-
-		return nil, err
 	}
 
 	if err != nil {

@@ -4,4 +4,6 @@
 package route53domains
 
 // Exports for use in tests only.
-var ResourceDelegationSignerAssociation = newResourceDelegationSignerAssociation
+var (
+	ResourceDelegationSignerAssociation = newResourceDelegationSignerAssociation
+)
