@@ -276,8 +276,8 @@ func (r *scraperResource) Create(ctx context.Context, req resource.CreateRequest
 
 	// Set values for unknowns after creation is complete.
 	sourceData.EKS = fwtypes.NewListNestedObjectValueOfPtr(ctx, eksSourceData)
+	data.RoleARN = flex.StringToFramework(ctx, scraper.RoleArn)
 	data.Source = fwtypes.NewListNestedObjectValueOfPtr(ctx, sourceData)
-	data.RoleArn = flex.StringToFramework(ctx, scraper.RoleArn)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -309,7 +309,6 @@ func (r *scraperResource) Read(ctx context.Context, req resource.ReadRequest, re
 	// We can't use AutoFlEx with the top-level resource model because the API structure uses Go interfaces.
 	data.ARN = flex.StringToFramework(ctx, scraper.Arn)
 	data.Alias = flex.StringToFramework(ctx, scraper.Alias)
-	data.RoleArn = flex.StringToFramework(ctx, scraper.RoleArn)
 	if v, ok := scraper.Destination.(*awstypes.DestinationMemberAmpConfiguration); ok {
 		var ampDestinationData scraperAMPDestinationModel
 		resp.Diagnostics.Append(flex.Flatten(ctx, &v.Value, &ampDestinationData)...)
@@ -321,6 +320,7 @@ func (r *scraperResource) Read(ctx context.Context, req resource.ReadRequest, re
 			AMP: fwtypes.NewListNestedObjectValueOfPtr(ctx, &ampDestinationData),
 		})
 	}
+	data.RoleARN = flex.StringToFramework(ctx, scraper.RoleArn)
 	if v, ok := scraper.ScrapeConfiguration.(*awstypes.ScrapeConfigurationMemberConfigurationBlob); ok {
 		data.ScrapeConfiguration = flex.StringValueToFramework(ctx, string(v.Value))
 	}
@@ -397,7 +397,7 @@ type scraperResourceModel struct {
 	ARN                 types.String                                             `tfsdk:"arn"`
 	Destination         fwtypes.ListNestedObjectValueOf[scraperDestinationModel] `tfsdk:"destination"`
 	ID                  types.String                                             `tfsdk:"id"`
-	RoleArn             types.String                                             `tfsdk:"role_arn"`
+	RoleARN             types.String                                             `tfsdk:"role_arn"`
 	ScrapeConfiguration types.String                                             `tfsdk:"scrape_configuration"`
 	Source              fwtypes.ListNestedObjectValueOf[scraperSourceModel]      `tfsdk:"source"`
 	Tags                types.Map                                                `tfsdk:"tags"`
