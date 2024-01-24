@@ -41,7 +41,7 @@ import (
 
 // @SDKResource("aws_s3_object", name="Object")
 // @Tags
-func ResourceObject() *schema.Resource {
+func resourceObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCreate,
 		ReadWithoutTimeout:   resourceObjectRead,
@@ -302,11 +302,11 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect", output.WebsiteRedirectLocation)
 
-	if err := resourceObjectSetKMS(ctx, meta, d, aws.ToString(output.SSEKMSKeyId)); err != nil {
+	if err := setObjectKMSKeyID(ctx, meta, d, aws.ToString(output.SSEKMSKeyId)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if tags, err := ObjectListTags(ctx, conn, bucket, key, optFns...); err == nil {
+	if tags, err := objectListTags(ctx, conn, bucket, key, optFns...); err == nil {
 		setTagsOut(ctx, Tags(tags))
 	} else if !tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
@@ -394,7 +394,7 @@ func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := ObjectUpdateTags(ctx, conn, bucket, key, o, n, optFns...); err != nil {
+		if err := objectUpdateTags(ctx, conn, bucket, key, o, n, optFns...); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
@@ -603,14 +603,14 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	return append(diags, resourceObjectRead(ctx, d, meta)...)
 }
 
-func resourceObjectSetKMS(ctx context.Context, meta interface{}, d *schema.ResourceData, sseKMSKeyID string) error {
+func setObjectKMSKeyID(ctx context.Context, meta interface{}, d *schema.ResourceData, sseKMSKeyID string) error {
 	// Only set non-default KMS key ID (one that doesn't match default).
 	if sseKMSKeyID != "" {
 		// Read S3 KMS default master key.
-		keyMetadata, err := kms.FindKeyByID(ctx, meta.(*conns.AWSClient).KMSConn(ctx), DefaultKMSKeyAlias)
+		keyMetadata, err := kms.FindKeyByID(ctx, meta.(*conns.AWSClient).KMSConn(ctx), defaultKMSKeyAlias)
 
 		if err != nil {
-			return fmt.Errorf("reading default S3 KMS key (%s): %s", DefaultKMSKeyAlias, err)
+			return fmt.Errorf("reading default S3 KMS key (%s): %s", defaultKMSKeyAlias, err)
 		}
 
 		if sseKMSKeyID != aws.ToString(keyMetadata.Arn) {

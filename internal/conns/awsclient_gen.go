@@ -15,12 +15,15 @@ import (
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	bedrock_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrock"
+	budgets_sdkv2 "github.com/aws/aws-sdk-go-v2/service/budgets"
 	chimesdkmediapipelines_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines"
 	chimesdkvoice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	codebuild_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codebuild"
 	codecatalyst_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codecatalyst"
+	codecommit_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codecommit"
 	codedeploy_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codedeploy"
 	codeguruprofiler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codeguruprofiler"
 	codepipeline_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codepipeline"
@@ -124,7 +127,6 @@ import (
 	autoscalingplans_sdkv1 "github.com/aws/aws-sdk-go/service/autoscalingplans"
 	backup_sdkv1 "github.com/aws/aws-sdk-go/service/backup"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
-	budgets_sdkv1 "github.com/aws/aws-sdk-go/service/budgets"
 	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
 	cloud9_sdkv1 "github.com/aws/aws-sdk-go/service/cloud9"
 	cloudformation_sdkv1 "github.com/aws/aws-sdk-go/service/cloudformation"
@@ -135,8 +137,6 @@ import (
 	cloudwatch_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatch"
 	cloudwatchrum_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	codeartifact_sdkv1 "github.com/aws/aws-sdk-go/service/codeartifact"
-	codebuild_sdkv1 "github.com/aws/aws-sdk-go/service/codebuild"
-	codecommit_sdkv1 "github.com/aws/aws-sdk-go/service/codecommit"
 	codegurureviewer_sdkv1 "github.com/aws/aws-sdk-go/service/codegurureviewer"
 	cognitoidentity_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentity"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -343,8 +343,8 @@ func (c *AWSClient) BedrockClient(ctx context.Context) *bedrock_sdkv2.Client {
 	return errs.Must(client[*bedrock_sdkv2.Client](ctx, c, names.Bedrock, make(map[string]any)))
 }
 
-func (c *AWSClient) BudgetsConn(ctx context.Context) *budgets_sdkv1.Budgets {
-	return errs.Must(conn[*budgets_sdkv1.Budgets](ctx, c, names.Budgets, make(map[string]any)))
+func (c *AWSClient) BudgetsClient(ctx context.Context) *budgets_sdkv2.Client {
+	return errs.Must(client[*budgets_sdkv2.Client](ctx, c, names.Budgets, make(map[string]any)))
 }
 
 func (c *AWSClient) CEConn(ctx context.Context) *costexplorer_sdkv1.CostExplorer {
@@ -407,16 +407,16 @@ func (c *AWSClient) CodeArtifactConn(ctx context.Context) *codeartifact_sdkv1.Co
 	return errs.Must(conn[*codeartifact_sdkv1.CodeArtifact](ctx, c, names.CodeArtifact, make(map[string]any)))
 }
 
-func (c *AWSClient) CodeBuildConn(ctx context.Context) *codebuild_sdkv1.CodeBuild {
-	return errs.Must(conn[*codebuild_sdkv1.CodeBuild](ctx, c, names.CodeBuild, make(map[string]any)))
+func (c *AWSClient) CodeBuildClient(ctx context.Context) *codebuild_sdkv2.Client {
+	return errs.Must(client[*codebuild_sdkv2.Client](ctx, c, names.CodeBuild, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeCatalystClient(ctx context.Context) *codecatalyst_sdkv2.Client {
 	return errs.Must(client[*codecatalyst_sdkv2.Client](ctx, c, names.CodeCatalyst, make(map[string]any)))
 }
 
-func (c *AWSClient) CodeCommitConn(ctx context.Context) *codecommit_sdkv1.CodeCommit {
-	return errs.Must(conn[*codecommit_sdkv1.CodeCommit](ctx, c, names.CodeCommit, make(map[string]any)))
+func (c *AWSClient) CodeCommitClient(ctx context.Context) *codecommit_sdkv2.Client {
+	return errs.Must(client[*codecommit_sdkv2.Client](ctx, c, names.CodeCommit, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeGuruProfilerClient(ctx context.Context) *codeguruprofiler_sdkv2.Client {

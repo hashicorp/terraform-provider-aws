@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	accounttypes "github.com/aws/aws-sdk-go-v2/service/account/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
@@ -47,6 +48,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	tfaccount "github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
@@ -1031,6 +1033,18 @@ func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
 
 	if aws.StringValue(organization.MasterAccountId) == aws.StringValue(callerIdentity.Account) {
 		t.Skip("this AWS account must not be the management account of an AWS Organization")
+	}
+}
+
+func PreCheckRegionOptIn(ctx context.Context, t *testing.T, region string) {
+	output, err := tfaccount.FindRegionOptInStatus(ctx, Provider.Meta().(*conns.AWSClient).AccountClient(ctx), "", region)
+
+	if err != nil {
+		t.Fatalf("reading Region (%s) opt-in status: %s", region, err)
+	}
+
+	if status := output.RegionOptStatus; status != accounttypes.RegionOptStatusEnabled && status != accounttypes.RegionOptStatusEnabledByDefault {
+		t.Skipf("Region (%s) opt-in status: %s", region, status)
 	}
 }
 

@@ -1,7 +1,17 @@
 ## 5.34.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* data-source/aws_codecommit_repository: Add `kms_key_id` attribute ([#35095](https://github.com/hashicorp/terraform-provider-aws/issues/35095))
+* data-source/aws_ssm_patch_baseline: Add `json` attribute to facilitate use with S3 buckets ([#33402](https://github.com/hashicorp/terraform-provider-aws/issues/33402))
+* resource/aws_codecommit_repository: Add `kms_key_id` argument ([#35095](https://github.com/hashicorp/terraform-provider-aws/issues/35095))
+* resource/aws_codecommit_trigger: Add plan-time validation of `trigger.destination_arn` and `trigger.events` ([#35095](https://github.com/hashicorp/terraform-provider-aws/issues/35095))
+* resource/aws_network_interface_sg_attachment: Increase default timeouts to 3 minutes and allow them to be configured ([#35435](https://github.com/hashicorp/terraform-provider-aws/issues/35435))
+* resource/aws_ssm_patch_baseline: Add `json` attribute to facilitate use with S3 buckets ([#33402](https://github.com/hashicorp/terraform-provider-aws/issues/33402))
+
 BUG FIXES:
 
+* resource/aws_codebuild_project: Allow `build_batch_config` to be removed on Update ([#34121](https://github.com/hashicorp/terraform-provider-aws/issues/34121))
 * resource/aws_eks_access_entry: Mark `kubernetes_groups` as Computed ([#35391](https://github.com/hashicorp/terraform-provider-aws/issues/35391))
 * resource/aws_eks_access_entry: Mark `type` and `user_name` as Optional, allowing values to be configured ([#35391](https://github.com/hashicorp/terraform-provider-aws/issues/35391))
 * resource/aws_security_group_rule: Fix `UnsupportedOperation: The functionality you requested is not available in this region` errors on Read in certain partitions ([#33484](https://github.com/hashicorp/terraform-provider-aws/issues/33484))
