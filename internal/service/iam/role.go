@@ -669,7 +669,7 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 				continue
 			}
 
-			if equivalent, err := awspolicy.PoliciesAreEquivalent(aws.StringValue(&v), aws.StringValue(&val)); err != nil || !equivalent {
+			if !verify.PolicyStringsEquivalent(v, val) {
 				add_policy_names[k] = 0
 			}
 		}
