@@ -3575,9 +3575,9 @@ resource "aws_wafv2_web_acl" "test" {
   }
 
   challenge_config {
-	immunity_time_property {
-	  immunity_time = 300
-	}
+    immunity_time_property {
+      immunity_time = 300
+    }
   }
 }
 `, rName, firstHeader, secondHeader)
