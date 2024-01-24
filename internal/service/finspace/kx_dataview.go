@@ -343,22 +343,25 @@ func (r *resourceKxDataview) Update(ctx context.Context, req resource.UpdateRequ
 		updateReq.SegmentConfigurations = expandSegmentConfigurations(ctx, configs)
 	}
 
-	if _, err := conn.UpdateKxDataview(ctx, updateReq); err != nil {
+	out, err := conn.UpdateKxDataview(ctx, updateReq)
+	if err != nil {
 		resp.Diagnostics.AddError("Error updating dataview", err.Error())
 		return
 	}
-
+	plan.Status = fwflex.StringValueToFramework(ctx, out.Status)
+	plan.LastModifiedTimestamp = fwflex.StringValueToFramework(ctx, out.LastModifiedTimestamp.String())
+	plan.CreatedTimestamp = fwflex.StringValueToFramework(ctx, out.CreatedTimestamp.String())
+	plan.SegmentConfigurations = flattenSegmentConfigurations(ctx, out.SegmentConfigurations, &resp.Diagnostics)
 	updateTimeout := r.UpdateTimeout(ctx, state.Timeouts)
-	dataview, err := waitKxDataviewUpdated(ctx, conn, state.ID.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError("Error waiting for dataview update", err.Error())
-		return
+	if out.Status == awstypes.KxDataviewStatusUpdating {
+		dataview, err := waitKxDataviewUpdated(ctx, conn, state.ID.ValueString(), updateTimeout)
+		if err != nil {
+			resp.Diagnostics.AddError("Error waiting for dataview update", err.Error())
+			return
+		}
+		plan.Status = fwflex.StringValueToFramework(ctx, dataview.Status)
 	}
 
-	plan.ChangesetId = fwflex.StringToFramework(ctx, dataview.ChangesetId)
-	plan.SegmentConfigurations = flattenSegmentConfigurations(ctx, dataview.SegmentConfigurations, &resp.Diagnostics)
-	plan.Status = fwflex.StringValueToFramework(ctx, dataview.Status)
-	plan.LastModifiedTimestamp = fwflex.StringValueToFramework(ctx, dataview.LastModifiedTimestamp.String())
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 func (r *resourceKxDataview) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {

@@ -402,29 +402,28 @@ func (r *resourceKxVolume) Update(ctx context.Context, req resource.UpdateReques
 		return
 	}
 
-	if _, err := conn.UpdateKxVolume(ctx, updateReq); err != nil {
-		resp.Diagnostics.AddError(
-			"Error updating volume", err.Error(),
-		)
-		return
-	}
-
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	volume, err := waitKxVolumeUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+	out, err := conn.UpdateKxVolume(ctx, updateReq)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			"Error updating volume", err.Error(),
 		)
 		return
 	}
-	if err != nil {
-		resp.Diagnostics.AddError("Error waiting for volume creation", err.Error())
-		return
+	plan.Nas1Configuration = flattenNas1Configuration(ctx, out.Nas1Configuration)
+	plan.Status = fwflex.StringValueToFramework(ctx, out.Status)
+	plan.StatusReason = fwflex.StringToFramework(ctx, out.StatusReason)
+	plan.LastModifiedTimestamp = fwflex.StringValueToFramework(ctx, out.LastModifiedTimestamp.String())
+	plan.CreatedTimestamp = fwflex.StringValueToFramework(ctx, out.CreatedTimestamp.String())
+	if out.Status == awstypes.KxVolumeStatusUpdating {
+		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+		volume, err := waitKxVolumeUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
+		if err != nil {
+			resp.Diagnostics.AddError("Error waiting for volume update", err.Error())
+			return
+		}
+		plan.Status = fwflex.StringValueToFramework(ctx, volume.Status)
+		plan.StatusReason = fwflex.StringToFramework(ctx, volume.StatusReason)
 	}
-	plan.Nas1Configuration = flattenNas1Configuration(ctx, volume.Nas1Configuration)
-	plan.Status = fwflex.StringValueToFramework(ctx, volume.Status)
-	plan.StatusReason = fwflex.StringToFramework(ctx, volume.StatusReason)
-	plan.LastModifiedTimestamp = fwflex.StringValueToFramework(ctx, volume.LastModifiedTimestamp.String())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }

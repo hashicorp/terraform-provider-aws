@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/finspace"
