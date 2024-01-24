@@ -206,16 +206,17 @@ func testAccSlotConfig_basic(rName string) string {
 resource "aws_lexv2models_slot" "test" {
   bot_id      = aws_lexv2models_bot.test.id
   bot_version = aws_lexv2models_bot_locale.test.bot_version
-  intent_id   = aws_lexv2models_intent.test.id
+  intent_id   = aws_lexv2models_intent.test.intent_id
   name        = %[1]q
   locale_id   = aws_lexv2models_bot_locale.test.locale_id
 
   value_elicitation_setting {
+    slot_constraint = "Optional"
     default_value_specification {
       default_value_list {
         default_value = "default"
       }
-	}
+    }
   }
 }
 `, rName))

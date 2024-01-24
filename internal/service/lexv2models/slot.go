@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -30,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	lexschema "github.com/hashicorp/terraform-provider-aws/internal/service/lexv2models/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -54,6 +52,7 @@ const (
 
 type resourceSlot struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -328,8 +327,8 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 		},
 	}
 
-	promptAttemptsSpecificationLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[PromptAttemptsSpecificationData](ctx),
+	promptAttemptsSpecificationLNB := schema.SetNestedBlock{
+		CustomType: fwtypes.NewSetNestedObjectTypeOf[PromptAttemptsSpecificationData](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"map_block_key": schema.StringAttribute{
@@ -352,6 +351,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 		Validators: []validator.List{
 			listvalidator.SizeBetween(1, 1),
 		},
+		CustomType: fwtypes.NewListNestedObjectTypeOf[PromptSpecificationData](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"allow_interrupt": schema.BoolAttribute{
@@ -478,6 +478,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"bot_version": schema.StringAttribute{
@@ -492,6 +493,9 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"id": framework.IDAttribute(),
 			"intent_id": schema.StringAttribute{
 				Required: true,
+				// Validators: []validator.String{
+				// Fixed length of 10
+				// },
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -504,9 +508,9 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 			},
 			"name": schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+				// PlanModifiers: []planmodifier.String{
+				// 	stringplanmodifier.RequiresReplace(),
+				// },
 			},
 			"slot_type_id": schema.StringAttribute{
 				Optional: true,
@@ -539,7 +543,7 @@ func (r *resourceSlot) Create(ctx context.Context, req resource.CreateRequest, r
 		SlotName: aws.String(plan.Name.ValueString()),
 	}
 
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, &in)...)
+	resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), &plan, in)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -578,7 +582,7 @@ func (r *resourceSlot) Create(ctx context.Context, req resource.CreateRequest, r
 
 	plan.ID = types.StringValue(id)
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), &plan, in)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -608,7 +612,7 @@ func (r *resourceSlot) Read(ctx context.Context, req resource.ReadRequest, resp 
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), out, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -652,7 +656,7 @@ func (r *resourceSlot) Update(ctx context.Context, req resource.UpdateRequest, r
 			return
 		}
 
-		// resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+		resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), &plan, input)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -692,9 +696,9 @@ func (r *resourceSlot) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 }
 
-func (r *resourceSlot) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
+// func (r *resourceSlot) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+// 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+// }
 
 func findSlotByID(ctx context.Context, conn *lexmodelsv2.Client, id string) (*lexmodelsv2.DescribeSlotOutput, error) {
 	parts, err := intflex.ExpandResourceId(id, slotIDPartCount, false)
@@ -731,18 +735,18 @@ func findSlotByID(ctx context.Context, conn *lexmodelsv2.Client, id string) (*le
 }
 
 type resourceSlotData struct {
-	BotID                    types.String                                                           `tfsdk:"bot_id"`
-	BotVersion               types.String                                                           `tfsdk:"bot_version"`
-	Description              types.String                                                           `tfsdk:"description"`
-	ID                       types.String                                                           `tfsdk:"id"`
-	IntentID                 types.String                                                           `tfsdk:"intent_id"`
-	LocaleID                 types.String                                                           `tfsdk:"locale_id"`
-	MultipleValuesSetting    fwtypes.ListNestedObjectValueOf[lexschema.MultipleValuesSettingData]   `tfsdk:"multiple_values_setting"`
-	Name                     types.String                                                           `tfsdk:"name"`
-	ObfuscationSetting       fwtypes.ListNestedObjectValueOf[lexschema.ObfuscationSettingData]      `tfsdk:"obfuscation_setting"`
-	Timeouts                 timeouts.Value                                                         `tfsdk:"timeouts"`
-	SlotTypeID               types.String                                                           `tfsdk:"slot_type_id"`
-	ValueElicitationSettings fwtypes.ListNestedObjectValueOf[lexschema.ValueElicitationSettingData] `tfsdk:"value_elicitation_settings"`
+	BotID                   types.String                                                 `tfsdk:"bot_id"`
+	BotVersion              types.String                                                 `tfsdk:"bot_version"`
+	Description             types.String                                                 `tfsdk:"description"`
+	ID                      types.String                                                 `tfsdk:"id"`
+	IntentID                types.String                                                 `tfsdk:"intent_id"`
+	LocaleID                types.String                                                 `tfsdk:"locale_id"`
+	MultipleValuesSetting   fwtypes.ListNestedObjectValueOf[MultipleValuesSettingData]   `tfsdk:"multiple_values_setting"`
+	Name                    types.String                                                 `tfsdk:"name"`
+	ObfuscationSetting      fwtypes.ListNestedObjectValueOf[ObfuscationSettingData]      `tfsdk:"obfuscation_setting"`
+	Timeouts                timeouts.Value                                               `tfsdk:"timeouts"`
+	SlotTypeID              types.String                                                 `tfsdk:"slot_type_id"`
+	ValueElicitationSetting fwtypes.ListNestedObjectValueOf[ValueElicitationSettingData] `tfsdk:"value_elicitation_setting"`
 }
 
 type MultipleValuesSettingData struct {
@@ -762,15 +766,16 @@ type DefaultValueData struct {
 }
 
 type PromptSpecificationData struct {
-	AllowInterrupt              types.Bool                                               `tfsdk:"allow_interrupt"`
-	MaxRetries                  types.Int64                                              `tfsdk:"max_retries"`
-	MessageGroup                fwtypes.ListNestedObjectValueOf[MessageGroupData]        `tfsdk:"message_groups"`
-	MessageSelectionStrategy    fwtypes.StringEnum[awstypes.MessageSelectionStrategy]    `tfsdk:"message_selection_strategy"`
-	PromptAttemptsSpecification fwtypes.ObjectMapValueOf[PromptAttemptSpecificationData] `tfsdk:"prompt_attempts_specification"`
+	AllowInterrupt              types.Bool                                                     `tfsdk:"allow_interrupt"`
+	MaxRetries                  types.Int64                                                    `tfsdk:"max_retries"`
+	MessageGroup                fwtypes.ListNestedObjectValueOf[MessageGroupData]              `tfsdk:"message_groups"`
+	MessageSelectionStrategy    fwtypes.StringEnum[awstypes.MessageSelectionStrategy]          `tfsdk:"message_selection_strategy"`
+	PromptAttemptsSpecification fwtypes.SetNestedObjectValueOf[PromptAttemptSpecificationData] `tfsdk:"prompt_attempts_specification"`
 }
 type PromptAttemptSpecificationData struct {
 	AllowedInputTypes              fwtypes.ListNestedObjectValueOf[AllowedInputTypesData]              `tfsdk:"allowed_input_types"`
 	AllowInterrupt                 types.Bool                                                          `tfsdk:"allow_interrupt"`
+	MapBlockKey                    fwtypes.StringEnum[PromptAttemptsType]                              `tfsdk:"map_block_key"`
 	AudioAndDTMFInputSpecification fwtypes.ListNestedObjectValueOf[AudioAndDTMFInputSpecificationData] `tfsdk:"audio_and_dtmf_input_specification"`
 	TextInputSpecification         fwtypes.ListNestedObjectValueOf[TextInputSpecificationData]         `tfsdk:"text_input_specification"`
 }
@@ -885,6 +890,5 @@ func slotHasChanges(_ context.Context, plan, state resourceSlotData) bool {
 	return !plan.Description.Equal(state.Description) ||
 		!plan.Name.Equal(state.Name) ||
 		!plan.Description.Equal(state.Description) ||
-		!plan.SlotTypeID.Equal(state.SlotTypeID) ||
-		!plan.ObfuscationSetting.Equal(state.ObfuscationSetting)
+		!plan.SlotTypeID.Equal(state.SlotTypeID)
 }
