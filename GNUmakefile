@@ -90,9 +90,10 @@ cleango: ## Clean up Go cache
 		echo "Killing gopls process $$proc" ; \
 		kill -9 $$proc ; \
 	done ; \
-	go clean -modcache -testcache -cache ; \
+	$(GO_VER) clean -modcache -testcache -cache ; \
 
 clean: cleango build tools ## Clean up Go cache and re-install tools
+	$(GO_VER) mod tidy
 
 copyright: ## Run copywrite (generate source code headers)
 	@copywrite headers
@@ -148,7 +149,6 @@ gen: ## Run all Go generators
 	rm -f internal/conns/*_gen.go
 	rm -f internal/provider/*_gen.go
 	rm -f internal/service/**/*_gen.go
-	rm -f internal/sweep/sweep_test.go internal/sweep/service_packages_gen_test.go
 	rm -f names/caps.md
 	rm -f names/*_gen.go
 	rm -f website/docs/guides/custom-service-endpoints.html.md
@@ -159,7 +159,6 @@ gen: ## Run all Go generators
 	# Generate service package lists last as they may depend on output of earlier generators.
 	rm -f internal/provider/service_packages_gen.go
 	$(GO_VER) generate ./internal/provider
-	rm -f internal/sweep/sweep_test.go internal/sweep/service_packages_gen_test.go
 	$(GO_VER) generate ./internal/sweep
 
 gencheck: ## Verify generated code is tidy
@@ -323,11 +322,11 @@ sweep: ## Run sweepers
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
 	# set SWEEPARGS=-sweep-allow-failures to continue after first failure
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) $(SWEEPARGS) -timeout $(SWEEP_TIMEOUT)
+	$(GO_VER) test $(SWEEP_DIR) -v -sweep=$(SWEEP) $(SWEEPARGS) -timeout $(SWEEP_TIMEOUT)
 
 sweeper: ## Run sweepers with failures allowed
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) SWEEPARGS=-sweep-allow-failures -timeout $(SWEEP_TIMEOUT)
+	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) -sweep-allow-failures -timeout $(SWEEP_TIMEOUT)
 
 t: fmtcheck
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)

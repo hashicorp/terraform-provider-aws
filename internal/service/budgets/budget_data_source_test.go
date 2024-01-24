@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 
+	awstypes "github.com/aws/aws-sdk-go-v2/service/budgets/types"
 	"github.com/aws/aws-sdk-go/service/budgets"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -19,7 +20,7 @@ func TestAccBudgetsBudgetDataSource_basic(t *testing.T) {
 	}
 
 	ctx := acctest.Context(t)
-	var budget budgets.Budget
+	var budget awstypes.Budget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_budgets_budget.test"
 	dataSourceName := "data.aws_budgets_budget.test"

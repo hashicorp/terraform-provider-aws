@@ -29,6 +29,7 @@ This resource supports the following arguments:
 * `origin_snapshot` - (Optional) The ARN of the source snapshot to create the volume from.
 * `copy_tags_to_snapshots` - (Optional) A boolean flag indicating whether tags for the file system should be copied to snapshots. The default value is false.
 * `data_compression_type` - (Optional) Method used to compress the data on the volume. Valid values are `NONE` or `ZSTD`. Child volumes that don't specify compression option will inherit from parent volume. This option on file system applies to the root volume.
+* `delete_volume_options` - (Optional) Whether to delete all child volumes and snapshots. Valid values: `DELETE_CHILD_VOLUMES_AND_SNAPSHOTS`. This configuration must be applied separately before attempting to delete the resource to have the desired behavior..
 * `nfs_exports` - (Optional) NFS export configuration for the root volume. Exactly 1 item. See [NFS Exports](#nfs-exports) Below.
 * `read_only` - (Optional) specifies whether the volume is read-only. Default is false.
 * `record_size_kib` - (Optional) The record size of an OpenZFS volume, in kibibytes (KiB). Valid values are `4`, `8`, `16`, `32`, `64`, `128`, `256`, `512`, or `1024` KiB. The default is `128` KiB.

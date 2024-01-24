@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package auditmanager
 
 import (
@@ -20,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_auditmanager_assessment", &resource.Sweeper{
 		Name: "aws_auditmanager_assessment",
 		F:    sweepAssessments,
@@ -60,10 +57,7 @@ func init() {
 // AccessDeniedException: Please complete AWS Audit Manager setup from home page to enable this action in this account.
 func isCompleteSetupError(err error) bool {
 	var ade *types.AccessDeniedException
-	if errors.As(err, &ade) {
-		return true
-	}
-	return false
+	return errors.As(err, &ade)
 }
 
 func sweepAssessments(region string) error {

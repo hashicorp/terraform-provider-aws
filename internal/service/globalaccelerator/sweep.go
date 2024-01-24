@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package globalaccelerator
 
 import (
@@ -15,9 +12,10 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_globalaccelerator_accelerator", &resource.Sweeper{
 		Name: "aws_globalaccelerator_accelerator",
 		F:    sweepAccelerators,
@@ -87,7 +85,7 @@ func sweepAccelerators(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Global Accelerator Accelerator sweep for %s: %s", region, err)
 		return nil
 	}
@@ -152,7 +150,7 @@ func sweepEndpointGroups(region string) error {
 						return !lastPage
 					})
 
-					if sweep.SkipSweepError(err) {
+					if awsv1.SkipSweepError(err) {
 						continue
 					}
 
@@ -164,7 +162,7 @@ func sweepEndpointGroups(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -176,7 +174,7 @@ func sweepEndpointGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Global Accelerator Endpoint Group sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -231,7 +229,7 @@ func sweepListeners(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -243,7 +241,7 @@ func sweepListeners(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Global Accelerator Listener sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -287,7 +285,7 @@ func sweepCustomRoutingAccelerators(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Global Accelerator Custom Routing Accelerator sweep for %s: %s", region, err)
 		return nil
 	}
@@ -352,7 +350,7 @@ func sweepCustomRoutingEndpointGroups(region string) error {
 						return !lastPage
 					})
 
-					if sweep.SkipSweepError(err) {
+					if awsv1.SkipSweepError(err) {
 						continue
 					}
 
@@ -364,7 +362,7 @@ func sweepCustomRoutingEndpointGroups(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -376,7 +374,7 @@ func sweepCustomRoutingEndpointGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Global AcceleratorCustom Routing Endpoint Group sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -431,7 +429,7 @@ func sweepCustomRoutingListeners(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -443,7 +441,7 @@ func sweepCustomRoutingListeners(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Global Accelerator Custom Routing Listener sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}

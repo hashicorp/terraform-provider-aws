@@ -110,7 +110,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	domainOwner, domainName, err := DecodeDomainID(d.Id())
 	if err != nil {
-		return create.DiagError(names.CodeArtifact, create.ErrActionReading, ResNameDomain, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeArtifact, create.ErrActionReading, ResNameDomain, d.Id(), err)
 	}
 
 	sm, err := conn.DescribeDomainWithContext(ctx, &codeartifact.DescribeDomainInput{
@@ -124,7 +124,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return create.DiagError(names.CodeArtifact, create.ErrActionReading, ResNameDomain, d.Id(), err)
+		return create.AppendDiagError(diags, names.CodeArtifact, create.ErrActionReading, ResNameDomain, d.Id(), err)
 	}
 
 	arn := aws.StringValue(sm.Domain.Arn)

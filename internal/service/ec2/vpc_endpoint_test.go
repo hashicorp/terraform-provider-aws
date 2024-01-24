@@ -809,7 +809,6 @@ resource "aws_vpc_endpoint" "test" {
   ip_address_type     = "ipv4"
 
   dns_options {
-    dns_record_ip_type                             = "ipv4"
     private_dns_only_for_inbound_resolver_endpoint = %[2]t
   }
 

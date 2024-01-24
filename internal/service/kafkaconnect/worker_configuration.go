@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -65,6 +66,8 @@ func ResourceWorkerConfiguration() *schema.Resource {
 }
 
 func resourceWorkerConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	name := d.Get("name").(string)
@@ -81,15 +84,17 @@ func resourceWorkerConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	output, err := conn.CreateWorkerConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating MSK Connect Worker Configuration (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating MSK Connect Worker Configuration (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.WorkerConfigurationArn))
 
-	return resourceWorkerConfigurationRead(ctx, d, meta)
+	return append(diags, resourceWorkerConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	config, err := FindWorkerConfigurationByARN(ctx, conn, d.Id())
@@ -97,11 +102,11 @@ func resourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData
 	if tfresource.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] MSK Connect Worker Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading MSK Connect Worker Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MSK Connect Worker Configuration (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", config.WorkerConfigurationArn)
@@ -116,7 +121,7 @@ func resourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData
 		d.Set("properties_file_content", nil)
 	}
 
-	return nil
+	return diags
 }
 
 func decodePropertiesFileContent(content string) string {

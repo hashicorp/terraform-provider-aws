@@ -20,6 +20,7 @@ data "aws_region" "current" {}
 
 resource "aws_opensearch_outbound_connection" "foo" {
   connection_alias = "outbound_connection"
+  connection_mode  = "DIRECT"
   local_domain_info {
     owner_id    = data.aws_caller_identity.current.account_id
     region      = data.aws_region.current.name
@@ -39,8 +40,19 @@ resource "aws_opensearch_outbound_connection" "foo" {
 This resource supports the following arguments:
 
 * `connection_alias` - (Required, Forces new resource) Specifies the connection alias that will be used by the customer for this connection.
+* `connection_mode` - (Required, Forces new resource) Specifies the connection mode. Accepted values are `DIRECT` or `VPC_ENDPOINT`.
+* `accept_connection` - (Optional, Forces new resource) Accepts the connection.
+* `connection_properties` - (Optional, Forces new resource) Configuration block for the outbound connection.
 * `local_domain_info` - (Required, Forces new resource) Configuration block for the local Opensearch domain.
 * `remote_domain_info` - (Required, Forces new resource) Configuration block for the remote Opensearch domain.
+
+### connection_properties
+
+* `cross_cluster_search` - (Optional, Forces new resource) Configuration block for cross cluster search.
+
+### cross_cluster_search
+
+* `skip_unavailable` - (Optional, Forces new resource) Skips unavailable clusters and can only be used for cross-cluster searches. Accepted values are `ENABLED` or `DISABLED`.
 
 ### local_domain_info
 
@@ -60,6 +72,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The Id of the connection.
 * `connection_status` - Status of the connection request.
+
+`connection_properties` block exports the following:
+
+* `endpoint` - The endpoint of the remote domain, is only set when `connection_mode` is `VPC_ENDPOINT` and `accept_connection` is `TRUE`.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 

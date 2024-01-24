@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -19,19 +18,19 @@ func TestTimestampValueToTerraformValue(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
-		timestamp fwtypes.TimestampValue
+		timestamp fwtypes.Timestamp
 		expected  tftypes.Value
 	}{
 		"value": {
-			timestamp: errs.Must(fwtypes.NewTimestampValueString("2023-06-07T15:11:34Z")),
+			timestamp: fwtypes.TimestampValue("2023-06-07T15:11:34Z"),
 			expected:  tftypes.NewValue(tftypes.String, "2023-06-07T15:11:34Z"),
 		},
 		"null": {
-			timestamp: fwtypes.NewTimestampNull(),
+			timestamp: fwtypes.TimestampNull(),
 			expected:  tftypes.NewValue(tftypes.String, nil),
 		},
 		"unknown": {
-			timestamp: fwtypes.NewTimestampUnknown(),
+			timestamp: fwtypes.TimestampUnknown(),
 			expected:  tftypes.NewValue(tftypes.String, tftypes.UnknownValue),
 		},
 	}
@@ -59,19 +58,19 @@ func TestTimestampValueToStringValue(t *testing.T) {
 	t.Parallel()
 
 	tests := map[string]struct {
-		timestamp fwtypes.TimestampValue
+		timestamp fwtypes.Timestamp
 		expected  types.String
 	}{
 		"value": {
-			timestamp: errs.Must(fwtypes.NewTimestampValueString("2023-06-07T15:11:34Z")),
+			timestamp: fwtypes.TimestampValue("2023-06-07T15:11:34Z"),
 			expected:  types.StringValue("2023-06-07T15:11:34Z"),
 		},
 		"null": {
-			timestamp: fwtypes.NewTimestampNull(),
+			timestamp: fwtypes.TimestampNull(),
 			expected:  types.StringNull(),
 		},
 		"unknown": {
-			timestamp: fwtypes.NewTimestampUnknown(),
+			timestamp: fwtypes.TimestampUnknown(),
 			expected:  types.StringUnknown(),
 		},
 	}
@@ -92,242 +91,23 @@ func TestTimestampValueToStringValue(t *testing.T) {
 	}
 }
 
-func TestTimestampValueEqual(t *testing.T) {
-	t.Parallel()
-
-	tests := map[string]struct {
-		input     fwtypes.TimestampValue
-		candidate attr.Value
-		expected  bool
-	}{
-		"known-known-same": {
-			input:     errs.Must(fwtypes.NewTimestampValueString("2023-06-07T15:11:34Z")),
-			candidate: errs.Must(fwtypes.NewTimestampValueString("2023-06-07T15:11:34Z")),
-			expected:  true,
-		},
-		"known-known-diff": {
-			input:     errs.Must(fwtypes.NewTimestampValueString("2023-06-07T15:11:34Z")),
-			candidate: errs.Must(fwtypes.NewTimestampValueString("1999-06-07T15:11:34Z")),
-			expected:  false,
-		},
-		"known-unknown": {
-			input:     errs.Must(fwtypes.NewTimestampValueString("2023-06-07T15:11:34Z")),
-			candidate: fwtypes.NewTimestampUnknown(),
-			expected:  false,
-		},
-		"known-null": {
-			input:     errs.Must(fwtypes.NewTimestampValueString("2023-06-07T15:11:34Z")),
-			candidate: fwtypes.NewTimestampNull(),
-			expected:  false,
-		},
-		"unknown-known": {
-			input:     fwtypes.NewTimestampUnknown(),
-			candidate: errs.Must(fwtypes.NewTimestampValueString("2023-06-07T15:11:34Z")),
-			expected:  false,
-		},
-		"unknown-unknown": {
-			input:     fwtypes.NewTimestampUnknown(),
-			candidate: fwtypes.NewTimestampUnknown(),
-			expected:  true,
-		},
-		"unknown-null": {
-			input:     fwtypes.NewTimestampUnknown(),
-			candidate: fwtypes.NewTimestampNull(),
-			expected:  false,
-		},
-		"null-known": {
-			input:     fwtypes.NewTimestampNull(),
-			candidate: errs.Must(fwtypes.NewTimestampValueString("2023-06-07T15:11:34Z")),
-			expected:  false,
-		},
-		"null-unknown": {
-			input:     fwtypes.NewTimestampNull(),
-			candidate: fwtypes.NewTimestampUnknown(),
-			expected:  false,
-		},
-		"null-null": {
-			input:     fwtypes.NewTimestampNull(),
-			candidate: fwtypes.NewTimestampNull(),
-			expected:  true,
-		},
-	}
-	for name, test := range tests {
-		name, test := name, test
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			got := test.input.Equal(test.candidate)
-			if got != test.expected {
-				t.Errorf("expected %t, got %t", test.expected, got)
-			}
-		})
-	}
-}
-
-func TestTimestampValueIsNull(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]struct {
-		input    fwtypes.TimestampValue
-		expected bool
-	}{
-		"known": {
-			input:    errs.Must(fwtypes.NewTimestampValueString("2023-06-07T15:11:34Z")),
-			expected: false,
-		},
-		"null": {
-			input:    fwtypes.NewTimestampNull(),
-			expected: true,
-		},
-		"unknown": {
-			input:    fwtypes.NewTimestampUnknown(),
-			expected: false,
-		},
-	}
-
-	for name, testCase := range testCases {
-		name, testCase := name, testCase
-
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			got := testCase.input.IsNull()
-
-			if got != testCase.expected {
-				t.Error("expected Null")
-			}
-		})
-	}
-}
-
-func TestTimestampValueIsUnknown(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]struct {
-		input    fwtypes.TimestampValue
-		expected bool
-	}{
-		"known": {
-			input:    errs.Must(fwtypes.NewTimestampValueString("2023-06-07T15:11:34Z")),
-			expected: false,
-		},
-		"null": {
-			input:    fwtypes.NewTimestampNull(),
-			expected: false,
-		},
-		"unknown": {
-			input:    fwtypes.NewTimestampUnknown(),
-			expected: true,
-		},
-	}
-
-	for name, testCase := range testCases {
-		name, testCase := name, testCase
-
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			got := testCase.input.IsUnknown()
-
-			if got != testCase.expected {
-				t.Error("expected Unknown")
-			}
-		})
-	}
-}
-
-func TestTimestampValueString(t *testing.T) {
-	t.Parallel()
-
-	type testCase struct {
-		input    fwtypes.TimestampValue
-		expected string
-	}
-	tests := map[string]testCase{
-		"known-non-empty": {
-			input:    errs.Must(fwtypes.NewTimestampValueString("2023-06-07T15:11:34Z")),
-			expected: `"2023-06-07T15:11:34Z"`,
-		},
-		"unknown": {
-			input:    fwtypes.NewTimestampUnknown(),
-			expected: "<unknown>",
-		},
-		"null": {
-			input:    fwtypes.NewTimestampNull(),
-			expected: "<null>",
-		},
-		"zero-value": {
-			input:    fwtypes.TimestampValue{},
-			expected: `<null>`,
-		},
-	}
-
-	for name, test := range tests {
-		name, test := name, test
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			got := test.input.String()
-			if got != test.expected {
-				t.Errorf("Expected %q, got %q", test.expected, got)
-			}
-		})
-	}
-}
-
-func TestTimestampValueValueString(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]struct {
-		input    fwtypes.TimestampValue
-		expected string
-	}{
-		"known": {
-			input:    errs.Must(fwtypes.NewTimestampValueString("2023-06-07T15:11:34Z")),
-			expected: "2023-06-07T15:11:34Z",
-		},
-		"null": {
-			input:    fwtypes.NewTimestampNull(),
-			expected: "",
-		},
-		"unknown": {
-			input:    fwtypes.NewTimestampUnknown(),
-			expected: "",
-		},
-	}
-
-	for name, testCase := range testCases {
-		name, testCase := name, testCase
-
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			got := testCase.input.ValueString()
-
-			if got != testCase.expected {
-				t.Errorf("Expected %q, got %q", testCase.expected, got)
-			}
-		})
-	}
-}
-
 func TestTimestampValueValueTimestamp(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]struct {
-		input    fwtypes.TimestampValue
+		input    fwtypes.Timestamp
 		expected time.Time
 	}{
 		"known": {
-			input:    errs.Must(fwtypes.NewTimestampValueString("2023-06-07T15:11:34Z")),
+			input:    fwtypes.TimestampValue("2023-06-07T15:11:34Z"),
 			expected: errs.Must(time.Parse(time.RFC3339, "2023-06-07T15:11:34Z")),
 		},
 		"null": {
-			input:    fwtypes.NewTimestampNull(),
+			input:    fwtypes.TimestampNull(),
 			expected: time.Time{},
 		},
 		"unknown": {
-			input:    fwtypes.NewTimestampUnknown(),
+			input:    fwtypes.TimestampUnknown(),
 			expected: time.Time{},
 		},
 	}

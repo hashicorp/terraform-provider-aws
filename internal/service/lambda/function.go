@@ -232,6 +232,39 @@ func ResourceFunction() *schema.Resource {
 					ValidateFunc: verify.ValidARN,
 				},
 			},
+			"logging_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"application_log_level": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          "",
+							ValidateDiagFunc: enum.Validate[types.ApplicationLogLevel](),
+						},
+						"log_format": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.LogFormat](),
+						},
+						"log_group": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validLogGroupName(),
+						},
+						"system_log_level": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          "",
+							ValidateDiagFunc: enum.Validate[types.SystemLogLevel](),
+						},
+					},
+				},
+			},
 			"memory_size": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -336,9 +369,10 @@ func ResourceFunction() *schema.Resource {
 				},
 			},
 			"source_code_hash": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
 			"source_code_size": {
 				Type:     schema.TypeInt,
@@ -377,6 +411,11 @@ func ResourceFunction() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"ipv6_allowed_for_dual_stack": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"security_group_ids": {
 							Type:     schema.TypeSet,
 							Required: true,
@@ -397,15 +436,16 @@ func ResourceFunction() *schema.Resource {
 				// Suppress diffs if the VPC configuration is provided, but empty
 				// which is a valid Lambda function configuration. e.g.
 				//   vpc_config {
-				//     security_group_ids = []
-				//     subnet_ids         = []
+				//     ipv6_allowed_for_dual_stack = false
+				//     security_group_ids          = []
+				//     subnet_ids                  = []
 				//   }
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					if d.Id() == "" || old == "1" || new == "0" {
 						return false
 					}
 
-					if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids") {
+					if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids", "vpc_config.0.ipv6_allowed_for_dual_stack") {
 						return false
 					}
 
@@ -512,6 +552,10 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.ImageConfig = expandImageConfigs(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("logging_config"); ok && len(v.([]interface{})) > 0 {
+		input.LoggingConfig = expandLoggingConfig(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("kms_key_arn"); ok {
 		input.KMSKeyArn = aws.String(v.(string))
 	}
@@ -533,8 +577,9 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 	if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input.VpcConfig = &types.VpcConfig{
-			SecurityGroupIds: flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
-			SubnetIds:        flex.ExpandStringValueSet(tfMap["subnet_ids"].(*schema.Set)),
+			Ipv6AllowedForDualStack: aws.Bool(tfMap["ipv6_allowed_for_dual_stack"].(bool)),
+			SecurityGroupIds:        flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
+			SubnetIds:               flex.ExpandStringValueSet(tfMap["subnet_ids"].(*schema.Set)),
 		}
 	}
 
@@ -637,6 +682,9 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("last_modified", function.LastModified)
 	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting layers: %s", err)
+	}
+	if err := d.Set("logging_config", flattenLoggingConfig(function.LoggingConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
 	}
 	d.Set("memory_size", function.MemorySize)
 	d.Set("package_type", function.PackageType)
@@ -821,6 +869,10 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Layers = flex.ExpandStringValueList(d.Get("layers").([]interface{}))
 		}
 
+		if d.HasChange("logging_config") {
+			input.LoggingConfig = expandLoggingConfig(d.Get("logging_config").([]interface{}))
+		}
+
 		if d.HasChange("memory_size") {
 			input.MemorySize = aws.Int32(int32(d.Get("memory_size").(int)))
 		}
@@ -849,17 +901,19 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids") {
+		if d.HasChanges("vpc_config.0.security_group_ids", "vpc_config.0.subnet_ids", "vpc_config.0.ipv6_allowed_for_dual_stack") {
 			if v, ok := d.GetOk("vpc_config"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				tfMap := v.([]interface{})[0].(map[string]interface{})
 				input.VpcConfig = &types.VpcConfig{
-					SecurityGroupIds: flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
-					SubnetIds:        flex.ExpandStringValueSet(tfMap["subnet_ids"].(*schema.Set)),
+					Ipv6AllowedForDualStack: aws.Bool(tfMap["ipv6_allowed_for_dual_stack"].(bool)),
+					SecurityGroupIds:        flex.ExpandStringValueSet(tfMap["security_group_ids"].(*schema.Set)),
+					SubnetIds:               flex.ExpandStringValueSet(tfMap["subnet_ids"].(*schema.Set)),
 				}
 			} else {
 				input.VpcConfig = &types.VpcConfig{
-					SecurityGroupIds: []string{},
-					SubnetIds:        []string{},
+					Ipv6AllowedForDualStack: aws.Bool(false),
+					SecurityGroupIds:        []string{},
+					SubnetIds:               []string{},
 				}
 			}
 		}
@@ -1242,6 +1296,7 @@ func needsFunctionConfigUpdate(d verify.ResourceDiffer) bool {
 		d.HasChange("handler") ||
 		d.HasChange("file_system_config") ||
 		d.HasChange("image_config") ||
+		d.HasChange("logging_config") ||
 		d.HasChange("memory_size") ||
 		d.HasChange("role") ||
 		d.HasChange("timeout") ||
@@ -1250,6 +1305,7 @@ func needsFunctionConfigUpdate(d verify.ResourceDiffer) bool {
 		d.HasChange("dead_letter_config") ||
 		d.HasChange("snap_start") ||
 		d.HasChange("tracing_config") ||
+		d.HasChange("vpc_config.0.ipv6_allowed_for_dual_stack") ||
 		d.HasChange("vpc_config.0.security_group_ids") ||
 		d.HasChange("vpc_config.0.subnet_ids") ||
 		d.HasChange("runtime") ||
@@ -1376,6 +1432,40 @@ func expandImageConfigs(imageConfigMaps []interface{}) *types.ImageConfig {
 		imageConfig.WorkingDirectory = aws.String(config["working_directory"].(string))
 	}
 	return imageConfig
+}
+
+func expandLoggingConfig(tfList []interface{}) *types.LoggingConfig {
+	loggingConfig := &types.LoggingConfig{}
+	if len(tfList) == 1 && tfList[0] != nil {
+		config := tfList[0].(map[string]interface{})
+		if v := config["application_log_level"].(string); len(v) > 0 {
+			loggingConfig.ApplicationLogLevel = types.ApplicationLogLevel(v)
+		}
+		if v := config["log_format"].(string); len(v) > 0 {
+			loggingConfig.LogFormat = types.LogFormat(v)
+		}
+		if v := config["log_group"].(string); len(v) > 0 {
+			loggingConfig.LogGroup = aws.String(v)
+		}
+		if v := config["system_log_level"].(string); len(v) > 0 {
+			loggingConfig.SystemLogLevel = types.SystemLogLevel(v)
+		}
+	}
+	return loggingConfig
+}
+
+func flattenLoggingConfig(apiObject *types.LoggingConfig) []map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+	m := map[string]interface{}{
+		"application_log_level": apiObject.ApplicationLogLevel,
+		"log_format":            apiObject.LogFormat,
+		"log_group":             aws.ToString(apiObject.LogGroup),
+		"system_log_level":      apiObject.SystemLogLevel,
+	}
+
+	return []map[string]interface{}{m}
 }
 
 func flattenEphemeralStorage(response *types.EphemeralStorage) []map[string]interface{} {

@@ -67,6 +67,7 @@ func ResourceFeatureGroup() *schema.Resource {
 						"feature_name": {
 							Type:     schema.TypeString,
 							Optional: true,
+							ForceNew: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 64),
 								validation.StringNotInSlice([]string{"is_deleted", "write_time", "api_invocation_time"}, false),
@@ -77,6 +78,7 @@ func ResourceFeatureGroup() *schema.Resource {
 						"feature_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(sagemaker.FeatureType_Values(), false),
 						},
 					},
@@ -104,6 +106,7 @@ func ResourceFeatureGroup() *schema.Resource {
 							Type:     schema.TypeList,
 							Optional: true,
 							Computed: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -111,16 +114,19 @@ func ResourceFeatureGroup() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
+										ForceNew: true,
 									},
 									"database": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
+										ForceNew: true,
 									},
 									"table_name": {
 										Type:     schema.TypeString,
 										Optional: true,
 										Computed: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -128,21 +134,31 @@ func ResourceFeatureGroup() *schema.Resource {
 						"disable_glue_table_creation": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 						},
 						"s3_storage_config": {
 							Type:     schema.TypeList,
 							Required: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"kms_key_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										ForceNew:     true,
 										ValidateFunc: verify.ValidARN,
+									},
+									"resolved_output_s3_uri": {
+										Type:     schema.TypeString,
+										Optional: true,
+										Computed: true,
+										ForceNew: true,
 									},
 									"s3_uri": {
 										Type:     schema.TypeString,
 										Required: true,
+										ForceNew: true,
 									},
 								},
 							},
@@ -150,6 +166,7 @@ func ResourceFeatureGroup() *schema.Resource {
 						"table_format": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							ForceNew:     true,
 							Default:      sagemaker.TableFormatGlue,
 							ValidateFunc: validation.StringInSlice(sagemaker.TableFormat_Values(), false),
 						},
@@ -167,18 +184,45 @@ func ResourceFeatureGroup() *schema.Resource {
 						"enable_online_store": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							ForceNew: true,
 							Default:  false,
 						},
 						"security_config": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"kms_key_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										ForceNew:     true,
 										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
+						"storage_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(sagemaker.StorageType_Values(), false),
+						},
+						"ttl_duration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"unit": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(sagemaker.TtlDurationUnit_Values(), false),
+									},
+									"value": {
+										Type:     schema.TypeInt,
+										Optional: true,
 									},
 								},
 							},
@@ -309,8 +353,23 @@ func resourceFeatureGroupRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceFeatureGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	// Tags only.
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &sagemaker.UpdateFeatureGroupInput{
+			FeatureGroupName: aws.String(d.Id()),
+		}
+
+		if d.HasChange("online_store_config") {
+			input.OnlineStoreConfig = expandFeatureGroupOnlineStoreConfigUpdate(d.Get("online_store_config").([]interface{}))
+		}
+
+		_, err := conn.UpdateFeatureGroupWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating SageMaker Feature Group (%s): %s", d.Id(), err)
+		}
+	}
 
 	return append(diags, resourceFeatureGroupRead(ctx, d, meta)...)
 }
@@ -386,6 +445,14 @@ func expandFeatureGroupOnlineStoreConfig(l []interface{}) *sagemaker.OnlineStore
 		config.SecurityConfig = expandFeatureGroupOnlineStoreConfigSecurityConfig(v)
 	}
 
+	if v, ok := m["storage_type"].(string); ok && v != "" {
+		config.StorageType = aws.String(v)
+	}
+
+	if v, ok := m["ttl_duration"].([]interface{}); ok && len(v) > 0 {
+		config.TtlDuration = expandFeatureGroupOnlineStoreConfigTTLDuration(v)
+	}
+
 	return config
 }
 
@@ -400,6 +467,14 @@ func flattenFeatureGroupOnlineStoreConfig(config *sagemaker.OnlineStoreConfig) [
 
 	if config.SecurityConfig != nil {
 		m["security_config"] = flattenFeatureGroupOnlineStoreConfigSecurityConfig(config.SecurityConfig)
+	}
+
+	if config.StorageType != nil {
+		m["storage_type"] = aws.StringValue(config.StorageType)
+	}
+
+	if config.TtlDuration != nil {
+		m["ttl_duration"] = flattenFeatureGroupOnlineStoreConfigTTLDuration(config.TtlDuration)
 	}
 
 	return []map[string]interface{}{m}
@@ -426,6 +501,34 @@ func flattenFeatureGroupOnlineStoreConfigSecurityConfig(config *sagemaker.Online
 
 	m := map[string]interface{}{
 		"kms_key_id": aws.StringValue(config.KmsKeyId),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func expandFeatureGroupOnlineStoreConfigTTLDuration(l []interface{}) *sagemaker.TtlDuration {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.TtlDuration{
+		Unit:  aws.String(m["unit"].(string)),
+		Value: aws.Int64(int64(m["value"].(int))),
+	}
+
+	return config
+}
+
+func flattenFeatureGroupOnlineStoreConfigTTLDuration(config *sagemaker.TtlDuration) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"unit":  aws.StringValue(config.Unit),
+		"value": aws.Int64Value(config.Value),
 	}
 
 	return []map[string]interface{}{m}
@@ -495,6 +598,10 @@ func expandFeatureGroupOfflineStoreConfigS3StorageConfig(l []interface{}) *sagem
 		config.KmsKeyId = aws.String(m["kms_key_id"].(string))
 	}
 
+	if v, ok := m["resolved_output_s3_uri"].(string); ok && v != "" {
+		config.ResolvedOutputS3Uri = aws.String(m["resolved_output_s3_uri"].(string))
+	}
+
 	return config
 }
 
@@ -509,6 +616,10 @@ func flattenFeatureGroupOfflineStoreConfigS3StorageConfig(config *sagemaker.S3St
 
 	if config.KmsKeyId != nil {
 		m["kms_key_id"] = aws.StringValue(config.KmsKeyId)
+	}
+
+	if config.ResolvedOutputS3Uri != nil {
+		m["resolved_output_s3_uri"] = aws.StringValue(config.ResolvedOutputS3Uri)
 	}
 
 	return []map[string]interface{}{m}
@@ -542,4 +653,20 @@ func flattenFeatureGroupOfflineStoreConfigDataCatalogConfig(config *sagemaker.Da
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func expandFeatureGroupOnlineStoreConfigUpdate(l []interface{}) *sagemaker.OnlineStoreConfigUpdate {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	config := &sagemaker.OnlineStoreConfigUpdate{}
+
+	if v, ok := m["ttl_duration"].([]interface{}); ok && len(v) > 0 {
+		config.TtlDuration = expandFeatureGroupOnlineStoreConfigTTLDuration(v)
+	}
+
+	return config
 }

@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/elbv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 )
 
 func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
@@ -21,7 +21,7 @@ func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -34,7 +34,8 @@ func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceNameByARN, "protocol", "HTTP"),
 					resource.TestCheckResourceAttr(datasourceNameByARN, "protocol_version", "HTTP1"),
 					resource.TestCheckResourceAttrSet(datasourceNameByARN, "vpc_id"),
-					resource.TestCheckResourceAttrSet(datasourceNameByARN, "load_balancing_algorithm_type"),
+					resource.TestCheckResourceAttr(datasourceNameByARN, "load_balancing_algorithm_type", "round_robin"),
+					resource.TestCheckResourceAttr(datasourceNameByARN, "load_balancing_anomaly_mitigation", "off"),
 					resource.TestCheckResourceAttrSet(datasourceNameByARN, "load_balancing_cross_zone_enabled"),
 					resource.TestCheckResourceAttr(datasourceNameByARN, "deregistration_delay", "300"),
 					resource.TestCheckResourceAttr(datasourceNameByARN, "slow_start", "0"),
@@ -55,7 +56,8 @@ func TestAccELBV2TargetGroupDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(datasourceNameByName, "arn_suffix"),
 					resource.TestCheckResourceAttr(datasourceNameByName, "port", "8080"),
 					resource.TestCheckResourceAttr(datasourceNameByName, "protocol", "HTTP"),
-					resource.TestCheckResourceAttrSet(datasourceNameByName, "load_balancing_algorithm_type"),
+					resource.TestCheckResourceAttr(datasourceNameByName, "load_balancing_algorithm_type", "round_robin"),
+					resource.TestCheckResourceAttr(datasourceNameByName, "load_balancing_anomaly_mitigation", "off"),
 					resource.TestCheckResourceAttrSet(datasourceNameByName, "load_balancing_cross_zone_enabled"),
 					resource.TestCheckResourceAttrSet(datasourceNameByName, "vpc_id"),
 					resource.TestCheckResourceAttr(datasourceNameByName, "deregistration_delay", "300"),
@@ -84,7 +86,7 @@ func TestAccELBV2TargetGroupDataSource_appCookie(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -128,7 +130,7 @@ func TestAccELBV2TargetGroupDataSource_backwardsCompatibility(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -194,7 +196,7 @@ func TestAccELBV2TargetGroupDataSource_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{

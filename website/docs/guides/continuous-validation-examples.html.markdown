@@ -129,3 +129,36 @@ check "check_iam_role_unused" {
   }
 }
 ```
+
+## Example - Check EKS Cluster Instance Health and Availability (`aws_eks_cluster`)
+
+Amazon Elastic Kubernetes Service (Amazon EKS) is a managed Kubernetes service to run Kubernetes in the AWS cloud and on-premises data centers. In the cloud, Amazon EKS automatically manages the availability and scalability of the Kubernetes control plane nodes responsible for scheduling containers, managing application availability, storing cluster data, and other key tasks. With Amazon EKS, you can take advantage of all the performance, scale, reliability, and availability of AWS infrastructure, as well as integrations with AWS networking and security services.
+
+The example below shows how a check block can be used to assert that your cluster is in good health and available.
+
+```hcl
+check "aws_eks_cluster_default" {
+  assert {
+    condition     = aws_eks_cluster.default.status == "ACTIVE"
+    error_message = "EKS cluster ${aws_eks_cluster.default.id} status is ${aws_eks_cluster.default.status}"
+  }
+}
+```
+
+## Example - Check for EC2 Stopped Instances (`aws_instances`)
+
+Amazon Elastic Compute Cloud (Amazon EC2) is a web service that provides secure, resizable compute capacity in the cloud. Access reliable, scalable infrastructure on demand. Scale capacity within minutes with SLA commitment of 99.99% availability.
+
+The example below shows how a check block can be used to assert that your EC2 instances are stopped.
+
+```hcl
+check "aws_instances_stopped" {
+  data "aws_instances" "example" {
+    instance_state_names = "stopped"
+  }
+  assert {
+    condition     = length(data.aws_instances.example) > 0
+    error_message = format("Found Instances have stopped! Instance ID’s: %s", data.aws_instances.example.ids)
+  }
+}
+```

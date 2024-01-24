@@ -6,7 +6,6 @@ package elbv2
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"sort"
 	"strconv"
@@ -14,8 +13,9 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -23,9 +23,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -47,7 +49,8 @@ func ResourceListener() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Read: schema.DefaultTimeout(10 * time.Minute),
+			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -83,7 +86,7 @@ func ResourceListener() *schema.Resource {
 						"authenticate_cognito": {
 							Type:             schema.TypeList,
 							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumAuthenticateCognito),
+							DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumAuthenticateCognito),
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -93,13 +96,10 @@ func ResourceListener() *schema.Resource {
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"on_unauthenticated_request": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-										ValidateFunc: validation.StringInSlice(
-											elbv2.AuthenticateCognitoActionConditionalBehaviorEnum_Values(),
-											true,
-										),
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateCognitoActionConditionalBehaviorEnum](),
 									},
 									"scope": {
 										Type:     schema.TypeString,
@@ -135,7 +135,7 @@ func ResourceListener() *schema.Resource {
 						"authenticate_oidc": {
 							Type:             schema.TypeList,
 							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumAuthenticateOidc),
+							DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumAuthenticateOidc),
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -162,13 +162,10 @@ func ResourceListener() *schema.Resource {
 										Required: true,
 									},
 									"on_unauthenticated_request": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Computed: true,
-										ValidateFunc: validation.StringInSlice(
-											elbv2.AuthenticateOidcActionConditionalBehaviorEnum_Values(),
-											true,
-										),
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateOidcActionConditionalBehaviorEnum](),
 									},
 									"scope": {
 										Type:     schema.TypeString,
@@ -199,7 +196,7 @@ func ResourceListener() *schema.Resource {
 						"fixed_response": {
 							Type:             schema.TypeList,
 							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumFixedResponse),
+							DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumFixedResponse),
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -215,8 +212,9 @@ func ResourceListener() *schema.Resource {
 										}, false),
 									},
 									"message_body": {
-										Type:     schema.TypeString,
-										Optional: true,
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(0, 1024),
 									},
 									"status_code": {
 										Type:         schema.TypeString,
@@ -230,7 +228,7 @@ func ResourceListener() *schema.Resource {
 						"forward": {
 							Type:             schema.TypeList,
 							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumForward),
+							DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumForward),
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -282,24 +280,26 @@ func ResourceListener() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validation.IntBetween(1, 50000),
+							ValidateFunc: validation.IntBetween(listenerActionOrderMin, listenerActionOrderMax),
 						},
 						"redirect": {
 							Type:             schema.TypeList,
 							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumRedirect),
+							DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumRedirect),
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"host": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "#{host}",
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "#{host}",
+										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
 									"path": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "/#{path}",
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "/#{path}",
+										ValidateFunc: validation.StringLenBetween(1, 128),
 									},
 									"port": {
 										Type:     schema.TypeString,
@@ -317,17 +317,15 @@ func ResourceListener() *schema.Resource {
 										}, false),
 									},
 									"query": {
-										Type:     schema.TypeString,
-										Optional: true,
-										Default:  "#{query}",
+										Type:         schema.TypeString,
+										Optional:     true,
+										Default:      "#{query}",
+										ValidateFunc: validation.StringLenBetween(0, 128),
 									},
 									"status_code": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.StringInSlice(
-											elbv2.RedirectActionStatusCodeEnum_Values(),
-											false,
-										),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.RedirectActionStatusCodeEnum](),
 									},
 								},
 							},
@@ -335,16 +333,13 @@ func ResourceListener() *schema.Resource {
 						"target_group_arn": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							DiffSuppressFunc: suppressIfDefaultActionTypeNot(elbv2.ActionTypeEnumForward),
+							DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumForward),
 							ValidateFunc:     verify.ValidARN,
 						},
 						"type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.StringInSlice(
-								elbv2.ActionTypeEnum_Values(),
-								true,
-							),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.ActionTypeEnum](),
 						},
 					},
 				},
@@ -355,6 +350,32 @@ func ResourceListener() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"mutual_authentication": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ignore_client_certificate_expiry": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"mode": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(mutualAuthenticationModeEnum_Values(), true),
+						},
+						"trust_store_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+					},
+				},
+			},
+
 			"port": {
 				Type:         schema.TypeInt,
 				Optional:     true,
@@ -367,7 +388,7 @@ func ResourceListener() *schema.Resource {
 				StateFunc: func(v interface{}) string {
 					return strings.ToUpper(v.(string))
 				},
-				ValidateFunc: validation.StringInSlice(elbv2.ProtocolEnum_Values(), true),
+				ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.ProtocolEnum](),
 			},
 			"ssl_policy": {
 				Type:     schema.TypeString,
@@ -380,7 +401,7 @@ func ResourceListener() *schema.Resource {
 	}
 }
 
-func suppressIfDefaultActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
+func suppressIfDefaultActionTypeNot(t awstypes.ActionTypeEnum) schema.SchemaDiffSuppressFunc {
 	return func(k, old, new string, d *schema.ResourceData) bool {
 		take := 2
 		i := strings.IndexFunc(k, func(r rune) bool {
@@ -391,30 +412,28 @@ func suppressIfDefaultActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
 			return false
 		})
 		at := k[:i+1] + "type"
-		return d.Get(at).(string) != t
+		return awstypes.ActionTypeEnum(d.Get(at).(string)) != t
 	}
 }
 
 func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
 	lbARN := d.Get("load_balancer_arn").(string)
-	input := &elbv2.CreateListenerInput{
+	input := &elasticloadbalancingv2.CreateListenerInput{
 		LoadBalancerArn: aws.String(lbARN),
-		Tags:            getTagsIn(ctx),
+		Tags:            getTagsInV2(ctx),
 	}
 
-	if alpnPolicy, ok := d.GetOk("alpn_policy"); ok {
-		input.AlpnPolicy = make([]*string, 1)
-		input.AlpnPolicy[0] = aws.String(alpnPolicy.(string))
+	if v, ok := d.GetOk("alpn_policy"); ok {
+		input.AlpnPolicy = []string{v.(string)}
 	}
 
-	if certificateArn, ok := d.GetOk("certificate_arn"); ok {
-		input.Certificates = make([]*elbv2.Certificate, 1)
-		input.Certificates[0] = &elbv2.Certificate{
-			CertificateArn: aws.String(certificateArn.(string)),
-		}
+	if v, ok := d.GetOk("certificate_arn"); ok {
+		input.Certificates = []awstypes.Certificate{{
+			CertificateArn: aws.String(v.(string)),
+		}}
 	}
 
 	if v, ok := d.GetOk("default_action"); ok && len(v.([]interface{})) > 0 {
@@ -425,50 +444,62 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
+	if v, ok := d.GetOk("mutual_authentication"); ok {
+		input.MutualAuthentication = expandMutualAuthenticationAttributes(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("port"); ok {
-		input.Port = aws.Int64(int64(v.(int)))
+		input.Port = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("protocol"); ok {
-		input.Protocol = aws.String(v.(string))
+		input.Protocol = awstypes.ProtocolEnum(v.(string))
 	} else if strings.Contains(lbARN, "loadbalancer/app/") {
-		// Keep previous default of HTTP for Application Load Balancers
-		input.Protocol = aws.String(elbv2.ProtocolEnumHttp)
+		// Keep previous default of HTTP for Application Load Balancers.
+		input.Protocol = awstypes.ProtocolEnumHttp
 	}
 
-	if sslPolicy, ok := d.GetOk("ssl_policy"); ok {
-		input.SslPolicy = aws.String(sslPolicy.(string))
+	if v, ok := d.GetOk("ssl_policy"); ok {
+		input.SslPolicy = aws.String(v.(string))
 	}
 
-	output, err := retryListenerCreate(ctx, conn, input)
+	output, err := retryListenerCreate(ctx, conn, input, d.Timeout(schema.TimeoutCreate))
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 		input.Tags = nil
 
-		output, err = retryListenerCreate(ctx, conn, input)
+		output, err = retryListenerCreate(ctx, conn, input, d.Timeout(schema.TimeoutCreate))
 	}
 
 	// Tags are not supported on creation with some load balancer types (i.e. Gateway)
 	// Retry creation without tags
-	if input.Tags != nil && tfawserr.ErrMessageContains(err, ErrValidationError, TagsOnCreationErrMessage) {
+	if input.Tags != nil && tfawserr.ErrMessageContains(err, errCodeValidationError, tagsOnCreationErrMessage) {
 		input.Tags = nil
 
-		output, err = retryListenerCreate(ctx, conn, input)
+		output, err = retryListenerCreate(ctx, conn, input, d.Timeout(schema.TimeoutCreate))
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ELBv2 Listener (%s): %s", lbARN, err)
 	}
 
-	d.SetId(aws.StringValue(output.Listeners[0].ListenerArn))
+	d.SetId(aws.ToString(output.Listeners[0].ListenerArn))
+
+	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
+		return findListenerByARN(ctx, conn, d.Id())
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ELBv2 Listener (%s) create: %s", d.Id(), err)
+	}
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
-	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
-		err := createTags(ctx, conn, d.Id(), tags)
+	if tags := getTagsInV2(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTagsV2(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 			return append(diags, resourceListenerRead(ctx, d, meta)...)
 		}
 
@@ -482,109 +513,61 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	const (
-		loadBalancerListenerReadTimeout = 2 * time.Minute
-	)
-	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
-	var listener *elbv2.Listener
+	listener, err := findListenerByARN(ctx, conn, d.Id())
 
-	err := retry.RetryContext(ctx, loadBalancerListenerReadTimeout, func() *retry.RetryError {
-		var err error
-		listener, err = FindListenerByARN(ctx, conn, d.Id())
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		listener, err = FindListenerByARN(ctx, conn, d.Id())
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeListenerNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ELBv2 Listener (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing ELBv2 Listener (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading ELBv2 Listener (%s): %s", d.Id(), err)
 	}
 
-	if listener == nil {
-		if d.IsNewResource() {
-			return sdkdiag.AppendErrorf(diags, "describing ELBv2 Listener (%s): empty response", d.Id())
-		}
-		log.Printf("[WARN] ELBv2 Listener (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+	if listener.AlpnPolicy != nil && len(listener.AlpnPolicy) == 1 {
+		d.Set("alpn_policy", listener.AlpnPolicy[0])
 	}
-
 	d.Set("arn", listener.ListenerArn)
+	if listener.Certificates != nil && len(listener.Certificates) == 1 {
+		d.Set("certificate_arn", listener.Certificates[0].CertificateArn)
+	}
+	sort.Slice(listener.DefaultActions, func(i, j int) bool {
+		return aws.ToInt32(listener.DefaultActions[i].Order) < aws.ToInt32(listener.DefaultActions[j].Order)
+	})
+	if err := d.Set("default_action", flattenLbListenerActions(d, listener.DefaultActions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
+	}
 	d.Set("load_balancer_arn", listener.LoadBalancerArn)
+	if err := d.Set("mutual_authentication", flattenMutualAuthenticationAttributes(listener.MutualAuthentication)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting mutual_authentication: %s", err)
+	}
 	d.Set("port", listener.Port)
 	d.Set("protocol", listener.Protocol)
 	d.Set("ssl_policy", listener.SslPolicy)
-
-	if listener.Certificates != nil && len(listener.Certificates) == 1 && listener.Certificates[0] != nil {
-		d.Set("certificate_arn", listener.Certificates[0].CertificateArn)
-	}
-
-	if listener.AlpnPolicy != nil && len(listener.AlpnPolicy) == 1 && listener.AlpnPolicy[0] != nil {
-		d.Set("alpn_policy", listener.AlpnPolicy[0])
-	}
-
-	sort.Slice(listener.DefaultActions, func(i, j int) bool {
-		return aws.Int64Value(listener.DefaultActions[i].Order) < aws.Int64Value(listener.DefaultActions[j].Order)
-	})
-
-	if err := d.Set("default_action", flattenLbListenerActions(d, listener.DefaultActions)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting default_action for ELBv2 listener (%s): %s", d.Id(), err)
-	}
 
 	return diags
 }
 
 func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	const (
-		loadBalancerListenerUpdateTimeout = 5 * time.Minute
-	)
-	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		input := &elbv2.ModifyListenerInput{
+		input := &elasticloadbalancingv2.ModifyListenerInput{
 			ListenerArn: aws.String(d.Id()),
 		}
 
-		if v, ok := d.GetOk("port"); ok {
-			input.Port = aws.Int64(int64(v.(int)))
-		}
-
-		if v, ok := d.GetOk("protocol"); ok {
-			input.Protocol = aws.String(v.(string))
-		}
-
-		if v, ok := d.GetOk("ssl_policy"); ok {
-			input.SslPolicy = aws.String(v.(string))
+		if v, ok := d.GetOk("alpn_policy"); ok {
+			input.AlpnPolicy = []string{v.(string)}
 		}
 
 		if v, ok := d.GetOk("certificate_arn"); ok {
-			input.Certificates = make([]*elbv2.Certificate, 1)
-			input.Certificates[0] = &elbv2.Certificate{
+			input.Certificates = []awstypes.Certificate{{
 				CertificateArn: aws.String(v.(string)),
-			}
-		}
-
-		if v, ok := d.GetOk("alpn_policy"); ok {
-			input.AlpnPolicy = aws.StringSlice([]string{v.(string)})
+			}}
 		}
 
 		if d.HasChange("default_action") {
@@ -595,23 +578,25 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		}
 
-		err := retry.RetryContext(ctx, loadBalancerListenerUpdateTimeout, func() *retry.RetryError {
-			_, err := conn.ModifyListenerWithContext(ctx, input)
-
-			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
-				return retry.RetryableError(err)
-			}
-
-			if err != nil {
-				return retry.NonRetryableError(err)
-			}
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			_, err = conn.ModifyListenerWithContext(ctx, input)
+		if d.HasChange("mutual_authentication") {
+			input.MutualAuthentication = expandMutualAuthenticationAttributes(d.Get("mutual_authentication").([]interface{}))
 		}
+
+		if v, ok := d.GetOk("port"); ok {
+			input.Port = aws.Int32(int32(v.(int)))
+		}
+
+		if v, ok := d.GetOk("protocol"); ok {
+			input.Protocol = awstypes.ProtocolEnum(v.(string))
+		}
+
+		if v, ok := d.GetOk("ssl_policy"); ok {
+			input.SslPolicy = aws.String(v.(string))
+		}
+
+		_, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
+			return conn.ModifyListener(ctx, input)
+		})
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "modifying ELBv2 Listener (%s): %s", d.Id(), err)
@@ -623,61 +608,94 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceListenerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
-	_, err := conn.DeleteListenerWithContext(ctx, &elbv2.DeleteListenerInput{
+	log.Printf("[INFO] Deleting ELBv2 Listener: %s", d.Id())
+	_, err := conn.DeleteListener(ctx, &elasticloadbalancingv2.DeleteListenerInput{
 		ListenerArn: aws.String(d.Id()),
 	})
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Listener (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting ELBv2 Listener (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func retryListenerCreate(ctx context.Context, conn *elbv2.ELBV2, params *elbv2.CreateListenerInput) (*elbv2.CreateListenerOutput, error) {
-	const (
-		loadBalancerListenerCreateTimeout = 5 * time.Minute
-	)
-	var output *elbv2.CreateListenerOutput
-
-	err := retry.RetryContext(ctx, loadBalancerListenerCreateTimeout, func() *retry.RetryError {
-		var err error
-
-		output, err = conn.CreateListenerWithContext(ctx, params)
-
-		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeCertificateNotFoundException) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
+func retryListenerCreate(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.CreateListenerInput, timeout time.Duration) (*elasticloadbalancingv2.CreateListenerOutput, error) {
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.CertificateNotFoundException](ctx, timeout, func() (interface{}, error) {
+		return conn.CreateListener(ctx, input)
 	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateListenerWithContext(ctx, params)
-	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.Listeners) == 0 {
-		return nil, fmt.Errorf("creating ELBv2 Listener: no listeners returned in response")
+	return outputRaw.(*elasticloadbalancingv2.CreateListenerOutput), nil
+}
+
+func findListenerByARN(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) (*awstypes.Listener, error) {
+	input := &elasticloadbalancingv2.DescribeListenersInput{
+		ListenerArns: []string{arn},
+	}
+	output, err := findListener(ctx, conn, input, tfslices.PredicateTrue[*awstypes.Listener]())
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.ListenerArn) != arn {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
 	}
 
 	return output, nil
 }
 
-func expandLbListenerActions(l []interface{}) ([]*elbv2.Action, error) {
+func findListener(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeListenersInput, filter tfslices.Predicate[*awstypes.Listener]) (*awstypes.Listener, error) {
+	output, err := findListeners(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findListeners(ctx context.Context, conn *elasticloadbalancingv2.Client, input *elasticloadbalancingv2.DescribeListenersInput, filter tfslices.Predicate[*awstypes.Listener]) ([]awstypes.Listener, error) {
+	var output []awstypes.Listener
+
+	paginator := elasticloadbalancingv2.NewDescribeListenersPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if errs.IsA[*awstypes.ListenerNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Listeners {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func expandLbListenerActions(l []interface{}) ([]awstypes.Action, error) {
 	if len(l) == 0 {
 		return nil, nil
 	}
 
-	var actions []*elbv2.Action
+	var actions []awstypes.Action
 	var err error
 
 	for i, tfMapRaw := range l {
@@ -686,17 +704,17 @@ func expandLbListenerActions(l []interface{}) ([]*elbv2.Action, error) {
 			continue
 		}
 
-		action := &elbv2.Action{
-			Order: aws.Int64(int64(i + 1)),
-			Type:  aws.String(tfMap["type"].(string)),
+		action := awstypes.Action{
+			Order: aws.Int32(int32(i + 1)),
+			Type:  awstypes.ActionTypeEnum(tfMap["type"].(string)),
 		}
 
 		if order, ok := tfMap["order"].(int); ok && order != 0 {
-			action.Order = aws.Int64(int64(order))
+			action.Order = aws.Int32(int32(order))
 		}
 
-		switch tfMap["type"].(string) {
-		case elbv2.ActionTypeEnumForward:
+		switch awstypes.ActionTypeEnum(tfMap["type"].(string)) {
+		case awstypes.ActionTypeEnumForward:
 			if v, ok := tfMap["target_group_arn"].(string); ok && v != "" {
 				action.TargetGroupArn = aws.String(v)
 			} else if v, ok := tfMap["forward"].([]interface{}); ok {
@@ -705,28 +723,28 @@ func expandLbListenerActions(l []interface{}) ([]*elbv2.Action, error) {
 				err = errors.New("for actions of type 'forward', you must specify a 'forward' block or 'target_group_arn'")
 			}
 
-		case elbv2.ActionTypeEnumRedirect:
+		case awstypes.ActionTypeEnumRedirect:
 			if v, ok := tfMap["redirect"].([]interface{}); ok {
 				action.RedirectConfig = expandLbListenerRedirectActionConfig(v)
 			} else {
 				err = errors.New("for actions of type 'redirect', you must specify a 'redirect' block")
 			}
 
-		case elbv2.ActionTypeEnumFixedResponse:
+		case awstypes.ActionTypeEnumFixedResponse:
 			if v, ok := tfMap["fixed_response"].([]interface{}); ok {
 				action.FixedResponseConfig = expandLbListenerFixedResponseConfig(v)
 			} else {
 				err = errors.New("for actions of type 'fixed-response', you must specify a 'fixed_response' block")
 			}
 
-		case elbv2.ActionTypeEnumAuthenticateCognito:
+		case awstypes.ActionTypeEnumAuthenticateCognito:
 			if v, ok := tfMap["authenticate_cognito"].([]interface{}); ok {
 				action.AuthenticateCognitoConfig = expandLbListenerAuthenticateCognitoConfig(v)
 			} else {
 				err = errors.New("for actions of type 'authenticate-cognito', you must specify a 'authenticate_cognito' block")
 			}
 
-		case elbv2.ActionTypeEnumAuthenticateOidc:
+		case awstypes.ActionTypeEnumAuthenticateOidc:
 			if v, ok := tfMap["authenticate_oidc"].([]interface{}); ok {
 				action.AuthenticateOidcConfig = expandAuthenticateOIDCConfig(v)
 			} else {
@@ -740,7 +758,7 @@ func expandLbListenerActions(l []interface{}) ([]*elbv2.Action, error) {
 	return actions, err
 }
 
-func expandLbListenerAuthenticateCognitoConfig(l []interface{}) *elbv2.AuthenticateCognitoActionConfig {
+func expandLbListenerAuthenticateCognitoConfig(l []interface{}) *awstypes.AuthenticateCognitoActionConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -751,15 +769,15 @@ func expandLbListenerAuthenticateCognitoConfig(l []interface{}) *elbv2.Authentic
 		return nil
 	}
 
-	config := &elbv2.AuthenticateCognitoActionConfig{
-		AuthenticationRequestExtraParams: flex.ExpandStringMap(tfMap["authentication_request_extra_params"].(map[string]interface{})),
+	config := &awstypes.AuthenticateCognitoActionConfig{
+		AuthenticationRequestExtraParams: flex.ExpandStringValueMap(tfMap["authentication_request_extra_params"].(map[string]interface{})),
 		UserPoolArn:                      aws.String(tfMap["user_pool_arn"].(string)),
 		UserPoolClientId:                 aws.String(tfMap["user_pool_client_id"].(string)),
 		UserPoolDomain:                   aws.String(tfMap["user_pool_domain"].(string)),
 	}
 
 	if v, ok := tfMap["on_unauthenticated_request"].(string); ok && v != "" {
-		config.OnUnauthenticatedRequest = aws.String(v)
+		config.OnUnauthenticatedRequest = awstypes.AuthenticateCognitoActionConditionalBehaviorEnum(v)
 	}
 
 	if v, ok := tfMap["scope"].(string); ok && v != "" {
@@ -777,7 +795,7 @@ func expandLbListenerAuthenticateCognitoConfig(l []interface{}) *elbv2.Authentic
 	return config
 }
 
-func expandAuthenticateOIDCConfig(l []interface{}) *elbv2.AuthenticateOidcActionConfig {
+func expandAuthenticateOIDCConfig(l []interface{}) *awstypes.AuthenticateOidcActionConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -788,8 +806,8 @@ func expandAuthenticateOIDCConfig(l []interface{}) *elbv2.AuthenticateOidcAction
 		return nil
 	}
 
-	config := &elbv2.AuthenticateOidcActionConfig{
-		AuthenticationRequestExtraParams: flex.ExpandStringMap(tfMap["authentication_request_extra_params"].(map[string]interface{})),
+	config := &awstypes.AuthenticateOidcActionConfig{
+		AuthenticationRequestExtraParams: flex.ExpandStringValueMap(tfMap["authentication_request_extra_params"].(map[string]interface{})),
 		AuthorizationEndpoint:            aws.String(tfMap["authorization_endpoint"].(string)),
 		ClientId:                         aws.String(tfMap["client_id"].(string)),
 		ClientSecret:                     aws.String(tfMap["client_secret"].(string)),
@@ -799,7 +817,7 @@ func expandAuthenticateOIDCConfig(l []interface{}) *elbv2.AuthenticateOidcAction
 	}
 
 	if v, ok := tfMap["on_unauthenticated_request"].(string); ok && v != "" {
-		config.OnUnauthenticatedRequest = aws.String(v)
+		config.OnUnauthenticatedRequest = awstypes.AuthenticateOidcActionConditionalBehaviorEnum(v)
 	}
 
 	if v, ok := tfMap["scope"].(string); ok && v != "" {
@@ -817,7 +835,7 @@ func expandAuthenticateOIDCConfig(l []interface{}) *elbv2.AuthenticateOidcAction
 	return config
 }
 
-func expandLbListenerFixedResponseConfig(l []interface{}) *elbv2.FixedResponseActionConfig {
+func expandLbListenerFixedResponseConfig(l []interface{}) *awstypes.FixedResponseActionConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -828,14 +846,14 @@ func expandLbListenerFixedResponseConfig(l []interface{}) *elbv2.FixedResponseAc
 		return nil
 	}
 
-	return &elbv2.FixedResponseActionConfig{
+	return &awstypes.FixedResponseActionConfig{
 		ContentType: aws.String(tfMap["content_type"].(string)),
 		MessageBody: aws.String(tfMap["message_body"].(string)),
 		StatusCode:  aws.String(tfMap["status_code"].(string)),
 	}
 }
 
-func expandLbListenerRedirectActionConfig(l []interface{}) *elbv2.RedirectActionConfig {
+func expandLbListenerRedirectActionConfig(l []interface{}) *awstypes.RedirectActionConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -846,17 +864,17 @@ func expandLbListenerRedirectActionConfig(l []interface{}) *elbv2.RedirectAction
 		return nil
 	}
 
-	return &elbv2.RedirectActionConfig{
+	return &awstypes.RedirectActionConfig{
 		Host:       aws.String(tfMap["host"].(string)),
 		Path:       aws.String(tfMap["path"].(string)),
 		Port:       aws.String(tfMap["port"].(string)),
 		Protocol:   aws.String(tfMap["protocol"].(string)),
 		Query:      aws.String(tfMap["query"].(string)),
-		StatusCode: aws.String(tfMap["status_code"].(string)),
+		StatusCode: awstypes.RedirectActionStatusCodeEnum(tfMap["status_code"].(string)),
 	}
 }
 
-func expandLbListenerActionForwardConfig(l []interface{}) *elbv2.ForwardActionConfig {
+func expandLbListenerActionForwardConfig(l []interface{}) *awstypes.ForwardActionConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -866,7 +884,7 @@ func expandLbListenerActionForwardConfig(l []interface{}) *elbv2.ForwardActionCo
 		return nil
 	}
 
-	config := &elbv2.ForwardActionConfig{}
+	config := &awstypes.ForwardActionConfig{}
 
 	if v, ok := tfMap["target_group"].(*schema.Set); ok && v.Len() > 0 {
 		config.TargetGroups = expandLbListenerActionForwardConfigTargetGroups(v.List())
@@ -879,31 +897,7 @@ func expandLbListenerActionForwardConfig(l []interface{}) *elbv2.ForwardActionCo
 	return config
 }
 
-func expandLbListenerActionForwardConfigTargetGroups(l []interface{}) []*elbv2.TargetGroupTuple {
-	if len(l) == 0 {
-		return nil
-	}
-
-	var groups []*elbv2.TargetGroupTuple
-
-	for _, tfMapRaw := range l {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-		if !ok {
-			continue
-		}
-
-		group := &elbv2.TargetGroupTuple{
-			TargetGroupArn: aws.String(tfMap["arn"].(string)),
-			Weight:         aws.Int64(int64(tfMap["weight"].(int))),
-		}
-
-		groups = append(groups, group)
-	}
-
-	return groups
-}
-
-func expandLbListenerActionForwardConfigTargetGroupStickinessConfig(l []interface{}) *elbv2.TargetGroupStickinessConfig {
+func expandMutualAuthenticationAttributes(l []interface{}) *awstypes.MutualAuthenticationAttributes {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -913,13 +907,66 @@ func expandLbListenerActionForwardConfigTargetGroupStickinessConfig(l []interfac
 		return nil
 	}
 
-	return &elbv2.TargetGroupStickinessConfig{
-		Enabled:         aws.Bool(tfMap["enabled"].(bool)),
-		DurationSeconds: aws.Int64(int64(tfMap["duration"].(int))),
+	switch mode := tfMap["mode"].(string); mode {
+	case mutualAuthenticationOff:
+		return &awstypes.MutualAuthenticationAttributes{
+			Mode: aws.String(mode),
+		}
+	case mutualAuthenticationPassthrough:
+		return &awstypes.MutualAuthenticationAttributes{
+			Mode:          aws.String(mode),
+			TrustStoreArn: aws.String(tfMap["trust_store_arn"].(string)),
+		}
+	default:
+		return &awstypes.MutualAuthenticationAttributes{
+			Mode:                          aws.String(mode),
+			TrustStoreArn:                 aws.String(tfMap["trust_store_arn"].(string)),
+			IgnoreClientCertificateExpiry: aws.Bool(tfMap["ignore_client_certificate_expiry"].(bool)),
+		}
 	}
 }
 
-func flattenLbListenerActions(d *schema.ResourceData, Actions []*elbv2.Action) []interface{} {
+func expandLbListenerActionForwardConfigTargetGroups(l []interface{}) []awstypes.TargetGroupTuple {
+	if len(l) == 0 {
+		return nil
+	}
+
+	var groups []awstypes.TargetGroupTuple
+
+	for _, tfMapRaw := range l {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		group := awstypes.TargetGroupTuple{
+			TargetGroupArn: aws.String(tfMap["arn"].(string)),
+			Weight:         aws.Int32(int32(tfMap["weight"].(int))),
+		}
+
+		groups = append(groups, group)
+	}
+
+	return groups
+}
+
+func expandLbListenerActionForwardConfigTargetGroupStickinessConfig(l []interface{}) *awstypes.TargetGroupStickinessConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := l[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	return &awstypes.TargetGroupStickinessConfig{
+		Enabled:         aws.Bool(tfMap["enabled"].(bool)),
+		DurationSeconds: aws.Int32(int32(tfMap["duration"].(int))),
+	}
+}
+
+func flattenLbListenerActions(d *schema.ResourceData, Actions []awstypes.Action) []interface{} {
 	if len(Actions) == 0 {
 		return []interface{}{}
 	}
@@ -928,28 +975,28 @@ func flattenLbListenerActions(d *schema.ResourceData, Actions []*elbv2.Action) [
 
 	for i, action := range Actions {
 		m := map[string]interface{}{
-			"type":  aws.StringValue(action.Type),
-			"order": aws.Int64Value(action.Order),
+			"type":  string(action.Type),
+			"order": aws.ToInt32(action.Order),
 		}
 
-		switch aws.StringValue(action.Type) {
-		case elbv2.ActionTypeEnumForward:
-			if aws.StringValue(action.TargetGroupArn) != "" {
-				m["target_group_arn"] = aws.StringValue(action.TargetGroupArn)
+		switch action.Type {
+		case awstypes.ActionTypeEnumForward:
+			if aws.ToString(action.TargetGroupArn) != "" {
+				m["target_group_arn"] = aws.ToString(action.TargetGroupArn)
 			} else {
 				m["forward"] = flattenLbListenerActionForwardConfig(action.ForwardConfig)
 			}
 
-		case elbv2.ActionTypeEnumRedirect:
+		case awstypes.ActionTypeEnumRedirect:
 			m["redirect"] = flattenLbListenerActionRedirectConfig(action.RedirectConfig)
 
-		case elbv2.ActionTypeEnumFixedResponse:
+		case awstypes.ActionTypeEnumFixedResponse:
 			m["fixed_response"] = flattenLbListenerActionFixedResponseConfig(action.FixedResponseConfig)
 
-		case elbv2.ActionTypeEnumAuthenticateCognito:
+		case awstypes.ActionTypeEnumAuthenticateCognito:
 			m["authenticate_cognito"] = flattenLbListenerActionAuthenticateCognitoConfig(action.AuthenticateCognitoConfig)
 
-		case elbv2.ActionTypeEnumAuthenticateOidc:
+		case awstypes.ActionTypeEnumAuthenticateOidc:
 			// The LB API currently provides no way to read the ClientSecret
 			// Instead we passthrough the configuration value into the state
 			var clientSecret string
@@ -966,62 +1013,85 @@ func flattenLbListenerActions(d *schema.ResourceData, Actions []*elbv2.Action) [
 	return vActions
 }
 
-func flattenAuthenticateOIDCActionConfig(config *elbv2.AuthenticateOidcActionConfig, clientSecret string) []interface{} {
+func flattenMutualAuthenticationAttributes(description *awstypes.MutualAuthenticationAttributes) []interface{} {
+	if description == nil {
+		return []interface{}{}
+	}
+
+	mode := aws.ToString(description.Mode)
+	if mode == mutualAuthenticationOff {
+		return []interface{}{
+			map[string]interface{}{
+				"mode": mode,
+			},
+		}
+	}
+
+	m := map[string]interface{}{
+		"mode":                             aws.ToString(description.Mode),
+		"trust_store_arn":                  aws.ToString(description.TrustStoreArn),
+		"ignore_client_certificate_expiry": aws.ToBool(description.IgnoreClientCertificateExpiry),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenAuthenticateOIDCActionConfig(config *awstypes.AuthenticateOidcActionConfig, clientSecret string) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"authentication_request_extra_params": aws.StringValueMap(config.AuthenticationRequestExtraParams),
-		"authorization_endpoint":              aws.StringValue(config.AuthorizationEndpoint),
-		"client_id":                           aws.StringValue(config.ClientId),
+		"authentication_request_extra_params": config.AuthenticationRequestExtraParams,
+		"authorization_endpoint":              aws.ToString(config.AuthorizationEndpoint),
+		"client_id":                           aws.ToString(config.ClientId),
 		"client_secret":                       clientSecret,
-		"issuer":                              aws.StringValue(config.Issuer),
-		"on_unauthenticated_request":          aws.StringValue(config.OnUnauthenticatedRequest),
-		"scope":                               aws.StringValue(config.Scope),
-		"session_cookie_name":                 aws.StringValue(config.SessionCookieName),
-		"session_timeout":                     aws.Int64Value(config.SessionTimeout),
-		"token_endpoint":                      aws.StringValue(config.TokenEndpoint),
-		"user_info_endpoint":                  aws.StringValue(config.UserInfoEndpoint),
+		"issuer":                              aws.ToString(config.Issuer),
+		"on_unauthenticated_request":          string(config.OnUnauthenticatedRequest),
+		"scope":                               aws.ToString(config.Scope),
+		"session_cookie_name":                 aws.ToString(config.SessionCookieName),
+		"session_timeout":                     aws.ToInt64(config.SessionTimeout),
+		"token_endpoint":                      aws.ToString(config.TokenEndpoint),
+		"user_info_endpoint":                  aws.ToString(config.UserInfoEndpoint),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenLbListenerActionAuthenticateCognitoConfig(config *elbv2.AuthenticateCognitoActionConfig) []interface{} {
+func flattenLbListenerActionAuthenticateCognitoConfig(config *awstypes.AuthenticateCognitoActionConfig) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"authentication_request_extra_params": aws.StringValueMap(config.AuthenticationRequestExtraParams),
-		"on_unauthenticated_request":          aws.StringValue(config.OnUnauthenticatedRequest),
-		"scope":                               aws.StringValue(config.Scope),
-		"session_cookie_name":                 aws.StringValue(config.SessionCookieName),
-		"session_timeout":                     aws.Int64Value(config.SessionTimeout),
-		"user_pool_arn":                       aws.StringValue(config.UserPoolArn),
-		"user_pool_client_id":                 aws.StringValue(config.UserPoolClientId),
-		"user_pool_domain":                    aws.StringValue(config.UserPoolDomain),
+		"authentication_request_extra_params": config.AuthenticationRequestExtraParams,
+		"on_unauthenticated_request":          string(config.OnUnauthenticatedRequest),
+		"scope":                               aws.ToString(config.Scope),
+		"session_cookie_name":                 aws.ToString(config.SessionCookieName),
+		"session_timeout":                     aws.ToInt64(config.SessionTimeout),
+		"user_pool_arn":                       aws.ToString(config.UserPoolArn),
+		"user_pool_client_id":                 aws.ToString(config.UserPoolClientId),
+		"user_pool_domain":                    aws.ToString(config.UserPoolDomain),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenLbListenerActionFixedResponseConfig(config *elbv2.FixedResponseActionConfig) []interface{} {
+func flattenLbListenerActionFixedResponseConfig(config *awstypes.FixedResponseActionConfig) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"content_type": aws.StringValue(config.ContentType),
-		"message_body": aws.StringValue(config.MessageBody),
-		"status_code":  aws.StringValue(config.StatusCode),
+		"content_type": aws.ToString(config.ContentType),
+		"message_body": aws.ToString(config.MessageBody),
+		"status_code":  aws.ToString(config.StatusCode),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenLbListenerActionForwardConfig(config *elbv2.ForwardActionConfig) []interface{} {
+func flattenLbListenerActionForwardConfig(config *awstypes.ForwardActionConfig) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
@@ -1034,7 +1104,7 @@ func flattenLbListenerActionForwardConfig(config *elbv2.ForwardActionConfig) []i
 	return []interface{}{m}
 }
 
-func flattenLbListenerActionForwardConfigTargetGroups(groups []*elbv2.TargetGroupTuple) []interface{} {
+func flattenLbListenerActionForwardConfigTargetGroups(groups []awstypes.TargetGroupTuple) []interface{} {
 	if len(groups) == 0 {
 		return []interface{}{}
 	}
@@ -1042,13 +1112,9 @@ func flattenLbListenerActionForwardConfigTargetGroups(groups []*elbv2.TargetGrou
 	var vGroups []interface{}
 
 	for _, group := range groups {
-		if group == nil {
-			continue
-		}
-
 		m := map[string]interface{}{
-			"arn":    aws.StringValue(group.TargetGroupArn),
-			"weight": aws.Int64Value(group.Weight),
+			"arn":    aws.ToString(group.TargetGroupArn),
+			"weight": aws.ToInt32(group.Weight),
 		}
 
 		vGroups = append(vGroups, m)
@@ -1057,32 +1123,46 @@ func flattenLbListenerActionForwardConfigTargetGroups(groups []*elbv2.TargetGrou
 	return vGroups
 }
 
-func flattenLbListenerActionForwardConfigTargetGroupStickinessConfig(config *elbv2.TargetGroupStickinessConfig) []interface{} {
+func flattenLbListenerActionForwardConfigTargetGroupStickinessConfig(config *awstypes.TargetGroupStickinessConfig) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"enabled":  aws.BoolValue(config.Enabled),
-		"duration": aws.Int64Value(config.DurationSeconds),
+		"enabled":  aws.ToBool(config.Enabled),
+		"duration": aws.ToInt32(config.DurationSeconds),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenLbListenerActionRedirectConfig(config *elbv2.RedirectActionConfig) []interface{} {
+func flattenLbListenerActionRedirectConfig(config *awstypes.RedirectActionConfig) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"host":        aws.StringValue(config.Host),
-		"path":        aws.StringValue(config.Path),
-		"port":        aws.StringValue(config.Port),
-		"protocol":    aws.StringValue(config.Protocol),
-		"query":       aws.StringValue(config.Query),
-		"status_code": aws.StringValue(config.StatusCode),
+		"host":        aws.ToString(config.Host),
+		"path":        aws.ToString(config.Path),
+		"port":        aws.ToString(config.Port),
+		"protocol":    aws.ToString(config.Protocol),
+		"query":       aws.ToString(config.Query),
+		"status_code": string(config.StatusCode),
 	}
 
 	return []interface{}{m}
+}
+
+const (
+	mutualAuthenticationOff         = "off"
+	mutualAuthenticationVerify      = "verify"
+	mutualAuthenticationPassthrough = "passthrough"
+)
+
+func mutualAuthenticationModeEnum_Values() []string {
+	return []string{
+		mutualAuthenticationOff,
+		mutualAuthenticationVerify,
+		mutualAuthenticationPassthrough,
+	}
 }

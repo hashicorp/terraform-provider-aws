@@ -35,7 +35,7 @@ func testAccEnabler_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
@@ -67,7 +67,7 @@ func testAccEnabler_accountID(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
@@ -100,7 +100,7 @@ func testAccEnabler_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
@@ -131,7 +131,7 @@ func testAccEnabler_updateResourceTypes(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
@@ -187,7 +187,7 @@ func testAccEnabler_updateResourceTypes_disjoint(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
@@ -230,7 +230,7 @@ func testAccEnabler_lambda(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
@@ -264,7 +264,7 @@ func testAccEnabler_memberAccount_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
@@ -299,7 +299,7 @@ func testAccEnabler_memberAccount_disappearsMemberAssociation(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
@@ -331,7 +331,7 @@ func testAccEnabler_memberAccount_multiple(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 			acctest.PreCheckThirdAccount(t)
@@ -371,7 +371,7 @@ func testAccEnabler_memberAccount_updateMemberAccounts(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 			acctest.PreCheckThirdAccount(t)
@@ -439,7 +439,7 @@ func testAccEnabler_memberAccount_updateMemberAccountsAndScanTypes(t *testing.T)
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.Inspector2EndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 			acctest.PreCheckThirdAccount(t)

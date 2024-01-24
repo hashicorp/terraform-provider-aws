@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package opensearch
 
 import (
@@ -15,9 +12,10 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_opensearch_domain", &resource.Sweeper{
 		Name: "aws_opensearch_domain",
 		F:    sweepDomains,
@@ -53,7 +51,7 @@ func sweepDomains(region string) error {
 	// ListDomainNames has no pagination support whatsoever
 	output, err := conn.ListDomainNamesWithContext(ctx, input)
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping OpenSearch Domain sweep for %s: %s", region, err)
 		return errs.ErrorOrNil()
 	}
@@ -111,7 +109,7 @@ func sweepDomains(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping OpenSearch Domains for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping OpenSearch Domain sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -135,13 +133,18 @@ func sweepInboundConnections(region string) error {
 		}
 
 		for _, v := range page.Connections {
-			if aws.StringValue(v.ConnectionStatus.StatusCode) != opensearchservice.InboundConnectionStatusCodeDeleted {
+			id := aws.StringValue(v.ConnectionId)
+
+			status := aws.StringValue(v.ConnectionStatus.StatusCode)
+			if status == opensearchservice.InboundConnectionStatusCodeDeleted || status == opensearchservice.InboundConnectionStatusCodeRejected {
+				log.Printf("[INFO] Skipping OpenSearch Inbound Connection %s: %s", id, status)
 				continue
 			}
 
 			r := ResourceInboundConnectionAccepter()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ConnectionId))
+			d.SetId(id)
+			d.Set("connection_status", status)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -149,7 +152,7 @@ func sweepInboundConnections(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping OpenSearch Inbound Connection sweep for %s: %s", region, err)
 		return nil
 	}
@@ -183,13 +186,16 @@ func sweepOutboundConnections(region string) error {
 		}
 
 		for _, v := range page.Connections {
-			if aws.StringValue(v.ConnectionStatus.StatusCode) != opensearchservice.OutboundConnectionStatusCodeDeleted {
+			id := aws.StringValue(v.ConnectionId)
+
+			if status := aws.StringValue(v.ConnectionStatus.StatusCode); status == opensearchservice.InboundConnectionStatusCodeDeleted {
+				log.Printf("[INFO] Skipping OpenSearch Outbound Connection %s: %s", id, status)
 				continue
 			}
 
 			r := ResourceOutboundConnection()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ConnectionId))
+			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -197,7 +203,7 @@ func sweepOutboundConnections(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping OpenSearch Outbound Connection sweep for %s: %s", region, err)
 		return nil
 	}

@@ -33,6 +33,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 		},
 		{
 			Factory: newDataSourceRegions,
+			Name:    "Regions",
 		},
 		{
 			Factory: newDataSourceService,

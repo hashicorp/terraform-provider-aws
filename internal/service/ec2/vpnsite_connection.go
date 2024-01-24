@@ -38,6 +38,7 @@ func ResourceVPNConnection() *schema.Resource {
 		ReadWithoutTimeout:   resourceVPNConnectionRead,
 		UpdateWithoutTimeout: resourceVPNConnectionUpdate,
 		DeleteWithoutTimeout: resourceVPNConnectionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -47,11 +48,11 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"core_network_arn": {
+			"core_network_attachment_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"core_network_attachment_arn": {
+			"core_network_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -696,7 +697,6 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 		input.VpnGatewayId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 VPN Connection: %s", input)
 	output, err := conn.CreateVpnConnectionWithContext(ctx, input)
 
 	if err != nil {
@@ -922,7 +922,6 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 				VpnTunnelOutsideIpAddress: aws.String(address),
 			}
 
-			log.Printf("[DEBUG] Modifying EC2 VPN Connection tunnel (%d) options: %s", i+1, input)
 			_, err := conn.ModifyVpnTunnelOptionsWithContext(ctx, input)
 
 			if err != nil {
@@ -991,8 +990,6 @@ func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *ec2.VpnCon
 		if v, ok := d.GetOk("remote_ipv4_network_cidr"); ok {
 			apiObject.RemoteIpv4NetworkCidr = aws.String(v.(string))
 		}
-
-		apiObject.TunnelInsideIpVersion = aws.String(ec2.TunnelInsideIpVersionIpv4)
 	}
 
 	if v, ok := d.GetOk("static_routes_only"); ok {

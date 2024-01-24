@@ -20,6 +20,15 @@ You should not use the `aws_vpc_security_group_ingress_rule` resource in conjunc
 ## Example Usage
 
 ```terraform
+resource "aws_security_group" "example" {
+  name        = "example"
+  description = "example"
+  vpc_id      = aws_vpc.main.id
+  tags = {
+    Name = "example"
+  }
+}
+
 resource "aws_vpc_security_group_ingress_rule" "example" {
   security_group_id = aws_security_group.example.id
 

@@ -268,7 +268,7 @@ Valid keys for `planned_limit` parameter.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import budgets using `AccountID:ActionID:BudgetName`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import budgets using `AccountID:BudgetName`. For example:
 
 ```terraform
 import {
@@ -277,7 +277,7 @@ import {
 }
 ```
 
-Using `terraform import`, import budgets using `AccountID:ActionID:BudgetName`. For example:
+Using `terraform import`, import budgets using `AccountID:BudgetName`. For example:
 
 ```console
 % terraform import aws_budgets_budget.myBudget 123456789012:myBudget

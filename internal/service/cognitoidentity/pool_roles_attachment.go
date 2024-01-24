@@ -161,7 +161,7 @@ func resourcePoolRolesAttachmentRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	if err != nil {
-		return create.DiagError(names.CognitoIdentity, create.ErrActionReading, ResNamePoolRolesAttachment, d.Id(), err)
+		return create.AppendDiagError(diags, names.CognitoIdentity, create.ErrActionReading, ResNamePoolRolesAttachment, d.Id(), err)
 	}
 
 	d.Set("identity_pool_id", ip.IdentityPoolId)

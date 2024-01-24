@@ -56,17 +56,15 @@ resource "aws_vpc_ipam_pool" "ipv6_test_public" {
   ipam_scope_id  = aws_vpc_ipam.example.public_default_scope_id
   locale         = "us-east-1"
   description    = "public ipv6"
-  advertisable   = false
-  aws_service    = "ec2"
+
+  publicly_advertisable = false
+  public_ip_source      = "amazon"
+  aws_service           = "ec2"
 }
 
 resource "aws_vpc_ipam_pool_cidr" "ipv6_test_public" {
-  ipam_pool_id = aws_vpc_ipam_pool.ipv6_test_public.id
-  cidr         = var.ipv6_cidr
-  cidr_authorization_context {
-    message   = var.message
-    signature = var.signature
-  }
+  ipam_pool_id   = aws_vpc_ipam_pool.ipv6_test_public.id
+  netmask_length = 52
 }
 ```
 

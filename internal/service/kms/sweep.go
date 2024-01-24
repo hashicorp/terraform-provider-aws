@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package kms
 
 import (
@@ -16,11 +13,12 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_kms_key", &resource.Sweeper{
 		Name: "aws_kms_key",
 		F:    sweepKeys,
@@ -75,7 +73,7 @@ func sweepKeys(region string) error {
 			d := r.Data(nil)
 			d.SetId(keyID)
 			d.Set("key_id", keyID)
-			d.Set("deletion_window_in_days", 7)
+			d.Set("deletion_window_in_days", 7) //nolint:gomnd
 
 			sweepResources = append(sweepResources, sdk.NewSweepResource(r, d, client))
 		}
@@ -83,7 +81,7 @@ func sweepKeys(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping KMS Key sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}

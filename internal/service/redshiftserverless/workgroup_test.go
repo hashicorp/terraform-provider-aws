@@ -101,7 +101,7 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 				Config: testAccWorkgroupConfig_configParameters(rName, "14400"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "7"),
+					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "9"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "datestyle",
 						"parameter_value": "ISO, MDY",
@@ -130,6 +130,14 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 						"parameter_key":   "enable_case_sensitive_identifier",
 						"parameter_value": "false",
 					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "require_ssl",
+						"parameter_value": "false",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "use_fips_ssl",
+						"parameter_value": "false",
+					}),
 				),
 			},
 			{
@@ -141,7 +149,7 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 				Config: testAccWorkgroupConfig_configParameters(rName, "28800"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "7"),
+					resource.TestCheckResourceAttr(resourceName, "config_parameter.#", "9"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "datestyle",
 						"parameter_value": "ISO, MDY",
@@ -168,6 +176,14 @@ func TestAccRedshiftServerlessWorkgroup_configParameters(t *testing.T) {
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
 						"parameter_key":   "enable_case_sensitive_identifier",
+						"parameter_value": "false",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "require_ssl",
+						"parameter_value": "false",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "config_parameter.*", map[string]string{
+						"parameter_key":   "use_fips_ssl",
 						"parameter_value": "false",
 					}),
 				),
@@ -238,6 +254,33 @@ func TestAccRedshiftServerlessWorkgroup_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshiftserverless.ResourceWorkgroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccRedshiftServerlessWorkgroup_port(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_workgroup.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, redshiftserverless.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWorkgroupConfig_port(rName, 8191),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWorkgroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "port", "8191"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -353,6 +396,14 @@ resource "aws_redshiftserverless_workgroup" "test" {
     parameter_key   = "enable_case_sensitive_identifier"
     parameter_value = "false"
   }
+  config_parameter {
+    parameter_key   = "require_ssl"
+    parameter_value = "false"
+  }
+  config_parameter {
+    parameter_key   = "use_fips_ssl"
+    parameter_value = "false"
+  }
 }
 `, rName, maxQueryExecutionTime)
 }
@@ -390,4 +441,18 @@ resource "aws_redshiftserverless_workgroup" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccWorkgroupConfig_port(rName string, port int) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name = %[1]q
+}
+
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+  port           = %[2]d
+}
+`, rName, port)
 }

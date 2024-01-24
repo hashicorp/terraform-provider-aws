@@ -128,7 +128,7 @@ func dataSourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, m
 
 	out, err := findDevEnvironmentByID(ctx, conn, env_id, spaceName, projectName)
 	if err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionReading, DSNameDevEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionReading, DSNameDevEnvironment, d.Id(), err)
 	}
 
 	d.SetId(aws.ToString(out.Id))
@@ -145,11 +145,11 @@ func dataSourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("status_reason", out.StatusReason)
 
 	if err := d.Set("ides", flattenIdes(out.Ides)); err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionSetting, ResNameDevEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionSetting, ResNameDevEnvironment, d.Id(), err)
 	}
 
 	if err := d.Set("repositories", flattenRepositories(out.Repositories)); err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionSetting, ResNameDevEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionSetting, ResNameDevEnvironment, d.Id(), err)
 	}
 
 	return diags
