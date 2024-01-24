@@ -69,7 +69,7 @@ func ResourceWebACL() *schema.Resource {
 					Computed: true,
 				},
 				"captcha_config":       outerCaptchaConfigSchema(),
-				"challenge_config":     outerCaptchaConfigSchema(),
+				"challenge_config":     outerChallengeConfigSchema(),
 				"custom_response_body": customResponseBodySchema(),
 				"default_action": {
 					Type:     schema.TypeList,
