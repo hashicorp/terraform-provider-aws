@@ -529,7 +529,6 @@ func ResourceUserProfile() *schema.Resource {
 									"user_group": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										Default:      sagemaker.RStudioServerProUserGroupRStudioUser,
 										ValidateFunc: validation.StringInSlice(sagemaker.RStudioServerProUserGroup_Values(), false),
 									},
 								},
