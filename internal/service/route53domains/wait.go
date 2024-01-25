@@ -59,7 +59,7 @@ func findOperationDetailByID(ctx context.Context, conn *route53domains.Client, i
 
 	output, err := conn.GetOperationDetail(ctx, input)
 
-	if errs.IsAErrorMessageContains[*types.InvalidInput](err, "not found") {
+	if errs.IsAErrorMessageContains[*types.InvalidInput](err, "No operation found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
