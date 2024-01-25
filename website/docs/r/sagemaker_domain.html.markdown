@@ -140,7 +140,7 @@ The following arguments are optional:
 
 * `efs_file_system_config` - (Optional) The default EBS storage settings for a private space. See [`efs_file_system_config` Block](#efs_file_system_config-block) below.
 
-#### `custom_posix_user_config`
+#### `custom_posix_user_config` Block
 
 * `gid` - (Optional) The POSIX group ID.
 * `uid` - (Optional) The POSIX user ID.
@@ -236,7 +236,7 @@ The following arguments are optional:
 
 #### `r_session_app_settings` Block
 
-* `custom_image` - (Optional) A list of custom SageMaker images that are configured to run as a KernelGateway app. see [`custom_image` Block](#custom_image-block) below.
+* `custom_image` - (Optional) A list of custom SageMaker images that are configured to run as a RSession app. see [`custom_image` Block](#custom_image-block) below.
 * `default_resource_spec` - (Optional) The default instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance. see [`default_resource_spec` Block](#default_resource_spec-block) above.
 
 ##### `custom_image` Block
