@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -213,15 +212,6 @@ func (r *delegationSignerRecordResource) Delete(ctx context.Context, request res
 
 		return
 	}
-}
-
-func GetDnssecKeyWithId(dnssecKeys []awstypes.DnssecKey, dnssec_key_id string) *awstypes.DnssecKey {
-	for _, dnssecKey := range dnssecKeys {
-		if *dnssecKey.Id == dnssec_key_id {
-			return &dnssecKey
-		}
-	}
-	return nil
 }
 
 type delegationSignerRecordResourceModel struct {
