@@ -5,29 +5,33 @@ package route53domains
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource(name="Delegation Signer Record")
-func newResourceDelegationSignerAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceDelegationSignerAssocation{}
+func newDelegationSignerRecordResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &delegationSignerRecordResource{}
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultDeleteTimeout(5 * time.Minute)
@@ -35,37 +39,62 @@ func newResourceDelegationSignerAssociation(_ context.Context) (resource.Resourc
 	return r, nil
 }
 
-const (
-	ResNameDelegationSignerAssociation = "DelegationSignerAssociation"
-)
-
-type resourceDelegationSignerAssocation struct {
+type delegationSignerRecordResource struct {
 	framework.ResourceWithConfigure
+	framework.WithNoOpUpdate
 	framework.WithTimeouts
+	framework.WithImportByID
 }
 
-func (r *resourceDelegationSignerAssocation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_route53domains_delegation_signer_record"
+func (r *delegationSignerRecordResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_route53domains_delegation_signer_record"
 }
 
-func (r *resourceDelegationSignerAssocation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *delegationSignerRecordResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"dnssec_key_id": framework.IDAttribute(),
 			"domain_name": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
-			"signing_algorithm_type": schema.Int64Attribute{
-				Required: true,
-			},
-			"flag": schema.Int64Attribute{
-				Required: true,
-			},
-			"public_key": schema.StringAttribute{
-				Required: true,
-			},
-			"dnssec_key_id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
+			"signing_algorithm": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[delegationSignerRecordSigningAlgorithmModel](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"algorithm": schema.Int64Attribute{
+							Required: true,
+							PlanModifiers: []planmodifier.Int64{
+								int64planmodifier.RequiresReplace(),
+							},
+						},
+						"flags": schema.Int64Attribute{
+							Required: true,
+							PlanModifiers: []planmodifier.Int64{
+								int64planmodifier.RequiresReplace(),
+							},
+						},
+						"public_key": schema.StringAttribute{
+							Required: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.RequiresReplace(),
+							},
+						},
+					},
+				},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtLeast(1),
+					listvalidator.SizeAtMost(1),
+				},
+			},
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Delete: true,
@@ -74,187 +103,116 @@ func (r *resourceDelegationSignerAssocation) Schema(ctx context.Context, req res
 	}
 }
 
-func (r *resourceDelegationSignerAssocation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *delegationSignerRecordResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data delegationSignerRecordResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().Route53DomainsClient(ctx)
 
-	var plan resourceDelegationSignerAssociationData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	input := &route53domains.AssociateDelegationSignerToDomainInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	flag := int32(plan.Flag.ValueInt64())
-	publicKey := plan.PublicKey.ValueString()
-
-	in := &route53domains.AssociateDelegationSignerToDomainInput{
-		DomainName: plan.DomainName.ValueStringPointer(),
-		SigningAttributes: &awstypes.DnssecSigningAttributes{
-			Algorithm: aws.Int32(int32(plan.SigningAlgorithmType.ValueInt64())),
-			Flags:     aws.Int32(flag),
-			PublicKey: aws.String(publicKey),
-		},
-	}
-
-	out, err := conn.AssociateDelegationSignerToDomain(ctx, in)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Route53Domains, create.ErrActionCreating, ResNameDelegationSignerAssociation, plan.DomainName.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.OperationId == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Route53Domains, create.ErrActionCreating, ResNameDelegationSignerAssociation, plan.DomainName.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
-
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-
-	if _, err := waitOperationSucceeded(ctx, conn, *out.OperationId, createTimeout); err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Route53Domains, create.ErrActionWaitingForCreation, ResNameDelegationSignerAssociation, plan.DomainName.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	domainDetail, err := findDomainDetailByName(ctx, conn, plan.DomainName.ValueString())
+	output, err := conn.AssociateDelegationSignerToDomain(ctx, input)
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Route53Domains, create.ErrActionCheckingExistence, ResNameDelegationSignerAssociation, plan.DomainName.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError("creating Route 53 Domains Delegation Signer Record", err.Error())
+
 		return
 	}
 
-	dnssecKey := getDnssecKeyWithFlagAndPublicKey(domainDetail.DnssecKeys, flag, publicKey)
-	if dnssecKey == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Route53Domains, create.ErrActionCheckingExistence, ResNameDelegationSignerAssociation, plan.DomainName.String(), nil),
-			errors.New("DNSSEC key not found").Error(),
-		)
+	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), r.CreateTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError("waiting for Route 53 Domains Delegation Signer Record create", err.Error())
+
 		return
 	}
 
-	plan.DNSSECKeyID = flex.StringToFramework(ctx, dnssecKey.Id)
+	signingAlgorithm, diags := data.SigningAlgorithm.ToPtr(ctx)
+	response.Diagnostics.Append(diags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	dnssecKey, err := findDNSSECKeyByThreePartKey(ctx, conn, data.DomainName.ValueString(), int(signingAlgorithm.Flags.ValueInt64()), signingAlgorithm.PublicKey.ValueString())
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s) DNSSEC key", data.DomainName.ValueString()), err.Error())
+
+		return
+	}
+
+	// Set values for unknowns.
+	data.DNSSECKeyID = fwflex.StringToFramework(ctx, dnssecKey.Id)
+	data.setID()
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceDelegationSignerAssocation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *delegationSignerRecordResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data delegationSignerRecordResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if err := data.InitFromID(); err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+
+		return
+	}
+
 	conn := r.Meta().Route53DomainsClient(ctx)
 
-	var state resourceDelegationSignerAssociationData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	dnssecKey, err := findDNSSECKeyByTwoPartKey(ctx, conn, data.DomainName.ValueString(), data.DNSSECKeyID.ValueString())
 
-	domainDetail, err := findDomainDetailByName(ctx, conn, state.DomainName.ValueString())
-
-	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
-		return
-	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Route53Domains, create.ErrActionCheckingExistence, ResNameDelegationSignerAssociation, state.DomainName.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s) DNSSEC key", data.DomainName.ValueString()), err.Error())
+
 		return
 	}
 
-	dnssecKey := GetDnssecKeyWithId(domainDetail.DnssecKeys, state.DNSSECKeyID.ValueString())
-	if dnssecKey == nil {
-		resp.State.RemoveResource(ctx)
+	// Set attributes for import.
+	var signingAlgorithm delegationSignerRecordSigningAlgorithmModel
+	response.Diagnostics.Append(fwflex.Flatten(ctx, dnssecKey, &signingAlgorithm)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	state.SigningAlgorithmType = flex.Int64ToFramework(ctx, aws.Int64(int64(aws.ToInt32(dnssecKey.Algorithm))))
-	state.Flag = flex.Int64ToFramework(ctx, aws.Int64(int64(aws.ToInt32(dnssecKey.Flags))))
-	state.PublicKey = flex.StringToFramework(ctx, dnssecKey.PublicKey)
+	data.SigningAlgorithm = fwtypes.NewListNestedObjectValueOfPtr(ctx, &signingAlgorithm)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-// There is no update API, so this method is a no-op
-func (r *resourceDelegationSignerAssocation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-}
+func (r *delegationSignerRecordResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data delegationSignerRecordResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-func (r *resourceDelegationSignerAssocation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().Route53DomainsClient(ctx)
 
-	var state resourceDelegationSignerAssociationData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	output, err := conn.DisassociateDelegationSignerFromDomain(ctx, &route53domains.DisassociateDelegationSignerFromDomainInput{
+		DomainName: aws.String(data.DomainName.ValueString()),
+		Id:         aws.String(data.DNSSECKeyID.ValueString()),
+	})
 
-	domainDetail, err := findDomainDetailByName(ctx, conn, state.DomainName.ValueString())
-
-	if tfresource.NotFound(err) {
-		return
-	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Route53Domains, create.ErrActionCheckingExistence, ResNameDelegationSignerAssociation, state.DomainName.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Route 53 Domains Delegation Signer Record (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	dnssecKey := GetDnssecKeyWithId(domainDetail.DnssecKeys, state.DNSSECKeyID.ValueString())
-	if dnssecKey == nil {
+	if _, err := waitOperationSucceeded(ctx, conn, aws.ToString(output.OperationId), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError("waiting for Route 53 Domains Delegation Signer Record delete", err.Error())
+
 		return
 	}
-
-	in := &route53domains.DisassociateDelegationSignerFromDomainInput{
-		DomainName: aws.String(state.DomainName.ValueString()),
-		Id:         aws.String(state.DNSSECKeyID.ValueString()),
-	}
-
-	out, err := conn.DisassociateDelegationSignerFromDomain(ctx, in)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Route53Domains, create.ErrActionDeleting, ResNameDelegationSignerAssociation, state.DomainName.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitOperationSucceeded(ctx, conn, *out.OperationId, deleteTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Route53Domains, create.ErrActionWaitingForDeletion, ResNameDelegationSignerAssociation, state.DomainName.String(), err),
-			err.Error(),
-		)
-		return
-	}
-}
-
-func (r *resourceDelegationSignerAssocation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	parts := strings.Split(req.ID, ":")
-	if len(parts) != 2 {
-		resp.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf(`Unexpected format for import ID (%s), use: "DomainName:DNSSECKeyID"`, req.ID))
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("domain_name"), parts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("dnssec_key_id"), parts[1])...)
-}
-
-func getDnssecKeyWithFlagAndPublicKey(dnssecKeys []awstypes.DnssecKey, flag int32, publicKey string) *awstypes.DnssecKey {
-	for _, dnssecKey := range dnssecKeys {
-		if *dnssecKey.Flags == flag && *dnssecKey.PublicKey == publicKey {
-			return &dnssecKey
-		}
-	}
-	return nil
 }
 
 func GetDnssecKeyWithId(dnssecKeys []awstypes.DnssecKey, dnssec_key_id string) *awstypes.DnssecKey {
@@ -266,11 +224,38 @@ func GetDnssecKeyWithId(dnssecKeys []awstypes.DnssecKey, dnssec_key_id string) *
 	return nil
 }
 
-type resourceDelegationSignerAssociationData struct {
-	DomainName           types.String   `tfsdk:"domain_name"`
-	SigningAlgorithmType types.Int64    `tfsdk:"signing_algorithm_type"`
-	Flag                 types.Int64    `tfsdk:"flag"`
-	PublicKey            types.String   `tfsdk:"public_key"`
-	DNSSECKeyID          types.String   `tfsdk:"dnssec_key_id"`
-	Timeouts             timeouts.Value `tfsdk:"timeouts"`
+type delegationSignerRecordResourceModel struct {
+	DNSSECKeyID      types.String                                                                 `tfsdk:"dnssec_key_id"`
+	DomainName       types.String                                                                 `tfsdk:"domain_name"`
+	ID               types.String                                                                 `tfsdk:"id"`
+	SigningAlgorithm fwtypes.ListNestedObjectValueOf[delegationSignerRecordSigningAlgorithmModel] `tfsdk:"signing_algorithm"`
+	Timeouts         timeouts.Value                                                               `tfsdk:"timeouts"`
+}
+
+type delegationSignerRecordSigningAlgorithmModel struct {
+	Algorithm types.Int64  `tfsdk:"algorithm"`
+	Flags     types.Int64  `tfsdk:"flags"`
+	PublicKey types.String `tfsdk:"public_key"`
+}
+
+const (
+	delegationSignerRecordResourceIDPartCount = 2
+)
+
+func (data *delegationSignerRecordResourceModel) InitFromID() error {
+	id := data.ID.ValueString()
+	parts, err := flex.ExpandResourceId(id, delegationSignerRecordResourceIDPartCount, false)
+
+	if err != nil {
+		return err
+	}
+
+	data.DNSSECKeyID = types.StringValue(parts[1])
+	data.DomainName = types.StringValue(parts[0])
+
+	return nil
+}
+
+func (data *delegationSignerRecordResourceModel) setID() {
+	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.DomainName.ValueString(), data.DNSSECKeyID.ValueString()}, delegationSignerRecordResourceIDPartCount, false)))
 }

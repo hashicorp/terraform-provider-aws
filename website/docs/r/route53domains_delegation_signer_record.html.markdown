@@ -129,17 +129,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import delegation signer records using the domain name and DNSSEC key ID, separated by a colon (`:`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import delegation signer records using the domain name and DNSSEC key ID, separated by a comma (`,`). For example:
 
 ```terraform
 import {
   to = aws_route53domains_delegation_signer_record.example
-  id = "example.com:40DE3534F5324DBDAC598ACEDB5B1E26A5368732D9C791D1347E4FBDDF6FC343"
+  id = "example.com,40DE3534F5324DBDAC598ACEDB5B1E26A5368732D9C791D1347E4FBDDF6FC343"
 }
 ```
 
-Using `terraform import`, import delegation signer records using the domain name and DNSSEC key ID, separated by a colon (`:`). For example:
+Using `terraform import`, import delegation signer records using the domain name and DNSSEC key ID, separated by a comma (`,`). For example:
 
 ```console
-% terraform import aws_route53domains_delegation_signer_record.example example.com:40DE3534F5324DBDAC598ACEDB5B1E26A5368732D9C791D1347E4FBDDF6FC343
+% terraform import aws_route53domains_delegation_signer_record.example example.com,40DE3534F5324DBDAC598ACEDB5B1E26A5368732D9C791D1347E4FBDDF6FC343
 ```

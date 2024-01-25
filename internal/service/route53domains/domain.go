@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -37,4 +38,28 @@ func findDomainDetailByName(ctx context.Context, conn *route53domains.Client, na
 	}
 
 	return output, nil
+}
+
+func findDNSSECKeyByTwoPartKey(ctx context.Context, conn *route53domains.Client, domainName, keyID string) (*types.DnssecKey, error) {
+	output, err := findDomainDetailByName(ctx, conn, domainName)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output.DnssecKeys, func(v types.DnssecKey) bool {
+		return aws.ToString(v.Id) == keyID
+	}))
+}
+
+func findDNSSECKeyByThreePartKey(ctx context.Context, conn *route53domains.Client, domainName string, flags int, publicKey string) (*types.DnssecKey, error) {
+	output, err := findDomainDetailByName(ctx, conn, domainName)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(tfslices.Filter(output.DnssecKeys, func(v types.DnssecKey) bool {
+		return int(aws.ToInt32(v.Flags)) == flags && aws.ToString(v.PublicKey) == publicKey
+	}))
 }

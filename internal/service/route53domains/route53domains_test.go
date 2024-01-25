@@ -25,6 +25,10 @@ func TestAccRoute53Domains_serial(t *testing.T) {
 			"nameservers":    testAccRegisteredDomain_nameservers,
 			"transferLock":   testAccRegisteredDomain_transferLock,
 		},
+		"DelegationSignerRecord": {
+			"basic":      testAccDelegationSignerRecord_basic,
+			"disappears": testAccDelegationSignerRecord_disappears,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
