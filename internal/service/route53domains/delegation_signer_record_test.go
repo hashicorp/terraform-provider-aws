@@ -111,7 +111,7 @@ func testAccCheckDelegationSignerAssociationExists(ctx context.Context, n string
 	}
 }
 
-func testAccDelegationSignerAssociationImportStateIDFunc(ctx context.Context, n string) resource.ImportStateIdFunc {
+func testAccDelegationSignerAssociationImportStateIDFunc(_ context.Context, n string) resource.ImportStateIdFunc {
 	return func(s *terraform.State) (string, error) {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
