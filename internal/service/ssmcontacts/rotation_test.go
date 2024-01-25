@@ -722,7 +722,7 @@ func testAccRotationConfig_recurrenceMultipleWeeklySettings(rName string) string
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_rotation" "test" {
   contact_ids = aws_ssmcontacts_contact.test[*].arn
-  name = %[1]q
+  name        = %[1]q
 
   recurrence {
     number_of_on_calls    = 1
