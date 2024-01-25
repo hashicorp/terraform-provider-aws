@@ -159,7 +159,7 @@ func (r *resourceProject) Read(ctx context.Context, req resource.ReadRequest, re
 		return
 	}
 
-	out, err := FindProjectByName(ctx, conn, state.ID.ValueString(), awstypes.CustomizationFeature(state.Feature.ValueString()))
+	out, err := findProjectByName(ctx, conn, state.ID.ValueString(), awstypes.CustomizationFeature(state.Feature.ValueString()))
 
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
@@ -283,7 +283,7 @@ func waitProjectDeleted(ctx context.Context, conn *rekognition.Client, name stri
 	return nil, err
 }
 
-func FindProjectByName(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature) (*awstypes.ProjectDescription, error) {
+func findProjectByName(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature) (*awstypes.ProjectDescription, error) {
 	features := []awstypes.CustomizationFeature{}
 	if len((string)(feature)) == 0 {
 		// we don't know the type on import, so we lookup both
@@ -321,7 +321,7 @@ func FindProjectByName(ctx context.Context, conn *rekognition.Client, name strin
 
 func statusProject(ctx context.Context, conn *rekognition.Client, name string, feature awstypes.CustomizationFeature) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := FindProjectByName(ctx, conn, name, feature)
+		out, err := findProjectByName(ctx, conn, name, feature)
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}

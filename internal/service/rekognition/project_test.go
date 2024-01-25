@@ -43,6 +43,7 @@ func TestAccRekognitionProject_basic(t *testing.T) {
 			{
 				Config: testAccProjectConfig_contentModeration(rProjectId, autoUpdate),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "id", rProjectId),
 					resource.TestCheckResourceAttr(resourceName, "name", rProjectId),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -78,6 +79,7 @@ func TestAccRekognitionProject_ContentModeration(t *testing.T) {
 			{
 				Config: testAccProjectConfig_contentModeration(rProjectId+"-1", "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "id", rProjectId+"-1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rProjectId+"-1"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -88,6 +90,7 @@ func TestAccRekognitionProject_ContentModeration(t *testing.T) {
 			{
 				Config: testAccProjectConfig_contentModeration(rProjectId+"-2", "DISABLED"),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "id", rProjectId+"-2"),
 					resource.TestCheckResourceAttr(resourceName, "name", rProjectId+"-2"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
@@ -119,6 +122,7 @@ func TestAccRekognitionProject_CustomLabels(t *testing.T) {
 			{
 				Config: testAccProjectConfig_customLabels(rProjectId),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "id", rProjectId),
 					resource.TestCheckResourceAttr(resourceName, "name", rProjectId),
@@ -132,6 +136,58 @@ func TestAccRekognitionProject_CustomLabels(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccRekognitionProject_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	rProjectId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rekognition_project.test"
+	feature := "CONTENT_MODERATION"
+	autoUpdate := "ENABLED"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.Rekognition)
+			testAccProjectPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.Rekognition),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckProjectDestroy(ctx, feature, rProjectId),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccProjectConfig_contentModeration(rProjectId, autoUpdate),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckProjectExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfrekognition.ResourceProject, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckProjectExists(ctx context.Context, name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return create.Error(names.Rekognition, create.ErrActionCheckingExistence, tfrekognition.ResNameProject, name, errors.New("not found"))
+		}
+
+		if rs.Primary.ID == "" {
+			return create.Error(names.Rekognition, create.ErrActionCheckingExistence, tfrekognition.ResNameProject, name, errors.New("not set"))
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RekognitionClient(ctx)
+		_, err := tfrekognition.FindProjectByName(ctx, conn, rs.Primary.ID, "")
+
+		if err != nil {
+			return create.Error(names.Rekognition, create.ErrActionCheckingExistence, tfrekognition.ResNameProject, rs.Primary.ID, err)
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckProjectDestroy(ctx context.Context, feature string, name string) resource.TestCheckFunc {
