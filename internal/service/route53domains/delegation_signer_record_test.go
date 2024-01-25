@@ -125,7 +125,7 @@ func testAccDelegationSignerAssociationImportStateIDFunc(ctx context.Context, n 
 func testAccDelegationSignerAssociationConfig_basic(domainName string, publicKey string) string {
 	return fmt.Sprintf(`
 resource "aws_route53domains_delegation_signer_record" "test" {
-  domain_name            = %[1]q
+  domain_name = %[1]q
 
   signing_attributes {
     algorithm  = 13
