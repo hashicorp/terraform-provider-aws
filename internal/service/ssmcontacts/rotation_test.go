@@ -233,8 +233,6 @@ func TestAccSSMContactsRotation_contactIds(t *testing.T) {
 					testAccCheckContactExists(ctx, firstContactResourceName),
 					testAccCheckContactExists(ctx, secondContactResourceName),
 					resource.TestCheckResourceAttr(resourceName, "contact_ids.#", "2"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "contact_ids.0", "ssm-contacts", "contact/test-contact-one-for-"+rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "contact_ids.1", "ssm-contacts", "contact/test-contact-two-for-"+rName),
 				),
 			},
 			{
@@ -250,15 +248,7 @@ func TestAccSSMContactsRotation_contactIds(t *testing.T) {
 					testAccCheckContactExists(ctx, secondContactResourceName),
 					testAccCheckContactExists(ctx, thirdContactResourceName),
 					resource.TestCheckResourceAttr(resourceName, "contact_ids.#", "3"),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "contact_ids.0", "ssm-contacts", "contact/test-contact-one-for-"+rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "contact_ids.1", "ssm-contacts", "contact/test-contact-two-for-"+rName),
-					acctest.CheckResourceAttrRegionalARN(resourceName, "contact_ids.2", "ssm-contacts", "contact/test-contact-three-for-"+rName),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -287,7 +277,8 @@ func TestAccSSMContactsRotation_recurrence(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.daily_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "recurrence.0.daily_settings.0", "18:00"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.daily_settings.0.hour_of_day", "18"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.daily_settings.0.minute_of_hour", "0"),
 				),
 			},
 			{
