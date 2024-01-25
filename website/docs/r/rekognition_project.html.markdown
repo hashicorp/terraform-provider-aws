@@ -15,7 +15,7 @@ Terraform resource for managing an AWS Rekognition Project.
 ```terraform
 resource "aws_rekognition_project" "example" {
   name        = "example-project"
-  auto_update = "true"
+  auto_update = "ENABLED"
   feature     = "CONTENT_MODERATION"
 }
 ```
