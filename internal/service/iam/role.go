@@ -67,6 +67,60 @@ func (r *resourceIamRole) Metadata(_ context.Context, request resource.MetadataR
 	response.TypeName = "aws_iam_role"
 }
 
+func EditPlanForSameReorderedPolicies() planmodifier.Map {
+	return editPlanForSameReorderedPolicies{}
+}
+
+// editPlanForSameReorderedPolicies implements the plan modifier.
+type editPlanForSameReorderedPolicies struct{}
+
+// Description returns a human-readable description of the plan modifier.
+// TODO: edit this once we get working
+func (m editPlanForSameReorderedPolicies) Description(_ context.Context) string {
+	return "Once set, the value of this attribute in state will not change."
+}
+
+// MarkdownDescription returns a markdown description of the plan modifier.
+// TODO: edit this once we get working
+func (m editPlanForSameReorderedPolicies) MarkdownDescription(_ context.Context) string {
+	return "Once set, the value of this attribute in state will not change."
+}
+
+// TODO: move to modify plan??
+func (m editPlanForSameReorderedPolicies) PlanModifyMap(ctx context.Context, req planmodifier.MapRequest, resp *planmodifier.MapResponse) {
+	// Do nothing if there is no state value.
+	if req.PlanValue.IsUnknown() || req.PlanValue.IsNull() {
+		return
+	}
+
+	// TODO: something with making sure not just unknown but has value
+	if req.StateValue.IsUnknown() || req.StateValue.IsNull() {
+		return
+	}
+
+	// TODO: do this more official way?
+	plan_inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, req.PlanValue)
+
+	if len(plan_inline_policies_map) == 0 {
+		// fmt.Println("empty plan map exiting")
+		return
+	}
+	state_inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, req.StateValue)
+	// fmt.Println(fmt.Sprintf("state_inline_policies_map: %+v", state_inline_policies_map))
+	// fmt.Println(fmt.Sprintf("plan_inline_policies_map: %+v", plan_inline_policies_map))
+
+	// If policies match, set plan for policy to use state version so that we don't see if diff bc ordering does not matter
+	for name, plan_policy_doc := range plan_inline_policies_map {
+		if state_policy_doc, ok := state_inline_policies_map[name]; ok {
+			if verify.PolicyStringsEquivalent(plan_policy_doc, state_policy_doc) {
+				plan_inline_policies_map[name] = state_policy_doc
+			}
+		}
+	}
+
+	resp.PlanValue = flex.FlattenFrameworkStringValueMap(ctx, plan_inline_policies_map)
+}
+
 func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -119,6 +173,10 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				// ElementType: types.StringType,
 				ElementType: fwtypes.IAMPolicyType,
 				Optional:    true,
+				PlanModifiers: []planmodifier.Map{
+					EditPlanForSameReorderedPolicies(),
+					// TODO: custom plan modifier for something like editing plan is fine
+				},
 				// TODO: custom validator for name stuff?
 				// TODO: validators and name func for both
 				// "name": {
@@ -179,7 +237,6 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
-					stringplanmodifier.UseStateForUnknown(),
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(roleNamePrefixMaxLen),
@@ -311,7 +368,6 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	if !plan.ManagedPolicyArns.IsNull() && !plan.ManagedPolicyArns.IsUnknown() {
-		fmt.Println("Hitting here!")
 		var managedPolicies []string
 		resp.Diagnostics.Append(plan.ManagedPolicyArns.ElementsAs(ctx, &managedPolicies, false)...)
 		if resp.Diagnostics.HasError() {
@@ -524,6 +580,7 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	setTagsOut(ctx, role.Tags)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	fmt.Println("Bottom of Read")
 }
 
 func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
@@ -717,28 +774,21 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 			return
 		}
 
-		fmt.Println(fmt.Sprintf("oldManagedARNs: %+v", oldManagedARNs))
-		fmt.Println(fmt.Sprintf("newManagedARNs: %+v", newManagedARNs))
-
 		var add, del []string
 
 		oldPolicyArnMap := make(map[string]int64)
 		for _, v := range oldManagedARNs {
-			fmt.Println(fmt.Sprintf("oldPolicyArnMap loop on %s", v))
 			oldPolicyArnMap[v] = 0
 		}
 
 		for _, v := range newManagedARNs {
-			fmt.Println(fmt.Sprintf("newManagedARNs loop on %s", v))
 			if _, ok := oldPolicyArnMap[v]; !ok {
-				fmt.Println(fmt.Sprintf("adding %s", v))
 				add = append(add, v)
 			}
 		}
 
 		newPolicyArnMap := make(map[string]int64)
 		for _, v := range newManagedARNs {
-			fmt.Println(fmt.Sprintf("newPolicyArnMap loop on %s", v))
 			newPolicyArnMap[v] = 0
 		}
 
@@ -747,10 +797,6 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 				del = append(del, v)
 			}
 		}
-
-		// fmt.Println(fmt.Sprintf("add: %+v", add))
-		fmt.Println(fmt.Sprintf("del: %+v", del))
-		fmt.Println(fmt.Sprintf("add: %+v", del))
 
 		if err := r.addRoleManagedPolicies(ctx, state.ID.ValueString(), add); err != nil {
 			resp.Diagnostics.AddError(
@@ -770,7 +816,6 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	if !plan.TagsAll.Equal(state.TagsAll) {
-		fmt.Println("Tags are not equal!")
 		err := roleUpdateTags(ctx, conn, plan.ID.ValueString(), state.TagsAll, plan.TagsAll)
 
 		// Some partitions (e.g. ISO) may not support tagging.
@@ -789,10 +834,7 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 			)
 			return
 		}
-	} else {
-		fmt.Println("Tags are equal")
 	}
-
 	plan.NamePrefix = flex.StringToFramework(ctx, create.NamePrefixFromName(plan.Name.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
