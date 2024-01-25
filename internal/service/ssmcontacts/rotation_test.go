@@ -103,7 +103,7 @@ func TestAccSSMContactsRotation_disappears(t *testing.T) {
 				Config: testAccRotationConfig_basic(rName, recurrenceMultiplier, timeZoneId),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfssmcontacts.ResourceRotation(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfssmcontacts.ResourceRotation, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -643,9 +643,10 @@ resource "aws_ssmcontacts_rotation" "test" {
   recurrence {
     number_of_on_calls = 1
 	recurrence_multiplier = %[2]d
-	daily_settings = [
-		"01:00"
-	]
+    daily_settings {
+      hour_of_day    = 1
+      minute_of_hour = 00
+    }
   }
  
  time_zone_id = %[3]q
@@ -668,9 +669,10 @@ resource "aws_ssmcontacts_rotation" "test" {
   recurrence {
     number_of_on_calls = 1
 	recurrence_multiplier = 1
-	daily_settings = [
-		"01:00"
-	]
+    daily_settings {
+      hour_of_day    = 9
+      minute_of_hour = 00
+    }
   }
 
   start_time = %[2]q

@@ -169,6 +169,10 @@ func (v ListNestedObjectValueOf[T]) ToObjectSlice(ctx context.Context) (any, dia
 	return v.ToSlice(ctx)
 }
 
+func (v ListNestedObjectValueOf[T]) ToObjectValueSlice(ctx context.Context) (any, diag.Diagnostics) {
+	return v.ToValueSlice(ctx)
+}
+
 // ToPtr returns a pointer to the single element of a ListNestedObject.
 func (v ListNestedObjectValueOf[T]) ToPtr(ctx context.Context) (*T, diag.Diagnostics) {
 	return nestedObjectValueObjectPtr[T](ctx, v.ListValue)
@@ -177,6 +181,10 @@ func (v ListNestedObjectValueOf[T]) ToPtr(ctx context.Context) (*T, diag.Diagnos
 // ToSlice returns a slice of pointers to the elements of a ListNestedObject.
 func (v ListNestedObjectValueOf[T]) ToSlice(ctx context.Context) ([]*T, diag.Diagnostics) {
 	return nestedObjectValueObjectSlice[T](ctx, v.ListValue)
+}
+
+func (v ListNestedObjectValueOf[T]) ToValueSlice(ctx context.Context) ([]T, diag.Diagnostics) {
+	return nestedObjectValueObjectValueSlice[T](ctx, v.ListValue)
 }
 
 func nestedObjectValueObjectPtr[T any](ctx context.Context, val valueWithElements) (*T, diag.Diagnostics) {
@@ -199,6 +207,27 @@ func nestedObjectValueObjectPtr[T any](ctx context.Context, val valueWithElement
 	}
 }
 
+func nestedObjectValueObject[T any](ctx context.Context, val valueWithElements) (T, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var zero T
+
+	elements := val.Elements()
+	switch n := len(elements); n {
+	case 0:
+		return zero, diags
+	case 1:
+		value, d := nestedObjectValueObjectFromElement[T](ctx, elements[0])
+		diags.Append(d...)
+		if diags.HasError() {
+			return zero, diags
+		}
+		return value, diags
+	default:
+		diags.Append(diag.NewErrorDiagnostic("Invalid list/set", fmt.Sprintf("too many elements: want 1, got %d", n)))
+		return zero, diags
+	}
+}
+
 func nestedObjectValueObjectSlice[T any](ctx context.Context, val valueWithElements) ([]*T, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
@@ -207,6 +236,25 @@ func nestedObjectValueObjectSlice[T any](ctx context.Context, val valueWithEleme
 	slice := make([]*T, n)
 	for i := 0; i < n; i++ {
 		ptr, d := nestedObjectValueObjectPtrFromElement[T](ctx, elements[i])
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		slice[i] = ptr
+	}
+
+	return slice, diags
+}
+
+func nestedObjectValueObjectValueSlice[T any](ctx context.Context, val valueWithElements) ([]T, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	elements := val.Elements()
+	n := len(elements)
+	slice := make([]T, n)
+	for i := 0; i < n; i++ {
+		ptr, d := nestedObjectValueObjectFromElement[T](ctx, elements[i])
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
@@ -228,6 +276,18 @@ func nestedObjectValueObjectPtrFromElement[T any](ctx context.Context, val attr.
 	}
 
 	return ptr, diags
+}
+
+func nestedObjectValueObjectFromElement[T any](ctx context.Context, val attr.Value) (T, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	var zero T
+	diags.Append(val.(ObjectValueOf[T]).ObjectValue.As(ctx, zero, basetypes.ObjectAsOptions{})...)
+	if diags.HasError() {
+		return zero, diags
+	}
+
+	return zero, diags
 }
 
 func NewListNestedObjectValueOfNull[T any](ctx context.Context) ListNestedObjectValueOf[T] {
