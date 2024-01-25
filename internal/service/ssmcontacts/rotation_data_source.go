@@ -2,6 +2,8 @@ package ssmcontacts
 
 import (
 	"context"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -9,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"time"
 )
 
 // @SDKDataSource("aws_ssmcontacts_rotation")
@@ -137,7 +138,7 @@ func dataSourceRotationRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).SSMContactsClient(ctx)
 	arn := d.Get("arn").(string)
 
-	out, err := FindRotationByID(ctx, conn, arn)
+	out, err := findRotationByID(ctx, conn, arn)
 	if err != nil {
 		return create.DiagError(names.SSMContacts, create.ErrActionReading, DSNameRotation, arn, err)
 	}

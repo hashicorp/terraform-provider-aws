@@ -8,3 +8,7 @@ package ssmcontacts
 var (
 	ResourceRotation = newResourceRotation
 )
+
+var (
+	FindRotationByID = findRotationByID
+)

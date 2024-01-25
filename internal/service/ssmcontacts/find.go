@@ -10,9 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts/types"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ssmcontacts/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -54,30 +52,6 @@ func findContactChannelByID(ctx context.Context, conn *ssmcontacts.Client, id st
 			}
 		}
 
-		return nil, err
-	}
-
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
-}
-
-func FindRotationByID(ctx context.Context, conn *ssmcontacts.Client, id string) (*ssmcontacts.GetRotationOutput, error) {
-	in := &ssmcontacts.GetRotationInput{
-		RotationId: aws.String(id),
-	}
-	out, err := conn.GetRotation(ctx, in)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
-	if err != nil {
 		return nil, err
 	}
 

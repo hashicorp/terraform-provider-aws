@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -211,29 +212,20 @@ func (r *resourceRotation) Create(ctx context.Context, request resource.CreateRe
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	dailySettingsInput := objectForInput[handOffTime]{
-		Data: recurrenceData.DailySettings,
-	}
-	dailySettingsOutput := objectForOutput[awstypes.HandOffTime]{}
+	
+	dailySettingsInput, dailySettingsOutput := setupSerializationObjects[handOffTime, awstypes.HandOffTime](recurrenceData.DailySettings)
 	response.Diagnostics.Append(flex.Expand(ctx, dailySettingsInput, &dailySettingsOutput)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	monthlySettingsInput := objectForInput[monthlySettingsData]{
-		Data: recurrenceData.MonthlySettings,
-	}
-	monthlySettingsOutput := objectForOutput[awstypes.MonthlySetting]{}
+	monthlySettingsInput, monthlySettingsOutput := setupSerializationObjects[monthlySettingsData, awstypes.MonthlySetting](recurrenceData.MonthlySettings)
 	response.Diagnostics.Append(flex.Expand(ctx, monthlySettingsInput, &monthlySettingsOutput)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	weeklySettingsInput := objectForInput[weeklySettingsData]{
-		Data: recurrenceData.WeeklySettings,
-	}
-	weeklySettingsOutput := objectForOutput[awstypes.WeeklySetting]{}
+	weeklySettingsInput, weeklySettingsOutput := setupSerializationObjects[weeklySettingsData, awstypes.WeeklySetting](recurrenceData.WeeklySettings)
 	response.Diagnostics.Append(flex.Expand(ctx, weeklySettingsInput, &weeklySettingsOutput)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -284,7 +276,7 @@ func (r *resourceRotation) Read(ctx context.Context, request resource.ReadReques
 		return
 	}
 
-	output, err := FindRotationByID(ctx, conn, state.ID.ValueString())
+	output, err := findRotationByID(ctx, conn, state.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.State.RemoveResource(ctx)
@@ -369,28 +361,19 @@ func (r *resourceRotation) Update(ctx context.Context, request resource.UpdateRe
 			return
 		}
 
-		dailySettingsInput := objectForInput[handOffTime]{
-			Data: recurrenceData.DailySettings,
-		}
-		dailySettingsOutput := objectForOutput[awstypes.HandOffTime]{}
+		dailySettingsInput, dailySettingsOutput := setupSerializationObjects[handOffTime, awstypes.HandOffTime](recurrenceData.DailySettings)
 		response.Diagnostics.Append(flex.Expand(ctx, dailySettingsInput, &dailySettingsOutput)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		monthlySettingsInput := objectForInput[monthlySettingsData]{
-			Data: recurrenceData.MonthlySettings,
-		}
-		monthlySettingsOutput := objectForOutput[awstypes.MonthlySetting]{}
+		monthlySettingsInput, monthlySettingsOutput := setupSerializationObjects[monthlySettingsData, awstypes.MonthlySetting](recurrenceData.MonthlySettings)
 		response.Diagnostics.Append(flex.Expand(ctx, monthlySettingsInput, &monthlySettingsOutput)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		weeklySettingsInput := objectForInput[weeklySettingsData]{
-			Data: recurrenceData.WeeklySettings,
-		}
-		weeklySettingsOutput := objectForOutput[awstypes.WeeklySetting]{}
+		weeklySettingsInput, weeklySettingsOutput := setupSerializationObjects[weeklySettingsData, awstypes.WeeklySetting](recurrenceData.WeeklySettings)
 		response.Diagnostics.Append(flex.Expand(ctx, weeklySettingsInput, &weeklySettingsOutput)...)
 		if response.Diagnostics.HasError() {
 			return
@@ -583,10 +566,42 @@ func flattenShiftCoveragesFW(ctx context.Context, object map[string][]awstypes.C
 	return fwtypes.NewListNestedObjectValueOfValueSlice[shiftCoveragesData](ctx, output)
 }
 
-type objectForOutput[T any] struct {
-	Data []T
+func findRotationByID(ctx context.Context, conn *ssmcontacts.Client, id string) (*ssmcontacts.GetRotationOutput, error) {
+	in := &ssmcontacts.GetRotationInput{
+		RotationId: aws.String(id),
+	}
+	out, err := conn.GetRotation(ctx, in)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
 }
 
 type objectForInput[T any] struct {
 	Data fwtypes.ListNestedObjectValueOf[T]
+}
+
+type objectForOutput[T any] struct {
+	Data []T
+}
+
+func setupSerializationObjects[T any, V any](input fwtypes.ListNestedObjectValueOf[T]) (objectForInput[T], objectForOutput[V]) {
+	in := objectForInput[T]{
+		Data: input,
+	}
+
+	return in, objectForOutput[V]{}
 }

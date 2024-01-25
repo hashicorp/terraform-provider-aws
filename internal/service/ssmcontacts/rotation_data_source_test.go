@@ -169,66 +169,66 @@ resource "aws_ssmcontacts_contact" "test_contact_two" {
 resource "aws_ssmcontacts_contact" "test_contact_three" {
   alias = "test-contact-three-for-%[1]s"
   type  = "PERSONAL"
-  
+
   depends_on = [aws_ssmincidents_replication_set.test]
 }
 
 resource "aws_ssmcontacts_rotation" "test" {
   contact_ids = [
-	aws_ssmcontacts_contact.test_contact_one.arn,
-	aws_ssmcontacts_contact.test_contact_two.arn,
-	aws_ssmcontacts_contact.test_contact_three.arn
+    aws_ssmcontacts_contact.test_contact_one.arn,
+    aws_ssmcontacts_contact.test_contact_two.arn,
+    aws_ssmcontacts_contact.test_contact_three.arn
   ]
 
   name = %[1]q
 
   recurrence {
-    number_of_on_calls = 1
-	recurrence_multiplier = 1
-	weekly_settings {
-		day_of_week = "MON"
-		hand_off_time = "04:25"
-	}
-	weekly_settings {
-		day_of_week = "WED"
-		hand_off_time = "07:34"
-	}
-	weekly_settings {
-		day_of_week = "FRI"
-		hand_off_time = "15:57"
-	}
+    number_of_on_calls    = 1
+    recurrence_multiplier = 1
+    weekly_settings {
+      day_of_week   = "MON"
+      hand_off_time = "04:25"
+    }
+    weekly_settings {
+      day_of_week   = "WED"
+      hand_off_time = "07:34"
+    }
+    weekly_settings {
+      day_of_week   = "FRI"
+      hand_off_time = "15:57"
+    }
     shift_coverages {
-		day_of_week = "MON"
-		coverage_times {
-		  start_time = "01:00"
-		  end_time = "23:00"
-		}
-  	}
-	shift_coverages {
-		day_of_week = "WED"
-		coverage_times {
-		  start_time = "01:00"
-		  end_time = "23:00"
-		}
-  	}
-	shift_coverages {
-		day_of_week = "FRI"
-		coverage_times {
-		  start_time = "01:00"
-		  end_time = "23:00"
-		}
-  	}
+      day_of_week = "MON"
+      coverage_times {
+        start_time = "01:00"
+        end_time   = "23:00"
+      }
+    }
+    shift_coverages {
+      day_of_week = "WED"
+      coverage_times {
+        start_time = "01:00"
+        end_time   = "23:00"
+      }
+    }
+    shift_coverages {
+      day_of_week = "FRI"
+      coverage_times {
+        start_time = "01:00"
+        end_time   = "23:00"
+      }
+    }
   }
 
   start_time = %[2]q
 
-  time_zone_id = "Australia/Sydney" 
+  time_zone_id = "Australia/Sydney"
 
   tags = {
-	key1 = "tag1"
-	key2 = "tag2"
+    key1 = "tag1"
+    key2 = "tag2"
   }
-  
+
   depends_on = [aws_ssmincidents_replication_set.test]
 }
 
@@ -244,22 +244,22 @@ func testRotationDataSourceConfig_dailySettings(rName string) string {
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_rotation" "test" {
   contact_ids = [
-	aws_ssmcontacts_contact.test_contact_one.arn,
+    aws_ssmcontacts_contact.test_contact_one.arn,
   ]
 
   name = %[1]q
 
   recurrence {
-    number_of_on_calls = 1
-	recurrence_multiplier = 1
-	daily_settings = [
-		"18:00"
-	]
+    number_of_on_calls    = 1
+    recurrence_multiplier = 1
+    daily_settings = [
+      "18:00"
+    ]
   }
- 
- time_zone_id = "Australia/Sydney"
 
- depends_on = [aws_ssmincidents_replication_set.test]
+  time_zone_id = "Australia/Sydney"
+
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 
 data "aws_ssmcontacts_rotation" "test" {
@@ -274,31 +274,31 @@ func testRotationDataSourceConfig_monthlySettings(rName string) string {
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_rotation" "test" {
   contact_ids = [
-	aws_ssmcontacts_contact.test_contact_one.arn,
+    aws_ssmcontacts_contact.test_contact_one.arn,
   ]
 
   name = %[1]q
 
   recurrence {
-    number_of_on_calls = 1
-	recurrence_multiplier = 1
-	monthly_settings {
-		day_of_month = 20
-		hand_off_time = "08:00"
-	}
-	monthly_settings {
-		day_of_month = 13
-		hand_off_time = "12:34"
-	}
-	monthly_settings {
-		day_of_month = 1
-		hand_off_time = "04:58"
-	}
+    number_of_on_calls    = 1
+    recurrence_multiplier = 1
+    monthly_settings {
+      day_of_month  = 20
+      hand_off_time = "08:00"
+    }
+    monthly_settings {
+      day_of_month  = 13
+      hand_off_time = "12:34"
+    }
+    monthly_settings {
+      day_of_month  = 1
+      hand_off_time = "04:58"
+    }
   }
- 
- time_zone_id = "Australia/Sydney"
 
- depends_on = [aws_ssmincidents_replication_set.test]
+  time_zone_id = "Australia/Sydney"
+
+  depends_on = [aws_ssmincidents_replication_set.test]
 }
 
 data "aws_ssmcontacts_rotation" "test" {
