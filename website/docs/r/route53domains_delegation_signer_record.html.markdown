@@ -1,12 +1,12 @@
 ---
 subcategory: "Route 53 Domains"
 layout: "aws"
-page_title: "AWS: aws_route53domains_ds_association"
+page_title: "AWS: aws_route53domains_delegation_signer_record"
 description: |-
   Provides a resource to manage a delegation signer record in the parent DNS zone for domains registered with Route53.
 ---
 
-# Resource: aws_route53domains_ds_association
+# Resource: aws_route53domains_delegation_signer_record
 
 Provides a resource to manage a [delegation signer record](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/dns-configuring-dnssec-enable-signing.html#dns-configuring-dnssec-enable-signing-step-1) in the parent DNS zone for domains registered with Route53.
 
@@ -93,11 +93,14 @@ resource "aws_route53_hosted_zone_dnssec" "example" {
   hosted_zone_id = aws_route53_key_signing_key.example.hosted_zone_id
 }
 
-resource "aws_route53domains_ds_association" "example" {
+resource "aws_route53domains_delegation_signer_record" "example" {
   domain_name            = "example.com"
-  signing_algorithm_type = aws_route53_key_signing_key.example.signing_algorithm_type
-  flag                   = aws_route53_key_signing_key.example.flag
-  public_key             = aws_route53_key_signing_key.example.public_key
+
+  signing_algorithm {
+    algorithm  = aws_route53_key_signing_key.example.signing_algorithm_type
+    flags      = aws_route53_key_signing_key.example.flag
+    public_key = aws_route53_key_signing_key.example.public_key
+  }
 }
 ```
 
@@ -105,10 +108,11 @@ resource "aws_route53domains_ds_association" "example" {
 
 This argument supports the following arguments:
 
-* `domain_name` - (Required) The name of the domain that will have its parent DNS zone updated with the Delegation Signer record. 
-* `signing_algorithm_type` - (Required) The algorithm which was used to generate the digest from the public key.
-* `flag` - (Required) Defines the type of key. It can be either a KSK (key-signing-key, value 257) or ZSK (zone-signing-key, value 256).
-* `public_key` - (Required) The base64-encoded public key part of the key pair that is passed to the registry.
+* `domain_name` - (Required) The name of the domain that will have its parent DNS zone updated with the Delegation Signer record.
+* `signing_algorithm` - (Required) The information about a key, including the algorithm, public key-value, and flags.
+    * `algorithm` - (Required) Algorithm which was used to generate the digest from the public key.
+    * `flags` - (Required) Defines the type of key. It can be either a KSK (key-signing-key, value `257`) or ZSK (zone-signing-key, value `256`).
+    * `public_key` - (Required) The base64-encoded public key part of the key pair that is passed to the registry.
 
 ## Attribute Reference
 
@@ -125,17 +129,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_route53domains_ds_association` using the Route 53 Domain Name and DNSSEC Key ID, separated by a colon (`:`). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import delegation signer records using the domain name and DNSSEC key ID, separated by a colon (`:`). For example:
 
 ```terraform
 import {
-  to = aws_route53domains_ds_association.example
+  to = aws_route53domains_delegation_signer_record.example
   id = "example.com:40DE3534F5324DBDAC598ACEDB5B1E26A5368732D9C791D1347E4FBDDF6FC343"
 }
 ```
 
-Using `terraform import`, import `aws_route53domains_ds_association` using the Route 53 Domain Name and DNSSEC Key ID, separated by a colon (`:`). For example:
+Using `terraform import`, import delegation signer records using the domain name and DNSSEC key ID, separated by a colon (`:`). For example:
 
 ```console
-% terraform import aws_route53domains_ds_association.example example.com:40DE3534F5324DBDAC598ACEDB5B1E26A5368732D9C791D1347E4FBDDF6FC343
+% terraform import aws_route53domains_delegation_signer_record.example example.com:40DE3534F5324DBDAC598ACEDB5B1E26A5368732D9C791D1347E4FBDDF6FC343
 ```

@@ -1,5 +1,5 @@
 ```release-note:new-resource
-aws_route53domains_ds_association
+aws_route53domains_delegation_signer_record
 ```
 
 ```release-note:enhancement

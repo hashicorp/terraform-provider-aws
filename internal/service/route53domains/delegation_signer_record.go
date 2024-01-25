@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Delegation Signer Association")
+// @FrameworkResource(name="Delegation Signer Record")
 func newResourceDelegationSignerAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceDelegationSignerAssocation{}
 
@@ -45,7 +45,7 @@ type resourceDelegationSignerAssocation struct {
 }
 
 func (r *resourceDelegationSignerAssocation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_route53domains_ds_association"
+	resp.TypeName = "aws_route53domains_delegation_signer_record"
 }
 
 func (r *resourceDelegationSignerAssocation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
