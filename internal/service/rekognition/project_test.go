@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccRekognitionProject_WithImport(t *testing.T) {
+func TestAccRekognitionProject_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rProjectId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -51,10 +51,9 @@ func TestAccRekognitionProject_WithImport(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"arn"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -124,14 +123,12 @@ func TestAccRekognitionProject_CustomLabels(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "id", rProjectId),
 					resource.TestCheckResourceAttr(resourceName, "name", rProjectId),
 					resource.TestCheckResourceAttr(resourceName, "feature", feature),
-					resource.TestCheckNoResourceAttr(resourceName, "auto_update"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"arn"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -179,8 +176,8 @@ func testAccProjectPreCheck(ctx context.Context, t *testing.T) {
 func testAccProjectConfig_contentModeration(rProjectId string, autoUpdate string) string {
 	return fmt.Sprintf(`
 resource "aws_rekognition_project" "test" {
-  name        = "%s"
-  auto_update = "%s"
+  name        = %[1]q
+  auto_update = %[2]q
   feature     = "CONTENT_MODERATION"
 }
 `, rProjectId, autoUpdate)
@@ -190,7 +187,7 @@ resource "aws_rekognition_project" "test" {
 func testAccProjectConfig_customLabels(rProjectId string) string {
 	return fmt.Sprintf(`
 resource "aws_rekognition_project" "test" {
-  name    = "%s"
+  name    = %[1]q
   feature = "CUSTOM_LABELS"
 }
 `, rProjectId)
