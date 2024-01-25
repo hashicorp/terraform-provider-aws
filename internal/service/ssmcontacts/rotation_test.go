@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -54,7 +54,7 @@ func TestAccSSMContactsRotation_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.daily_settings.0.hour_of_day", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.daily_settings.0.minute_of_hour", "0"),
 					resource.TestCheckResourceAttr(resourceName, "contact_ids.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm-contacts", regexp.MustCompile(`rotation\/+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm-contacts", regexache.MustCompile(`rotation\/+.`)),
 				),
 			},
 			{
