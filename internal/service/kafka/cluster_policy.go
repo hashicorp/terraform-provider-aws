@@ -23,7 +23,7 @@ import (
 )
 
 // @SDKResource("aws_msk_cluster_policy", name="Cluster Policy")
-func ResourceClusterPolicy() *schema.Resource {
+func resourceClusterPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterPolicyPut,
 		ReadWithoutTimeout:   resourceClusterPolicyRead,
@@ -94,7 +94,7 @@ func resourceClusterPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	output, err := FindClusterPolicyByARN(ctx, conn, d.Id())
+	output, err := findClusterPolicyByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MSK Cluster Policy (%s) not found, removing from state", d.Id())
@@ -142,7 +142,7 @@ func resourceClusterPolicyDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func FindClusterPolicyByARN(ctx context.Context, conn *kafka.Client, id string) (*kafka.GetClusterPolicyOutput, error) {
+func findClusterPolicyByARN(ctx context.Context, conn *kafka.Client, id string) (*kafka.GetClusterPolicyOutput, error) {
 	in := &kafka.GetClusterPolicyInput{
 		ClusterArn: aws.String(id),
 	}

@@ -464,7 +464,7 @@ func TestExpandGeneric(t *testing.T) {
 		{
 			TestName: "map string",
 			Source: &TestFlexTF11{
-				FieldInner: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+				FieldInner: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
 					"x": types.StringValue("y"),
 				}),
 			},
@@ -537,7 +537,7 @@ func TestExpandGeneric(t *testing.T) {
 			TestName: "nested string map",
 			Source: &TestFlexTF14{
 				FieldOuter: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF11{
-					FieldInner: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+					FieldInner: fwtypes.NewMapValueOfMust[basetypes.StringValue](ctx, map[string]attr.Value{
 						"x": types.StringValue("y"),
 					}),
 				}),
@@ -578,7 +578,7 @@ func TestExpandGeneric(t *testing.T) {
 		{
 			TestName: "map block key list",
 			Source: &TestFlexMapBlockKeyTF01{
-				BlockMap: fwtypes.NewListNestedObjectValueOfValueSlice[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
+				MapBlock: fwtypes.NewListNestedObjectValueOfValueSlice[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
 					{
 						MapBlockKey: types.StringValue("x"),
 						Attr1:       types.StringValue("a"),
@@ -593,7 +593,7 @@ func TestExpandGeneric(t *testing.T) {
 			},
 			Target: &TestFlexMapBlockKeyAWS01{},
 			WantTarget: &TestFlexMapBlockKeyAWS01{
-				BlockMap: map[string]TestFlexMapBlockKeyAWS02{
+				MapBlock: map[string]TestFlexMapBlockKeyAWS02{
 					"x": {
 						Attr1: "a",
 						Attr2: "b",
@@ -608,7 +608,7 @@ func TestExpandGeneric(t *testing.T) {
 		{
 			TestName: "map block key set",
 			Source: &TestFlexMapBlockKeyTF03{
-				BlockMap: fwtypes.NewSetNestedObjectValueOfValueSlice[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
+				MapBlock: fwtypes.NewSetNestedObjectValueOfValueSlice[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
 					{
 						MapBlockKey: types.StringValue("x"),
 						Attr1:       types.StringValue("a"),
@@ -623,7 +623,7 @@ func TestExpandGeneric(t *testing.T) {
 			},
 			Target: &TestFlexMapBlockKeyAWS01{},
 			WantTarget: &TestFlexMapBlockKeyAWS01{
-				BlockMap: map[string]TestFlexMapBlockKeyAWS02{
+				MapBlock: map[string]TestFlexMapBlockKeyAWS02{
 					"x": {
 						Attr1: "a",
 						Attr2: "b",
@@ -638,7 +638,7 @@ func TestExpandGeneric(t *testing.T) {
 		{
 			TestName: "map block key ptr source",
 			Source: &TestFlexMapBlockKeyTF01{
-				BlockMap: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexMapBlockKeyTF02{
+				MapBlock: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexMapBlockKeyTF02{
 					{
 						MapBlockKey: types.StringValue("x"),
 						Attr1:       types.StringValue("a"),
@@ -653,7 +653,7 @@ func TestExpandGeneric(t *testing.T) {
 			},
 			Target: &TestFlexMapBlockKeyAWS01{},
 			WantTarget: &TestFlexMapBlockKeyAWS01{
-				BlockMap: map[string]TestFlexMapBlockKeyAWS02{
+				MapBlock: map[string]TestFlexMapBlockKeyAWS02{
 					"x": {
 						Attr1: "a",
 						Attr2: "b",
@@ -668,7 +668,7 @@ func TestExpandGeneric(t *testing.T) {
 		{
 			TestName: "map block key ptr both",
 			Source: &TestFlexMapBlockKeyTF01{
-				BlockMap: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexMapBlockKeyTF02{
+				MapBlock: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexMapBlockKeyTF02{
 					{
 						MapBlockKey: types.StringValue("x"),
 						Attr1:       types.StringValue("a"),
@@ -683,12 +683,42 @@ func TestExpandGeneric(t *testing.T) {
 			},
 			Target: &TestFlexMapBlockKeyAWS03{},
 			WantTarget: &TestFlexMapBlockKeyAWS03{
-				BlockMap: map[string]*TestFlexMapBlockKeyAWS02{
+				MapBlock: map[string]*TestFlexMapBlockKeyAWS02{
 					"x": {
 						Attr1: "a",
 						Attr2: "b",
 					},
 					"y": {
+						Attr1: "c",
+						Attr2: "d",
+					},
+				},
+			},
+		},
+		{
+			TestName: "map block enum key",
+			Source: &TestFlexMapBlockKeyTF04{
+				MapBlock: fwtypes.NewListNestedObjectValueOfValueSlice[TestFlexMapBlockKeyTF05](ctx, []TestFlexMapBlockKeyTF05{
+					{
+						MapBlockKey: fwtypes.StringEnumValue(TestEnumList),
+						Attr1:       types.StringValue("a"),
+						Attr2:       types.StringValue("b"),
+					},
+					{
+						MapBlockKey: fwtypes.StringEnumValue(TestEnumScalar),
+						Attr1:       types.StringValue("c"),
+						Attr2:       types.StringValue("d"),
+					},
+				}),
+			},
+			Target: &TestFlexMapBlockKeyAWS01{},
+			WantTarget: &TestFlexMapBlockKeyAWS01{
+				MapBlock: map[string]TestFlexMapBlockKeyAWS02{
+					string(TestEnumList): {
+						Attr1: "a",
+						Attr2: "b",
+					},
+					string(TestEnumScalar): {
 						Attr1: "c",
 						Attr2: "d",
 					},
@@ -714,7 +744,7 @@ func TestExpandGeneric(t *testing.T) {
 						},
 					}),
 				}),
-				SessionAttributes: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+				SessionAttributes: fwtypes.NewMapValueOfMust[basetypes.StringValue](ctx, map[string]attr.Value{
 					"x": basetypes.NewStringValue("y"),
 				}),
 			},

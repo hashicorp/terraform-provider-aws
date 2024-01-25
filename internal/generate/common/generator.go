@@ -11,7 +11,7 @@ import (
 	"strings"
 	"text/template"
 
-	"github.com/mitchellh/cli"
+	"github.com/hashicorp/cli"
 )
 
 type Generator struct {

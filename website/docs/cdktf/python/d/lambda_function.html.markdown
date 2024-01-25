@@ -61,6 +61,7 @@ This data source exports the following attributes in addition to the arguments a
 * `kms_key_arn` - ARN for the KMS encryption key.
 * `last_modified` - Date this resource was last modified.
 * `layers` - List of Lambda Layer ARNs attached to your Lambda Function.
+* `logging_config` - Advanced logging settings.
 * `memory_size` - Amount of memory in MB your Lambda Function can use at runtime.
 * `qualified_arn` - Qualified (`:QUALIFIER` or `:VERSION` suffix) ARN identifying your Lambda Function. See also `arn`.
 * `qualified_invoke_arn` - Qualified (`:QUALIFIER` or `:VERSION` suffix) ARN to be used for invoking Lambda Function from API Gateway. See also `invoke_arn`.
@@ -76,4 +77,4 @@ This data source exports the following attributes in addition to the arguments a
 * `version` - The version of the Lambda function returned. If `qualifier` is not set, this will resolve to the most recent published version. If no published version of the function exists, `version` will resolve to `$LATEST`.
 * `vpc_config` - VPC configuration associated with your Lambda function.
 
-<!-- cache-key: cdktf-0.19.0 input-aa23743032adbbcb3971ecbe81f2b393d5995f92cb64512014ac1d8c97a94023 -->
+<!-- cache-key: cdktf-0.20.1 input-d12adb5ab778abb1b1f48a5df1c612e78eaa21663c524377f393ac9e240577d3 -->

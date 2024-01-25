@@ -66,6 +66,6 @@ The following arguments are required:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `enabledControls` - List of all the ARNs for the controls applied to the `target_identifier`.
+* `enabledControls` - List of all the ARNs for the controls applied to the `targetIdentifier`.
 
-<!-- cache-key: cdktf-0.19.0 input-5d64cbccc4ebc5f5b040cdf645dfc1895e2df0f54863b642aeb0024d4372f827 -->
+<!-- cache-key: cdktf-0.20.1 input-5d64cbccc4ebc5f5b040cdf645dfc1895e2df0f54863b642aeb0024d4372f827 -->

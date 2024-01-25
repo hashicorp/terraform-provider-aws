@@ -37,7 +37,7 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 					testAccCheckCanaryExists(ctx, resourceName, &conf1),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexache.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.9"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-6.1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
@@ -69,7 +69,7 @@ func TestAccSyntheticsCanary_basic(t *testing.T) {
 					testAccCheckCanaryExists(ctx, resourceName, &conf2),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexache.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.9"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-6.1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
@@ -148,10 +148,10 @@ func TestAccSyntheticsCanary_runtimeVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckCanaryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCanaryConfig_runtimeVersion(rName, "syn-nodejs-puppeteer-3.7"),
+				Config: testAccCanaryConfig_runtimeVersion(rName, "syn-nodejs-puppeteer-6.0"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf1),
-					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.7"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-6.0"),
 				),
 			},
 			{
@@ -161,10 +161,10 @@ func TestAccSyntheticsCanary_runtimeVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"zip_file", "start_canary", "delete_lambda"},
 			},
 			{
-				Config: testAccCanaryConfig_runtimeVersion(rName, "syn-nodejs-puppeteer-3.9"),
+				Config: testAccCanaryConfig_runtimeVersion(rName, "syn-nodejs-puppeteer-6.1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCanaryExists(ctx, resourceName, &conf1),
-					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.9"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-6.1"),
 				),
 			},
 		},
@@ -280,7 +280,7 @@ func TestAccSyntheticsCanary_s3(t *testing.T) {
 					testAccCheckCanaryExists(ctx, resourceName, &conf),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", synthetics.ServiceName, regexache.MustCompile(`canary:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-3.9"),
+					resource.TestCheckResourceAttr(resourceName, "runtime_version", "syn-nodejs-puppeteer-6.1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.memory_in_mb", "1000"),
 					resource.TestCheckResourceAttr(resourceName, "run_config.0.timeout_in_seconds", "840"),
@@ -747,7 +747,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.9"
+  runtime_version      = "syn-nodejs-puppeteer-6.1"
   delete_lambda        = true
 
   schedule {
@@ -771,7 +771,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.9"
+  runtime_version      = "syn-nodejs-puppeteer-6.1"
   delete_lambda        = true
 
   schedule {
@@ -796,7 +796,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.9"
+  runtime_version      = "syn-nodejs-puppeteer-6.1"
   delete_lambda        = true
 
   schedule {
@@ -821,7 +821,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.9"
+  runtime_version      = "syn-nodejs-puppeteer-6.1"
   delete_lambda        = true
 
   schedule {
@@ -847,7 +847,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.9"
+  runtime_version      = "syn-nodejs-puppeteer-6.1"
   delete_lambda        = true
 
   schedule {
@@ -877,7 +877,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.9"
+  runtime_version      = "syn-nodejs-puppeteer-6.1"
   delete_lambda        = true
 
   schedule {
@@ -895,7 +895,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.9"
+  runtime_version      = "syn-nodejs-puppeteer-6.1"
   delete_lambda        = true
 
   artifact_config {
@@ -926,7 +926,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.9"
+  runtime_version      = "syn-nodejs-puppeteer-6.1"
   delete_lambda        = true
 
   artifact_config {
@@ -973,7 +973,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest_modified.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.9"
+  runtime_version      = "syn-nodejs-puppeteer-6.1"
   delete_lambda        = true
 
   schedule {
@@ -994,7 +994,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
   start_canary         = %[2]t
-  runtime_version      = "syn-nodejs-puppeteer-3.9"
+  runtime_version      = "syn-nodejs-puppeteer-6.1"
   delete_lambda        = true
 
   schedule {
@@ -1015,7 +1015,7 @@ resource "aws_synthetics_canary" "test" {
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest_modified.zip"
   start_canary         = %[2]t
-  runtime_version      = "syn-nodejs-puppeteer-3.9"
+  runtime_version      = "syn-nodejs-puppeteer-6.1"
   delete_lambda        = true
 
   schedule {
@@ -1037,7 +1037,7 @@ resource "aws_synthetics_canary" "test" {
   s3_bucket            = aws_s3_object.test.bucket
   s3_key               = aws_s3_object.test.key
   s3_version           = aws_s3_object.test.version_id
-  runtime_version      = "syn-nodejs-puppeteer-3.9"
+  runtime_version      = "syn-nodejs-puppeteer-6.1"
   delete_lambda        = true
 
   schedule {
@@ -1060,45 +1060,10 @@ resource "aws_s3_object" "test" {
 `, rName))
 }
 
-func testAccCanaryVPCBaseConfig(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test1" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 0)
-  availability_zone = data.aws_availability_zones.available.names[0]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test2" {
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 2, 1)
-  availability_zone = data.aws_availability_zones.available.names[1]
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test1" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test2" {
+func testAccCanarySecurityGroupBaseConfig(rName string, count int) string {
+	return acctest.ConfigCompose(fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  count  = %[2]d
   vpc_id = aws_vpc.test.id
 
   tags = {
@@ -1110,13 +1075,14 @@ resource "aws_iam_role_policy_attachment" "test" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole"
   role       = aws_iam_role.test.name
 }
-`, rName))
+`, rName, count))
 }
 
 func testAccCanaryConfig_vpc1(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCanaryConfig_base(rName),
-		testAccCanaryVPCBaseConfig(rName),
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		testAccCanarySecurityGroupBaseConfig(rName, 2),
 		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -1124,7 +1090,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.9"
+  runtime_version      = "syn-nodejs-puppeteer-6.1"
   delete_lambda        = true
 
   schedule {
@@ -1132,8 +1098,8 @@ resource "aws_synthetics_canary" "test" {
   }
 
   vpc_config {
-    subnet_ids         = [aws_subnet.test1.id]
-    security_group_ids = [aws_security_group.test1.id]
+    subnet_ids         = [aws_subnet.test[0].id]
+    security_group_ids = [aws_security_group.test[0].id]
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
@@ -1144,7 +1110,8 @@ resource "aws_synthetics_canary" "test" {
 func testAccCanaryConfig_vpc2(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCanaryConfig_base(rName),
-		testAccCanaryVPCBaseConfig(rName),
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		testAccCanarySecurityGroupBaseConfig(rName, 2),
 		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -1152,7 +1119,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.9"
+  runtime_version      = "syn-nodejs-puppeteer-6.1"
   delete_lambda        = true
 
   schedule {
@@ -1160,8 +1127,8 @@ resource "aws_synthetics_canary" "test" {
   }
 
   vpc_config {
-    subnet_ids         = [aws_subnet.test1.id, aws_subnet.test2.id]
-    security_group_ids = [aws_security_group.test1.id, aws_security_group.test2.id]
+    subnet_ids         = aws_subnet.test[*].id
+    security_group_ids = aws_security_group.test[*].id
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
@@ -1172,7 +1139,8 @@ resource "aws_synthetics_canary" "test" {
 func testAccCanaryConfig_vpc3(rName string) string {
 	return acctest.ConfigCompose(
 		testAccCanaryConfig_base(rName),
-		testAccCanaryVPCBaseConfig(rName),
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		testAccCanarySecurityGroupBaseConfig(rName, 2),
 		fmt.Sprintf(`
 resource "aws_synthetics_canary" "test" {
   name                 = %[1]q
@@ -1180,7 +1148,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.9"
+  runtime_version      = "syn-nodejs-puppeteer-6.1"
   delete_lambda        = true
 
   schedule {
@@ -1188,8 +1156,8 @@ resource "aws_synthetics_canary" "test" {
   }
 
   vpc_config {
-    subnet_ids         = [aws_subnet.test2.id]
-    security_group_ids = [aws_security_group.test2.id]
+    subnet_ids         = [aws_subnet.test[1].id]
+    security_group_ids = [aws_security_group.test[1].id]
   }
 
   depends_on = [aws_iam_role_policy_attachment.test]
@@ -1205,7 +1173,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.9"
+  runtime_version      = "syn-nodejs-puppeteer-6.1"
   delete_lambda        = true
 
   schedule {
@@ -1227,7 +1195,7 @@ resource "aws_synthetics_canary" "test" {
   execution_role_arn   = aws_iam_role.test.arn
   handler              = "exports.handler"
   zip_file             = "test-fixtures/lambdatest.zip"
-  runtime_version      = "syn-nodejs-puppeteer-3.9"
+  runtime_version      = "syn-nodejs-puppeteer-6.1"
   delete_lambda        = true
 
   schedule {

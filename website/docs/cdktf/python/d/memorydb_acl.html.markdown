@@ -47,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Map of tags assigned to the ACL.
 * `user_names` - Set of MemoryDB user names included in this ACL.
 
-<!-- cache-key: cdktf-0.19.0 input-dae65be976707896a0ccf5394e359974398040d0921bfad084e1f4c241a2a529 -->
+<!-- cache-key: cdktf-0.20.1 input-dae65be976707896a0ccf5394e359974398040d0921bfad084e1f4c241a2a529 -->

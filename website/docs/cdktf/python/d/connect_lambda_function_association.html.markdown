@@ -45,4 +45,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `id` - AWS Region.
 
-<!-- cache-key: cdktf-0.19.0 input-c1d2d9bab41d5c50f6cd1ef56d9cd79787374ce4ee8749c6691de4b6f052c798 -->
+<!-- cache-key: cdktf-0.20.1 input-c1d2d9bab41d5c50f6cd1ef56d9cd79787374ce4ee8749c6691de4b6f052c798 -->

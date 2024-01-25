@@ -76,6 +76,24 @@ func ExpandStringyValueList[E ~string](configured []any) []E {
 	return vs
 }
 
+// ExpandStringValueList takes the result of flatmap.Expand for an array of strings
+// and returns a []string
+func ExpandStringValueListEmpty(configured []interface{}) []string {
+	return ExpandStringyValueListEmpty[string](configured)
+}
+
+func ExpandStringyValueListEmpty[E ~string](configured []any) []E {
+	vs := make([]E, 0, len(configured))
+	for _, v := range configured {
+		if val, ok := v.(string); ok { // empty string in config turns into nil in []interface{} so !ok
+			vs = append(vs, E(val))
+		} else {
+			vs = append(vs, E(""))
+		}
+	}
+	return vs
+}
+
 // Takes list of pointers to strings. Expand to an array
 // of raw strings and returns a []interface{}
 // to keep compatibility w/ schema.NewSetschema.NewSet
@@ -317,11 +335,17 @@ func StringToIntValue(v *string) int {
 	return i
 }
 
-// StringValueToInt64 converts a string to a Go int64 pointer value.
+// StringValueToInt64 converts a string to a Go int64 pointer.
 // Invalid integer strings are converted to 0.
 func StringValueToInt64(v string) *int64 {
-	i, _ := strconv.Atoi(v)
-	return aws.Int64(int64(i))
+	return aws.Int64(StringValueToInt64Value(v))
+}
+
+// StringValueToInt64Value converts a string to a Go int64 value.
+// Invalid integer strings are converted to 0.
+func StringValueToInt64Value(v string) int64 {
+	i, _ := strconv.ParseInt(v, 0, 64)
+	return i
 }
 
 // Takes a string of resource attributes separated by the ResourceIdSeparator constant

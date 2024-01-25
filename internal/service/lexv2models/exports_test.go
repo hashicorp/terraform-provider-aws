@@ -8,4 +8,5 @@ var (
 	ResourceBot        = newResourceBot
 	ResourceBotLocale  = newResourceBotLocale
 	ResourceBotVersion = newResourceBotVersion
+	ResourceIntent     = newResourceIntent
 )

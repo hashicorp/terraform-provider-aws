@@ -48,7 +48,7 @@ func TestAccCloud9EnvironmentEC2_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"instance_type", "subnet_id"},
+				ImportStateVerifyIgnore: []string{"instance_type", "subnet_id", "image_id"},
 			},
 		},
 	})
@@ -130,7 +130,7 @@ func TestAccCloud9EnvironmentEC2_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"instance_type", "subnet_id"},
+				ImportStateVerifyIgnore: []string{"instance_type", "subnet_id", "image_id"},
 			},
 			{
 				Config: testAccEnvironmentEC2Config_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -186,10 +186,6 @@ func testAccCheckEnvironmentEC2Exists(ctx context.Context, n string, v *cloud9.E
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Cloud9 Environment EC2 ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).Cloud9Conn(ctx)
 
 		output, err := tfcloud9.FindEnvironmentByID(ctx, conn, rs.Primary.ID)
@@ -225,6 +221,7 @@ func testAccCheckEnvironmentEC2Destroy(ctx context.Context) resource.TestCheckFu
 
 			return fmt.Errorf("Cloud9 Environment EC2 %s still exists.", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
@@ -253,6 +250,7 @@ resource "aws_cloud9_environment_ec2" "test" {
   instance_type = "t2.micro"
   name          = %[1]q
   subnet_id     = aws_subnet.test[0].id
+  image_id      = "amazonlinux-2023-x86_64"
 }
 `, rName))
 }
@@ -282,6 +280,7 @@ resource "aws_cloud9_environment_ec2" "test" {
   instance_type = "t2.micro"
   name          = %[1]q
   subnet_id     = aws_subnet.test[0].id
+  image_id      = "amazonlinux-2023-x86_64"
 
   tags = {
     %[2]q = %[3]q
@@ -296,6 +295,7 @@ resource "aws_cloud9_environment_ec2" "test" {
   instance_type = "t2.micro"
   name          = %[1]q
   subnet_id     = aws_subnet.test[0].id
+  image_id      = "amazonlinux-2023-x86_64"
 
   tags = {
     %[2]q = %[3]q

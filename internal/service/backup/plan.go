@@ -100,6 +100,11 @@ func ResourcePlan() *schema.Resource {
 										Type:     schema.TypeInt,
 										Optional: true,
 									},
+									"opt_in_to_archive_for_supported_resources": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
 								},
 							},
 						},
@@ -121,6 +126,11 @@ func ResourcePlan() *schema.Resource {
 												"delete_after": {
 													Type:     schema.TypeInt,
 													Optional: true,
+												},
+												"opt_in_to_archive_for_supported_resources": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Computed: true,
 												},
 											},
 										},
@@ -395,6 +405,9 @@ func expandPlanLifecycle(l []interface{}) *backup.Lifecycle {
 		if vMoveToColdStorageAfterDays, ok := lc["cold_storage_after"]; ok && vMoveToColdStorageAfterDays.(int) > 0 {
 			lifecycle.MoveToColdStorageAfterDays = aws.Int64(int64(vMoveToColdStorageAfterDays.(int)))
 		}
+		if optInToArchiveForSupportedResources, ok := lc["opt_in_to_archive_for_supported_resources"]; ok {
+			lifecycle.OptInToArchiveForSupportedResources = aws.Bool(optInToArchiveForSupportedResources.(bool))
+		}
 	}
 
 	return lifecycle
@@ -475,6 +488,7 @@ func flattenPlanCopyActionLifecycle(copyActionLifecycle *backup.Lifecycle) []int
 	m := map[string]interface{}{
 		"delete_after":       aws.Int64Value(copyActionLifecycle.DeleteAfterDays),
 		"cold_storage_after": aws.Int64Value(copyActionLifecycle.MoveToColdStorageAfterDays),
+		"opt_in_to_archive_for_supported_resources": aws.BoolValue(copyActionLifecycle.OptInToArchiveForSupportedResources),
 	}
 
 	return []interface{}{m}

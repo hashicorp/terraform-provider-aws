@@ -44,29 +44,29 @@ class MyConvertedCode(TerraformStack):
                     count=Wafv2WebAclRuleOverrideActionCount()
                 ),
                 priority=1,
-                statement=Wafv2WebAclRuleStatement(
-                    managed_rule_group_statement=Wafv2WebAclRuleStatementManagedRuleGroupStatement(
-                        name="AWSManagedRulesCommonRuleSet",
-                        rule_action_override=[Wafv2WebAclRuleStatementManagedRuleGroupStatementRuleActionOverride(
-                            action_to_use=Wafv2WebAclRuleStatementManagedRuleGroupStatementRuleActionOverrideActionToUse(
-                                count=Wafv2WebAclRuleStatementManagedRuleGroupStatementRuleActionOverrideActionToUseCount()
-                            ),
-                            name="SizeRestrictions_QUERYSTRING"
-                        ), Wafv2WebAclRuleStatementManagedRuleGroupStatementRuleActionOverride(
-                            action_to_use=Wafv2WebAclRuleStatementManagedRuleGroupStatementRuleActionOverrideActionToUse(
-                                count=Wafv2WebAclRuleStatementManagedRuleGroupStatementRuleActionOverrideActionToUseCount()
-                            ),
-                            name="NoUserAgent_HEADER"
-                        )
+                statement={
+                    "managed_rule_group_statement": {
+                        "name": "AWSManagedRulesCommonRuleSet",
+                        "rule_action_override": [{
+                            "action_to_use": {
+                                "count": {}
+                            },
+                            "name": "SizeRestrictions_QUERYSTRING"
+                        }, {
+                            "action_to_use": {
+                                "count": {}
+                            },
+                            "name": "NoUserAgent_HEADER"
+                        }
                         ],
-                        scope_down_statement=Wafv2WebAclRuleStatementManagedRuleGroupStatementScopeDownStatement(
-                            geo_match_statement=Wafv2WebAclRuleStatementManagedRuleGroupStatementScopeDownStatementGeoMatchStatement(
-                                country_codes=["US", "NL"]
-                            )
-                        ),
-                        vendor_name="AWS"
-                    )
-                ),
+                        "scope_down_statement": {
+                            "geo_match_statement": {
+                                "country_codes": ["US", "NL"]
+                            }
+                        },
+                        "vendor_name": "AWS"
+                    }
+                },
                 token_domains=["mywebsite.com", "myotherwebsite.com"],
                 visibility_config=Wafv2WebAclRuleVisibilityConfig(
                     cloudwatch_metrics_enabled=False,
@@ -114,37 +114,37 @@ class MyConvertedCode(TerraformStack):
                     count=Wafv2WebAclRuleOverrideActionCount()
                 ),
                 priority=1,
-                statement=Wafv2WebAclRuleStatement(
-                    managed_rule_group_statement=Wafv2WebAclRuleStatementManagedRuleGroupStatement(
-                        managed_rule_group_configs=[Wafv2WebAclRuleStatementManagedRuleGroupStatementManagedRuleGroupConfigs(
-                            aws_managed_rules_acfp_rule_set=Wafv2WebAclRuleStatementManagedRuleGroupStatementManagedRuleGroupConfigsAwsManagedRulesAcfpRuleSet(
-                                creation_path="/signin",
-                                registration_page_path="/register",
-                                request_inspection=Wafv2WebAclRuleStatementManagedRuleGroupStatementManagedRuleGroupConfigsAwsManagedRulesAcfpRuleSetRequestInspection(
-                                    email_field=Wafv2WebAclRuleStatementManagedRuleGroupStatementManagedRuleGroupConfigsAwsManagedRulesAcfpRuleSetRequestInspectionEmailField(
-                                        identifier="/email"
-                                    ),
-                                    password_field=Wafv2WebAclRuleStatementManagedRuleGroupStatementManagedRuleGroupConfigsAwsManagedRulesAcfpRuleSetRequestInspectionPasswordField(
-                                        identifier="/password"
-                                    ),
-                                    payload_type="JSON",
-                                    username_field=Wafv2WebAclRuleStatementManagedRuleGroupStatementManagedRuleGroupConfigsAwsManagedRulesAcfpRuleSetRequestInspectionUsernameField(
-                                        identifier="/username"
-                                    )
-                                ),
-                                response_inspection=Wafv2WebAclRuleStatementManagedRuleGroupStatementManagedRuleGroupConfigsAwsManagedRulesAcfpRuleSetResponseInspection(
-                                    status_code=Wafv2WebAclRuleStatementManagedRuleGroupStatementManagedRuleGroupConfigsAwsManagedRulesAcfpRuleSetResponseInspectionStatusCode(
-                                        failure_codes=[Token.as_number("403")],
-                                        success_codes=[Token.as_number("200")]
-                                    )
-                                )
-                            )
-                        )
+                statement={
+                    "managed_rule_group_statement": {
+                        "managed_rule_group_configs": [{
+                            "aws_managed_rules_acfp_rule_set": {
+                                "creation_path": "/signin",
+                                "registration_page_path": "/register",
+                                "request_inspection": {
+                                    "email_field": {
+                                        "identifier": "/email"
+                                    },
+                                    "password_field": {
+                                        "identifier": "/password"
+                                    },
+                                    "payload_type": "JSON",
+                                    "username_field": {
+                                        "identifier": "/username"
+                                    }
+                                },
+                                "response_inspection": {
+                                    "status_code": {
+                                        "failure_codes": [Token.as_number("403")],
+                                        "success_codes": [Token.as_number("200")]
+                                    }
+                                }
+                            }
+                        }
                         ],
-                        name="AWSManagedRulesACFPRuleSet",
-                        vendor_name="AWS"
-                    )
-                ),
+                        "name": "AWSManagedRulesACFPRuleSet",
+                        "vendor_name": "AWS"
+                    }
+                },
                 visibility_config=Wafv2WebAclRuleVisibilityConfig(
                     cloudwatch_metrics_enabled=False,
                     metric_name="friendly-rule-metric-name",
@@ -187,33 +187,33 @@ class MyConvertedCode(TerraformStack):
                     count=Wafv2WebAclRuleOverrideActionCount()
                 ),
                 priority=1,
-                statement=Wafv2WebAclRuleStatement(
-                    managed_rule_group_statement=Wafv2WebAclRuleStatementManagedRuleGroupStatement(
-                        managed_rule_group_configs=[Wafv2WebAclRuleStatementManagedRuleGroupStatementManagedRuleGroupConfigs(
-                            aws_managed_rules_atp_rule_set=Wafv2WebAclRuleStatementManagedRuleGroupStatementManagedRuleGroupConfigsAwsManagedRulesAtpRuleSet(
-                                login_path="/api/1/signin",
-                                request_inspection=Wafv2WebAclRuleStatementManagedRuleGroupStatementManagedRuleGroupConfigsAwsManagedRulesAtpRuleSetRequestInspection(
-                                    password_field=Wafv2WebAclRuleStatementManagedRuleGroupStatementManagedRuleGroupConfigsAwsManagedRulesAtpRuleSetRequestInspectionPasswordField(
-                                        identifier="/password"
-                                    ),
-                                    payload_type="JSON",
-                                    username_field=Wafv2WebAclRuleStatementManagedRuleGroupStatementManagedRuleGroupConfigsAwsManagedRulesAtpRuleSetRequestInspectionUsernameField(
-                                        identifier="/email"
-                                    )
-                                ),
-                                response_inspection=Wafv2WebAclRuleStatementManagedRuleGroupStatementManagedRuleGroupConfigsAwsManagedRulesAtpRuleSetResponseInspection(
-                                    status_code=Wafv2WebAclRuleStatementManagedRuleGroupStatementManagedRuleGroupConfigsAwsManagedRulesAtpRuleSetResponseInspectionStatusCode(
-                                        failure_codes=[Token.as_number("403")],
-                                        success_codes=[Token.as_number("200")]
-                                    )
-                                )
-                            )
-                        )
+                statement={
+                    "managed_rule_group_statement": {
+                        "managed_rule_group_configs": [{
+                            "aws_managed_rules_atp_rule_set": {
+                                "login_path": "/api/1/signin",
+                                "request_inspection": {
+                                    "password_field": {
+                                        "identifier": "/password"
+                                    },
+                                    "payload_type": "JSON",
+                                    "username_field": {
+                                        "identifier": "/email"
+                                    }
+                                },
+                                "response_inspection": {
+                                    "status_code": {
+                                        "failure_codes": [Token.as_number("403")],
+                                        "success_codes": [Token.as_number("200")]
+                                    }
+                                }
+                            }
+                        }
                         ],
-                        name="AWSManagedRulesATPRuleSet",
-                        vendor_name="AWS"
-                    )
-                ),
+                        "name": "AWSManagedRulesATPRuleSet",
+                        "vendor_name": "AWS"
+                    }
+                },
                 visibility_config=Wafv2WebAclRuleVisibilityConfig(
                     cloudwatch_metrics_enabled=False,
                     metric_name="friendly-rule-metric-name",
@@ -258,17 +258,17 @@ class MyConvertedCode(TerraformStack):
                 ),
                 name="rule-1",
                 priority=1,
-                statement=Wafv2WebAclRuleStatement(
-                    rate_based_statement=Wafv2WebAclRuleStatementRateBasedStatement(
-                        aggregate_key_type="IP",
-                        limit=10000,
-                        scope_down_statement=Wafv2WebAclRuleStatementRateBasedStatementScopeDownStatement(
-                            geo_match_statement=Wafv2WebAclRuleStatementRateBasedStatementScopeDownStatementGeoMatchStatement(
-                                country_codes=["US", "NL"]
-                            )
-                        )
-                    )
-                ),
+                statement={
+                    "rate_based_statement": {
+                        "aggregate_key_type": "IP",
+                        "limit": 10000,
+                        "scope_down_statement": {
+                            "geo_match_statement": {
+                                "country_codes": ["US", "NL"]
+                            }
+                        }
+                    }
+                },
                 visibility_config=Wafv2WebAclRuleVisibilityConfig(
                     cloudwatch_metrics_enabled=False,
                     metric_name="friendly-rule-metric-name",
@@ -313,11 +313,11 @@ class MyConvertedCode(TerraformStack):
                 ),
                 name="rule-1",
                 priority=1,
-                statement=Wafv2RuleGroupRuleStatement(
-                    geo_match_statement=Wafv2RuleGroupRuleStatementGeoMatchStatement(
-                        country_codes=["NL"]
-                    )
-                ),
+                statement={
+                    "geo_match_statement": {
+                        "country_codes": ["NL"]
+                    }
+                },
                 visibility_config=Wafv2RuleGroupRuleVisibilityConfig(
                     cloudwatch_metrics_enabled=False,
                     metric_name="friendly-rule-metric-name",
@@ -329,11 +329,11 @@ class MyConvertedCode(TerraformStack):
                 ),
                 name="rule-to-exclude-a",
                 priority=10,
-                statement=Wafv2RuleGroupRuleStatement(
-                    geo_match_statement=Wafv2RuleGroupRuleStatementGeoMatchStatement(
-                        country_codes=["US"]
-                    )
-                ),
+                statement={
+                    "geo_match_statement": {
+                        "country_codes": ["US"]
+                    }
+                },
                 visibility_config=Wafv2RuleGroupRuleVisibilityConfig(
                     cloudwatch_metrics_enabled=False,
                     metric_name="friendly-rule-metric-name",
@@ -345,11 +345,11 @@ class MyConvertedCode(TerraformStack):
                 ),
                 name="rule-to-exclude-b",
                 priority=15,
-                statement=Wafv2RuleGroupRuleStatement(
-                    geo_match_statement=Wafv2RuleGroupRuleStatementGeoMatchStatement(
-                        country_codes=["GB"]
-                    )
-                ),
+                statement={
+                    "geo_match_statement": {
+                        "country_codes": ["GB"]
+                    }
+                },
                 visibility_config=Wafv2RuleGroupRuleVisibilityConfig(
                     cloudwatch_metrics_enabled=False,
                     metric_name="friendly-rule-metric-name",
@@ -375,23 +375,23 @@ class MyConvertedCode(TerraformStack):
                     count=Wafv2WebAclRuleOverrideActionCount()
                 ),
                 priority=1,
-                statement=Wafv2WebAclRuleStatement(
-                    rule_group_reference_statement=Wafv2WebAclRuleStatementRuleGroupReferenceStatement(
-                        arn=example.arn,
-                        rule_action_override=[Wafv2WebAclRuleStatementRuleGroupReferenceStatementRuleActionOverride(
-                            action_to_use=Wafv2WebAclRuleStatementRuleGroupReferenceStatementRuleActionOverrideActionToUse(
-                                count=Wafv2WebAclRuleStatementRuleGroupReferenceStatementRuleActionOverrideActionToUseCount()
-                            ),
-                            name="rule-to-exclude-b"
-                        ), Wafv2WebAclRuleStatementRuleGroupReferenceStatementRuleActionOverride(
-                            action_to_use=Wafv2WebAclRuleStatementRuleGroupReferenceStatementRuleActionOverrideActionToUse(
-                                count=Wafv2WebAclRuleStatementRuleGroupReferenceStatementRuleActionOverrideActionToUseCount()
-                            ),
-                            name="rule-to-exclude-a"
-                        )
+                statement={
+                    "rule_group_reference_statement": {
+                        "arn": example.arn,
+                        "rule_action_override": [{
+                            "action_to_use": {
+                                "count": {}
+                            },
+                            "name": "rule-to-exclude-b"
+                        }, {
+                            "action_to_use": {
+                                "count": {}
+                            },
+                            "name": "rule-to-exclude-a"
+                        }
                         ]
-                    )
-                ),
+                    }
+                },
                 visibility_config=Wafv2WebAclRuleVisibilityConfig(
                     cloudwatch_metrics_enabled=False,
                     metric_name="friendly-rule-metric-name",
@@ -1043,9 +1043,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 # DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 from constructs import Construct
 from cdktf import TerraformStack
+#
+# Provider bindings are generated by running `cdktf get`.
+# See https://cdk.tf/provider-generation for more details.
+#
+from imports.aws.wafv2_web_acl import Wafv2WebAcl
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
+        Wafv2WebAcl.generate_config_for_import(self, "example", "a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL")
 ```
 
 Using `terraform import`, import WAFv2 Web ACLs using `ID/Name/Scope`. For example:
@@ -1054,4 +1060,4 @@ Using `terraform import`, import WAFv2 Web ACLs using `ID/Name/Scope`. For examp
 % terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-bb7e42f63763364f8c9c28922974f072b6dc15b1c389b5eb3fceec122747038c -->
+<!-- cache-key: cdktf-0.20.1 input-bb7e42f63763364f8c9c28922974f072b6dc15b1c389b5eb3fceec122747038c -->

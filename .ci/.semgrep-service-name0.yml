@@ -999,6 +999,49 @@ rules:
           patterns:
             - pattern-regex: "(?i)AppMesh"
     severity: WARNING
+  - id: appregistry-in-func-name
+    languages:
+      - go
+    message: Do not use "appregistry" in func name inside servicecatalogappregistry package
+    paths:
+      include:
+        - internal/service/servicecatalogappregistry
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)appregistry"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: appregistry-in-const-name
+    languages:
+      - go
+    message: Do not use "appregistry" in const name inside servicecatalogappregistry package
+    paths:
+      include:
+        - internal/service/servicecatalogappregistry
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)appregistry"
+    severity: WARNING
+  - id: appregistry-in-var-name
+    languages:
+      - go
+    message: Do not use "appregistry" in var name inside servicecatalogappregistry package
+    paths:
+      include:
+        - internal/service/servicecatalogappregistry
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)appregistry"
+    severity: WARNING
   - id: apprunner-in-func-name
     languages:
       - go
@@ -3607,4 +3650,107 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)ComputeOptimizer"
+    severity: WARNING
+  - id: computeoptimizer-in-var-name
+    languages:
+      - go
+    message: Do not use "ComputeOptimizer" in var name inside computeoptimizer package
+    paths:
+      include:
+        - internal/service/computeoptimizer
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ComputeOptimizer"
+    severity: WARNING
+  - id: configservice-in-func-name
+    languages:
+      - go
+    message: Do not use "ConfigService" in func name inside configservice package
+    paths:
+      include:
+        - internal/service/configservice
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ConfigService"
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: configservice-in-test-name
+    languages:
+      - go
+    message: Include "ConfigService" in test name
+    paths:
+      include:
+        - internal/service/configservice/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccConfigService"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: configservice-in-const-name
+    languages:
+      - go
+    message: Do not use "ConfigService" in const name inside configservice package
+    paths:
+      include:
+        - internal/service/configservice
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ConfigService"
+    severity: WARNING
+  - id: configservice-in-var-name
+    languages:
+      - go
+    message: Do not use "ConfigService" in var name inside configservice package
+    paths:
+      include:
+        - internal/service/configservice
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ConfigService"
+    severity: WARNING
+  - id: connect-in-func-name
+    languages:
+      - go
+    message: Do not use "Connect" in func name inside connect package
+    paths:
+      include:
+        - internal/service/connect
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Connect"
+            - pattern-not-regex: .*uickConnect.*
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: connect-in-test-name
+    languages:
+      - go
+    message: Include "Connect" in test name
+    paths:
+      include:
+        - internal/service/connect/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccConnect"
+            - pattern-regex: ^TestAcc.*
     severity: WARNING

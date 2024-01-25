@@ -11,6 +11,194 @@ import (
 	"testing"
 )
 
+func TestDNSSuffixForPartition(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "empty",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "China",
+			input:    ChinaPartitionID,
+			expected: "amazonaws.com.cn",
+		},
+		{
+			name:     "GovCloud",
+			input:    USGovCloudPartitionID,
+			expected: "amazonaws.com",
+		},
+		{
+			name:     "standard",
+			input:    StandardPartitionID,
+			expected: "amazonaws.com",
+		},
+		{
+			name:     "default",
+			input:    "custom",
+			expected: "amazonaws.com",
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := DNSSuffixForPartition(testCase.input), testCase.expected; got != want {
+				t.Errorf("got: %s, expected: %s", got, want)
+			}
+		})
+	}
+}
+
+func TestIsOptInRegion(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		input    string
+		expected bool
+	}{
+		{
+			name:     "empty",
+			input:    "",
+			expected: false,
+		},
+		{
+			name:     "China",
+			input:    CNNorth1RegionID,
+			expected: false,
+		},
+		{
+			name:     "GovCloud",
+			input:    USGovWest1RegionID,
+			expected: false,
+		},
+		{
+			name:     "standard opt-in",
+			input:    CAWest1RegionID,
+			expected: true,
+		},
+		{
+			name:     "standard not opt-in",
+			input:    CACentral1RegionID,
+			expected: false,
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := IsOptInRegion(testCase.input), testCase.expected; got != want {
+				t.Errorf("got: %t, expected: %t", got, want)
+			}
+		})
+	}
+}
+
+func TestPartitionForRegion(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "empty",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "China",
+			input:    CNNorth1RegionID,
+			expected: ChinaPartitionID,
+		},
+		{
+			name:     "GovCloud",
+			input:    USGovWest1RegionID,
+			expected: USGovCloudPartitionID,
+		},
+		{
+			name:     "standard",
+			input:    USWest2RegionID,
+			expected: StandardPartitionID,
+		},
+		{
+			name:     "default",
+			input:    "custom",
+			expected: StandardPartitionID,
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := PartitionForRegion(testCase.input), testCase.expected; got != want {
+				t.Errorf("got: %s, expected: %s", got, want)
+			}
+		})
+	}
+}
+
+func TestReverseDNS(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "empty",
+			input:    "",
+			expected: "",
+		},
+		{
+			name:     "amazonaws.com",
+			input:    "amazonaws.com",
+			expected: "com.amazonaws",
+		},
+		{
+			name:     "amazonaws.com.cn",
+			input:    "amazonaws.com.cn",
+			expected: "cn.com.amazonaws",
+		},
+		{
+			name:     "sc2s.sgov.gov",
+			input:    "sc2s.sgov.gov",
+			expected: "gov.sgov.sc2s",
+		},
+		{
+			name:     "c2s.ic.gov",
+			input:    "c2s.ic.gov",
+			expected: "gov.ic.c2s",
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+
+			if got, want := ReverseDNS(testCase.input), testCase.expected; got != want {
+				t.Errorf("got: %s, expected: %s", got, want)
+			}
+		})
+	}
+}
+
 func TestProviderPackageForAlias(t *testing.T) {
 	t.Parallel()
 

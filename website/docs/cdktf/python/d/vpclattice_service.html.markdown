@@ -54,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of the service.
 * `tags` - List of tags associated with the service.
 
-<!-- cache-key: cdktf-0.19.0 input-7b6870621548d47b2268852ea64bf86123c019e6fafbc3bb70238634ddfbd625 -->
+<!-- cache-key: cdktf-0.20.1 input-7b6870621548d47b2268852ea64bf86123c019e6fafbc3bb70238634ddfbd625 -->
