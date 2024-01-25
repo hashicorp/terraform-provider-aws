@@ -118,7 +118,7 @@ func testAccDelegationSignerAssociationImportStateIDFunc(ctx context.Context, n 
 			return "", fmt.Errorf("Not found: %s", n)
 		}
 
-		return fmt.Sprintf("%s:%s", rs.Primary.Attributes["domain_name"], rs.Primary.Attributes["dnssec_key_id"]), nil
+		return fmt.Sprintf("%s,%s", rs.Primary.Attributes["domain_name"], rs.Primary.Attributes["dnssec_key_id"]), nil
 	}
 }
 
