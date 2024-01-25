@@ -52,6 +52,7 @@ func TestAccWAFV2WebACL_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "association_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "captcha_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "challenge_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
@@ -2441,6 +2442,7 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "captcha_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "captcha_config.0.immunity_time_property.0.immunity_time", "120"),
+					resource.TestCheckResourceAttr(resourceName, "challenge_config.0.immunity_time_property.0.immunity_time", "300"),
 				),
 			},
 			{
@@ -3570,6 +3572,12 @@ resource "aws_wafv2_web_acl" "test" {
   captcha_config {
     immunity_time_property {
       immunity_time = 120
+    }
+  }
+
+  challenge_config {
+    immunity_time_property {
+      immunity_time = 300
     }
   }
 }

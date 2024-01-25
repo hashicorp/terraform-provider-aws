@@ -1832,7 +1832,7 @@ resource "aws_cloudwatch_event_target" "test" {
 
 func testAccTargetConfig_ecsCapacityProvider(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		testAccTargetConfig_ecsBase(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_event_target" "test" {
@@ -1854,7 +1854,7 @@ resource "aws_cloudwatch_event_target" "test" {
 
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 }
 
@@ -1883,6 +1883,7 @@ resource "aws_ecs_capacity_provider" "test" {
   auto_scaling_group_provider {
     auto_scaling_group_arn         = aws_autoscaling_group.test.arn
     managed_termination_protection = "DISABLED"
+    managed_draining               = "ENABLED"
 
     managed_scaling {
       maximum_scaling_step_size = 1
@@ -1897,7 +1898,7 @@ resource "aws_ecs_capacity_provider" "test" {
 
 func testAccTargetConfig_ecsPlacementStrategy(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		testAccTargetConfig_ecsBase(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_event_target" "test" {
@@ -1919,13 +1920,12 @@ resource "aws_cloudwatch_event_target" "test" {
       type  = "spread"
       field = "instanceId"
     }
-
   }
 }
 
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 }
 
@@ -1954,6 +1954,7 @@ resource "aws_ecs_capacity_provider" "test" {
   auto_scaling_group_provider {
     auto_scaling_group_arn         = aws_autoscaling_group.test.arn
     managed_termination_protection = "DISABLED"
+    managed_draining               = "ENABLED"
 
     managed_scaling {
       maximum_scaling_step_size = 1
@@ -1974,8 +1975,6 @@ resource "aws_ecs_cluster_capacity_providers" "test" {
     weight            = 100
   }
 }
-
-
 `, rName))
 }
 

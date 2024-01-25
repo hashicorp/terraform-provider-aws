@@ -300,15 +300,15 @@ terminateInstancesWithExpiration.
 * `replaceUnhealthyInstances` - (Optional) Indicates whether Spot fleet should replace unhealthy instances. Default `false`.
 * `launchSpecification` - (Optional) Used to define the launch configuration of the
   spot-fleet request. Can be specified multiple times to define different bids
-across different markets and instance types. Conflicts with `launch_template_config`. At least one of `launch_specification` or `launch_template_config` is required.
+across different markets and instance types. Conflicts with `launchTemplateConfig`. At least one of `launchSpecification` or `launchTemplateConfig` is required.
 
     **Note**: This takes in similar but not
     identical inputs as [`aws_instance`](instance.html).  There are limitations on
     what you can specify. See the list of officially supported inputs in the
     [reference documentation](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetLaunchSpecification.html). Any normal [`aws_instance`](instance.html) parameter that corresponds to those inputs may be used and it have
-    a additional parameter `iam_instance_profile_arn` takes `aws_iam_instance_profile` attribute `arn` as input.
+    a additional parameter `iamInstanceProfileArn` takes `aws_iam_instance_profile` attribute `arn` as input.
 
-* `launchTemplateConfig` - (Optional) Launch template configuration block. See [Launch Template Configs](#launch-template-configs) below for more details. Conflicts with `launch_specification`. At least one of `launch_specification` or `launch_template_config` is required.
+* `launchTemplateConfig` - (Optional) Launch template configuration block. See [Launch Template Configs](#launch-template-configs) below for more details. Conflicts with `launchSpecification`. At least one of `launchSpecification` or `launchTemplateConfig` is required.
 * `spotMaintenanceStrategies` - (Optional) Nested argument containing maintenance strategies for managing your Spot Instances that are at an elevated risk of being interrupted. Defined below.
 * `spotPrice` - (Optional; Default: On-demand price) The maximum bid price per unit hour.
 * `waitForFulfillment` - (Optional; Default: false) If set, Terraform will
@@ -317,13 +317,13 @@ across different markets and instance types. Conflicts with `launch_template_con
 * `targetCapacity` - The number of units to request. You can choose to set the
   target capacity in terms of instances or a performance characteristic that is
   important to your application workload, such as vCPUs, memory, or I/O.
-* `targetCapacityUnitType` - (Optional) The unit for the target capacity. This can only be done with `instance_requirements` defined
+* `targetCapacityUnitType` - (Optional) The unit for the target capacity. This can only be done with `instanceRequirements` defined
 * `allocationStrategy` - Indicates how to allocate the target capacity across
   the Spot pools specified by the Spot fleet request. Valid values: `lowestPrice`, `diversified`, `capacityOptimized`, `capacityOptimizedPrioritized`, and `priceCapacityOptimized`. The default is
   `lowestPrice`.
 * `instancePoolsToUseCount` - (Optional; Default: 1)
   The number of Spot pools across which to allocate your target Spot capacity.
-  Valid only when `allocation_strategy` is set to `lowestPrice`. Spot Fleet selects
+  Valid only when `allocationStrategy` is set to `lowestPrice`. Spot Fleet selects
   the cheapest Spot pools and evenly allocates your target Spot capacity across
   the number of Spot pools that you specify.
 * `excessCapacityTerminationPolicy` - Indicates whether running Spot
@@ -333,7 +333,7 @@ across different markets and instance types. Conflicts with `launch_template_con
   instances should be terminated when the Spot fleet request expires.
 * `terminateInstancesOnDelete` - (Optional) Indicates whether running Spot
   instances should be terminated when the resource is deleted (and the Spot fleet request cancelled).
-  If no value is specified, the value of the `terminate_instances_with_expiration` argument is used.
+  If no value is specified, the value of the `terminateInstancesWithExpiration` argument is used.
 * `instanceInterruptionBehaviour` - (Optional) Indicates whether a Spot
   instance stops or terminates when it is interrupted. Default is
   `terminate`.
@@ -346,7 +346,7 @@ across different markets and instance types. Conflicts with `launch_template_con
 * `onDemandAllocationStrategy` - The order of the launch template overrides to use in fulfilling On-Demand capacity. the possible values are: `lowestPrice` and `prioritized`. the default is `lowestPrice`.
 * `onDemandMaxTotalPrice` - The maximum amount per hour for On-Demand Instances that you're willing to pay. When the maximum amount you're willing to pay is reached, the fleet stops launching instances even if it hasn’t met the target capacity.
 * `onDemandTargetCapacity` - The number of On-Demand units to request. If the request type is `maintain`, you can specify a target capacity of 0 and add capacity later.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Launch Template Configs
 
@@ -363,7 +363,7 @@ The `launchTemplateConfig` block supports the following:
 
     **Note:** The specified launch template can specify only a subset of the
     inputs of [`aws_launch_template`](launch_template.html).  There are limitations on
-    what you can specify as spot fleet does not support all the attributes that are supported by autoscaling groups. [AWS documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html#launch-templates-spot-fleet) is currently sparse, but at least `instance_initiated_shutdown_behavior` is confirmed unsupported.
+    what you can specify as spot fleet does not support all the attributes that are supported by autoscaling groups. [AWS documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html#launch-templates-spot-fleet) is currently sparse, but at least `instanceInitiatedShutdownBehavior` is confirmed unsupported.
 
 ### spot_maintenance_strategies
 
@@ -371,7 +371,7 @@ The `launchTemplateConfig` block supports the following:
 
 ### capacity_rebalance
 
-* `replacementStrategy` - (Optional) The replacement strategy to use. Only available for spot fleets with `fleet_type` set to `maintain`. Valid values: `launch`.
+* `replacementStrategy` - (Optional) The replacement strategy to use. Only available for spot fleets with `fleetType` set to `maintain`. Valid values: `launch`.
 
 ### Overrides
 
@@ -427,7 +427,7 @@ This configuration block supports the following:
 
 * `allowedInstanceTypes` - (Optional) List of instance types to apply your specified attributes against. All other instance types are ignored, even if they match your specified attributes. You can use strings with one or more wild cards, represented by an asterisk (\*), to allow an instance type, size, or generation. The following are examples: `m5.8xlarge`, `c5*.*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are allowing the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are allowing all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is all instance types.
 
-    ~> **NOTE:** If you specify `allowed_instance_types`, you can't specify `excluded_instance_types`.
+    ~> **NOTE:** If you specify `allowedInstanceTypes`, you can't specify `excludedInstanceTypes`.
 
 * `bareMetal` - (Optional) Indicate whether bare metal instace types should be `included`, `excluded`, or `required`. Default is `excluded`.
 * `baselineEbsBandwidthMbps` - (Optional) Block describing the minimum and maximum baseline EBS bandwidth, in Mbps. Default is no minimum or maximum.
@@ -447,7 +447,7 @@ This configuration block supports the following:
 
 * `excludedInstanceTypes` - (Optional) List of instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*), to exclude an instance type, size, or generation. The following are examples: `m5.8xlarge`, `c5*.*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
 
-    ~> **NOTE:** If you specify `excluded_instance_types`, you can't specify `allowed_instance_types`.
+    ~> **NOTE:** If you specify `excludedInstanceTypes`, you can't specify `allowedInstanceTypes`.
 
 * `instanceGenerations` - (Optional) List of instance generation names. Default is any generation.
 
@@ -498,7 +498,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The Spot fleet request ID
 * `spotRequestState` - The state of the Spot fleet request.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -515,9 +515,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { SpotFleetRequest } from "./.gen/providers/aws/spot-fleet-request";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    SpotFleetRequest.generateConfigForImport(
+      this,
+      "fleet",
+      "sfr-005e9ec8-5546-4c31-b317-31a62325411e"
+    );
   }
 }
 
@@ -529,4 +539,4 @@ Using `terraform import`, import Spot Fleet Requests using `id`. For example:
 % terraform import aws_spot_fleet_request.fleet sfr-005e9ec8-5546-4c31-b317-31a62325411e
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-1ecd23c004a4840044b58f08e2d76b93455d0e78ffddfd4a1e1ae619c9c18174 -->
+<!-- cache-key: cdktf-0.20.1 input-1ecd23c004a4840044b58f08e2d76b93455d0e78ffddfd4a1e1ae619c9c18174 -->

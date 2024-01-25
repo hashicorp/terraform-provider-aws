@@ -57,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 * `securityPolicy` - Security policy for the domain name.
 * `tags` - Key-value map of tags for the resource.
 
-<!-- cache-key: cdktf-0.19.0 input-ec3ad0e8dda61e42fd75917952379778e983a6bf94a2c3f251ea482b57cbc3ed -->
+<!-- cache-key: cdktf-0.20.1 input-ec3ad0e8dda61e42fd75917952379778e983a6bf94a2c3f251ea482b57cbc3ed -->

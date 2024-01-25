@@ -11,9 +11,9 @@ description: |-
 # Data Source: aws_dx_locations
 
 Retrieve information about the AWS Direct Connect locations in the current AWS Region.
-These are the locations that can be specified when configuring [`awsDxConnection`](/docs/providers/aws/r/dx_connection.html) or [`awsDxLag`](/docs/providers/aws/r/dx_lag.html) resources.
+These are the locations that can be specified when configuring [`aws_dx_connection`](/docs/providers/aws/r/dx_connection.html) or [`aws_dx_lag`](/docs/providers/aws/r/dx_lag.html) resources.
 
-~> **Note:** This data source is different from the [`awsDxLocation`](/docs/providers/aws/d/dx_location.html) data source which retrieves information about a specific AWS Direct Connect location in the current AWS Region.
+~> **Note:** This data source is different from the [`aws_dx_location`](/docs/providers/aws/d/dx_location.html) data source which retrieves information about a specific AWS Direct Connect location in the current AWS Region.
 
 ## Example Usage
 
@@ -45,4 +45,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `locationCodes` - Code for the locations.
 
-<!-- cache-key: cdktf-0.19.0 input-edf9691bbd1000b72a448faca5fe847d9e9f887f6e0151e1dd14c6adec8f3ca6 -->
+<!-- cache-key: cdktf-0.20.1 input-edf9691bbd1000b72a448faca5fe847d9e9f887f6e0151e1dd14c6adec8f3ca6 -->

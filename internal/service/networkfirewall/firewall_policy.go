@@ -180,6 +180,11 @@ func ResourceFirewallPolicy() *schema.Resource {
 								},
 							},
 						},
+						"tls_inspection_configuration_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
 					},
 				},
 			},
@@ -517,6 +522,10 @@ func expandFirewallPolicy(l []interface{}) *networkfirewall.FirewallPolicy {
 		policy.StatelessRuleGroupReferences = expandStatelessRuleGroupReferences(v.List())
 	}
 
+	if v, ok := lRaw["tls_inspection_configuration_arn"].(string); ok && v != "" {
+		policy.TLSInspectionConfigurationArn = aws.String(v)
+	}
+
 	return policy
 }
 
@@ -548,6 +557,9 @@ func flattenFirewallPolicy(policy *networkfirewall.FirewallPolicy) []interface{}
 	}
 	if policy.StatelessRuleGroupReferences != nil {
 		p["stateless_rule_group_reference"] = flattenPolicyStatelessRuleGroupReference(policy.StatelessRuleGroupReferences)
+	}
+	if policy.TLSInspectionConfigurationArn != nil {
+		p["tls_inspection_configuration_arn"] = aws.StringValue(policy.TLSInspectionConfigurationArn)
 	}
 
 	return []interface{}{p}

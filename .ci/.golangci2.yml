@@ -173,6 +173,7 @@ linters-settings:
           - argument
         ignored-functions:
           # AWS Go SDK
+          - aws.Int32
           - aws.Int64
           - request.ConstantWaiterDelay
           - request.WithWaiterMaxAttempts

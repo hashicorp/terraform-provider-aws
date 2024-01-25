@@ -679,7 +679,7 @@ func (r *resourceManagedUserPoolClient) Delete(ctx context.Context, request reso
 	}
 
 	response.Diagnostics.AddWarning(
-		"Cognito User Pool Client (%s) not deleted",
+		fmt.Sprintf("Cognito User Pool Client (%s) not deleted", state.ID.ValueString()),
 		"User Pool Client is managed by another service and will be deleted when that resource is deleted. Removed from Terraform state.",
 	)
 }

@@ -12,7 +12,7 @@ description: |-
 
 Provides a security group resource.
 
-~> **NOTE on Security Groups and Security Group Rules:** Terraform currently provides a Security Group resource with `ingress` and `egress` rules defined in-line and a [Security Group Rule resource](security_group_rule.html) which manages one or more `ingress` or `egress` rules. Both of these resource were added before AWS assigned a [security group rule unique ID](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-rules.html), and they do not work well in all scenarios using the`description` and `tags` attributes, which rely on the unique ID. The [`awsVpcSecurityGroupEgressRule`](vpc_security_group_egress_rule.html) and [`awsVpcSecurityGroupIngressRule`](vpc_security_group_ingress_rule.html) resources have been added to address these limitations and should be used for all new security group rules. You should not use the `awsVpcSecurityGroupEgressRule` and `awsVpcSecurityGroupIngressRule` resources in conjunction with an `awsSecurityGroup` resource with in-line rules or with `awsSecurityGroupRule` resources defined for the same Security Group, as rule conflicts may occur and rules will be overwritten.
+~> **NOTE on Security Groups and Security Group Rules:** Terraform currently provides a Security Group resource with `ingress` and `egress` rules defined in-line and a [Security Group Rule resource](security_group_rule.html) which manages one or more `ingress` or `egress` rules. Both of these resource were added before AWS assigned a [security group rule unique ID](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/security-group-rules.html), and they do not work well in all scenarios using the`description` and `tags` attributes, which rely on the unique ID. The [`aws_vpc_security_group_egress_rule`](vpc_security_group_egress_rule.html) and [`aws_vpc_security_group_ingress_rule`](vpc_security_group_ingress_rule.html) resources have been added to address these limitations and should be used for all new security group rules. You should not use the `aws_vpc_security_group_egress_rule` and `aws_vpc_security_group_ingress_rule` resources in conjunction with an `aws_security_group` resource with in-line rules or with `aws_security_group_rule` resources defined for the same Security Group, as rule conflicts may occur and rules will be overwritten.
 
 ~> **NOTE:** Referencing Security Groups across VPC peering has certain restrictions. More information is available in the [VPC Peering User Guide](https://docs.aws.amazon.com/vpc/latest/peering/vpc-peering-security-groups.html).
 
@@ -33,35 +33,42 @@ import { TerraformStack } from "cdktf";
  * See https://cdk.tf/provider-generation for more details.
  */
 import { SecurityGroup } from "./.gen/providers/aws/security-group";
+import { VpcSecurityGroupEgressRule } from "./.gen/providers/aws/vpc-security-group-egress-rule";
+import { VpcSecurityGroupIngressRule } from "./.gen/providers/aws/vpc-security-group-ingress-rule";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
-    new SecurityGroup(this, "allow_tls", {
-      description: "Allow TLS inbound traffic",
-      egress: [
-        {
-          cidrBlocks: ["0.0.0.0/0"],
-          fromPort: 0,
-          ipv6CidrBlocks: ["::/0"],
-          protocol: "-1",
-          toPort: 0,
-        },
-      ],
-      ingress: [
-        {
-          cidrBlocks: [main.cidrBlock],
-          description: "TLS from VPC",
-          fromPort: 443,
-          ipv6CidrBlocks: [main.ipv6CidrBlock],
-          protocol: "tcp",
-          toPort: 443,
-        },
-      ],
+    const allowTls = new SecurityGroup(this, "allow_tls", {
+      description: "Allow TLS inbound traffic and all outbound traffic",
       name: "allow_tls",
       tags: {
         Name: "allow_tls",
       },
       vpcId: main.id,
+    });
+    new VpcSecurityGroupEgressRule(this, "allow_all_traffic_ipv4", {
+      cidrIpv4: "0.0.0.0/0",
+      ipProtocol: "-1",
+      securityGroupId: allowTls.id,
+    });
+    new VpcSecurityGroupEgressRule(this, "allow_all_traffic_ipv6", {
+      cidrIpv6: "::/0",
+      ipProtocol: "-1",
+      securityGroupId: allowTls.id,
+    });
+    new VpcSecurityGroupIngressRule(this, "allow_tls_ipv4", {
+      cidrIpv4: main.cidrBlock,
+      fromPort: 443,
+      ipProtocol: "tcp",
+      securityGroupId: allowTls.id,
+      toPort: 443,
+    });
+    new VpcSecurityGroupIngressRule(this, "allow_tls_ipv6", {
+      cidrIpv6: main.ipv6CidrBlock,
+      fromPort: 443,
+      ipProtocol: "tcp",
+      securityGroupId: allowTls.id,
+      toPort: 443,
     });
   }
 }
@@ -141,7 +148,7 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-You can also find a specific Prefix List using the `awsPrefixList` data source.
+You can also find a specific Prefix List using the `aws_prefix_list` data source.
 
 ### Removing All Ingress and Egress Rules
 
@@ -174,19 +181,19 @@ class MyConvertedCode extends TerraformStack {
 
 A simple security group `name` change "forces new" the security group--Terraform destroys the security group and creates a new one. (Likewise, `description`, `namePrefix`, or `vpcId` [cannot be changed](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/working-with-security-groups.html#creating-security-group).) Attempting to recreate the security group leads to a variety of complications depending on how it is used.
 
-Security groups are generally associated with other resources--**more than 100** AWS Provider resources reference security groups. Referencing a resource from another resource creates a one-way dependency. For example, if you create an EC2 `awsInstance` that has a `vpcSecurityGroupIds` argument that refers to an `awsSecurityGroup` resource, the `awsSecurityGroup` is a dependent of the `awsInstance`. Because of this, Terraform will create the security group first so that it can then be associated with the EC2 instance.
+Security groups are generally associated with other resources--**more than 100** AWS Provider resources reference security groups. Referencing a resource from another resource creates a one-way dependency. For example, if you create an EC2 `aws_instance` that has a `vpcSecurityGroupIds` argument that refers to an `aws_security_group` resource, the `aws_security_group` is a dependent of the `aws_instance`. Because of this, Terraform will create the security group first so that it can then be associated with the EC2 instance.
 
-However, the dependency relationship actually goes both directions causing the _Security Group Deletion Problem_. AWS does not allow you to delete the security group associated with another resource (_e.g._, the `awsInstance`).
+However, the dependency relationship actually goes both directions causing the _Security Group Deletion Problem_. AWS does not allow you to delete the security group associated with another resource (_e.g._, the `aws_instance`).
 
-Terraform does [not model bi-directional dependencies](https://developer.hashicorp.com/terraform/internals/graph) like this, but, even if it did, simply knowing the dependency situation would not be enough to solve it. For example, some resources must always have an associated security group while others don't need to. In addition, when the `awsSecurityGroup` resource attempts to recreate, it receives a dependent object error, which does not provide information on whether the dependent object is a security group rule or, for example, an associated EC2 instance. Within Terraform, the associated resource (_e.g._, `awsInstance`) does not receive an error when the `awsSecurityGroup` is trying to recreate even though that is where changes to the associated resource would need to take place (_e.g._, removing the security group association).
+Terraform does [not model bi-directional dependencies](https://developer.hashicorp.com/terraform/internals/graph) like this, but, even if it did, simply knowing the dependency situation would not be enough to solve it. For example, some resources must always have an associated security group while others don't need to. In addition, when the `aws_security_group` resource attempts to recreate, it receives a dependent object error, which does not provide information on whether the dependent object is a security group rule or, for example, an associated EC2 instance. Within Terraform, the associated resource (_e.g._, `aws_instance`) does not receive an error when the `aws_security_group` is trying to recreate even though that is where changes to the associated resource would need to take place (_e.g._, removing the security group association).
 
 Despite these sticky problems, below are some ways to improve your experience when you find it necessary to recreate a security group.
 
-#### `createBeforeDestroy`
+#### `create_before_destroy`
 
 (This example is one approach to [recreating security groups](#recreating-a-security-group). For more information on the challenges and the _Security Group Deletion Problem_, see [the section above](#recreating-a-security-group).)
 
-Normally, Terraform first deletes the existing security group resource and then creates a new one. When a security group is associated with a resource, the delete won't succeed. You can invert the default behavior using the [`createBeforeDestroy` meta argument](https://www.terraform.io/language/meta-arguments/lifecycle#create_before_destroy):
+Normally, Terraform first deletes the existing security group resource and then creates a new one. When a security group is associated with a resource, the delete won't succeed. You can invert the default behavior using the [`create_before_destroy` meta argument](https://www.terraform.io/language/meta-arguments/lifecycle#create_before_destroy):
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -211,11 +218,11 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-#### `replaceTriggeredBy`
+#### `replace_triggered_by`
 
 (This example is one approach to [recreating security groups](#recreating-a-security-group). For more information on the challenges and the _Security Group Deletion Problem_, see [the section above](#recreating-a-security-group).)
 
-To replace a resource when a security group changes, use the [`replaceTriggeredBy` meta argument](https://www.terraform.io/language/meta-arguments/lifecycle#replace_triggered_by). Note that in this example, the `awsInstance` will be destroyed and created again when the `awsSecurityGroup` changes.
+To replace a resource when a security group changes, use the [`replace_triggered_by` meta argument](https://www.terraform.io/language/meta-arguments/lifecycle#replace_triggered_by). Note that in this example, the `aws_instance` will be destroyed and created again when the `aws_security_group` changes.
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -335,7 +342,7 @@ This resource supports the following arguments:
 * `namePrefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `name` - (Optional, Forces new resource) Name of the security group. If omitted, Terraform will assign a random, unique name.
 * `revokeRulesOnDelete` - (Optional) Instruct Terraform to revoke all of the Security Groups attached ingress and egress rules before deleting the rule itself. This is normally not needed, however certain AWS services such as Elastic Map Reduce may automatically add required rules to security groups used with the service, and those rules may contain a cyclic dependency that prevent the security groups from being destroyed without removing the dependency first. Default `false`.
-* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpcId` - (Optional, Forces new resource) VPC ID. Defaults to the region's default VPC.
 
 ### ingress
@@ -346,7 +353,7 @@ The following arguments are required:
 
 * `fromPort` - (Required) Start port (or ICMP type number if protocol is `icmp` or `icmpv6`).
 * `toPort` - (Required) End range port (or ICMP code if protocol is `icmp`).
-* `protocol` - (Required) Protocol. If you select a protocol of `-1` (semantically equivalent to `all`, which is not a valid value here), you must specify a `from_port` and `to_port` equal to 0.  The supported values are defined in the `IpProtocol` argument on the [IpPermission](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IpPermission.html) API reference. This argument is normalized to a lowercase value to match the AWS API requirement when using with Terraform 0.12.x and above, please make sure that the value of the protocol is specified as lowercase when using with older version of Terraform to avoid an issue during upgrade.
+* `protocol` - (Required) Protocol. If you select a protocol of `-1` (semantically equivalent to `all`, which is not a valid value here), you must specify a `fromPort` and `toPort` equal to 0. The supported values are defined in the `IpProtocol` argument on the [IpPermission](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IpPermission.html) API reference. This argument is normalized to a lowercase value to match the AWS API requirement when using with Terraform 0.12.x and above, please make sure that the value of the protocol is specified as lowercase when using with older version of Terraform to avoid an issue during upgrade.
 
 The following arguments are optional:
 
@@ -376,7 +383,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of this egress rule.
 * `ipv6CidrBlocks` - (Optional) List of IPv6 CIDR blocks.
 * `prefixListIds` - (Optional) List of Prefix List IDs.
-* `protocol` - (Required) Protocol. If you select a protocol of `-1` (semantically equivalent to `all`, which is not a valid value here), you must specify a `from_port` and `to_port` equal to 0.  The supported values are defined in the `IpProtocol` argument in the [IpPermission](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IpPermission.html) API reference. This argument is normalized to a lowercase value to match the AWS API requirement when using Terraform 0.12.x and above. Please make sure that the value of the protocol is specified as lowercase when used with older version of Terraform to avoid issues during upgrade.
+* `protocol` - (Required) Protocol. If you select a protocol of `-1` (semantically equivalent to `all`, which is not a valid value here), you must specify a `fromPort` and `toPort` equal to 0. The supported values are defined in the `IpProtocol` argument in the [IpPermission](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IpPermission.html) API reference. This argument is normalized to a lowercase value to match the AWS API requirement when using Terraform 0.12.x and above. Please make sure that the value of the protocol is specified as lowercase when used with older version of Terraform to avoid issues during upgrade.
 * `securityGroups` - (Optional) List of security groups. A group name can be used relative to the default VPC. Otherwise, group ID.
 * `self` - (Optional) Whether the security group itself will be added as a source to this egress rule.
 
@@ -387,7 +394,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the security group.
 * `id` - ID of the security group.
 * `ownerId` - Owner ID.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -404,9 +411,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { SecurityGroup } from "./.gen/providers/aws/security-group";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    SecurityGroup.generateConfigForImport(this, "elbSg", "sg-903004f8");
   }
 }
 
@@ -418,4 +431,4 @@ Using `terraform import`, import Security Groups using the security group `id`. 
 % terraform import aws_security_group.elb_sg sg-903004f8
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-6bcc9835f16447ac7bb124f5ed74bb0497f70dd790dd17824e05e55e14536c7a -->
+<!-- cache-key: cdktf-0.20.1 input-93222372e6881ccaba4ffb1efdf5422fdc272507a55ffdf74984bc8bf0bd0d39 -->

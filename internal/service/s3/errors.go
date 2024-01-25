@@ -12,7 +12,10 @@ import (
 
 const (
 	errCodeAccessDenied                         = "AccessDenied"
+	errCodeBucketAlreadyExists                  = "BucketAlreadyExists"
+	errCodeBucketAlreadyOwnedByYou              = "BucketAlreadyOwnedByYou"
 	errCodeBucketNotEmpty                       = "BucketNotEmpty"
+	errCodeIllegalLocationConstraintException   = "IllegalLocationConstraintException"
 	errCodeInvalidArgument                      = "InvalidArgument"
 	errCodeInvalidBucketState                   = "InvalidBucketState"
 	errCodeInvalidRequest                       = "InvalidRequest"
@@ -30,7 +33,7 @@ const (
 	errCodeNoSuchWebsiteConfiguration           = "NoSuchWebsiteConfiguration"
 	errCodeNotImplemented                       = "NotImplemented"
 	// errCodeObjectLockConfigurationNotFound should be used with tfawserr.ErrCodeContains, not tfawserr.ErrCodeEquals.
-	// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/26317
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/26317.
 	errCodeObjectLockConfigurationNotFound           = "ObjectLockConfigurationNotFound"
 	errCodeObjectLockConfigurationNotFoundError      = "ObjectLockConfigurationNotFoundError"
 	errCodeOperationAborted                          = "OperationAborted"
@@ -38,14 +41,9 @@ const (
 	errCodeReplicationConfigurationNotFound          = "ReplicationConfigurationNotFoundError"
 	errCodeServerSideEncryptionConfigurationNotFound = "ServerSideEncryptionConfigurationNotFoundError"
 	errCodeUnsupportedArgument                       = "UnsupportedArgument"
-	// errCodeXNotImplemented is returned from Third Party S3 implementations
-	// and so far has been noticed with calls to GetBucketWebsite.
-	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14645
+	// errCodeXNotImplemented is returned from third-party S3 API implementations.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/14645.
 	errCodeXNotImplemented = "XNotImplemented"
-)
-
-const (
-	ErrMessageBucketAlreadyExists = "bucket already exists"
 )
 
 func errDirectoryBucket(err error) error {

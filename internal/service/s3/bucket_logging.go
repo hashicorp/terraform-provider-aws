@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_s3_bucket_logging")
-func ResourceBucketLogging() *schema.Resource {
+// @SDKResource("aws_s3_bucket_logging", name="Bucket Logging")
+func resourceBucketLogging() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketLoggingCreate,
 		ReadWithoutTimeout:   resourceBucketLoggingRead,
@@ -155,14 +155,14 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if v, ok := d.GetOk("target_grant"); ok && v.(*schema.Set).Len() > 0 {
-		input.BucketLoggingStatus.LoggingEnabled.TargetGrants = expandBucketLoggingTargetGrants(v.(*schema.Set).List())
+		input.BucketLoggingStatus.LoggingEnabled.TargetGrants = expandTargetGrants(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("target_object_key_format"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.BucketLoggingStatus.LoggingEnabled.TargetObjectKeyFormat = expandTargetObjectKeyFormat(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketLogging(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -176,7 +176,7 @@ func resourceBucketLoggingCreate(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findLoggingEnabled(ctx, conn, bucket, expectedBucketOwner)
 	})
 
@@ -211,7 +211,7 @@ func resourceBucketLoggingRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("bucket", bucket)
 	d.Set("expected_bucket_owner", expectedBucketOwner)
 	d.Set("target_bucket", loggingEnabled.TargetBucket)
-	if err := d.Set("target_grant", flattenBucketLoggingTargetGrants(loggingEnabled.TargetGrants)); err != nil {
+	if err := d.Set("target_grant", flattenTargetGrants(loggingEnabled.TargetGrants)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting target_grant: %s", err)
 	}
 	if loggingEnabled.TargetObjectKeyFormat != nil {
@@ -249,7 +249,7 @@ func resourceBucketLoggingUpdate(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	if v, ok := d.GetOk("target_grant"); ok && v.(*schema.Set).Len() > 0 {
-		input.BucketLoggingStatus.LoggingEnabled.TargetGrants = expandBucketLoggingTargetGrants(v.(*schema.Set).List())
+		input.BucketLoggingStatus.LoggingEnabled.TargetGrants = expandTargetGrants(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("target_object_key_format"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -325,7 +325,7 @@ func findLoggingEnabled(ctx context.Context, conn *s3.Client, bucketName, expect
 	return output.LoggingEnabled, nil
 }
 
-func expandBucketLoggingTargetGrants(l []interface{}) []types.TargetGrant {
+func expandTargetGrants(l []interface{}) []types.TargetGrant {
 	var grants []types.TargetGrant
 
 	for _, tfMapRaw := range l {
@@ -337,7 +337,7 @@ func expandBucketLoggingTargetGrants(l []interface{}) []types.TargetGrant {
 		grant := types.TargetGrant{}
 
 		if v, ok := tfMap["grantee"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			grant.Grantee = expandBucketLoggingTargetGrantGrantee(v)
+			grant.Grantee = expandLoggingGrantee(v)
 		}
 
 		if v, ok := tfMap["permission"].(string); ok && v != "" {
@@ -350,7 +350,7 @@ func expandBucketLoggingTargetGrants(l []interface{}) []types.TargetGrant {
 	return grants
 }
 
-func expandBucketLoggingTargetGrantGrantee(l []interface{}) *types.Grantee {
+func expandLoggingGrantee(l []interface{}) *types.Grantee {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -385,7 +385,7 @@ func expandBucketLoggingTargetGrantGrantee(l []interface{}) *types.Grantee {
 	return grantee
 }
 
-func flattenBucketLoggingTargetGrants(grants []types.TargetGrant) []interface{} {
+func flattenTargetGrants(grants []types.TargetGrant) []interface{} {
 	var results []interface{}
 
 	for _, grant := range grants {
@@ -394,7 +394,7 @@ func flattenBucketLoggingTargetGrants(grants []types.TargetGrant) []interface{} 
 		}
 
 		if grant.Grantee != nil {
-			m["grantee"] = flattenBucketLoggingTargetGrantGrantee(grant.Grantee)
+			m["grantee"] = flattenLoggingGrantee(grant.Grantee)
 		}
 
 		results = append(results, m)
@@ -403,7 +403,7 @@ func flattenBucketLoggingTargetGrants(grants []types.TargetGrant) []interface{} 
 	return results
 }
 
-func flattenBucketLoggingTargetGrantGrantee(g *types.Grantee) []interface{} {
+func flattenLoggingGrantee(g *types.Grantee) []interface{} {
 	if g == nil {
 		return []interface{}{}
 	}
