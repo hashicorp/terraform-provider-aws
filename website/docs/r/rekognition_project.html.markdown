@@ -41,9 +41,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
@@ -56,7 +55,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Rekognition Project using the `example_id_arg`. For example:
+Using `terraform import`, import Rekognition Project using the `name`. For example:
 
 ```console
 % terraform import aws_rekognition_project.example project-id-12345678
