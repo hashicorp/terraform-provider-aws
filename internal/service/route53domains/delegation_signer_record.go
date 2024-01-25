@@ -63,8 +63,8 @@ func (r *delegationSignerRecordResource) Schema(ctx context.Context, request res
 			names.AttrID: framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			"signing_algorithm": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[delegationSignerRecordSigningAlgorithmModel](ctx),
+			"signing_attributes": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[delegationSignerRecordSigningAttributesModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"algorithm": schema.Int64Attribute{
@@ -132,13 +132,13 @@ func (r *delegationSignerRecordResource) Create(ctx context.Context, request res
 		return
 	}
 
-	signingAlgorithm, diags := data.SigningAlgorithm.ToPtr(ctx)
+	signingAttributes, diags := data.SigningAttributes.ToPtr(ctx)
 	response.Diagnostics.Append(diags...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	dnssecKey, err := findDNSSECKeyByThreePartKey(ctx, conn, data.DomainName.ValueString(), int(signingAlgorithm.Flags.ValueInt64()), signingAlgorithm.PublicKey.ValueString())
+	dnssecKey, err := findDNSSECKeyByThreePartKey(ctx, conn, data.DomainName.ValueString(), int(signingAttributes.Flags.ValueInt64()), signingAttributes.PublicKey.ValueString())
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading Route 53 Domains Domain (%s) DNSSEC key", data.DomainName.ValueString()), err.Error())
@@ -177,13 +177,13 @@ func (r *delegationSignerRecordResource) Read(ctx context.Context, request resou
 	}
 
 	// Set attributes for import.
-	var signingAlgorithm delegationSignerRecordSigningAlgorithmModel
-	response.Diagnostics.Append(fwflex.Flatten(ctx, dnssecKey, &signingAlgorithm)...)
+	var signingAttributes delegationSignerRecordSigningAttributesModel
+	response.Diagnostics.Append(fwflex.Flatten(ctx, dnssecKey, &signingAttributes)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	data.SigningAlgorithm = fwtypes.NewListNestedObjectValueOfPtr(ctx, &signingAlgorithm)
+	data.SigningAttributes = fwtypes.NewListNestedObjectValueOfPtr(ctx, &signingAttributes)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -225,14 +225,14 @@ func GetDnssecKeyWithId(dnssecKeys []awstypes.DnssecKey, dnssec_key_id string) *
 }
 
 type delegationSignerRecordResourceModel struct {
-	DNSSECKeyID      types.String                                                                 `tfsdk:"dnssec_key_id"`
-	DomainName       types.String                                                                 `tfsdk:"domain_name"`
-	ID               types.String                                                                 `tfsdk:"id"`
-	SigningAlgorithm fwtypes.ListNestedObjectValueOf[delegationSignerRecordSigningAlgorithmModel] `tfsdk:"signing_algorithm"`
-	Timeouts         timeouts.Value                                                               `tfsdk:"timeouts"`
+	DNSSECKeyID       types.String                                                                  `tfsdk:"dnssec_key_id"`
+	DomainName        types.String                                                                  `tfsdk:"domain_name"`
+	ID                types.String                                                                  `tfsdk:"id"`
+	SigningAttributes fwtypes.ListNestedObjectValueOf[delegationSignerRecordSigningAttributesModel] `tfsdk:"signing_attributes"`
+	Timeouts          timeouts.Value                                                                `tfsdk:"timeouts"`
 }
 
-type delegationSignerRecordSigningAlgorithmModel struct {
+type delegationSignerRecordSigningAttributesModel struct {
 	Algorithm types.Int64  `tfsdk:"algorithm"`
 	Flags     types.Int64  `tfsdk:"flags"`
 	PublicKey types.String `tfsdk:"public_key"`

@@ -96,7 +96,7 @@ resource "aws_route53_hosted_zone_dnssec" "example" {
 resource "aws_route53domains_delegation_signer_record" "example" {
   domain_name            = "example.com"
 
-  signing_algorithm {
+  signing_attributes {
     algorithm  = aws_route53_key_signing_key.example.signing_algorithm_type
     flags      = aws_route53_key_signing_key.example.flag
     public_key = aws_route53_key_signing_key.example.public_key
@@ -109,7 +109,7 @@ resource "aws_route53domains_delegation_signer_record" "example" {
 This argument supports the following arguments:
 
 * `domain_name` - (Required) The name of the domain that will have its parent DNS zone updated with the Delegation Signer record.
-* `signing_algorithm` - (Required) The information about a key, including the algorithm, public key-value, and flags.
+* `signing_attributes` - (Required) The information about a key, including the algorithm, public key-value, and flags.
     * `algorithm` - (Required) Algorithm which was used to generate the digest from the public key.
     * `flags` - (Required) Defines the type of key. It can be either a KSK (key-signing-key, value `257`) or ZSK (zone-signing-key, value `256`).
     * `public_key` - (Required) The base64-encoded public key part of the key pair that is passed to the registry.
