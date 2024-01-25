@@ -3,7 +3,31 @@
 
 package slices
 
-import "golang.org/x/exp/slices"
+import (
+	"errors"
+	"fmt"
+
+	"golang.org/x/exp/slices"
+)
+
+var (
+	emptySliceError = errors.New("empty slice")
+)
+
+func tooManyElementsError(want, got int) error {
+	return fmt.Errorf("too many elements: want %d, got %d", want, got)
+}
+
+// SingleValue returns a pointer to the single value of `s`,
+// or an error if `s` is empty or has more than one element.
+func SingleValue[S ~[]E, E any](s S) (*E, error) {
+	if l := len(s); l == 0 {
+		return nil, emptySliceError
+	} else if l > 1 {
+		return nil, tooManyElementsError(1, l)
+	}
+	return &s[0], nil
+}
 
 // Of returns a slice from varargs.
 func Of[E any](vs ...E) []E {
