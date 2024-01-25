@@ -5,7 +5,6 @@ package secretsmanager
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -73,7 +72,6 @@ func dataSourceSecretVersionsRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
 	secretId := d.Get("secret_id").(string)
-	fmt.Printf("\nsecretId: %s", secretId)
 
 	input := &secretsmanager.ListSecretVersionIdsInput{
 		SecretId: aws.String(secretId),
