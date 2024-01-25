@@ -27,7 +27,7 @@ func TestAccELBV2TrustStoreRevocation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrustStoreRevocationDestroy(ctx),
 		Steps: []resource.TestStep{

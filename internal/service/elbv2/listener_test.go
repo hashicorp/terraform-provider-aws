@@ -9,8 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,13 +24,13 @@ import (
 
 func TestAccELBV2Listener_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Listener
+	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -62,13 +63,13 @@ func TestAccELBV2Listener_basic(t *testing.T) {
 
 func TestAccELBV2Listener_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Listener
+	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -108,14 +109,14 @@ func TestAccELBV2Listener_tags(t *testing.T) {
 
 func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Listener
+	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -189,13 +190,13 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 
 func TestAccELBV2Listener_Protocol_upd(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Listener
+	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -226,13 +227,13 @@ func TestAccELBV2Listener_Protocol_upd(t *testing.T) {
 
 func TestAccELBV2Listener_backwardsCompatibility(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Listener
+	var conf awstypes.Listener
 	resourceName := "aws_alb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -263,7 +264,7 @@ func TestAccELBV2Listener_backwardsCompatibility(t *testing.T) {
 
 func TestAccELBV2Listener_Protocol_https(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Listener
+	var conf awstypes.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	resourceName := "aws_lb_listener.test"
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
@@ -271,7 +272,7 @@ func TestAccELBV2Listener_Protocol_https(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -304,7 +305,7 @@ func TestAccELBV2Listener_Protocol_https(t *testing.T) {
 
 func TestAccELBV2Listener_mutualAuthentication(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Listener
+	var conf awstypes.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	resourceName := "aws_lb_listener.test"
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
@@ -312,7 +313,7 @@ func TestAccELBV2Listener_mutualAuthentication(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -351,7 +352,7 @@ func TestAccELBV2Listener_mutualAuthentication(t *testing.T) {
 
 func TestAccELBV2Listener_mutualAuthenticationPassthrough(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Listener
+	var conf awstypes.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	resourceName := "aws_lb_listener.test"
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
@@ -359,7 +360,7 @@ func TestAccELBV2Listener_mutualAuthenticationPassthrough(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -398,7 +399,7 @@ func TestAccELBV2Listener_mutualAuthenticationPassthrough(t *testing.T) {
 
 func TestAccELBV2Listener_LoadBalancerARN_gatewayLoadBalancer(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Listener
+	var conf awstypes.Listener
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	lbResourceName := "aws_lb.test"
 	resourceName := "aws_lb_listener.test"
@@ -409,7 +410,7 @@ func TestAccELBV2Listener_LoadBalancerARN_gatewayLoadBalancer(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -429,7 +430,7 @@ func TestAccELBV2Listener_LoadBalancerARN_gatewayLoadBalancer(t *testing.T) {
 
 func TestAccELBV2Listener_Protocol_tls(t *testing.T) {
 	ctx := acctest.Context(t)
-	var listener1 elbv2.Listener
+	var listener1 awstypes.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -441,7 +442,7 @@ func TestAccELBV2Listener_Protocol_tls(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -464,13 +465,13 @@ func TestAccELBV2Listener_Protocol_tls(t *testing.T) {
 
 func TestAccELBV2Listener_redirect(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Listener
+	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -507,13 +508,13 @@ func TestAccELBV2Listener_redirect(t *testing.T) {
 
 func TestAccELBV2Listener_fixedResponse(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Listener
+	var conf awstypes.Listener
 	resourceName := "aws_lb_listener.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -547,7 +548,7 @@ func TestAccELBV2Listener_fixedResponse(t *testing.T) {
 
 func TestAccELBV2Listener_cognito(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Listener
+	var conf awstypes.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	resourceName := "aws_lb_listener.test"
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
@@ -555,7 +556,7 @@ func TestAccELBV2Listener_cognito(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -592,7 +593,7 @@ func TestAccELBV2Listener_cognito(t *testing.T) {
 
 func TestAccELBV2Listener_oidc(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Listener
+	var conf awstypes.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	resourceName := "aws_lb_listener.test"
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
@@ -600,7 +601,7 @@ func TestAccELBV2Listener_oidc(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -641,7 +642,7 @@ func TestAccELBV2Listener_oidc(t *testing.T) {
 
 func TestAccELBV2Listener_DefaultAction_order(t *testing.T) {
 	ctx := acctest.Context(t)
-	var listener elbv2.Listener
+	var listener awstypes.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -649,7 +650,7 @@ func TestAccELBV2Listener_DefaultAction_order(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -675,7 +676,7 @@ func TestAccELBV2Listener_DefaultAction_order(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6171
 func TestAccELBV2Listener_DefaultAction_orderRecreates(t *testing.T) {
 	ctx := acctest.Context(t)
-	var listener elbv2.Listener
+	var listener awstypes.Listener
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -683,7 +684,7 @@ func TestAccELBV2Listener_DefaultAction_orderRecreates(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -702,12 +703,12 @@ func TestAccELBV2Listener_DefaultAction_orderRecreates(t *testing.T) {
 	})
 }
 
-func testAccCheckListenerDefaultActionOrderDisappears(ctx context.Context, listener *elbv2.Listener, actionOrderToDelete int) resource.TestCheckFunc {
+func testAccCheckListenerDefaultActionOrderDisappears(ctx context.Context, listener *awstypes.Listener, actionOrderToDelete int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		var newDefaultActions []*elbv2.Action
+		var newDefaultActions []awstypes.Action
 
 		for i, action := range listener.DefaultActions {
-			if int(aws.Int64Value(action.Order)) == actionOrderToDelete {
+			if int(aws.ToInt32(action.Order)) == actionOrderToDelete {
 				newDefaultActions = slices.Delete(listener.DefaultActions, i, i+1)
 				break
 			}
@@ -717,27 +718,27 @@ func testAccCheckListenerDefaultActionOrderDisappears(ctx context.Context, liste
 			return fmt.Errorf("Unable to find default action order %d from default actions: %#v", actionOrderToDelete, listener.DefaultActions)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
-		input := &elbv2.ModifyListenerInput{
+		input := &elasticloadbalancingv2.ModifyListenerInput{
 			DefaultActions: newDefaultActions,
 			ListenerArn:    listener.ListenerArn,
 		}
 
-		_, err := conn.ModifyListenerWithContext(ctx, input)
+		_, err := conn.ModifyListener(ctx, input)
 
 		return err
 	}
 }
 
-func testAccCheckListenerExists(ctx context.Context, n string, v *elbv2.Listener) resource.TestCheckFunc {
+func testAccCheckListenerExists(ctx context.Context, n string, v *awstypes.Listener) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
 		output, err := tfelbv2.FindListenerByARN(ctx, conn, rs.Primary.ID)
 
@@ -753,7 +754,7 @@ func testAccCheckListenerExists(ctx context.Context, n string, v *elbv2.Listener
 
 func testAccCheckListenerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lb_listener" && rs.Type != "aws_alb_listener" {

@@ -3,15 +3,27 @@
 ENHANCEMENTS:
 
 * data-source/aws_codecommit_repository: Add `kms_key_id` attribute ([#35095](https://github.com/hashicorp/terraform-provider-aws/issues/35095))
+* data-source/aws_imagebuilder_components: Add support for `ThirdParty` `owner` value ([#35286](https://github.com/hashicorp/terraform-provider-aws/issues/35286))
+* data-source/aws_imagebuilder_container_recipes: Add support for `ThirdParty` `owner` value ([#35286](https://github.com/hashicorp/terraform-provider-aws/issues/35286))
+* data-source/aws_imagebuilder_image_recipes: Add support for `ThirdParty` `owner` value ([#35286](https://github.com/hashicorp/terraform-provider-aws/issues/35286))
 * data-source/aws_ssm_patch_baseline: Add `json` attribute to facilitate use with S3 buckets ([#33402](https://github.com/hashicorp/terraform-provider-aws/issues/33402))
+* resource/aws_accessanalyzer_analyzer: Add `configuration` configuration block ([#35310](https://github.com/hashicorp/terraform-provider-aws/issues/35310))
 * resource/aws_codecommit_repository: Add `kms_key_id` argument ([#35095](https://github.com/hashicorp/terraform-provider-aws/issues/35095))
 * resource/aws_codecommit_trigger: Add plan-time validation of `trigger.destination_arn` and `trigger.events` ([#35095](https://github.com/hashicorp/terraform-provider-aws/issues/35095))
+* resource/aws_ecs_capacity_provider: Add `auto_scaling_group_provider.managed_draining` argument ([#35421](https://github.com/hashicorp/terraform-provider-aws/issues/35421))
+* resource/aws_fis_experiment_template: Add support for `AutoScalingGroups`, `Buckets`, `ReplicationGroups`, `Tables` and `TransitGateways` to `action.*.target` ([#35300](https://github.com/hashicorp/terraform-provider-aws/issues/35300))
+* resource/aws_fsx_openzfs_file_system: Add `skip_final_backup` argument ([#35320](https://github.com/hashicorp/terraform-provider-aws/issues/35320))
+* resource/aws_network_interface_sg_attachment: Increase default timeouts to 3 minutes and allow them to be configured ([#35435](https://github.com/hashicorp/terraform-provider-aws/issues/35435))
+* resource/aws_prometheus_scraper: Add `role_arn` attribute ([#35453](https://github.com/hashicorp/terraform-provider-aws/issues/35453))
 * resource/aws_ssm_patch_baseline: Add `json` attribute to facilitate use with S3 buckets ([#33402](https://github.com/hashicorp/terraform-provider-aws/issues/33402))
+* resource/aws_wafv2_web_acl: Add `challenge_config` argument ([#35367](https://github.com/hashicorp/terraform-provider-aws/issues/35367))
 
 BUG FIXES:
 
+* resource/aws_codebuild_project: Allow `build_batch_config` to be removed on Update ([#34121](https://github.com/hashicorp/terraform-provider-aws/issues/34121))
 * resource/aws_eks_access_entry: Mark `kubernetes_groups` as Computed ([#35391](https://github.com/hashicorp/terraform-provider-aws/issues/35391))
 * resource/aws_eks_access_entry: Mark `type` and `user_name` as Optional, allowing values to be configured ([#35391](https://github.com/hashicorp/terraform-provider-aws/issues/35391))
+* resource/aws_grafana_license_association: Fix missing `workspace_id` attribute after import ([#35290](https://github.com/hashicorp/terraform-provider-aws/issues/35290))
 * resource/aws_security_group_rule: Fix `UnsupportedOperation: The functionality you requested is not available in this region` errors on Read in certain partitions ([#33484](https://github.com/hashicorp/terraform-provider-aws/issues/33484))
 
 ## 5.33.0 (January 18, 2024)
