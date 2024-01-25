@@ -82,6 +82,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexache.MustCompile(`^default\.mysql\d`)),
 					resource.TestCheckResourceAttr(resourceName, "port", "3306"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+					resource.TestCheckResourceAttr(resourceName, "replicas.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "status", "available"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
@@ -1151,6 +1152,15 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "db_name", sourceResourceName, "db_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "username", sourceResourceName, "username"),
+
+					resource.TestCheckResourceAttr(sourceResourceName, "replicas.#", "0"), // Before refreshing source, it will not be aware of replicas
+				),
+			},
+			{
+				// Confirm that `replicas` is populated after refreshing source
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(sourceResourceName, "replicas.#", "1"),
 				),
 			},
 			{

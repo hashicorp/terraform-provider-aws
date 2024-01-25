@@ -41,6 +41,7 @@ Low-downtime updates minimize service interruptions by performing the updates wi
 
 Low-downtime updates are only available for DB Instances using MySQL and MariaDB,
 as other engines are not supported by RDS Blue/Green deployments.
+They cannot be used with DB Instances with replicas.
 
 Backups must be enabled to use low-downtime updates.
 
