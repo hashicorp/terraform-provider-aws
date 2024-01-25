@@ -94,7 +94,7 @@ resource "aws_route53_hosted_zone_dnssec" "example" {
 }
 
 resource "aws_route53domains_delegation_signer_record" "example" {
-  domain_name            = "example.com"
+  domain_name = "example.com"
 
   signing_attributes {
     algorithm  = aws_route53_key_signing_key.example.signing_algorithm_type
