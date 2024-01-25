@@ -60,7 +60,7 @@ func NewTooManyResultsError(count int, lastRequest interface{}) error {
 }
 
 func (e *TooManyResultsError) Error() string {
-	return fmt.Sprintf("too many results: want 1, got %d", e.Count)
+	return fmt.Sprintf("too many results: wanted 1, got %d", e.Count)
 }
 
 func (e *TooManyResultsError) Is(err error) bool {
