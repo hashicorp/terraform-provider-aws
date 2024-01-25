@@ -5,6 +5,8 @@ package secretsmanager
 
 import (
 	"context"
+	"fmt"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/secretsmanager"
@@ -17,7 +19,7 @@ import (
 // @SDKDataSource("aws_secretsmanager_secret_versions", name="Secret Versions")
 func dataSourceSecretVersions() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceSecretVersionRead,
+		ReadWithoutTimeout: dataSourceSecretVersionsRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -70,10 +72,11 @@ func dataSourceSecretVersionsRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 
-	secretID := d.Get("secret_id").(string)
+	secretId := d.Get("secret_id").(string)
+	fmt.Printf("\nsecretId: %s", secretId)
 
 	input := &secretsmanager.ListSecretVersionIdsInput{
-		SecretId: aws.String(secretID),
+		SecretId: aws.String(secretId),
 	}
 
 	if v, ok := d.GetOk("include_deprecated"); ok {
@@ -81,29 +84,29 @@ func dataSourceSecretVersionsRead(ctx context.Context, d *schema.ResourceData, m
 		input.IncludeDeprecated = aws.Bool(includeDeprecated)
 	}
 	if v, ok := d.GetOk("max_results"); ok {
-		maxResults := v.(int32)
-		input.MaxResults = aws.Int32(maxResults)
+		maxResults := v.(int)
+		input.MaxResults = aws.Int32(int32(maxResults))
 	}
 
-	id := secretID
 	output, err := findSecretVersions(ctx, conn, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Versions (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret Versions (%s): %s", secretId, err)
 	}
 
-	d.SetId(id)
+	d.SetId(secretId)
 	d.Set("arn", output.ARN)
 	var versions []interface{}
 	for _, version := range output.Versions {
 		versions = append(versions, map[string]interface{}{
-			"created_date":       version.CreatedDate,
-			"last_accessed_date": version.LastAccessedDate,
+			"created_date":       version.CreatedDate.Format(time.RFC3339),
+			"last_accessed_date": version.LastAccessedDate.Format(time.RFC3339),
 			"version_id":         version.VersionId,
 			"version_stages":     version.VersionStages,
 		})
 	}
-	d.Set("versions", output.Versions)
+
+	d.Set("versions", versions)
 
 	return diags
 }
