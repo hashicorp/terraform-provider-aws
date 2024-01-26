@@ -554,6 +554,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceClientVPNNetworkAssociation,
 			TypeName: "aws_ec2_client_vpn_network_association",
+			Name:     "Client VPN Network Association",
 		},
 		{
 			Factory:  ResourceClientVPNRoute,
