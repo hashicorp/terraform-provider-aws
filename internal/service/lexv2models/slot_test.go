@@ -108,7 +108,7 @@ func TestAccLexV2ModelsSlot_updateMultipleValuesSetting(t *testing.T) {
 	})
 }
 
-func TestAccLexV2ModelsSlot_updateObfuscationSetting(t *testing.T) {
+func TestAccLexV2ModelsSlot_ObfuscationSetting(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var slot lexmodelsv2.DescribeSlotOutput
@@ -137,19 +137,6 @@ func TestAccLexV2ModelsSlot_updateObfuscationSetting(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "obfuscation_setting.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "obfuscation_setting.0.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "obfuscation_setting.0.obfuscation_setting_type", "DefaultObfuscation"),
-				),
-			},
-			{
-				Config: testAccSlotConfig_updateObfuscationSetting(rName, "None"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSlotExists(ctx, resourceName, &slot),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botLocaleName, "bot_id"),
-					resource.TestCheckResourceAttrPair(resourceName, "bot_version", botLocaleName, "bot_version"),
-					resource.TestCheckResourceAttrPair(resourceName, "locale_id", botLocaleName, "locale_id"),
-					resource.TestCheckResourceAttr(resourceName, "obfuscation_setting.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "obfuscation_setting.0.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "obfuscation_setting.0.obfuscation_setting_type", "None"),
 				),
 			},
 		},

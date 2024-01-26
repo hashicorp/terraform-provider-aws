@@ -494,9 +494,6 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 			"id": framework.IDAttribute(),
 			"intent_id": schema.StringAttribute{
 				Required: true,
-				// Validators: []validator.String{
-				// Fixed length of 10
-				// },
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -515,9 +512,6 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 			},
 			"name": schema.StringAttribute{
 				Required: true,
-				// PlanModifiers: []planmodifier.String{
-				// 	stringplanmodifier.RequiresReplace(),
-				// },
 			},
 			"slot_type_id": schema.StringAttribute{
 				Optional: true,
@@ -640,8 +634,6 @@ func (r *resourceSlot) Update(ctx context.Context, req resource.UpdateRequest, r
 	if slotHasChanges(ctx, plan, state) {
 		input := &lexmodelsv2.UpdateSlotInput{}
 
-		// TODO: expand here, or check for updatable arguments individually?
-
 		resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), plan, input)...)
 		if resp.Diagnostics.HasError() {
 			return
@@ -707,10 +699,6 @@ func (r *resourceSlot) Delete(ctx context.Context, req resource.DeleteRequest, r
 		return
 	}
 }
-
-// func (r *resourceSlot) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-// 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-// }
 
 func findSlotByID(ctx context.Context, conn *lexmodelsv2.Client, id string) (*lexmodelsv2.DescribeSlotOutput, error) {
 	parts, err := intflex.ExpandResourceId(id, slotIDPartCount, false)
