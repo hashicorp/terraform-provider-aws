@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -3717,6 +3718,85 @@ func TestAccRDSInstance_MSSQL_domainSnapshotRestore(t *testing.T) {
 					testAccCheckInstanceDomainAttributes(domain, &vRestoredInstance),
 					resource.TestCheckResourceAttrSet(resourceName, "domain"),
 					resource.TestCheckResourceAttrSet(resourceName, "domain_iam_role_name"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_MSSQL_selfManagedDomain(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var vBefore, vAfter rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := acctest.RandomDomain().String()
+	domainOu := fmt.Sprintf("OU=AWS,DC=%s,DC=%s", strings.Split(domain, ".")[0], strings.Split(domain, ".")[1])
+	domain1 := acctest.RandomDomain().String()
+	domain1Ou := fmt.Sprintf("OU=AWS,DC=%s,DC=%s", strings.Split(domain1, ".")[0], strings.Split(domain1, ".")[1])
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_mssqlSelfManagedDomain(rName, domain, domainOu),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &vBefore),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_fqdn"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_ou"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_auth_secret_arn"),
+					resource.TestCheckResourceAttr(resourceName, "domain_dns_ips.#", "2"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_mssqlUpdateSelfManagedDomain(rName, domain1, domain1Ou),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &vAfter),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_fqdn"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_ou"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_auth_secret_arn"),
+					resource.TestCheckResourceAttr(resourceName, "domain_dns_ips.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_MSSQL_selfManagedDomainSnapshotRestore(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v, vRestoredInstance rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	originResourceName := "aws_db_instance.origin"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName()
+	domainOu := fmt.Sprintf("OU=AWS,DC=%s,DC=%s", strings.Split(domain, ".")[0], strings.Split(domain, ".")[1])
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_mssqlSelfManagedDomainSnapshotRestore(rName, domain, domainOu),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &vRestoredInstance),
+					testAccCheckInstanceExists(ctx, originResourceName, &v),
+					testAccCheckInstanceDomainAttributes(domain, &vRestoredInstance),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_fqdn"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_ou"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_auth_secret_arn"),
+					resource.TestCheckResourceAttr(resourceName, "domain_dns_ips.#", "2"),
 				),
 			},
 		},
@@ -7495,6 +7575,243 @@ resource "aws_db_instance" "test" {
   snapshot_identifier = aws_db_snapshot.origin.id
 }
 `, rName))
+}
+
+func testAccInstanceConfig_baseMSSQLSelfManagedDomain(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassSQLServerEx(),
+		testAccInstanceConfig_baseVPC(rName),
+		testAccInstanceConfig_ServiceRole(rName),
+		fmt.Sprintf(`
+
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+
+resource "aws_security_group" "test" {
+	name   = %[1]q
+	vpc_id = aws_vpc.test.id
+	
+	tags = {
+		Name = %[1]q
+	}
+}
+		  
+resource "aws_security_group_rule" "test" {
+  type        = "egress"
+  from_port   = 0
+  to_port     = 0
+  protocol    = "-1"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  security_group_id = aws_security_group.test.id
+}
+
+resource "aws_kms_key" "example" {
+  description = "Terraform acc test %[1]s"
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Id": "kms-tf-1",
+  "Statement": [
+    {
+      "Sid": "Enable IAM User Permissions",
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"
+      },
+      "Action": "kms:*",
+      "Resource": "*"
+    },
+	{
+		"Sid": "Allow use of the KMS key on behalf of RDS",
+		"Effect": "Allow",
+		"Principal": {
+			"Service": [
+				"rds.amazonaws.com"
+			]
+		},
+		"Action": "kms:Decrypt",
+		"Resource": "*"
+	}
+  ]
+}
+ POLICY
+}
+
+resource "aws_secretsmanager_secret" "example" {
+  name = %[1]q
+  kms_key_id = aws_kms_key.example.arn
+  policy = <<POLICY
+  {
+    "Version": "2012-10-17",
+    "Statement":
+    [
+        {
+            "Effect": "Allow",
+            "Principal":
+            {
+                "Service": "rds.amazonaws.com"
+            },
+            "Action": "secretsmanager:GetSecretValue",
+            "Resource": "*",
+            "Condition":
+            {
+                "StringEquals":
+                {
+                    "aws:sourceAccount": "${data.aws_caller_identity.current.account_id}"
+                },
+                "ArnLike":
+                {
+                    "aws:sourceArn": "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:*"
+                }
+            }
+        }
+    ]
+}
+POLICY
+}
+	
+resource "aws_secretsmanager_secret_version" "example" {
+  secret_id     = aws_secretsmanager_secret.example.id
+  secret_string = jsonencode({"CUSTOMER_MANAGED_ACTIVE_DIRECTORY_USERNAME": "Admin", "CUSTOMER_MANAGED_ACTIVE_DIRECTORY_PASSWORD": "avoid-plaintext-passwords"})
+}
+`, rName))
+}
+
+func testAccInstanceConfig_mssqlSelfManagedDomain(rName, domain, domainOu string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_baseMSSQLSelfManagedDomain(rName),
+		fmt.Sprintf(`
+
+resource "aws_db_instance" "test" {
+  allocated_storage       = 20
+  backup_retention_period = 0
+  db_subnet_group_name    = aws_db_subnet_group.test.name
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier              = %[1]q
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  skip_final_snapshot     = true
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  vpc_security_group_ids  = [aws_security_group.test.id]
+  domain_fqdn             = %[2]q
+  domain_ou               = %[3]q
+  domain_auth_secret_arn  = aws_secretsmanager_secret_version.example.arn
+  domain_dns_ips          = ["123.124.125.126", "123.124.125.127"]
+}
+`, rName, domain, domainOu))
+}
+
+func testAccInstanceConfig_mssqlUpdateSelfManagedDomain(rName, domain, domainOu string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_baseMSSQLSelfManagedDomain(rName),
+		fmt.Sprintf(`
+
+resource "aws_db_instance" "test" {
+  allocated_storage       = 20
+  apply_immediately       = true
+  backup_retention_period = 0
+  db_subnet_group_name    = aws_db_subnet_group.test.name
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier              = %[1]q
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  skip_final_snapshot     = true
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  vpc_security_group_ids  = [aws_security_group.test.id]
+  domain_fqdn             = %[2]q
+  domain_ou               = %[3]q
+  domain_auth_secret_arn  = aws_secretsmanager_secret_version.example.arn
+  domain_dns_ips          = ["123.124.125.126", "123.124.125.127"]
+}
+
+resource "aws_secretsmanager_secret" "example-2" {
+	name = "%[1]s-2"
+	kms_key_id = aws_kms_key.example.arn
+	policy = <<POLICY
+	{
+	  "Version": "2012-10-17",
+	  "Statement":
+	  [
+		  {
+			  "Effect": "Allow",
+			  "Principal":
+			  {
+				  "Service": "rds.amazonaws.com"
+			  },
+			  "Action": "secretsmanager:GetSecretValue",
+			  "Resource": "*",
+			  "Condition":
+			  {
+				  "StringEquals":
+				  {
+					  "aws:sourceAccount": "${data.aws_caller_identity.current.account_id}"
+				  },
+				  "ArnLike":
+				  {
+					  "aws:sourceArn": "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:*"
+				  }
+			  }
+		  }
+	  ]
+  }
+  POLICY
+  }
+
+  resource "aws_secretsmanager_secret_version" "example-2" {
+	secret_id     = aws_secretsmanager_secret.example-2.id
+	secret_string = jsonencode({"CUSTOMER_MANAGED_ACTIVE_DIRECTORY_USERNAME": "Admin", "CUSTOMER_MANAGED_ACTIVE_DIRECTORY_PASSWORD": "avoid-plaintext-passwords"})
+  }
+`, rName, domain, domainOu))
+}
+
+func testAccInstanceConfig_mssqlSelfManagedDomainSnapshotRestore(rName, domain, domainOu string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_baseMSSQLSelfManagedDomain(rName),
+		fmt.Sprintf(`
+
+resource "aws_db_instance" "origin" {
+  allocated_storage   = 20
+  engine              = data.aws_rds_orderable_db_instance.test.engine
+  engine_version      = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier          = %[1]q
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  skip_final_snapshot = true
+  password            = "avoid-plaintext-passwords"
+  username            = "tfacctest"
+}
+
+resource "aws_db_snapshot" "origin" {
+  db_instance_identifier = aws_db_instance.origin.identifier
+  db_snapshot_identifier = %[1]q
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage       = 20
+  apply_immediately       = true
+  backup_retention_period = 0
+  db_subnet_group_name    = aws_db_subnet_group.test.name
+  engine                  = aws_db_instance.origin.engine
+  engine_version          = aws_db_instance.origin.engine_version
+  identifier              = "%[1]s-restore"
+  instance_class          = aws_db_instance.origin.instance_class
+  skip_final_snapshot     = true
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  vpc_security_group_ids  = [aws_security_group.test.id]
+
+  domain_fqdn             = %[2]q
+  domain_ou               = %[3]q
+  domain_auth_secret_arn  = aws_secretsmanager_secret_version.example.arn
+  domain_dns_ips          = ["123.124.125.126", "123.124.125.127"]
+
+  snapshot_identifier = aws_db_snapshot.origin.id
+}
+`, rName, domain, domainOu))
 }
 
 func testAccInstanceConfig_mySQLSnapshotRestoreEngineVersion(rName string) string {
