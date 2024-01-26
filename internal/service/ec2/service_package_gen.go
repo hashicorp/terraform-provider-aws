@@ -650,6 +650,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceTrafficMirrorFilterRule,
 			TypeName: "aws_ec2_traffic_mirror_filter_rule",
+			Name:     "Traffic Mirror Filter Rule",
 		},
 		{
 			Factory:  ResourceTrafficMirrorSession,
