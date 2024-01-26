@@ -542,6 +542,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceClientVPNAuthorizationRule,
 			TypeName: "aws_ec2_client_vpn_authorization_rule",
+			Name:     "Client VPN Authorization Rule",
 		},
 		{
 			Factory:  ResourceClientVPNEndpoint,
