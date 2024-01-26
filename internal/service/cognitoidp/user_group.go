@@ -180,7 +180,7 @@ func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceUserGroupImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	idSplit := strings.Split(d.Id(), "/")
+	idSplit := strings.SplitN(d.Id(), "/", 2)
 	if len(idSplit) != 2 {
 		return nil, errors.New("Error importing Cognito User Group. Must specify user_pool_id/group_name")
 	}
