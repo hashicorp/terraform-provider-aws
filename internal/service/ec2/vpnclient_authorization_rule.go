@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,6 +28,7 @@ func ResourceClientVPNAuthorizationRule() *schema.Resource {
 		CreateWithoutTimeout: resourceClientVPNAuthorizationRuleCreate,
 		ReadWithoutTimeout:   resourceClientVPNAuthorizationRuleRead,
 		DeleteWithoutTimeout: resourceClientVPNAuthorizationRuleDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -78,7 +79,7 @@ func resourceClientVPNAuthorizationRuleCreate(ctx context.Context, d *schema.Res
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	targetNetworkCIDR := d.Get("target_network_cidr").(string)
 	input := &ec2.AuthorizeClientVpnIngressInput{
-		ClientToken:         aws.String(id.UniqueId()),
+		ClientToken:         aws.String(sdkid.UniqueId()),
 		ClientVpnEndpointId: aws.String(endpointID),
 		TargetNetworkCidr:   aws.String(targetNetworkCIDR),
 	}
