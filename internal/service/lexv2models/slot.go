@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -506,6 +507,12 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"slot_id": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"name": schema.StringAttribute{
 				Required: true,
 				// PlanModifiers: []planmodifier.String{
@@ -582,7 +589,7 @@ func (r *resourceSlot) Create(ctx context.Context, req resource.CreateRequest, r
 
 	plan.ID = types.StringValue(id)
 
-	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), &plan, in)...)
+	resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), out, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -635,7 +642,7 @@ func (r *resourceSlot) Update(ctx context.Context, req resource.UpdateRequest, r
 
 		// TODO: expand here, or check for updatable arguments individually?
 
-		resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), &plan, input)...)
+		resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), plan, input)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -656,7 +663,7 @@ func (r *resourceSlot) Update(ctx context.Context, req resource.UpdateRequest, r
 			return
 		}
 
-		resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), &plan, input)...)
+		resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameSlot), input, &plan)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -675,19 +682,24 @@ func (r *resourceSlot) Delete(ctx context.Context, req resource.DeleteRequest, r
 	}
 
 	in := &lexmodelsv2.DeleteSlotInput{
-		BotId:      aws.String(state.ID.ValueString()),
-		BotVersion: aws.String(state.ID.ValueString()),
-		IntentId:   aws.String(state.ID.ValueString()),
-		LocaleId:   aws.String(state.ID.ValueString()),
-		SlotId:     aws.String(state.ID.ValueString()),
+		BotId:      aws.String(state.BotID.ValueString()),
+		BotVersion: aws.String(state.BotVersion.ValueString()),
+		IntentId:   aws.String(state.IntentID.ValueString()),
+		LocaleId:   aws.String(state.LocaleID.ValueString()),
+		SlotId:     aws.String(state.SlotID.ValueString()),
 	}
 
 	_, err := conn.DeleteSlot(ctx, in)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
+	if errs.IsAErrorMessageContains[*awstypes.PreconditionFailedException](err, "does not exist") {
+		return
+	}
+
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return
-		}
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.LexV2Models, create.ErrActionDeleting, ResNameSlot, state.ID.String(), err),
 			err.Error(),
@@ -715,15 +727,15 @@ func findSlotByID(ctx context.Context, conn *lexmodelsv2.Client, id string) (*le
 	}
 
 	out, err := conn.DescribeSlot(ctx, in)
-	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -741,6 +753,7 @@ type resourceSlotData struct {
 	ID                      types.String                                                 `tfsdk:"id"`
 	IntentID                types.String                                                 `tfsdk:"intent_id"`
 	LocaleID                types.String                                                 `tfsdk:"locale_id"`
+	SlotID                  types.String                                                 `tfsdk:"slot_id"`
 	MultipleValuesSetting   fwtypes.ListNestedObjectValueOf[MultipleValuesSettingData]   `tfsdk:"multiple_values_setting"`
 	Name                    types.String                                                 `tfsdk:"name"`
 	ObfuscationSetting      fwtypes.ListNestedObjectValueOf[ObfuscationSettingData]      `tfsdk:"obfuscation_setting"`
@@ -888,7 +901,6 @@ type ValueElicitationSettingData struct {
 
 func slotHasChanges(_ context.Context, plan, state resourceSlotData) bool {
 	return !plan.Description.Equal(state.Description) ||
-		!plan.Name.Equal(state.Name) ||
-		!plan.Description.Equal(state.Description) ||
+		!plan.MultipleValuesSetting.Equal(state.MultipleValuesSetting) ||
 		!plan.SlotTypeID.Equal(state.SlotTypeID)
 }
