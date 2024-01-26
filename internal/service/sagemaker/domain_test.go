@@ -1087,11 +1087,17 @@ func testAccDomain_efs(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDomainConfig_basic(rName),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+			{
+				Config: testAccDomainConfig_efs_detached(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", rName),
-					resource.TestCheckNoResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config"),
+					resource.TestCheckResourceAttr(resourceName, "default_user_settings.0.custom_file_system_config.#", "0"),
 				),
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
@@ -1101,12 +1107,6 @@ func testAccDomain_efs(t *testing.T) {
 						plancheck.ExpectEmptyPlan(),
 					},
 				},
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 		},
 	})
@@ -2075,6 +2075,37 @@ resource "aws_sagemaker_domain" "test" {
         file_system_path = "/"
       }
     }
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName))
+}
+
+func testAccDomainConfig_efs_detached(rName string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_efs_mount_target" "test" {
+  file_system_id = aws_efs_file_system.test.id
+  subnet_id      = aws_subnet.test[0].id
+}
+
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+
   }
 
   retention_policy {
