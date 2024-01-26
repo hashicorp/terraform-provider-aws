@@ -2147,10 +2147,10 @@ resource "aws_sagemaker_domain" "test" {
   auth_mode   = "IAM"
   vpc_id      = aws_vpc.test.id
   subnet_ids  = aws_subnet.test[*].id
-  
+
   default_user_settings {
     execution_role    = aws_iam_role.test.arn
-	studio_web_portal = "DISABLED"
+    studio_web_portal = "DISABLED"
   }
 
   retention_policy {
@@ -2170,7 +2170,7 @@ resource "aws_sagemaker_domain" "test" {
 
   default_user_settings {
     execution_role    = aws_iam_role.test.arn
-	studio_web_portal = "ENABLED"
+    studio_web_portal = "ENABLED"
   }
 
   retention_policy {
