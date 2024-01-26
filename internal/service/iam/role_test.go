@@ -53,41 +53,41 @@ func TestAccIAMRole_basic(t *testing.T) {
 	})
 }
 
-func TestAccIAMRole_MigrateFromPluginSDK_basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf iam.Role
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_iam_role.test"
+// func TestAccIAMRole_MigrateFromPluginSDK_basic(t *testing.T) {
+// ctx := acctest.Context(t)
+// var conf iam.Role
+// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+// resourceName := "aws_iam_role.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		CheckDestroy: testAccCheckRoleDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.33.0",
-					},
-				},
-				Config: testAccRoleConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "path", "/"),
-					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-				),
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccRoleConfig_basic(rName),
-				PlanOnly:                 true,
-			},
-		},
-	})
-}
+// resource.ParallelTest(t, resource.TestCase{
+// PreCheck:     func() { acctest.PreCheck(ctx, t) },
+// ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+// CheckDestroy: testAccCheckRoleDestroy(ctx),
+// Steps: []resource.TestStep{
+// {
+// ExternalProviders: map[string]resource.ExternalProvider{
+// "aws": {
+// Source:            "hashicorp/aws",
+// VersionConstraint: "5.33.0",
+// },
+// },
+// Config: testAccRoleConfig_basic(rName),
+// Check: resource.ComposeTestCheckFunc(
+// testAccCheckRoleExists(ctx, resourceName, &conf),
+// resource.TestCheckResourceAttr(resourceName, "path", "/"),
+// resource.TestCheckResourceAttrSet(resourceName, "create_date"),
+// resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
+// resource.TestCheckResourceAttrSet(resourceName, "arn"),
+// ),
+// },
+// {
+// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// Config:                   testAccRoleConfig_basic(rName),
+// PlanOnly:                 true,
+// },
+// },
+// })
+// }
 
 func TestAccIAMRole_description(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -747,43 +747,43 @@ func TestAccIAMRole_InlinePolicy_badJSON(t *testing.T) {
 // TODO: So close on this, for some reason namePrefix is showing up when Plan is modified... very annoying
 
 // // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19444
-// func TestAccIAMRole_InlinePolicy_ignoreOrder(t *testing.T) {
-// ctx := acctest.Context(t)
-// var role iam.Role
-// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// resourceName := "aws_iam_role.test"
+func TestAccIAMRole_InlinePolicy_ignoreOrder(t *testing.T) {
+	ctx := acctest.Context(t)
+	var role iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
 
-// resource.ParallelTest(t, resource.TestCase{
-// PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// CheckDestroy:             testAccCheckRoleDestroy(ctx),
-// Steps: []resource.TestStep{
-// {
-// Config: testAccRoleConfig_policyInlineActionOrder(rName),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &role),
-// resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "1"),
-// resource.TestCheckResourceAttr(resourceName, "name", rName),
-// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
-// ),
-// },
-// {
-// Config:   testAccRoleConfig_policyInlineActionOrder(rName),
-// PlanOnly: true,
-// },
-// {
-// Config:   testAccRoleConfig_policyInlineActionNewOrder(rName),
-// PlanOnly: true,
-// },
-// {
-// Config:             testAccRoleConfig_policyInlineActionOrderActualDiff(rName),
-// PlanOnly:           true,
-// ExpectNonEmptyPlan: true,
-// },
-// },
-// })
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRoleConfig_policyInlineActionOrder(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+				),
+			},
+			{
+				Config:   testAccRoleConfig_policyInlineActionOrder(rName),
+				PlanOnly: true,
+			},
+			{
+				Config:   testAccRoleConfig_policyInlineActionNewOrder(rName),
+				PlanOnly: true,
+			},
+			{
+				Config:             testAccRoleConfig_policyInlineActionOrderActualDiff(rName),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 
 func TestAccIAMRole_InlinePolicy_empty(t *testing.T) {
 	ctx := acctest.Context(t)

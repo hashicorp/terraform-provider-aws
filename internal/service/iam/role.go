@@ -174,10 +174,10 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				// ElementType: types.StringType,
 				ElementType: fwtypes.IAMPolicyType,
 				Optional:    true,
-				// PlanModifiers: []planmodifier.Map{
-				// EditPlanForSameReorderedPolicies(),
-				// // TODO: custom plan modifier for something like editing plan is fine
-				// },
+				PlanModifiers: []planmodifier.Map{
+					EditPlanForSameReorderedPolicies(),
+					// TODO: custom plan modifier for something like editing plan is fine
+				},
 				// TODO: custom validator for name stuff?
 				// TODO: validators and name func for both
 				// "name": {
@@ -463,7 +463,7 @@ func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.Upgrade
 	}
 
 	// TODO: fix this later?
-	roleDataCurrent.NamePrefix = types.StringNull()
+	// roleDataCurrent.NamePrefix = types.StringNull()
 
 	// if roleDataV0.NamePrefix.ValueString() == "" {
 	// roleDataCurrent.NamePrefix = types.StringNull()
@@ -654,6 +654,27 @@ func (r *resourceIamRole) ImportState(ctx context.Context, request resource.Impo
 
 func (r *resourceIamRole) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	fmt.Println("Hitting modify plan!")
+	if !request.Plan.Raw.IsNull() && !request.State.Raw.IsNull() {
+		var state, plan resourceIamRoleData
+
+		response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		if state.NamePrefix.ValueString() == plan.NamePrefix.ValueString() {
+			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("name_prefix"), state.NamePrefix)...)
+			// response.Plan.SetAttribute(ctx, path.Root("name_prefix"), state.NamePrefix)
+		}
+
+	}
 	r.SetTagsAll(ctx, request, response)
 }
 
