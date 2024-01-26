@@ -6,4 +6,6 @@ package codegurureviewer
 // Exports for use in tests only.
 var (
 	ResourceRepositoryAssociation = resourceRepositoryAssociation
+
+	FindRepositoryAssociationByID = findRepositoryAssociationByID
 )
