@@ -123,6 +123,7 @@ func (m editPlanForSameReorderedPolicies) PlanModifyMap(ctx context.Context, req
 
 func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
+		Version: 1,
 		Attributes: map[string]schema.Attribute{
 			"arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
@@ -173,10 +174,10 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				// ElementType: types.StringType,
 				ElementType: fwtypes.IAMPolicyType,
 				Optional:    true,
-				PlanModifiers: []planmodifier.Map{
-					EditPlanForSameReorderedPolicies(),
-					// TODO: custom plan modifier for something like editing plan is fine
-				},
+				// PlanModifiers: []planmodifier.Map{
+				// EditPlanForSameReorderedPolicies(),
+				// // TODO: custom plan modifier for something like editing plan is fine
+				// },
 				// TODO: custom validator for name stuff?
 				// TODO: validators and name func for both
 				// "name": {
@@ -293,10 +294,209 @@ type resourceIamRoleData struct {
 	Path                types.String      `tfsdk:"path"`
 	PermissionsBoundary fwtypes.ARN       `tfsdk:"permissions_boundary"`
 	InlinePolicies      types.Map         `tfsdk:"inline_policies"`
-	UniqueId            types.String      `tfsdk:"unique_id"`
+	UniqueID            types.String      `tfsdk:"unique_id"`
 	ManagedPolicyArns   types.Set         `tfsdk:"managed_policy_arns"`
 	Tags                types.Map         `tfsdk:"tags"`
 	TagsAll             types.Map         `tfsdk:"tags_all"`
+}
+
+func oldSDKIAMRoleSchema(ctx context.Context) schema.Schema {
+	return schema.Schema{
+		Version: 0,
+		Attributes: map[string]schema.Attribute{
+			"arn": schema.StringAttribute{
+				Computed: true,
+			},
+			"assume_role_policy": schema.StringAttribute{
+				Required: true,
+				// TODO Validate,
+			},
+			"create_date": schema.StringAttribute{
+				Computed: true,
+			},
+			"description": schema.StringAttribute{
+				Optional: true,
+				// TODO Validate,
+			},
+			"force_detach_policies": schema.BoolAttribute{
+				Optional: true,
+				// TODO Default:false,
+			},
+			"id": // TODO framework.IDAttribute()
+			schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"managed_policy_arns": schema.SetAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+			},
+			"max_session_duration": schema.Int64Attribute{
+				Optional: true,
+				// TODO Default:3600,
+				// TODO Validate,
+			},
+			"name": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				// TODO Validate,
+			},
+			"name_prefix": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				// TODO Validate,
+			},
+			"path": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  stringdefault.StaticString("/"),
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"permissions_boundary": schema.StringAttribute{
+				Optional: true,
+				// TODO Validate,
+			},
+			"tags": // TODO tftags.TagsAttribute()
+			schema.MapAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+			},
+			"tags_all": // TODO tftags.TagsAttributeComputedOnly()
+			schema.MapAttribute{
+				ElementType: types.StringType,
+				Optional:    true,
+				Computed:    true,
+			},
+			"unique_id": schema.StringAttribute{
+				Computed: true,
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"inline_policy": schema.SetNestedBlock{
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"name": schema.StringAttribute{
+							Optional: true,
+							// TODO Validate,
+						},
+						"policy": schema.StringAttribute{
+							Optional: true,
+							// TODO Validate,
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func (r *resourceIamRole) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
+	schemaV0 := oldSDKIAMRoleSchema(ctx)
+
+	return map[int64]resource.StateUpgrader{
+		0: {
+			PriorSchema:   &schemaV0,
+			StateUpgrader: upgradeIAMRoleResourceStateV0toV1,
+		},
+	}
+}
+
+// TODO: ok finish working on this to perform upgrade cleanly
+func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+	fmt.Println("Top of upgrade")
+	type resourceIamRoleDataV0 struct {
+		ARN                 types.String `tfsdk:"arn"`
+		AssumeRolePolicy    types.String `tfsdk:"assume_role_policy"`
+		CreateDate          types.String `tfsdk:"create_date"`
+		Description         types.String `tfsdk:"description"`
+		ForceDetachPolicies types.Bool   `tfsdk:"force_detach_policies"`
+		ID                  types.String `tfsdk:"id"`
+		ManagedPolicyArns   types.Set    `tfsdk:"managed_policy_arns"`
+		MaxSessionDuration  types.Int64  `tfsdk:"max_session_duration"`
+		Name                types.String `tfsdk:"name"`
+		NamePrefix          types.String `tfsdk:"name_prefix"`
+		Path                types.String `tfsdk:"path"`
+		PermissionsBoundary types.String `tfsdk:"permissions_boundary"`
+		Tags                types.Map    `tfsdk:"tags"`
+		TagsAll             types.Map    `tfsdk:"tags_all"`
+		UniqueID            types.String `tfsdk:"unique_id"`
+		InlinePolicy        types.Set    `tfsdk:"inline_policy"`
+	}
+
+	var roleDataV0 resourceIamRoleDataV0
+
+	resp.Diagnostics.Append(req.State.Get(ctx, &roleDataV0)...)
+	if resp.Diagnostics.HasError() {
+		fmt.Println("There was an error :(")
+		return
+	}
+
+	fmt.Println("Made it here!")
+
+	roleDataCurrent := resourceIamRoleData{
+		ARN:                 fwtypes.ARNValue(roleDataV0.ARN.ValueString()),
+		AssumeRolePolicy:    fwtypes.IAMPolicyValue(roleDataV0.AssumeRolePolicy.ValueString()),
+		CreateDate:          roleDataV0.CreateDate,
+		Description:         roleDataV0.Description,
+		ForceDetachPolicies: roleDataV0.ForceDetachPolicies,
+		ID:                  roleDataV0.ID,
+		MaxSessionDuration:  roleDataV0.MaxSessionDuration,
+		Name:                roleDataV0.Name,
+		Path:                roleDataV0.Path,
+		UniqueID:            roleDataV0.UniqueID,
+		// NamePrefix:          roleDataV0.NamePrefix,
+		Tags:    roleDataV0.Tags,
+		TagsAll: roleDataV0.TagsAll,
+		// ManagedPolicyArns   types.Set    `tfsdk:"managed_policy_arns"`
+		// InlinePolicy        types.Set    `tfsdk:"inline_policy"`
+	}
+
+	// TODO: fix this later?
+	roleDataCurrent.NamePrefix = types.StringNull()
+
+	// if roleDataV0.NamePrefix.ValueString() == "" {
+	// roleDataCurrent.NamePrefix = types.StringNull()
+	// // fmt.Println("Name prefix is empty!")
+	// }
+
+	// TODO: do something with this once I get to that test
+	var policyARNs []string
+	roleDataCurrent.ManagedPolicyArns = flex.FlattenFrameworkStringValueSet(ctx, policyARNs)
+
+	// TODO: do something with this once I get to that test
+	temp := make(map[string]string)
+	roleDataCurrent.InlinePolicies = flex.FlattenFrameworkStringValueMap(ctx, temp)
+
+	// TODO: update this to be string is empty check?
+	// if !roleDataV0.PermissionsBoundary.IsNull() {
+	// fmt.Println("permission boundary found")
+	// roleDataCurrent.PermissionsBoundary = fwtypes.ARNValue(roleDataV0.PermissionsBoundary.ValueString())
+	// }
+
+	// var managedPolicies []string
+	// resp.Diagnostics.Append(plan.ManagedPolicyArns.ElementsAs(ctx, &managedPolicies, false)...)
+	// if resp.Diagnostics.HasError() {
+	// return
+	// }
+
+	// if jobQueueDataV0.SchedulingPolicyARN.ValueString() == "" {
+	// jobQueueDataV2.SchedulingPolicyARN = fwtypes.ARNNull()
+	// }
+
+	diags := resp.State.Set(ctx, roleDataCurrent)
+	resp.Diagnostics.Append(diags...)
+	fmt.Println("Bottom of upgrade")
 }
 
 func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -406,7 +606,7 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	plan.ID = flex.StringToFramework(ctx, output.Role.RoleName)
 	plan.Name = flex.StringToFramework(ctx, output.Role.RoleName)
 	plan.NamePrefix = flex.StringToFramework(ctx, create.NamePrefixFromName(aws.StringValue(output.Role.RoleName)))
-	plan.UniqueId = flex.StringToFramework(ctx, output.Role.RoleId)
+	plan.UniqueID = flex.StringToFramework(ctx, output.Role.RoleId)
 
 	// last steps?
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -453,6 +653,7 @@ func (r *resourceIamRole) ImportState(ctx context.Context, request resource.Impo
 }
 
 func (r *resourceIamRole) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	fmt.Println("Hitting modify plan!")
 	r.SetTagsAll(ctx, request, response)
 }
 
@@ -508,7 +709,7 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	state.Description = flex.StringToFramework(ctx, role.Description)
 	state.NamePrefix = flex.StringToFramework(ctx, create.NamePrefixFromName(aws.StringValue(role.RoleName)))
 	state.MaxSessionDuration = flex.Int64ToFramework(ctx, role.MaxSessionDuration)
-	state.UniqueId = flex.StringToFramework(ctx, role.RoleId)
+	state.UniqueID = flex.StringToFramework(ctx, role.RoleId)
 
 	if state.ForceDetachPolicies.IsNull() {
 		// TODO: better way to do this that is more framework friendly?
