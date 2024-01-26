@@ -984,7 +984,7 @@ resource "aws_wafv2_web_acl_logging_configuration" "test" {
 
     filter {
       behavior = "KEEP"
-	  priority = 0
+      priority = 0
       condition {
         action_condition {
           action = "ALLOW"
@@ -995,7 +995,7 @@ resource "aws_wafv2_web_acl_logging_configuration" "test" {
 
     filter {
       behavior = "DROP"
-	  priority = 1
+      priority = 1
       condition {
         action_condition {
           action = "BLOCK"
