@@ -153,6 +153,10 @@ func DataSourceCluster() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"multi_az": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
 			"node_type": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -268,6 +272,11 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set("kms_key_id", rsc.KmsKeyId)
 	d.Set("master_username", rsc.MasterUsername)
+	maz, err := clusterMultiAZStatus(rsc)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Cluster (%s): %s", clusterID, err)
+	}
+	d.Set("multi_az", maz)
 	d.Set("node_type", rsc.NodeType)
 	d.Set("number_of_nodes", rsc.NumberOfNodes)
 	d.Set("preferred_maintenance_window", rsc.PreferredMaintenanceWindow)

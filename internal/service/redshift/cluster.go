@@ -85,6 +85,7 @@ func ResourceCluster() *schema.Resource {
 			"availability_zone_relocation_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  false,
 			},
 			"cluster_identifier": {
 				Type:     schema.TypeString,
@@ -299,6 +300,11 @@ func ResourceCluster() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`(?i)^[a-z_]`), "first character must be a letter"),
 				),
 			},
+			"multi_az": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"node_type": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -447,9 +453,19 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.AvailabilityZone = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("availability_zone_relocation_enabled"); ok {
-		backupInput.AvailabilityZoneRelocation = aws.Bool(v.(bool))
-		input.AvailabilityZoneRelocation = aws.Bool(v.(bool))
+	azRelocation, azRelocationOk := d.GetOk("availability_zone_relocation_enabled")
+	multiAZ, multiAZOk := d.GetOk("multi_az")
+	if azRelocationOk && multiAZOk && azRelocation.(bool) && azRelocation.(bool) == multiAZ.(bool) {
+		return sdkdiag.AppendErrorf(diags, "availability_zone_relocation_enabled and multi_az can be both true")
+	}
+	if azRelocationOk {
+		backupInput.AvailabilityZoneRelocation = aws.Bool(azRelocation.(bool))
+		input.AvailabilityZoneRelocation = aws.Bool(azRelocation.(bool))
+	}
+
+	if multiAZOk {
+		backupInput.MultiAZ = aws.Bool(multiAZ.(bool))
+		input.MultiAZ = aws.Bool(multiAZ.(bool))
 	}
 
 	if v, ok := d.GetOk("cluster_parameter_group_name"); ok {
@@ -680,6 +696,11 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("master_username", rsc.MasterUsername)
 	d.Set("master_password_secret_arn", rsc.MasterPasswordSecretArn)
 	d.Set("master_password_secret_kms_key_id", rsc.MasterPasswordSecretKmsKeyId)
+	maz, err := clusterMultiAZStatus(rsc)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Cluster (%s): %s", d.Id(), err)
+	}
+	d.Set("multi_az", maz)
 	d.Set("node_type", rsc.NodeType)
 	d.Set("number_of_nodes", rsc.NumberOfNodes)
 	d.Set("preferred_maintenance_window", rsc.PreferredMaintenanceWindow)
@@ -726,7 +747,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	if d.HasChangesExcept("aqua_configuration_status", "availability_zone", "iam_roles", "logging", "snapshot_copy", "tags", "tags_all") {
+	if d.HasChangesExcept("aqua_configuration_status", "availability_zone", "iam_roles", "multi_az", "logging", "snapshot_copy", "tags", "tags_all") {
 		input := &redshift.ModifyClusterInput{
 			ClusterIdentifier: aws.String(d.Id()),
 		}
@@ -942,6 +963,46 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 	}
 
+	if d.HasChange("multi_az") {
+		multiAZEnabled := d.Get("multi_az").(bool)
+		azRelocationEnabled := d.Get("availability_zone_relocation_enabled").(bool)
+		if multiAZEnabled && azRelocationEnabled {
+			return sdkdiag.AppendErrorf(diags, "modifying Redshift Cluster (%s): availability_zone_relocation_enabled and multi_az can't be both true", d.Id())
+		}
+		input := &redshift.ModifyClusterInput{
+			MultiAZ:           aws.Bool(azRelocationEnabled),
+			ClusterIdentifier: aws.String(d.Id()),
+		}
+
+		log.Printf("[DEBUG] Changing cluster multi AZ configuration: %s", input)
+		_, err := conn.ModifyClusterWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "Changing cluster multi AZ configuration (%s): %s", d.Id(), err)
+		}
+
+		if _, err = waitClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Redshift Cluster (%s) update: %s", d.Id(), err)
+		}
+		if !multiAZEnabled {
+			// Disabling MultiAZ, Redshift automatically enables the AZ Relocation. For that reason is necessary to align it with the current configuration
+			input = &redshift.ModifyClusterInput{
+				AvailabilityZoneRelocation: aws.Bool(azRelocationEnabled),
+				ClusterIdentifier:          aws.String(d.Id()),
+			}
+			log.Printf("[DEBUG] Changing cluster availability zone relocation configuration: %s\n", input)
+			_, err = conn.ModifyClusterWithContext(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "Changing cluster multi AZ configuration (%s): %s", d.Id(), err)
+			}
+
+			if _, err = waitClusterUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for Redshift Cluster (%s) update: %s", d.Id(), err)
+			}
+		}
+	}
+
 	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
@@ -1133,5 +1194,17 @@ func clusterAvailabilityZoneRelocationStatus(cluster *redshift.Cluster) (bool, e
 		return false, nil
 	default:
 		return false, fmt.Errorf("unexpected AvailabilityZoneRelocationStatus value %q returned by API", availabilityZoneRelocationStatus)
+	}
+}
+
+func clusterMultiAZStatus(cluster *redshift.Cluster) (bool, error) {
+	// MultiAZ is returned as string from the API but is implemented as bool to keep consistency with other parameters.
+	switch multiAZStatus := aws.StringValue(cluster.MultiAZ); strings.ToLower(multiAZStatus) {
+	case "enabled":
+		return true, nil
+	case "disabled":
+		return false, nil
+	default:
+		return false, fmt.Errorf("unexpected MultiAZ value %q returned by API", multiAZStatus)
 	}
 }
