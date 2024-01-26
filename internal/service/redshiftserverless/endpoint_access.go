@@ -111,6 +111,12 @@ func ResourceEndpointAccess() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 30),
 			},
+			"owner_account": {
+				Type: 			schema.TypeString,
+				Required:		false,
+				ForceNew:     	true,
+				ValidateFunc: 	verify.ValidAccountID,
+			},
 		},
 	}
 }
@@ -130,6 +136,10 @@ func resourceEndpointAccessCreate(ctx context.Context, d *schema.ResourceData, m
 
 	if v, ok := d.GetOk("subnet_ids"); ok && v.(*schema.Set).Len() > 0 {
 		input.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("owner_account"); ok {
+		input.OwnerAccount = aws.String(v.(string))
 	}
 
 	out, err := conn.CreateEndpointAccessWithContext(ctx, &input)
