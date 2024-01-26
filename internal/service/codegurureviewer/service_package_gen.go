@@ -29,7 +29,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceRepositoryAssociation,
+			Factory:  resourceRepositoryAssociation,
 			TypeName: "aws_codegurureviewer_repository_association",
 			Name:     "Repository Association",
 			Tags: &types.ServicePackageResourceTags{
