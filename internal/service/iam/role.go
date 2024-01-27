@@ -47,7 +47,7 @@ import (
 const (
 	roleNameMaxLen       = 64
 	roleNamePrefixMaxLen = roleNameMaxLen - id.UniqueIDSuffixLength
-	ResNameIamRole       = "IAM Role"
+	ResNameIAMRole       = "IAM Role"
 )
 
 // @FrameworkResource(name="Role")
@@ -511,7 +511,7 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, plan.AssumeRolePolicy.String(), nil),
+			create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIAMRole, plan.AssumeRolePolicy.String(), nil),
 			errors.New(fmt.Sprintf("assume_role_policy (%s) is invalid JSON: %s", assumeRolePolicy, err)).Error(),
 		)
 		return
@@ -546,7 +546,7 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
+			create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIAMRole, name, nil),
 			err.Error(),
 		)
 		return
@@ -559,7 +559,7 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 		policies := expandRoleInlinePolicies(roleName, inline_policies_map)
 		if err := r.addRoleInlinePolicies(ctx, policies); err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
+				create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIAMRole, name, nil),
 				err.Error(),
 			)
 			return
@@ -574,7 +574,7 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 		}
 		if err := r.addRoleManagedPolicies(ctx, roleName, managedPolicies); err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIamRole, name, nil),
+				create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameIAMRole, name, nil),
 				err.Error(),
 			)
 			return
@@ -593,7 +593,7 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, fmt.Sprintf("%s tags", ResNameIamRole), name, nil),
+				create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, fmt.Sprintf("%s tags", ResNameIAMRole), name, nil),
 				err.Error(),
 			)
 			return
