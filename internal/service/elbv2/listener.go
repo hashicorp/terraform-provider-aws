@@ -6,6 +6,7 @@ package elbv2
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"sort"
 	"strconv"
@@ -17,6 +18,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -55,6 +57,114 @@ func ResourceListener() *schema.Resource {
 
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				var errx []error
+
+				path := cty.GetAttrPath("default_action")
+
+				configRaw := d.GetRawConfig()
+				if !configRaw.IsKnown() || configRaw.IsNull() {
+					return nil
+				}
+
+				defaultAction := configRaw.GetAttr("default_action")
+				if defaultAction.IsKnown() && !defaultAction.IsNull() {
+					it := defaultAction.ElementIterator()
+					for it.Next() {
+						i, action := it.Element()
+						path := path.Index(i)
+
+						actionType := action.GetAttr("type")
+						if !actionType.IsKnown() {
+							continue
+						}
+						if actionType.IsNull() {
+							continue
+						}
+
+						if action.IsKnown() && !action.IsNull() {
+							tga := action.GetAttr("target_group_arn")
+							f := action.GetAttr("forward")
+
+							if !tga.IsNull() && (!f.IsNull() && f.LengthInt() > 0) {
+								errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeErrorDiagnostic(path,
+									"Invalid Attribute Combination",
+									fmt.Sprintf("Only one of %q or %q can be specified",
+										"target_group_arn",
+										"forward",
+									),
+								)))
+							}
+
+							path = path.GetAttr("type")
+
+							switch awstypes.ActionTypeEnum(actionType.AsString()) {
+							case awstypes.ActionTypeEnumForward:
+								if tga.IsNull() && (f.IsNull() || f.LengthInt() == 0) {
+									errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeErrorDiagnostic(path,
+										"Invalid Attribute Combination",
+										fmt.Sprintf("Either %q or %q must be specified when %q is %q.",
+											"target_group_arn", "forward",
+											"type",
+											awstypes.ActionTypeEnumForward,
+										),
+									)))
+								}
+
+							case awstypes.ActionTypeEnumRedirect:
+								if r := action.GetAttr("redirect"); r.IsNull() || r.LengthInt() == 0 {
+									errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeErrorDiagnostic(path,
+										"Invalid Attribute Combination",
+										fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+											"redirect",
+											"type",
+											awstypes.ActionTypeEnumRedirect,
+										),
+									)))
+								}
+
+							case awstypes.ActionTypeEnumFixedResponse:
+								if fr := action.GetAttr("fixed_response"); fr.IsNull() || fr.LengthInt() == 0 {
+									errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeErrorDiagnostic(path,
+										"Invalid Attribute Combination",
+										fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+											"fixed_response",
+											"type",
+											awstypes.ActionTypeEnumFixedResponse,
+										),
+									)))
+								}
+
+							case awstypes.ActionTypeEnumAuthenticateCognito:
+								if ac := action.GetAttr("authenticate_cognito"); ac.IsNull() || ac.LengthInt() == 0 {
+									errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeErrorDiagnostic(path,
+										"Invalid Attribute Combination",
+										fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+											"authenticate_cognito",
+											"type",
+											awstypes.ActionTypeEnumAuthenticateCognito,
+										),
+									)))
+								}
+
+							case awstypes.ActionTypeEnumAuthenticateOidc:
+								if ao := action.GetAttr("authenticate_oidc"); ao.IsNull() || ao.LengthInt() == 0 {
+									errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeWarningDiagnostic(path,
+										"Invalid Attribute Combination",
+										fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+											"authenticate_oidc",
+											"type",
+											awstypes.ActionTypeEnumAuthenticateOidc,
+										),
+									)))
+								}
+							}
+						}
+					}
+				}
+
+				return errors.Join(errx...)
+			},
 		),
 
 		Schema: map[string]*schema.Schema{
@@ -713,36 +823,26 @@ func expandLbListenerActions(l []interface{}) ([]awstypes.Action, error) {
 				action.TargetGroupArn = aws.String(v)
 			} else if v, ok := tfMap["forward"].([]interface{}); ok {
 				action.ForwardConfig = expandLbListenerActionForwardConfig(v)
-			} else {
-				err = errors.New("for actions of type 'forward', you must specify a 'forward' block or 'target_group_arn'")
 			}
 
 		case awstypes.ActionTypeEnumRedirect:
 			if v, ok := tfMap["redirect"].([]interface{}); ok {
 				action.RedirectConfig = expandLbListenerRedirectActionConfig(v)
-			} else {
-				err = errors.New("for actions of type 'redirect', you must specify a 'redirect' block")
 			}
 
 		case awstypes.ActionTypeEnumFixedResponse:
 			if v, ok := tfMap["fixed_response"].([]interface{}); ok {
 				action.FixedResponseConfig = expandLbListenerFixedResponseConfig(v)
-			} else {
-				err = errors.New("for actions of type 'fixed-response', you must specify a 'fixed_response' block")
 			}
 
 		case awstypes.ActionTypeEnumAuthenticateCognito:
 			if v, ok := tfMap["authenticate_cognito"].([]interface{}); ok {
 				action.AuthenticateCognitoConfig = expandLbListenerAuthenticateCognitoConfig(v)
-			} else {
-				err = errors.New("for actions of type 'authenticate-cognito', you must specify a 'authenticate_cognito' block")
 			}
 
 		case awstypes.ActionTypeEnumAuthenticateOidc:
 			if v, ok := tfMap["authenticate_oidc"].([]interface{}); ok {
 				action.AuthenticateOidcConfig = expandAuthenticateOIDCConfig(v)
-			} else {
-				err = errors.New("for actions of type 'authenticate-oidc', you must specify a 'authenticate_oidc' block")
 			}
 		}
 

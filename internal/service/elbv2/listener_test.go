@@ -6,6 +6,7 @@ package elbv2_test
 import (
 	"context"
 	"fmt"
+	"regexp"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -318,6 +319,24 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccELBV2Listener_forwardTargetArnAndBlock(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccListenerConfig_forwardTargetArnAndBlock(rName),
+				ExpectError: regexache.MustCompile(`Only one of "target_group_arn" or "forward" can be specified`),
 			},
 		},
 	})
@@ -886,6 +905,83 @@ func TestAccELBV2Listener_DefaultAction_actionDisappears(t *testing.T) {
 	})
 }
 
+func TestAccELBV2Listener_EmptyDefaultAction(t *testing.T) {
+	t.Parallel()
+
+	testcases := map[awstypes.ActionTypeEnum]struct {
+		actionType    awstypes.ActionTypeEnum
+		expectedError *regexp.Regexp
+	}{
+		awstypes.ActionTypeEnumForward: {
+			actionType: awstypes.ActionTypeEnumForward,
+			expectedError: regexache.MustCompile(fmt.Sprintf("Either %q or %q must be specified when %q is %q.",
+				"target_group_arn", "forward",
+				"type",
+				awstypes.ActionTypeEnumForward,
+			)),
+		},
+
+		awstypes.ActionTypeEnumAuthenticateOidc: {
+			actionType: awstypes.ActionTypeEnumAuthenticateOidc,
+			expectedError: regexache.MustCompile(fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+				"authenticate_oidc",
+				"type",
+				awstypes.ActionTypeEnumAuthenticateOidc,
+			)),
+		},
+
+		awstypes.ActionTypeEnumAuthenticateCognito: {
+			actionType: awstypes.ActionTypeEnumAuthenticateCognito,
+			expectedError: regexache.MustCompile(fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+				"authenticate_cognito",
+				"type",
+				awstypes.ActionTypeEnumAuthenticateCognito,
+			)),
+		},
+
+		awstypes.ActionTypeEnumRedirect: {
+			actionType: awstypes.ActionTypeEnumRedirect,
+			expectedError: regexache.MustCompile(fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+				"redirect",
+				"type",
+				awstypes.ActionTypeEnumRedirect,
+			)),
+		},
+
+		awstypes.ActionTypeEnumFixedResponse: {
+			actionType: awstypes.ActionTypeEnumFixedResponse,
+			expectedError: regexache.MustCompile(fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+				"fixed_response",
+				"type",
+				awstypes.ActionTypeEnumFixedResponse,
+			)),
+		},
+	}
+
+	for name, testcase := range testcases {
+		testcase := testcase
+
+		t.Run(string(name), func(t *testing.T) {
+			ctx := acctest.Context(t)
+			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+			resource.ParallelTest(t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckListenerDestroy(ctx),
+				Steps: []resource.TestStep{
+					{
+						Config:      testAccListenerConfig_EmptyDefaultAction(rName, testcase.actionType),
+						ExpectError: testcase.expectedError,
+					},
+				},
+			})
+
+		})
+	}
+}
+
 func testAccCheckListenerDefaultActionOrderDisappears(ctx context.Context, listener *awstypes.Listener, actionOrderToDelete int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		var newDefaultActions []awstypes.Action
@@ -1308,6 +1404,72 @@ resource "aws_lb_target_group" "test2" {
   }
 }
 `, rName, rName2))
+}
+
+func testAccListenerConfig_forwardTargetArnAndBlock(rName string) string {
+	return acctest.ConfigCompose(
+		testAccListenerConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTP"
+  port              = "440"
+
+  default_action {
+    type = "forward"
+
+    target_group_arn = aws_lb_target_group.test.arn
+
+    forward {
+      target_group {
+        arn    = aws_lb_target_group.test.arn
+        weight = 1
+      }
+
+      stickiness {
+        enabled  = true
+        duration = 3600
+      }
+    }
+  }
+}
+
+resource "aws_lb" "test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName))
 }
 
 func testAccListenerConfig_changeForwardWeightedToBasic(rName, rName2 string) string {
@@ -2325,4 +2487,54 @@ resource "aws_lb_target_group" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccListenerConfig_EmptyDefaultAction(rName string, action awstypes.ActionTypeEnum) string {
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTP"
+  port              = "80"
+
+  default_action {
+    type = %[2]q
+  }
+}
+
+resource "aws_lb" "test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, action))
 }
