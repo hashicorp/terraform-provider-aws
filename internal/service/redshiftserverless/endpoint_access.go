@@ -112,10 +112,10 @@ func ResourceEndpointAccess() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 30),
 			},
 			"owner_account": {
-				Type: 			schema.TypeString,
-				Required:		false,
-				ForceNew:     	true,
-				ValidateFunc: 	verify.ValidAccountID,
+				Type:         schema.TypeString,
+				Required:     false,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidAccountID,
 			},
 		},
 	}
