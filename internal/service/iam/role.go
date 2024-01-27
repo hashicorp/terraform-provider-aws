@@ -293,7 +293,7 @@ type resourceIamRoleData struct {
 	TagsAll             types.Map         `tfsdk:"tags_all"`
 }
 
-func oldSDKIAMRoleSchema(ctx context.Context) schema.Schema {
+func oldSDKRoleSchema(ctx context.Context) schema.Schema {
 	return schema.Schema{
 		Version: 0,
 		Attributes: map[string]schema.Attribute{
@@ -401,7 +401,7 @@ func oldSDKIAMRoleSchema(ctx context.Context) schema.Schema {
 }
 
 func (r *resourceIamRole) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
-	schemaV0 := oldSDKIAMRoleSchema(ctx)
+	schemaV0 := oldSDKRoleSchema(ctx)
 
 	return map[int64]resource.StateUpgrader{
 		0: {
