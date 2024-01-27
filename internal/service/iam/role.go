@@ -71,16 +71,13 @@ func EditPlanForSameReorderedPolicies() planmodifier.Map {
 	return editPlanForSameReorderedPolicies{}
 }
 
-// editPlanForSameReorderedPolicies implements the plan modifier.
 type editPlanForSameReorderedPolicies struct{}
 
-// Description returns a human-readable description of the plan modifier.
 // TODO: edit this once we get working
 func (m editPlanForSameReorderedPolicies) Description(_ context.Context) string {
 	return "Once set, the value of this attribute in state will not change."
 }
 
-// MarkdownDescription returns a markdown description of the plan modifier.
 // TODO: edit this once we get working
 func (m editPlanForSameReorderedPolicies) MarkdownDescription(_ context.Context) string {
 	return "Once set, the value of this attribute in state will not change."
@@ -102,12 +99,9 @@ func (m editPlanForSameReorderedPolicies) PlanModifyMap(ctx context.Context, req
 	plan_inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, req.PlanValue)
 
 	if len(plan_inline_policies_map) == 0 {
-		// fmt.Println("empty plan map exiting")
 		return
 	}
 	state_inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, req.StateValue)
-	// fmt.Println(fmt.Sprintf("state_inline_policies_map: %+v", state_inline_policies_map))
-	// fmt.Println(fmt.Sprintf("plan_inline_policies_map: %+v", plan_inline_policies_map))
 
 	// If policies match, set plan for policy to use state version so that we don't see if diff bc ordering does not matter
 	for name, plan_policy_doc := range plan_inline_policies_map {
@@ -171,7 +165,6 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			// TODO: maybe mapof of IAMPolicytype?
 			"inline_policies": schema.MapAttribute{
-				// ElementType: types.StringType,
 				ElementType: fwtypes.IAMPolicyType,
 				Optional:    true,
 				PlanModifiers: []planmodifier.Map{
@@ -507,7 +500,6 @@ func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.Upgrade
 }
 
 func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	fmt.Println("Hitting top of Create")
 	conn := r.Meta().IAMConn(ctx)
 
 	var plan resourceIamRoleData
@@ -615,9 +607,7 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	plan.NamePrefix = flex.StringToFramework(ctx, create.NamePrefixFromName(aws.StringValue(output.Role.RoleName)))
 	plan.UniqueID = flex.StringToFramework(ctx, output.Role.RoleId)
 
-	// last steps?
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-	fmt.Println("Bottom of Create")
 }
 
 func (r resourceIamRole) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -655,12 +645,10 @@ func (r resourceIamRole) Delete(ctx context.Context, req resource.DeleteRequest,
 }
 
 func (r *resourceIamRole) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	fmt.Println("Top of Import")
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
 }
 
 func (r *resourceIamRole) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-	fmt.Println("Hitting modify plan!")
 	if !request.Plan.Raw.IsNull() && !request.State.Raw.IsNull() {
 		var state, plan resourceIamRoleData
 
@@ -676,6 +664,10 @@ func (r *resourceIamRole) ModifyPlan(ctx context.Context, request resource.Modif
 			return
 		}
 
+		if state.Description.ValueString() == plan.Description.ValueString() {
+			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("description"), state.Description)...)
+		}
+
 		if state.NamePrefix.ValueString() == plan.NamePrefix.ValueString() {
 			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("name_prefix"), state.NamePrefix)...)
 		}
@@ -685,7 +677,6 @@ func (r *resourceIamRole) ModifyPlan(ctx context.Context, request resource.Modif
 }
 
 func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	fmt.Println("Top of Read")
 	conn := r.Meta().IAMConn(ctx)
 
 	var state resourceIamRoleData
@@ -702,9 +693,6 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	// NOTE: Same issue here, I left old conditional here as example, not sure what else can/should be done
 	// if !d.IsNewResource() && tfresource.NotFound(err) {
 	if tfresource.NotFound(err) {
-		// log.Printf("[WARN] IAM Role (%s) not found, removing from state", d.Id())
-		// d.SetId("")
-		// return diags
 		resp.State.RemoveResource(ctx)
 		return
 	}
@@ -784,10 +772,8 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 		var configPoliciesList []*iam.PutRolePolicyInput
 		inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, state.InlinePolicies)
 		configPoliciesList = expandRoleInlinePolicies(aws.StringValue(role.RoleName), inline_policies_map)
-		fmt.Println(fmt.Sprintf("configPoliciesList: %+v", configPoliciesList))
 
 		if !inlinePoliciesEquivalent(inlinePolicies, configPoliciesList) {
-			fmt.Println("found different inline policies!")
 			state.InlinePolicies = flex.FlattenFrameworkStringValueMap(ctx, flattenRoleInlinePolicies(inlinePolicies))
 		}
 	}
@@ -808,11 +794,9 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	setTagsOut(ctx, role.Tags)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-	fmt.Println("Bottom of Read")
 }
 
 func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	fmt.Println("Top of Update")
 	conn := r.Meta().IAMConn(ctx)
 
 	var plan, state resourceIamRoleData
@@ -932,8 +916,6 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	if !plan.InlinePolicies.Equal(state.InlinePolicies) && inlinePoliciesActualDiff(ctx, &plan, &state) {
-		fmt.Println("Found inline policies changes!")
-
 		old_inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, state.InlinePolicies)
 		new_inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, plan.InlinePolicies)
 
@@ -1066,7 +1048,6 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 	plan.NamePrefix = flex.StringToFramework(ctx, create.NamePrefixFromName(plan.Name.ValueString()))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-	fmt.Println("Hit bottom of update")
 }
 
 func FindRoleByName(ctx context.Context, conn *iam.IAM, name string) (*iam.Role, error) {
@@ -1340,8 +1321,6 @@ func expandRoleInlinePolicies(roleName string, tfPoliciesMap map[string]string) 
 	var apiObjects []*iam.PutRolePolicyInput
 
 	for policyName, policyDocument := range tfPoliciesMap {
-		fmt.Println(fmt.Sprintf("policyName: %s", policyName))
-		// fmt.Println(fmt.Sprintf("policyDocument: %s", policyDocument))
 		apiObject := expandRoleInlinePolicy(roleName, policyName, policyDocument)
 
 		if apiObject == nil {

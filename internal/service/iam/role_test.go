@@ -87,17 +87,7 @@ func TestAccIAMRole_MigrateFromPluginSDK_basic(t *testing.T) {
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				Config:                   testAccRoleConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "path", "/"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "assume_role_policy"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "force_detach_policies", "false"),
-				),
+				PlanOnly:                 true,
 			},
 		},
 	})
@@ -811,56 +801,56 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 	})
 }
 
-// func TestAccIAMRole_MigrateFromPluginSDK_InlinePolicy(t *testing.T) {
-// ctx := acctest.Context(t)
-// var conf iam.Role
-// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// resourceName := "aws_iam_role.test"
+func TestAccIAMRole_MigrateFromPluginSDK_InlinePolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
 
-// resource.ParallelTest(t, resource.TestCase{
-// PreCheck:     func() { acctest.PreCheck(ctx, t) },
-// ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-// CheckDestroy: testAccCheckRoleDestroy(ctx),
-// Steps: []resource.TestStep{
-// {
-// ExternalProviders: map[string]resource.ExternalProvider{
-// "aws": {
-// Source:            "hashicorp/aws",
-// VersionConstraint: "5.34.0",
-// },
-// },
-// Config: testAccRoleConfig_policyInline(rName, policyName1),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &conf),
-// resource.TestCheckResourceAttr(resourceName, "path", "/"),
-// resource.TestCheckResourceAttr(resourceName, "name", rName),
-// resource.TestCheckResourceAttr(resourceName, "description", ""),
-// resource.TestCheckResourceAttrSet(resourceName, "create_date"),
-// resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
-// resource.TestCheckResourceAttrSet(resourceName, "arn"),
-// resource.TestCheckResourceAttr(resourceName, "force_detach_policies", "false"),
-// resource.TestCheckResourceAttr(resourceName, "inline_policies.#", "1"),
-// ),
-// },
-// {
-// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// Config:                   testAccRoleConfig_policyInline(rName, policyName1),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &conf),
-// resource.TestCheckResourceAttr(resourceName, "path", "/"),
-// resource.TestCheckResourceAttr(resourceName, "name", rName),
-// resource.TestCheckResourceAttr(resourceName, "description", ""),
-// resource.TestCheckResourceAttrSet(resourceName, "create_date"),
-// resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
-// resource.TestCheckResourceAttrSet(resourceName, "arn"),
-// resource.TestCheckResourceAttr(resourceName, "force_detach_policies", "false"),
-// resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "1"),
-// ),
-// },
-// },
-// })
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.34.0",
+					},
+				},
+				Config: testAccRoleConfig_policyInlineLegacy(rName, policyName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "path", "/"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "force_detach_policies", "false"),
+					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccRoleConfig_policyInline(rName, policyName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "path", "/"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "force_detach_policies", "false"),
+					resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "1"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccIAMRole_InlinePolicy_badJSON(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -2040,6 +2030,46 @@ EOF
   }
 }
 `, roleName)
+}
+
+func testAccRoleConfig_policyInlineLegacy(roleName, policyName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+
+  inline_policy {
+    name   = %[2]q
+    policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+  }
+}
+`, roleName, policyName)
 }
 
 func testAccRoleConfig_policyInline(roleName, policyName string) string {
