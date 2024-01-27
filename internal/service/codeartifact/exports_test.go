@@ -5,6 +5,7 @@ package codeartifact
 
 // Exports for use in tests only.
 var (
+	ResourceDomain                      = resourceDomain
 	ResourceRepository                  = resourceRepository
 	ResourceRepositoryPermissionsPolicy = resourceRepositoryPermissionsPolicy
 )

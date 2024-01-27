@@ -39,7 +39,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDomain,
+			Factory:  resourceDomain,
 			TypeName: "aws_codeartifact_domain",
 			Name:     "Domain",
 			Tags: &types.ServicePackageResourceTags{
