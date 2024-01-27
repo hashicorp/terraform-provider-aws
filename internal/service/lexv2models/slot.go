@@ -115,7 +115,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[CustomPayloadData](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[CustomPayload](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"value": schema.StringAttribute{
@@ -128,7 +128,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[ImageResponseCardData](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[ImageResponseCard](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"image_url": schema.StringAttribute{
@@ -143,7 +143,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 					},
 					Blocks: map[string]schema.Block{
 						"button": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[ButtonData](ctx),
+							CustomType: fwtypes.NewListNestedObjectTypeOf[Button](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"text": schema.StringAttribute{
@@ -162,7 +162,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[PlainTextMessageData](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[PlainTextMessage](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"value": schema.StringAttribute{
@@ -175,7 +175,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[SSMLMessageData](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[SSMLMessage](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"value": schema.StringAttribute{
@@ -191,18 +191,18 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 		Validators: []validator.List{
 			listvalidator.SizeAtLeast(1),
 		},
-		CustomType: fwtypes.NewListNestedObjectTypeOf[MessageGroupData](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[MessageGroup](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
 				"message": schema.ListNestedBlock{
 					Validators: []validator.List{
 						listvalidator.SizeBetween(1, 1),
 					},
-					CustomType:   fwtypes.NewListNestedObjectTypeOf[MessageData](ctx),
+					CustomType:   fwtypes.NewListNestedObjectTypeOf[Message](ctx),
 					NestedObject: messageNBO,
 				},
 				"variation": schema.ListNestedBlock{
-					CustomType:   fwtypes.NewListNestedObjectTypeOf[MessageData](ctx),
+					CustomType:   fwtypes.NewListNestedObjectTypeOf[Message](ctx),
 					NestedObject: messageNBO,
 				},
 			},
@@ -213,7 +213,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 		Validators: []validator.List{
 			listvalidator.SizeBetween(1, 1),
 		},
-		CustomType: fwtypes.NewListNestedObjectTypeOf[AllowedInputTypesData](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[AllowedInputTypes](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"allow_audio_input": schema.BoolAttribute{
@@ -230,7 +230,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
-		CustomType: fwtypes.NewListNestedObjectTypeOf[AudioSpecificationData](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[AudioSpecification](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"end_timeout_ms": schema.Int64Attribute{
@@ -253,7 +253,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
-		CustomType: fwtypes.NewListNestedObjectTypeOf[DTMFSpecificationData](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[DTMFSpecification](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"deletion_character": schema.StringAttribute{
@@ -294,7 +294,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
-		CustomType: fwtypes.NewListNestedObjectTypeOf[AudioAndDTMFInputSpecificationData](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[AudioAndDTMFInputSpecification](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"start_timeout_ms": schema.Int64Attribute{
@@ -315,7 +315,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 		Validators: []validator.List{
 			listvalidator.SizeAtMost(1),
 		},
-		CustomType: fwtypes.NewListNestedObjectTypeOf[TextInputSpecificationData](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[TextInputSpecification](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"start_timeout_ms": schema.Int64Attribute{
@@ -329,7 +329,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 	}
 
 	promptAttemptsSpecificationLNB := schema.SetNestedBlock{
-		CustomType: fwtypes.NewSetNestedObjectTypeOf[PromptAttemptsSpecificationData](ctx),
+		CustomType: fwtypes.NewSetNestedObjectTypeOf[PromptAttemptsSpecification](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"map_block_key": schema.StringAttribute{
@@ -352,7 +352,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 		Validators: []validator.List{
 			listvalidator.SizeBetween(1, 1),
 		},
-		CustomType: fwtypes.NewListNestedObjectTypeOf[PromptSpecificationData](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[PromptSpecification](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"allow_interrupt": schema.BoolAttribute{
@@ -369,14 +369,14 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"message_groups":                messageGroupLNB,
+				"message_group":                 messageGroupLNB,
 				"prompt_attempts_specification": promptAttemptsSpecificationLNB,
 			},
 		},
 	}
 
 	sampleUtteranceLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[SampleUtteranceData](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[SampleUtterance](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"utterance": schema.StringAttribute{
@@ -399,7 +399,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 	}
 
 	responseSpecificationLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[ResponseSpecificationData](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[ResponseSpecification](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"allow_interrupt": schema.BoolAttribute{
@@ -407,7 +407,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"message_groups": messageGroupLNB,
+				"message_group": messageGroupLNB,
 			},
 		},
 	}
@@ -427,7 +427,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"message_groups": messageGroupLNB,
+				"message_group": messageGroupLNB,
 			},
 		},
 	}
@@ -766,123 +766,29 @@ type DefaultValueData struct {
 	DefaultValue types.String `tfsdk:"default_value"`
 }
 
-type PromptSpecificationData struct {
-	AllowInterrupt              types.Bool                                                     `tfsdk:"allow_interrupt"`
-	MaxRetries                  types.Int64                                                    `tfsdk:"max_retries"`
-	MessageGroup                fwtypes.ListNestedObjectValueOf[MessageGroupData]              `tfsdk:"message_groups"`
-	MessageSelectionStrategy    fwtypes.StringEnum[awstypes.MessageSelectionStrategy]          `tfsdk:"message_selection_strategy"`
-	PromptAttemptsSpecification fwtypes.SetNestedObjectValueOf[PromptAttemptSpecificationData] `tfsdk:"prompt_attempts_specification"`
-}
-type PromptAttemptSpecificationData struct {
-	AllowedInputTypes              fwtypes.ListNestedObjectValueOf[AllowedInputTypesData]              `tfsdk:"allowed_input_types"`
-	AllowInterrupt                 types.Bool                                                          `tfsdk:"allow_interrupt"`
-	MapBlockKey                    fwtypes.StringEnum[PromptAttemptsType]                              `tfsdk:"map_block_key"`
-	AudioAndDTMFInputSpecification fwtypes.ListNestedObjectValueOf[AudioAndDTMFInputSpecificationData] `tfsdk:"audio_and_dtmf_input_specification"`
-	TextInputSpecification         fwtypes.ListNestedObjectValueOf[TextInputSpecificationData]         `tfsdk:"text_input_specification"`
-}
-
-type DTMFSpecificationData struct {
-	EndCharacter      types.String `tfsdk:"end_character"`
-	EndTimeoutMs      types.Int64  `tfsdk:"end_timeout_ms"`
-	DeletionCharacter types.String `tfsdk:"deletion_character"`
-	MaxLength         types.Int64  `tfsdk:"max_length"`
-}
-
-type TextInputSpecificationData struct {
-	StartTimeoutMs types.Int64 `tfsdk:"start_timeout_ms"`
-}
-
-type AllowedInputTypesData struct {
-	AllowAudioInput types.Bool `tfsdk:"allow_audio_input"`
-	AllowDTMFInput  types.Bool `tfsdk:"allow_dtmf_input"`
-}
-
-type AudioAndDTMFInputSpecificationData struct {
-	AudioSpecification fwtypes.ListNestedObjectValueOf[AudioSpecificationData] `tfsdk:"audio_specification"`
-	StartTimeoutMs     types.Int64                                             `tfsdk:"start_timeout_ms"`
-	DTMFSpecification  fwtypes.ListNestedObjectValueOf[DTMFSpecificationData]  `tfsdk:"dtmf_specification"`
-}
-
-type AudioSpecificationData struct {
-	EndTimeoutMs types.Int64 `tfsdk:"end_timeout_ms"`
-	MaxLengthMs  types.Int64 `tfsdk:"max_length_ms"`
-}
-
-type CustomPayloadData struct {
-	Value types.String `tfsdk:"value"`
-}
-
-type ImageResponseCardData struct {
-	Title    types.String                                `tfsdk:"title"`
-	Button   fwtypes.ListNestedObjectValueOf[ButtonData] `tfsdk:"buttons"`
-	ImageURL types.String                                `tfsdk:"image_url"`
-	Subtitle types.String                                `tfsdk:"subtitle"`
-}
-
-type ButtonData struct {
-	Text  types.String `tfsdk:"text"`
-	Value types.String `tfsdk:"value"`
-}
-
-type PlainTextMessageData struct {
-	Value types.String `tfsdk:"value"`
-}
-
-type SSMLMessageData struct {
-	Value types.String `tfsdk:"value"`
-}
-type MessageGroupData struct {
-	Message    fwtypes.ListNestedObjectValueOf[MessageData] `tfsdk:"message"`
-	Variations fwtypes.ListNestedObjectValueOf[MessageData] `tfsdk:"variations"`
-}
-
-type MessageData struct {
-	CustomPayload     fwtypes.ListNestedObjectValueOf[CustomPayloadData]     `tfsdk:"custom_payload"`
-	ImageResponseCard fwtypes.ListNestedObjectValueOf[ImageResponseCardData] `tfsdk:"image_response_card"`
-	PlainTextMessage  fwtypes.ListNestedObjectValueOf[PlainTextMessageData]  `tfsdk:"plain_text_message"`
-	SSMLMessage       fwtypes.ListNestedObjectValueOf[SSMLMessageData]       `tfsdk:"ssml_message"`
-}
-
-type PromptAttemptsSpecificationData struct {
-	AllowedInputTypes              fwtypes.ListNestedObjectValueOf[AllowedInputTypes]              `tfsdk:"allowed_input_types"`
-	AllowInterrupt                 types.Bool                                                      `tfsdk:"allow_interrupt"`
-	AudioAndDTMFInputSpecification fwtypes.ListNestedObjectValueOf[AudioAndDTMFInputSpecification] `tfsdk:"audio_and_dtmf_input_specification"`
-	MapBlockKey                    fwtypes.StringEnum[PromptAttemptsType]                          `tfsdk:"map_block_key"`
-	TextInputSpecification         fwtypes.ListNestedObjectValueOf[TextInputSpecification]         `tfsdk:"text_input_specification"`
-}
-
-type SampleUtteranceData struct {
-	Utterance types.String `tfsdk:"utterance"`
-}
-
 type SlotResolutionSettingData struct {
 	SlotResolutionStrategy fwtypes.StringEnum[awstypes.SlotResolutionStrategy] `tfsdk:"slot_resolution_strategy"`
 }
 
-type ResponseSpecificationData struct {
-	AllowInterrupt types.Bool                                        `tfsdk:"allow_interrupt"`
-	MessageGroups  fwtypes.ListNestedObjectValueOf[MessageGroupData] `tfsdk:"message_groups"`
-}
-
 type StillWaitingResponseSpecificationData struct {
-	AllowInterrupt     types.Bool                                        `tfsdk:"allow_interrupt"`
-	FrequencyInSeconds types.Int64                                       `tfsdk:"frequency_in_seconds"`
-	MessageGroups      fwtypes.ListNestedObjectValueOf[MessageGroupData] `tfsdk:"message_groups"`
-	TimeoutInSeconds   types.Int64                                       `tfsdk:"timeout_in_seconds"`
+	AllowInterrupt     types.Bool                                    `tfsdk:"allow_interrupt"`
+	FrequencyInSeconds types.Int64                                   `tfsdk:"frequency_in_seconds"`
+	MessageGroups      fwtypes.ListNestedObjectValueOf[MessageGroup] `tfsdk:"message_groups"`
+	TimeoutInSeconds   types.Int64                                   `tfsdk:"timeout_in_seconds"`
 }
 
 type WaitAndContinueSpecificationData struct {
 	Active               types.Bool                                                             `tfsdk:"active"`
-	ContinueResponse     fwtypes.ListNestedObjectValueOf[ResponseSpecificationData]             `tfsdk:"continue_response"`
+	ContinueResponse     fwtypes.ListNestedObjectValueOf[ResponseSpecification]                 `tfsdk:"continue_response"`
 	StillWaitingResponse fwtypes.ListNestedObjectValueOf[StillWaitingResponseSpecificationData] `tfsdk:"still_waiting_response"`
-	WaitingResponse      fwtypes.ListNestedObjectValueOf[ResponseSpecificationData]             `tfsdk:"waiting_response"`
+	WaitingResponse      fwtypes.ListNestedObjectValueOf[ResponseSpecification]                 `tfsdk:"waiting_response"`
 }
 
 type ValueElicitationSettingData struct {
 	SlotConstraint               fwtypes.StringEnum[awstypes.SlotConstraint]                       `tfsdk:"slot_constraint"`
 	DefaultValueSpecification    fwtypes.ListNestedObjectValueOf[DefaultValueSpecificationData]    `tfsdk:"default_value_specification"`
-	PromptSpecification          fwtypes.ListNestedObjectValueOf[PromptSpecificationData]          `tfsdk:"prompt_specification"`
-	SampleUtterance              fwtypes.ListNestedObjectValueOf[SampleUtteranceData]              `tfsdk:"sample_utterance"`
+	PromptSpecification          fwtypes.ListNestedObjectValueOf[PromptSpecification]              `tfsdk:"prompt_specification"`
+	SampleUtterance              fwtypes.ListNestedObjectValueOf[SampleUtterance]                  `tfsdk:"sample_utterance"`
 	SlotResolutionSetting        fwtypes.ListNestedObjectValueOf[SlotResolutionSettingData]        `tfsdk:"slot_resolution_setting"`
 	WaitAndContinueSpecification fwtypes.ListNestedObjectValueOf[WaitAndContinueSpecificationData] `tfsdk:"wait_and_continue_specification"`
 }
