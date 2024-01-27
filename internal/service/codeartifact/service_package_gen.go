@@ -29,8 +29,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_codeartifact_authorization_token",
 		},
 		{
-			Factory:  DataSourceRepositoryEndpoint,
+			Factory:  dataSourceRepositoryEndpoint,
 			TypeName: "aws_codeartifact_repository_endpoint",
+			Name:     "Repository Endpoint",
 		},
 	}
 }
