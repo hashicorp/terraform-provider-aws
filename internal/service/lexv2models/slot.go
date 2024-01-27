@@ -773,7 +773,7 @@ type SlotResolutionSettingData struct {
 type StillWaitingResponseSpecificationData struct {
 	AllowInterrupt     types.Bool                                    `tfsdk:"allow_interrupt"`
 	FrequencyInSeconds types.Int64                                   `tfsdk:"frequency_in_seconds"`
-	MessageGroups      fwtypes.ListNestedObjectValueOf[MessageGroup] `tfsdk:"message_groups"`
+	MessageGroup       fwtypes.ListNestedObjectValueOf[MessageGroup] `tfsdk:"message_group"`
 	TimeoutInSeconds   types.Int64                                   `tfsdk:"timeout_in_seconds"`
 }
 

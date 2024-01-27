@@ -33,19 +33,19 @@ The following arguments are required:
 * `intent_id` - (Required) Identifier of the intent that contains the slot.
 * `locale_id` - (Required) Identifier of the language and locale that the slot will be used in.
 * `name` - (Required) Name of the slot.
-* `value_elicitation_setting` - (Required) Specifies prompts that Amazon Lex sends to the user to elicit a response that provides the value for the slot.
+* `value_elicitation_setting` - (Required) Prompts that Amazon Lex sends to the user to elicit a response that provides the value for the slot.
 
 The following arguments are optional:
 
 * `description` - (Optional) Description of the slot.
-* `multiple_values_setting` - (Optional) Indicates whether the slot returns multiple values in one response. See the [`multiple_values_setting` argument reference](#multiple_values_setting-argument-reference) below.
+* `multiple_values_setting` - (Optional) Whether the slot returns multiple values in one response. See the [`multiple_values_setting` argument reference](#multiple_values_setting-argument-reference) below.
 * `obfuscation_setting` - (Optional) Determines how slot values are used in Amazon CloudWatch logs. See the [`obfuscation_setting` argument reference](#obfuscation_setting-argument-reference) below.
 * `slot_type_id` - (Optional) Unique identifier for the slot type associated with this slot.
 * `sub_slot_setting` - (Optional) Specifications for the constituent sub slots and the expression for the composite slot.
 
 ### `multiple_values_setting` Argument Reference
 
-* `allow_multiple_values` - (Optional) Indicates whether a slot can return multiple values. When `true`, the slot may return more than one value in a response. When `false`, the slot returns only a single value. Multi-value slots are only available in the `en-US` locale.
+* `allow_multiple_values` - (Optional) Whether a slot can return multiple values. When `true`, the slot may return more than one value in a response. When `false`, the slot returns only a single value. Multi-value slots are only available in the `en-US` locale.
 
 ### `obfuscation_setting` Argument Reference
 
