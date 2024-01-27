@@ -315,20 +315,20 @@ func oldSDKIAMRoleSchema(ctx context.Context) schema.Schema {
 				Computed: true,
 			},
 			"description": schema.StringAttribute{
+				Default: stringdefault.StaticString(""),
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(0, 1000),
+				},
 				Optional: true,
-				// TODO Validate,
+				Computed: true,
 			},
 			"force_detach_policies": schema.BoolAttribute{
 				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
 				// TODO Default:false,
 			},
-			"id": // TODO framework.IDAttribute()
-			schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			"id": framework.IDAttribute(),
 			"managed_policy_arns": schema.SetAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
@@ -336,24 +336,30 @@ func oldSDKIAMRoleSchema(ctx context.Context) schema.Schema {
 			},
 			"max_session_duration": schema.Int64Attribute{
 				Optional: true,
-				// TODO Default:3600,
-				// TODO Validate,
 			},
 			"name": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
-				// TODO Validate,
+				Validators: []validator.String{
+					stringvalidator.LengthAtMost(roleNameMaxLen),
+				},
 			},
 			"name_prefix": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.RequiresReplaceIfConfigured(),
 				},
-				// TODO Validate,
+				Validators: []validator.String{
+					stringvalidator.LengthAtMost(roleNamePrefixMaxLen),
+					stringvalidator.ConflictsWith(
+						path.MatchRelative().AtParent().AtName("name"),
+					),
+				},
 			},
 			"path": schema.StringAttribute{
 				Optional: true,
@@ -414,7 +420,7 @@ func (r *resourceIamRole) UpgradeState(ctx context.Context) map[int64]resource.S
 
 // TODO: ok finish working on this to perform upgrade cleanly
 func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
-	fmt.Println("Top of upgrade")
+	fmt.Println("Top of state upgrade")
 	type resourceIamRoleDataV0 struct {
 		ARN                 types.String `tfsdk:"arn"`
 		AssumeRolePolicy    types.String `tfsdk:"assume_role_policy"`
@@ -455,11 +461,9 @@ func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.Upgrade
 		Name:                roleDataV0.Name,
 		Path:                roleDataV0.Path,
 		UniqueID:            roleDataV0.UniqueID,
-		// NamePrefix:          roleDataV0.NamePrefix,
-		Tags:    roleDataV0.Tags,
-		TagsAll: roleDataV0.TagsAll,
-		// ManagedPolicyArns   types.Set    `tfsdk:"managed_policy_arns"`
-		// InlinePolicy        types.Set    `tfsdk:"inline_policy"`
+		NamePrefix:          roleDataV0.NamePrefix,
+		Tags:                roleDataV0.Tags,
+		TagsAll:             roleDataV0.TagsAll,
 	}
 
 	// TODO: fix this later?
@@ -471,18 +475,21 @@ func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.Upgrade
 	// }
 
 	// TODO: do something with this once I get to that test
-	var policyARNs []string
-	roleDataCurrent.ManagedPolicyArns = flex.FlattenFrameworkStringValueSet(ctx, policyARNs)
+	// var policyARNs []string
+	// roleDataCurrent.ManagedPolicyArns = flex.FlattenFrameworkStringValueSet(ctx, policyARNs)
+	roleDataCurrent.ManagedPolicyArns = types.SetNull(fwtypes.ARNType)
 
 	// TODO: do something with this once I get to that test
-	temp := make(map[string]string)
-	roleDataCurrent.InlinePolicies = flex.FlattenFrameworkStringValueMap(ctx, temp)
+	// temp := make(map[string]string)
+	// roleDataCurrent.InlinePolicies = flex.FlattenFrameworkStringValueMap(ctx, temp)
+	roleDataCurrent.InlinePolicies = types.MapNull(fwtypes.IAMPolicyType)
 
 	// TODO: update this to be string is empty check?
-	// if !roleDataV0.PermissionsBoundary.IsNull() {
-	// fmt.Println("permission boundary found")
-	// roleDataCurrent.PermissionsBoundary = fwtypes.ARNValue(roleDataV0.PermissionsBoundary.ValueString())
-	// }
+	if roleDataV0.PermissionsBoundary.ValueString() != "" {
+		roleDataCurrent.PermissionsBoundary = fwtypes.ARNValue(roleDataV0.PermissionsBoundary.ValueString())
+	} else {
+		roleDataCurrent.PermissionsBoundary = fwtypes.ARNNull()
+	}
 
 	// var managedPolicies []string
 	// resp.Diagnostics.Append(plan.ManagedPolicyArns.ElementsAs(ctx, &managedPolicies, false)...)
@@ -496,7 +503,7 @@ func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.Upgrade
 
 	diags := resp.State.Set(ctx, roleDataCurrent)
 	resp.Diagnostics.Append(diags...)
-	fmt.Println("Bottom of upgrade")
+	fmt.Println("Bottom of state upgrade")
 }
 
 func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -671,7 +678,6 @@ func (r *resourceIamRole) ModifyPlan(ctx context.Context, request resource.Modif
 
 		if state.NamePrefix.ValueString() == plan.NamePrefix.ValueString() {
 			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("name_prefix"), state.NamePrefix)...)
-			// response.Plan.SetAttribute(ctx, path.Root("name_prefix"), state.NamePrefix)
 		}
 
 	}

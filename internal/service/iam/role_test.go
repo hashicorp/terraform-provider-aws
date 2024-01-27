@@ -53,41 +53,55 @@ func TestAccIAMRole_basic(t *testing.T) {
 	})
 }
 
-// func TestAccIAMRole_MigrateFromPluginSDK_basic(t *testing.T) {
-// ctx := acctest.Context(t)
-// var conf iam.Role
-// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// resourceName := "aws_iam_role.test"
+// can't just check plan because of state diffs, rather apply new one and make sure everything
+// is as expected before and after upgrade
+func TestAccIAMRole_MigrateFromPluginSDK_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
 
-// resource.ParallelTest(t, resource.TestCase{
-// PreCheck:     func() { acctest.PreCheck(ctx, t) },
-// ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-// CheckDestroy: testAccCheckRoleDestroy(ctx),
-// Steps: []resource.TestStep{
-// {
-// ExternalProviders: map[string]resource.ExternalProvider{
-// "aws": {
-// Source:            "hashicorp/aws",
-// VersionConstraint: "5.33.0",
-// },
-// },
-// Config: testAccRoleConfig_basic(rName),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRoleExists(ctx, resourceName, &conf),
-// resource.TestCheckResourceAttr(resourceName, "path", "/"),
-// resource.TestCheckResourceAttrSet(resourceName, "create_date"),
-// resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
-// resource.TestCheckResourceAttrSet(resourceName, "arn"),
-// ),
-// },
-// {
-// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// Config:                   testAccRoleConfig_basic(rName),
-// PlanOnly:                 true,
-// },
-// },
-// })
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.33.0",
+					},
+				},
+				Config: testAccRoleConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "path", "/"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "force_detach_policies", "false"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccRoleConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "path", "/"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "force_detach_policies", "false"),
+				),
+			},
+		},
+	})
+}
 
 func TestAccIAMRole_description(t *testing.T) {
 	ctx := acctest.Context(t)
