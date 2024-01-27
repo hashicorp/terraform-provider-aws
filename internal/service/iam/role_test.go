@@ -70,7 +70,7 @@ func TestAccIAMRole_MigrateFromPluginSDK_basic(t *testing.T) {
 				ExternalProviders: map[string]resource.ExternalProvider{
 					"aws": {
 						Source:            "hashicorp/aws",
-						VersionConstraint: "5.33.0",
+						VersionConstraint: "5.34.0",
 					},
 				},
 				Config: testAccRoleConfig_basic(rName),
