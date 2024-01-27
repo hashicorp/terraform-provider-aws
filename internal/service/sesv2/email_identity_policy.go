@@ -106,6 +106,11 @@ func resourceEmailIdentityPolicyRead(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SESV2Client(ctx)
 
+	emailIdentity, policyName, err := ParseEmailIdentityPolicyID(d.Id())
+	if err != nil {
+		return create.DiagError(names.SESV2, create.ErrActionReading, ResNameEmailIdentityPolicy, d.Id(), err)
+	}
+
 	policy, err := FindEmailIdentityPolicyByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -128,7 +133,9 @@ func resourceEmailIdentityPolicyRead(ctx context.Context, d *schema.ResourceData
 		return create.AppendDiagError(diags, names.SESV2, create.ErrActionSetting, ResNameEmailIdentityPolicy, d.Id(), err)
 	}
 
+	d.Set("email_identity", emailIdentity)
 	d.Set("policy", policy)
+	d.Set("policy_name", policyName)
 
 	return diags
 }
