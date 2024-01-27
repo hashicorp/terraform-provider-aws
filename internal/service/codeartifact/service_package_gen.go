@@ -59,8 +59,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRepositoryPermissionsPolicy,
+			Factory:  resourceRepositoryPermissionsPolicy,
 			TypeName: "aws_codeartifact_repository_permissions_policy",
+			Name:     "Repository Permissions Policy",
 		},
 	}
 }

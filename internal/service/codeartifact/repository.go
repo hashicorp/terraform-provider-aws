@@ -179,7 +179,7 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating CodeArtifact Repository (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CodeArtifact Repository (%s): %s", d.Id(), err)
 	}
 
 	d.Set("administrator_account", repository.AdministratorAccount)
