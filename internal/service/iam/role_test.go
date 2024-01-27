@@ -2116,7 +2116,7 @@ func testAccRoleConfig_policyInlineUpdate(roleName, policyName2, policyName3 str
 data "aws_partition" "current" {}
 
 locals {
-    inline_policy_doc = <<EOF
+  inline_policy_doc = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
