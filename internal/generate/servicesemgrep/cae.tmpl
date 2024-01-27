@@ -10,6 +10,7 @@ rules:
       exclude:
         - internal/service/securitylake/aws_log_source.go
         - internal/service/securitylake/aws_log_source_test.go
+        - internal/service/*/service_endpoints_gen_test.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -27,6 +28,7 @@ rules:
         - internal
       exclude:
         - internal/service/securitylake/aws_log_source.go
+        - internal/service/*/service_endpoints_gen_test.go
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -44,6 +46,7 @@ rules:
       exclude:
         - internal/service/securitylake/aws_log_source.go
         - internal/service/securitylake/exports_test.go
+        - internal/service/*/service_endpoints_gen_test.go
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:

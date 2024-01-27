@@ -105,4 +105,4 @@ This data source exports the following attributes in addition to the arguments a
 * `vpcId` - ID of the VPC associated with the DB snapshot.
 * `snapshotCreateTime` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC).
 
-<!-- cache-key: cdktf-0.20.0 input-9f41210b58c8bb6be2c45a9fec8d65b0d0e6ca683037a4f7c19bc634c7236062 -->
+<!-- cache-key: cdktf-0.20.1 input-9f41210b58c8bb6be2c45a9fec8d65b0d0e6ca683037a4f7c19bc634c7236062 -->

@@ -33,6 +33,11 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
+			Factory:  dataSourceAccessEntry,
+			TypeName: "aws_eks_access_entry",
+			Name:     "Access Entry",
+		},
+		{
 			Factory:  dataSourceAddon,
 			TypeName: "aws_eks_addon",
 		},
@@ -65,6 +70,19 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  resourceAccessEntry,
+			TypeName: "aws_eks_access_entry",
+			Name:     "Access Entry",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "access_entry_arn",
+			},
+		},
+		{
+			Factory:  resourceAccessPolicyAssociation,
+			TypeName: "aws_eks_access_policy_association",
+			Name:     "Access Policy Association",
+		},
 		{
 			Factory:  resourceAddon,
 			TypeName: "aws_eks_addon",

@@ -172,6 +172,7 @@ Recycle Bin (RBin)
 Redshift
 Redshift Data
 Redshift Serverless
+Rekognition
 Resource Explorer
 Resource Groups
 Resource Groups Tagging

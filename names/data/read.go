@@ -70,12 +70,27 @@ func (sr ServiceRecord) SkipClientGenerate() bool {
 	return sr[colSkipClientGenerate] != ""
 }
 
-func (sr ServiceRecord) ClientSDKV1() string {
-	return sr[colClientSDKV1]
+func (sr ServiceRecord) ClientSDKV1() bool {
+	return sr[colClientSDKV1] != ""
 }
 
-func (sr ServiceRecord) ClientSDKV2() string {
-	return sr[colClientSDKV2]
+func (sr ServiceRecord) ClientSDKV2() bool {
+	return sr[colClientSDKV2] != ""
+}
+
+// SDKVersion returns:
+// * "1" if only SDK v1 is implemented
+// * "2" if only SDK v2 is implemented
+// * "1,2" if both are implemented
+func (sr ServiceRecord) SDKVersion() string {
+	if sr.ClientSDKV1() && sr.ClientSDKV2() {
+		return "1,2"
+	} else if sr.ClientSDKV1() {
+		return "1"
+	} else if sr.ClientSDKV2() {
+		return "2"
+	}
+	return ""
 }
 
 func (sr ServiceRecord) ResourcePrefix() string {
