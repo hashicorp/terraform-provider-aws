@@ -53,8 +53,6 @@ func TestAccIAMRole_basic(t *testing.T) {
 	})
 }
 
-// can't just check plan because of state diffs, rather apply new one and make sure everything
-// is as expected before and after upgrade
 func TestAccIAMRole_MigrateFromPluginSDK_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf iam.Role
@@ -81,6 +79,7 @@ func TestAccIAMRole_MigrateFromPluginSDK_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "assume_role_policy"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "force_detach_policies", "false"),
 				),
@@ -95,6 +94,7 @@ func TestAccIAMRole_MigrateFromPluginSDK_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
 					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "assume_role_policy"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "force_detach_policies", "false"),
 				),
@@ -203,6 +203,8 @@ func TestAccIAMRole_namePrefix(t *testing.T) {
 		},
 	})
 }
+
+// TODO: name prefix test
 
 func TestAccIAMRole_testNameChange(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -548,6 +550,42 @@ func TestAccIAMRole_maxSessionDuration(t *testing.T) {
 	})
 }
 
+func TestAccIAMRole_MigrateFromPluginSDK_MaxSessionDuration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.34.0",
+					},
+				},
+				Config: testAccRoleConfig_maxSessionDuration(rName, 3700),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "max_session_duration", "3700"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccRoleConfig_maxSessionDuration(rName, 3700),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "max_session_duration", "3700"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 	ctx := acctest.Context(t)
 	var role iam.Role
@@ -641,6 +679,45 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 	})
 }
 
+func TestAccIAMRole_MigrateFromPluginSDK_PermissionBoundary(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var role iam.Role
+	resourceName := "aws_iam_role.test"
+	permissionsBoundary1 := fmt.Sprintf("arn:%s:iam::aws:policy/AdministratorAccess", acctest.Partition())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.34.0",
+					},
+				},
+				Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
+					testAccCheckRolePermissionsBoundary(&role, permissionsBoundary1),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
+					testAccCheckRolePermissionsBoundary(&role, permissionsBoundary1),
+				),
+			},
+		},
+	})
+}
+
 func TestAccIAMRole_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var role iam.Role
@@ -700,9 +777,7 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 					testAccCheckRoleExists(ctx, resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					// TODO: remove this once we add managed_policy_arns
-					// should be null?
-					// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 				),
 			},
 			{
@@ -710,9 +785,7 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "2"),
-				// TODO: remove this once we add managed_policy_arns
-				// should be null?
-				// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 				),
 			},
 			{
@@ -720,9 +793,7 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "1"),
-				// TODO: remove this once we add managed_policy_arns
-				// should be null?
-				// resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 				),
 			},
 			{
@@ -739,6 +810,57 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 		},
 	})
 }
+
+// func TestAccIAMRole_MigrateFromPluginSDK_InlinePolicy(t *testing.T) {
+// ctx := acctest.Context(t)
+// var conf iam.Role
+// rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+// policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+// resourceName := "aws_iam_role.test"
+
+// resource.ParallelTest(t, resource.TestCase{
+// PreCheck:     func() { acctest.PreCheck(ctx, t) },
+// ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+// CheckDestroy: testAccCheckRoleDestroy(ctx),
+// Steps: []resource.TestStep{
+// {
+// ExternalProviders: map[string]resource.ExternalProvider{
+// "aws": {
+// Source:            "hashicorp/aws",
+// VersionConstraint: "5.34.0",
+// },
+// },
+// Config: testAccRoleConfig_policyInline(rName, policyName1),
+// Check: resource.ComposeTestCheckFunc(
+// testAccCheckRoleExists(ctx, resourceName, &conf),
+// resource.TestCheckResourceAttr(resourceName, "path", "/"),
+// resource.TestCheckResourceAttr(resourceName, "name", rName),
+// resource.TestCheckResourceAttr(resourceName, "description", ""),
+// resource.TestCheckResourceAttrSet(resourceName, "create_date"),
+// resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
+// resource.TestCheckResourceAttrSet(resourceName, "arn"),
+// resource.TestCheckResourceAttr(resourceName, "force_detach_policies", "false"),
+// resource.TestCheckResourceAttr(resourceName, "inline_policies.#", "1"),
+// ),
+// },
+// {
+// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// Config:                   testAccRoleConfig_policyInline(rName, policyName1),
+// Check: resource.ComposeTestCheckFunc(
+// testAccCheckRoleExists(ctx, resourceName, &conf),
+// resource.TestCheckResourceAttr(resourceName, "path", "/"),
+// resource.TestCheckResourceAttr(resourceName, "name", rName),
+// resource.TestCheckResourceAttr(resourceName, "description", ""),
+// resource.TestCheckResourceAttrSet(resourceName, "create_date"),
+// resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
+// resource.TestCheckResourceAttrSet(resourceName, "arn"),
+// resource.TestCheckResourceAttr(resourceName, "force_detach_policies", "false"),
+// resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "1"),
+// ),
+// },
+// },
+// })
+// }
 
 func TestAccIAMRole_InlinePolicy_badJSON(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -871,6 +993,8 @@ func TestAccIAMRole_ManagedPolicy_basic(t *testing.T) {
 		},
 	})
 }
+
+// TODO: Managed policy arns upgrade test
 
 func TestAccIAMRole_ManagedPolicy_badARN(t *testing.T) {
 	ctx := acctest.Context(t)
