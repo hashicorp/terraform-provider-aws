@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -33,15 +34,18 @@ func (d *foundationModelDataSource) Schema(ctx context.Context, request datasour
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"customizations_supported": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
 			names.AttrID: framework.IDAttribute(),
 			"inference_types_supported": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
 			"input_modalities": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
@@ -55,6 +59,7 @@ func (d *foundationModelDataSource) Schema(ctx context.Context, request datasour
 				Computed: true,
 			},
 			"output_modalities": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				ElementType: types.StringType,
 				Computed:    true,
 			},
@@ -100,14 +105,14 @@ func (d *foundationModelDataSource) Read(ctx context.Context, request datasource
 }
 
 type foundationModelDataSourceModel struct {
-	CustomizationsSupported    types.Set    `tfsdk:"customizations_supported"`
-	ID                         types.String `tfsdk:"id"`
-	InferenceTypesSupported    types.Set    `tfsdk:"inference_types_supported"`
-	InputModalities            types.Set    `tfsdk:"input_modalities"`
-	ModelARN                   types.String `tfsdk:"model_arn"`
-	ModelID                    types.String `tfsdk:"model_id"`
-	ModelName                  types.String `tfsdk:"model_name"`
-	OutputModalities           types.Set    `tfsdk:"output_modalities"`
-	ProviderName               types.String `tfsdk:"provider_name"`
-	ResponseStreamingSupported types.Bool   `tfsdk:"response_streaming_supported"`
+	CustomizationsSupported    fwtypes.SetValueOf[types.String] `tfsdk:"customizations_supported"`
+	ID                         types.String                     `tfsdk:"id"`
+	InferenceTypesSupported    fwtypes.SetValueOf[types.String] `tfsdk:"inference_types_supported"`
+	InputModalities            fwtypes.SetValueOf[types.String] `tfsdk:"input_modalities"`
+	ModelARN                   types.String                     `tfsdk:"model_arn"`
+	ModelID                    types.String                     `tfsdk:"model_id"`
+	ModelName                  types.String                     `tfsdk:"model_name"`
+	OutputModalities           fwtypes.SetValueOf[types.String] `tfsdk:"output_modalities"`
+	ProviderName               types.String                     `tfsdk:"provider_name"`
+	ResponseStreamingSupported types.Bool                       `tfsdk:"response_streaming_supported"`
 }

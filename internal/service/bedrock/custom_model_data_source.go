@@ -5,44 +5,40 @@ package bedrock
 
 import (
 	"context"
-	"time"
+	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource
+// @FrameworkDataSource(name="Custom Model")
 // @Tags(identifierAttribute="model_arn")
-func newDataSourceCustomModel(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceCustomModel{}, nil
+func newCustomModelDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &customModelDataSource{}, nil
 }
 
-type dataSourceCustomModel struct {
+type customModelDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-// Metadata should return the full name of the data source, such as
-// examplecloud_thing.
-func (d *dataSourceCustomModel) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+func (d *customModelDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
 	response.TypeName = "aws_bedrock_custom_model"
 }
 
 // Schema returns the schema for this data source.
-func (d *dataSourceCustomModel) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *customModelDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
-			"model_id": schema.StringAttribute{
-				Required: true,
-			},
 			"base_model_arn": schema.StringAttribute{
 				Computed: true,
 			},
@@ -53,6 +49,7 @@ func (d *dataSourceCustomModel) Schema(ctx context.Context, req datasource.Schem
 				ElementType: types.StringType,
 				Computed:    true,
 			},
+			names.AttrID: framework.IDAttribute(),
 			"job_arn": schema.StringAttribute{
 				Computed: true,
 			},
@@ -63,42 +60,44 @@ func (d *dataSourceCustomModel) Schema(ctx context.Context, req datasource.Schem
 			"model_arn": schema.StringAttribute{
 				Computed: true,
 			},
+			"model_id": schema.StringAttribute{
+				Required: true,
+			},
 			"model_kms_key_arn": schema.StringAttribute{
 				Computed: true,
 			},
 			"model_name": schema.StringAttribute{
 				Computed: true,
 			},
-			"training_data_config": schema.StringAttribute{
-				Computed: true,
-			},
 			"output_data_config": schema.StringAttribute{
 				Computed: true,
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
-		},
-		Blocks: map[string]schema.Block{
-			"training_metrics": schema.SingleNestedBlock{
-				Attributes: map[string]schema.Attribute{
-					"training_loss": schema.Float64Attribute{
-						Computed: true,
+			"training_data_config": schema.StringAttribute{
+				Computed: true,
+			},
+			"training_metrics": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[customModelTrainingMetricsModel](ctx),
+				Computed:   true,
+				ElementType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"training_loss": types.Float64Type,
 					},
 				},
 			},
-			"validation_data_config": schema.SingleNestedBlock{
-				Attributes: map[string]schema.Attribute{
-					"validators": schema.ListAttribute{
-						ElementType: types.StringType,
-						Computed:    true,
-					},
+			"validation_data_config": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[customModelValidationDataConfigModel](ctx),
+				Computed:   true,
+				AttributeTypes: map[string]attr.Type{
+					"validators": types.ListType{ElemType: types.StringType},
 				},
 			},
-			"validation_metrics": schema.ListNestedBlock{
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"validation_loss": schema.Float64Attribute{
-							Computed: true,
-						},
+			"validation_metrics": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[customModelValidationMetricsModel](ctx),
+				Computed:   true,
+				ElementType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"validation_loss": types.Float64Type,
 					},
 				},
 			},
@@ -106,13 +105,9 @@ func (d *dataSourceCustomModel) Schema(ctx context.Context, req datasource.Schem
 	}
 }
 
-// Read is called when the provider must read data source values in order to update state.
-// Config values should be read from the ReadRequest and new state values set on the ReadResponse.
-func (d *dataSourceCustomModel) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	var data customModel
-
+func (d *customModelDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data customModelDataSourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -120,60 +115,66 @@ func (d *dataSourceCustomModel) Read(ctx context.Context, request datasource.Rea
 	conn := d.Meta().BedrockClient(ctx)
 
 	input := &bedrock.GetCustomModelInput{
-		ModelIdentifier: data.ModelID.ValueStringPointer(),
+		ModelIdentifier: fwflex.StringFromFramework(ctx, data.ModelID),
 	}
-	model, err := conn.GetCustomModel(ctx, input)
+
+	output, err := conn.GetCustomModel(ctx, input)
+
 	if err != nil {
-		response.Diagnostics.AddError("reading Bedrock Custom Model", err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Custom Model (%s)", data.ModelID.ValueString()), err.Error())
+
 		return
 	}
 
-	jobTags, err := listTags(ctx, conn, *model.JobArn)
-	if err != nil {
-		response.Diagnostics.AddError("reading Tags for Job", err.Error())
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
+
+	data.ID = data.ModelID
+
+	jobARN := aws.ToString(output.JobArn)
+	jobTags, err := listTags(ctx, conn, jobARN)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Custom Model Job (%s) tags", jobARN), err.Error())
+
+		return
+	}
+
 	data.JobTags = flex.FlattenFrameworkStringValueMap(ctx, jobTags.IgnoreAWS().Map())
 
-	data.refreshFromOutput(ctx, model)
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type customModel struct {
-	ID                   types.String          `tfsdk:"id"`
-	ModelID              types.String          `tfsdk:"model_id"`
-	BaseModelArn         types.String          `tfsdk:"base_model_arn"`
-	CreationTime         types.String          `tfsdk:"creation_time"`
-	JobArn               types.String          `tfsdk:"job_arn"`
-	ModelArn             types.String          `tfsdk:"model_arn"`
-	ModelName            types.String          `tfsdk:"model_name"`
-	JobName              types.String          `tfsdk:"job_name"`
-	ModelKmsKeyArn       types.String          `tfsdk:"model_kms_key_arn"`
-	HyperParameters      types.Map             `tfsdk:"hyper_parameters"`
-	TrainingDataConfig   types.String          `tfsdk:"training_data_config"`
-	TrainingMetrics      types.List            `tfsdk:"training_metrics"`
-	ValidationDataConfig *validationDataConfig `tfsdk:"validation_data_config"`
-	ValidationMetrics    []validationMetrics   `tfsdk:"validation_metrics"`
-	OutputDataConfig     types.String          `tfsdk:"output_data_config"`
-	JobTags              types.Map             `tfsdk:"job_tags"`
-	Tags                 types.Map             `tfsdk:"tags"`
+type customModelDataSourceModel struct {
+	BaseModelARN         types.String                                                       `tfsdk:"base_model_arn"`
+	CreationTime         types.String                                                       `tfsdk:"creation_time"`
+	HyperParameters      types.Map                                                          `tfsdk:"hyper_parameters"`
+	ID                   types.String                                                       `tfsdk:"id"`
+	JobARN               types.String                                                       `tfsdk:"job_arn"`
+	JobName              types.String                                                       `tfsdk:"job_name"`
+	JobTags              types.Map                                                          `tfsdk:"job_tags"`
+	ModelARN             types.String                                                       `tfsdk:"model_arn"`
+	ModelID              types.String                                                       `tfsdk:"model_id"`
+	ModelKMSKeyARN       types.String                                                       `tfsdk:"model_kms_key_arn"`
+	ModelName            types.String                                                       `tfsdk:"model_name"`
+	OutputDataConfig     types.String                                                       `tfsdk:"output_data_config"`
+	Tags                 types.Map                                                          `tfsdk:"tags"`
+	TrainingDataConfig   types.String                                                       `tfsdk:"training_data_config"`
+	TrainingMetrics      fwtypes.ListNestedObjectValueOf[customModelTrainingMetricsModel]   `tfsdk:"training_metrics"`
+	ValidationDataConfig fwtypes.ObjectValueOf[customModelValidationDataConfigModel]        `tfsdk:"validation_data_config"`
+	ValidationMetrics    fwtypes.ListNestedObjectValueOf[customModelValidationMetricsModel] `tfsdk:"validation_metrics"`
 }
 
-func (data *customModel) refreshFromOutput(ctx context.Context, model *bedrock.GetCustomModelOutput) {
-	if model == nil {
-		return
-	}
+type customModelTrainingMetricsModel struct {
+	TrainingLoss types.Float64 `tfsdk:"training_loss"`
+}
 
-	data.ID = flex.StringToFramework(ctx, model.ModelArn)
-	data.BaseModelArn = flex.StringToFramework(ctx, model.BaseModelArn)
-	data.CreationTime = flex.StringValueToFramework[string](ctx, model.CreationTime.Format(time.RFC3339))
-	data.JobArn = flex.StringToFramework(ctx, model.JobArn)
-	data.ModelArn = flex.StringToFramework(ctx, model.ModelArn)
-	data.ModelName = flex.StringToFramework(ctx, model.ModelName)
-	data.JobName = flex.StringToFramework(ctx, model.JobName)
-	data.ModelKmsKeyArn = flex.StringToFramework(ctx, model.ModelKmsKeyArn)
-	data.HyperParameters = flex.FlattenFrameworkStringValueMap(ctx, model.HyperParameters)
-	data.TrainingDataConfig = flex.StringToFramework(ctx, model.TrainingDataConfig.S3Uri)
-	data.TrainingMetrics = flattenTrainingMetrics(ctx, model.TrainingMetrics)
-	data.ValidationMetrics = flattenValidationMetrics(ctx, model.ValidationMetrics)
-	data.OutputDataConfig = flex.StringToFramework(ctx, model.OutputDataConfig.S3Uri)
+type customModelValidationDataConfigModel struct {
+	Validators fwtypes.ListValueOf[types.String] `tfsdk:"validators"`
+}
+
+type customModelValidationMetricsModel struct {
+	ValidationLoss types.Float64 `tfsdk:"validation_loss"`
 }

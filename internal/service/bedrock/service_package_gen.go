@@ -17,14 +17,15 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newCustomModelsDataSource,
-			Name:    "Custom Models",
-		},
-		{
-			Factory: newDataSourceCustomModel,
+			Factory: newCustomModelDataSource,
+			Name:    "Custom Model",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "model_arn",
 			},
+		},
+		{
+			Factory: newCustomModelsDataSource,
+			Name:    "Custom Models",
 		},
 		{
 			Factory: newFoundationModelDataSource,
