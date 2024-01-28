@@ -17,7 +17,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -1001,7 +1000,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 				return retry.RetryableError(err)
 			}
 
-			if tfawserr.ErrMessageContains(err, "DependencyViolation", "has a dependent object") {
+			if errs.IsAErrorMessageContains[*types.InvalidParameterException](err, "has a dependent object") {
 				return retry.RetryableError(err)
 			}
 

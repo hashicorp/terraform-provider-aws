@@ -13,9 +13,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
