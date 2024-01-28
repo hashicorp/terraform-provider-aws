@@ -85,7 +85,7 @@ func ResourceFileSystem() *schema.Resource {
 			"lifecycle_policy": {
 				Type:     schema.TypeList,
 				Optional: true,
-				MaxItems: 2,
+				MaxItems: 3,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"transition_to_archive": {
