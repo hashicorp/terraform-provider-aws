@@ -27,7 +27,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			},
 		},
 		{
-			Factory: newDataSourceFoundationModel,
+			Factory: newFoundationModelDataSource,
 			Name:    "Foundation Model",
 		},
 		{

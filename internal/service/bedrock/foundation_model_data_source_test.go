@@ -12,6 +12,7 @@ import (
 
 func TestAccBedrockFoundationModelDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	datasourceName := "data.aws_bedrock_foundation_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -19,9 +20,16 @@ func TestAccBedrockFoundationModelDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFoundationModelDataSourceConfig_basic(),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.aws_bedrock_foundation_model.test", "id"),
-					resource.TestCheckResourceAttrSet("data.aws_bedrock_foundation_model.test", "model_id"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet(datasourceName, "customizations_supported.#"),
+					resource.TestCheckResourceAttrSet(datasourceName, "id"),
+					resource.TestCheckResourceAttrSet(datasourceName, "inference_types_supported.#"),
+					resource.TestCheckResourceAttrSet(datasourceName, "input_modalities.#"),
+					resource.TestCheckResourceAttrSet(datasourceName, "model_arn"),
+					resource.TestCheckResourceAttrSet(datasourceName, "model_name"),
+					resource.TestCheckResourceAttrSet(datasourceName, "output_modalities.#"),
+					resource.TestCheckResourceAttrSet(datasourceName, "provider_name"),
+					resource.TestCheckResourceAttrSet(datasourceName, "response_streaming_supported"),
 				),
 			},
 		},
