@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_wafv2_rule_group: Add `header_order` block support to `field_to_match` in rule statements
+resource/aws_wafv2_web_acl: Add `header_order` block support to `field_to_match` in rule statements
+```
