@@ -210,7 +210,7 @@ func resourceCapacityProviderUpdate(ctx context.Context, d *schema.ResourceData,
 			Name:                     aws.String(d.Get("name").(string)),
 		}
 
-		log.Printf("[DEBUG] Updating ECS Capacity Provider: %s", input)
+		log.Printf("[DEBUG] Updating ECS Capacity Provider: %+v", input)
 		err := retry.RetryContext(ctx, capacityProviderUpdateTimeout, func() *retry.RetryError {
 			_, err := conn.UpdateCapacityProvider(ctx, input)
 

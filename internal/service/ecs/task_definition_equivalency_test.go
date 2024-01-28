@@ -12,7 +12,7 @@ import (
 func TestContainerDefinitionsAreEquivalent_basic(t *testing.T) {
 	t.Parallel()
 
-	cfgRepresention := `
+	cfgRepresentation := `
 [
     {
       "name": "wordpress",
@@ -85,7 +85,7 @@ func TestContainerDefinitionsAreEquivalent_basic(t *testing.T) {
     }
 ]`
 
-	equal, err := tfecs.ContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err := tfecs.ContainerDefinitionsAreEquivalent(cfgRepresentation, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -97,7 +97,7 @@ func TestContainerDefinitionsAreEquivalent_basic(t *testing.T) {
 func TestContainerDefinitionsAreEquivalent_portMappings(t *testing.T) {
 	t.Parallel()
 
-	cfgRepresention := `
+	cfgRepresentation := `
 [
     {
       "name": "wordpress",
@@ -134,7 +134,7 @@ func TestContainerDefinitionsAreEquivalent_portMappings(t *testing.T) {
     }
 ]`
 
-	equal, err := tfecs.ContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err := tfecs.ContainerDefinitionsAreEquivalent(cfgRepresentation, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -146,7 +146,7 @@ func TestContainerDefinitionsAreEquivalent_portMappings(t *testing.T) {
 func TestContainerDefinitionsAreEquivalent_portMappingsIgnoreHostPort(t *testing.T) {
 	t.Parallel()
 
-	cfgRepresention := `
+	cfgRepresentation := `
 [
     {
       "name": "wordpress",
@@ -178,7 +178,7 @@ func TestContainerDefinitionsAreEquivalent_portMappingsIgnoreHostPort(t *testing
 		err   error
 	)
 
-	equal, err = tfecs.ContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err = tfecs.ContainerDefinitionsAreEquivalent(cfgRepresentation, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -186,7 +186,7 @@ func TestContainerDefinitionsAreEquivalent_portMappingsIgnoreHostPort(t *testing
 		t.Fatal("Expected definitions to differ.")
 	}
 
-	equal, err = tfecs.ContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, true)
+	equal, err = tfecs.ContainerDefinitionsAreEquivalent(cfgRepresentation, apiRepresentation, true)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -198,7 +198,7 @@ func TestContainerDefinitionsAreEquivalent_portMappingsIgnoreHostPort(t *testing
 func TestContainerDefinitionsAreEquivalent_arrays(t *testing.T) {
 	t.Parallel()
 
-	cfgRepresention := `
+	cfgRepresentation := `
 [
     {
       "name": "wordpress",
@@ -441,7 +441,7 @@ func TestContainerDefinitionsAreEquivalent_arrays(t *testing.T) {
 ]
 `
 
-	equal, err := tfecs.ContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err := tfecs.ContainerDefinitionsAreEquivalent(cfgRepresentation, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -453,7 +453,7 @@ func TestContainerDefinitionsAreEquivalent_arrays(t *testing.T) {
 func TestContainerDefinitionsAreEquivalent_negative(t *testing.T) {
 	t.Parallel()
 
-	cfgRepresention := `
+	cfgRepresentation := `
 [
     {
       "name": "wordpress",
@@ -481,7 +481,7 @@ func TestContainerDefinitionsAreEquivalent_negative(t *testing.T) {
     }
 ]`
 
-	equal, err := tfecs.ContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err := tfecs.ContainerDefinitionsAreEquivalent(cfgRepresentation, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -493,7 +493,7 @@ func TestContainerDefinitionsAreEquivalent_negative(t *testing.T) {
 func TestContainerDefinitionsAreEquivalent_missingEnvironmentName(t *testing.T) {
 	t.Parallel()
 
-	cfgRepresention := `
+	cfgRepresentation := `
 [
     {
       "name": "wordpress",
@@ -570,7 +570,7 @@ func TestContainerDefinitionsAreEquivalent_missingEnvironmentName(t *testing.T) 
     }
 ]`
 
-	equal, err := tfecs.ContainerDefinitionsAreEquivalent(cfgRepresention, apiRepresentation, false)
+	equal, err := tfecs.ContainerDefinitionsAreEquivalent(cfgRepresentation, apiRepresentation, false)
 	if err != nil {
 		t.Fatal(err)
 	}
