@@ -976,7 +976,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	// Drain the ECS service
-	if aws.ToString(service.Status) != serviceStatusDraining && types.SchedulingStrategy(service.SchedulingStrategy) != types.SchedulingStrategyDaemon {
+	if aws.ToString(service.Status) != serviceStatusDraining && service.SchedulingStrategy != types.SchedulingStrategyDaemon {
 		_, err := conn.UpdateService(ctx, &ecs.UpdateServiceInput{
 			Service:      aws.String(d.Id()),
 			Cluster:      aws.String(d.Get("cluster").(string)),

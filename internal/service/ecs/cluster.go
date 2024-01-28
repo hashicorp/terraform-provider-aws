@@ -511,7 +511,7 @@ func flattenClusterSettings(list []types.ClusterSetting) []map[string]interface{
 	result := make([]map[string]interface{}, 0, len(list))
 	for _, setting := range list {
 		l := map[string]interface{}{
-			"name":  types.ClusterSettingName(setting.Name),
+			"name":  setting.Name,
 			"value": aws.ToString(setting.Value),
 		}
 

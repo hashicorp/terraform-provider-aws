@@ -762,8 +762,8 @@ func flattenRuntimePlatform(rp *types.RuntimePlatform) []map[string]interface{} 
 		return nil
 	}
 
-	os := types.OSFamily(rp.OperatingSystemFamily)
-	cpu := types.CPUArchitecture(rp.CpuArchitecture)
+	os := rp.OperatingSystemFamily
+	cpu := rp.CpuArchitecture
 
 	if os == "" && cpu == "" {
 		return nil
@@ -797,7 +797,7 @@ func flattenProxyConfiguration(pc *types.ProxyConfiguration) []map[string]interf
 
 	config := make(map[string]interface{})
 	config["container_name"] = aws.ToString(pc.ContainerName)
-	config["type"] = types.ProxyConfigurationType(pc.Type)
+	config["type"] = pc.Type
 	config["properties"] = meshProperties
 
 	return []map[string]interface{}{
@@ -1074,7 +1074,7 @@ func flattenDockerVolumeConfiguration(config *types.DockerVolumeConfiguration) [
 	var items []interface{}
 	m := make(map[string]interface{})
 
-	m["scope"] = types.Scope(config.Scope)
+	m["scope"] = config.Scope
 
 	if v := config.Autoprovision; v != nil {
 		m["autoprovision"] = aws.ToBool(v)
@@ -1108,7 +1108,7 @@ func flattenEFSVolumeConfiguration(config *types.EFSVolumeConfiguration) []inter
 			m["root_directory"] = aws.ToString(v)
 		}
 
-		m["transit_encryption"] = types.EFSTransitEncryption(config.TransitEncryption)
+		m["transit_encryption"] = config.TransitEncryption
 
 		if v := config.TransitEncryptionPort; v != nil {
 			m["transit_encryption_port"] = int(aws.ToInt32(v))
@@ -1130,7 +1130,7 @@ func flattenEFSVolumeAuthorizationConfig(config *types.EFSAuthorizationConfig) [
 		if v := config.AccessPointId; v != nil {
 			m["access_point_id"] = aws.ToString(v)
 		}
-		m["iam"] = types.EFSAuthorizationConfigIAM(config.Iam)
+		m["iam"] = config.Iam
 	}
 
 	items = append(items, m)
