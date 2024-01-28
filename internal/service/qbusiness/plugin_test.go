@@ -195,8 +195,41 @@ resource "aws_qbusiness_plugin" "test" {
   type           = "SERVICE_NOW"
 }
 
+variable "credentials" {
+  default = {
+    username = "username"
+    password = "password"
+  }
+  type = map(string)
+}
+
 resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
+}
+
+resource "aws_secretsmanager_secret_version" "test" {
+  secret_id     = aws_secretsmanager_secret.test.id
+  secret_string = jsonencode(var.credentials)
+}
+
+resource "aws_iam_policy" "test" {
+policy = jsonencode({
+  Version    = "2012-10-17" 
+  Statement  = [
+
+	{
+      Action   = ["secretsmanager:GetSecretValue",]
+      Effect   = "Allow"
+      Resource = aws_secretsmanager_secret.test.arn
+    }
+	
+  ] 
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "test-attach" {
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.test.arn
 }
 
 resource "aws_iam_role" "test" {
@@ -248,8 +281,41 @@ resource "aws_qbusiness_plugin" "test" {
   }
 }
 
-resource "aws_secretsmanager_secret" "test" {
-  name = %[1]q
+variable "credentials" {
+	default = {
+	  username = "username"
+	  password = "password"
+	}
+	type = map(string)
+  }
+  
+  resource "aws_secretsmanager_secret" "test" {
+	name = %[1]q
+  }
+  
+  resource "aws_secretsmanager_secret_version" "test" {
+	secret_id     = aws_secretsmanager_secret.test.id
+	secret_string = jsonencode(var.credentials)
+  }
+
+resource "aws_iam_policy" "test" {
+policy = jsonencode({
+  Version    = "2012-10-17" 
+  Statement  = [
+
+	{
+      Action   = ["secretsmanager:GetSecretValue",]
+      Effect   = "Allow"
+      Resource = aws_secretsmanager_secret.test.arn
+    }
+
+  ] 
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "test-attach" {
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.test.arn
 }
 
 resource "aws_iam_role" "test" {

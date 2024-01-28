@@ -169,7 +169,7 @@ func resourcePluginCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "updating qbusiness plugin: %s", err)
 	}
 
-	return append(diags, resourceIndexRead(ctx, d, meta)...)
+	return append(diags, resourcePluginRead(ctx, d, meta)...)
 }
 
 func resourcePluginRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
