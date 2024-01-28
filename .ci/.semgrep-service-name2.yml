@@ -3565,6 +3565,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)RAM"
+            - pattern-not-regex: "(?i)Param"
     severity: WARNING
   - id: ram-in-var-name
     languages:
@@ -3579,6 +3580,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)RAM"
+            - pattern-not-regex: "(?i)Param"
     severity: WARNING
   - id: rbin-in-func-name
     languages:

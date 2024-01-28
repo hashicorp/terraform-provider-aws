@@ -79,6 +79,9 @@
             {{- if eq .ServiceAlias "Pipes" }}
             - pattern-not-regex: ^pipeS.*
             {{- end }}
+            {{- if eq .ServiceAlias "RAM" }}
+            - pattern-not-regex: "(?i)Param"
+            {{- end }}
     severity: WARNING
   - id: {{ .LowerAlias }}-in-var-name
     languages:
@@ -101,6 +104,9 @@
             {{- end }}
             {{- if eq .ServiceAlias "Pipes" }}
             - pattern-not-regex: ^pipeS.*
+            {{- end }}
+            {{- if eq .ServiceAlias "RAM" }}
+            - pattern-not-regex: "(?i)Param"
             {{- end }}
     severity: WARNING
 {{- end }}
