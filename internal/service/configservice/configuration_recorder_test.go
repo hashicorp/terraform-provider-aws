@@ -64,6 +64,7 @@ func testAccConfigurationRecorder_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationRecorderExists(ctx, resourceName, &cr),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceConfigurationRecorder(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceConfigurationRecorder(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
