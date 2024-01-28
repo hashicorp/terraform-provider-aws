@@ -9,4 +9,9 @@ var (
 	ResourceDomainPermissionsPolicy     = resourceDomainPermissionsPolicy
 	ResourceRepository                  = resourceRepository
 	ResourceRepositoryPermissionsPolicy = resourceRepositoryPermissionsPolicy
+
+	FindDomainByTwoPartKey                        = findDomainByTwoPartKey
+	FindDomainPermissionsPolicyByTwoPartKey       = findDomainPermissionsPolicyByTwoPartKey
+	FindRepositoryByThreePartKey                  = findRepositoryByThreePartKey
+	FindRepositoryPermissionsPolicyByThreePartKey = findRepositoryPermissionsPolicyByThreePartKey
 )
