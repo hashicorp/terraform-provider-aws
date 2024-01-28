@@ -143,7 +143,7 @@ func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
 			expectedService:  names.STS,
 			expectedEndpoint: "https://sts.fake.test",
 			expectedDiags: diag.Diagnostics{
-				deprecatedEnvVarDiag("TF_AWS_STS_ENDPOINT", "AWS_ENDPOINT_URL_STS"),
+				DeprecatedEnvVarDiag("TF_AWS_STS_ENDPOINT", "AWS_ENDPOINT_URL_STS"),
 			},
 		},
 		{
@@ -154,7 +154,7 @@ func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
 			expectedService:  names.STS,
 			expectedEndpoint: "https://sts-deprecated.fake.test",
 			expectedDiags: diag.Diagnostics{
-				deprecatedEnvVarDiag("AWS_STS_ENDPOINT", "AWS_ENDPOINT_URL_STS"),
+				DeprecatedEnvVarDiag("AWS_STS_ENDPOINT", "AWS_ENDPOINT_URL_STS"),
 			},
 		},
 		{
@@ -166,7 +166,7 @@ func TestEndpointEnvVarPrecedence(t *testing.T) { //nolint:paralleltest
 			expectedService:  names.STS,
 			expectedEndpoint: "https://sts.fake.test",
 			expectedDiags: diag.Diagnostics{
-				deprecatedEnvVarDiag("TF_AWS_STS_ENDPOINT", "AWS_ENDPOINT_URL_STS"),
+				DeprecatedEnvVarDiag("TF_AWS_STS_ENDPOINT", "AWS_ENDPOINT_URL_STS"),
 			},
 		},
 		{

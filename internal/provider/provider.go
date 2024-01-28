@@ -918,7 +918,7 @@ func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string
 
 		if tfAwsEnvVar != "" {
 			if v := os.Getenv(tfAwsEnvVar); v != "" {
-				diags = append(diags, deprecatedEnvVarDiag(tfAwsEnvVar, awsEnvVar))
+				diags = append(diags, DeprecatedEnvVarDiag(tfAwsEnvVar, awsEnvVar))
 				endpoints[pkg] = v
 				continue
 			}
@@ -926,7 +926,7 @@ func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string
 
 		if deprecatedEnvVar != "" {
 			if v := os.Getenv(deprecatedEnvVar); v != "" {
-				diags = append(diags, deprecatedEnvVarDiag(deprecatedEnvVar, awsEnvVar))
+				diags = append(diags, DeprecatedEnvVarDiag(deprecatedEnvVar, awsEnvVar))
 				endpoints[pkg] = v
 				continue
 			}
@@ -936,7 +936,7 @@ func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string
 	return endpoints, diags
 }
 
-func deprecatedEnvVarDiag(envvar, replacement string) diag.Diagnostic {
+func DeprecatedEnvVarDiag(envvar, replacement string) diag.Diagnostic {
 	return errs.NewWarningDiagnostic(
 		"Deprecated Environment Variable",
 		fmt.Sprintf(`The environment variable "%s" is deprecated. Use environment variable "%s" instead.`, envvar, replacement),

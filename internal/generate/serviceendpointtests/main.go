@@ -29,7 +29,7 @@ func main() {
 		g.Fatalf("error reading service data: %s", err)
 	}
 
-	for i, l := range services {
+	for _, l := range services {
 		packageName := l.ProviderPackage()
 
 		switch packageName {
@@ -47,16 +47,7 @@ func main() {
 			continue
 		}
 
-		if packageName == "" {
-			g.Infof("wtf, line %d", i+1)
-			continue
-		}
-
 		if len(l.Aliases()) > 0 {
-			continue
-		}
-
-		if l.DeprecatedEnvVar() != "" || l.TfAwsEnvVar() != "" {
 			continue
 		}
 
@@ -70,6 +61,8 @@ func main() {
 			APICallParams:     l.EndpointAPIParams(),
 			AwsEnvVar:         l.AwsServiceEnvVar(),
 			ConfigParameter:   l.AwsConfigParameter(),
+			DeprecatedEnvVar:  l.DeprecatedEnvVar(),
+			TfAwsEnvVar:       l.TfAwsEnvVar(),
 		}
 		if l.ClientSDKV1() {
 			td.GoV1Package = l.GoV1Package()
@@ -128,6 +121,8 @@ type TemplateData struct {
 	APICallParams                     string
 	AwsEnvVar                         string
 	ConfigParameter                   string
+	DeprecatedEnvVar                  string
+	TfAwsEnvVar                       string
 	V1NameResolverNeedsUnknownService bool
 	V1AlternateInputPackage           string
 	ImportAWS_V1                      bool
