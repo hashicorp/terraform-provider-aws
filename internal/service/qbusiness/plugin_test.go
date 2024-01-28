@@ -190,7 +190,7 @@ resource "aws_qbusiness_plugin" "test" {
     secret_arn = aws_secretsmanager_secret.test.arn
   }
   display_name   = %[1]q
-  server_url     = "https://example.com"
+  server_url     = "https://yourinstance.service-now.com"
   state          = "ENABLED"
   type           = "SERVICE_NOW"
 }
@@ -237,7 +237,7 @@ resource "aws_qbusiness_plugin" "test" {
     secret_arn = aws_secretsmanager_secret.test.arn
   }
   display_name   = %[1]q
-  server_url     = "https://example.com"
+  server_url     = "https://yourinstance.service-now.com"
   state          = "ENABLED"
   type           = "SERVICE_NOW"
 
