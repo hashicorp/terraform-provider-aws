@@ -60,10 +60,10 @@ func resourceCapacityProvider() *schema.Resource {
 							ValidateFunc: verify.ValidARN,
 						},
 						"managed_draining": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice(ecs.ManagedDraining_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[types.ManagedDraining](),
 						},
 						"managed_scaling": {
 							Type:     schema.TypeList,
