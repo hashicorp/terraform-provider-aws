@@ -16,6 +16,7 @@ import (
 func TestAccBedrockCustomModelsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	datasourceName := "data.aws_bedrock_custom_models.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -25,13 +26,15 @@ func TestAccBedrockCustomModelsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccCustomModelsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.aws_bedrock_custom_models.test", "id"),
+					resource.TestCheckResourceAttrSet(datasourceName, "id"),
+					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "model_summaries.#", 0),
 				),
 			},
 		},
 	})
 }
 
+// TODO Shared config with resource?
 func testAccCustomModelsDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}

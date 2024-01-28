@@ -14,6 +14,7 @@ import (
 
 func TestAccBedrockFoundationModelsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	datasourceName := "aws_bedrock_foundation_models.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -22,8 +23,8 @@ func TestAccBedrockFoundationModelsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccFoundationModelsDataSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.aws_bedrock_foundation_models.test", "id"),
-					acctest.CheckResourceAttrGreaterThanValue("data.aws_bedrock_foundation_models.test", "model_summaries.#", 0),
+					resource.TestCheckResourceAttrSet(datasourceName, "id"),
+					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "model_summaries.#", 0),
 				),
 			},
 		},
@@ -32,6 +33,7 @@ func TestAccBedrockFoundationModelsDataSource_basic(t *testing.T) {
 
 func TestAccBedrockFoundationModelsDataSource_byCustomizationType(t *testing.T) {
 	ctx := acctest.Context(t)
+	datasourceName := "aws_bedrock_foundation_models.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -40,8 +42,8 @@ func TestAccBedrockFoundationModelsDataSource_byCustomizationType(t *testing.T) 
 			{
 				Config: testAccFoundationModelsDataSourceConfig_byCustomizationType(string(types.ModelCustomizationFineTuning)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.aws_bedrock_foundation_models.test", "id"),
-					acctest.CheckResourceAttrGreaterThanValue("data.aws_bedrock_foundation_models.test", "model_summaries.#", 0),
+					resource.TestCheckResourceAttrSet(datasourceName, "id"),
+					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "model_summaries.#", 0),
 				),
 			},
 		},
@@ -50,6 +52,7 @@ func TestAccBedrockFoundationModelsDataSource_byCustomizationType(t *testing.T) 
 
 func TestAccBedrockFoundationModelsDataSource_byInferenceType(t *testing.T) {
 	ctx := acctest.Context(t)
+	datasourceName := "aws_bedrock_foundation_models.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -58,8 +61,8 @@ func TestAccBedrockFoundationModelsDataSource_byInferenceType(t *testing.T) {
 			{
 				Config: testAccFoundationModelsDataSourceConfig_byInferenceType(string(types.InferenceTypeOnDemand)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.aws_bedrock_foundation_models.test", "id"),
-					acctest.CheckResourceAttrGreaterThanValue("data.aws_bedrock_foundation_models.test", "model_summaries.#", 0),
+					resource.TestCheckResourceAttrSet(datasourceName, "id"),
+					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "model_summaries.#", 0),
 				),
 			},
 		},
@@ -68,6 +71,7 @@ func TestAccBedrockFoundationModelsDataSource_byInferenceType(t *testing.T) {
 
 func TestAccBedrockFoundationModelsDataSource_byOutputModality(t *testing.T) {
 	ctx := acctest.Context(t)
+	datasourceName := "aws_bedrock_foundation_models.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -76,8 +80,8 @@ func TestAccBedrockFoundationModelsDataSource_byOutputModality(t *testing.T) {
 			{
 				Config: testAccFoundationModelsDataSourceConfig_byOutputModality(string(types.ModelModalityText)),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet("data.aws_bedrock_foundation_models.test", "id"),
-					acctest.CheckResourceAttrGreaterThanValue("data.aws_bedrock_foundation_models.test", "model_summaries.#", 0),
+					resource.TestCheckResourceAttrSet(datasourceName, "id"),
+					acctest.CheckResourceAttrGreaterThanValue(datasourceName, "model_summaries.#", 0),
 				),
 			},
 		},

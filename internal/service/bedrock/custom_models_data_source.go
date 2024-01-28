@@ -5,61 +5,45 @@ package bedrock
 
 import (
 	"context"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
-	bedrock_types "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkDataSource
-func newDataSourceCustomModels(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceCustomModels{}, nil
+// @FrameworkDataSource(name="Custom Models")
+func newCustomModelsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &customModelsDataSource{}, nil
 }
 
-type dataSourceCustomModels struct {
+type customModelsDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-// Metadata should return the full name of the data source, such as
-// examplecloud_thing.
-func (d *dataSourceCustomModels) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+func (d *customModelsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
 	response.TypeName = "aws_bedrock_custom_models"
 }
 
-// Schema returns the schema for this data source.
-func (d *dataSourceCustomModels) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *customModelsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
-		},
-		Blocks: map[string]schema.Block{
-			"model_summaries": schema.ListNestedBlock{
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"base_model_arn": schema.StringAttribute{
-							Computed: true,
-						},
-						"base_model_name": schema.StringAttribute{
-							Computed: true,
-						},
-						"model_arn": schema.StringAttribute{
-							Computed: true,
-						},
-						"model_name": schema.StringAttribute{
-							Computed: true,
-						},
-						"creation_time": schema.StringAttribute{
-							Computed: true,
-						},
+			names.AttrID: framework.IDAttribute(),
+			"model_summaries": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[customModelSummaryModel](ctx),
+				Computed:   true,
+				ElementType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"base_model_arn":  types.StringType,
+						"base_model_name": types.StringType,
+						"creation_time":   types.StringType,
+						"model_arn":       types.StringType,
+						"model_name":      types.StringType,
 					},
 				},
 			},
@@ -67,61 +51,48 @@ func (d *dataSourceCustomModels) Schema(ctx context.Context, req datasource.Sche
 	}
 }
 
-// Read is called when the provider must read data source values in order to update state.
-// Config values should be read from the ReadRequest and new state values set on the ReadResponse.
-func (d *dataSourceCustomModels) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	var data customModels
-
+func (d *customModelsDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data customModelsDataSourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := d.Meta().BedrockClient(ctx)
 
-	models, err := conn.ListCustomModels(ctx, nil)
-	if err != nil {
-		response.Diagnostics.AddError("reading Bedrock Custom Models", err.Error())
+	input := &bedrock.ListCustomModelsInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	data.ID = flex.StringToFramework(ctx, &d.Meta().Region)
-	data.refreshFromOutput(ctx, models)
+	output, err := conn.ListCustomModels(ctx, input)
+
+	if err != nil {
+		response.Diagnostics.AddError("listing Bedrock Custom Models", err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	data.ID = types.StringValue(d.Meta().Region)
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type customModels struct {
-	ID             types.String `tfsdk:"id"`
-	ModelSummaries types.List   `tfsdk:"model_summaries"`
+type customModelsDataSourceModel struct {
+	ID             types.String                                             `tfsdk:"id"`
+	ModelSummaries fwtypes.ListNestedObjectValueOf[customModelSummaryModel] `tfsdk:"model_summaries"`
 }
 
-func (cms *customModels) refreshFromOutput(ctx context.Context, out *bedrock.ListCustomModelsOutput) {
-	if out == nil {
-		return
-	}
-	cms.ModelSummaries = flattenCustomModelSummaries(ctx, out.ModelSummaries)
-}
-
-func flattenCustomModelSummaries(ctx context.Context, models []bedrock_types.CustomModelSummary) types.List {
-	attributeTypes := fwtypes.AttributeTypesMust[customModels](ctx)
-	elemType := types.ObjectType{AttrTypes: attributeTypes}
-
-	if models == nil {
-		return types.ListNull(elemType)
-	}
-
-	attrs := make([]attr.Value, 0, len(models))
-	for _, model := range models {
-		attr := map[string]attr.Value{}
-		attr["base_model_arn"] = flex.StringToFramework(ctx, model.BaseModelArn)
-		attr["base_model_name"] = flex.StringToFramework(ctx, model.BaseModelName)
-		attr["model_arn"] = flex.StringToFramework(ctx, model.ModelArn)
-		attr["model_name"] = flex.StringToFramework(ctx, model.ModelName)
-		attr["creation_time"] = flex.StringValueToFramework[string](ctx, model.CreationTime.Format(time.RFC3339))
-		val := types.ObjectValueMust(attributeTypes, attr)
-		attrs = append(attrs, val)
-	}
-
-	return types.ListValueMust(elemType, attrs)
+type customModelSummaryModel struct {
+	BaseModelARN  types.String `tfsdk:"base_model_arn"`
+	BaseModelName types.String `tfsdk:"base_model_name"`
+	CreationTime  types.String `tfsdk:"creation_time"`
+	ModelARN      types.String `tfsdk:"model_arn"`
+	ModelName     types.String `tfsdk:"model_name"`
 }
