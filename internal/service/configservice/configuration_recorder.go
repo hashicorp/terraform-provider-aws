@@ -102,11 +102,13 @@ func ResourceConfigurationRecorder() *schema.Resource {
 			"recording_mode": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"recording_frequency": {
 							Type:         schema.TypeString,
+							Default:      configservice.RecordingFrequencyContinuous,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(configservice.RecordingFrequency_Values(), false),
 						},
