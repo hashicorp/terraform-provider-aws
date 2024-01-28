@@ -96,7 +96,8 @@ func sweepObjects(region string) error {
 	}
 
 	// Directory buckets.
-	pages := s3.NewListDirectoryBucketsPaginator(conn, &s3.ListDirectoryBucketsInput{})
+	s3ExpressConn := client.S3ExpressClient(ctx)
+	pages := s3.NewListDirectoryBucketsPaginator(s3ExpressConn, &s3.ListDirectoryBucketsInput{})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -115,7 +116,7 @@ func sweepObjects(region string) error {
 			}
 
 			sweepables = append(sweepables, directoryBucketObjectSweeper{
-				conn:   conn,
+				conn:   s3ExpressConn,
 				bucket: aws.ToString(v.Name),
 			})
 		}
@@ -194,7 +195,7 @@ func sweepBuckets(region string) error {
 	for _, bucket := range buckets {
 		name := aws.ToString(bucket.Name)
 
-		r := ResourceBucket()
+		r := resourceBucket()
 		d := r.Data(nil)
 		d.SetId(name)
 
@@ -281,7 +282,7 @@ func sweepDirectoryBuckets(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.S3Client(ctx)
+	conn := client.S3ExpressClient(ctx)
 	input := &s3.ListDirectoryBucketsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

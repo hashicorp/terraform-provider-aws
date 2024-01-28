@@ -256,6 +256,21 @@ func TestAccBackupPlan_withLifecycle(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccPlanConfig_optInToArchiveForSupportedResources(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"rule_name":                      rName,
+						"lifecycle.#":                    "1",
+						"lifecycle.0.cold_storage_after": "30",
+						"lifecycle.0.delete_after":       "180",
+						"lifecycle.0.opt_in_to_archive_for_supported_resources": "true",
+					}),
+				),
+			},
+			{
 				Config: testAccPlanConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPlanExists(ctx, resourceName, &plan),
@@ -722,6 +737,29 @@ resource "aws_backup_plan" "test" {
     rule_name         = %[1]q
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
+  }
+}
+`, rName)
+}
+
+func testAccPlanConfig_optInToArchiveForSupportedResources(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = %[1]q
+}
+
+resource "aws_backup_plan" "test" {
+  name = %[1]q
+
+  rule {
+    rule_name         = %[1]q
+    target_vault_name = aws_backup_vault.test.name
+    schedule          = "cron(0 10 ? * 6L *)"
+    lifecycle {
+      cold_storage_after                        = 30
+      delete_after                              = 180
+      opt_in_to_archive_for_supported_resources = true
+    }
   }
 }
 `, rName)

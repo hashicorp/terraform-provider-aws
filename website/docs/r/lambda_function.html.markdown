@@ -198,6 +198,11 @@ variable "lambda_function_name" {
 resource "aws_lambda_function" "test_lambda" {
   function_name = var.lambda_function_name
 
+  # Advanced logging controls (optional)
+  logging_config {
+    log_format = "Text"
+  }
+
   # ... other configuration ...
   depends_on = [
     aws_iam_role_policy_attachment.lambda_logs,
@@ -270,6 +275,7 @@ The following arguments are optional:
 * `image_uri` - (Optional) ECR image URI containing the function's deployment package. Exactly one of `filename`, `image_uri`,  or `s3_bucket` must be specified.
 * `kms_key_arn` - (Optional) Amazon Resource Name (ARN) of the AWS Key Management Service (KMS) key that is used to encrypt environment variables. If this configuration is not provided when environment variables are in use, AWS Lambda uses a default service key. If this configuration is provided when environment variables are not in use, the AWS Lambda API does not save this configuration and Terraform will show a perpetual difference of adding the key. To fix the perpetual difference, remove this configuration.
 * `layers` - (Optional) List of Lambda Layer Version ARNs (maximum of 5) to attach to your Lambda Function. See [Lambda Layers][10]
+* `logging_config` - (Optional) Configuration block used to specify advanced logging settings. Detailed below.
 * `memory_size` - (Optional) Amount of memory in MB your Lambda Function can use at runtime. Defaults to `128`. See [Limits][5]
 * `package_type` - (Optional) Lambda deployment package type. Valid values are `Zip` and `Image`. Defaults to `Zip`.
 * `publish` - (Optional) Whether to publish creation/change as new Lambda Function Version. Defaults to `false`.
@@ -317,9 +323,18 @@ Container image configuration values that override the values in the container i
 * `entry_point` - (Optional) Entry point to your application, which is typically the location of the runtime executable.
 * `working_directory` - (Optional) Working directory.
 
+### logging_config
+
+Advanced logging settings. See [Configuring advanced logging controls for your Lambda function][13].
+
+* `application_log_level` - (Optional) for JSON structured logs, choose the detail level of the logs your application sends to CloudWatch when using supported logging libraries.
+* `log_format` - (Required) select between `Text` and structured `JSON` format for your function's logs.
+* `log_group` - (Optional) the CloudWatch log group your function sends logs to.
+* `system_log_level` - (optional) for JSON structured logs, choose the detail level of the Lambda platform event logs sent to CloudWatch, such as `ERROR`, `DEBUG`, or `INFO`.
+
 ### snap_start
 
-Snap start settings for low-latency startups. This feature is currently only supported for `java11` and `java17` runtimes. Remove this block to delete the associated settings (rather than setting `apply_on = "None"`).
+Snap start settings for low-latency startups. This feature is currently only supported for `java11`, `java17` and `java21` runtimes. Remove this block to delete the associated settings (rather than setting `apply_on = "None"`).
 
 * `apply_on` - (Required) Conditions where snap start is enabled. Valid values are `PublishedVersions`.
 
@@ -365,6 +380,7 @@ This resource exports the following attributes in addition to the arguments abov
 [10]: https://docs.aws.amazon.com/lambda/latest/dg/configuration-layers.html
 [11]: https://learn.hashicorp.com/terraform/aws/lambda-api-gateway
 [12]: https://docs.aws.amazon.com/lambda/latest/dg/services-efs.html
+[13]: https://docs.aws.amazon.com/lambda/latest/dg/monitoring-cloudwatchlogs.html#monitoring-cloudwatchlogs-advanced
 
 ## Timeouts
 

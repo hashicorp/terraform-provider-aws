@@ -608,13 +608,6 @@ func TestAccECSTaskDefinition_DockerVolume_taskScoped(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
 				),
 			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
-			},
 		},
 	})
 }
