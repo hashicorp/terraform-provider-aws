@@ -5,6 +5,7 @@ package ssm
 
 import (
 	"context"
+	"encoding/json"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -99,6 +100,10 @@ func DataSourcePatchBaseline() *schema.Resource {
 						},
 					},
 				},
+			},
+			"json": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -225,6 +230,13 @@ func dataPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "getting SSM PatchBaseline: %s", err)
 	}
 
+	jsonDoc, err := json.MarshalIndent(output, "", "  ")
+	if err != nil {
+		// should never happen if the above code is correct
+		return sdkdiag.AppendErrorf(diags, "Formatting json representation: formatting JSON: %s", err)
+	}
+	jsonString := string(jsonDoc)
+
 	d.SetId(aws.StringValue(baseline.BaselineId))
 	d.Set("approved_patches", aws.StringValueSlice(output.ApprovedPatches))
 	d.Set("approved_patches_compliance_level", output.ApprovedPatchesComplianceLevel)
@@ -233,6 +245,7 @@ func dataPatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("default_baseline", baseline.DefaultBaseline)
 	d.Set("description", baseline.BaselineDescription)
 	d.Set("global_filter", flattenPatchFilterGroup(output.GlobalFilters))
+	d.Set("json", jsonString)
 	d.Set("name", baseline.BaselineName)
 	d.Set("operating_system", baseline.OperatingSystem)
 	d.Set("rejected_patches", aws.StringValueSlice(output.RejectedPatches))

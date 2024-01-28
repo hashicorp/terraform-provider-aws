@@ -53,6 +53,8 @@ func ResourceLoadBalancerHTTPSRedirectionPolicy() *schema.Resource {
 }
 
 func resourceLoadBalancerHTTPSRedirectionPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	lbName := d.Get("lb_name").(string)
 	in := lightsail.UpdateLoadBalancerAttributeInput{
@@ -64,7 +66,7 @@ func resourceLoadBalancerHTTPSRedirectionPolicyCreate(ctx context.Context, d *sc
 	out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeUpdateLoadBalancerAttribute), ResLoadBalancerHTTPSRedirectionPolicy, lbName, err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeUpdateLoadBalancerAttribute), ResLoadBalancerHTTPSRedirectionPolicy, lbName, err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerHTTPSRedirectionPolicy, lbName)
@@ -75,10 +77,12 @@ func resourceLoadBalancerHTTPSRedirectionPolicyCreate(ctx context.Context, d *sc
 
 	d.SetId(lbName)
 
-	return resourceLoadBalancerHTTPSRedirectionPolicyRead(ctx, d, meta)
+	return append(diags, resourceLoadBalancerHTTPSRedirectionPolicyRead(ctx, d, meta)...)
 }
 
 func resourceLoadBalancerHTTPSRedirectionPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindLoadBalancerHTTPSRedirectionPolicyById(ctx, conn, d.Id())
@@ -86,20 +90,22 @@ func resourceLoadBalancerHTTPSRedirectionPolicyRead(ctx context.Context, d *sche
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResLoadBalancerHTTPSRedirectionPolicy, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResLoadBalancerHTTPSRedirectionPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResLoadBalancerHTTPSRedirectionPolicy, d.Id(), err)
 	}
 
 	d.Set("enabled", out)
 	d.Set("lb_name", d.Id())
 
-	return nil
+	return diags
 }
 
 func resourceLoadBalancerHTTPSRedirectionPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	lbName := d.Get("lb_name").(string)
 	if d.HasChange("enabled") {
@@ -112,7 +118,7 @@ func resourceLoadBalancerHTTPSRedirectionPolicyUpdate(ctx context.Context, d *sc
 		out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, string(types.OperationTypeUpdateLoadBalancerAttribute), ResLoadBalancerHTTPSRedirectionPolicy, lbName, err)
+			return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeUpdateLoadBalancerAttribute), ResLoadBalancerHTTPSRedirectionPolicy, lbName, err)
 		}
 
 		diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerHTTPSRedirectionPolicy, lbName)
@@ -122,10 +128,12 @@ func resourceLoadBalancerHTTPSRedirectionPolicyUpdate(ctx context.Context, d *sc
 		}
 	}
 
-	return resourceLoadBalancerHTTPSRedirectionPolicyRead(ctx, d, meta)
+	return append(diags, resourceLoadBalancerHTTPSRedirectionPolicyRead(ctx, d, meta)...)
 }
 
 func resourceLoadBalancerHTTPSRedirectionPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	lbName := d.Get("lb_name").(string)
 	in := lightsail.UpdateLoadBalancerAttributeInput{
@@ -137,7 +145,7 @@ func resourceLoadBalancerHTTPSRedirectionPolicyDelete(ctx context.Context, d *sc
 	out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeUpdateLoadBalancerAttribute), ResLoadBalancerHTTPSRedirectionPolicy, lbName, err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeUpdateLoadBalancerAttribute), ResLoadBalancerHTTPSRedirectionPolicy, lbName, err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerHTTPSRedirectionPolicy, lbName)
@@ -146,7 +154,7 @@ func resourceLoadBalancerHTTPSRedirectionPolicyDelete(ctx context.Context, d *sc
 		return diag
 	}
 
-	return nil
+	return diags
 }
 
 func FindLoadBalancerHTTPSRedirectionPolicyById(ctx context.Context, conn *lightsail.Client, id string) (*bool, error) {

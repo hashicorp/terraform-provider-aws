@@ -49,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 * `hasFindings` - Indicates whether findings are present for the specified detector.
 * `findingIds` - A list of finding IDs for the specified detector.
 
-<!-- cache-key: cdktf-0.19.0 input-639e9057ccf47998ef50f3f122bf6e2e0a603648cc0ea1e6bdfe980be55cceb6 -->
+<!-- cache-key: cdktf-0.20.1 input-639e9057ccf47998ef50f3f122bf6e2e0a603648cc0ea1e6bdfe980be55cceb6 -->

@@ -37,11 +37,11 @@ class MyConvertedCode(TerraformStack):
                 ),
                 name="rule-1",
                 priority=1,
-                statement=Wafv2RuleGroupRuleStatement(
-                    geo_match_statement=Wafv2RuleGroupRuleStatementGeoMatchStatement(
-                        country_codes=["US", "NL"]
-                    )
-                ),
+                statement={
+                    "geo_match_statement": {
+                        "country_codes": ["US", "NL"]
+                    }
+                },
                 visibility_config=Wafv2RuleGroupRuleVisibilityConfig(
                     cloudwatch_metrics_enabled=False,
                     metric_name="friendly-rule-metric-name",
@@ -107,37 +107,37 @@ class MyConvertedCode(TerraformStack):
                 ),
                 name="rule-1",
                 priority=1,
-                statement=Wafv2RuleGroupRuleStatement(
-                    not_statement=Wafv2RuleGroupRuleStatementNotStatement(
-                        statement=[Wafv2RuleGroupRuleStatementNotStatementStatement(
-                            and_statement=Wafv2RuleGroupRuleStatementNotStatementStatementAndStatement(
-                                statement=[Wafv2RuleGroupRuleStatementNotStatementStatement(
-                                    geo_match_statement=Wafv2RuleGroupRuleStatementNotStatementStatementGeoMatchStatement(
-                                        country_codes=["US"]
-                                    )
-                                ), Wafv2RuleGroupRuleStatementNotStatementStatement(
-                                    byte_match_statement=Wafv2RuleGroupRuleStatementNotStatementStatementByteMatchStatement(
-                                        field_to_match=Wafv2RuleGroupRuleStatementNotStatementStatementByteMatchStatementFieldToMatch(
-                                            all_query_arguments=Wafv2RuleGroupRuleStatementNotStatementStatementByteMatchStatementFieldToMatchAllQueryArguments()
-                                        ),
-                                        positional_constraint="CONTAINS",
-                                        search_string="word",
-                                        text_transformation=[Wafv2RuleGroupRuleStatementNotStatementStatementByteMatchStatementTextTransformation(
-                                            priority=5,
-                                            type="CMD_LINE"
-                                        ), Wafv2RuleGroupRuleStatementNotStatementStatementByteMatchStatementTextTransformation(
-                                            priority=2,
-                                            type="LOWERCASE"
-                                        )
+                statement={
+                    "not_statement": {
+                        "statement": [{
+                            "and_statement": {
+                                "statement": [{
+                                    "geo_match_statement": {
+                                        "country_codes": ["US"]
+                                    }
+                                }, {
+                                    "byte_match_statement": {
+                                        "field_to_match": {
+                                            "all_query_arguments": {}
+                                        },
+                                        "positional_constraint": "CONTAINS",
+                                        "search_string": "word",
+                                        "text_transformation": [{
+                                            "priority": 5,
+                                            "type": "CMD_LINE"
+                                        }, {
+                                            "priority": 2,
+                                            "type": "LOWERCASE"
+                                        }
                                         ]
-                                    )
-                                )
+                                    }
+                                }
                                 ]
-                            )
-                        )
+                            }
+                        }
                         ]
-                    )
-                ),
+                    }
+                },
                 visibility_config=Wafv2RuleGroupRuleVisibilityConfig(
                     cloudwatch_metrics_enabled=False,
                     metric_name="rule-1",
@@ -154,54 +154,54 @@ class MyConvertedCode(TerraformStack):
                 ),
                 name="rule-2",
                 priority=2,
-                statement=Wafv2RuleGroupRuleStatement(
-                    or_statement=Wafv2RuleGroupRuleStatementOrStatement(
-                        statement=[Wafv2RuleGroupRuleStatementOrStatementStatement(
-                            regex_match_statement=Wafv2RuleGroupRuleStatementOrStatementStatementRegexMatchStatement(
-                                field_to_match=Wafv2RuleGroupRuleStatementOrStatementStatementRegexMatchStatementFieldToMatch(
-                                    single_header=Wafv2RuleGroupRuleStatementOrStatementStatementRegexMatchStatementFieldToMatchSingleHeader(
-                                        name="user-agent"
-                                    )
-                                ),
-                                regex_string="[a-z]([a-z0-9_-]*[a-z0-9])?",
-                                text_transformation=[Wafv2RuleGroupRuleStatementOrStatementStatementRegexMatchStatementTextTransformation(
-                                    priority=6,
-                                    type="NONE"
-                                )
+                statement={
+                    "or_statement": {
+                        "statement": [{
+                            "regex_match_statement": {
+                                "field_to_match": {
+                                    "single_header": {
+                                        "name": "user-agent"
+                                    }
+                                },
+                                "regex_string": "[a-z]([a-z0-9_-]*[a-z0-9])?",
+                                "text_transformation": [{
+                                    "priority": 6,
+                                    "type": "NONE"
+                                }
                                 ]
-                            )
-                        ), Wafv2RuleGroupRuleStatementOrStatementStatement(
-                            sqli_match_statement=Wafv2RuleGroupRuleStatementOrStatementStatementSqliMatchStatement(
-                                field_to_match=Wafv2RuleGroupRuleStatementOrStatementStatementSqliMatchStatementFieldToMatch(
-                                    body=Wafv2RuleGroupRuleStatementOrStatementStatementSqliMatchStatementFieldToMatchBody()
-                                ),
-                                text_transformation=[Wafv2RuleGroupRuleStatementOrStatementStatementSqliMatchStatementTextTransformation(
-                                    priority=5,
-                                    type="URL_DECODE"
-                                ), Wafv2RuleGroupRuleStatementOrStatementStatementSqliMatchStatementTextTransformation(
-                                    priority=4,
-                                    type="HTML_ENTITY_DECODE"
-                                ), Wafv2RuleGroupRuleStatementOrStatementStatementSqliMatchStatementTextTransformation(
-                                    priority=3,
-                                    type="COMPRESS_WHITE_SPACE"
-                                )
+                            }
+                        }, {
+                            "sqli_match_statement": {
+                                "field_to_match": {
+                                    "body": {}
+                                },
+                                "text_transformation": [{
+                                    "priority": 5,
+                                    "type": "URL_DECODE"
+                                }, {
+                                    "priority": 4,
+                                    "type": "HTML_ENTITY_DECODE"
+                                }, {
+                                    "priority": 3,
+                                    "type": "COMPRESS_WHITE_SPACE"
+                                }
                                 ]
-                            )
-                        ), Wafv2RuleGroupRuleStatementOrStatementStatement(
-                            xss_match_statement=Wafv2RuleGroupRuleStatementOrStatementStatementXssMatchStatement(
-                                field_to_match=Wafv2RuleGroupRuleStatementOrStatementStatementXssMatchStatementFieldToMatch(
-                                    method=Wafv2RuleGroupRuleStatementOrStatementStatementXssMatchStatementFieldToMatchMethod()
-                                ),
-                                text_transformation=[Wafv2RuleGroupRuleStatementOrStatementStatementXssMatchStatementTextTransformation(
-                                    priority=2,
-                                    type="NONE"
-                                )
+                            }
+                        }, {
+                            "xss_match_statement": {
+                                "field_to_match": {
+                                    "method": {}
+                                },
+                                "text_transformation": [{
+                                    "priority": 2,
+                                    "type": "NONE"
+                                }
                                 ]
-                            )
-                        )
+                            }
+                        }
                         ]
-                    )
-                ),
+                    }
+                },
                 visibility_config=Wafv2RuleGroupRuleVisibilityConfig(
                     cloudwatch_metrics_enabled=False,
                     metric_name="rule-2",
@@ -213,22 +213,22 @@ class MyConvertedCode(TerraformStack):
                 ),
                 name="rule-3",
                 priority=3,
-                statement=Wafv2RuleGroupRuleStatement(
-                    size_constraint_statement=Wafv2RuleGroupRuleStatementSizeConstraintStatement(
-                        comparison_operator="GT",
-                        field_to_match=Wafv2RuleGroupRuleStatementSizeConstraintStatementFieldToMatch(
-                            single_query_argument=Wafv2RuleGroupRuleStatementSizeConstraintStatementFieldToMatchSingleQueryArgument(
-                                name="username"
-                            )
-                        ),
-                        size=100,
-                        text_transformation=[Wafv2RuleGroupRuleStatementSizeConstraintStatementTextTransformation(
-                            priority=5,
-                            type="NONE"
-                        )
+                statement={
+                    "size_constraint_statement": {
+                        "comparison_operator": "GT",
+                        "field_to_match": {
+                            "single_query_argument": {
+                                "name": "username"
+                            }
+                        },
+                        "size": 100,
+                        "text_transformation": [{
+                            "priority": 5,
+                            "type": "NONE"
+                        }
                         ]
-                    )
-                ),
+                    }
+                },
                 visibility_config=Wafv2RuleGroupRuleVisibilityConfig(
                     cloudwatch_metrics_enabled=False,
                     metric_name="rule-3",
@@ -240,30 +240,30 @@ class MyConvertedCode(TerraformStack):
                 ),
                 name="rule-4",
                 priority=4,
-                statement=Wafv2RuleGroupRuleStatement(
-                    or_statement=Wafv2RuleGroupRuleStatementOrStatement(
-                        statement=[Wafv2RuleGroupRuleStatementOrStatementStatement(
-                            ip_set_reference_statement=Wafv2RuleGroupRuleStatementOrStatementStatementIpSetReferenceStatement(
-                                arn=test.arn
-                            )
-                        ), Wafv2RuleGroupRuleStatementOrStatementStatement(
-                            regex_pattern_set_reference_statement=Wafv2RuleGroupRuleStatementOrStatementStatementRegexPatternSetReferenceStatement(
-                                arn=Token.as_string(aws_wafv2_regex_pattern_set_test.arn),
-                                field_to_match=Wafv2RuleGroupRuleStatementOrStatementStatementRegexPatternSetReferenceStatementFieldToMatch(
-                                    single_header=Wafv2RuleGroupRuleStatementOrStatementStatementRegexPatternSetReferenceStatementFieldToMatchSingleHeader(
-                                        name="referer"
-                                    )
-                                ),
-                                text_transformation=[Wafv2RuleGroupRuleStatementOrStatementStatementRegexPatternSetReferenceStatementTextTransformation(
-                                    priority=2,
-                                    type="NONE"
-                                )
+                statement={
+                    "or_statement": {
+                        "statement": [{
+                            "ip_set_reference_statement": {
+                                "arn": test.arn
+                            }
+                        }, {
+                            "regex_pattern_set_reference_statement": {
+                                "arn": Token.as_string(aws_wafv2_regex_pattern_set_test.arn),
+                                "field_to_match": {
+                                    "single_header": {
+                                        "name": "referer"
+                                    }
+                                },
+                                "text_transformation": [{
+                                    "priority": 2,
+                                    "type": "NONE"
+                                }
                                 ]
-                            )
-                        )
+                            }
+                        }
                         ]
-                    )
-                ),
+                    }
+                },
                 visibility_config=Wafv2RuleGroupRuleVisibilityConfig(
                     cloudwatch_metrics_enabled=False,
                     metric_name="rule-4",
@@ -760,9 +760,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 # DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 from constructs import Construct
 from cdktf import TerraformStack
+#
+# Provider bindings are generated by running `cdktf get`.
+# See https://cdk.tf/provider-generation for more details.
+#
+from imports.aws.wafv2_rule_group import Wafv2RuleGroup
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
+        Wafv2RuleGroup.generate_config_for_import(self, "example", "a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL")
 ```
 
 Using `terraform import`, import WAFv2 Rule Group using `ID/name/scope`. For example:
@@ -771,4 +777,4 @@ Using `terraform import`, import WAFv2 Rule Group using `ID/name/scope`. For exa
 % terraform import aws_wafv2_rule_group.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-5ad818d569e90a291b2931bc9f839421af7a5d4bbec442c14b320a69e106236c -->
+<!-- cache-key: cdktf-0.20.1 input-5ad818d569e90a291b2931bc9f839421af7a5d4bbec442c14b320a69e106236c -->

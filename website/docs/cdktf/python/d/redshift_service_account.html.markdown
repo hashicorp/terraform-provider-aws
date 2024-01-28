@@ -82,4 +82,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - ID of the AWS Redshift service account in the selected region.
 * `arn` - ARN of the AWS Redshift service account in the selected region.
 
-<!-- cache-key: cdktf-0.19.0 input-e94000569ef4938913b2e5c8ffc6e76ff71e3d14063c879ff153df1bb864e656 -->
+<!-- cache-key: cdktf-0.20.1 input-e94000569ef4938913b2e5c8ffc6e76ff71e3d14063c879ff153df1bb864e656 -->

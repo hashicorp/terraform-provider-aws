@@ -48,6 +48,7 @@ user guide for more information.
 * `encrypted` - (Optional) If true, the disk will be encrypted.
 * `kms_key_id` - (Optional) The ARN for the KMS encryption key. When specifying kms_key_id, encrypted needs to be set to true.
 * `lifecycle_policy` - (Optional) A file system [lifecycle policy](https://docs.aws.amazon.com/efs/latest/ug/API_LifecyclePolicy.html) object (documented below).
+* `protection` - (Optional) A file system [protection](https://docs.aws.amazon.com/efs/latest/ug/API_FileSystemProtectionDescription.html) object (documented below).
 * `performance_mode` - (Optional) The file system performance mode. Can be either `"generalPurpose"` or `"maxIO"` (Default: `"generalPurpose"`).
 * `provisioned_throughput_in_mibps` - (Optional) The throughput, measured in MiB/s, that you want to provision for the file system. Only applicable with `throughput_mode` set to `provisioned`.
 * `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -59,6 +60,13 @@ user guide for more information.
 
 * `transition_to_ia` - (Optional) Indicates how long it takes to transition files to the IA storage class. Valid values: `AFTER_1_DAY`, `AFTER_7_DAYS`, `AFTER_14_DAYS`, `AFTER_30_DAYS`, `AFTER_60_DAYS`, or `AFTER_90_DAYS`.
 * `transition_to_primary_storage_class` - (Optional) Describes the policy used to transition a file from infequent access storage to primary storage. Valid values: `AFTER_1_ACCESS`.
+* `transition_to_archive` - (Optional) Indicates how long it takes to transition files to the archive storage class. Requires transition_to_ia, Elastic Throughput and General Purpose performance mode. Valid values: `AFTER_1_DAY`, `AFTER_7_DAYS`, `AFTER_14_DAYS`, `AFTER_30_DAYS`, `AFTER_60_DAYS`, or `AFTER_90_DAYS`.
+
+### Protection Arguments
+
+`protection` supports the following arguments:
+
+* `replication_overwrite` - (Optional) Indicates whether replication overwrite protection is enabled. Valid values: `ENABLED` or `DISABLED`.
 
 ## Attribute Reference
 

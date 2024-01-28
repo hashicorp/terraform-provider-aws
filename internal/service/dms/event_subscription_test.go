@@ -8,15 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccDMSEventSubscription_basic(t *testing.T) {
@@ -215,11 +214,9 @@ func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestChec
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
 
-			resp, err := conn.DescribeEventSubscriptionsWithContext(ctx, &dms.DescribeEventSubscriptionsInput{
-				SubscriptionName: aws.String(rs.Primary.ID),
-			})
+			_, err := tfdms.FindEventSubscriptionByName(ctx, conn, rs.Primary.ID)
 
-			if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -227,77 +224,37 @@ func testAccCheckEventSubscriptionDestroy(ctx context.Context) resource.TestChec
 				return err
 			}
 
-			if resp != nil && len(resp.EventSubscriptionsList) > 0 {
-				return fmt.Errorf("DMS event subscription still exists: %s", rs.Primary.ID)
-			}
+			return fmt.Errorf("DMS Event Subscription %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckEventSubscriptionExists(ctx context.Context, n string, eventSubscription *dms.EventSubscription) resource.TestCheckFunc {
+func testAccCheckEventSubscriptionExists(ctx context.Context, n string, v *dms.EventSubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
-		resp, err := conn.DescribeEventSubscriptionsWithContext(ctx, &dms.DescribeEventSubscriptionsInput{
-			SubscriptionName: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfdms.FindEventSubscriptionByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return fmt.Errorf("DMS event subscription error: %v", err)
+			return err
 		}
 
-		if resp == nil || len(resp.EventSubscriptionsList) == 0 || resp.EventSubscriptionsList[0] == nil {
-			return fmt.Errorf("DMS event subscription not found")
-		}
-
-		*eventSubscription = *resp.EventSubscriptionsList[0]
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccEventSubscriptionConfigBase(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
+func testAccEventSubscriptionConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 data "aws_partition" "current" {}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count = 2
-
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = "10.1.${count.index}.0/24"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = aws_vpc.test.tags["Name"]
-  }
-}
 
 resource "aws_dms_replication_subnet_group" "test" {
   replication_subnet_group_description = %[1]q
@@ -315,13 +272,11 @@ resource "aws_dms_replication_instance" "test" {
 resource "aws_sns_topic" "test" {
   name = %[1]q
 }
-`, rName)
+`, rName))
 }
 
 func testAccEventSubscriptionConfig_enabled(rName string, enabled bool) string {
-	return acctest.ConfigCompose(
-		testAccEventSubscriptionConfigBase(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSubscriptionConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_event_subscription" "test" {
   name             = %[1]q
   enabled          = %[2]t
@@ -334,9 +289,7 @@ resource "aws_dms_event_subscription" "test" {
 }
 
 func testAccEventSubscriptionConfig_categories2(rName string, eventCategory1 string, eventCategory2 string) string {
-	return acctest.ConfigCompose(
-		testAccEventSubscriptionConfigBase(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSubscriptionConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_event_subscription" "test" {
   name             = %[1]q
   enabled          = false
@@ -349,9 +302,7 @@ resource "aws_dms_event_subscription" "test" {
 }
 
 func testAccEventSubscriptionConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(
-		testAccEventSubscriptionConfigBase(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSubscriptionConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_event_subscription" "test" {
   name             = %[1]q
   enabled          = true
@@ -368,9 +319,7 @@ resource "aws_dms_event_subscription" "test" {
 }
 
 func testAccEventSubscriptionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(
-		testAccEventSubscriptionConfigBase(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEventSubscriptionConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_event_subscription" "test" {
   name             = %[1]q
   enabled          = true

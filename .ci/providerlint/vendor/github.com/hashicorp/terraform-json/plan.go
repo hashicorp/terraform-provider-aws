@@ -144,6 +144,10 @@ type ResourceChange struct {
 	// The absolute resource address.
 	Address string `json:"address,omitempty"`
 
+	// The absolute address that this resource instance had
+	// at the conclusion of a previous plan.
+	PreviousAddress string `json:"previous_address,omitempty"`
+
 	// The module portion of the above address. Omitted if the instance
 	// is in the root module.
 	ModuleAddress string `json:"module_address,omitempty"`

@@ -31,7 +31,7 @@ See the AWS Docs on [RDS Instance Maintenance][instance-maintenance] for more in
 
 ## RDS Instance Class Types
 
-Amazon RDS supports three types of instance classes: Standard, Memory Optimized, and Burstable Performance.
+Amazon RDS supports instance classes for the following use cases: General-purpose, Memory-optimized, Burstable Performance, and Optimized-reads.
 For more information please read the AWS RDS documentation about [DB Instance Class Types](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.DBInstanceClass.html)
 
 ## Low-Downtime Updates
@@ -144,8 +144,8 @@ data "aws_kms_key" "by_id" {
 
 resource "aws_db_instance" "example" {
   allocated_storage           = 500
-  auto_minor_version_upgrade  = false                               # Custom for SQL Server does not support minor version upgrades
-  custom_iam_instance_profile = "AWSRDSCustomSQLServerInstanceRole" # Instance profile is required for Custom for SQL Server. See: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-setup-sqlserver.html#custom-setup-sqlserver.iam
+  auto_minor_version_upgrade  = false                                  # Custom for SQL Server does not support minor version upgrades
+  custom_iam_instance_profile = "AWSRDSCustomSQLServerInstanceProfile" # Instance profile is required for Custom for SQL Server. See: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/custom-setup-sqlserver.html#custom-setup-sqlserver.iam
   backup_retention_period     = 7
   db_subnet_group_name        = local.db_subnet_group_name # Copy the subnet group from the RDS Console
   engine                      = data.aws_rds_orderable_db_instance.custom-sqlserver.engine
@@ -163,6 +163,55 @@ resource "aws_db_instance" "example" {
     delete = "3h"
     update = "3h"
   }
+}
+```
+
+### RDS Db2 Usage
+
+```terraform
+# Lookup the default version for the engine. Db2 Standard Edition is `db2-se`, Db2 Advanced Edition is `db2-ae`.
+data "aws_rds_engine_version" "default" {
+  engine = "db2-se" #Standard Edition
+}
+
+# Lookup the available instance classes for the engine in the region being operated in
+data "aws_rds_orderable_db_instance" "example" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  license_model              = "bring-your-own-license"
+  storage_type               = "gp3"
+  preferred_instance_classes = ["db.t3.small", "db.r6i.large", "db.m6i.large"]
+}
+
+# The RDS Db2 instance resource requires licensing information. Create a new parameter group using the default paramater group as a source, and set license information.
+resource "aws_db_parameter_group" "example" {
+  name   = "db-db2-params"
+  family = data.aws_rds_engine_version.default.parameter_group_family
+
+  parameter {
+    apply_method = "immediate"
+    name         = "rds.ibm_customer_id"
+    value        = 0000000000
+  }
+  parameter {
+    apply_method = "immediate"
+    name         = "rds.ibm_site_id"
+    value        = 0000000000
+  }
+}
+
+# Create the RDS Db2 instance, use the data sources defined to set attributes
+resource "aws_db_instance" "example" {
+  allocated_storage       = 100
+  backup_retention_period = 7
+  db_name                 = "test"
+  engine                  = data.aws_rds_orderable_db_instance.example.engine
+  engine_version          = data.aws_rds_orderable_db_instance.example.engine_version
+  identifier              = "db2-instance-demo"
+  instance_class          = data.aws_rds_orderable_db_instance.example.instance_class
+  parameter_group_name    = aws_db_parameter_group.example.name
+  password                = "avoid-plaintext-passwords"
+  username                = "test"
 }
 ```
 
@@ -316,8 +365,7 @@ what IAM permissions are needed to allow Enhanced Monitoring for RDS Instances.
 Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html).
 * `network_type` - (Optional) The network type of the DB instance. Valid values: `IPV4`, `DUAL`.
 * `option_group_name` - (Optional) Name of the DB option group to associate.
-* `parameter_group_name` - (Optional) Name of the DB parameter group to
-associate.
+* `parameter_group_name` - (Optional) Name of the DB parameter group to associate.
 * `password` - (Required unless `manage_master_user_password` is set to true or unless a `snapshot_identifier` or `replicate_source_db`
 is provided or `manage_master_user_password` is set.) Password for the master DB user. Note that this may show up in
 logs, and it will be stored in the state file. Cannot be set if `manage_master_user_password` is set to `true`.

@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func TestAccVPCNetworkInterfaceSgAttachment_basic(t *testing.T) {
+func TestAccVPCNetworkInterfaceSGAttachment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	networkInterfaceResourceName := "aws_network_interface.test"
 	securityGroupResourceName := "aws_security_group.test"
@@ -49,7 +49,7 @@ func TestAccVPCNetworkInterfaceSgAttachment_basic(t *testing.T) {
 	})
 }
 
-func TestAccVPCNetworkInterfaceSgAttachment_disappears(t *testing.T) {
+func TestAccVPCNetworkInterfaceSGAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_network_interface_sg_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -72,7 +72,7 @@ func TestAccVPCNetworkInterfaceSgAttachment_disappears(t *testing.T) {
 	})
 }
 
-func TestAccVPCNetworkInterfaceSgAttachment_instance(t *testing.T) {
+func TestAccVPCNetworkInterfaceSGAttachment_instance(t *testing.T) {
 	ctx := acctest.Context(t)
 	instanceResourceName := "aws_instance.test"
 	securityGroupResourceName := "aws_security_group.test"
@@ -97,7 +97,7 @@ func TestAccVPCNetworkInterfaceSgAttachment_instance(t *testing.T) {
 	})
 }
 
-func TestAccVPCNetworkInterfaceSgAttachment_multiple(t *testing.T) {
+func TestAccVPCNetworkInterfaceSGAttachment_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	networkInterfaceResourceName := "aws_network_interface.test"
 	securityGroupResourceName1 := "aws_security_group.test.0"
@@ -227,7 +227,7 @@ resource "aws_network_interface_sg_attachment" "test" {
 
 func testAccVPCNetworkInterfaceSGAttachmentConfig_viaInstance(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		fmt.Sprintf(`
@@ -260,7 +260,7 @@ resource "aws_security_group" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id     = aws_subnet.test.id
 
