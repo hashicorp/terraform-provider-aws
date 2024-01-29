@@ -291,6 +291,23 @@ func testAccCapacityProviderConfig_base(rName string) string {
 		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		fmt.Sprintf(`
+resource "aws_subnet" "test" {
+  cidr_block = cidrsubnet(aws_vpc.test.cidr_block, 8, 1)
+  vpc_id     = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.10.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
 resource "aws_launch_template" "test" {
   image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t3.micro"
@@ -298,11 +315,11 @@ resource "aws_launch_template" "test" {
 }
 
 resource "aws_autoscaling_group" "test" {
-  availability_zones = data.aws_availability_zones.available.names
-  desired_capacity   = 0
-  max_size           = 0
-  min_size           = 0
-  name               = %[1]q
+  desired_capacity    = 0
+  max_size            = 0
+  min_size            = 0
+  name                = %[1]q
+  vpc_zone_identifier = [aws_subnet.test.id]
 
   launch_template {
     id = aws_launch_template.test.id

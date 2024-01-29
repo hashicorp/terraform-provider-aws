@@ -541,6 +541,12 @@ func TestAccECSTaskDefinition_EFSVolume_accessPoint(t *testing.T) {
 }
 
 func TestAccECSTaskDefinition_fsxWinFileSystem(t *testing.T) {
+	// Creating Directory service takes 20-45 minutes
+	// Creating FSx for Windows file system takes 20-45 minutes
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	ctx := acctest.Context(t)
 	var def types.TaskDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1125,7 +1131,7 @@ func TestAccECSTaskDefinition_invalidContainerDefinition(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTaskDefinitionConfig_invalidContainerDefinition(rName),
-				ExpectError: regexache.MustCompile(`invalid container definition supplied at index \(1\)`),
+				ExpectError: regexache.MustCompile(`Container\.name should not be null or empty`),
 			},
 		},
 	})
@@ -2277,7 +2283,7 @@ resource "aws_iam_role_policy" "test" {
 	 }
  ]
 }
- 
+
 EOF
 }
 
@@ -2350,7 +2356,7 @@ resource "aws_iam_role_policy" "test" {
 	 }
  ]
 }
- 
+
 EOF
 }
 
@@ -2423,7 +2429,7 @@ resource "aws_iam_role_policy" "test" {
 	 }
  ]
 }
- 
+
 EOF
 }
 

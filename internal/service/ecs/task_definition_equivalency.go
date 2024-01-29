@@ -68,10 +68,10 @@ func (cd containerDefinitions) Reduce(isAWSVPC bool) error {
 			def.Essential = aws.Bool(true)
 		}
 		for j, pm := range def.PortMappings {
-			if pm.Protocol != "" && string(pm.Protocol) == "tcp" {
+			if string(pm.Protocol) == "tcp" {
 				cd[i].PortMappings[j].Protocol = ""
 			}
-			if pm.HostPort != nil && aws.ToInt32(pm.HostPort) == 0 {
+			if aws.ToInt32(pm.HostPort) == 0 {
 				cd[i].PortMappings[j].HostPort = nil
 			}
 			if isAWSVPC && cd[i].PortMappings[j].HostPort == nil {

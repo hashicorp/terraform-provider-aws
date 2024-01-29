@@ -231,12 +231,8 @@ func resourceTaskDefinition() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					ValidateFunc: validation.StringInSlice([]string{
-						"EC2",
-						"FARGATE",
-						"EXTERNAL",
-					}, false),
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[types.Compatibility](),
 				},
 			},
 			"revision": {
@@ -508,7 +504,8 @@ func resourceTaskDefinitionCreate(ctx context.Context, d *schema.ResourceData, m
 		input.ProxyConfiguration = expandTaskDefinitionProxyConfiguration(proxyConfigs)
 	}
 
-	if requiresCompats := d.Get("requires_compatibilities").([]interface{}); len(requiresCompats) > 0 {
+	if requiresCompats := d.Get("requires_compatibilities").(*schema.Set).List(); len(requiresCompats) > 0 {
+		// if requiresCompats := d.Get("requires_compatibilities").([]interface{}); len(requiresCompats) > 0 {
 		input.RequiresCompatibilities = expandTaskDefinitionRequiresCompatibilities(requiresCompats)
 	}
 
@@ -901,6 +898,23 @@ func expandTaskDefinitionRequiresCompatibilities(requiresCompats []interface{}) 
 	}
 	return rc
 }
+
+// func flattenLogging(logging *types.Logging) []string {
+// 	enabledLogTypes := []types.LogType{}
+
+// 	if logging != nil {
+// 		logSetups := logging.ClusterLogging
+// 		for _, logSetup := range logSetups {
+// 			if !aws.ToBool(logSetup.Enabled) {
+// 				continue
+// 			}
+
+// 			enabledLogTypes = append(enabledLogTypes, logSetup.Types...)
+// 		}
+// 	}
+
+// 	return enum.Slice(enabledLogTypes...)
+// }
 
 func expandVolumes(configured []interface{}) []types.Volume {
 	volumes := make([]types.Volume, 0, len(configured))

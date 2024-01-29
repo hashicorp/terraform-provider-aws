@@ -5,9 +5,9 @@ package ecs
 
 // Exports for use in tests only.
 var (
-	ResourceClusterCapacityProviders = resourceClusterCapacityProviders
 	ResourceCapacityProvider         = resourceCapacityProvider
 	ResourceCluster                  = resourceCluster
+	ResourceClusterCapacityProviders = resourceClusterCapacityProviders
 	ResourceService                  = resourceService
 	ResourceTag                      = resourceTag
 	ResourceTaskDefinition           = resourceTaskDefinition

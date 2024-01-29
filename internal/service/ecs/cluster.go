@@ -406,17 +406,21 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	partition := meta.(*conns.AWSClient).Partition
 
 	log.Printf("[DEBUG] Deleting ECS Cluster: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, clusterDeleteTimeout, func() (interface{}, error) {
-		return conn.DeleteCluster(ctx, &ecs.DeleteClusterInput{
+	err := tfresource.Retry(ctx, clusterDeleteTimeout, func() *retry.RetryError {
+		_, err := conn.DeleteCluster(ctx, &ecs.DeleteClusterInput{
 			Cluster: aws.String(d.Id()),
 		})
-	},
-	// TODO
-	// ecs.ErrCodeClusterContainsContainerInstancesException,
-	// ecs.ErrCodeClusterContainsServicesException,
-	// ecs.ErrCodeClusterContainsTasksException,
-	// ecs.ErrCodeUpdateInProgressException,
-	)
+
+		if err != nil {
+			if errs.IsA[*types.ClusterContainsContainerInstancesException](err) || errs.IsA[*types.ClusterContainsServicesException](err) ||
+				errs.IsA[*types.ClusterContainsTasksException](err) || errs.IsA[*types.UpdateInProgressException](err) {
+				return retry.RetryableError(err)
+			}
+
+			return retry.NonRetryableError(err)
+		}
+		return nil
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ECS Cluster (%s): %s", d.Id(), err)

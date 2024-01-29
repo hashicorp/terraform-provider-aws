@@ -148,7 +148,7 @@ func resourceService() *schema.Resource {
 				Optional: true,
 				Default:  200,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if d.Get("scheduling_strategy") == types.SchedulingStrategyDaemon && new == "200" {
+					if d.Get("scheduling_strategy").(string) == string(types.SchedulingStrategyDaemon) && new == "200" {
 						return true
 					}
 					return false
@@ -159,7 +159,7 @@ func resourceService() *schema.Resource {
 				Optional: true,
 				Default:  100,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if d.Get("scheduling_strategy") == types.SchedulingStrategyDaemon && new == "100" {
+					if d.Get("scheduling_strategy").(string) == string(types.SchedulingStrategyDaemon) && new == "100" {
 						return true
 					}
 					return false
@@ -169,7 +169,7 @@ func resourceService() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					return d.Get("scheduling_strategy") == types.SchedulingStrategyDaemon
+					return d.Get("scheduling_strategy").(string) == string(types.SchedulingStrategyDaemon)
 				},
 			},
 			"enable_ecs_managed_tags": {

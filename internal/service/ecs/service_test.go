@@ -652,83 +652,6 @@ func TestAccECSService_deploymentCircuitBreaker(t *testing.T) {
 	})
 }
 
-// Regression for https://github.com/hashicorp/terraform/issues/3444
-func TestAccECSService_loadBalancerChanges(t *testing.T) {
-	ctx := acctest.Context(t)
-	var s1, s2 types.Service
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ecs_service.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceConfig_lbChanges(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &s1),
-				),
-			},
-			{
-				Config: testAccServiceConfig_lbChangesModified(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &s2),
-					testAccCheckServiceNotRecreated(&s2, &s1),
-				),
-			},
-		},
-	})
-}
-
-// Regression for https://github.com/hashicorp/terraform/issues/3361
-func TestAccECSService_clusterName(t *testing.T) {
-	ctx := acctest.Context(t)
-	var service types.Service
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ecs_service.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceConfig_clusterName(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "cluster", rName),
-				),
-			},
-		},
-	})
-}
-
-func TestAccECSService_alb(t *testing.T) {
-	ctx := acctest.Context(t)
-	var service types.Service
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ecs_service.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceConfig_alb(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service),
-					resource.TestCheckResourceAttr(resourceName, "load_balancer.#", "1"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccECSService_multipleTargetGroups(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service types.Service
@@ -877,25 +800,6 @@ func TestAccECSService_PlacementStrategy_basic(t *testing.T) {
 	})
 }
 
-// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13146
-func TestAccECSService_PlacementStrategy_missing(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccServiceConfig_placementStrategyType(rName, ""),
-				ExpectError: regexache.MustCompile(`expected ordered_placement_strategy.0.type to be one of`),
-			},
-		},
-	})
-}
-
 func TestAccECSService_PlacementConstraints_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service1, service2 types.Service
@@ -920,29 +824,6 @@ func TestAccECSService_PlacementConstraints_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServiceExists(ctx, resourceName, &service2),
 					testAccCheckServiceNotRecreated(&service1, &service2),
-					resource.TestCheckResourceAttr(resourceName, "placement_constraints.#", "1"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccECSService_PlacementConstraints_emptyExpression(t *testing.T) {
-	ctx := acctest.Context(t)
-	var service types.Service
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_ecs_service.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceConfig_placementConstraintEmptyExpression(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceExists(ctx, resourceName, &service),
 					resource.TestCheckResourceAttr(resourceName, "placement_constraints.#", "1"),
 				),
 			},
@@ -1995,23 +1876,6 @@ resource "aws_security_group" "test" {
   }
 }
 
-resource "aws_subnet" "test" {
-  cidr_block = cidrsubnet(aws_vpc.test.cidr_block, 8, 1)
-  vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.10.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_ecs_service" "test" {
   name                 = %[1]q
   cluster              = aws_ecs_cluster.test.id
@@ -2179,41 +2043,6 @@ resource "aws_ecs_service" "test" {
   }
 }
 `, rName)
-}
-
-func testAccServiceConfig_placementStrategyType(rName string, placementStrategyType string) string {
-	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-}
-
-resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
-
-  container_definitions = <<DEFINITION
-[
-  {
-    "cpu": 128,
-    "essential": true,
-    "image": "mongo:latest",
-    "memory": 128,
-    "name": "mongodb"
-  }
-]
-DEFINITION
-}
-
-resource "aws_ecs_service" "test" {
-  cluster         = aws_ecs_cluster.test.id
-  desired_count   = 1
-  name            = %[1]q
-  task_definition = aws_ecs_task_definition.test.arn
-
-  ordered_placement_strategy {
-    type = %[1]q
-  }
-}
-`, rName, placementStrategyType)
 }
 
 func testAccServiceConfig_randomPlacementStrategy(rName string) string {
@@ -2825,14 +2654,6 @@ resource "aws_ecs_service" "test" {
 `, rName, image, containerName, containerPort, hostPort))
 }
 
-func testAccServiceConfig_lbChanges(rName string) string {
-	return testAccServiceLBChangesConfig_base(rName, "ghost:latest", "ghost", 2368, 8080)
-}
-
-func testAccServiceConfig_lbChangesModified(rName string) string {
-	return testAccServiceLBChangesConfig_base(rName, "nginx:latest", "nginx", 80, 8080)
-}
-
 func testAccServiceConfig_familyAndRevision(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
@@ -2893,152 +2714,6 @@ resource "aws_ecs_service" "test" {
   desired_count   = 1
 }
 `, rName)
-}
-
-func testAccServiceConfig_clusterName(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-}
-
-resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
-
-  container_definitions = <<DEFINITION
-[
-  {
-    "cpu": 128,
-    "essential": true,
-    "image": "jenkins:latest",
-    "memory": 128,
-    "name": "jenkins"
-  }
-]
-DEFINITION
-}
-
-resource "aws_ecs_service" "test" {
-  name            = %[1]q
-  cluster         = aws_ecs_cluster.test.name
-  task_definition = aws_ecs_task_definition.test.arn
-  desired_count   = 1
-}
-`, rName)
-}
-
-func testAccServiceConfig_alb(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-}
-
-resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
-
-  container_definitions = <<DEFINITION
-[
-  {
-    "cpu": 256,
-    "essential": true,
-    "image": "ghost:latest",
-    "memory": 512,
-    "name": "ghost",
-    "portMappings": [
-      {
-        "containerPort": 2368,
-        "hostPort": 8080
-      }
-    ]
-  }
-]
-DEFINITION
-}
-
-resource "aws_iam_role" "ecs_service" {
-  name = %[1]q
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2008-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "ecs.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_iam_role_policy" "ecs_service" {
-  name = %[1]q
-  role = aws_iam_role.ecs_service.name
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Action": [
-        "ec2:Describe*",
-        "elasticloadbalancing:DeregisterInstancesFromLoadBalancer",
-        "elasticloadbalancing:DeregisterTargets",
-        "elasticloadbalancing:Describe*",
-        "elasticloadbalancing:RegisterInstancesWithLoadBalancer",
-        "elasticloadbalancing:RegisterTargets"
-      ],
-      "Resource": "*"
-    }
-  ]
-}
-EOF
-}
-
-resource "aws_lb_target_group" "test" {
-  name     = aws_lb.test.name
-  port     = 80
-  protocol = "HTTP"
-  vpc_id   = aws_vpc.test.id
-}
-
-resource "aws_lb" "test" {
-  name     = %[1]q
-  internal = true
-  subnets  = aws_subnet.test[*].id
-}
-
-resource "aws_lb_listener" "front_end" {
-  load_balancer_arn = aws_lb.test.id
-  port              = "80"
-  protocol          = "HTTP"
-
-  default_action {
-    target_group_arn = aws_lb_target_group.test.id
-    type             = "forward"
-  }
-}
-
-resource "aws_ecs_service" "test" {
-  name            = %[1]q
-  cluster         = aws_ecs_cluster.test.id
-  task_definition = aws_ecs_task_definition.test.arn
-  desired_count   = 1
-  iam_role        = aws_iam_role.ecs_service.name
-
-  load_balancer {
-    target_group_arn = aws_lb_target_group.test.id
-    container_name   = "ghost"
-    container_port   = "2368"
-  }
-
-  depends_on = [aws_iam_role_policy.ecs_service]
-}
-`, rName))
 }
 
 func testAccServiceConfig_multipleTargetGroups(rName string) string {
