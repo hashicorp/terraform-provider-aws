@@ -259,6 +259,7 @@ func TestAccELBV2ListenerRule_forwardWeighted(t *testing.T) {
 	})
 }
 
+// TestAccELBV2ListenerRule_backwardsCompatibility confirms that the resource type `aws_alb_listener_rule` works
 func TestAccELBV2ListenerRule_backwardsCompatibility(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf elbv2.Rule
@@ -731,7 +732,7 @@ func TestAccELBV2ListenerRule_Action_order(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6171
-func TestAccELBV2ListenerRule_ActionOrder_recreates(t *testing.T) {
+func TestAccELBV2ListenerRule_Action_actionDisappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule elbv2.Rule
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
@@ -2004,6 +2005,8 @@ resource "aws_security_group" "alb_test" {
 `, lbName, targetGroupName1, targetGroupName2)
 }
 
+// testAccListenerRuleConfig_backwardsCompatibility should be the equivalent of `testAccListenerRuleConfig_basic`
+// but using the legacy `aws_alb*` resource types.
 func testAccListenerRuleConfig_backwardsCompatibility(lbName, targetGroupName string) string {
 	return fmt.Sprintf(`
 resource "aws_alb_listener_rule" "static" {
