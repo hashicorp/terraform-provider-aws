@@ -4,6 +4,10 @@ FEATURES:
 
 * **New Resource:** `aws_lexv2models_slot` ([#34617](https://github.com/hashicorp/terraform-provider-aws/issues/34617))
 
+BUG FIXES:
+
+* resource/aws_eks_access_entry: Retry IAM eventual consistency errors on create ([#35535](https://github.com/hashicorp/terraform-provider-aws/issues/35535))
+
 ## 5.34.0 (January 26, 2024)
 
 FEATURES:
