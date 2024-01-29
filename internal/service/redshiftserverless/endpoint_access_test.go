@@ -38,7 +38,7 @@ func TestAccRedshiftServerlessEndpointAccess_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "owner_account", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "port"),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", "id"),
 					resource.TestCheckResourceAttr(resourceName, "workgroup_name", rName),
 				),
 			},
@@ -55,7 +55,7 @@ func TestAccRedshiftServerlessEndpointAccess_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "endpoint_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "port"),
 					resource.TestCheckResourceAttr(resourceName, "owner_account", ""),
-					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test", "id"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test.0", "id"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "vpc_security_group_ids.*", "aws_security_group.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "workgroup_name", rName),
 				),
@@ -168,7 +168,7 @@ func testAccEndpointAccessConfig_basic(rName string) string {
 resource "aws_redshiftserverless_endpoint_access" "test" {
   workgroup_name = aws_redshiftserverless_workgroup.test.workgroup_name
   endpoint_name  = %[1]q
-  subnet_ids     = [aws_subnet.test[0]].id]
+  subnet_ids     = [aws_subnet.test[0].id]
 }
 `, rName))
 }
