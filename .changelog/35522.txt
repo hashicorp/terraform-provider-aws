@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/aws_efs_file_system: Fix max # of `lifecycle_policy` configuration blocks to allow setting all 3 policies
+resource/aws_efs_file_system: Increase `lifecycle_policy` maximum item limit to 3
 ```
