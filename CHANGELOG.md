@@ -4,6 +4,11 @@ FEATURES:
 
 * **New Resource:** `aws_lexv2models_slot` ([#34617](https://github.com/hashicorp/terraform-provider-aws/issues/34617))
 
+ENHANCEMENTS:
+
+* resource/aws_wafv2_rule_group: Add `header_order` to `field_to_match` configuration blocks ([#35521](https://github.com/hashicorp/terraform-provider-aws/issues/35521))
+* resource/aws_wafv2_web_acl: Add `header_order`to `field_to_match` configuration blocks ([#35521](https://github.com/hashicorp/terraform-provider-aws/issues/35521))
+
 BUG FIXES:
 
 * resource/aws_dms_event_subscription: Mark `source_ids` as Optional. This fixes a regression introduced in [v5.31.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5310-december-15-2023) ([#35541](https://github.com/hashicorp/terraform-provider-aws/issues/35541))
