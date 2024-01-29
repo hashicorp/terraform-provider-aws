@@ -487,7 +487,7 @@ resource "aws_eks_access_entry" "test" {
 }
 
 func testAccAccessEntryConfig_eventualConsistency(rName string) string {
-	return acctest.ConfigCompose(testAccAccessEntryConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAccessEntryConfig_base(rName), `
 resource "aws_iam_role" "test2" {
   name = "${aws_eks_cluster.test.name}-2"
 
@@ -513,7 +513,7 @@ resource "aws_eks_access_entry" "test" {
 
   type = "EC2_LINUX"
 }
-`))
+`)
 }
 
 func testAccAccessEntryConfig_username(rName, username string) string {
