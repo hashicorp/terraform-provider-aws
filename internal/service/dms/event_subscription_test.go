@@ -33,16 +33,16 @@ func TestAccDMSEventSubscription_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSubscriptionConfig_enabled(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "source_type", "replication-instance"),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "failure"),
-					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", snsTopicResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_type", "replication-instance"),
 				),
 			},
 			{
@@ -282,7 +282,6 @@ resource "aws_dms_event_subscription" "test" {
   enabled          = %[2]t
   event_categories = ["creation", "failure"]
   source_type      = "replication-instance"
-  source_ids       = [aws_dms_replication_instance.test.replication_instance_id]
   sns_topic_arn    = aws_sns_topic.test.arn
 }
 `, rName, enabled))
