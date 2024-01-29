@@ -179,6 +179,7 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("address", endpointAccess.Address)
 	d.Set("arn", endpointAccess.EndpointArn)
 	d.Set("endpoint_name", endpointAccess.EndpointName)
+	d.Set("owner_account", d.Get("owner_account"))
 	d.Set("port", endpointAccess.Port)
 	d.Set("subnet_ids", aws.StringValueSlice(endpointAccess.SubnetIds))
 	if err := d.Set("vpc_endpoint", []interface{}{flattenVPCEndpoint(endpointAccess.VpcEndpoint)}); err != nil {
