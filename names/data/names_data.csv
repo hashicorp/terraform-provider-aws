@@ -79,7 +79,7 @@ codebuild,codebuild,codebuild,codebuild,,codebuild,,,CodeBuild,CodeBuild,,,2,,aw
 codecommit,codecommit,codecommit,codecommit,,codecommit,,,CodeCommit,CodeCommit,,,2,,aws_codecommit_,,codecommit_,CodeCommit,AWS,,,,,,,CodeCommit,,,
 deploy,deploy,codedeploy,codedeploy,,deploy,,codedeploy,Deploy,CodeDeploy,,,2,aws_codedeploy_,aws_deploy_,,codedeploy_,CodeDeploy,AWS,,,,,,,CodeDeploy,,,
 codeguruprofiler,codeguruprofiler,codeguruprofiler,codeguruprofiler,,codeguruprofiler,,,CodeGuruProfiler,CodeGuruProfiler,,,2,,aws_codeguruprofiler_,,codeguruprofiler_,CodeGuru Profiler,Amazon,,,,,,,CodeGuruProfiler,ListProfilingGroups,,
-codeguru-reviewer,codegurureviewer,codegurureviewer,codegurureviewer,,codegurureviewer,,,CodeGuruReviewer,CodeGuruReviewer,,1,,,aws_codegurureviewer_,,codegurureviewer_,CodeGuru Reviewer,Amazon,,,,,,,CodeGuru Reviewer,,,
+codeguru-reviewer,codegurureviewer,codegurureviewer,codegurureviewer,,codegurureviewer,,,CodeGuruReviewer,CodeGuruReviewer,,,2,,aws_codegurureviewer_,,codegurureviewer_,CodeGuru Reviewer,Amazon,,,,,,,CodeGuru Reviewer,,,
 codepipeline,codepipeline,codepipeline,codepipeline,,codepipeline,,,CodePipeline,CodePipeline,,,2,aws_codepipeline,aws_codepipeline_,,codepipeline,CodePipeline,AWS,,,,,,,CodePipeline,ListPipelines,,
 codestar,codestar,codestar,codestar,,codestar,,,CodeStar,CodeStar,,1,,,aws_codestar_,,codestar_,CodeStar,AWS,,x,,,,,CodeStar,,,
 codestar-connections,codestarconnections,codestarconnections,codestarconnections,,codestarconnections,,,CodeStarConnections,CodeStarConnections,,,2,,aws_codestarconnections_,,codestarconnections_,CodeStar Connections,AWS,,,,,,,CodeStar connections,ListConnections,,

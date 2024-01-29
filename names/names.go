@@ -45,6 +45,7 @@ const (
 	CodeCommitEndpointID                 = "codecommit"
 	CodeDeployEndpointID                 = "codedeploy"
 	CodeGuruProfilerEndpointID           = "codeguru-profiler"
+	CodeGuruReviewerEndpointID           = "codeguru-reviewer"
 	CodePipelineEndpointID               = "codepipeline"
 	CodeStarConnectionsEndpointID        = "codestar-connections"
 	CodeStarNotificationsEndpointID      = "codestar-notifications"

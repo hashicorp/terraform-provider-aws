@@ -1,4 +1,9 @@
 ## 5.35.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_lexv2models_slot` ([#34617](https://github.com/hashicorp/terraform-provider-aws/issues/34617))
+
 ## 5.34.0 (January 26, 2024)
 
 FEATURES:

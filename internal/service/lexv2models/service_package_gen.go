@@ -39,6 +39,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceIntent,
 			Name:    "Intent",
 		},
+		{
+			Factory: newResourceSlot,
+			Name:    "Slot",
+		},
 	}
 }
 
