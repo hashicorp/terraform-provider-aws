@@ -178,9 +178,7 @@ func main() {
 		}
 
 		if l.EndpointAPICall() == "" && !l.NotImplemented() && !l.Exclude() {
-			if len(l.Aliases()) == 0 {
-				log.Fatalf("in service data, line %d, for service %s, EndpointAPICall is required for services without aliases", i+lineOffset, l.HumanFriendly())
-			}
+			log.Fatalf("in service data, line %d, for service %s, EndpointAPICall is required for unless NotImplemented or Exclude is set", i+lineOffset, l.HumanFriendly())
 		}
 
 		rre := l.ResourcePrefixActual()

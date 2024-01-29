@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/names/data"
-	"golang.org/x/exp/slices"
 )
 
 // These "should" be defined by the AWS Go SDK v2, but currently aren't.
@@ -359,11 +358,7 @@ func Endpoints() []Endpoint {
 			ProviderPackage: k,
 		}
 		if len(v.Aliases) > 1 {
-			idx := slices.Index(v.Aliases, k)
-			if idx != -1 {
-				aliases := slices.Delete(v.Aliases, idx, idx+1)
-				ep.Aliases = aliases
-			}
+			ep.Aliases = v.Aliases[1:]
 		}
 		endpoints = append(endpoints, ep)
 	}

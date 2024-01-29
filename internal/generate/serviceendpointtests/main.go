@@ -47,10 +47,6 @@ func main() {
 			continue
 		}
 
-		if len(l.Aliases()) > 0 {
-			continue
-		}
-
 		g.Infof("Generating internal/service/%s/%s", packageName, filename)
 
 		td := TemplateData{
@@ -63,6 +59,7 @@ func main() {
 			ConfigParameter:   l.AwsConfigParameter(),
 			DeprecatedEnvVar:  l.DeprecatedEnvVar(),
 			TfAwsEnvVar:       l.TfAwsEnvVar(),
+			Aliases:           l.Aliases(),
 		}
 		if l.ClientSDKV1() {
 			td.GoV1Package = l.GoV1Package()
@@ -96,7 +93,7 @@ func main() {
 		}
 
 		if td.APICall == "" {
-			td.APICall = "PLACEHOLDER"
+			g.Fatalf("error generating service endpoint tests: package %q missing APICall", packageName)
 		}
 
 		d := g.NewGoFileDestination(filepath.Join(relativePath, packageName, filename))
@@ -125,6 +122,7 @@ type TemplateData struct {
 	TfAwsEnvVar                       string
 	V1NameResolverNeedsUnknownService bool
 	V1AlternateInputPackage           string
+	Aliases                           []string
 	ImportAWS_V1                      bool
 	ImportAwsTypes                    bool
 }

@@ -874,20 +874,19 @@ func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string
 			continue
 		}
 
-		for _, alias := range names.Aliases() {
-			pkg, err := names.ProviderPackageForAlias(alias)
-
-			if err != nil {
-				diags = append(diags, errs.NewErrorDiagnostic(
-					"Internal Error",
-					"This is always an error in the provider. Please report the following to the provider developer:\n\n"+
-						fmt.Sprintf("failed to assign endpoint (%s): %s", alias, err),
-				))
-			}
+		for _, endpoint := range names.Endpoints() {
+			pkg := endpoint.ProviderPackage
 
 			if endpoints[pkg] == "" {
-				if v := tfMap[alias].(string); v != "" {
+				if v := tfMap[pkg].(string); v != "" {
 					endpoints[pkg] = v
+				} else {
+					for _, alias := range endpoint.Aliases {
+						if v := tfMap[alias].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
 				}
 			}
 		}
