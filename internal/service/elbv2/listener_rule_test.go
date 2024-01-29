@@ -704,7 +704,7 @@ func TestAccELBV2ListenerRule_oidc(t *testing.T) {
 	})
 }
 
-func TestAccELBV2ListenerRule_Action_order(t *testing.T) {
+func TestAccELBV2ListenerRule_Action_defaultOrder(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule elbv2.Rule
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
@@ -719,13 +719,52 @@ func TestAccELBV2ListenerRule_Action_order(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerRuleConfig_actionOrder(rName, key, certificate),
+				Config: testAccListenerRuleConfig_action_defaultOrder(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.1.order", "2"),
 				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"action.0.authenticate_oidc.0.client_secret"},
+			},
+		},
+	})
+}
+
+func TestAccELBV2ListenerRule_Action_specifyOrder(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rule elbv2.Rule
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lb_listener_rule.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerRuleConfig_action_specifyOrder(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.order", "2"),
+					resource.TestCheckResourceAttr(resourceName, "action.1.order", "4"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"action.0.authenticate_oidc.0.client_secret"},
 			},
 		},
 	})
@@ -747,7 +786,7 @@ func TestAccELBV2ListenerRule_Action_actionDisappears(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccListenerRuleConfig_actionOrder(rName, key, certificate),
+				Config: testAccListenerRuleConfig_action_defaultOrder(rName, key, certificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, resourceName, &rule),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "2"),
@@ -2767,12 +2806,8 @@ resource "aws_lb_listener" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccListenerRuleConfig_actionOrder(rName, key, certificate string) string {
+func testAccListenerRuleConfig_action_defaultOrder(rName, key, certificate string) string {
 	return fmt.Sprintf(`
-variable "rName" {
-  default = %[1]q
-}
-
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -2786,7 +2821,6 @@ resource "aws_lb_listener_rule" "test" {
   listener_arn = aws_lb_listener.test.arn
 
   action {
-    order = 1
     type  = "authenticate-oidc"
 
     authenticate_oidc {
@@ -2804,7 +2838,6 @@ resource "aws_lb_listener_rule" "test" {
   }
 
   action {
-    order            = 2
     type             = "forward"
     target_group_arn = aws_lb_target_group.test.arn
   }
@@ -2817,8 +2850,8 @@ resource "aws_lb_listener_rule" "test" {
 }
 
 resource "aws_iam_server_certificate" "test" {
+  name             = %[1]q
   certificate_body = "%[2]s"
-  name             = var.rName
   private_key      = "%[3]s"
 }
 
@@ -2837,13 +2870,13 @@ resource "aws_lb_listener" "test" {
 
 resource "aws_lb" "test" {
   internal        = true
-  name            = var.rName
+  name            = %[1]q
   security_groups = [aws_security_group.test.id]
   subnets         = aws_subnet.test[*].id
 }
 
 resource "aws_lb_target_group" "test" {
-  name     = var.rName
+  name     = %[1]q
   port     = 8080
   protocol = "HTTP"
   vpc_id   = aws_vpc.test.id
@@ -2864,7 +2897,7 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 
   tags = {
-    Name = var.rName
+    Name = %[1]q
   }
 }
 
@@ -2877,12 +2910,12 @@ resource "aws_subnet" "test" {
   vpc_id                  = aws_vpc.test.id
 
   tags = {
-    Name = var.rName
+    Name = %[1]q
   }
 }
 
 resource "aws_security_group" "test" {
-  name   = var.rName
+  name   = %[1]q
   vpc_id = aws_vpc.test.id
 
   ingress {
@@ -2900,7 +2933,142 @@ resource "aws_security_group" "test" {
   }
 
   tags = {
-    Name = var.rName
+    Name = %[1]q
+  }
+}
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
+}
+
+func testAccListenerRuleConfig_action_specifyOrder(rName, key, certificate string) string {
+	return fmt.Sprintf(`
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_lb_listener_rule" "test" {
+  listener_arn = aws_lb_listener.test.arn
+
+  action {
+    order = 2
+    type  = "authenticate-oidc"
+
+    authenticate_oidc {
+      authorization_endpoint = "https://example.com/authorization_endpoint"
+      client_id              = "s6BhdRkqt3"
+      client_secret          = "7Fjfp0ZBr1KtDRbnfVdmIw"
+      issuer                 = "https://example.com"
+      token_endpoint         = "https://example.com/token_endpoint"
+      user_info_endpoint     = "https://example.com/user_info_endpoint"
+
+      authentication_request_extra_params = {
+        param = "test"
+      }
+    }
+  }
+
+  action {
+    order            = 4
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+
+  condition {
+    path_pattern {
+      values = ["/static/*"]
+    }
+  }
+}
+
+resource "aws_iam_server_certificate" "test" {
+  name             = %[1]q
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTPS"
+  port              = "443"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_iam_server_certificate.test.arn
+
+  default_action {
+    target_group_arn = aws_lb_target_group.test.id
+    type             = "forward"
+  }
+}
+
+resource "aws_lb" "test" {
+  internal        = true
+  name            = %[1]q
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+}
+
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  count = 2
+
+  availability_zone       = data.aws_availability_zones.available.names[count.index]
+  cidr_block              = "10.0.${count.index}.0/24"
+  map_public_ip_on_launch = true
+  vpc_id                  = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key))
