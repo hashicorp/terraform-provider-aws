@@ -94,7 +94,7 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.EncryptionKey = aws.String(v.(string))
 	}
 
-	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.ValidationException](ctx, 2*time.Minute, func() (any, error) {
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.ValidationException](ctx, propagationTimeout, func() (any, error) {
 		return conn.CreateDomain(ctx, input)
 	}, "KMS key not found")
 
