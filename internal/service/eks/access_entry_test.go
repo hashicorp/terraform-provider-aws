@@ -513,7 +513,7 @@ resource "aws_eks_access_entry" "test" {
 
   type = "EC2_LINUX"
 }
-`, rName))
+`))
 }
 
 func testAccAccessEntryConfig_username(rName, username string) string {
