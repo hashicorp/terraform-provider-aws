@@ -8,13 +8,11 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -46,8 +44,8 @@ func (d *customModelDataSource) Schema(ctx context.Context, request datasource.S
 				Computed: true,
 			},
 			"hyper_parameters": schema.MapAttribute{
-				ElementType: types.StringType,
 				Computed:    true,
+				ElementType: types.StringType,
 			},
 			names.AttrID: framework.IDAttribute(),
 			"job_arn": schema.StringAttribute{
@@ -69,27 +67,33 @@ func (d *customModelDataSource) Schema(ctx context.Context, request datasource.S
 			"model_name": schema.StringAttribute{
 				Computed: true,
 			},
-			"output_data_config": schema.StringAttribute{
-				Computed: true,
+			"output_data_config": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[customModelOutputDataConfigModel](ctx),
+				Computed:   true,
+				AttributeTypes: map[string]attr.Type{
+					"s3_uri": types.StringType,
+				},
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
-			"training_data_config": schema.StringAttribute{
-				Computed: true,
-			},
-			"training_metrics": schema.ListAttribute{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[customModelTrainingMetricsModel](ctx),
+			"training_data_config": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[customModelTrainingDataConfigModel](ctx),
 				Computed:   true,
-				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						"training_loss": types.Float64Type,
-					},
+				AttributeTypes: map[string]attr.Type{
+					"s3_uri": types.StringType,
+				},
+			},
+			"training_metrics": schema.ObjectAttribute{
+				CustomType: fwtypes.NewObjectTypeOf[customModelTrainingMetricsModel](ctx),
+				Computed:   true,
+				AttributeTypes: map[string]attr.Type{
+					"training_loss": types.Float64Type,
 				},
 			},
 			"validation_data_config": schema.ObjectAttribute{
 				CustomType: fwtypes.NewObjectTypeOf[customModelValidationDataConfigModel](ctx),
 				Computed:   true,
 				AttributeTypes: map[string]attr.Type{
-					"validators": types.ListType{ElemType: types.StringType},
+					"validators": types.ListType{ElemType: fwtypes.NewObjectTypeOf[customModelValidatorConfigModel](ctx)},
 				},
 			},
 			"validation_metrics": schema.ListAttribute{
@@ -114,11 +118,7 @@ func (d *customModelDataSource) Read(ctx context.Context, request datasource.Rea
 
 	conn := d.Meta().BedrockClient(ctx)
 
-	input := &bedrock.GetCustomModelInput{
-		ModelIdentifier: fwflex.StringFromFramework(ctx, data.ModelID),
-	}
-
-	output, err := conn.GetCustomModel(ctx, input)
+	output, err := findCustomModelByID(ctx, conn, data.ModelID.ValueString())
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Custom Model (%s)", data.ModelID.ValueString()), err.Error())
@@ -142,7 +142,7 @@ func (d *customModelDataSource) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	data.JobTags = flex.FlattenFrameworkStringValueMap(ctx, jobTags.IgnoreAWS().Map())
+	data.JobTags = fwflex.FlattenFrameworkStringValueMap(ctx, jobTags.IgnoreAWS().Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -150,7 +150,7 @@ func (d *customModelDataSource) Read(ctx context.Context, request datasource.Rea
 type customModelDataSourceModel struct {
 	BaseModelARN         types.String                                                       `tfsdk:"base_model_arn"`
 	CreationTime         types.String                                                       `tfsdk:"creation_time"`
-	HyperParameters      types.Map                                                          `tfsdk:"hyper_parameters"`
+	HyperParameters      fwtypes.MapValueOf[types.String]                                   `tfsdk:"hyper_parameters"`
 	ID                   types.String                                                       `tfsdk:"id"`
 	JobARN               types.String                                                       `tfsdk:"job_arn"`
 	JobName              types.String                                                       `tfsdk:"job_name"`
@@ -167,6 +167,14 @@ type customModelDataSourceModel struct {
 	ValidationMetrics    fwtypes.ListNestedObjectValueOf[customModelValidationMetricsModel] `tfsdk:"validation_metrics"`
 }
 
+type customModelOutputDataConfigModel struct {
+	S3URI types.String `tfsdk:"s3_uri"`
+}
+
+type customModelTrainingDataConfigModel struct {
+	S3URI types.String `tfsdk:"s3_uri"`
+}
+
 type customModelTrainingMetricsModel struct {
 	TrainingLoss types.Float64 `tfsdk:"training_loss"`
 }
@@ -177,4 +185,13 @@ type customModelValidationDataConfigModel struct {
 
 type customModelValidationMetricsModel struct {
 	ValidationLoss types.Float64 `tfsdk:"validation_loss"`
+}
+
+type customModelValidatorConfigModel struct {
+	S3URI types.String `tfsdk:"s3_uri"`
+}
+
+type customModelVPCConfigModel struct {
+	SecurityGroupIDs fwtypes.SetValueOf[types.String] `tfsdk:"security_group_ids"`
+	SubnetIDs        fwtypes.SetValueOf[types.String] `tfsdk:"subnet_ids"`
 }
