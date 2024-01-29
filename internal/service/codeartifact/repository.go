@@ -188,11 +188,11 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("domain", repository.DomainName)
 	d.Set("domain_owner", repository.DomainOwner)
 	if err := d.Set("external_connections", flattenRepositoryExternalConnectionInfos(repository.ExternalConnections)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error setting external_connections: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting external_connections: %s", err)
 	}
 	d.Set("repository", repository.Name)
 	if err := d.Set("upstream", flattenUpstreamRepositoryInfos(repository.Upstreams)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "error setting upstream: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting upstream: %s", err)
 	}
 
 	return diags
