@@ -133,12 +133,13 @@ func TestAccDMSEventSubscription_eventCategories(t *testing.T) {
 		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSubscriptionConfig_categories2(rName, "creation", "failure"),
+				Config: testAccEventSubscriptionConfig_eventCategories(rName, "creation", "failure"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "failure"),
+					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "1"),
 				),
 			},
 			{
@@ -147,12 +148,13 @@ func TestAccDMSEventSubscription_eventCategories(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEventSubscriptionConfig_categories2(rName, "configuration change", "deletion"),
+				Config: testAccEventSubscriptionConfig_eventCategories(rName, "configuration change", "deletion"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "configuration change"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "deletion"),
+					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "1"),
 				),
 			},
 		},
@@ -287,7 +289,7 @@ resource "aws_dms_event_subscription" "test" {
 `, rName, enabled))
 }
 
-func testAccEventSubscriptionConfig_categories2(rName string, eventCategory1 string, eventCategory2 string) string {
+func testAccEventSubscriptionConfig_eventCategories(rName string, eventCategory1, eventCategory2 string) string {
 	return acctest.ConfigCompose(testAccEventSubscriptionConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_event_subscription" "test" {
   name             = %[1]q
