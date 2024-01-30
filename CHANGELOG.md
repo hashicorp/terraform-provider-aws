@@ -1,4 +1,60 @@
-## 5.34.0 (Unreleased)
+## 5.35.0 (Unreleased)
+
+FEATURES:
+
+* **New Resource:** `aws_lexv2models_slot` ([#34617](https://github.com/hashicorp/terraform-provider-aws/issues/34617))
+* **New Resource:** `aws_sesv2_email_identity_policy` ([#35486](https://github.com/hashicorp/terraform-provider-aws/issues/35486))
+
+ENHANCEMENTS:
+
+* data/aws_redshift_cluster: Add `multi_az` attribute ([#35508](https://github.com/hashicorp/terraform-provider-aws/issues/35508))
+* resource/aws_redshift_cluster: Add `multi_az` argument ([#35508](https://github.com/hashicorp/terraform-provider-aws/issues/35508))
+* resource/aws_redshiftserverless_endpoint_access: Add `owner_account` argument ([#35509](https://github.com/hashicorp/terraform-provider-aws/issues/35509))
+* resource/aws_wafv2_rule_group: Add `header_order` to `field_to_match` configuration blocks ([#35521](https://github.com/hashicorp/terraform-provider-aws/issues/35521))
+* resource/aws_wafv2_web_acl: Add `header_order`to `field_to_match` configuration blocks ([#35521](https://github.com/hashicorp/terraform-provider-aws/issues/35521))
+
+BUG FIXES:
+
+* resource/aws_backup_plan: Fix `InvalidParameterValueException: Invalid lifecycle. EBS Cold Tier is not yet supported` errors on resource Create in AWS GovCloud (US) ([#35560](https://github.com/hashicorp/terraform-provider-aws/issues/35560))
+* resource/aws_dms_event_subscription: Mark `source_ids` as Optional. This fixes a regression introduced in [v5.31.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5310-december-15-2023) ([#35541](https://github.com/hashicorp/terraform-provider-aws/issues/35541))
+* resource/aws_efs_file_system: Increase `lifecycle_policy` maximum item limit to 3 ([#35522](https://github.com/hashicorp/terraform-provider-aws/issues/35522))
+* resource/aws_eks_access_entry: Retry IAM eventual consistency errors on create ([#35535](https://github.com/hashicorp/terraform-provider-aws/issues/35535))
+
+## 5.34.0 (January 26, 2024)
+
+FEATURES:
+
+* **New Resource:** `aws_rekognition_project` ([#35429](https://github.com/hashicorp/terraform-provider-aws/issues/35429))
+* **New Resource:** `aws_route53domains_delegation_signer_record` ([#33596](https://github.com/hashicorp/terraform-provider-aws/issues/33596))
+
+ENHANCEMENTS:
+
+* data-source/aws_codecommit_repository: Add `kms_key_id` attribute ([#35095](https://github.com/hashicorp/terraform-provider-aws/issues/35095))
+* data-source/aws_imagebuilder_components: Add support for `ThirdParty` `owner` value ([#35286](https://github.com/hashicorp/terraform-provider-aws/issues/35286))
+* data-source/aws_imagebuilder_container_recipes: Add support for `ThirdParty` `owner` value ([#35286](https://github.com/hashicorp/terraform-provider-aws/issues/35286))
+* data-source/aws_imagebuilder_image_recipes: Add support for `ThirdParty` `owner` value ([#35286](https://github.com/hashicorp/terraform-provider-aws/issues/35286))
+* data-source/aws_ssm_patch_baseline: Add `json` attribute to facilitate use with S3 buckets ([#33402](https://github.com/hashicorp/terraform-provider-aws/issues/33402))
+* resource/aws_accessanalyzer_analyzer: Add `configuration` configuration block ([#35310](https://github.com/hashicorp/terraform-provider-aws/issues/35310))
+* resource/aws_appflow_flow: Add `flow_status` attribute ([#34948](https://github.com/hashicorp/terraform-provider-aws/issues/34948))
+* resource/aws_codecommit_repository: Add `kms_key_id` argument ([#35095](https://github.com/hashicorp/terraform-provider-aws/issues/35095))
+* resource/aws_codecommit_trigger: Add plan-time validation of `trigger.destination_arn` and `trigger.events` ([#35095](https://github.com/hashicorp/terraform-provider-aws/issues/35095))
+* resource/aws_ecs_capacity_provider: Add `auto_scaling_group_provider.managed_draining` argument ([#35421](https://github.com/hashicorp/terraform-provider-aws/issues/35421))
+* resource/aws_fis_experiment_template: Add support for `AutoScalingGroups`, `Buckets`, `ReplicationGroups`, `Tables` and `TransitGateways` to `action.*.target` ([#35300](https://github.com/hashicorp/terraform-provider-aws/issues/35300))
+* resource/aws_fsx_openzfs_file_system: Add `skip_final_backup` argument ([#35320](https://github.com/hashicorp/terraform-provider-aws/issues/35320))
+* resource/aws_network_interface_sg_attachment: Increase default timeouts to 3 minutes and allow them to be configured ([#35435](https://github.com/hashicorp/terraform-provider-aws/issues/35435))
+* resource/aws_prometheus_scraper: Add `role_arn` attribute ([#35453](https://github.com/hashicorp/terraform-provider-aws/issues/35453))
+* resource/aws_route53domains_registered_domain: Support resource import ([#33596](https://github.com/hashicorp/terraform-provider-aws/issues/33596))
+* resource/aws_ssm_patch_baseline: Add `json` attribute to facilitate use with S3 buckets ([#33402](https://github.com/hashicorp/terraform-provider-aws/issues/33402))
+* resource/aws_wafv2_web_acl: Add `challenge_config` argument ([#35367](https://github.com/hashicorp/terraform-provider-aws/issues/35367))
+
+BUG FIXES:
+
+* resource/aws_codebuild_project: Allow `build_batch_config` to be removed on Update ([#34121](https://github.com/hashicorp/terraform-provider-aws/issues/34121))
+* resource/aws_eks_access_entry: Mark `kubernetes_groups` as Computed ([#35391](https://github.com/hashicorp/terraform-provider-aws/issues/35391))
+* resource/aws_eks_access_entry: Mark `type` and `user_name` as Optional, allowing values to be configured ([#35391](https://github.com/hashicorp/terraform-provider-aws/issues/35391))
+* resource/aws_grafana_license_association: Fix missing `workspace_id` attribute after import ([#35290](https://github.com/hashicorp/terraform-provider-aws/issues/35290))
+* resource/aws_security_group_rule: Fix `UnsupportedOperation: The functionality you requested is not available in this region` errors on Read in certain partitions ([#33484](https://github.com/hashicorp/terraform-provider-aws/issues/33484))
+
 ## 5.33.0 (January 18, 2024)
 
 FEATURES:
