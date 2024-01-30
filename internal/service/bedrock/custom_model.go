@@ -41,7 +41,7 @@ import (
 )
 
 // @FrameworkResource(name="Custom Model")
-// @Tags(identifierAttribute="model_arn")
+// @Tags(identifierAttribute="arn")
 func newCustomModelResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &customModelResource{}
 
@@ -79,6 +79,7 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 			"customization_type": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.CustomizationType](),
 				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 					stringplanmodifier.UseStateForUnknown(),
@@ -92,6 +93,7 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 					mapplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrID: framework.IDAttribute(),
 			"job_arn": schema.StringAttribute{
 				Computed: true,
 			},
@@ -292,7 +294,7 @@ func (r *customModelResource) Create(ctx context.Context, request resource.Creat
 		return
 	}
 
-	// Some fields for CreateModelCustomizationJobInput don't match those from GetCustomModelOutput, so we need to set them manually.
+	// Some fields from CreateModelCustomizationJobInput don't match those from GetCustomModelOutput, so we need to set them manually.
 	input.BaseModelIdentifier = fwflex.StringFromFramework(ctx, data.BaseModelARN)
 	input.ClientRequestToken = aws.String(id.UniqueId())
 	input.CustomModelKmsKeyId = fwflex.StringFromFramework(ctx, data.ModelKmsKeyARN)
@@ -300,7 +302,7 @@ func (r *customModelResource) Create(ctx context.Context, request resource.Creat
 	input.CustomModelTags = getTagsIn(ctx)
 	input.JobTags = getTagsIn(ctx)
 
-	outputC, err := conn.CreateModelCustomizationJob(ctx, input)
+	outputCJ, err := conn.CreateModelCustomizationJob(ctx, input)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Bedrock Custom Model customization job", err.Error())
@@ -308,8 +310,8 @@ func (r *customModelResource) Create(ctx context.Context, request resource.Creat
 		return
 	}
 
-	jobARN := aws.ToString(outputC.JobArn)
-	outputG, err := waitModelCustomizationJobCompleted(ctx, conn, jobARN, r.CreateTimeout(ctx, data.Timeouts))
+	jobARN := aws.ToString(outputCJ.JobArn)
+	outputGJ, err := waitModelCustomizationJobCompleted(ctx, conn, jobARN, r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Custom Model customization job (%s) complete", jobARN), err.Error())
@@ -317,15 +319,24 @@ func (r *customModelResource) Create(ctx context.Context, request resource.Creat
 		return
 	}
 
+	data.ModelARN = fwflex.StringToFramework(ctx, outputGJ.OutputModelArn)
+	data.setID()
+
 	// Set values for unknowns.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, outputG, &data)...)
-	if response.Diagnostics.HasError() {
+	// We need to read the model as not all fields are returned by GetModelCustomizationJob.
+	outputGM, err := findCustomModelByID(ctx, conn, data.ModelARN.ValueString())
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Custom Model (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	// Some fields for GetModelCustomizationJobOutput don't match those from GetCustomModelOutput, so we need to set them manually.
-	data.ModelARN = fwflex.StringToFramework(ctx, outputG.OutputModelArn)
-	data.setID()
+	// Set values for unknowns.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, outputGM, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
