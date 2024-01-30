@@ -126,10 +126,8 @@ func testAccCheckSlotTypeExists(ctx context.Context, name string, slottype *lexm
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LexV2ModelsClient(ctx)
+
 		out, err := tflexv2models.FindSlotTypeByID(ctx, conn, rs.Primary.ID)
-		if err != nil {
-			return create.Error(names.LexV2Models, create.ErrActionCheckingExistence, tflexv2models.ResNameSlotType, rs.Primary.ID, err)
-		}
 		if err != nil {
 			return create.Error(names.LexV2Models, create.ErrActionCheckingExistence, tflexv2models.ResNameSlotType, rs.Primary.ID, err)
 		}

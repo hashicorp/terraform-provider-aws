@@ -384,7 +384,6 @@ func (r *resourceSlotType) Delete(ctx context.Context, req resource.DeleteReques
 		return
 	}
 
-	// TIP: -- 3. Populate a delete input structure
 	in := &lexmodelsv2.DeleteSlotTypeInput{
 		BotId:      aws.String(state.BotID.ValueString()),
 		BotVersion: aws.String(state.BotVersion.ValueString()),

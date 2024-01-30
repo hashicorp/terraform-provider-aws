@@ -69,10 +69,7 @@ The following arguments are optional:
 * `external_source_setting` - Type of external information used to create the slot type. See [`external_source_setting` argument reference](#external_source_setting) below.
 * `parent_slot_type_signature` - Built-in slot type used as a parent of this slot type. When you define a parent slot type, the new slot type has the configuration of the parent slot type. Only AMAZON.AlphaNumeric is supported.
 * `slot_type_values` - List of SlotTypeValue objects that defines the values that the slot type can take. Each value can have a list of synonyms, additional values that help train the machine learning model about the values that it resolves for a slot. See [`slot_type_values` argument reference](#slot_type_values) below.
-* `value_selection_setting` - Determines the strategy that Amazon Lex uses to select a value from the list of possible values. The field can be set to one of the following values:
- - ORIGINAL_VALUE - Returns the value entered by the user, if the user value is similar to the slot value.
- - TOP_RESOLUTION - If there is a resolution list for the slot, return the first value in the resolution list. If there is no resolution list, return null.
-If you don't specify the valueSelectionSetting parameter, the default is ORIGINAL_VALUE. See [`value_selection_setting` argument reference](#value_selection_setting) below.
+* `value_selection_setting` - Determines the strategy that Amazon Lex uses to select a value from the list of possible values. The field can be set to one of the following values: `ORIGINAL_VALUE` returns the value entered by the user, if the user value is similar to the slot value. `TOP_RESOLUTION` if there is a resolution list for the slot, return the first value in the resolution list. If there is no resolution list, return null. If you don't specify the valueSelectionSetting parameter, the default is ORIGINAL_VALUE. See [`value_selection_setting` argument reference](#value_selection_setting) below.
 
 ### `slot_type_values` Argument Reference
 * `sample_value` - Value of the slot type entry.  See [`sample_value` argument reference](#sample_value) below.
@@ -95,7 +92,7 @@ If you don't specify the valueSelectionSetting parameter, the default is ORIGINA
 ### `composite_slot_type_setting` Argument Reference
 * `sub_slots` - Subslots in the composite slot. Contains filtered or unexported fields. See [`sub_slot_type_composition` argument reference] below.
 
-### `sub_slot_type_composition` Arugment Reference
+### `sub_slot_type_composition` Argument Reference
 * `name` - Name of a constituent sub slot inside a composite slot.
 * `slot_type_id` - (Required) Unique identifier assigned to a slot type. This refers to either a built-in slot type or the unique slotTypeId of a custom slot type.
 
