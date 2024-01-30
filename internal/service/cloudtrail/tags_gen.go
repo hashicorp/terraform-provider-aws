@@ -21,7 +21,7 @@ import (
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *cloudtrail.Client, identifier string, optFns ...func(*cloudtrail.Options)) (tftags.KeyValueTags, error) {
 	input := &cloudtrail.ListTagsInput{
-		ResourceIdList: aws.StringSlice([]string{identifier}),
+		ResourceIdList: []string{identifier},
 	}
 
 	output, err := conn.ListTags(ctx, input, optFns...)
