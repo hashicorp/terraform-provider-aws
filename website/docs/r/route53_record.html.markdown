@@ -68,12 +68,12 @@ resource "aws_route53_record" "www" {
   ttl     = 300
   geoproximity_routing_policy {
     coordinates {
-			latitude = "49.22"
-			longitude = "-74.01"
-		}
-  } 
+      latitude  = "49.22"
+      longitude = "-74.01"
+    }
+  }
   set_identifier = "dev"
-  records = ["dev.example.com"]
+  records        = ["dev.example.com"]
 }
 ```
 
@@ -194,7 +194,7 @@ Geolocation routing policies support the following:
 Geoproximity routing policies support the following:
 
 * `awsregion` - A AWS region where the resource is present.
-* `bias` - Route more traffic or less traffic to the resource by specifing a value ranges between -90 to 90. See https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy-geoproximity.html for bias details.
+* `bias` - Route more traffic or less traffic to the resource by specifying a value ranges between -90 to 90. See https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy-geoproximity.html for bias details.
 * `coordinates` - Specify `latitude` and `longitude` for routing traffic to non-AWS resources.
 * `localzonegroup` - A AWS local zone group where the resource is present. See https://docs.aws.amazon.com/local-zones/latest/ug/available-local-zones.html for local zone group list.
 
