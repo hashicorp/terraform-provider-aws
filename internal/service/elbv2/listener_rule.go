@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -477,8 +478,117 @@ func ResourceListenerRule() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
 		CustomizeDiff: customdiff.Sequence(
 			verify.SetTagsDiff,
+			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+				var errx []error
+
+				path := cty.GetAttrPath("action")
+
+				configRaw := d.GetRawConfig()
+				if !configRaw.IsKnown() || configRaw.IsNull() {
+					return nil
+				}
+
+				defaultAction := configRaw.GetAttr("action")
+				if defaultAction.IsKnown() && !defaultAction.IsNull() {
+					it := defaultAction.ElementIterator()
+					for it.Next() {
+						i, action := it.Element()
+						path := path.Index(i)
+
+						actionType := action.GetAttr("type")
+						if !actionType.IsKnown() {
+							continue
+						}
+						if actionType.IsNull() {
+							continue
+						}
+
+						if action.IsKnown() && !action.IsNull() {
+							tga := action.GetAttr("target_group_arn")
+							f := action.GetAttr("forward")
+
+							if !tga.IsNull() && (!f.IsNull() && f.LengthInt() > 0) {
+								errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeErrorDiagnostic(path,
+									"Invalid Attribute Combination",
+									fmt.Sprintf("Only one of %q or %q can be specified",
+										"target_group_arn",
+										"forward",
+									),
+								)))
+							}
+
+							path = path.GetAttr("type")
+
+							switch awstypes.ActionTypeEnum(actionType.AsString()) {
+							case awstypes.ActionTypeEnumForward:
+								if tga.IsNull() && (f.IsNull() || f.LengthInt() == 0) {
+									errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeErrorDiagnostic(path,
+										"Invalid Attribute Combination",
+										fmt.Sprintf("Either %q or %q must be specified when %q is %q.",
+											"target_group_arn", "forward",
+											"type",
+											awstypes.ActionTypeEnumForward,
+										),
+									)))
+								}
+
+							case awstypes.ActionTypeEnumRedirect:
+								if r := action.GetAttr("redirect"); r.IsNull() || r.LengthInt() == 0 {
+									errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeErrorDiagnostic(path,
+										"Invalid Attribute Combination",
+										fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+											"redirect",
+											"type",
+											awstypes.ActionTypeEnumRedirect,
+										),
+									)))
+								}
+
+							case awstypes.ActionTypeEnumFixedResponse:
+								if fr := action.GetAttr("fixed_response"); fr.IsNull() || fr.LengthInt() == 0 {
+									errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeErrorDiagnostic(path,
+										"Invalid Attribute Combination",
+										fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+											"fixed_response",
+											"type",
+											awstypes.ActionTypeEnumFixedResponse,
+										),
+									)))
+								}
+
+							case awstypes.ActionTypeEnumAuthenticateCognito:
+								if ac := action.GetAttr("authenticate_cognito"); ac.IsNull() || ac.LengthInt() == 0 {
+									errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeErrorDiagnostic(path,
+										"Invalid Attribute Combination",
+										fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+											"authenticate_cognito",
+											"type",
+											awstypes.ActionTypeEnumAuthenticateCognito,
+										),
+									)))
+								}
+
+							case awstypes.ActionTypeEnumAuthenticateOidc:
+								if ao := action.GetAttr("authenticate_oidc"); ao.IsNull() || ao.LengthInt() == 0 {
+									errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeWarningDiagnostic(path,
+										"Invalid Attribute Combination",
+										fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+											"authenticate_oidc",
+											"type",
+											awstypes.ActionTypeEnumAuthenticateOidc,
+										),
+									)))
+								}
+							}
+						}
+					}
+				}
+
+				return errors.Join(errx...)
+			},
 		),
 	}
 }
@@ -508,12 +618,12 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		Tags:        getTagsInV2(ctx),
 	}
 
-	var err error
-
-	input.Actions, err = expandLbListenerActions(d.Get("action").([]interface{}))
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+	input.Actions = expandLbListenerActions(cty.GetAttrPath("action"), d.Get("action").([]any), &diags)
+	if diags.HasError() {
+		return diags
 	}
+
+	var err error
 
 	input.Conditions, err = lbListenerRuleConditions(d.Get("condition").(*schema.Set).List())
 	if err != nil {
@@ -734,10 +844,9 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if d.HasChange("action") {
-			var err error
-			input.Actions, err = expandLbListenerActions(d.Get("action").([]interface{}))
-			if err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
+			input.Actions = expandLbListenerActions(cty.GetAttrPath("action"), d.Get("action").([]any), &diags)
+			if diags.HasError() {
+				return diags
 			}
 			requestUpdate = true
 		}
