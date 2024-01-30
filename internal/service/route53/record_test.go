@@ -2227,49 +2227,50 @@ const testAccRecordConfig_geoproximityCNAME = `
 resource "aws_route53_zone" "main" {
 	name = "domain.test"
   }
-
-resource "aws_route53_record" "awsregion" {
-	name           = "www"
-	zone_id        = aws_route53_zone.main.zone_id
-	type           = "CNAME"
-	ttl            = "5"
-
+  
+  resource "aws_route53_record" "awsregion" {
+	name    = "www"
+	zone_id = aws_route53_zone.main.zone_id
+	type    = "CNAME"
+	ttl     = "5"
+  
 	geoproximity_routing_policy {
-		awsregion = "us-east-1"
-		bias = 40
+	  awsregion = "us-east-1"
+	  bias      = 40
 	}
 	records        = ["dev.domain.test"]
 	set_identifier = "awsregion"
-}
-
-resource "aws_route53_record" "localzonegroup" {
-	name           = "www"
-	zone_id        = aws_route53_zone.main.zone_id
-	type           = "CNAME"
-	ttl            = "5"
-
+  }
+  
+  resource "aws_route53_record" "localzonegroup" {
+	name    = "www"
+	zone_id = aws_route53_zone.main.zone_id
+	type    = "CNAME"
+	ttl     = "5"
+  
 	geoproximity_routing_policy {
-		localzonegroup = "us-east-1-atl-1"
+	  localzonegroup = "us-east-1-atl-1"
 	}
 	records        = ["dev.domain.test"]
 	set_identifier = "localzonegroup"
-}
-
-resource "aws_route53_record" "coordinates" {
-	name           = "www"
-	zone_id        = aws_route53_zone.main.zone_id
-	type           = "CNAME"
-	ttl            = "5"
-
+  }
+  
+  resource "aws_route53_record" "coordinates" {
+	name    = "www"
+	zone_id = aws_route53_zone.main.zone_id
+	type    = "CNAME"
+	ttl     = "5"
+  
 	geoproximity_routing_policy {
-		coordinates {
-			latitude = "49.22"
-			longitude = "-74.01"
-		  }
+	  coordinates {
+		latitude  = "49.22"
+		longitude = "-74.01"
+	  }
 	}
 	records        = ["dev.domain.test"]
 	set_identifier = "coordinates"
-}
+  }
+  
 `
 
 func testAccRecordConfig_latencyCNAME(firstRegion, secondRegion, thirdRegion string) string {
@@ -2937,67 +2938,70 @@ resource "aws_route53_record" "set_identifier_rename_geolocation" {
 func testAccRecordConfig_setIdentifierRenameGeoproximityAwsRegion(region, set_identifier string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
-	name = "domain.test"
-	}
+  name = "domain.test"
+}
 
 resource "aws_route53_record" "set_identifier_rename_geoproximity" {
-	name           = "www"
-	zone_id        = aws_route53_zone.main.zone_id
-	type           = "CNAME"
-	ttl            = "5"
+  name    = "www"
+  zone_id = aws_route53_zone.main.zone_id
+  type    = "CNAME"
+  ttl     = "5"
 
-	geoproximity_routing_policy {
-		awsregion = %[1]q
-	}
+  geoproximity_routing_policy {
+    awsregion = %[1]q
+  }
 
-	records        = ["dev.example.com"]
-	set_identifier = %[2]q
-	}`, region, set_identifier)
+  records        = ["dev.example.com"]
+  set_identifier = %[2]q
+}
+`, region, set_identifier)
 }
 
 func testAccRecordConfig_setIdentifierRenameGeoproximityLocalZoneGroup(zonegroup, set_identifier string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
-	name = "domain.test"
-	}
+  name = "domain.test"
+}
 
 resource "aws_route53_record" "set_identifier_rename_geoproximity" {
-	name           = "www"
-	zone_id        = aws_route53_zone.main.zone_id
-	type           = "CNAME"
-	ttl            = "5"
-	
-	geoproximity_routing_policy {
-		localzonegroup = %[1]q
-	}
+  name    = "www"
+  zone_id = aws_route53_zone.main.zone_id
+  type    = "CNAME"
+  ttl     = "5"
 
-	records        = ["dev.example.com"]
-	set_identifier = %[2]q
-	}`, zonegroup, set_identifier)
+  geoproximity_routing_policy {
+    localzonegroup = %[1]q
+  }
+
+  records        = ["dev.example.com"]
+  set_identifier = %[2]q
+}
+`, zonegroup, set_identifier)
 }
 
 func testAccRecordConfig_setIdentifierRenameGeoproximityCoordinates(latitude, longitude, set_identifier string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
-	name = "domain.test"
-	}
+  name = "domain.test"
+}
 
 resource "aws_route53_record" "set_identifier_rename_geoproximity" {
-	name           = "www"
-	zone_id        = aws_route53_zone.main.zone_id
-	type           = "CNAME"
-	ttl            = "5"
-	
-	geoproximity_routing_policy {
-		coordinates {
-			latitude = %[1]q
-			longitude = %[2]q
-		  }
-	}
+  name    = "www"
+  zone_id = aws_route53_zone.main.zone_id
+  type    = "CNAME"
+  ttl     = "5"
 
-	records        = ["dev.example.com"]
-	set_identifier = %[3]q
-	}`, latitude, longitude, set_identifier)
+  geoproximity_routing_policy {
+    coordinates {
+      latitude  = %[1]q
+      longitude = %[2]q
+    }
+  }
+
+  records        = ["dev.example.com"]
+  set_identifier = %[3]q
+}
+`, latitude, longitude, set_identifier)
 }
 
 func testAccRecordConfig_setIdentifierRenameLatency(region, set_identifier string) string {
