@@ -48,6 +48,11 @@ func ResourceResource() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"hybrid_access_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -69,6 +74,10 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("use_service_linked_role"); ok {
 		input.UseServiceLinkedRole = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("hybrid_access_enabled"); ok {
+		input.HybridAccessEnabled = aws.Bool(v.(bool))
 	}
 
 	_, err := conn.RegisterResourceWithContext(ctx, input)

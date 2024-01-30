@@ -169,6 +169,33 @@ func TestAccLakeFormationResource_updateSLRToRole(t *testing.T) {
 	})
 }
 
+func TestAccLakeFormationResource_hybridAccessEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceAddr := "aws_lakeformation_resource.test"
+	bucketAddr := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceConfig_hybridAccessEnabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceExists(ctx, resourceAddr),
+					resource.TestCheckResourceAttrPair(resourceAddr, "arn", bucketAddr, "arn"),
+					resource.TestCheckResourceAttr(resourceAddr, "hybrid_access_enabled", "true"),
+				),
+			},
+		},
+	})
+}
+
 // AWS does not support changing from an IAM role to an SLR. No error is thrown
 // but the registration is not changed (the IAM role continues in the registration).
 //
@@ -307,6 +334,19 @@ resource "aws_s3_bucket" "test" {
 resource "aws_lakeformation_resource" "test" {
   arn                     = aws_s3_bucket.test.arn
   use_service_linked_role = true
+}
+`, rName)
+}
+
+func testAccResourceConfig_hybridAccessEnabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_lakeformation_resource" "test" {
+  arn                     = aws_s3_bucket.test.arn
+  hybrid_access_enabled = true
 }
 `, rName)
 }
