@@ -189,21 +189,23 @@ func resourcePlanCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
+	name := d.Get("name").(string)
 	input := &backup.CreateBackupPlanInput{
 		BackupPlan: &backup.PlanInput{
-			BackupPlanName:         aws.String(d.Get("name").(string)),
-			Rules:                  expandPlanRules(ctx, d.Get("rule").(*schema.Set)),
 			AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
+			BackupPlanName:         aws.String(name),
+			Rules:                  expandPlanRules(ctx, d.Get("rule").(*schema.Set)),
 		},
 		BackupPlanTags: getTagsIn(ctx),
 	}
 
-	resp, err := conn.CreateBackupPlanWithContext(ctx, input)
+	output, err := conn.CreateBackupPlanWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Backup Plan: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Backup Plan (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.BackupPlanId))
+	d.SetId(aws.StringValue(output.BackupPlanId))
 
 	return append(diags, resourcePlanRead(ctx, d, meta)...)
 }
