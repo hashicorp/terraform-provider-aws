@@ -50,9 +50,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceMetricStream,
+			Factory:  resourceMetricStream,
 			TypeName: "aws_cloudwatch_metric_stream",
-			Name:     "Metric Alarm",
+			Name:     "Metric Stream",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
