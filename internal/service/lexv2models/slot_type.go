@@ -111,9 +111,6 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 			"parent_slot_type_signature": schema.StringAttribute{
 				Optional: true,
 			},
-			"type": schema.StringAttribute{
-				Required: true,
-			},
 		},
 		Blocks: map[string]schema.Block{
 			"composite_slot_type_setting": schema.ListNestedBlock{

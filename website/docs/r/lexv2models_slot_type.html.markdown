@@ -26,7 +26,7 @@ resource "aws_lexv2models_bot" "test" {
   role_arn                    = aws_iam_role.test.arn
 
   data_privacy {
-    child_directed = %[3]t
+    child_directed = true
   }
 }
 
