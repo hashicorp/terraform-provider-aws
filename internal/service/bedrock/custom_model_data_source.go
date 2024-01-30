@@ -41,9 +41,11 @@ func (d *customModelDataSource) Schema(ctx context.Context, request datasource.S
 				Computed: true,
 			},
 			"creation_time": schema.StringAttribute{
-				Computed: true,
+				CustomType: fwtypes.TimestampType,
+				Computed:   true,
 			},
 			"hyper_parameters": schema.MapAttribute{
+				CustomType:  fwtypes.MapOfStringType,
 				Computed:    true,
 				ElementType: types.StringType,
 			},
@@ -67,33 +69,41 @@ func (d *customModelDataSource) Schema(ctx context.Context, request datasource.S
 			"model_name": schema.StringAttribute{
 				Computed: true,
 			},
-			"output_data_config": schema.ObjectAttribute{
-				CustomType: fwtypes.NewObjectTypeOf[customModelOutputDataConfigModel](ctx),
+			"output_data_config": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[customModelOutputDataConfigModel](ctx),
 				Computed:   true,
-				AttributeTypes: map[string]attr.Type{
-					"s3_uri": types.StringType,
+				ElementType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"s3_uri": types.StringType,
+					},
 				},
 			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
-			"training_data_config": schema.ObjectAttribute{
-				CustomType: fwtypes.NewObjectTypeOf[customModelTrainingDataConfigModel](ctx),
+			"training_data_config": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[customModelTrainingDataConfigModel](ctx),
 				Computed:   true,
-				AttributeTypes: map[string]attr.Type{
-					"s3_uri": types.StringType,
+				ElementType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"s3_uri": types.StringType,
+					},
 				},
 			},
-			"training_metrics": schema.ObjectAttribute{
-				CustomType: fwtypes.NewObjectTypeOf[customModelTrainingMetricsModel](ctx),
+			"training_metrics": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[customModelTrainingMetricsModel](ctx),
 				Computed:   true,
-				AttributeTypes: map[string]attr.Type{
-					"training_loss": types.Float64Type,
+				ElementType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"training_loss": types.Float64Type,
+					},
 				},
 			},
-			"validation_data_config": schema.ObjectAttribute{
-				CustomType: fwtypes.NewObjectTypeOf[customModelValidationDataConfigModel](ctx),
+			"validation_data_config": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[customModelValidationDataConfigModel](ctx),
 				Computed:   true,
-				AttributeTypes: map[string]attr.Type{
-					"validators": types.ListType{ElemType: fwtypes.NewObjectTypeOf[customModelValidatorConfigModel](ctx)},
+				ElementType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"validators": fwtypes.NewListNestedObjectTypeOf[customModelValidatorConfigModel](ctx),
+					},
 				},
 			},
 			"validation_metrics": schema.ListAttribute{
@@ -148,23 +158,23 @@ func (d *customModelDataSource) Read(ctx context.Context, request datasource.Rea
 }
 
 type customModelDataSourceModel struct {
-	BaseModelARN         types.String                                                       `tfsdk:"base_model_arn"`
-	CreationTime         types.String                                                       `tfsdk:"creation_time"`
-	HyperParameters      fwtypes.MapValueOf[types.String]                                   `tfsdk:"hyper_parameters"`
-	ID                   types.String                                                       `tfsdk:"id"`
-	JobARN               types.String                                                       `tfsdk:"job_arn"`
-	JobName              types.String                                                       `tfsdk:"job_name"`
-	JobTags              types.Map                                                          `tfsdk:"job_tags"`
-	ModelARN             types.String                                                       `tfsdk:"model_arn"`
-	ModelID              types.String                                                       `tfsdk:"model_id"`
-	ModelKMSKeyARN       types.String                                                       `tfsdk:"model_kms_key_arn"`
-	ModelName            types.String                                                       `tfsdk:"model_name"`
-	OutputDataConfig     types.String                                                       `tfsdk:"output_data_config"`
-	Tags                 types.Map                                                          `tfsdk:"tags"`
-	TrainingDataConfig   types.String                                                       `tfsdk:"training_data_config"`
-	TrainingMetrics      fwtypes.ListNestedObjectValueOf[customModelTrainingMetricsModel]   `tfsdk:"training_metrics"`
-	ValidationDataConfig fwtypes.ObjectValueOf[customModelValidationDataConfigModel]        `tfsdk:"validation_data_config"`
-	ValidationMetrics    fwtypes.ListNestedObjectValueOf[customModelValidationMetricsModel] `tfsdk:"validation_metrics"`
+	BaseModelARN         types.String                                                          `tfsdk:"base_model_arn"`
+	CreationTime         fwtypes.Timestamp                                                     `tfsdk:"creation_time"`
+	HyperParameters      fwtypes.MapValueOf[types.String]                                      `tfsdk:"hyper_parameters"`
+	ID                   types.String                                                          `tfsdk:"id"`
+	JobARN               types.String                                                          `tfsdk:"job_arn"`
+	JobName              types.String                                                          `tfsdk:"job_name"`
+	JobTags              types.Map                                                             `tfsdk:"job_tags"`
+	ModelARN             types.String                                                          `tfsdk:"model_arn"`
+	ModelID              types.String                                                          `tfsdk:"model_id"`
+	ModelKMSKeyARN       types.String                                                          `tfsdk:"model_kms_key_arn"`
+	ModelName            types.String                                                          `tfsdk:"model_name"`
+	OutputDataConfig     fwtypes.ListNestedObjectValueOf[customModelOutputDataConfigModel]     `tfsdk:"output_data_config"`
+	Tags                 types.Map                                                             `tfsdk:"tags"`
+	TrainingDataConfig   fwtypes.ListNestedObjectValueOf[customModelTrainingDataConfigModel]   `tfsdk:"training_data_config"`
+	TrainingMetrics      fwtypes.ListNestedObjectValueOf[customModelTrainingMetricsModel]      `tfsdk:"training_metrics"`
+	ValidationDataConfig fwtypes.ListNestedObjectValueOf[customModelValidationDataConfigModel] `tfsdk:"validation_data_config"`
+	ValidationMetrics    fwtypes.ListNestedObjectValueOf[customModelValidationMetricsModel]    `tfsdk:"validation_metrics"`
 }
 
 type customModelOutputDataConfigModel struct {
@@ -180,7 +190,7 @@ type customModelTrainingMetricsModel struct {
 }
 
 type customModelValidationDataConfigModel struct {
-	Validators fwtypes.ListValueOf[types.String] `tfsdk:"validators"`
+	Validators fwtypes.ListNestedObjectValueOf[customModelValidatorConfigModel] `tfsdk:"validators"`
 }
 
 type customModelValidationMetricsModel struct {
