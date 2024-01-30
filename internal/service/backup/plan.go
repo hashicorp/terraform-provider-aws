@@ -348,8 +348,8 @@ func expandPlanRules(ctx context.Context, vRules *schema.Set) []*backup.RuleInpu
 			rule.RecoveryPointTags = Tags(tftags.New(ctx, vRecoveryPointTags).IgnoreAWS())
 		}
 
-		if vLifecycle, ok := mRule["lifecycle"].([]interface{}); ok && len(vLifecycle) > 0 {
-			rule.Lifecycle = expandPlanLifecycle(vLifecycle)
+		if v, ok := mRule["lifecycle"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			rule.Lifecycle = expandPlanLifecycle(v[0].(map[string]interface{}))
 		}
 
 		if vCopyActions := expandPlanCopyActions(mRule["copy_action"].(*schema.Set).List()); len(vCopyActions) > 0 {
@@ -398,8 +398,8 @@ func expandPlanCopyActions(actionList []interface{}) []*backup.CopyAction {
 
 		action.DestinationBackupVaultArn = aws.String(item["destination_vault_arn"].(string))
 
-		if v, ok := item["lifecycle"].([]interface{}); ok && len(v) > 0 {
-			action.Lifecycle = expandPlanLifecycle(v)
+		if v, ok := item["lifecycle"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			action.Lifecycle = expandPlanLifecycle(v[0].(map[string]interface{}))
 		}
 
 		actions = append(actions, action)
@@ -408,23 +408,26 @@ func expandPlanCopyActions(actionList []interface{}) []*backup.CopyAction {
 	return actions
 }
 
-func expandPlanLifecycle(l []interface{}) *backup.Lifecycle {
-	lifecycle := new(backup.Lifecycle)
-
-	for _, i := range l {
-		lc := i.(map[string]interface{})
-		if vDeleteAfter, ok := lc["delete_after"]; ok && vDeleteAfter.(int) > 0 {
-			lifecycle.DeleteAfterDays = aws.Int64(int64(vDeleteAfter.(int)))
-		}
-		if vMoveToColdStorageAfterDays, ok := lc["cold_storage_after"]; ok && vMoveToColdStorageAfterDays.(int) > 0 {
-			lifecycle.MoveToColdStorageAfterDays = aws.Int64(int64(vMoveToColdStorageAfterDays.(int)))
-		}
-		if optInToArchiveForSupportedResources, ok := lc["opt_in_to_archive_for_supported_resources"]; ok {
-			lifecycle.OptInToArchiveForSupportedResources = aws.Bool(optInToArchiveForSupportedResources.(bool))
-		}
+func expandPlanLifecycle(tfMap map[string]interface{}) *backup.Lifecycle {
+	if tfMap == nil {
+		return nil
 	}
 
-	return lifecycle
+	apiObject := &backup.Lifecycle{}
+
+	if v, ok := tfMap["delete_after"].(int); ok && v != 0 {
+		apiObject.DeleteAfterDays = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["cold_storage_after"].(int); ok && v != 0 {
+		apiObject.MoveToColdStorageAfterDays = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["opt_in_to_archive_for_supported_resources"].(bool); ok && v {
+		apiObject.OptInToArchiveForSupportedResources = aws.Bool(v)
+	}
+
+	return apiObject
 }
 
 func flattenPlanRules(ctx context.Context, rules []*backup.Rule) *schema.Set {
