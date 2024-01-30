@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -213,31 +214,29 @@ func resourcePlanRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
-	resp, err := conn.GetBackupPlanWithContext(ctx, &backup.GetBackupPlanInput{
-		BackupPlanId: aws.String(d.Id()),
-	})
-	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
+	output, err := FindPlanByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Backup Plan (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Backup Plan (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", resp.BackupPlanArn)
-	d.Set("name", resp.BackupPlan.BackupPlanName)
-	d.Set("version", resp.VersionId)
-
-	if err := d.Set("rule", flattenPlanRules(ctx, resp.BackupPlan.Rules)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
-	}
-
-	// AdvancedBackupSettings being read direct from resp and not from under
-	// resp.BackupPlan is deliberate - the latter always contains null
-	if err := d.Set("advanced_backup_setting", flattenPlanAdvancedSettings(resp.AdvancedBackupSettings)); err != nil {
+	// AdvancedBackupSettings being read direct from output and not from under
+	// output.BackupPlan is deliberate - the latter always contains nil.
+	if err := d.Set("advanced_backup_setting", flattenPlanAdvancedSettings(output.AdvancedBackupSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting advanced_backup_setting: %s", err)
 	}
+	d.Set("arn", output.BackupPlanArn)
+	d.Set("name", output.BackupPlan.BackupPlanName)
+	if err := d.Set("rule", flattenPlanRules(ctx, output.BackupPlan.Rules)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
+	}
+	d.Set("version", output.VersionId)
 
 	return diags
 }
@@ -289,6 +288,31 @@ func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	return diags
+}
+
+func FindPlanByID(ctx context.Context, conn *backup.Backup, id string) (*backup.GetBackupPlanOutput, error) {
+	input := &backup.GetBackupPlanInput{
+		BackupPlanId: aws.String(id),
+	}
+
+	output, err := conn.GetBackupPlanWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.BackupPlan == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func expandPlanRules(ctx context.Context, vRules *schema.Set) []*backup.RuleInput {
