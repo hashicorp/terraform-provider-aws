@@ -236,7 +236,6 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 					},
 				},
 			},
-
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
