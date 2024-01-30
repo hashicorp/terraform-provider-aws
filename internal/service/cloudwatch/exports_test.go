@@ -6,8 +6,10 @@ package cloudwatch
 // Exports for use in tests only.
 var (
 	ResourceDashboard    = resourceDashboard
+	ResourceMetricAlarm  = resourceMetricAlarm
 	ResourceMetricStream = resourceMetricStream
 
 	FindDashboardByName    = findDashboardByName
+	FindMetricAlarmByName  = findMetricAlarmByName
 	FindMetricStreamByName = findMetricStreamByName
 )
