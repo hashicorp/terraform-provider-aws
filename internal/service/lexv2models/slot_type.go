@@ -59,7 +59,6 @@ func (r *resourceSlotType) Metadata(_ context.Context, req resource.MetadataRequ
 }
 
 func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-
 	subSlotTypeCompositionLNB := schema.ListNestedBlock{
 		CustomType: fwtypes.NewListNestedObjectTypeOf[SubSlotTypeComposition](ctx),
 		NestedObject: schema.NestedBlockObject{
@@ -164,8 +163,6 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 					},
 				},
 			},
-
-			//not sure https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/lexmodelsv2@v1.38.6/types#SlotTypeValue
 			"slot_type_values": schema.ListNestedBlock{
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
