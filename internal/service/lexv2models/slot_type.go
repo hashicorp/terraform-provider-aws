@@ -50,6 +50,7 @@ const (
 
 type resourceSlotType struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -209,7 +210,7 @@ func (r *resourceSlotType) Schema(ctx context.Context, req resource.SchemaReques
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"advanced_recognition_settings": schema.ListNestedBlock{
+						"advanced_recognition_setting": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[AdvancedRecognitionSetting](ctx),
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -410,75 +411,8 @@ func (r *resourceSlotType) Delete(ctx context.Context, req resource.DeleteReques
 	}
 }
 
-// func waitSlotTypeCreated(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeSlotTypeOutput, error) {
-// 	stateConf := &retry.StateChangeConf{
-// 		Pending:                   []string{},
-// 		Target:                    []string{statusNormal},
-// 		Refresh:                   statusSlotType(ctx, conn, id),
-// 		Timeout:                   timeout,
-// 		NotFoundChecks:            20,
-// 		ContinuousTargetOccurence: 2,
-// 	}
-
-// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-// 	if out, ok := outputRaw.(*lexmodelsv2.DescribeSlotTypeOutput); ok {
-// 		return out, err
-// 	}
-
-// 	return nil, err
-// }
-
-// func waitSlotTypeUpdated(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeSlotTypeOutput, error) {
-// 	stateConf := &retry.StateChangeConf{
-// 		Pending:                   []string{statusChangePending},
-// 		Target:                    []string{statusUpdated},
-// 		Refresh:                   statusSlotType(ctx, conn, id),
-// 		Timeout:                   timeout,
-// 		NotFoundChecks:            20,
-// 		ContinuousTargetOccurence: 2,
-// 	}
-
-// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-// 	if out, ok := outputRaw.(*lexv2models.SlotType); ok {
-// 		return out, err
-// 	}
-
-// 	return nil, err
-// }
-
-// func waitSlotTypeDeleted(ctx context.Context, conn *lexmodelsv2.Client, id string, timeout time.Duration) (*lexmodelsv2.DescribeSlotTypeOutput, error) {
-// 	stateConf := &retry.StateChangeConf{
-// 		Pending: []string{statusDeleting, statusNormal},
-// 		Target:  []string{},
-// 		Refresh: statusSlotType(ctx, conn, id),
-// 		Timeout: timeout,
-// 	}
-
-// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-// 	if out, ok := outputRaw.(*lexmodelsv2.DescribeSlotTypeOutput); ok {
-// 		return out, err
-// 	}
-
-// 	return nil, err
-// }
-
-// func statusSlotType(ctx context.Context, conn *lexmodelsv2.Client, id string) retry.StateRefreshFunc {
-// 	return func() (interface{}, string, error) {
-// 		out, err := findSlotTypeByID(ctx, conn, id)
-// 		if tfresource.NotFound(err) {
-// 			return nil, "", nil
-// 		}
-
-// 		if err != nil {
-// 			return nil, "", err
-// 		}
-
-// 		return out, aws.ToString(out.Status), nil
-// 	}
-// }
-
 func FindSlotTypeByID(ctx context.Context, conn *lexmodelsv2.Client, id string) (*lexmodelsv2.DescribeSlotTypeOutput, error) {
-	parts, err := intflex.ExpandResourceId(id, slotIDPartCount, false)
+	parts, err := intflex.ExpandResourceId(id, slotTypeIDPartCount, false)
 	if err != nil {
 		return nil, err
 	}
