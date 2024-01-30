@@ -67,7 +67,7 @@ cloudsearch,cloudsearch,cloudsearch,cloudsearch,,cloudsearch,,,CloudSearch,Cloud
 cloudsearchdomain,cloudsearchdomain,cloudsearchdomain,cloudsearchdomain,,cloudsearchdomain,,,CloudSearchDomain,CloudSearchDomain,,1,,,aws_cloudsearchdomain_,,cloudsearchdomain_,CloudSearch Domain,Amazon,,x,,,,,CloudSearch Domain,,,
 ,,,,,,,,,,,,,,,,,CloudShell,AWS,x,,,,,,,,,No SDK support
 cloudtrail,cloudtrail,cloudtrail,cloudtrail,,cloudtrail,,,CloudTrail,CloudTrail,,1,,aws_cloudtrail,aws_cloudtrail_,,cloudtrail,CloudTrail,AWS,,,,,,,CloudTrail,,,
-cloudwatch,cloudwatch,cloudwatch,cloudwatch,,cloudwatch,,,CloudWatch,CloudWatch,,1,,aws_cloudwatch_(?!(event_|log_|query_)),aws_cloudwatch_,,cloudwatch_dashboard;cloudwatch_metric_;cloudwatch_composite_,CloudWatch,Amazon,,,,,,,CloudWatch,,,
+cloudwatch,cloudwatch,cloudwatch,cloudwatch,,cloudwatch,,,CloudWatch,CloudWatch,,,2,aws_cloudwatch_(?!(event_|log_|query_)),aws_cloudwatch_,,cloudwatch_dashboard;cloudwatch_metric_;cloudwatch_composite_,CloudWatch,Amazon,,,,,,,CloudWatch,,,
 application-insights,applicationinsights,applicationinsights,applicationinsights,,applicationinsights,,,ApplicationInsights,ApplicationInsights,,1,,,aws_applicationinsights_,,applicationinsights_,CloudWatch Application Insights,Amazon,,,,,,,Application Insights,,,
 evidently,evidently,cloudwatchevidently,evidently,,evidently,,cloudwatchevidently,Evidently,CloudWatchEvidently,,,2,,aws_evidently_,,evidently_,CloudWatch Evidently,Amazon,,,,,,,Evidently,,,
 internetmonitor,internetmonitor,internetmonitor,internetmonitor,,internetmonitor,,,InternetMonitor,InternetMonitor,,,2,,aws_internetmonitor_,,internetmonitor_,CloudWatch Internet Monitor,Amazon,,,,,,,InternetMonitor,ListMonitors,,
