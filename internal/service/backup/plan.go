@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -251,14 +250,14 @@ func resourcePlanUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		input := &backup.UpdateBackupPlanInput{
 			BackupPlanId: aws.String(d.Id()),
 			BackupPlan: &backup.PlanInput{
+				AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 				BackupPlanName:         aws.String(d.Get("name").(string)),
 				Rules:                  expandPlanRules(ctx, d.Get("rule").(*schema.Set)),
-				AdvancedBackupSettings: expandPlanAdvancedSettings(d.Get("advanced_backup_setting").(*schema.Set)),
 			},
 		}
 
-		log.Printf("[DEBUG] Updating Backup Plan: %#v", input)
 		_, err := conn.UpdateBackupPlanWithContext(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Backup Plan (%s): %s", d.Id(), err)
 		}
@@ -271,30 +270,18 @@ func resourcePlanDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
-	input := &backup.DeleteBackupPlanInput{
-		BackupPlanId: aws.String(d.Id()),
-	}
-
 	log.Printf("[DEBUG] Deleting Backup Plan: %s", d.Id())
-	err := retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
-		_, err := conn.DeleteBackupPlanWithContext(ctx, input)
+	const (
+		timeout = 2 * time.Minute
+	)
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteBackupPlanWithContext(ctx, &backup.DeleteBackupPlanInput{
+			BackupPlanId: aws.String(d.Id()),
+		})
+	}, backup.ErrCodeInvalidRequestException, "Related backup plan selections must be deleted prior to backup")
 
-		if tfawserr.ErrMessageContains(err, backup.ErrCodeInvalidRequestException, "Related backup plan selections must be deleted prior to backup") {
-			return retry.RetryableError(err)
-		}
-
-		if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
-			return nil
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		_, err = conn.DeleteBackupPlanWithContext(ctx, input)
+	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
+		return diags
 	}
 
 	if err != nil {
