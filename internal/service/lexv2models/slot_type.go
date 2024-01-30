@@ -550,7 +550,7 @@ type GrammarSlotTypeSetting struct {
 }
 
 type ExternalSourceSetting struct {
-	GrammarSlotTypeSetting fwtypes.ListNestedObjectValueOf[GrammarSlotTypeSetting] `tfsdk: "grammar_slot_type_setting"`
+	GrammarSlotTypeSetting fwtypes.ListNestedObjectValueOf[GrammarSlotTypeSetting] `tfsdk:"grammar_slot_type_setting"`
 }
 
 type SlotTypeValue struct {
@@ -563,7 +563,7 @@ type SlotTypeValues struct {
 }
 
 type AdvancedRecognitionSetting struct {
-	AudioRecognitionSetting fwtypes.ListNestedObjectValueOf[awstypes.AudioRecognitionStrategy] `tfsdk:"audio_recognition_setting"`
+	AudioRecognitionSetting types.String `tfsdk:"audio_recognition_setting"`
 }
 
 type RegexFilter struct {
@@ -571,9 +571,9 @@ type RegexFilter struct {
 }
 
 type ValueSelectionSetting struct {
-	ResolutionStrategy         fwtypes.StringEnum[awstypes.SlotValueResolutionStrategy]    `tfsdk: "resolution_strategy"`
-	AdvancedRecognitionSetting fwtypes.ListNestedObjectValueOf[AdvancedRecognitionSetting] `tfsdk: "advanced_recognition_setting"`
-	RegexFilter                fwtypes.ListNestedObjectValueOf[RegexFilter]                `tfsdk: "regex_filter"`
+	ResolutionStrategy         fwtypes.StringEnum[awstypes.SlotValueResolutionStrategy]    `tfsdk:"resolution_strategy"`
+	AdvancedRecognitionSetting fwtypes.ListNestedObjectValueOf[AdvancedRecognitionSetting] `tfsdk:"advanced_recognition_setting"`
+	RegexFilter                fwtypes.ListNestedObjectValueOf[RegexFilter]                `tfsdk:"regex_filter"`
 }
 
 func slotTypeHasChanges(_ context.Context, plan, state resourceSlotTypeData) bool {
