@@ -36,118 +36,12 @@ func ResourcePlan() *schema.Resource {
 		ReadWithoutTimeout:   resourcePlanRead,
 		UpdateWithoutTimeout: resourcePlanUpdate,
 		DeleteWithoutTimeout: resourcePlanDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
-			"rule": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"rule_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 50),
-								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
-							),
-						},
-						"target_vault_name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(2, 50),
-								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric characters, hyphens, and underscores"),
-							),
-						},
-						"schedule": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"enable_continuous_backup": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"start_window": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  60,
-						},
-						"completion_window": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  180,
-						},
-						"lifecycle": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cold_storage_after": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"delete_after": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"opt_in_to_archive_for_supported_resources": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"copy_action": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"lifecycle": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"cold_storage_after": {
-													Type:     schema.TypeInt,
-													Optional: true,
-												},
-												"delete_after": {
-													Type:     schema.TypeInt,
-													Optional: true,
-												},
-												"opt_in_to_archive_for_supported_resources": {
-													Type:     schema.TypeBool,
-													Optional: true,
-													Computed: true,
-												},
-											},
-										},
-									},
-									"destination_vault_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-						},
-						"recovery_point_tags": tftags.TagsSchema(),
-					},
-				},
-				Set: planHash,
-			},
 			"advanced_backup_setting": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -172,12 +66,119 @@ func ResourcePlan() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+			"rule": {
+				Type:     schema.TypeSet,
+				Required: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"completion_window": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  180,
+						},
+						"copy_action": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"destination_vault_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"lifecycle": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"cold_storage_after": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+												"delete_after": {
+													Type:     schema.TypeInt,
+													Optional: true,
+												},
+												"opt_in_to_archive_for_supported_resources": {
+													Type:     schema.TypeBool,
+													Optional: true,
+													Computed: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
+						"enable_continuous_backup": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"lifecycle": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cold_storage_after": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+									"delete_after": {
+										Type:     schema.TypeInt,
+										Optional: true,
+									},
+									"opt_in_to_archive_for_supported_resources": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"recovery_point_tags": tftags.TagsSchema(),
+						"rule_name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(1, 50),
+								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
+							),
+						},
+						"schedule": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"start_window": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  60,
+						},
+						"target_vault_name": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.All(
+								validation.StringLenBetween(2, 50),
+								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), "must contain only alphanumeric characters, hyphens, and underscores"),
+							),
+						},
+					},
+				},
+				Set: planHash,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"version": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
