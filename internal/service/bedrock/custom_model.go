@@ -7,10 +7,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
@@ -321,10 +323,12 @@ func (r *customModelResource) Create(ctx context.Context, request resource.Creat
 		return
 	}
 
+	// Set values for unknowns.
+	data.CustomizationType = fwtypes.StringEnumValue(outputGJ.CustomizationType)
+	data.JobARN = fwflex.StringToFramework(ctx, outputCJ.JobArn)
 	data.ModelARN = fwflex.StringToFramework(ctx, outputGJ.OutputModelArn)
 	data.setID()
 
-	// Set values for unknowns.
 	// We need to read the model as not all fields are returned by GetModelCustomizationJob.
 	outputGM, err := findCustomModelByID(ctx, conn, data.ModelARN.ValueString())
 
@@ -334,11 +338,14 @@ func (r *customModelResource) Create(ctx context.Context, request resource.Creat
 		return
 	}
 
-	// Set values for unknowns.
-	response.Diagnostics.Append(fwflex.Flatten(ctx, outputGM, &data)...)
+	var new resourceCustomModelData
+	response.Diagnostics.Append(fwflex.Flatten(ctx, outputGM, &new)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	data.TrainingMetrics = new.TrainingMetrics
+	data.ValidationMetrics = new.ValidationMetrics
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -358,22 +365,6 @@ func (r *customModelResource) Read(ctx context.Context, request resource.ReadReq
 
 	conn := r.Meta().BedrockClient(ctx)
 
-	// We need to read both the job and the model as not all fields are returned by GetModelCustomizationJob.
-	outputGJ, err := findModelCustomizationJobByID(ctx, conn, data.JobARN.ValueString())
-
-	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		response.State.RemoveResource(ctx)
-
-		return
-	}
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Custom Model customization job (%s)", data.JobARN.ValueString()), err.Error())
-
-		return
-	}
-
 	outputGM, err := findCustomModelByID(ctx, conn, data.ModelARN.ValueString())
 
 	if tfresource.NotFound(err) {
@@ -389,6 +380,25 @@ func (r *customModelResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
+	baseModelARN := fwflex.StringFromFramework(ctx, data.BaseModelARN)
+
+	// We need to read both the job and the model as not all fields are returned by GetModelCustomizationJob.
+	jobARN := aws.ToString(outputGM.JobArn)
+	outputGJ, err := findModelCustomizationJobByID(ctx, conn, jobARN)
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Custom Model customization job (%s)", jobARN), err.Error())
+
+		return
+	}
+
 	response.Diagnostics.Append(fwflex.Flatten(ctx, outputGJ, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -399,7 +409,20 @@ func (r *customModelResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	jobARN := aws.ToString(outputGM.JobArn)
+	data.JobName = fwflex.StringToFramework(ctx, outputGJ.JobName) // Null in GetCustomModelOutput.
+	if baseModelARN != nil {
+		// Value in GetCustomModelOutput can contain the model version and parameter count.
+		if old, err := arn.Parse(aws.ToString(baseModelARN)); err == nil {
+			if new, err := arn.Parse(aws.ToString(outputGM.BaseModelArn)); err == nil {
+				if len(strings.SplitN(old.Resource, ":", 2)) == 1 {
+					// Old ARN doesn't contain the model version and parameter count.
+					new.Resource = strings.SplitN(new.Resource, ":", 2)[0]
+					data.BaseModelARN = fwtypes.ARNValue(new.String())
+				}
+			}
+		}
+	}
+
 	jobTags, err := listTags(ctx, conn, jobARN)
 
 	if err != nil {
