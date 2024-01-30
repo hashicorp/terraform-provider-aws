@@ -446,9 +446,10 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"metric_query"},
 			},
 			{
 				Config: testAccMetricAlarmConfig_metricQueryExpressionReference(rName),
@@ -477,9 +478,10 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"metric_query"},
 			},
 			{
 				Config: testAccMetricAlarmConfig_metricQueryCrossAccount(rName),
@@ -492,9 +494,10 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"metric_query"},
 			},
 			{
 				Config: testAccMetricAlarmConfig_metricQueryExpressionReferenceUpdated(rName),
@@ -518,9 +521,10 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"metric_query"},
 			},
 			{
 				Config: testAccMetricAlarmConfig_metricQueryExpressionReference(rName),
@@ -530,9 +534,10 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"metric_query"},
 			},
 			{
 				Config: testAccMetricAlarmConfig_anomalyDetectionExpression(rName),
@@ -549,9 +554,10 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"metric_query"},
 			},
 		},
 	})

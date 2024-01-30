@@ -373,7 +373,7 @@ func findMetricStreamByName(ctx context.Context, conn *cloudwatch.Client, name s
 
 	output, err := conn.GetMetricStream(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFound](err) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
