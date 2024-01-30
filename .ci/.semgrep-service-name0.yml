@@ -1737,7 +1737,8 @@ rules:
           patterns:
             - pattern-regex: "(?i)CE"
             - pattern-not-regex: ource
-            - pattern-not-regex: ServicePackage
+            - pattern-not-regex: "[Ss]ervice"
+            - pattern-not-regex: "[Cc]ancel"
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
   - id: ce-in-test-name
@@ -1768,6 +1769,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CE"
+            - pattern-not-regex: "[Ss]ervice"
     severity: WARNING
   - id: ce-in-var-name
     languages:
@@ -1782,7 +1784,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CE"
-            - pattern-not-regex: ServicePackage
+            - pattern-not-regex: "[Ss]ervice"
+            - pattern-not-regex: "[Cc]ancel"
     severity: WARNING
   - id: chime-in-func-name
     languages:
