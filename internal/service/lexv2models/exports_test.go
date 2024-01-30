@@ -10,6 +10,7 @@ var (
 	ResourceBotVersion = newResourceBotVersion
 	ResourceIntent     = newResourceIntent
 	ResourceSlot       = newResourceSlot
+	ResourceSlotType   = newResourceSlotType
 
 	FindSlotByID = findSlotByID
 )
