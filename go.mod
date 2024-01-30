@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.50.4
+	github.com/aws/aws-sdk-go v1.50.6
 	github.com/aws/aws-sdk-go-v2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/config v1.26.6
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.11
@@ -37,14 +37,14 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.22.6
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.22.1
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.20.6
-	github.com/aws/aws-sdk-go-v2/service/comprehend v1.29.6
+	github.com/aws/aws-sdk-go-v2/service/comprehend v1.29.7
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.31.6
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.10.7
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.34.6
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.22.8
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.6.6
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.145.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.146.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/eks v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.34.7
@@ -59,7 +59,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.23.6
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.20.6
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.21.8
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.21.0
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.10.7
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.10.6
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.28.6
@@ -87,7 +87,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.1.7
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.19.6
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.14.5
-	github.com/aws/aws-sdk-go-v2/service/rds v1.68.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.69.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.23.6
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.8.6
