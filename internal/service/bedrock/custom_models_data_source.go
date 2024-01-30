@@ -41,7 +41,7 @@ func (d *customModelsDataSource) Schema(ctx context.Context, request datasource.
 					AttrTypes: map[string]attr.Type{
 						"base_model_arn":  types.StringType,
 						"base_model_name": types.StringType,
-						"creation_time":   types.StringType,
+						"creation_time":   fwtypes.TimestampType,
 						"model_arn":       types.StringType,
 						"model_name":      types.StringType,
 					},
@@ -90,9 +90,9 @@ type customModelsDataSourceModel struct {
 }
 
 type customModelSummaryModel struct {
-	BaseModelARN  types.String `tfsdk:"base_model_arn"`
-	BaseModelName types.String `tfsdk:"base_model_name"`
-	CreationTime  types.String `tfsdk:"creation_time"`
-	ModelARN      types.String `tfsdk:"model_arn"`
-	ModelName     types.String `tfsdk:"model_name"`
+	BaseModelARN  types.String      `tfsdk:"base_model_arn"`
+	BaseModelName types.String      `tfsdk:"base_model_name"`
+	CreationTime  fwtypes.Timestamp `tfsdk:"creation_time"`
+	ModelARN      types.String      `tfsdk:"model_arn"`
+	ModelName     types.String      `tfsdk:"model_name"`
 }
