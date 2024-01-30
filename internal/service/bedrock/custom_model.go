@@ -140,11 +140,13 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"training_metrics": schema.ObjectAttribute{
-				CustomType: fwtypes.NewObjectTypeOf[customModelTrainingMetricsModel](ctx),
+			"training_metrics": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[customModelTrainingMetricsModel](ctx),
 				Computed:   true,
-				AttributeTypes: map[string]attr.Type{
-					"training_loss": types.Float64Type,
+				ElementType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"training_loss": types.Float64Type,
+					},
 				},
 			},
 			"validation_metrics": schema.ListAttribute{
@@ -520,7 +522,7 @@ type resourceCustomModelData struct {
 	TagsAll              types.Map                                                             `tfsdk:"tags_all"`
 	Timeouts             timeouts.Value                                                        `tfsdk:"timeouts"`
 	TrainingDataConfig   fwtypes.ListNestedObjectValueOf[customModelTrainingDataConfigModel]   `tfsdk:"training_data_config"`
-	TrainingMetrics      fwtypes.ObjectValueOf[customModelTrainingMetricsModel]                `tfsdk:"training_metrics"`
+	TrainingMetrics      fwtypes.ListNestedObjectValueOf[customModelTrainingMetricsModel]      `tfsdk:"training_metrics"`
 	ValidationDataConfig fwtypes.ListNestedObjectValueOf[customModelValidationDataConfigModel] `tfsdk:"validation_data_config"`
 	ValidationMetrics    fwtypes.ListNestedObjectValueOf[customModelValidationMetricsModel]    `tfsdk:"validation_metrics"`
 }
