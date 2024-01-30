@@ -358,7 +358,23 @@ func (r *customModelResource) Read(ctx context.Context, request resource.ReadReq
 
 	conn := r.Meta().BedrockClient(ctx)
 
-	output, err := findCustomModelByID(ctx, conn, data.ModelARN.ValueString())
+	// We need to read both the job and the model as not all fields are returned by GetModelCustomizationJob.
+	outputGJ, err := findModelCustomizationJobByID(ctx, conn, data.JobARN.ValueString())
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Custom Model customization job (%s)", data.JobARN.ValueString()), err.Error())
+
+		return
+	}
+
+	outputGM, err := findCustomModelByID(ctx, conn, data.ModelARN.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -373,12 +389,17 @@ func (r *customModelResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, outputGJ, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	jobARN := aws.ToString(output.JobArn)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, outputGM, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	jobARN := aws.ToString(outputGM.JobArn)
 	jobTags, err := listTags(ctx, conn, jobARN)
 
 	if err != nil {
