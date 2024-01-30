@@ -864,7 +864,7 @@ func TestAccRoute53Record_Geoproximity_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckRecordDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_geoproximityCNAME,
+				Config: testAccRecordConfig_geoproximityCNAME(endpoints.UsEast1RegionID, fmt.Sprintf("%s-atl-1", endpoints.UsEast1RegionID)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, "aws_route53_record.awsregion", &record1),
 					testAccCheckRecordExists(ctx, "aws_route53_record.localzonegroup", &record2),
@@ -1214,7 +1214,7 @@ func TestAccRoute53Record_SetIdentifierRename_geolocationCountrySubdivision(t *t
 	})
 }
 
-func TestAccRoute53Record_SetIdentifierRename_geoproximityAwsRegion(t *testing.T) {
+func TestAccRoute53Record_SetIdentifierRename_geoproximityRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 	var record1, record2 route53.ResourceRecordSet
 	resourceName := "aws_route53_record.set_identifier_rename_geoproximity"
@@ -1226,7 +1226,7 @@ func TestAccRoute53Record_SetIdentifierRename_geoproximityAwsRegion(t *testing.T
 		CheckDestroy:             testAccCheckRecordDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_setIdentifierRenameGeoproximityAwsRegion("us-east-1", "before"),
+				Config: testAccRecordConfig_setIdentifierRenameGeoproximityRegion(endpoints.UsEast1RegionID, "before"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
@@ -1238,7 +1238,7 @@ func TestAccRoute53Record_SetIdentifierRename_geoproximityAwsRegion(t *testing.T
 				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 			{
-				Config: testAccRecordConfig_setIdentifierRenameGeoproximityAwsRegion("us-east-1", "after"),
+				Config: testAccRecordConfig_setIdentifierRenameGeoproximityRegion(endpoints.UsEast1RegionID, "after"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record2),
 				),
@@ -1259,7 +1259,7 @@ func TestAccRoute53Record_SetIdentifierRename_geoproximityLocalZoneGroup(t *test
 		CheckDestroy:             testAccCheckRecordDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRecordConfig_setIdentifierRenameGeoproximityLocalZoneGroup("us-east-1-atl-1", "before"),
+				Config: testAccRecordConfig_setIdentifierRenameGeoproximityLocalZoneGroup(fmt.Sprintf("%s-atl-1", endpoints.UsEast1RegionID), "before"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record1),
 				),
@@ -1271,7 +1271,7 @@ func TestAccRoute53Record_SetIdentifierRename_geoproximityLocalZoneGroup(t *test
 				ImportStateVerifyIgnore: []string{"allow_overwrite"},
 			},
 			{
-				Config: testAccRecordConfig_setIdentifierRenameGeoproximityLocalZoneGroup("us-east-1-atl-1", "after"),
+				Config: testAccRecordConfig_setIdentifierRenameGeoproximityLocalZoneGroup(fmt.Sprintf("%s-atl-1", endpoints.UsEast1RegionID), "after"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRecordExists(ctx, resourceName, &record2),
 				),
@@ -2223,7 +2223,8 @@ resource "aws_route53_record" "denmark" {
 }
 `
 
-const testAccRecordConfig_geoproximityCNAME = `
+func testAccRecordConfig_geoproximityCNAME(region string, localzonegroup string) string {
+	return fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
   name = "domain.test"
 }
@@ -2235,7 +2236,7 @@ resource "aws_route53_record" "awsregion" {
   ttl     = "5"
 
   geoproximity_routing_policy {
-    awsregion = "us-east-1"
+    awsregion = %[1]q
     bias      = 40
   }
   records        = ["dev.domain.test"]
@@ -2249,7 +2250,7 @@ resource "aws_route53_record" "localzonegroup" {
   ttl     = "5"
 
   geoproximity_routing_policy {
-    localzonegroup = "us-east-1-atl-1"
+    localzonegroup = %[2]q
   }
   records        = ["dev.domain.test"]
   set_identifier = "localzonegroup"
@@ -2270,7 +2271,8 @@ resource "aws_route53_record" "coordinates" {
   records        = ["dev.domain.test"]
   set_identifier = "coordinates"
 }
-`
+`, region, localzonegroup)
+}
 
 func testAccRecordConfig_latencyCNAME(firstRegion, secondRegion, thirdRegion string) string {
 	return fmt.Sprintf(`
@@ -2934,7 +2936,7 @@ resource "aws_route53_record" "set_identifier_rename_geolocation" {
 `, country, subdivision, set_identifier)
 }
 
-func testAccRecordConfig_setIdentifierRenameGeoproximityAwsRegion(region, set_identifier string) string {
+func testAccRecordConfig_setIdentifierRenameGeoproximityRegion(region, set_identifier string) string {
 	return fmt.Sprintf(`
 resource "aws_route53_zone" "main" {
   name = "domain.test"
