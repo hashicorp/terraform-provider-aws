@@ -37,8 +37,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceDashboard,
+			Factory:  resourceDashboard,
 			TypeName: "aws_cloudwatch_dashboard",
+			Name:     "Dashboard",
 		},
 		{
 			Factory:  ResourceMetricAlarm,
