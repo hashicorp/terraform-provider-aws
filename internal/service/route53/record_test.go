@@ -2225,52 +2225,51 @@ resource "aws_route53_record" "denmark" {
 
 const testAccRecordConfig_geoproximityCNAME = `
 resource "aws_route53_zone" "main" {
-	name = "domain.test"
+  name = "domain.test"
+}
+
+resource "aws_route53_record" "awsregion" {
+  name    = "www"
+  zone_id = aws_route53_zone.main.zone_id
+  type    = "CNAME"
+  ttl     = "5"
+
+  geoproximity_routing_policy {
+    awsregion = "us-east-1"
+    bias      = 40
   }
-  
-  resource "aws_route53_record" "awsregion" {
-	name    = "www"
-	zone_id = aws_route53_zone.main.zone_id
-	type    = "CNAME"
-	ttl     = "5"
-  
-	geoproximity_routing_policy {
-	  awsregion = "us-east-1"
-	  bias      = 40
-	}
-	records        = ["dev.domain.test"]
-	set_identifier = "awsregion"
+  records        = ["dev.domain.test"]
+  set_identifier = "awsregion"
+}
+
+resource "aws_route53_record" "localzonegroup" {
+  name    = "www"
+  zone_id = aws_route53_zone.main.zone_id
+  type    = "CNAME"
+  ttl     = "5"
+
+  geoproximity_routing_policy {
+    localzonegroup = "us-east-1-atl-1"
   }
-  
-  resource "aws_route53_record" "localzonegroup" {
-	name    = "www"
-	zone_id = aws_route53_zone.main.zone_id
-	type    = "CNAME"
-	ttl     = "5"
-  
-	geoproximity_routing_policy {
-	  localzonegroup = "us-east-1-atl-1"
-	}
-	records        = ["dev.domain.test"]
-	set_identifier = "localzonegroup"
+  records        = ["dev.domain.test"]
+  set_identifier = "localzonegroup"
+}
+
+resource "aws_route53_record" "coordinates" {
+  name    = "www"
+  zone_id = aws_route53_zone.main.zone_id
+  type    = "CNAME"
+  ttl     = "5"
+
+  geoproximity_routing_policy {
+    coordinates {
+      latitude  = "49.22"
+      longitude = "-74.01"
+    }
   }
-  
-  resource "aws_route53_record" "coordinates" {
-	name    = "www"
-	zone_id = aws_route53_zone.main.zone_id
-	type    = "CNAME"
-	ttl     = "5"
-  
-	geoproximity_routing_policy {
-	  coordinates {
-		latitude  = "49.22"
-		longitude = "-74.01"
-	  }
-	}
-	records        = ["dev.domain.test"]
-	set_identifier = "coordinates"
-  }
-  
+  records        = ["dev.domain.test"]
+  set_identifier = "coordinates"
+}
 `
 
 func testAccRecordConfig_latencyCNAME(firstRegion, secondRegion, thirdRegion string) string {
