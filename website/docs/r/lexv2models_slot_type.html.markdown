@@ -74,8 +74,6 @@ The following arguments are optional:
  - TOP_RESOLUTION - If there is a resolution list for the slot, return the first value in the resolution list. If there is no resolution list, return null.
 If you don't specify the valueSelectionSetting parameter, the default is ORIGINAL_VALUE. See [`value_selection_setting` argument reference](#value_selection_setting) below.
 
-
-
 ### `slot_type_values` Argument Reference
 * `sample_value` - Value of the slot type entry.  See [`sample_value` argument reference](#sample_value) below.
 * `synonyms` - Additional values related to the slot type entry. See [`sample_value` argument reference](#sample_value) below.
