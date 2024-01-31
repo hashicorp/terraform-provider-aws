@@ -12,7 +12,7 @@ Manages an Amazon Bedrock custom model.
 Model customization is the process of providing training data to a base model in order to improve its performance for specific use-cases.
 
 This Terraform resource interacts with two Amazon Bedrock entities:
-1. A Fine-tuning or Continued Pre-training job which is started when the Terraform resource is created. The customization job can take several hours to run to completion. The duration of the job depends on the size of the training data (number of records, input tokens, and output tokens), and [hyperparameters](https://docs.aws.amazon.com/bedrock/latest/userguide/custom-models-hp.html) (number of epochs, and batch size).
+1. A Continued Pre-training or Fine-tuning job which is started when the Terraform resource is created. The customization job can take several hours to run to completion. The duration of the job depends on the size of the training data (number of records, input tokens, and output tokens), and [hyperparameters](https://docs.aws.amazon.com/bedrock/latest/userguide/custom-models-hp.html) (number of epochs, and batch size).
 2. The custom model produced on successful completion of the customization job.
 
 This resource's [behaviors](https://developer.hashicorp.com/terraform/language/resources/behavior) correspond to operations on these Amazon Bedrock entities:
