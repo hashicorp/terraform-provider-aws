@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -59,12 +60,7 @@ func (d *dataSourceRotation) Schema(ctx context.Context, request datasource.Sche
 				CustomType: fwtypes.TimestampType,
 				Computed:   true,
 			},
-			"tags": // TODO tftags.TagsAttribute()
-			schema.MapAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
-				Computed:    true,
-			},
+			"tags": tftags.TagsAttributeComputedOnly(),
 			"time_zone_id": schema.StringAttribute{
 				Computed: true,
 			},
@@ -129,6 +125,18 @@ func (d *dataSourceRotation) Read(ctx context.Context, request datasource.ReadRe
 		data.StartTime = fwtypes.TimestampValue(output.StartTime.Format(time.RFC3339))
 	}
 
+	tags, err := listTags(ctx, conn, data.ARN.ValueString())
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SSMContacts, create.ErrActionSetting, ResNameRotation, data.ARN.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	data.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags.Map())
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -140,7 +148,6 @@ type dataSourceRotationData struct {
 	Name       types.String                                      `tfsdk:"name"`
 	StartTime  fwtypes.Timestamp                                 `tfsdk:"start_time"`
 	Tags       types.Map                                         `tfsdk:"tags"`
-	TagsAll    types.Map                                         `tfsdk:"tags_all"`
 	TimeZoneID types.String                                      `tfsdk:"time_zone_id"`
 }
 

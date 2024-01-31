@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSSMContactsRotationDataSource_basic(t *testing.T) {
+func testRotationDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -43,27 +43,19 @@ func TestAccSSMContactsRotationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.recurrence_multiplier", dataSourceName, "recurrence.0.recurrence_multiplier"),
 					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.weekly_settings.#", dataSourceName, "recurrence.0.weekly_settings.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.weekly_settings.0.day_of_week", dataSourceName, "recurrence.0.weekly_settings.0.day_of_week"),
-					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.weekly_settings.0.hand_off_time", dataSourceName, "recurrence.0.weekly_settings.0.hand_off_time"),
+					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.weekly_settings.0.hand_off_time.0.hour_of_day", dataSourceName, "recurrence.0.weekly_settings.0.hand_off_time.0.hour_of_day"),
+					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.weekly_settings.0.hand_off_time.0.minute_of_hour", dataSourceName, "recurrence.0.weekly_settings.0.hand_off_time.0.minute_of_hour"),
 					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.weekly_settings.1.day_of_week", dataSourceName, "recurrence.0.weekly_settings.1.day_of_week"),
-					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.weekly_settings.1.hand_off_time", dataSourceName, "recurrence.0.weekly_settings.1.hand_off_time"),
+					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.weekly_settings.1.hand_off_time.0.hour_of_day", dataSourceName, "recurrence.0.weekly_settings.1.hand_off_time.0.hour_of_day"),
+					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.weekly_settings.1.hand_off_time.0.minute_of_hour", dataSourceName, "recurrence.0.weekly_settings.1.hand_off_time.0.minute_of_hour"),
 					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.weekly_settings.2.day_of_week", dataSourceName, "recurrence.0.weekly_settings.2.day_of_week"),
-					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.weekly_settings.2.hand_off_time", dataSourceName, "recurrence.0.weekly_settings.2.hand_off_time"),
+					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.weekly_settings.2.hand_off_time.0.hour_of_day", dataSourceName, "recurrence.0.weekly_settings.2.hand_off_time.0.hour_of_day"),
+					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.weekly_settings.2.hand_off_time.0.minute_of_hour", dataSourceName, "recurrence.0.weekly_settings.2.hand_off_time.0.minute_of_hour"),
 					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.shift_coverages.#", dataSourceName, "recurrence.0.shift_coverages.#"),
-					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.shift_coverages.0.day_of_week", dataSourceName, "recurrence.0.shift_coverages.0.day_of_week"),
-					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.shift_coverages.0.coverage_times.0.start_time", dataSourceName, "recurrence.0.shift_coverages.0.coverage_times.0.start_time"),
-					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.shift_coverages.0.coverage_times.0.end_time", dataSourceName, "recurrence.0.shift_coverages.0.coverage_times.0.end_time"),
-					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.shift_coverages.1.day_of_week", dataSourceName, "recurrence.0.shift_coverages.1.day_of_week"),
-					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.shift_coverages.1.coverage_times.0.start_time", dataSourceName, "recurrence.0.shift_coverages.1.coverage_times.0.start_time"),
-					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.shift_coverages.1.coverage_times.0.end_time", dataSourceName, "recurrence.0.shift_coverages.1.coverage_times.0.end_time"),
-					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.shift_coverages.2.day_of_week", dataSourceName, "recurrence.0.shift_coverages.2.day_of_week"),
-					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.shift_coverages.2.coverage_times.0.start_time", dataSourceName, "recurrence.0.shift_coverages.2.coverage_times.0.start_time"),
-					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.shift_coverages.2.coverage_times.0.end_time", dataSourceName, "recurrence.0.shift_coverages.2.coverage_times.0.end_time"),
 					resource.TestCheckResourceAttrPair(resourceName, "start_time", dataSourceName, "start_time"),
 					resource.TestCheckResourceAttrPair(resourceName, "time_zone_id", dataSourceName, "time_zone_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "contact_ids.#", dataSourceName, "contact_ids.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "contact_ids.0", dataSourceName, "contact_ids.0"),
-					resource.TestCheckResourceAttrPair(resourceName, "contact_ids.1", dataSourceName, "contact_ids.1"),
-					resource.TestCheckResourceAttrPair(resourceName, "contact_ids.2", dataSourceName, "contact_ids.2"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.key1", dataSourceName, "tags.key1"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.key2", dataSourceName, "tags.key2"),
@@ -73,7 +65,7 @@ func TestAccSSMContactsRotationDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccSSMContactsRotationDataSource_dailySettings(t *testing.T) {
+func testRotationDataSource_dailySettings(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -97,14 +89,15 @@ func TestAccSSMContactsRotationDataSource_dailySettings(t *testing.T) {
 				Config: testRotationDataSourceConfig_dailySettings(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.daily_settings.#", dataSourceName, "recurrence.0.daily_settings.#"),
-					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.daily_settings.0", dataSourceName, "recurrence.0.daily_settings.0"),
+					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.daily_settings.0.hour_of_day", dataSourceName, "recurrence.0.daily_settings.0.hour_of_day"),
+					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.daily_settings.0.minute_of_hour", dataSourceName, "recurrence.0.daily_settings.0.minute_of_hour"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccSSMContactsRotationDataSource_monthlySettings(t *testing.T) {
+func testRotationDataSource_monthlySettings(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -129,11 +122,14 @@ func TestAccSSMContactsRotationDataSource_monthlySettings(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.monthly_settings.#", dataSourceName, "recurrence.0.monthly_settings.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.monthly_settings.0.day_of_month", dataSourceName, "recurrence.0.monthly_settings.0.day_of_month"),
-					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.monthly_settings.0.hand_off_time", dataSourceName, "recurrence.0.monthly_settings.0.hand_off_time"),
+					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.monthly_settings.0.hand_off_time.0.hour_of_day", dataSourceName, "recurrence.0.monthly_settings.0.hand_off_time.0.hour_of_day"),
+					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.monthly_settings.0.hand_off_time.0.minute_of_hour", dataSourceName, "recurrence.0.monthly_settings.0.hand_off_time.0.minute_of_hour"),
 					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.monthly_settings.1.day_of_month", dataSourceName, "recurrence.0.monthly_settings.1.day_of_month"),
-					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.monthly_settings.1.hand_off_time", dataSourceName, "recurrence.0.monthly_settings.1.hand_off_time"),
+					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.monthly_settings.1.hand_off_time.0.hour_of_day", dataSourceName, "recurrence.0.monthly_settings.1.hand_off_time.0.hour_of_day"),
+					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.monthly_settings.1.hand_off_time.0.minute_of_hour", dataSourceName, "recurrence.0.monthly_settings.1.hand_off_time.0.minute_of_hour"),
 					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.monthly_settings.2.day_of_month", dataSourceName, "recurrence.0.monthly_settings.2.day_of_month"),
-					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.monthly_settings.2.hand_off_time", dataSourceName, "recurrence.0.monthly_settings.2.hand_off_time"),
+					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.monthly_settings.2.hand_off_time.0.hour_of_day", dataSourceName, "recurrence.0.monthly_settings.2.hand_off_time.0.hour_of_day"),
+					resource.TestCheckResourceAttrPair(resourceName, "recurrence.0.monthly_settings.2.hand_off_time.0.minute_of_hour", dataSourceName, "recurrence.0.monthly_settings.2.hand_off_time.0.minute_of_hour"),
 				),
 			},
 		},
@@ -148,7 +144,7 @@ resource "aws_ssmincidents_replication_set" "test" {
   }
 }
 
-resource "aws_ssmcontacts_contact" "test_contact_one" {
+resource "aws_ssmcontacts_contact" "test" {
   alias = "test-contact-one-for-%[2]s"
   type  = "PERSONAL"
 
@@ -161,25 +157,9 @@ func testRotationDataSourceConfig_basic(rName, startTime string) string {
 	return acctest.ConfigCompose(
 		testRotationDataSourceConfig_base(rName),
 		fmt.Sprintf(`
-resource "aws_ssmcontacts_contact" "test_contact_two" {
-  alias = "test-contact-two-for-%[1]s"
-  type  = "PERSONAL"
-
-  depends_on = [aws_ssmincidents_replication_set.test]
-}
-
-resource "aws_ssmcontacts_contact" "test_contact_three" {
-  alias = "test-contact-three-for-%[1]s"
-  type  = "PERSONAL"
-
-  depends_on = [aws_ssmincidents_replication_set.test]
-}
-
 resource "aws_ssmcontacts_rotation" "test" {
   contact_ids = [
-    aws_ssmcontacts_contact.test_contact_one.arn,
-    aws_ssmcontacts_contact.test_contact_two.arn,
-    aws_ssmcontacts_contact.test_contact_three.arn
+    aws_ssmcontacts_contact.test.arn,
   ]
 
   name = %[1]q
@@ -188,36 +168,63 @@ resource "aws_ssmcontacts_rotation" "test" {
     number_of_on_calls    = 1
     recurrence_multiplier = 1
     weekly_settings {
-      day_of_week   = "MON"
-      hand_off_time = "04:25"
-    }
-    weekly_settings {
-      day_of_week   = "WED"
-      hand_off_time = "07:34"
-    }
-    weekly_settings {
-      day_of_week   = "FRI"
-      hand_off_time = "15:57"
-    }
-    shift_coverages {
       day_of_week = "MON"
-      coverage_times {
-        start_time = "01:00"
-        end_time   = "23:00"
+      hand_off_time {
+        hour_of_day    = 4
+        minute_of_hour = 25
       }
     }
-    shift_coverages {
+    weekly_settings {
       day_of_week = "WED"
-      coverage_times {
-        start_time = "01:00"
-        end_time   = "23:00"
+      hand_off_time {
+        hour_of_day    = 7
+        minute_of_hour = 34
+      }
+    }
+    weekly_settings {
+      day_of_week = "FRI"
+      hand_off_time {
+        hour_of_day    = 15
+        minute_of_hour = 57
       }
     }
     shift_coverages {
-      day_of_week = "FRI"
+      map_block_key = "MON"
       coverage_times {
-        start_time = "01:00"
-        end_time   = "23:00"
+        start {
+          hour_of_day    = 1
+          minute_of_hour = 0
+        }
+        end {
+          hour_of_day    = 23
+          minute_of_hour = 0
+        }
+      }
+    }
+    shift_coverages {
+      map_block_key = "WED"
+      coverage_times {
+        start {
+          hour_of_day    = 1
+          minute_of_hour = 0
+        }
+        end {
+          hour_of_day    = 23
+          minute_of_hour = 0
+        }
+      }
+    }
+    shift_coverages {
+      map_block_key = "FRI"
+      coverage_times {
+        start {
+          hour_of_day    = 1
+          minute_of_hour = 0
+        }
+        end {
+          hour_of_day    = 23
+          minute_of_hour = 0
+        }
       }
     }
   }
@@ -246,7 +253,7 @@ func testRotationDataSourceConfig_dailySettings(rName string) string {
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_rotation" "test" {
   contact_ids = [
-    aws_ssmcontacts_contact.test_contact_one.arn,
+    aws_ssmcontacts_contact.test.arn,
   ]
 
   name = %[1]q
@@ -254,9 +261,10 @@ resource "aws_ssmcontacts_rotation" "test" {
   recurrence {
     number_of_on_calls    = 1
     recurrence_multiplier = 1
-    daily_settings = [
-      "18:00"
-    ]
+    daily_settings {
+      hour_of_day    = 18
+      minute_of_hour = 0
+    }
   }
 
   time_zone_id = "Australia/Sydney"
@@ -276,7 +284,7 @@ func testRotationDataSourceConfig_monthlySettings(rName string) string {
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_rotation" "test" {
   contact_ids = [
-    aws_ssmcontacts_contact.test_contact_one.arn,
+    aws_ssmcontacts_contact.test.arn,
   ]
 
   name = %[1]q
@@ -285,16 +293,25 @@ resource "aws_ssmcontacts_rotation" "test" {
     number_of_on_calls    = 1
     recurrence_multiplier = 1
     monthly_settings {
-      day_of_month  = 20
-      hand_off_time = "08:00"
+      day_of_month = 20
+      hand_off_time {
+        hour_of_day    = 8
+        minute_of_hour = 0
+      }
     }
     monthly_settings {
-      day_of_month  = 13
-      hand_off_time = "12:34"
+      day_of_month = 13
+      hand_off_time {
+        hour_of_day    = 12
+        minute_of_hour = 34
+      }
     }
     monthly_settings {
-      day_of_month  = 1
-      hand_off_time = "04:58"
+      day_of_month = 1
+      hand_off_time {
+        hour_of_day    = 4
+        minute_of_hour = 58
+      }
     }
   }
 
