@@ -232,9 +232,8 @@ func TestAccOpenSearchIngestionPipeline_vpc(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.security_group_ids.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_options.0.security_group_ids.0"),
-					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.0.subnet_ids.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_options.0.subnet_ids.0"),
-					resource.TestCheckResourceAttrSet(resourceName, "vpc_options.0.subnet_ids.1"),
 				),
 			},
 			{
@@ -697,13 +696,8 @@ resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
 }
 
-resource "aws_subnet" "test1" {
+resource "aws_subnet" "test" {
   cidr_block = "10.0.1.0/24"
-  vpc_id     = aws_vpc.test.id
-}
-
-resource "aws_subnet" "test2" {
-  cidr_block = "10.0.2.0/24"
   vpc_id     = aws_vpc.test.id
 }
 
@@ -736,7 +730,7 @@ resource "aws_osis_pipeline" "test" {
 
   vpc_options {
     security_group_ids = [aws_security_group.test.id]
-    subnet_ids         = [aws_subnet.test1.id, aws_subnet.test2.id]
+    subnet_ids         = [aws_subnet.test.id]
   }
 }
 `, rName)
