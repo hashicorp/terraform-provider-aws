@@ -634,35 +634,6 @@ func flattenBufferOptions(ctx context.Context, apiObject *awstypes.BufferOptions
 	return listVal, diags
 }
 
-//func flattenEncryptionAtRestOptions(ctx context.Context, apiObject *awstypes.EncryptionAtRestOptions) (types.List, diag.Diagnostics) {
-//	var diags diag.Diagnostics
-//	elemType := fwtypes.NewObjectTypeOf[encryptionAtRestOptionsData](ctx).ObjectType
-//
-//	if apiObject == nil {
-//		return types.ListValueMust(elemType, []attr.Value{}), diags
-//	}
-//
-//	values := make([]attr.Value, len(apiObjects))
-//	for i, o := range apiObjects {
-//		values[i] = flattenMonitorData(ctx, o).value(ctx)
-//	}
-//
-//	objVal := &encryptionAtRestOptionsData{
-//		KmsKeyArn: flex.StringToFrameworkARN(ctx, apiObject.KmsKeyArn),
-//	}
-//
-//	obj := map[string]attr.Value{
-//		"kms_key_arn": flex.StringToFrameworkARN(ctx, apiObject.KmsKeyArn),
-//	}
-//	//objVal, d := types.ObjectValue(encryptionAtRestOptionsAttrTypes, obj)
-//	//diags.Append(d...)
-//
-//	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-//	diags.Append(d...)
-//
-//	return listVal, diags
-//}
-
 func flattenEncryptionAtRestOptions(ctx context.Context, apiObject *awstypes.EncryptionAtRestOptions) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: encryptionAtRestOptionsAttrTypes}
@@ -672,7 +643,6 @@ func flattenEncryptionAtRestOptions(ctx context.Context, apiObject *awstypes.Enc
 	}
 
 	obj := map[string]attr.Value{
-		//"kms_key_arn": flex.StringToFrameworkARN(ctx, apiObject.KmsKeyArn),
 		"kms_key_arn": flex.StringToFramework(ctx, apiObject.KmsKeyArn),
 	}
 	objVal, d := types.ObjectValue(encryptionAtRestOptionsAttrTypes, obj)
