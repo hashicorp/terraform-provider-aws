@@ -3,12 +3,23 @@ subcategory: "Amazon Bedrock"
 layout: "aws"
 page_title: "AWS: aws_bedrock_custom_model"
 description: |-
-  Manages a Bedrock custom model
+  Manages an Amazon Bedrock custom model.
 ---
 
 # Resource: aws_bedrock_custom_model
 
-Manages a Bedrock custom model.
+Manages an Amazon Bedrock custom model.
+Model customization is the process of providing training data to a base model in order to improve its performance for specific use-cases.
+
+This Terraform resource interacts with two Amazon Bedrock entities:
+1. A Fine-tuning or Continued Pre-training job which is started when the Terraform resource is created. The customization job can take several hours to run to completion. The duration of the job depends on the size of the training data (number of records, input tokens, and output tokens), and [hyperparameters](https://docs.aws.amazon.com/bedrock/latest/userguide/custom-models-hp.html) (number of epochs, and batch size).
+2. The custom model produced on successful completion of the customization job.
+
+This resource's [behaviors](https://developer.hashicorp.com/terraform/language/resources/behavior) correspond to operations on these Amazon Bedrock entities:
+* [_Create_](https://developer.hashicorp.com/terraform/plugin/framework/resources/create) starts the customization job and immediately returns.
+* [_Read_](https://developer.hashicorp.com/terraform/plugin/framework/resources/read) returns the status and results of the customization job. If the customization job has completed, the custom model's properties are returned.
+* [_Update_](https://developer.hashicorp.com/terraform/plugin/framework/resources/update) updates the customization job's [tags](https://docs.aws.amazon.com/bedrock/latest/userguide/tagging.html), and the tags on any custom model produced by the job.
+* [_Delete_](https://developer.hashicorp.com/terraform/plugin/framework/resources/delete) stops the customization job if it is still active. If the customization job has completed, the custom model produced by the job is deleted.
 
 ## Example Usage
 
