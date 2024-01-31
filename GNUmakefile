@@ -90,9 +90,10 @@ cleango: ## Clean up Go cache
 		echo "Killing gopls process $$proc" ; \
 		kill -9 $$proc ; \
 	done ; \
-	go clean -modcache -testcache -cache ; \
+	$(GO_VER) clean -modcache -testcache -cache ; \
 
 clean: cleango build tools ## Clean up Go cache and re-install tools
+	$(GO_VER) mod tidy
 
 copyright: ## Run copywrite (generate source code headers)
 	@copywrite headers
@@ -148,6 +149,7 @@ gen: ## Run all Go generators
 	rm -f internal/conns/*_gen.go
 	rm -f internal/provider/*_gen.go
 	rm -f internal/service/**/*_gen.go
+	rm -f internal/service/**/*_gen_test.go
 	rm -f names/caps.md
 	rm -f names/*_gen.go
 	rm -f website/docs/guides/custom-service-endpoints.html.md

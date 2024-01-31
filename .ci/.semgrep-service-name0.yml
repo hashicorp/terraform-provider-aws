@@ -1737,7 +1737,8 @@ rules:
           patterns:
             - pattern-regex: "(?i)CE"
             - pattern-not-regex: ource
-            - pattern-not-regex: ServicePackage
+            - pattern-not-regex: "[Ss]ervice"
+            - pattern-not-regex: "[Cc]ancel"
             - pattern-not-regex: ^TestAcc.*
     severity: WARNING
   - id: ce-in-test-name
@@ -1768,6 +1769,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CE"
+            - pattern-not-regex: "[Ss]ervice"
     severity: WARNING
   - id: ce-in-var-name
     languages:
@@ -1782,7 +1784,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CE"
-            - pattern-not-regex: ServicePackage
+            - pattern-not-regex: "[Ss]ervice"
+            - pattern-not-regex: "[Cc]ancel"
     severity: WARNING
   - id: chime-in-func-name
     languages:
@@ -3694,4 +3697,78 @@ rules:
           patterns:
             - pattern-not-regex: "^TestAccConfigService"
             - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: configservice-in-const-name
+    languages:
+      - go
+    message: Do not use "ConfigService" in const name inside configservice package
+    paths:
+      include:
+        - internal/service/configservice
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ConfigService"
+    severity: WARNING
+  - id: configservice-in-var-name
+    languages:
+      - go
+    message: Do not use "ConfigService" in var name inside configservice package
+    paths:
+      include:
+        - internal/service/configservice
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ConfigService"
+    severity: WARNING
+  - id: connect-in-func-name
+    languages:
+      - go
+    message: Do not use "Connect" in func name inside connect package
+    paths:
+      include:
+        - internal/service/connect
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Connect"
+            - pattern-not-regex: .*uickConnect.*
+            - pattern-not-regex: ^TestAcc.*
+    severity: WARNING
+  - id: connect-in-test-name
+    languages:
+      - go
+    message: Include "Connect" in test name
+    paths:
+      include:
+        - internal/service/connect/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccConnect"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: connect-in-const-name
+    languages:
+      - go
+    message: Do not use "Connect" in const name inside connect package
+    paths:
+      include:
+        - internal/service/connect
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Connect"
+            - pattern-not-regex: .*uickConnect.*
     severity: WARNING

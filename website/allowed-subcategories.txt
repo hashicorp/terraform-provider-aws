@@ -6,6 +6,7 @@ API Gateway
 API Gateway V2
 Account Management
 Amazon Bedrock
+Amazon Q Business
 Amplify
 App Mesh
 App Runner
@@ -133,6 +134,7 @@ Kinesis Firehose
 Kinesis Video
 Lake Formation
 Lambda
+Launch Wizard
 Lex Model Building
 Lex V2 Models
 License Manager
@@ -142,6 +144,7 @@ Lookout for Metrics
 MQ
 MWAA (Managed Workflows for Apache Airflow)
 Macie
+Mainframe Modernization
 Managed Grafana
 Managed Streaming for Kafka
 Managed Streaming for Kafka Connect
@@ -169,6 +172,7 @@ Recycle Bin (RBin)
 Redshift
 Redshift Data
 Redshift Serverless
+Rekognition
 Resource Explorer
 Resource Groups
 Resource Groups Tagging

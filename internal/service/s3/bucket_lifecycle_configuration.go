@@ -28,8 +28,8 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-// @SDKResource("aws_s3_bucket_lifecycle_configuration")
-func ResourceBucketLifecycleConfiguration() *schema.Resource {
+// @SDKResource("aws_s3_bucket_lifecycle_configuration", name="Bucket Lifecycle Configuration")
+func resourceBucketLifecycleConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketLifecycleConfigurationCreate,
 		ReadWithoutTimeout:   resourceBucketLifecycleConfigurationRead,

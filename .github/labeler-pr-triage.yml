@@ -604,6 +604,7 @@ service/keyspaces:
 service/kinesis:
   - 'internal/service/kinesis/**/*'
   - 'website/**/kinesis_stream*'
+  - 'website/**/kinesis_resource_policy*'
 service/kinesisanalytics:
   - 'internal/service/kinesisanalytics/**/*'
   - 'website/**/kinesis_analytics_*'
@@ -631,6 +632,9 @@ service/lakeformation:
 service/lambda:
   - 'internal/service/lambda/**/*'
   - 'website/**/lambda_*'
+service/launchwizard:
+  - 'internal/service/launchwizard/**/*'
+  - 'website/**/launchwizard_*'
 service/lexmodels:
   - 'internal/service/lexmodels/**/*'
   - 'website/**/lex_*'
@@ -665,6 +669,9 @@ service/lookoutmetrics:
 service/lookoutvision:
   - 'internal/service/lookoutvision/**/*'
   - 'website/**/lookoutvision_*'
+service/m2:
+  - 'internal/service/m2/**/*'
+  - 'website/**/m2_*'
 service/machinelearning:
   - 'internal/service/machinelearning/**/*'
   - 'website/**/machinelearning_*'
@@ -830,6 +837,9 @@ service/pricing:
 service/proton:
   - 'internal/service/proton/**/*'
   - 'website/**/proton_*'
+service/qbusiness:
+  - 'internal/service/qbusiness/**/*'
+  - 'website/**/qbusiness_*'
 service/qldb:
   - 'internal/service/qldb/**/*'
   - 'website/**/qldb_*'

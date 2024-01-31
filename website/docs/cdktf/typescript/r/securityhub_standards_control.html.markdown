@@ -12,7 +12,7 @@ description: |-
 
 Disable/enable Security Hub standards control in the current region.
 
-The `awsSecurityhubStandardsControl` behaves differently from normal resources, in that
+The `aws_securityhub_standards_control` behaves differently from normal resources, in that
 Terraform does not _create_ this resource, but instead "adopts" it
 into management. When you _delete_ this resource configuration, Terraform "abandons" resource as is and just removes it from the state.
 
@@ -63,8 +63,8 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `standardsControlArn` - (Required) The standards control ARN. See the AWS documentation for how to list existing controls using [`get-enabled-standards`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/securityhub/get-enabled-standards.html) and [`describe-standards-controls`](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/securityhub/describe-standards-controls.html).
-* `controlStatus` – (Required) The control status could be `ENABLED` or `DISABLED`. You have to specify `disabled_reason` argument for `DISABLED` control status.
-* `disabledReason` – (Optional) A description of the reason why you are disabling a security standard control. If you specify this attribute, `control_status` will be set to `DISABLED` automatically.
+* `controlStatus` – (Required) The control status could be `ENABLED` or `DISABLED`. You have to specify `disabledReason` argument for `DISABLED` control status.
+* `disabledReason` – (Optional) A description of the reason why you are disabling a security standard control. If you specify this attribute, `controlStatus` will be set to `DISABLED` automatically.
 
 ## Attribute Reference
 
@@ -79,4 +79,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `severityRating` – The severity of findings generated from this security standard control.
 * `title` – The standard control title.
 
-<!-- cache-key: cdktf-0.19.0 input-4f2686dbc145e094fc564010e6dbf6ac103f5be38f045e92ccb633c43bb96b39 -->
+<!-- cache-key: cdktf-0.20.1 input-4f2686dbc145e094fc564010e6dbf6ac103f5be38f045e92ccb633c43bb96b39 -->

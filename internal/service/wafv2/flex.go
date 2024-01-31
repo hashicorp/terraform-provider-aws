@@ -74,6 +74,32 @@ func expandCaptchaConfig(l []interface{}) *wafv2.CaptchaConfig {
 	return configuration
 }
 
+func expandChallengeConfig(l []interface{}) *wafv2.ChallengeConfig {
+	configuration := &wafv2.ChallengeConfig{}
+
+	if len(l) == 0 || l[0] == nil {
+		return configuration
+	}
+
+	m := l[0].(map[string]interface{})
+	if v, ok := m["immunity_time_property"]; ok {
+		inner := v.([]interface{})
+		if len(inner) == 0 || inner[0] == nil {
+			return configuration
+		}
+
+		m = inner[0].(map[string]interface{})
+
+		if v, ok := m["immunity_time"]; ok {
+			configuration.ImmunityTimeProperty = &wafv2.ImmunityTimeProperty{
+				ImmunityTime: aws.Int64(int64(v.(int))),
+			}
+		}
+	}
+
+	return configuration
+}
+
 func expandAssociationConfig(l []interface{}) *wafv2.AssociationConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -505,6 +531,10 @@ func expandFieldToMatch(l []interface{}) *wafv2.FieldToMatch {
 		f.Cookies = expandCookies(m["cookies"].([]interface{}))
 	}
 
+	if v, ok := m["header_order"]; ok && len(v.([]interface{})) > 0 {
+		f.HeaderOrder = expandHeaderOrder(m["header_order"].([]interface{}))
+	}
+
 	if v, ok := m["headers"]; ok && len(v.([]interface{})) > 0 {
 		f.Headers = expandHeaders(m["headers"].([]interface{}))
 	}
@@ -878,6 +908,18 @@ func expandXSSMatchStatement(l []interface{}) *wafv2.XssMatchStatement {
 	return &wafv2.XssMatchStatement{
 		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]interface{})),
 		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
+	}
+}
+
+func expandHeaderOrder(l []interface{}) *wafv2.HeaderOrder {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.HeaderOrder{
+		OversizeHandling: aws.String(m["oversize_handling"].(string)),
 	}
 }
 
@@ -1655,6 +1697,23 @@ func flattenCaptchaConfig(config *wafv2.CaptchaConfig) interface{} {
 	return []interface{}{m}
 }
 
+func flattenChallengeConfig(config *wafv2.ChallengeConfig) interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+	if config.ImmunityTimeProperty == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"immunity_time_property": []interface{}{map[string]interface{}{
+			"immunity_time": aws.Int64Value(config.ImmunityTimeProperty.ImmunityTime),
+		}},
+	}
+
+	return []interface{}{m}
+}
+
 func flattenAssociationConfig(config *wafv2.AssociationConfig) interface{} {
 	associationConfig := []interface{}{}
 	if config == nil {
@@ -1913,6 +1972,10 @@ func flattenFieldToMatch(f *wafv2.FieldToMatch) interface{} {
 
 	if f.Cookies != nil {
 		m["cookies"] = flattenCookies(f.Cookies)
+	}
+
+	if f.HeaderOrder != nil {
+		m["header_order"] = flattenHeaderOrder(f.HeaderOrder)
 	}
 
 	if f.Headers != nil {
@@ -2239,6 +2302,18 @@ func flattenVisibilityConfig(config *wafv2.VisibilityConfig) interface{} {
 		"cloudwatch_metrics_enabled": aws.BoolValue(config.CloudWatchMetricsEnabled),
 		"metric_name":                aws.StringValue(config.MetricName),
 		"sampled_requests_enabled":   aws.BoolValue(config.SampledRequestsEnabled),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenHeaderOrder(s *wafv2.HeaderOrder) interface{} {
+	if s == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"oversize_handling": aws.StringValue(s.OversizeHandling),
 	}
 
 	return []interface{}{m}

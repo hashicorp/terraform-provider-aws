@@ -47,6 +47,10 @@ func ResourceResource() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
+			},
+			"use_service_linked_role": {
+				Type:     schema.TypeBool,
+				Optional: true,
 				ForceNew: true,
 			},
 		},
@@ -70,6 +74,10 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("with_federation"); ok {
 		input.WithFederation = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("use_service_linked_role"); ok {
+		input.UseServiceLinkedRole = aws.Bool(v.(bool))
 	}
 
 	_, err := conn.RegisterResourceWithContext(ctx, input)
@@ -130,6 +138,9 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	_, err := conn.DeregisterResourceWithContext(ctx, input)
+	if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
+		return diags
+	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deregistering Lake Formation Resource (%s): %s", d.Id(), err)
 	}

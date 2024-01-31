@@ -7,6 +7,10 @@ rules:
     paths:
       include:
         - internal
+      exclude:
+        - internal/service/securitylake/aws_log_source.go
+        - internal/service/securitylake/aws_log_source_test.go
+        - internal/service/*/service_endpoints_gen_test.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -15,7 +19,6 @@ rules:
             - pattern-regex: "(?i)AWS"
       - focus-metavariable: $NAME
     severity: WARNING
-
   - id: aws-in-const-name
     languages:
       - go
@@ -23,6 +26,9 @@ rules:
     paths:
       include:
         - internal
+      exclude:
+        - internal/service/securitylake/aws_log_source.go
+        - internal/service/*/service_endpoints_gen_test.go
     patterns:
       - pattern: const $NAME = ...
       - metavariable-pattern:
@@ -37,6 +43,10 @@ rules:
     paths:
       include:
         - internal
+      exclude:
+        - internal/service/securitylake/aws_log_source.go
+        - internal/service/securitylake/exports_test.go
+        - internal/service/*/service_endpoints_gen_test.go
     patterns:
       - pattern: var $NAME = ...
       - metavariable-pattern:

@@ -102,7 +102,7 @@ If the `principal` is also a data lake administrator, AWS grants implicit permis
 ```terraform
 resource "aws_lakeformation_permissions" "example" {
   principal   = aws_iam_role.workflow_role.arn
-  permissions = ["ALL"]
+  permissions = ["DATA_LOCATION_ACCESS"]
 
   data_location {
     arn = aws_lakeformation_resource.example.arn

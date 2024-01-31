@@ -61,4 +61,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `policy` - IAM policy that is associated with the permission.
 
-<!-- cache-key: cdktf-0.19.0 input-494bcc5d28fd45281186122cb5e3ebdff619ec5306af716d4d8172805c2c661d -->
+<!-- cache-key: cdktf-0.20.1 input-494bcc5d28fd45281186122cb5e3ebdff619ec5306af716d4d8172805c2c661d -->

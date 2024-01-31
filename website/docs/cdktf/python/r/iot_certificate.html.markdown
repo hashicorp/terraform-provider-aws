@@ -99,4 +99,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `public_key` - When neither CSR nor certificate is provided, the public key.
 * `private_key` - When neither CSR nor certificate is provided, the private key.
 
-<!-- cache-key: cdktf-0.19.0 input-cd4ec9a7a491e894c7c1bf387191cc12633a4113cd2e7bf2fe6ecc7c3615caa6 -->
+<!-- cache-key: cdktf-0.20.1 input-cd4ec9a7a491e894c7c1bf387191cc12633a4113cd2e7bf2fe6ecc7c3615caa6 -->

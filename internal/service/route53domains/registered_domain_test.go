@@ -4,69 +4,24 @@
 package route53domains_test
 
 import (
-	"context"
 	"fmt"
-	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccRoute53Domains_serial(t *testing.T) {
-	t.Parallel()
-
-	testCases := map[string]map[string]func(t *testing.T){
-		"RegisteredDomain": {
-			"tags":           testAccRegisteredDomain_tags,
-			"autoRenew":      testAccRegisteredDomain_autoRenew,
-			"contacts":       testAccRegisteredDomain_contacts,
-			"contactPrivacy": testAccRegisteredDomain_contactPrivacy,
-			"nameservers":    testAccRegisteredDomain_nameservers,
-			"transferLock":   testAccRegisteredDomain_transferLock,
-		},
-	}
-
-	acctest.RunSerialTests2Levels(t, testCases, 0)
-}
-
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	acctest.PreCheckPartitionHasService(t, names.Route53DomainsEndpointID)
-
-	conn := acctest.Provider.Meta().(*conns.AWSClient).Route53DomainsClient(ctx)
-
-	input := &route53domains.ListDomainsInput{}
-
-	_, err := conn.ListDomains(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
 func testAccRegisteredDomain_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "ROUTE53DOMAINS_DOMAIN_NAME"
-	domainName := os.Getenv(key)
-	if domainName == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	domainName := acctest.SkipIfEnvVarNotSet(t, "ROUTE53DOMAINS_DOMAIN_NAME")
 	resourceName := "aws_route53domains_registered_domain.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegisteredDomainDestroy,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegisteredDomainConfig_tags1(domainName, "key1", "value1"),
@@ -74,6 +29,11 @@ func testAccRegisteredDomain_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccRegisteredDomainConfig_tags2(domainName, "key1", "value1updated", "key2", "value2"),
@@ -96,19 +56,14 @@ func testAccRegisteredDomain_tags(t *testing.T) {
 
 func testAccRegisteredDomain_autoRenew(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "ROUTE53DOMAINS_DOMAIN_NAME"
-	domainName := os.Getenv(key)
-	if domainName == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	domainName := acctest.SkipIfEnvVarNotSet(t, "ROUTE53DOMAINS_DOMAIN_NAME")
 	resourceName := "aws_route53domains_registered_domain.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegisteredDomainDestroy,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegisteredDomainConfig_autoRenew(domainName, false),
@@ -128,19 +83,14 @@ func testAccRegisteredDomain_autoRenew(t *testing.T) {
 
 func testAccRegisteredDomain_contacts(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "ROUTE53DOMAINS_DOMAIN_NAME"
-	domainName := os.Getenv(key)
-	if domainName == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	domainName := acctest.SkipIfEnvVarNotSet(t, "ROUTE53DOMAINS_DOMAIN_NAME")
 	resourceName := "aws_route53domains_registered_domain.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegisteredDomainDestroy,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegisteredDomainConfig_contacts(domainName),
@@ -232,19 +182,14 @@ func testAccRegisteredDomain_contacts(t *testing.T) {
 
 func testAccRegisteredDomain_contactPrivacy(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "ROUTE53DOMAINS_DOMAIN_NAME"
-	domainName := os.Getenv(key)
-	if domainName == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	domainName := acctest.SkipIfEnvVarNotSet(t, "ROUTE53DOMAINS_DOMAIN_NAME")
 	resourceName := "aws_route53domains_registered_domain.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegisteredDomainDestroy,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegisteredDomainConfig_contactPrivacy(domainName, true, true, true),
@@ -268,19 +213,14 @@ func testAccRegisteredDomain_contactPrivacy(t *testing.T) {
 
 func testAccRegisteredDomain_nameservers(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "ROUTE53DOMAINS_DOMAIN_NAME"
-	domainName := os.Getenv(key)
-	if domainName == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	domainName := acctest.SkipIfEnvVarNotSet(t, "ROUTE53DOMAINS_DOMAIN_NAME")
 	resourceName := "aws_route53domains_registered_domain.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegisteredDomainDestroy,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegisteredDomainConfig_nameservers(domainName),
@@ -313,19 +253,14 @@ func testAccRegisteredDomain_nameservers(t *testing.T) {
 
 func testAccRegisteredDomain_transferLock(t *testing.T) {
 	ctx := acctest.Context(t)
-	key := "ROUTE53DOMAINS_DOMAIN_NAME"
-	domainName := os.Getenv(key)
-	if domainName == "" {
-		t.Skipf("Environment variable %s is not set", key)
-	}
-
+	domainName := acctest.SkipIfEnvVarNotSet(t, "ROUTE53DOMAINS_DOMAIN_NAME")
 	resourceName := "aws_route53domains_registered_domain.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRegisteredDomainDestroy,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccRegisteredDomainConfig_transferLock(domainName, false),
@@ -341,10 +276,6 @@ func testAccRegisteredDomain_transferLock(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckRegisteredDomainDestroy(s *terraform.State) error {
-	return nil
 }
 
 func testAccRegisteredDomainConfig_tags1(domainName, tagKey1, tagValue1 string) string {

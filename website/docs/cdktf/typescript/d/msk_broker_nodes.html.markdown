@@ -48,11 +48,11 @@ This data source exports the following attributes in addition to the arguments a
 
 ### Nodes
 
-* `attachedEniId` - Attached elastic network interface of the broker
+* `attached_eni_id` - Attached elastic network interface of the broker
 * `brokerId` - ID of the broker
-* `clientSubnet` - Client subnet to which this broker node belongs
-* `clientVpcIpAddress` - The client virtual private cloud (VPC) IP address
+* `client_subnet` - Client subnet to which this broker node belongs
+* `client_vpc_ip_address` - The client virtual private cloud (VPC) IP address
 * `endpoints` - Set of endpoints for accessing the broker. This does not include ports
-* `nodeArn` - ARN of the node
+* `node_arn` - ARN of the node
 
-<!-- cache-key: cdktf-0.19.0 input-bff2642a3e21e8b608fc7f2ec749ea4dc2c86d2f7735aae811865faa68478e8c -->
+<!-- cache-key: cdktf-0.20.1 input-bff2642a3e21e8b608fc7f2ec749ea4dc2c86d2f7735aae811865faa68478e8c -->
