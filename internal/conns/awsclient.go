@@ -201,15 +201,15 @@ func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName stri
 
 	return m
 }
-func (client *AWSClient) resolveEndpoint(ctx context.Context, servicePackageName string) string {
-	endpoint := client.endpoints[servicePackageName]
+func (c *AWSClient) resolveEndpoint(ctx context.Context, servicePackageName string) string {
+	endpoint := c.endpoints[servicePackageName]
 	if endpoint != "" {
 		return endpoint
 	}
 
 	// Only continue if there is an SDK v1 package. SDK v2 supports envvars and config file
 	if names.ClientSDKV1(servicePackageName) {
-		endpoint = aws_sdkv2.ToString(client.awsConfig.BaseEndpoint)
+		endpoint = aws_sdkv2.ToString(c.awsConfig.BaseEndpoint)
 
 		envvar := names.AwsServiceEnvVar(servicePackageName)
 		svc := os.Getenv(envvar)
@@ -222,7 +222,7 @@ func (client *AWSClient) resolveEndpoint(ctx context.Context, servicePackageName
 		}
 
 		sdkId := names.SdkId(servicePackageName)
-		endpoint, found, err := resolveServiceBaseEndpoint(ctx, sdkId, client.awsConfig.ConfigSources)
+		endpoint, found, err := resolveServiceBaseEndpoint(ctx, sdkId, c.awsConfig.ConfigSources)
 		if found && err == nil {
 			return endpoint
 		}
