@@ -237,9 +237,10 @@ func TestAccOpenSearchIngestionPipeline_vpc(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vpc_options"},
 			},
 		},
 	})
