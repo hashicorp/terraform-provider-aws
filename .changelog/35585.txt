@@ -1,0 +1,3 @@
+```release-note:bug
+resource/core_network_policy_document_data_source: Remove MaxItems limitation for edge_locations
+```
