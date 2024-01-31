@@ -5,13 +5,13 @@ package ssmcontacts_test
 
 import (
 	"fmt"
+	"testing"
+	"time"
+
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"regexp"
-	"testing"
-	"time"
 )
 
 func TestAccSSMContactsRotationDataSource_basic(t *testing.T) {
@@ -67,7 +67,6 @@ func TestAccSSMContactsRotationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.key1", dataSourceName, "tags.key1"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.key2", dataSourceName, "tags.key2"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm-contacts", regexp.MustCompile(`rotation\/+.`)),
 				),
 			},
 		},

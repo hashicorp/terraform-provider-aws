@@ -4,7 +4,6 @@
 package ssmcontacts
 
 import (
-	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -246,39 +245,39 @@ func flattenHandOffTime(handOffTime *types.HandOffTime) string {
 // //
 // //	return c
 // //}
-func flattenRecurrence(recurrence *types.RecurrenceSettings, ctx context.Context) []interface{} {
-	var result []interface{}
-
-	c := make(map[string]interface{})
-
-	if v := recurrence.DailySettings; v != nil {
-		c["daily_settings"] = flattenDailySettings(v)
-	}
-
-	if v := recurrence.MonthlySettings; v != nil {
-		c["monthly_settings"] = flattenMonthlySettings(v)
-	}
-
-	if v := recurrence.NumberOfOnCalls; v != nil {
-		c["number_of_on_calls"] = aws.ToInt32(v)
-	}
-
-	if v := recurrence.RecurrenceMultiplier; v != nil {
-		c["recurrence_multiplier"] = aws.ToInt32(v)
-	}
-
-	if v := recurrence.ShiftCoverages; v != nil {
-		c["shift_coverages"] = flattenShiftCoverages(v)
-	}
-
-	if v := recurrence.WeeklySettings; v != nil {
-		c["weekly_settings"] = flattenWeeklySettings(v)
-	}
-
-	result = append(result, c)
-
-	return result
-}
+//func flattenRecurrence(recurrence *types.RecurrenceSettings, ctx context.Context) []interface{} {
+//	var result []interface{}
+//
+//	c := make(map[string]interface{})
+//
+//	if v := recurrence.DailySettings; v != nil {
+//		c["daily_settings"] = flattenDailySettings(v)
+//	}
+//
+//	if v := recurrence.MonthlySettings; v != nil {
+//		c["monthly_settings"] = flattenMonthlySettings(v)
+//	}
+//
+//	if v := recurrence.NumberOfOnCalls; v != nil {
+//		c["number_of_on_calls"] = aws.ToInt32(v)
+//	}
+//
+//	if v := recurrence.RecurrenceMultiplier; v != nil {
+//		c["recurrence_multiplier"] = aws.ToInt32(v)
+//	}
+//
+//	if v := recurrence.ShiftCoverages; v != nil {
+//		c["shift_coverages"] = flattenShiftCoverages(v)
+//	}
+//
+//	if v := recurrence.WeeklySettings; v != nil {
+//		c["weekly_settings"] = flattenWeeklySettings(v)
+//	}
+//
+//	result = append(result, c)
+//
+//	return result
+//}
 
 // //
 // //func expandDailySettings(dailySettings []interface{}) []types.HandOffTime {
@@ -371,27 +370,27 @@ func flattenMonthlySettings(monthlySettings []types.MonthlySetting) []interface{
 // //
 // //	return result
 // //}
-func flattenShiftCoverages(shiftCoverages map[string][]types.CoverageTime) []interface{} {
-	if len(shiftCoverages) == 0 {
-		return nil
-	}
-
-	var result []interface{}
-
-	for coverageDay, coverageTime := range shiftCoverages {
-		c := make(map[string]interface{})
-
-		c["coverage_times"] = flattenCoverageTimes(coverageTime)
-		c["day_of_week"] = coverageDay
-
-		result = append(result, c)
-	}
-
-	// API doesn't return in any consistent order. This causes flakes during testing, so we sort to always return a consistent order
-	sortShiftCoverages(result)
-
-	return result
-}
+//func flattenShiftCoverages(shiftCoverages map[string][]types.CoverageTime) []interface{} {
+//	if len(shiftCoverages) == 0 {
+//		return nil
+//	}
+//
+//	var result []interface{}
+//
+//	for coverageDay, coverageTime := range shiftCoverages {
+//		c := make(map[string]interface{})
+//
+//		c["coverage_times"] = flattenCoverageTimes(coverageTime)
+//		c["day_of_week"] = coverageDay
+//
+//		result = append(result, c)
+//	}
+//
+//	// API doesn't return in any consistent order. This causes flakes during testing, so we sort to always return a consistent order
+//	sortShiftCoverages(result)
+//
+//	return result
+//}
 
 //	func expandCoverageTimes(coverageTimes []interface{}) []types.CoverageTime {
 //		var result []types.CoverageTime
@@ -414,25 +413,25 @@ func flattenShiftCoverages(shiftCoverages map[string][]types.CoverageTime) []int
 //
 //		return result
 //	}
-func flattenCoverageTimes(coverageTimes []types.CoverageTime) []interface{} {
-	var result []interface{}
-
-	c := make(map[string]interface{})
-
-	for _, coverageTime := range coverageTimes {
-		if v := coverageTime.End; v != nil {
-			c["end_time"] = flattenHandOffTime(v)
-		}
-
-		if v := coverageTime.Start; v != nil {
-			c["start_time"] = flattenHandOffTime(v)
-		}
-
-		result = append(result, c)
-	}
-
-	return result
-}
+//func flattenCoverageTimes(coverageTimes []types.CoverageTime) []interface{} {
+//	var result []interface{}
+//
+//	c := make(map[string]interface{})
+//
+//	for _, coverageTime := range coverageTimes {
+//		if v := coverageTime.End; v != nil {
+//			c["end_time"] = flattenHandOffTime(v)
+//		}
+//
+//		if v := coverageTime.Start; v != nil {
+//			c["start_time"] = flattenHandOffTime(v)
+//		}
+//
+//		result = append(result, c)
+//	}
+//
+//	return result
+//}
 
 //	func expandWeeklySettings(weeklySettings []interface{}) []types.WeeklySetting {
 //		var result []types.WeeklySetting
@@ -451,26 +450,26 @@ func flattenCoverageTimes(coverageTimes []types.CoverageTime) []interface{} {
 //
 //		return result
 //	}
-func flattenWeeklySettings(weeklySettings []types.WeeklySetting) []interface{} {
-	if len(weeklySettings) == 0 {
-		return nil
-	}
-
-	var result []interface{}
-
-	for _, weeklySetting := range weeklySettings {
-		c := make(map[string]interface{})
-
-		if v := string(weeklySetting.DayOfWeek); v != "" {
-			c["day_of_week"] = v
-		}
-
-		if v := weeklySetting.HandOffTime; v != nil {
-			c["hand_off_time"] = flattenHandOffTime(v)
-		}
-
-		result = append(result, c)
-	}
-
-	return result
-}
+//func flattenWeeklySettings(weeklySettings []types.WeeklySetting) []interface{} {
+//	if len(weeklySettings) == 0 {
+//		return nil
+//	}
+//
+//	var result []interface{}
+//
+//	for _, weeklySetting := range weeklySettings {
+//		c := make(map[string]interface{})
+//
+//		if v := string(weeklySetting.DayOfWeek); v != "" {
+//			c["day_of_week"] = v
+//		}
+//
+//		if v := weeklySetting.HandOffTime; v != nil {
+//			c["hand_off_time"] = flattenHandOffTime(v)
+//		}
+//
+//		result = append(result, c)
+//	}
+//
+//	return result
+//}

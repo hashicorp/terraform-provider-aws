@@ -319,7 +319,7 @@ func (r *resourceRotation) Read(ctx context.Context, request resource.ReadReques
 		return
 	}
 
-	rc.ShiftCoverages = flattenShiftCoveragesFW(ctx, output.Recurrence.ShiftCoverages)
+	rc.ShiftCoverages = flattenShiftCoverages(ctx, output.Recurrence.ShiftCoverages)
 
 	state.ARN = flex.StringToFramework(ctx, output.RotationArn)
 	state.Name = flex.StringToFramework(ctx, output.Name)
@@ -540,7 +540,7 @@ func expandShiftCoverages(ctx context.Context, object []*shiftCoveragesData, dia
 	return result
 }
 
-func flattenShiftCoveragesFW(ctx context.Context, object map[string][]awstypes.CoverageTime) fwtypes.ListNestedObjectValueOf[shiftCoveragesData] {
+func flattenShiftCoverages(ctx context.Context, object map[string][]awstypes.CoverageTime) fwtypes.ListNestedObjectValueOf[shiftCoveragesData] {
 	if len(object) == 0 {
 		return fwtypes.NewListNestedObjectValueOfNull[shiftCoveragesData](ctx)
 	}
