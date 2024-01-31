@@ -437,6 +437,29 @@ func TestAccEFSFileSystem_lifecyclePolicy(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccFileSystemConfig_lifecyclePolicyAll(
+					"transition_to_primary_storage_class",
+					efs.TransitionToPrimaryStorageClassRulesAfter1Access,
+					"transition_to_ia",
+					efs.TransitionToIARulesAfter30Days,
+					"transition_to_archive",
+					efs.TransitionToArchiveRulesAfter60Days,
+				),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFileSystem(ctx, resourceName, &desc),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_archive", ""),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_ia", ""),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.0.transition_to_primary_storage_class", efs.TransitionToPrimaryStorageClassRulesAfter1Access),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.1.transition_to_archive", ""),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.1.transition_to_ia", efs.TransitionToIARulesAfter30Days),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.1.transition_to_primary_storage_class", ""),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.2.transition_to_archive", efs.TransitionToArchiveRulesAfter60Days),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.2.transition_to_ia", ""),
+					resource.TestCheckResourceAttr(resourceName, "lifecycle_policy.2.transition_to_primary_storage_class", ""),
+				),
+			},
+			{
 				Config: testAccFileSystemConfig_lifecyclePolicyTransitionToArchive(
 					"transition_to_ia",
 					efs.TransitionToIARulesAfter30Days,
@@ -692,6 +715,26 @@ resource "aws_efs_file_system" "test" {
   }
 }
 `, lpName1, lpVal1, lpName2, lpVal2)
+}
+
+func testAccFileSystemConfig_lifecyclePolicyAll(lpName1, lpVal1, lpName2, lpVal2, lpName3, lpVal3 string) string {
+	return fmt.Sprintf(`
+resource "aws_efs_file_system" "test" {
+  throughput_mode = "elastic"
+
+  lifecycle_policy {
+    %[1]s = %[2]q
+  }
+
+  lifecycle_policy {
+    %[3]s = %[4]q
+  }
+
+  lifecycle_policy {
+    %[5]s = %[6]q
+  }
+}
+`, lpName1, lpVal1, lpName2, lpVal2, lpName3, lpVal3)
 }
 
 func testAccFileSystemConfig_lifecyclePolicyTransitionToArchive(lpName1, lpVal1, lpName2, lpVal2 string) string {

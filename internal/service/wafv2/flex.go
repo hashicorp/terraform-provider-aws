@@ -531,6 +531,10 @@ func expandFieldToMatch(l []interface{}) *wafv2.FieldToMatch {
 		f.Cookies = expandCookies(m["cookies"].([]interface{}))
 	}
 
+	if v, ok := m["header_order"]; ok && len(v.([]interface{})) > 0 {
+		f.HeaderOrder = expandHeaderOrder(m["header_order"].([]interface{}))
+	}
+
 	if v, ok := m["headers"]; ok && len(v.([]interface{})) > 0 {
 		f.Headers = expandHeaders(m["headers"].([]interface{}))
 	}
@@ -904,6 +908,18 @@ func expandXSSMatchStatement(l []interface{}) *wafv2.XssMatchStatement {
 	return &wafv2.XssMatchStatement{
 		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]interface{})),
 		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
+	}
+}
+
+func expandHeaderOrder(l []interface{}) *wafv2.HeaderOrder {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.HeaderOrder{
+		OversizeHandling: aws.String(m["oversize_handling"].(string)),
 	}
 }
 
@@ -1958,6 +1974,10 @@ func flattenFieldToMatch(f *wafv2.FieldToMatch) interface{} {
 		m["cookies"] = flattenCookies(f.Cookies)
 	}
 
+	if f.HeaderOrder != nil {
+		m["header_order"] = flattenHeaderOrder(f.HeaderOrder)
+	}
+
 	if f.Headers != nil {
 		m["headers"] = flattenHeaders(f.Headers)
 	}
@@ -2282,6 +2302,18 @@ func flattenVisibilityConfig(config *wafv2.VisibilityConfig) interface{} {
 		"cloudwatch_metrics_enabled": aws.BoolValue(config.CloudWatchMetricsEnabled),
 		"metric_name":                aws.StringValue(config.MetricName),
 		"sampled_requests_enabled":   aws.BoolValue(config.SampledRequestsEnabled),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenHeaderOrder(s *wafv2.HeaderOrder) interface{} {
+	if s == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"oversize_handling": aws.StringValue(s.OversizeHandling),
 	}
 
 	return []interface{}{m}
