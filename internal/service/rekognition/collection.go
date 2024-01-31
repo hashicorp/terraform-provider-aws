@@ -6,15 +6,12 @@ package rekognition
 import (
 	"context"
 	"errors"
-	"regexp"
-	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rekognition/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -23,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -35,16 +33,12 @@ import (
 func newResourceCollection(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCollection{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultReadTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
-
 	return r, nil
 }
 
 type resourceCollection struct {
 	framework.ResourceWithConfigure
-	framework.WithTimeouts
+	framework.WithImportByID
 }
 
 const (
@@ -56,7 +50,7 @@ func (r *resourceCollection) Metadata(_ context.Context, req resource.MetadataRe
 }
 
 func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	collectionRegex, _ := regexp.Compile(`^[a-zA-Z0-9_.\-]+$`)
+	collectionRegex := regexache.MustCompile(`^[a-zA-Z0-9_.\-]+$`)
 
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -82,18 +76,7 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
-		Blocks: map[string]schema.Block{
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Delete: true,
-			}),
-		},
-		Version: 1,
 	}
-}
-
-func (r *resourceCollection) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -107,14 +90,14 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	in := &rekognition.CreateCollectionInput{
-		CollectionId: plan.CollectionId.ValueStringPointer(),
+		CollectionId: plan.CollectionID.ValueStringPointer(),
 		Tags:         getTagsIn(ctx),
 	}
 
 	out, err := conn.CreateCollection(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionCreating, ResNameCollection, plan.CollectionId.String(), err),
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionCreating, ResNameCollection, plan.CollectionID.ValueString(), err),
 			err.Error(),
 		)
 		return
@@ -122,15 +105,15 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 
 	if out == nil || out.CollectionArn == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionCreating, ResNameCollection, plan.CollectionId.String(), nil),
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionCreating, ResNameCollection, plan.CollectionID.ValueString(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
 	state := plan
-	state.Id = plan.CollectionId
-	state.Arn = flex.StringToFramework(ctx, out.CollectionArn)
+	state.ID = plan.CollectionID
+	state.ARN = flex.StringToFramework(ctx, out.CollectionArn)
 	state.FaceModelVersion = flex.StringToFramework(ctx, out.FaceModelVersion)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
@@ -146,22 +129,22 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	out, err := FindCollectionByID(ctx, conn, state.Id.ValueString())
+	out, err := findCollectionByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionReading, ResNameCollection, state.Id.ValueString(), err),
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionReading, ResNameCollection, state.ID.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	state.Arn = flex.StringToFramework(ctx, out.CollectionARN)
+	state.ARN = flex.StringToFramework(ctx, out.CollectionARN)
 	state.FaceModelVersion = flex.StringToFramework(ctx, out.FaceModelVersion)
-	state.CollectionId = flex.StringToFramework(ctx, state.Id.ValueStringPointer())
+	state.CollectionID = flex.StringToFramework(ctx, state.ID.ValueStringPointer())
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -187,17 +170,18 @@ func (r *resourceCollection) Delete(ctx context.Context, req resource.DeleteRequ
 	}
 
 	in := &rekognition.DeleteCollectionInput{
-		CollectionId: state.Id.ValueStringPointer(),
+		CollectionId: state.ID.ValueStringPointer(),
 	}
 
 	_, err := conn.DeleteCollection(ctx, in)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return
-		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionDeleting, ResNameCollection, state.Id.ValueString(), err),
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionDeleting, ResNameCollection, state.ID.ValueString(), err),
 			err.Error(),
 		)
 		return
@@ -208,21 +192,21 @@ func (r *resourceCollection) ModifyPlan(ctx context.Context, req resource.Modify
 	r.SetTagsAll(ctx, req, resp)
 }
 
-func FindCollectionByID(ctx context.Context, conn *rekognition.Client, id string) (*rekognition.DescribeCollectionOutput, error) {
+func findCollectionByID(ctx context.Context, conn *rekognition.Client, id string) (*rekognition.DescribeCollectionOutput, error) {
 	in := &rekognition.DescribeCollectionInput{
 		CollectionId: aws.String(id),
 	}
 
 	out, err := conn.DescribeCollection(ctx, in)
-	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -234,11 +218,10 @@ func FindCollectionByID(ctx context.Context, conn *rekognition.Client, id string
 }
 
 type resourceCollectionData struct {
-	Arn              types.String   `tfsdk:"arn"`
-	CollectionId     types.String   `tfsdk:"collection_id"`
-	FaceModelVersion types.String   `tfsdk:"face_model_version"`
-	Id               types.String   `tfsdk:"id"`
-	Tags             types.Map      `tfsdk:"tags"`
-	TagsAll          types.Map      `tfsdk:"tags_all"`
-	Timeouts         timeouts.Value `tfsdk:"timeouts"`
+	ARN              types.String `tfsdk:"arn"`
+	CollectionID     types.String `tfsdk:"collection_id"`
+	FaceModelVersion types.String `tfsdk:"face_model_version"`
+	ID               types.String `tfsdk:"id"`
+	Tags             types.Map    `tfsdk:"tags"`
+	TagsAll          types.Map    `tfsdk:"tags_all"`
 }

@@ -10,5 +10,6 @@ var (
 )
 
 var (
-	FindProjectByName = findProjectByName
+	FindCollectionByID = findCollectionByID
+	FindProjectByName  = findProjectByName
 )

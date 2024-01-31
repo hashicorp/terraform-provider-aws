@@ -80,6 +80,7 @@ const (
 	PricingEndpointID                    = "pricing"
 	QLDBEndpointID                       = "qldb"
 	RedshiftDataEndpointID               = "redshift-data"
+	RekognitionEndpointID                = "rekognition"
 	ResourceExplorer2EndpointID          = "resource-explorer-2"
 	ResourceGroupsEndpointID             = "resource-groups"
 	ResourceGroupsTaggingAPIEndpointID   = "tagging"

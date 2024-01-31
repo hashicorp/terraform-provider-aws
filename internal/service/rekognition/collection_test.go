@@ -24,23 +24,23 @@ import (
 func TestAccRekognitionCollection_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	rCollectionId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_rekognition_collection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.Rekognition)
+			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
 			testAccCollectionPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Rekognition),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCollectionConfig_basic(rCollectionId),
+				Config: testAccCollectionConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "collection_id", rCollectionId),
+					resource.TestCheckResourceAttr(resourceName, "collection_id", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "face_model_version"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -48,10 +48,9 @@ func TestAccRekognitionCollection_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"arn"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
