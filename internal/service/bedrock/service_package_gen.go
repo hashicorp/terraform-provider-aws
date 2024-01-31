@@ -44,7 +44,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newCustomModelResource,
 			Name:    "Custom Model",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: "job_arn",
 			},
 		},
 		{

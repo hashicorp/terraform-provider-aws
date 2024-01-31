@@ -43,18 +43,17 @@ import (
 )
 
 // @FrameworkResource(name="Custom Model")
-// @Tags(identifierAttribute="arn")
+// @Tags(identifierAttribute="job_arn")
 func newCustomModelResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &customModelResource{}
 
-	r.SetDefaultCreateTimeout(120 * time.Minute)
+	r.SetDefaultDeleteTimeout(120 * time.Minute)
 
 	return r, nil
 }
 
 type customModelResource struct {
 	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -70,12 +69,30 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 	// - GetCustomModel
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
-			"base_model_arn": schema.StringAttribute{
+			"base_model_identifier": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"custom_model_arn": schema.StringAttribute{
+				Computed: true,
+			},
+			"custom_model_kms_key_id": schema.StringAttribute{
+				Optional:   true,
+				CustomType: fwtypes.ARNType,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"custom_model_name": schema.StringAttribute{
+				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 63),
 				},
 			},
 			"customization_type": schema.StringAttribute{
@@ -87,7 +104,7 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"hyper_parameters": schema.MapAttribute{
+			"hyperparameters": schema.MapAttribute{
 				CustomType:  fwtypes.MapOfStringType,
 				Required:    true,
 				ElementType: types.StringType,
@@ -96,9 +113,7 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			names.AttrID: framework.IDAttribute(),
-			"job_arn": schema.StringAttribute{
-				Computed: true,
-			},
+			"job_arn":    framework.ARNAttributeComputedOnly(),
 			"job_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -110,34 +125,15 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 						"must be up to 63 letters (uppercase and lowercase), numbers, plus sign, dashes, and dots, and must start with an alphanumeric"),
 				},
 			},
-			"job_tags": schema.MapAttribute{
-				Optional:    true,
-				ElementType: types.StringType,
-				PlanModifiers: []planmodifier.Map{
-					mapplanmodifier.RequiresReplace(),
-				},
+			"job_status": schema.StringAttribute{
+				CustomType: fwtypes.StringEnumType[awstypes.ModelCustomizationJobStatus](),
+				Computed:   true,
 			},
-			"job_role_arn": schema.StringAttribute{
+			"role_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"kms_key_arn": schema.StringAttribute{
-				Optional:   true,
-				CustomType: fwtypes.ARNType,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-			},
-			"name": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 63),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -162,35 +158,6 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"job_vpc_config": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[customModelVPCConfigModel](ctx),
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"security_group_ids": schema.SetAttribute{
-							CustomType:  fwtypes.SetOfStringType,
-							Required:    true,
-							ElementType: types.StringType,
-							PlanModifiers: []planmodifier.Set{
-								setplanmodifier.RequiresReplace(),
-							},
-						},
-						"subnet_ids": schema.SetAttribute{
-							CustomType:  fwtypes.SetOfStringType,
-							Required:    true,
-							ElementType: types.StringType,
-							PlanModifiers: []planmodifier.Set{
-								setplanmodifier.RequiresReplace(),
-							},
-						},
-					},
-				},
-			},
 			"output_data_config": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[customModelOutputDataConfigModel](ctx),
 				PlanModifiers: []planmodifier.List{
@@ -279,6 +246,35 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 					},
 				},
 			},
+			"vpc_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[customModelVPCConfigModel](ctx),
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"security_group_ids": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
+							Required:    true,
+							ElementType: types.StringType,
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.RequiresReplace(),
+							},
+						},
+						"subnet_ids": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
+							Required:    true,
+							ElementType: types.StringType,
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.RequiresReplace(),
+							},
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -298,11 +294,8 @@ func (r *customModelResource) Create(ctx context.Context, request resource.Creat
 		return
 	}
 
-	// Some fields from CreateModelCustomizationJobInput don't match those from GetCustomModelOutput, so we need to set them manually.
-	input.BaseModelIdentifier = fwflex.StringFromFramework(ctx, data.BaseModelARN)
+	// Additional fields.
 	input.ClientRequestToken = aws.String(id.UniqueId())
-	input.CustomModelKmsKeyId = fwflex.StringFromFramework(ctx, data.ModelKmsKeyARN)
-	input.CustomModelName = fwflex.StringFromFramework(ctx, data.ModelName)
 	input.CustomModelTags = getTagsIn(ctx)
 	input.JobTags = getTagsIn(ctx)
 
@@ -315,37 +308,22 @@ func (r *customModelResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	jobARN := aws.ToString(outputCJ.JobArn)
-	outputGJ, err := waitModelCustomizationJobCompleted(ctx, conn, jobARN, r.CreateTimeout(ctx, data.Timeouts))
+	job, err := findModelCustomizationJobByID(ctx, conn, jobARN)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Custom Model customization job (%s) complete", jobARN), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Custom Model customization job (%s)", jobARN), err.Error())
 
 		return
 	}
 
 	// Set values for unknowns.
-	data.CustomizationType = fwtypes.StringEnumValue(outputGJ.CustomizationType)
-	data.JobARN = fwflex.StringToFramework(ctx, outputCJ.JobArn)
-	data.ModelARN = fwflex.StringToFramework(ctx, outputGJ.OutputModelArn)
+	data.CustomizationType = fwtypes.StringEnumValue(job.CustomizationType)
+	data.CustomModelARN = fwflex.StringToFramework(ctx, job.OutputModelArn)
+	data.JobARN = fwflex.StringToFramework(ctx, job.JobArn)
+	data.JobStatus = fwtypes.StringEnumValue(job.Status)
+	data.TrainingMetrics = fwtypes.NewListNestedObjectValueOfNull[customModelTrainingMetricsModel](ctx)
+	data.ValidationMetrics = fwtypes.NewListNestedObjectValueOfNull[customModelValidationMetricsModel](ctx)
 	data.setID()
-
-	// We need to read the model as not all fields are returned by GetModelCustomizationJob.
-	outputGM, err := findCustomModelByID(ctx, conn, data.ModelARN.ValueString())
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Custom Model (%s)", data.ID.ValueString()), err.Error())
-
-		return
-	}
-
-	var new resourceCustomModelData
-	response.Diagnostics.Append(fwflex.Flatten(ctx, outputGM, &new)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	data.TrainingMetrics = new.TrainingMetrics
-	data.ValidationMetrics = new.ValidationMetrics
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -365,25 +343,7 @@ func (r *customModelResource) Read(ctx context.Context, request resource.ReadReq
 
 	conn := r.Meta().BedrockClient(ctx)
 
-	outputGM, err := findCustomModelByID(ctx, conn, data.ModelARN.ValueString())
-
-	if tfresource.NotFound(err) {
-		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
-		response.State.RemoveResource(ctx)
-
-		return
-	}
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Custom Model (%s)", data.ID.ValueString()), err.Error())
-
-		return
-	}
-
-	baseModelARN := fwflex.StringFromFramework(ctx, data.BaseModelARN)
-
-	// We need to read both the job and the model as not all fields are returned by GetModelCustomizationJob.
-	jobARN := aws.ToString(outputGM.JobArn)
+	jobARN := data.JobARN.ValueString()
 	outputGJ, err := findModelCustomizationJobByID(ctx, conn, jobARN)
 
 	if tfresource.NotFound(err) {
@@ -404,37 +364,77 @@ func (r *customModelResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, outputGM, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	data.JobName = fwflex.StringToFramework(ctx, outputGJ.JobName) // Null in GetCustomModelOutput.
+	// Some fields in GetModelCustomizationJobOutput have different names than in CreateModelCustomizationJobInput.
+	data.CustomModelKmsKeyID = fwflex.StringToFrameworkARN(ctx, outputGJ.OutputModelKmsKeyArn)
+	data.CustomModelName = fwflex.StringToFramework(ctx, outputGJ.OutputModelName)
+	data.JobStatus = fwtypes.StringEnumValue(outputGJ.Status)
+	// The base model ARN in GetCustomModelOutput can contain the model version and parameter count.
+	baseModelARN := fwflex.StringFromFramework(ctx, data.BaseModelIdentifier)
+	data.BaseModelIdentifier = fwflex.StringToFrameworkARN(ctx, outputGJ.BaseModelArn)
 	if baseModelARN != nil {
-		// Value in GetCustomModelOutput can contain the model version and parameter count.
 		if old, err := arn.Parse(aws.ToString(baseModelARN)); err == nil {
-			if new, err := arn.Parse(aws.ToString(outputGM.BaseModelArn)); err == nil {
+			if new, err := arn.Parse(aws.ToString(outputGJ.BaseModelArn)); err == nil {
 				if len(strings.SplitN(old.Resource, ":", 2)) == 1 {
 					// Old ARN doesn't contain the model version and parameter count.
 					new.Resource = strings.SplitN(new.Resource, ":", 2)[0]
-					data.BaseModelARN = fwtypes.ARNValue(new.String())
+					data.BaseModelIdentifier = fwtypes.ARNValue(new.String())
 				}
 			}
 		}
 	}
 
-	jobTags, err := listTags(ctx, conn, jobARN)
+	if outputGJ.OutputModelArn != nil {
+		customModelARN := aws.ToString(outputGJ.OutputModelArn)
+		outputGM, err := findCustomModelByID(ctx, conn, customModelARN)
 
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Custom Model Job (%s) tags", jobARN), err.Error())
+		if tfresource.NotFound(err) {
+			response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+			response.State.RemoveResource(ctx)
 
-		return
+			return
+		}
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Custom Model (%s)", customModelARN), err.Error())
+
+			return
+		}
+
+		var customModelData resourceCustomModelData
+		response.Diagnostics.Append(fwflex.Flatten(ctx, outputGM, &customModelData)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		data.CustomModelARN = fwflex.StringToFramework(ctx, outputGM.ModelArn)
+		data.TrainingMetrics = customModelData.TrainingMetrics
+		data.ValidationMetrics = customModelData.ValidationMetrics
 	}
-
-	data.JobTags = fwflex.FlattenFrameworkStringValueMap(ctx, jobTags.IgnoreAWS().Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
+
+func (r *customModelResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new resourceCustomModelData
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Update is only called when `tags` are updated.
+	// Set unknowns to the old (in state) values.
+	new.CustomModelARN = old.CustomModelARN
+	new.JobStatus = old.JobStatus
+	new.TrainingMetrics = old.TrainingMetrics
+	new.ValidationMetrics = old.ValidationMetrics
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+}
+
 func (r *customModelResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data resourceCustomModelData
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
@@ -444,18 +444,41 @@ func (r *customModelResource) Delete(ctx context.Context, request resource.Delet
 
 	conn := r.Meta().BedrockClient(ctx)
 
-	_, err := conn.DeleteCustomModel(ctx, &bedrock.DeleteCustomModelInput{
-		ModelIdentifier: fwflex.StringFromFramework(ctx, data.ModelARN),
-	})
+	if data.JobStatus.ValueEnum() == awstypes.ModelCustomizationJobStatusInProgress {
+		jobARN := data.JobARN.ValueString()
+		input := &bedrock.StopModelCustomizationJobInput{
+			JobIdentifier: aws.String(jobARN),
+		}
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return
+		_, err := conn.StopModelCustomizationJob(ctx, input)
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("stopping Bedrock Custom Model customization job (%s)", jobARN), err.Error())
+
+			return
+		}
+
+		if _, err := waitModelCustomizationJobStopped(ctx, conn, jobARN, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Custom Model customization job (%s) stop", jobARN), err.Error())
+
+			return
+		}
 	}
 
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Custom Model (%s)", data.ID.ValueString()), err.Error())
+	if !data.CustomModelARN.IsNull() {
+		_, err := conn.DeleteCustomModel(ctx, &bedrock.DeleteCustomModelInput{
+			ModelIdentifier: fwflex.StringFromFramework(ctx, data.CustomModelARN),
+		})
 
-		return
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return
+		}
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Custom Model (%s)", data.ID.ValueString()), err.Error())
+
+			return
+		}
 	}
 }
 
@@ -548,20 +571,38 @@ func waitModelCustomizationJobCompleted(ctx context.Context, conn *bedrock.Clien
 	return nil, err
 }
 
+func waitModelCustomizationJobStopped(ctx context.Context, conn *bedrock.Client, id string, timeout time.Duration) (*bedrock.GetModelCustomizationJobOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.ModelCustomizationJobStatusStopping),
+		Target:  enum.Slice(awstypes.ModelCustomizationJobStatusStopped),
+		Refresh: statusModelCustomizationJob(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*bedrock.GetModelCustomizationJobOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 type resourceCustomModelData struct {
-	BaseModelARN         fwtypes.ARN                                                           `tfsdk:"base_model_arn"`
+	BaseModelIdentifier  fwtypes.ARN                                                           `tfsdk:"base_model_identifier"`
+	CustomModelARN       types.String                                                          `tfsdk:"custom_model_arn"`
+	CustomModelKmsKeyID  fwtypes.ARN                                                           `tfsdk:"custom_model_kms_key_id"`
+	CustomModelName      types.String                                                          `tfsdk:"custom_model_name"`
 	CustomizationType    fwtypes.StringEnum[awstypes.CustomizationType]                        `tfsdk:"customization_type"`
-	HyperParameters      fwtypes.MapValueOf[types.String]                                      `tfsdk:"hyper_parameters"`
+	HyperParameters      fwtypes.MapValueOf[types.String]                                      `tfsdk:"hyperparameters"`
 	ID                   types.String                                                          `tfsdk:"id"`
 	JobARN               types.String                                                          `tfsdk:"job_arn"`
 	JobName              types.String                                                          `tfsdk:"job_name"`
-	JobTags              types.Map                                                             `tfsdk:"job_tags"`
-	JobVPCConfig         fwtypes.ListNestedObjectValueOf[customModelVPCConfigModel]            `tfsdk:"job_vpc_config"`
-	ModelARN             types.String                                                          `tfsdk:"arn"`
-	ModelKmsKeyARN       fwtypes.ARN                                                           `tfsdk:"kms_key_arn"`
-	ModelName            types.String                                                          `tfsdk:"name"`
+	JobStatus            fwtypes.StringEnum[awstypes.ModelCustomizationJobStatus]              `tfsdk:"job_status"`
 	OutputDataConfig     fwtypes.ListNestedObjectValueOf[customModelOutputDataConfigModel]     `tfsdk:"output_data_config"`
-	RoleARN              fwtypes.ARN                                                           `tfsdk:"job_role_arn"`
+	RoleARN              fwtypes.ARN                                                           `tfsdk:"role_arn"`
 	Tags                 types.Map                                                             `tfsdk:"tags"`
 	TagsAll              types.Map                                                             `tfsdk:"tags_all"`
 	Timeouts             timeouts.Value                                                        `tfsdk:"timeouts"`
@@ -569,14 +610,15 @@ type resourceCustomModelData struct {
 	TrainingMetrics      fwtypes.ListNestedObjectValueOf[customModelTrainingMetricsModel]      `tfsdk:"training_metrics"`
 	ValidationDataConfig fwtypes.ListNestedObjectValueOf[customModelValidationDataConfigModel] `tfsdk:"validation_data_config"`
 	ValidationMetrics    fwtypes.ListNestedObjectValueOf[customModelValidationMetricsModel]    `tfsdk:"validation_metrics"`
+	VPCConfig            fwtypes.ListNestedObjectValueOf[customModelVPCConfigModel]            `tfsdk:"vpc_config"`
 }
 
 func (data *resourceCustomModelData) InitFromID() error {
-	data.ModelARN = data.ID
+	data.JobARN = data.ID
 
 	return nil
 }
 
 func (data *resourceCustomModelData) setID() {
-	data.ID = data.ModelARN
+	data.ID = data.JobARN
 }

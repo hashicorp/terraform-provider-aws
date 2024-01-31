@@ -32,7 +32,7 @@ TODO
 This resource supports the following arguments:
 
 * `base_model_identifier` - (Required) The Amazon Resource Name (ARN) of the base model.
-* `custom_model_kms_key_id` - (Optional) The custom model is encrypted at rest using this key.
+* `custom_model_kms_key_id` - (Optional) The custom model is encrypted at rest using this key. Specify the key ARN.
 * `custom_model_name` - (Required) Name for the custom model.
 * `customization_type` -(Optional) The customization type. Valid values: `FINE_TUNING`, `CONTINUED_PRE_TRAINING`.
 * `hyperparameters` - (Required) [Parameters](https://docs.aws.amazon.com/bedrock/latest/userguide/custom-models-hp.html) related to tuning the model.
