@@ -70,6 +70,108 @@ func TestAccBedrockCustomModel_basic(t *testing.T) {
 	})
 }
 
+func TestAccBedrockCustomModel_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_custom_model.test"
+	var v bedrock.GetModelCustomizationJobOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomModelConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomModelExists(ctx, resourceName, &v),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrock.ResourceCustomModel, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccBedrockCustomModel_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_custom_model.test"
+	var v bedrock.GetModelCustomizationJobOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomModelConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomModelExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"base_model_identifier"},
+			},
+			{
+				Config: testAccCustomModelConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomModelExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccCustomModelConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomModelExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBedrockCustomModel_vpcConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_custom_model.test"
+	var v bedrock.GetModelCustomizationJobOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomModelConfig_vpcConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomModelExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.0.subnet_ids.#", "2"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"base_model_identifier"},
+			},
+		},
+	})
+}
+
 func testAccCheckCustomModelDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
@@ -261,6 +363,138 @@ resource "aws_bedrock_custom_model" "test" {
 
   training_data_config {
     s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
+  }
+}
+`, rName))
+}
+
+func testAccCustomModelConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccCustomModelConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrock_custom_model" "test" {
+  custom_model_name     = %[1]q
+  job_name              = %[1]q
+  base_model_identifier = data.aws_bedrock_foundation_model.test.model_arn
+  role_arn              = aws_iam_role.test.arn
+
+  hyperparameters = {
+    "epochCount"              = "1"
+    "batchSize"               = "1"
+    "learningRate"            = "0.005"
+    "learningRateWarmupSteps" = "0"
+  }
+
+  output_data_config {
+    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
+  }
+
+  training_data_config {
+    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1))
+}
+
+func testAccCustomModelConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccCustomModelConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrock_custom_model" "test" {
+  custom_model_name     = %[1]q
+  job_name              = %[1]q
+  base_model_identifier = data.aws_bedrock_foundation_model.test.model_arn
+  role_arn              = aws_iam_role.test.arn
+
+  hyperparameters = {
+    "epochCount"              = "1"
+    "batchSize"               = "1"
+    "learningRate"            = "0.005"
+    "learningRateWarmupSteps" = "0"
+  }
+
+  output_data_config {
+    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
+  }
+
+  training_data_config {
+    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccCustomModelConfig_vpcConfig(rName string) string {
+	return acctest.ConfigCompose(testAccCustomModelConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_iam_policy" "vpc" {
+  name = "%[1]s-vpc"
+
+  policy = jsonencode({
+    "Version" : "2012-10-17",
+    "Statement" : [
+      {
+        "Effect" : "Allow",
+        "Action" : [
+          "ec2:DescribeNetworkInterfaces",
+          "ec2:DescribeVpcs",
+          "ec2:DescribeDhcpOptions",
+          "ec2:DescribeSubnets",
+          "ec2:DescribeSecurityGroups",
+          "ec2:CreateNetworkInterface",
+          "ec2:CreateNetworkInterfacePermission",
+          "ec2:DeleteNetworkInterface",
+          "ec2:DeleteNetworkInterfacePermission",
+          "ec2:CreateTags"
+        ],
+        "Resource" : "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "vpc" {
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.vpc.arn
+}
+
+resource "aws_bedrock_custom_model" "test" {
+  custom_model_name     = %[1]q
+  job_name              = %[1]q
+  base_model_identifier = data.aws_bedrock_foundation_model.test.model_arn
+  role_arn              = aws_iam_role.test.arn
+
+  hyperparameters = {
+    "epochCount"              = "1"
+    "batchSize"               = "1"
+    "learningRate"            = "0.005"
+    "learningRateWarmupSteps" = "0"
+  }
+
+  output_data_config {
+    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
+  }
+
+  training_data_config {
+    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
+  }
+
+  vpc_config {
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = aws_subnet.test[*].id
   }
 }
 `, rName))

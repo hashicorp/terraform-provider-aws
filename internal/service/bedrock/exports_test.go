@@ -5,7 +5,7 @@ package bedrock
 
 // Exports for use in tests only.
 var (
-	ResourceCustomModelName                     = newCustomModelResource
+	ResourceCustomModel                         = newCustomModelResource
 	ResourceModelInvocationLoggingConfiguration = newResourceModelInvocationLoggingConfiguration
 
 	FindModelCustomizationJobByID = findModelCustomizationJobByID
