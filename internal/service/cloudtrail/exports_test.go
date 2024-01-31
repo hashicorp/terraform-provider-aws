@@ -6,4 +6,6 @@ package cloudtrail
 // Exports for use in tests only.
 var (
 	FindTrailByARN = findTrailByARN
+
+	ServiceAccountPerRegionMap = serviceAccountPerRegionMap
 )
