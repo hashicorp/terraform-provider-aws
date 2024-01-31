@@ -5,7 +5,7 @@ package elbv2
 
 // Exports for use in tests only.
 const (
-	AwsSdkId = awsSdkId // nosemgrep:ci.aws-in-var-name
+	AwsSdkId = awsSdkId
 )
 
 var (
