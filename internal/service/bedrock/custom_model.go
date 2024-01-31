@@ -452,6 +452,10 @@ func (r *customModelResource) Delete(ctx context.Context, request resource.Delet
 
 		_, err := conn.StopModelCustomizationJob(ctx, input)
 
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return
+		}
+
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("stopping Bedrock Custom Model customization job (%s)", jobARN), err.Error())
 
@@ -531,6 +535,13 @@ func findModelCustomizationJobByID(ctx context.Context, conn *bedrock.Client, id
 
 	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if status := output.Status; status == awstypes.ModelCustomizationJobStatusStopped {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
 	}
 
 	return output, nil
