@@ -3,14 +3,20 @@
 FEATURES:
 
 * **New Resource:** `aws_lexv2models_slot` ([#34617](https://github.com/hashicorp/terraform-provider-aws/issues/34617))
+* **New Resource:** `aws_lexv2models_slot_type` ([#35555](https://github.com/hashicorp/terraform-provider-aws/issues/35555))
+* **New Resource:** `aws_sesv2_email_identity_policy` ([#35486](https://github.com/hashicorp/terraform-provider-aws/issues/35486))
 
 ENHANCEMENTS:
 
+* data-source/aws_redshift_cluster: Add `multi_az` attribute ([#35508](https://github.com/hashicorp/terraform-provider-aws/issues/35508))
+* resource/aws_redshift_cluster: Add `multi_az` argument ([#35508](https://github.com/hashicorp/terraform-provider-aws/issues/35508))
+* resource/aws_redshiftserverless_endpoint_access: Add `owner_account` argument ([#35509](https://github.com/hashicorp/terraform-provider-aws/issues/35509))
 * resource/aws_wafv2_rule_group: Add `header_order` to `field_to_match` configuration blocks ([#35521](https://github.com/hashicorp/terraform-provider-aws/issues/35521))
 * resource/aws_wafv2_web_acl: Add `header_order`to `field_to_match` configuration blocks ([#35521](https://github.com/hashicorp/terraform-provider-aws/issues/35521))
 
 BUG FIXES:
 
+* resource/aws_backup_plan: Fix `InvalidParameterValueException: Invalid lifecycle. EBS Cold Tier is not yet supported` errors on resource Create in AWS GovCloud (US) ([#35560](https://github.com/hashicorp/terraform-provider-aws/issues/35560))
 * resource/aws_dms_event_subscription: Mark `source_ids` as Optional. This fixes a regression introduced in [v5.31.0](https://github.com/hashicorp/terraform-provider-aws/blob/main/CHANGELOG.md#5310-december-15-2023) ([#35541](https://github.com/hashicorp/terraform-provider-aws/issues/35541))
 * resource/aws_efs_file_system: Increase `lifecycle_policy` maximum item limit to 3 ([#35522](https://github.com/hashicorp/terraform-provider-aws/issues/35522))
 * resource/aws_eks_access_entry: Retry IAM eventual consistency errors on create ([#35535](https://github.com/hashicorp/terraform-provider-aws/issues/35535))
