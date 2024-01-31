@@ -8,46 +8,46 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindCapacityProviderByARN(ctx context.Context, conn *ecs.ECS, arn string) (*ecs.CapacityProvider, error) {
+func findCapacityProviderByARN(ctx context.Context, conn *ecs.Client, arn, partition string) (*types.CapacityProvider, error) {
 	input := &ecs.DescribeCapacityProvidersInput{
-		CapacityProviders: aws.StringSlice([]string{arn}),
-		Include:           aws.StringSlice([]string{ecs.CapacityProviderFieldTags}),
+		CapacityProviders: []string{arn},
+		Include:           []types.CapacityProviderField{types.CapacityProviderFieldTags},
 	}
 
-	output, err := conn.DescribeCapacityProvidersWithContext(ctx, input)
+	output, err := conn.DescribeCapacityProviders(ctx, input)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	if errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		log.Printf("[WARN] ECS tagging failed describing Capacity Provider (%s) with tags: %s; retrying without tags", arn, err)
 
 		input.Include = nil
-		output, err = conn.DescribeCapacityProvidersWithContext(ctx, input)
+		output, err = conn.DescribeCapacityProviders(ctx, input)
 	}
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.CapacityProviders) == 0 || output.CapacityProviders[0] == nil {
+	if output == nil || len(output.CapacityProviders) == 0 {
 		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
 	}
 
-	capacityProvider := output.CapacityProviders[0]
+	capacityProvider := &output.CapacityProviders[0]
 
-	if status := aws.StringValue(capacityProvider.Status); status == ecs.CapacityProviderStatusInactive {
+	if status := capacityProvider.Status; status == types.CapacityProviderStatusInactive {
 		return nil, &retry.NotFoundError{
-			Message:     status,
+			Message:     string(status),
 			LastRequest: input,
 		}
 	}
@@ -55,25 +55,25 @@ func FindCapacityProviderByARN(ctx context.Context, conn *ecs.ECS, arn string) (
 	return capacityProvider, nil
 }
 
-func FindServiceByID(ctx context.Context, conn *ecs.ECS, id, cluster string) (*ecs.Service, error) {
+func findServiceByID(ctx context.Context, conn *ecs.Client, id, cluster, partition string) (*types.Service, error) {
 	input := &ecs.DescribeServicesInput{
 		Cluster:  aws.String(cluster),
-		Include:  aws.StringSlice([]string{ecs.ServiceFieldTags}),
-		Services: aws.StringSlice([]string{id}),
+		Include:  []types.ServiceField{types.ServiceFieldTags},
+		Services: []string{id},
 	}
 
-	return FindService(ctx, conn, input)
+	return findService(ctx, conn, partition, input)
 }
 
-func FindServiceNoTagsByID(ctx context.Context, conn *ecs.ECS, id, cluster string) (*ecs.Service, error) {
+func findServiceNoTagsByID(ctx context.Context, conn *ecs.Client, id, cluster, partition string) (*types.Service, error) {
 	input := &ecs.DescribeServicesInput{
-		Services: aws.StringSlice([]string{id}),
+		Services: []string{id},
 	}
 	if cluster != "" {
 		input.Cluster = aws.String(cluster)
 	}
 
-	return FindService(ctx, conn, input)
+	return findService(ctx, conn, partition, input)
 }
 
 type expectActiveError struct {
@@ -90,12 +90,12 @@ func (e *expectActiveError) Error() string {
 	return fmt.Sprintf("expected status %[1]q, was %[2]q", serviceStatusActive, e.status)
 }
 
-func FindServiceByIDWaitForActive(ctx context.Context, conn *ecs.ECS, id, cluster string) (*ecs.Service, error) {
-	var service *ecs.Service
+func findServiceByIDWaitForActive(ctx context.Context, conn *ecs.Client, id, cluster, partition string) (*types.Service, error) {
+	var service *types.Service
 	// Use the retry.RetryContext function instead of WaitForState() because we don't want the timeout error, if any
 	err := retry.RetryContext(ctx, serviceDescribeTimeout, func() *retry.RetryError {
 		var err error
-		service, err = FindServiceByID(ctx, conn, id, cluster)
+		service, err = findServiceByID(ctx, conn, id, cluster, partition)
 		if tfresource.NotFound(err) {
 			return retry.RetryableError(err)
 		}
@@ -103,33 +103,33 @@ func FindServiceByIDWaitForActive(ctx context.Context, conn *ecs.ECS, id, cluste
 			return retry.NonRetryableError(err)
 		}
 
-		if status := aws.StringValue(service.Status); status != serviceStatusActive {
+		if status := aws.ToString(service.Status); status != serviceStatusActive {
 			return retry.RetryableError(newExpectActiveError(status))
 		}
 
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		service, err = FindServiceByID(ctx, conn, id, cluster)
+		service, err = findServiceByID(ctx, conn, id, cluster, partition)
 	}
 
 	return service, err
 }
 
-func FindService(ctx context.Context, conn *ecs.ECS, input *ecs.DescribeServicesInput) (*ecs.Service, error) {
-	output, err := conn.DescribeServicesWithContext(ctx, input)
+func findService(ctx context.Context, conn *ecs.Client, partition string, input *ecs.DescribeServicesInput) (*types.Service, error) {
+	output, err := conn.DescribeServices(ctx, input)
 
-	if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) && input.Include != nil {
-		id := aws.StringValueSlice(input.Services)[0]
+	if errs.IsUnsupportedOperationInPartitionError(partition, err) && input.Include != nil {
+		id := input.Services[0]
 		log.Printf("[WARN] failed describing ECS Service (%s) with tags: %s; retrying without tags", id, err)
 
 		input.Include = nil
-		output, err = conn.DescribeServicesWithContext(ctx, input)
+		output, err = conn.DescribeServices(ctx, input)
 	}
 
 	// As of AWS SDK for Go v1.44.42, DescribeServices does not return the error code ecs.ErrCodeServiceNotFoundException
 	// Keep this here in case it ever does
-	if tfawserr.ErrCodeEquals(err, ecs.ErrCodeServiceNotFoundException) {
+	if errs.IsA[*types.ServiceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -141,7 +141,7 @@ func FindService(ctx context.Context, conn *ecs.ECS, input *ecs.DescribeServices
 
 	// When an ECS Service is not found by DescribeServices(), it will return a Failure struct with Reason = "MISSING"
 	for _, v := range output.Failures {
-		if aws.StringValue(v.Reason) == "MISSING" {
+		if aws.ToString(v.Reason) == "MISSING" {
 			return nil, &retry.NotFoundError{
 				LastRequest: input,
 			}
@@ -155,5 +155,5 @@ func FindService(ctx context.Context, conn *ecs.ECS, input *ecs.DescribeServices
 		return nil, tfresource.NewTooManyResultsError(n, input)
 	}
 
-	return output.Services[0], nil
+	return &output.Services[0], nil
 }

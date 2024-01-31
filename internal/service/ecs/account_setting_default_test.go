@@ -9,23 +9,24 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/service/ecs/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 func TestAccECSAccountSettingDefault_containerInstanceLongARNFormat(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ecs_account_setting_default.test"
-	settingName := ecs.SettingNameContainerInstanceLongArnFormat
+	settingName := string(types.SettingNameContainerInstanceLongArnFormat)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -50,11 +51,11 @@ func TestAccECSAccountSettingDefault_containerInstanceLongARNFormat(t *testing.T
 func TestAccECSAccountSettingDefault_serviceLongARNFormat(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ecs_account_setting_default.test"
-	settingName := ecs.SettingNameServiceLongArnFormat
+	settingName := string(types.SettingNameServiceLongArnFormat)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,11 +80,11 @@ func TestAccECSAccountSettingDefault_serviceLongARNFormat(t *testing.T) {
 func TestAccECSAccountSettingDefault_taskLongARNFormat(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ecs_account_setting_default.test"
-	settingName := ecs.SettingNameTaskLongArnFormat
+	settingName := string(types.SettingNameTaskLongArnFormat)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -108,11 +109,11 @@ func TestAccECSAccountSettingDefault_taskLongARNFormat(t *testing.T) {
 func TestAccECSAccountSettingDefault_vpcTrunking(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ecs_account_setting_default.test"
-	settingName := ecs.SettingNameAwsvpcTrunking
+	settingName := string(types.SettingNameAwsvpcTrunking)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -137,11 +138,11 @@ func TestAccECSAccountSettingDefault_vpcTrunking(t *testing.T) {
 func TestAccECSAccountSettingDefault_containerInsights(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ecs_account_setting_default.test"
-	settingName := ecs.SettingNameContainerInsights
+	settingName := string(types.SettingNameContainerInsights)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -165,7 +166,7 @@ func TestAccECSAccountSettingDefault_containerInsights(t *testing.T) {
 
 func testAccCheckAccountSettingDefaultDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecs_account_setting_default" {
@@ -175,13 +176,13 @@ func testAccCheckAccountSettingDefaultDestroy(ctx context.Context) resource.Test
 			name := rs.Primary.Attributes["name"]
 
 			input := &ecs.ListAccountSettingsInput{
-				Name:              aws.String(name),
-				EffectiveSettings: aws.Bool(true),
+				Name:              types.SettingName(name),
+				EffectiveSettings: true,
 			}
 
-			resp, err := conn.ListAccountSettingsWithContext(ctx, input)
+			resp, err := conn.ListAccountSettings(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, ecs.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*types.ResourceNotFoundException](err) {
 				continue
 			}
 
@@ -190,16 +191,16 @@ func testAccCheckAccountSettingDefaultDestroy(ctx context.Context) resource.Test
 			}
 
 			for _, value := range resp.Settings {
-				if aws.StringValue(value.Value) != "disabled" {
-					switch name {
-					case ecs.SettingNameContainerInstanceLongArnFormat:
+				if aws.ToString(value.Value) != "disabled" {
+					switch types.SettingName(name) {
+					case types.SettingNameContainerInstanceLongArnFormat:
 						return nil
-					case ecs.SettingNameServiceLongArnFormat:
+					case types.SettingNameServiceLongArnFormat:
 						return nil
-					case ecs.SettingNameTaskLongArnFormat:
+					case types.SettingNameTaskLongArnFormat:
 						return nil
 					default:
-						return fmt.Errorf("[Destroy Error] Account Settings (%s), still enabled", aws.StringValue(value.Name))
+						return fmt.Errorf("[Destroy Error] Account Settings (%s), still enabled", string(value.Name))
 					}
 				}
 			}

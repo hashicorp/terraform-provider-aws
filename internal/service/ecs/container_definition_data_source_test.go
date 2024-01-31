@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/aws/aws-sdk-go-v2/service/ecs"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -16,13 +16,13 @@ import (
 func TestAccECSContainerDefinitionDataSource_ecsContainerDefinition(t *testing.T) {
 	ctx := acctest.Context(t)
 	rString := sdkacctest.RandString(8)
-	clusterName := fmt.Sprintf("tf_acc_td_ds_cluster_ecs_containter_definition_%s", rString)
-	svcName := fmt.Sprintf("tf_acc_svc_td_ds_ecs_containter_definition_%s", rString)
-	tdName := fmt.Sprintf("tf_acc_td_ds_ecs_containter_definition_%s", rString)
+	clusterName := fmt.Sprintf("tf_acc_td_ds_cluster_ecs_container_definition_%s", rString)
+	svcName := fmt.Sprintf("tf_acc_svc_td_ds_ecs_container_definition_%s", rString)
+	tdName := fmt.Sprintf("tf_acc_td_ds_ecs_container_definition_%s", rString)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{

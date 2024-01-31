@@ -17,9 +17,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	sdkV1 = 1
+	sdkV2 = 2
+)
+
 var (
 	getTagFunc     = flag.String("GetTagFunc", "GetTag", "getTagFunc")
 	idAttribName   = flag.String("IDAttribName", "resource_arn", "idAttribName")
+	sdkVersion     = flag.Int("AWSSDKVersion", sdkV1, "Version of the AWS Go SDK to use i.e. 1 or 2")
 	updateTagsFunc = flag.String("UpdateTagsFunc", "updateTags", "updateTagsFunc")
 )
 
@@ -64,6 +70,10 @@ func main() {
 		g.Fatalf("encountered: %s", err)
 	}
 
+	if *sdkVersion != sdkV1 && *sdkVersion != sdkV2 {
+		g.Fatalf("AWS SDK Go Version %d not supported", *sdkVersion)
+	}
+
 	providerResName := fmt.Sprintf("aws_%s_tag", servicePackage)
 
 	templateData := TemplateData{
@@ -84,6 +94,18 @@ func main() {
 
 	d := g.NewGoFileDestination(resourceFilename)
 
+	var resourceTemplateBody string
+	var resourceTestTemplateBody string
+
+	switch *sdkVersion {
+	case sdkV1:
+		resourceTemplateBody = v1ResourceTemplateBody
+		resourceTestTemplateBody = v1ResourceTestTemplateBody
+	case sdkV2:
+		resourceTemplateBody = v2ResourceTemplateBody
+		resourceTestTemplateBody = v2ResourceTestTemplateBody
+	}
+
 	if err := d.WriteTemplate("taggen", resourceTemplateBody, templateData); err != nil {
 		g.Fatalf("generating file (%s): %s", resourceFilename, err)
 	}
@@ -103,8 +125,14 @@ func main() {
 	}
 }
 
-//go:embed resource.tmpl
-var resourceTemplateBody string
+//go:embed templates/v1/resource.tmpl
+var v1ResourceTemplateBody string
 
-//go:embed tests.tmpl
-var resourceTestTemplateBody string
+//go:embed templates/v2/resource.tmpl
+var v2ResourceTemplateBody string
+
+//go:embed templates/v1/tests.tmpl
+var v1ResourceTestTemplateBody string
+
+//go:embed templates/v2/tests.tmpl
+var v2ResourceTestTemplateBody string
