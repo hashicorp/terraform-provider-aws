@@ -42,9 +42,9 @@ import (
 func newResourcePipeline(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourcePipeline{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+	r.SetDefaultCreateTimeout(45 * time.Minute)
+	r.SetDefaultUpdateTimeout(45 * time.Minute)
+	r.SetDefaultDeleteTimeout(45 * time.Minute)
 
 	return r, nil
 }
