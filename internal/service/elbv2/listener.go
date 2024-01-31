@@ -5,7 +5,6 @@ package elbv2
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"sort"
@@ -54,118 +53,6 @@ func ResourceListener() *schema.Resource {
 			Create: schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(5 * time.Minute),
 		},
-
-		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-			func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
-				var errx []error
-
-				path := cty.GetAttrPath("default_action")
-
-				configRaw := d.GetRawConfig()
-				if !configRaw.IsKnown() || configRaw.IsNull() {
-					return nil
-				}
-
-				defaultAction := configRaw.GetAttr("default_action")
-				if defaultAction.IsKnown() && !defaultAction.IsNull() {
-					it := defaultAction.ElementIterator()
-					for it.Next() {
-						i, action := it.Element()
-						path := path.Index(i)
-
-						actionType := action.GetAttr("type")
-						if !actionType.IsKnown() {
-							continue
-						}
-						if actionType.IsNull() {
-							continue
-						}
-
-						if action.IsKnown() && !action.IsNull() {
-							tga := action.GetAttr("target_group_arn")
-							f := action.GetAttr("forward")
-
-							if !tga.IsNull() && (!f.IsNull() && f.LengthInt() > 0) {
-								errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeErrorDiagnostic(path,
-									"Invalid Attribute Combination",
-									fmt.Sprintf("Only one of %q or %q can be specified",
-										"target_group_arn",
-										"forward",
-									),
-								)))
-							}
-
-							path = path.GetAttr("type")
-
-							switch awstypes.ActionTypeEnum(actionType.AsString()) {
-							case awstypes.ActionTypeEnumForward:
-								if tga.IsNull() && (f.IsNull() || f.LengthInt() == 0) {
-									errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeErrorDiagnostic(path,
-										"Invalid Attribute Combination",
-										fmt.Sprintf("Either %q or %q must be specified when %q is %q.",
-											"target_group_arn", "forward",
-											"type",
-											awstypes.ActionTypeEnumForward,
-										),
-									)))
-								}
-
-							case awstypes.ActionTypeEnumRedirect:
-								if r := action.GetAttr("redirect"); r.IsNull() || r.LengthInt() == 0 {
-									errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeErrorDiagnostic(path,
-										"Invalid Attribute Combination",
-										fmt.Sprintf("Attribute %q must be specified when %q is %q.",
-											"redirect",
-											"type",
-											awstypes.ActionTypeEnumRedirect,
-										),
-									)))
-								}
-
-							case awstypes.ActionTypeEnumFixedResponse:
-								if fr := action.GetAttr("fixed_response"); fr.IsNull() || fr.LengthInt() == 0 {
-									errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeErrorDiagnostic(path,
-										"Invalid Attribute Combination",
-										fmt.Sprintf("Attribute %q must be specified when %q is %q.",
-											"fixed_response",
-											"type",
-											awstypes.ActionTypeEnumFixedResponse,
-										),
-									)))
-								}
-
-							case awstypes.ActionTypeEnumAuthenticateCognito:
-								if ac := action.GetAttr("authenticate_cognito"); ac.IsNull() || ac.LengthInt() == 0 {
-									errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeErrorDiagnostic(path,
-										"Invalid Attribute Combination",
-										fmt.Sprintf("Attribute %q must be specified when %q is %q.",
-											"authenticate_cognito",
-											"type",
-											awstypes.ActionTypeEnumAuthenticateCognito,
-										),
-									)))
-								}
-
-							case awstypes.ActionTypeEnumAuthenticateOidc:
-								if ao := action.GetAttr("authenticate_oidc"); ao.IsNull() || ao.LengthInt() == 0 {
-									errx = append(errx, sdkdiag.DiagnosticError(errs.NewAttributeWarningDiagnostic(path,
-										"Invalid Attribute Combination",
-										fmt.Sprintf("Attribute %q must be specified when %q is %q.",
-											"authenticate_oidc",
-											"type",
-											awstypes.ActionTypeEnumAuthenticateOidc,
-										),
-									)))
-								}
-							}
-						}
-					}
-				}
-
-				return errors.Join(errx...)
-			},
-		),
 
 		Schema: map[string]*schema.Schema{
 			"alpn_policy": {
@@ -502,6 +389,11 @@ func ResourceListener() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: customdiff.All(
+			verify.SetTagsDiff,
+			validateListenerActionsCustomDiff("default_action"),
+		),
 	}
 }
 
@@ -541,10 +433,9 @@ func resourceListenerCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("default_action"); ok && len(v.([]interface{})) > 0 {
-		var err error
-		input.DefaultActions, err = expandLbListenerActions(v.([]interface{}))
-		if err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
+		input.DefaultActions = expandLbListenerActions(cty.GetAttrPath("default_action"), v.([]any), &diags)
+		if diags.HasError() {
+			return diags
 		}
 	}
 
@@ -675,10 +566,9 @@ func resourceListenerUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if d.HasChange("default_action") {
-			var err error
-			input.DefaultActions, err = expandLbListenerActions(d.Get("default_action").([]interface{}))
-			if err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
+			input.DefaultActions = expandLbListenerActions(cty.GetAttrPath("default_action"), d.Get("default_action").([]any), &diags)
+			if diags.HasError() {
+				return diags
 			}
 		}
 
@@ -794,13 +684,12 @@ func findListeners(ctx context.Context, conn *elasticloadbalancingv2.Client, inp
 	return output, nil
 }
 
-func expandLbListenerActions(l []interface{}) ([]awstypes.Action, error) {
+func expandLbListenerActions(actionsPath cty.Path, l []any, diags *diag.Diagnostics) []awstypes.Action {
 	if len(l) == 0 {
-		return nil, nil
+		return nil
 	}
 
 	var actions []awstypes.Action
-	var err error
 
 	for i, tfMapRaw := range l {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -808,48 +697,54 @@ func expandLbListenerActions(l []interface{}) ([]awstypes.Action, error) {
 			continue
 		}
 
-		action := awstypes.Action{
-			Order: aws.Int32(int32(i + 1)),
-			Type:  awstypes.ActionTypeEnum(tfMap["type"].(string)),
-		}
-
-		if order, ok := tfMap["order"].(int); ok && order != 0 {
-			action.Order = aws.Int32(int32(order))
-		}
-
-		switch awstypes.ActionTypeEnum(tfMap["type"].(string)) {
-		case awstypes.ActionTypeEnumForward:
-			if v, ok := tfMap["target_group_arn"].(string); ok && v != "" {
-				action.TargetGroupArn = aws.String(v)
-			} else if v, ok := tfMap["forward"].([]interface{}); ok {
-				action.ForwardConfig = expandLbListenerActionForwardConfig(v)
-			}
-
-		case awstypes.ActionTypeEnumRedirect:
-			if v, ok := tfMap["redirect"].([]interface{}); ok {
-				action.RedirectConfig = expandLbListenerRedirectActionConfig(v)
-			}
-
-		case awstypes.ActionTypeEnumFixedResponse:
-			if v, ok := tfMap["fixed_response"].([]interface{}); ok {
-				action.FixedResponseConfig = expandLbListenerFixedResponseConfig(v)
-			}
-
-		case awstypes.ActionTypeEnumAuthenticateCognito:
-			if v, ok := tfMap["authenticate_cognito"].([]interface{}); ok {
-				action.AuthenticateCognitoConfig = expandLbListenerAuthenticateCognitoConfig(v)
-			}
-
-		case awstypes.ActionTypeEnumAuthenticateOidc:
-			if v, ok := tfMap["authenticate_oidc"].([]interface{}); ok {
-				action.AuthenticateOidcConfig = expandAuthenticateOIDCConfig(v)
-			}
-		}
-
-		actions = append(actions, action)
+		actions = append(actions, expandLbListenerAction(actionsPath.IndexInt(i), i, tfMap, diags))
 	}
 
-	return actions, err
+	return actions
+}
+
+func expandLbListenerAction(actionPath cty.Path, i int, tfMap map[string]any, diags *diag.Diagnostics) awstypes.Action {
+	action := awstypes.Action{
+		Order: aws.Int32(int32(i + 1)),
+		Type:  awstypes.ActionTypeEnum(tfMap["type"].(string)),
+	}
+
+	if order, ok := tfMap["order"].(int); ok && order != 0 {
+		action.Order = aws.Int32(int32(order))
+	}
+
+	switch awstypes.ActionTypeEnum(tfMap["type"].(string)) {
+	case awstypes.ActionTypeEnumForward:
+		if v, ok := tfMap["target_group_arn"].(string); ok && v != "" {
+			action.TargetGroupArn = aws.String(v)
+		} else if v, ok := tfMap["forward"].([]interface{}); ok {
+			action.ForwardConfig = expandLbListenerActionForwardConfig(v)
+		}
+
+	case awstypes.ActionTypeEnumRedirect:
+		if v, ok := tfMap["redirect"].([]interface{}); ok {
+			action.RedirectConfig = expandLbListenerRedirectActionConfig(v)
+		}
+
+	case awstypes.ActionTypeEnumFixedResponse:
+		if v, ok := tfMap["fixed_response"].([]interface{}); ok {
+			action.FixedResponseConfig = expandLbListenerFixedResponseConfig(v)
+		}
+
+	case awstypes.ActionTypeEnumAuthenticateCognito:
+		if v, ok := tfMap["authenticate_cognito"].([]interface{}); ok {
+			action.AuthenticateCognitoConfig = expandLbListenerAuthenticateCognitoConfig(v)
+		}
+
+	case awstypes.ActionTypeEnumAuthenticateOidc:
+		if v, ok := tfMap["authenticate_oidc"].([]interface{}); ok {
+			action.AuthenticateOidcConfig = expandAuthenticateOIDCConfig(v)
+		}
+	}
+
+	listenerActionRuntimeValidate(actionPath, tfMap, diags)
+
+	return action
 }
 
 func expandLbListenerAuthenticateCognitoConfig(l []interface{}) *awstypes.AuthenticateCognitoActionConfig {
@@ -1276,5 +1171,174 @@ func alpnPolicyEnum_Values() []string {
 		alpnPolicyHTTP2Optional,
 		alpnPolicyHTTP2Preferred,
 		alpnPolicyNone,
+	}
+}
+
+func validateListenerActionsCustomDiff(attrName string) schema.CustomizeDiffFunc {
+	return func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+		var diags diag.Diagnostics
+
+		configRaw := d.GetRawConfig()
+		if !configRaw.IsKnown() || configRaw.IsNull() {
+			return nil
+		}
+
+		actionsPath := cty.GetAttrPath(attrName)
+		actions := configRaw.GetAttr(attrName)
+		if actions.IsKnown() && !actions.IsNull() {
+			listenerActionsPlantimeValidate(actionsPath, actions, &diags)
+		}
+
+		return sdkdiag.DiagnosticsError(diags)
+	}
+}
+
+func listenerActionsPlantimeValidate(actionsPath cty.Path, actions cty.Value, diags *diag.Diagnostics) {
+	it := actions.ElementIterator()
+	for it.Next() {
+		i, action := it.Element()
+		actionPath := actionsPath.Index(i)
+
+		listenerActionPlantimeValidate(actionPath, action, diags)
+	}
+}
+
+func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags *diag.Diagnostics) {
+	actionType := action.GetAttr("type")
+	if !actionType.IsKnown() {
+		return
+	}
+	if actionType.IsNull() {
+		return
+	}
+
+	if action.IsKnown() && !action.IsNull() {
+		tga := action.GetAttr("target_group_arn")
+		f := action.GetAttr("forward")
+
+		if !tga.IsNull() && (!f.IsNull() && f.LengthInt() > 0) {
+			*diags = append(*diags, errs.NewAttributeErrorDiagnostic(actionPath,
+				"Invalid Attribute Combination",
+				fmt.Sprintf("Only one of %q or %q can be specified.",
+					errs.PathString(actionPath.GetAttr("target_group_arn")),
+					errs.PathString(actionPath.GetAttr("forward")),
+				),
+			))
+		}
+
+		switch awstypes.ActionTypeEnum(actionType.AsString()) {
+		case awstypes.ActionTypeEnumForward:
+			if tga.IsNull() && (f.IsNull() || f.LengthInt() == 0) {
+				typePath := actionPath.GetAttr("type")
+				*diags = append(*diags, errs.NewAttributeErrorDiagnostic(typePath,
+					"Invalid Attribute Combination",
+					fmt.Sprintf("Either %q or %q must be specified when %q is %q.",
+						errs.PathString(actionPath.GetAttr("target_group_arn")), errs.PathString(actionPath.GetAttr("forward")),
+						errs.PathString(typePath),
+						awstypes.ActionTypeEnumForward,
+					),
+				))
+			}
+
+		case awstypes.ActionTypeEnumRedirect:
+			if r := action.GetAttr("redirect"); r.IsNull() || r.LengthInt() == 0 {
+				*diags = append(*diags, errs.NewAttributeRequiredWhenError(
+					actionPath.GetAttr("redirect"),
+					actionPath.GetAttr("type"),
+					string(awstypes.ActionTypeEnumRedirect),
+				))
+			}
+
+		case awstypes.ActionTypeEnumFixedResponse:
+			if fr := action.GetAttr("fixed_response"); fr.IsNull() || fr.LengthInt() == 0 {
+				*diags = append(*diags, errs.NewAttributeRequiredWhenError(
+					actionPath.GetAttr("fixed_response"),
+					actionPath.GetAttr("type"),
+					string(awstypes.ActionTypeEnumFixedResponse),
+				))
+			}
+
+		case awstypes.ActionTypeEnumAuthenticateCognito:
+			if ac := action.GetAttr("authenticate_cognito"); ac.IsNull() || ac.LengthInt() == 0 {
+				*diags = append(*diags, errs.NewAttributeRequiredWhenError(
+					actionPath.GetAttr("authenticate_cognito"),
+					actionPath.GetAttr("type"),
+					string(awstypes.ActionTypeEnumAuthenticateCognito),
+				))
+			}
+
+		case awstypes.ActionTypeEnumAuthenticateOidc:
+			if ao := action.GetAttr("authenticate_oidc"); ao.IsNull() || ao.LengthInt() == 0 {
+				*diags = append(*diags, errs.NewAttributeRequiredWhenError(
+					actionPath.GetAttr("authenticate_oidc"),
+					actionPath.GetAttr("type"),
+					string(awstypes.ActionTypeEnumAuthenticateOidc),
+				))
+			}
+		}
+	}
+}
+
+func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, diags *diag.Diagnostics) {
+	actionType := awstypes.ActionTypeEnum(action["type"].(string))
+
+	if v, ok := action["target_group_arn"].(string); ok && v != "" {
+		if actionType != awstypes.ActionTypeEnumForward {
+			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
+				actionPath.GetAttr("target_group_arn"),
+				actionPath.GetAttr("type"),
+				string(actionType),
+			))
+		}
+	}
+
+	if v, ok := action["forward"].([]interface{}); ok && len(v) > 0 {
+		if actionType != awstypes.ActionTypeEnumForward {
+			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
+				actionPath.GetAttr("forward"),
+				actionPath.GetAttr("type"),
+				string(actionType),
+			))
+		}
+	}
+
+	if v, ok := action["authenticate_cognito"].([]interface{}); ok && len(v) > 0 {
+		if actionType != awstypes.ActionTypeEnumAuthenticateCognito {
+			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
+				actionPath.GetAttr("authenticate_cognito"),
+				actionPath.GetAttr("type"),
+				string(actionType),
+			))
+		}
+	}
+
+	if v, ok := action["authenticate_oidc"].([]interface{}); ok && len(v) > 0 {
+		if actionType != awstypes.ActionTypeEnumAuthenticateOidc {
+			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
+				actionPath.GetAttr("authenticate_oidc"),
+				actionPath.GetAttr("type"),
+				string(actionType),
+			))
+		}
+	}
+
+	if v, ok := action["fixed_response"].([]interface{}); ok && len(v) > 0 {
+		if actionType != awstypes.ActionTypeEnumFixedResponse {
+			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
+				actionPath.GetAttr("fixed_response"),
+				actionPath.GetAttr("type"),
+				string(actionType),
+			))
+		}
+	}
+
+	if v, ok := action["redirect"].([]interface{}); ok && len(v) > 0 {
+		if actionType != awstypes.ActionTypeEnumRedirect {
+			*diags = append(*diags, errs.NewAttributeConflictsWhenWillBeError(
+				actionPath.GetAttr("redirect"),
+				actionPath.GetAttr("type"),
+				string(actionType),
+			))
+		}
 	}
 }

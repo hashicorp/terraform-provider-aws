@@ -261,7 +261,7 @@ func TestAccELBV2ListenerRule_forwardWeighted(t *testing.T) {
 	})
 }
 
-func TestAccELBV2ListenerRule_forwardTargetArnAndBlock(t *testing.T) {
+func TestAccELBV2ListenerRule_forwardTargetARNAndBlock(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -272,8 +272,8 @@ func TestAccELBV2ListenerRule_forwardTargetArnAndBlock(t *testing.T) {
 		CheckDestroy:             testAccCheckListenerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccListenerRuleConfig_forwardTargetArnAndBlock(rName),
-				ExpectError: regexache.MustCompile(`Only one of "target_group_arn" or "forward" can be specified`),
+				Config:      testAccListenerRuleConfig_forwardTargetARNAndBlock(rName),
+				ExpectError: regexache.MustCompile(regexp.QuoteMeta(`Only one of "action[0].target_group_arn" or "action[0].forward" can be specified.`)),
 			},
 		},
 	})
@@ -829,47 +829,47 @@ func TestAccELBV2ListenerRule_EmptyAction(t *testing.T) {
 	}{
 		awstypes.ActionTypeEnumForward: {
 			actionType: awstypes.ActionTypeEnumForward,
-			expectedError: regexache.MustCompile(fmt.Sprintf("Either %q or %q must be specified when %q is %q.",
-				"target_group_arn", "forward",
-				"type",
+			expectedError: regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf("Either %q or %q must be specified when %q is %q.",
+				"action[0].target_group_arn", "action[0].forward",
+				"action[0].type",
 				awstypes.ActionTypeEnumForward,
-			)),
+			))),
 		},
 
 		awstypes.ActionTypeEnumAuthenticateOidc: {
 			actionType: awstypes.ActionTypeEnumAuthenticateOidc,
-			expectedError: regexache.MustCompile(fmt.Sprintf("Attribute %q must be specified when %q is %q.",
-				"authenticate_oidc",
-				"type",
+			expectedError: regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+				"action[0].authenticate_oidc",
+				"action[0].type",
 				awstypes.ActionTypeEnumAuthenticateOidc,
-			)),
+			))),
 		},
 
 		awstypes.ActionTypeEnumAuthenticateCognito: {
 			actionType: awstypes.ActionTypeEnumAuthenticateCognito,
-			expectedError: regexache.MustCompile(fmt.Sprintf("Attribute %q must be specified when %q is %q.",
-				"authenticate_cognito",
-				"type",
+			expectedError: regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+				"action[0].authenticate_cognito",
+				"action[0].type",
 				awstypes.ActionTypeEnumAuthenticateCognito,
-			)),
+			))),
 		},
 
 		awstypes.ActionTypeEnumRedirect: {
 			actionType: awstypes.ActionTypeEnumRedirect,
-			expectedError: regexache.MustCompile(fmt.Sprintf("Attribute %q must be specified when %q is %q.",
-				"redirect",
-				"type",
+			expectedError: regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+				"action[0].redirect",
+				"action[0].type",
 				awstypes.ActionTypeEnumRedirect,
-			)),
+			))),
 		},
 
 		awstypes.ActionTypeEnumFixedResponse: {
 			actionType: awstypes.ActionTypeEnumFixedResponse,
-			expectedError: regexache.MustCompile(fmt.Sprintf("Attribute %q must be specified when %q is %q.",
-				"fixed_response",
-				"type",
+			expectedError: regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf("Attribute %q must be specified when %q is %q.",
+				"action[0].fixed_response",
+				"action[0].type",
 				awstypes.ActionTypeEnumFixedResponse,
-			)),
+			))),
 		},
 	}
 
@@ -2002,7 +2002,7 @@ resource "aws_security_group" "alb_test" {
 `, lbName, targetGroupName1, targetGroupName2)
 }
 
-func testAccListenerRuleConfig_forwardTargetArnAndBlock(rName string) string {
+func testAccListenerRuleConfig_forwardTargetARNAndBlock(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_lb_listener_rule" "weighted" {
   listener_arn = aws_lb_listener.test.arn
