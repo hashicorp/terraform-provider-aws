@@ -111,12 +111,22 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
+	output, err := findCollectionByID(ctx, conn, plan.CollectionID.ValueString())
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Rekognition, create.ErrActionCreating, ResNameCollection, plan.CollectionID.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
 	state := plan
 	state.ID = plan.CollectionID
-	state.ARN = flex.StringToFramework(ctx, out.CollectionArn)
-	state.FaceModelVersion = flex.StringToFramework(ctx, out.FaceModelVersion)
+	state.ARN = flex.StringToFramework(ctx, output.CollectionARN)
+	state.FaceModelVersion = flex.StringToFramework(ctx, output.FaceModelVersion)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -130,10 +140,12 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	out, err := findCollectionByID(ctx, conn, state.ID.ValueString())
+
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Rekognition, create.ErrActionReading, ResNameCollection, state.ID.ValueString(), err),
