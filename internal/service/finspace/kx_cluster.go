@@ -171,7 +171,7 @@ func ResourceKxCluster() *schema.Resource {
 						"s3_object_version": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(3, 63),
+							ValidateFunc: validation.StringLenBetween(3, 1024),
 						},
 					},
 				},
