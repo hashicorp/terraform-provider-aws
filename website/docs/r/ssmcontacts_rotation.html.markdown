@@ -152,7 +152,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name (ARN) of the rotation.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-
 ### Recurrence
 
 * `number_of_on_calls` - (Required) The number of contacts, or shift team members designated to be on call concurrently during a shift.
@@ -173,6 +172,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `hand_off_time` - (Required) The hand off time. See [Hand Off Time](#hand-off-time) for more details.
 
 ### Weekly Settings
+
 * `day_of_week` - (Required) The day of the week when weekly recurring on-call shift rotations begins.
 * `hand_off_time` - (Required) The hand off time. See [Hand Off Time](#hand-off-time) for more details.
 
