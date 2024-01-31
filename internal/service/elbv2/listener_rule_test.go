@@ -873,12 +873,10 @@ func TestAccELBV2ListenerRule_EmptyAction(t *testing.T) {
 		},
 	}
 
-	for name, testcase := range testcases {
+	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
 		testcase := testcase
 
 		t.Run(string(name), func(t *testing.T) {
-			t.Parallel()
-
 			ctx := acctest.Context(t)
 			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2012,7 +2010,7 @@ resource "aws_lb_listener_rule" "weighted" {
   action {
     type = "forward"
 
-	target_group_arn = aws_lb_target_group.test.arn
+    target_group_arn = aws_lb_target_group.test.arn
 
     forward {
       target_group {
@@ -3053,7 +3051,7 @@ resource "aws_lb_listener_rule" "test" {
   listener_arn = aws_lb_listener.test.arn
 
   action {
-    type  = "authenticate-oidc"
+    type = "authenticate-oidc"
 
     authenticate_oidc {
       authorization_endpoint = "https://example.com/authorization_endpoint"
