@@ -17,17 +17,18 @@ Provides a Terraform resource for managing a Contacts Rotation in AWS Systems Ma
 ```terraform
 resource "aws_ssmcontacts_rotation" "example" {
   contact_ids = [
-	aws_ssmcontacts_contact.example.arn
+    aws_ssmcontacts_contact.example.arn
   ]
 
   name = "rotation"
 
   recurrence {
-    number_of_on_calls = 1
+    number_of_on_calls    = 1
 	recurrence_multiplier = 1
-	daily_settings = [
-		"01:00"
-	]
+    daily_settings {
+      hour_of_day    = 9
+      minute_of_hour = 00
+    }
   }
  
  time_zone_id = "Australia/Sydney"
@@ -41,47 +42,43 @@ resource "aws_ssmcontacts_rotation" "example" {
 ```terraform
 resource "aws_ssmcontacts_rotation" "example" {
   contact_ids = [
-	aws_ssmcontacts_contact.example.arn
+    aws_ssmcontacts_contact.example.arn
   ]
 
   name = "rotation"
 
   recurrence {
-    number_of_on_calls = 1
+    number_of_on_calls    = 1
 	recurrence_multiplier = 1
-	weekly_settings {
-		day_of_week = "MON"
-		hand_off_time = "04:25"
-	}
-	weekly_settings {
-		day_of_week = "WED"
-		hand_off_time = "07:34"
-	}
-	weekly_settings {
-		day_of_week = "FRI"
-		hand_off_time = "15:57"
-	}
+    weekly_settings {
+      day_of_week = "WED"
+      hand_off_time {
+        hour_of_day    = 04
+        minute_of_hour = 25
+      }
+    }
+
+    weekly_settings {
+      day_of_week = "FRI"
+      hand_off_time {
+        hour_of_day    = 15
+        minute_of_hour = 57
+      }
+    }
+    
     shift_coverages {
-		day_of_week = "MON"
-		coverage_times {
-		  start_time = "01:00"
-		  end_time = "23:00"
-		}
-  	}
-	shift_coverages {
-		day_of_week = "WED"
-		coverage_times {
-		  start_time = "01:00"
-		  end_time = "23:00"
-		}
-  	}
-	shift_coverages {
-		day_of_week = "FRI"
-		coverage_times {
-		  start_time = "01:00"
-		  end_time = "23:00"
-		}
-  	}
+      map_block_key = "MON"
+      coverage_times {
+        start {
+          hour_of_day    = 01
+          minute_of_hour = 00
+        }
+        end {
+          hour_of_day    = 23
+          minute_of_hour = 00
+        }
+      }
+    }
   }
 
   start_time = "2023-07-20T02:21:49+00:00"
@@ -102,31 +99,33 @@ resource "aws_ssmcontacts_rotation" "example" {
 ```terraform
 resource "aws_ssmcontacts_rotation" "example" {
   contact_ids = [
-	aws_ssmcontacts_contact.example.arn,
+    aws_ssmcontacts_contact.example.arn,
   ]
 
   name = "rotation"
 
   recurrence {
-    number_of_on_calls = 1
+    number_of_on_calls    = 1
 	recurrence_multiplier = 1
-	monthly_settings {
-		day_of_month = 20
-		hand_off_time = "08:00"
-	}
-	monthly_settings {
-		day_of_month = 13
-		hand_off_time = "12:34"
-	}
-	monthly_settings {
-		day_of_month = 1
-		hand_off_time = "04:58"
-	}
+    monthly_settings {
+      day_of_month = 20
+      hand_off_time {
+        hour_of_day    = 8
+        minute_of_hour = 00
+      }
+    }
+    monthly_settings {
+      day_of_month = 13
+      hand_off_time {
+        hour_of_day    = 12
+        minute_of_hour = 34
+      }
+    }
   }
  
  time_zone_id = "Australia/Sydney"
 
- depends_on = [aws_ssmincidents_replication_set.test]
+ depends_on = [aws_ssmincidents_replication_set.example]
 }
 ```
 
@@ -139,46 +138,72 @@ The following arguments are required:
 * `contact_ids` - (Required) Amazon Resource Names (ARNs) of the contacts to add to the rotation. The order in which you list the contacts is their shift order in the rotation schedule.
 * `name` - (Required) The name for the rotation.
 * `time_zone_id` - (Required) The time zone to base the rotation’s activity on in Internet Assigned Numbers Authority (IANA) format.
-* `recurrence` - (Required) Information about when an on-call rotation is in effect and how long the rotation period lasts. Exactly one of either `daily_settings`, `monthly_settings`, or `weekly_settings` must be populated.
-    * `number_of_oncalls` - (Required) The number of contacts, or shift team members designated to be on call concurrently during a shift.
-    * `recurrence_multiplier` - (Required) The number of days, weeks, or months a single rotation lasts.
-    * `daily_settings` - (Optional) Information about on-call rotations that recur daily. Composed of a list of times, in 24-hour format, for when daily on-call shift rotations begin.
-    * `monthly_settings` - (Optional) Information about on-call rotations that recur monthly.
-        * `day_of_month` - (Required) The day of the month when monthly recurring on-call rotations begin.
-        * `hand_off_time` - (Required) The time of day, in 24-hour format, when a monthly recurring on-call shift rotation begins.
-    * `weekly_settings` - (Optional) Information about rotations that recur weekly.
-        * `day_of_week` - (Required) The day of the week when weekly recurring on-call shift rotations begins.
-        * `hand_off_time` - (Required) The time of day, in 24-hour format, when a weekly recurring on-call shift rotation begins.
-    * `shift_coverages` - (Optional) Information about the days of the week that the on-call rotation coverage includes.
-        * `coverage_times` - (Required) Information about when an on-call shift begins and ends.
-            * `end_time` - (Optional) The time, in 24-hour format, that the on-call rotation shift ends.
-            * `start_time` - (Optional) The time, in 24-hour format, that the on-call rotation shift begins.
-        * `day_of_week` - (Required) The day of the week when the shift coverage occurs.
+* `recurrence` - (Required) Information about when an on-call rotation is in effect and how long the rotation period lasts. Exactly one of either `daily_settings`, `monthly_settings`, or `weekly_settings` must be populated. See [Recurrence](#recurrence) for more details.
 
 The following arguments are optional:
 
 * `start_time` - (Optional) The date and time, in RFC 3339 format, that the rotation goes into effect.
-* `tags` - (Optional) A map of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the rotation.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-## Timeouts
 
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+### Recurrence
 
-* `create` - (Default `30m`)
-* `update` - (Default `30m`)
-* `delete` - (Default `30m`)
+* `number_of_on_calls` - (Required) The number of contacts, or shift team members designated to be on call concurrently during a shift.
+* `recurrence_multiplier` - (Required) The number of days, weeks, or months a single rotation lasts.
+* `daly_settings` - (Optional) Information about on-call rotations that recur daily. Composed of a list of times, in 24-hour format, for when daily on-call shift rotations begin. See [Daily Settings](#daily-settings) for more details.
+* `monthly_settings` - (Optional) Information about on-call rotations that recur monthly. See [Monthly Settings](#monthly-settings) for more details.
+* `weekly_settings` - (Optional) Information about on-call rotations that recur weekly. See [Weekly Settings](#weekly-settings) for more details.
+* `shift_coverages` - (Optional) Information about the days of the week that the on-call rotation coverage includes. See [Shift Coverages](#shift-coverages) for more details.
+
+### Daily Settings
+
+* `hour_of_day` - (Required) The hour of the day.
+* `minute_of_hour` - (Required) The minutes of the hour.
+
+### Monthly Settings
+
+* `day_of_month` - (Required) The day of the month when monthly recurring on-call rotations begin.
+* `hand_off_time` - (Required) The hand off time. See [Hand Off Time](#hand-off-time) for more details.
+
+### Weekly Settings
+* `day_of_week` - (Required) The day of the week when weekly recurring on-call shift rotations begins.
+* `hand_off_time` - (Required) The hand off time. See [Hand Off Time](#hand-off-time) for more details.
+
+### Hand Off Time
+
+* `hour_of_day` - (Required) The hour of the day.
+* `minute_of_hour` - (Required) The minutes of the hour.
+
+### Shift Coverages
+
+* `coverage_times` - (Required) Information about when an on-call shift begins and ends. See [Coverage Times](#coverage-times) for more details.
+* `day_of_week` - (Required) The day of the week when the shift coverage occurs.
+
+### Coverage Times
+
+* `start` - (Required) The start time of the on-call shift. See [Hand Off Time](#hand-off-time) for more details.
+* `end` - (Required) The end time of the on-call shift. See [Hand Off Time](#hand-off-time) for more details.
 
 ## Import
 
-An Incident Manager Contacts Rotation can be imported using the `ARN`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SSMContacts Rotation using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_ssmcontacts_rotation.example
+  id = "arn:aws:ssm-contacts:us-east-1:012345678910:rotation/example"
+}
 ```
-$ terraform import aws_ssmcontacts_rotation.example {ARNValue}
+
+Using `terraform import`, import CodeGuru Profiler Profiling Group using the `arn`. For example:
+
+```console
+% terraform import aws_ssmcontacts_rotation.example arn:aws:ssm-contacts:us-east-1:012345678910:rotation/example
 ```
