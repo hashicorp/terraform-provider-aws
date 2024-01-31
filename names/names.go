@@ -74,6 +74,7 @@ const (
 	MQEndpointID                         = "mq"
 	ObservabilityAccessManagerEndpointID = "oam"
 	OpenSearchServerlessEndpointID       = "aoss"
+	OpenSearchIngestionEndpointID        = "osis"
 	PipesEndpointID                      = "pipes"
 	PollyEndpointID                      = "polly"
 	PricingEndpointID                    = "pricing"
