@@ -51,13 +51,13 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			"basic":             testPlanDataSource_basic,
 			"channelTargetInfo": testPlanDataSource_channelTargetInfo,
 		},
-		"Rotation Resource Tests": {
-			"basic":      TestAccSSMContactsRotation_basic,
-			"disappears": TestAccSSMContactsRotation_disappears,
-			"update":     TestAccSSMContactsRotation_updateRequiredFields,
-			"startTime":  TestAccSSMContactsRotation_startTime,
-			"contactIds": TestAccSSMContactsRotation_contactIds,
-			"recurrence": TestAccSSMContactsRotation_recurrence,
+		"RotationResource": {
+			"basic":      testRotation_basic,
+			"disappears": testRotation_disappears,
+			"update":     testRotation_updateRequiredFields,
+			"startTime":  testRotation_startTime,
+			"contactIds": testRotation_contactIds,
+			"recurrence": testRotation_recurrence,
 		},
 		"Rotation Data Source Tests": {
 			"basic":           TestAccSSMContactsRotationDataSource_basic,

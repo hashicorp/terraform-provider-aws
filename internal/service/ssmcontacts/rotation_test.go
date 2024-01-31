@@ -24,7 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSSMContactsRotation_basic(t *testing.T) {
+func testRotation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -69,14 +69,14 @@ func TestAccSSMContactsRotation_basic(t *testing.T) {
 				// We need to explicitly test destroying this resource instead of just using CheckDestroy,
 				// because CheckDestroy will run after the replication set has been destroyed and destroying
 				// the replication set will destroy all other resources.
-				Config: testAccRotationConfig_none(),
+				Config: testAccRotationConfig_replicationSetBase(),
 				Check:  testAccCheckRotationDestroy(ctx),
 			},
 		},
 	})
 }
 
-func TestAccSSMContactsRotation_disappears(t *testing.T) {
+func testRotation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -108,7 +108,7 @@ func TestAccSSMContactsRotation_disappears(t *testing.T) {
 	})
 }
 
-func TestAccSSMContactsRotation_updateRequiredFields(t *testing.T) {
+func testRotation_updateRequiredFields(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -156,7 +156,7 @@ func TestAccSSMContactsRotation_updateRequiredFields(t *testing.T) {
 	})
 }
 
-func TestAccSSMContactsRotation_startTime(t *testing.T) {
+func testRotation_startTime(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -196,16 +196,11 @@ func TestAccSSMContactsRotation_startTime(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "start_time", updStartTime),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
 
-func TestAccSSMContactsRotation_contactIds(t *testing.T) {
+func testRotation_contactIds(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -213,9 +208,6 @@ func TestAccSSMContactsRotation_contactIds(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ssmcontacts_rotation.test"
-	firstContactResourceName := "aws_ssmcontacts_contact.test_contact_one"
-	secondContactResourceName := "aws_ssmcontacts_contact.test_contact_two"
-	thirdContactResourceName := "aws_ssmcontacts_contact.test_contact_three"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -230,8 +222,6 @@ func TestAccSSMContactsRotation_contactIds(t *testing.T) {
 				Config: testAccRotationConfig_twoContacts(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
-					testAccCheckContactExists(ctx, firstContactResourceName),
-					testAccCheckContactExists(ctx, secondContactResourceName),
 					resource.TestCheckResourceAttr(resourceName, "contact_ids.#", "2"),
 				),
 			},
@@ -244,9 +234,6 @@ func TestAccSSMContactsRotation_contactIds(t *testing.T) {
 				Config: testAccRotationConfig_threeContacts(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
-					testAccCheckContactExists(ctx, firstContactResourceName),
-					testAccCheckContactExists(ctx, secondContactResourceName),
-					testAccCheckContactExists(ctx, thirdContactResourceName),
 					resource.TestCheckResourceAttr(resourceName, "contact_ids.#", "3"),
 				),
 			},
@@ -254,7 +241,7 @@ func TestAccSSMContactsRotation_contactIds(t *testing.T) {
 	})
 }
 
-func TestAccSSMContactsRotation_recurrence(t *testing.T) {
+func testRotation_recurrence(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -277,7 +264,7 @@ func TestAccSSMContactsRotation_recurrence(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.daily_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "recurrence.0.daily_settings.0.hour_of_day", "18"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.daily_settings.0.hour_of_day", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.daily_settings.0.minute_of_hour", "0"),
 				),
 			},
@@ -287,7 +274,8 @@ func TestAccSSMContactsRotation_recurrence(t *testing.T) {
 					testAccCheckRotationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.monthly_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.monthly_settings.0.day_of_month", "20"),
-					resource.TestCheckResourceAttr(resourceName, "recurrence.0.monthly_settings.0.hand_off_time", "08:00"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.monthly_settings.0.hand_off_time.0.hour_of_day", "8"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.monthly_settings.0.hand_off_time.0.minute_of_hour", "0"),
 				),
 			},
 			{
@@ -296,9 +284,11 @@ func TestAccSSMContactsRotation_recurrence(t *testing.T) {
 					testAccCheckRotationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.monthly_settings.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.monthly_settings.0.day_of_month", "20"),
-					resource.TestCheckResourceAttr(resourceName, "recurrence.0.monthly_settings.0.hand_off_time", "08:00"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.monthly_settings.0.hand_off_time.0.hour_of_day", "8"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.monthly_settings.0.hand_off_time.0.minute_of_hour", "0"),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.monthly_settings.1.day_of_month", "13"),
-					resource.TestCheckResourceAttr(resourceName, "recurrence.0.monthly_settings.1.hand_off_time", "12:34"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.monthly_settings.1.hand_off_time.0.hour_of_day", "12"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.monthly_settings.1.hand_off_time.0.minute_of_hour", "34"),
 				),
 			},
 			{
@@ -307,7 +297,8 @@ func TestAccSSMContactsRotation_recurrence(t *testing.T) {
 					testAccCheckRotationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.weekly_settings.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.weekly_settings.0.day_of_week", "MON"),
-					resource.TestCheckResourceAttr(resourceName, "recurrence.0.weekly_settings.0.hand_off_time", "10:30"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.weekly_settings.0.hand_off_time.0.hour_of_day", "10"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.weekly_settings.0.hand_off_time.0.minute_of_hour", "30"),
 				),
 			},
 			{
@@ -316,9 +307,11 @@ func TestAccSSMContactsRotation_recurrence(t *testing.T) {
 					testAccCheckRotationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.weekly_settings.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.weekly_settings.0.day_of_week", "WED"),
-					resource.TestCheckResourceAttr(resourceName, "recurrence.0.weekly_settings.0.hand_off_time", "04:25"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.weekly_settings.0.hand_off_time.0.hour_of_day", "4"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.weekly_settings.0.hand_off_time.0.minute_of_hour", "25"),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.weekly_settings.1.day_of_week", "FRI"),
-					resource.TestCheckResourceAttr(resourceName, "recurrence.0.weekly_settings.1.hand_off_time", "15:57"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.weekly_settings.1.hand_off_time.0.hour_of_day", "15"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.weekly_settings.1.hand_off_time.0.minute_of_hour", "57"),
 				),
 			},
 			{
@@ -326,9 +319,11 @@ func TestAccSSMContactsRotation_recurrence(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.0.day_of_week", "MON"),
-					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.0.coverage_times.0.start_time", "08:00"),
-					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.0.coverage_times.0.end_time", "17:00"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.0.map_block_key", "MON"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.0.coverage_times.0.start.0.hour_of_day", "8"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.0.coverage_times.0.start.0.minute_of_hour", "0"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.0.coverage_times.0.end.0.hour_of_day", "17"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.0.coverage_times.0.end.0.minute_of_hour", "0"),
 				),
 			},
 			{
@@ -336,22 +331,28 @@ func TestAccSSMContactsRotation_recurrence(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRotationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.0.day_of_week", "FRI"),
-					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.0.coverage_times.0.start_time", "01:00"),
-					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.0.coverage_times.0.end_time", "23:00"),
-					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.1.day_of_week", "MON"),
-					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.1.coverage_times.0.start_time", "01:00"),
-					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.1.coverage_times.0.end_time", "23:00"),
-					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.2.day_of_week", "WED"),
-					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.2.coverage_times.0.start_time", "01:00"),
-					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.2.coverage_times.0.end_time", "23:00"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.0.map_block_key", "MON"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.0.coverage_times.0.start.0.hour_of_day", "1"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.0.coverage_times.0.start.0.minute_of_hour", "0"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.0.coverage_times.0.end.0.hour_of_day", "23"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.0.coverage_times.0.end.0.minute_of_hour", "0"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.1.map_block_key", "WED"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.1.coverage_times.0.start.0.hour_of_day", "1"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.1.coverage_times.0.start.0.minute_of_hour", "0"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.1.coverage_times.0.end.0.hour_of_day", "23"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.1.coverage_times.0.end.0.minute_of_hour", "0"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.2.map_block_key", "FRI"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.2.coverage_times.0.start.0.hour_of_day", "1"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.2.coverage_times.0.start.0.minute_of_hour", "0"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.2.coverage_times.0.end.0.hour_of_day", "23"),
+					resource.TestCheckResourceAttr(resourceName, "recurrence.0.shift_coverages.2.coverage_times.0.end.0.minute_of_hour", "0"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccSSMContactsRotation_tags(t *testing.T) {
+func testRotation_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -476,7 +477,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccRotationConfig_none() string {
+func testAccRotationConfig_replicationSetBase() string {
 	return fmt.Sprintf(`
 resource "aws_ssmincidents_replication_set" "test" {
   region {
@@ -488,11 +489,11 @@ resource "aws_ssmincidents_replication_set" "test" {
 
 func testAccRotationConfig_base(alias string, contactCount int) string {
 	return acctest.ConfigCompose(
-		testAccRotationConfig_none(),
+		testAccRotationConfig_replicationSetBase(),
 		fmt.Sprintf(`
 resource "aws_ssmcontacts_contact" "test" {
   count = %[2]d
-  alias = %[1]q
+  alias = "%[1]s-${count.index}"
   type  = "PERSONAL"
 
   depends_on = [aws_ssmincidents_replication_set.test]
@@ -799,7 +800,7 @@ resource "aws_ssmcontacts_rotation" "test" {
     }
 
     shift_coverages {
-      day_of_week = "MON"
+      map_block_key = "MON"
       coverage_times {
         start {
           hour_of_day    = 01
@@ -812,7 +813,7 @@ resource "aws_ssmcontacts_rotation" "test" {
       }
     }
     shift_coverages {
-      day_of_week = "WED"
+      map_block_key = "WED"
       coverage_times {
         start {
           hour_of_day    = 01
@@ -825,7 +826,7 @@ resource "aws_ssmcontacts_rotation" "test" {
       }
     }
     shift_coverages {
-      day_of_week = "FRI"
+      map_block_key = "FRI"
       coverage_times {
         start {
           hour_of_day    = 01

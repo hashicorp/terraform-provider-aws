@@ -5,6 +5,7 @@ package ssmcontacts
 
 import (
 	"context"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssmcontacts/types"
@@ -244,8 +245,11 @@ func (r *resourceRotation) Create(ctx context.Context, request resource.CreateRe
 			WeeklySettings:       weeklySettingsOutput.Data,
 		},
 		TimeZoneId: flex.StringFromFramework(ctx, plan.TimeZoneID),
-		StartTime:  plan.StartTime.ValueTimestampPointer(),
 		Tags:       getTagsIn(ctx),
+	}
+
+	if !plan.StartTime.IsNull() || !plan.StartTime.IsUnknown() {
+		input.StartTime = plan.StartTime.ValueTimestampPointer()
 	}
 
 	output, err := conn.CreateRotation(ctx, input)
@@ -322,6 +326,10 @@ func (r *resourceRotation) Read(ctx context.Context, request resource.ReadReques
 	state.Recurrence = fwtypes.NewListNestedObjectValueOfPtr(ctx, rc)
 	state.TimeZoneID = flex.StringToFramework(ctx, output.TimeZoneId)
 
+	if output.StartTime != nil {
+		state.StartTime = fwtypes.TimestampValue(output.StartTime.Format(time.RFC3339))
+	}
+
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
@@ -343,7 +351,6 @@ func (r *resourceRotation) Update(ctx context.Context, request resource.UpdateRe
 
 	if !plan.Recurrence.Equal(state.Recurrence) || !plan.ContactIds.Equal(state.ContactIds) ||
 		!plan.StartTime.Equal(state.StartTime) || !plan.TimeZoneID.Equal(state.TimeZoneID) {
-
 		recurrenceData, diags := plan.Recurrence.ToPtr(ctx)
 		response.Diagnostics.Append(diags...)
 		if response.Diagnostics.HasError() {
@@ -489,17 +496,17 @@ type weeklySettingsData struct {
 	HandOffTime fwtypes.ListNestedObjectValueOf[handOffTime] `tfsdk:"hand_off_time"`
 }
 
-func expandShiftCoverages(ctx context.Context, object []*shiftCoveragesData, diags *diag.Diagnostics) (result map[string][]awstypes.CoverageTime) {
+func expandShiftCoverages(ctx context.Context, object []*shiftCoveragesData, diags *diag.Diagnostics) map[string][]awstypes.CoverageTime {
 	if len(object) == 0 {
-		return
+		return nil
 	}
 
-	result = make(map[string][]awstypes.CoverageTime)
+	result := make(map[string][]awstypes.CoverageTime)
 	for _, v := range object {
 		covTimes, diagErr := v.CoverageTimes.ToSlice(ctx)
 		diags.Append(diagErr...)
 		if diags.HasError() {
-			return
+			return nil
 		}
 
 		var cTimes []awstypes.CoverageTime
@@ -507,12 +514,12 @@ func expandShiftCoverages(ctx context.Context, object []*shiftCoveragesData, dia
 			end, diagErr := val.End.ToPtr(ctx)
 			diags.Append(diagErr...)
 			if diags.HasError() {
-				return
+				return nil
 			}
 			start, diagErr := val.Start.ToPtr(ctx)
 			diags.Append(diagErr...)
 			if diags.HasError() {
-				return
+				return nil
 			}
 
 			cTimes = append(cTimes, awstypes.CoverageTime{
@@ -530,7 +537,7 @@ func expandShiftCoverages(ctx context.Context, object []*shiftCoveragesData, dia
 		result[v.MapBlockKey.ValueString()] = cTimes
 	}
 
-	return
+	return result
 }
 
 func flattenShiftCoveragesFW(ctx context.Context, object map[string][]awstypes.CoverageTime) fwtypes.ListNestedObjectValueOf[shiftCoveragesData] {
@@ -598,7 +605,7 @@ type objectForOutput[T any] struct {
 	Data []T
 }
 
-func setupSerializationObjects[T any, V any](input fwtypes.ListNestedObjectValueOf[T]) (objectForInput[T], objectForOutput[V]) {
+func setupSerializationObjects[T any, V any](input fwtypes.ListNestedObjectValueOf[T]) (objectForInput[T], objectForOutput[V]) { //nolint:unparam
 	in := objectForInput[T]{
 		Data: input,
 	}
