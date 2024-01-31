@@ -4,103 +4,152 @@
 package bedrock_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfbedrock "github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBedrockCustomModel_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	customModelResourceName := "aws_bedrock_custom_model.test"
+	resourceName := "aws_bedrock_custom_model.test"
+	var v bedrock.GetModelCustomizationJobOutput
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomModelConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(customModelResourceName, "custom_model_name", rName),
-					resource.TestCheckResourceAttr(customModelResourceName, "job_name", rName),
-					resource.TestCheckResourceAttr(customModelResourceName, "base_model_id", "amazon.titan-text-express-v1"),
-					resource.TestCheckResourceAttr(customModelResourceName, "tags.%", "0"),
+					testAccCheckCustomModelExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "base_model_identifier"),
+					resource.TestCheckNoResourceAttr(resourceName, "custom_model_arn"),
+					resource.TestCheckNoResourceAttr(resourceName, "custom_model_kms_key_id"),
+					resource.TestCheckResourceAttr(resourceName, "custom_model_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "customization_type", "FINE_TUNING"),
+					resource.TestCheckResourceAttr(resourceName, "hyperparameters.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "hyperparameters.batchSize", "1"),
+					resource.TestCheckResourceAttr(resourceName, "hyperparameters.epochCount", "1"),
+					resource.TestCheckResourceAttr(resourceName, "hyperparameters.learningRate", "0.005"),
+					resource.TestCheckResourceAttr(resourceName, "hyperparameters.learningRateWarmupSteps", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "job_arn"),
+					resource.TestCheckResourceAttr(resourceName, "job_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "job_status", "InProgress"),
+					resource.TestCheckResourceAttr(resourceName, "output_data_config.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "output_data_config.0.s3_uri"),
+					resource.TestCheckResourceAttrSet(resourceName, "role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "training_data_config.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "training_data_config.0.s3_uri"),
+					resource.TestCheckNoResourceAttr(resourceName, "training_metrics"),
+					resource.TestCheckResourceAttr(resourceName, "validation_data_config.#", "0"),
+					resource.TestCheckNoResourceAttr(resourceName, "validation_metrics"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_config.#", "0"),
 				),
 			},
 			{
-				ResourceName:      customModelResourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"base_model_identifier"},
 			},
 		},
 	})
 }
 
-// func TestAccBedrockCustomModel_basic(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	rName := "tf-acc-test-1531621220222582981" // sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	customModelResourceName := "aws_bedrock_custom_model.test"
+func testAccCheckCustomModelDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccCustomModelConfig_basic2(rName),
-// 				Check: resource.ComposeAggregateTestCheckFunc(
-// 					resource.TestCheckResourceAttr(customModelResourceName, "custom_model_name", rName),
-// 					resource.TestCheckResourceAttr(customModelResourceName, "job_name", rName),
-// 					resource.TestCheckResourceAttr(customModelResourceName, "base_model_id", "amazon.titan-text-express-v1"),
-// 					resource.TestCheckResourceAttr(customModelResourceName, "tags.%", "0"),
-// 				),
-// 			},
-// 			{
-// 				ResourceName:      customModelResourceName,
-// 				ImportState:       true,
-// 				ImportStateVerify: true,
-// 			},
-// 		},
-// 	})
-// }
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_bedrock_custom_model" {
+				continue
+			}
 
-func testAccCustomModelConfig_basic(rName string) string {
+			_, err := tfbedrock.FindModelCustomizationJobByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Bedrock Custom Model %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckCustomModelExists(ctx context.Context, n string, v *bedrock.GetModelCustomizationJobOutput) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
+
+		output, err := tfbedrock.FindModelCustomizationJobByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCustomModelConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 data "aws_partition" "current" {}
 
-resource aws_s3_bucket training_data {
-  bucket = "bedrock-training-data-%[1]s"
+resource "aws_s3_bucket" "training" {
+  bucket = "%[1]s-training"
 }
 
-resource aws_s3_bucket validation_data {
-  bucket = "bedrock-validation-data-%[1]s"
+resource "aws_s3_bucket" "validation" {
+  bucket = "%[1]s-validation"
 }
 
-resource aws_s3_bucket output_data {
-  bucket        = "bedrock-output-data-%[1]s"
+resource "aws_s3_bucket" "output" {
+  bucket        = "%[1]s-output"
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "training_data" {
-  bucket = aws_s3_bucket.training_data.id
-  key    = "myfolder/training_data.jsonl"
-  source = "./testdata/training_data.jsonl"
-  etag   = filemd5("./testdata/training_data.jsonl")
+resource "aws_s3_object" "training" {
+  bucket = aws_s3_bucket.training.id
+  key    = "data/train.jsonl"
+  source = "test-fixtures/train.jsonl"
 }
 
-resource "aws_s3_bucket_object" "validation_data" {
-  bucket = aws_s3_bucket.validation_data.id
-  key    = "myfolder/validation_data.jsonl"
-  source = "./testdata/validation_data.jsonl"
-  etag   = filemd5("./testdata/validation_data.jsonl")
+resource "aws_s3_object" "validation" {
+  bucket = aws_s3_bucket.validation.id
+  key    = "data/validate.jsonl"
+  source = "test-fixtures/validate.jsonl"
 }
 
-resource "aws_iam_role" "bedrock_fine_tuning" {
-  name = "bedrock-fine-tuning-%[1]s"
+resource "aws_iam_role" "test" {
+  name = %[1]q
 
   assume_role_policy = <<EOF
 {
@@ -126,10 +175,8 @@ resource "aws_iam_role" "bedrock_fine_tuning" {
 EOF
 }
 
-resource "aws_iam_policy" "BedrockAccessTrainingValidationS3Policy" {
-  name        = "BedrockAccessTrainingValidationS3Policy_%[1]s"
-  path        = "/"
-  description = "BedrockAccessTrainingValidationS3Policy"
+resource "aws_iam_policy" "training" {
+  name = "%[1]s-training"
 
   policy = jsonencode({
     "Version" : "2012-10-17",
@@ -143,21 +190,19 @@ resource "aws_iam_policy" "BedrockAccessTrainingValidationS3Policy" {
           "s3:ListObjects"
         ],
         "Resource" : [
-          "${aws_s3_bucket.training_data.arn}",
-          "${aws_s3_bucket.training_data.arn}/myfolder",
-          "${aws_s3_bucket.training_data.arn}/myfolder/*",
-          "${aws_s3_bucket.validation_data.arn}/myfolder",
-          "${aws_s3_bucket.validation_data.arn}/myfolder/*"
+          "${aws_s3_bucket.training.arn}",
+          "${aws_s3_bucket.training.arn}/data",
+          "${aws_s3_bucket.training.arn}/data/*",
+          "${aws_s3_bucket.validation.arn}/data",
+          "${aws_s3_bucket.validation.arn}/data/*"
         ]
       }
     ]
   })
 }
 
-resource "aws_iam_policy" "BedrockAccessOutputS3Policy" {
-  name        = "BedrockAccessOutputS3Policy_%[1]s"
-  path        = "/"
-  description = "BedrockAccessOutputS3Policy"
+resource "aws_iam_policy" "output" {
+  name = "%[1]s-output"
 
   policy = jsonencode({
     "Version" : "2012-10-17",
@@ -171,56 +216,52 @@ resource "aws_iam_policy" "BedrockAccessOutputS3Policy" {
           "s3:ListObjects"
         ],
         "Resource" : [
-          "${aws_s3_bucket.output_data.arn}/myfolder",
-          "${aws_s3_bucket.output_data.arn}/myfolder/*"
+          "${aws_s3_bucket.output.arn}/data",
+          "${aws_s3_bucket.output.arn}/data/*"
         ]
       }
     ]
   })
 }
 
-resource "aws_iam_role_policy_attachment" "bedrock_attachment_1" {
-  role       = aws_iam_role.bedrock_fine_tuning.name
-  policy_arn = aws_iam_policy.BedrockAccessTrainingValidationS3Policy.arn
+resource "aws_iam_role_policy_attachment" "training" {
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.training.arn
 }
 
-resource "aws_iam_role_policy_attachment" "bedrock_attachment_2" {
-  role       = aws_iam_role.bedrock_fine_tuning.name
-  policy_arn = aws_iam_policy.BedrockAccessOutputS3Policy.arn
+resource "aws_iam_role_policy_attachment" "output" {
+  role       = aws_iam_role.test.name
+  policy_arn = aws_iam_policy.output.arn
 }
 
+data "aws_bedrock_foundation_model" "test" {
+  model_id = "amazon.titan-text-express-v1"
+}
+`, rName)
+}
+
+func testAccCustomModelConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccCustomModelConfig_base(rName), fmt.Sprintf(`
 resource "aws_bedrock_custom_model" "test" {
-  custom_model_name = %[1]q
-  job_name          = %[1]q
-  base_model_id     = "amazon.titan-text-express-v1"
-  role_arn          = aws_iam_role.bedrock_fine_tuning.arn
-  hyper_parameters = {
+  custom_model_name     = %[1]q
+  job_name              = %[1]q
+  base_model_identifier = data.aws_bedrock_foundation_model.test.model_arn
+  role_arn              = aws_iam_role.test.arn
+
+  hyperparameters = {
     "epochCount"              = "1"
     "batchSize"               = "1"
     "learningRate"            = "0.005"
     "learningRateWarmupSteps" = "0"
   }
-  output_data_config   = "s3://${aws_s3_bucket.output_data.id}/myfolder/"
-  training_data_config = "s3://${aws_s3_bucket.training_data.id}/myfolder/training_data.jsonl"
-}
-`, rName)
-}
 
-// func testAccCustomModelConfig_basic2(rName string) string {
-// 	return fmt.Sprintf(`
-// resource "aws_bedrock_custom_model" "test" {
-//   custom_model_name = %[1]q
-//   job_name          = %[1]q
-//   base_model_id     = "amazon.titan-text-express-v1"
-//   role_arn          = "arn:aws:iam::219858395663:role/bedrock-fine-tuning-tf-acc-test-1531621220222582981"
-//   hyper_parameters = {
-//     "epochCount"              = "1"
-//     "batchSize"               = "1"
-//     "learningRate"            = "0.005"
-//     "learningRateWarmupSteps" = "0"
-//   }
-//   output_data_config   = "s3://bedrock-output-data-tf-acc-test-1531621220222582981/myfolder/"
-//   training_data_config = "s3://bedrock-training-data-tf-acc-test-1531621220222582981/myfolder/training_data.jsonl"
-// }
-// `, rName)
-// }
+  output_data_config {
+    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
+  }
+
+  training_data_config {
+    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
+  }
+}
+`, rName))
+}

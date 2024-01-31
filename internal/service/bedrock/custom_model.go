@@ -520,6 +520,23 @@ func findModelCustomizationJobByID(ctx context.Context, conn *bedrock.Client, id
 		JobIdentifier: aws.String(id),
 	}
 
+	output, err := findModelCustomizationJob(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := output.Status; status == awstypes.ModelCustomizationJobStatusStopped {
+		return nil, &retry.NotFoundError{
+			Message:     string(status),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findModelCustomizationJob(ctx context.Context, conn *bedrock.Client, input *bedrock.GetModelCustomizationJobInput) (*bedrock.GetModelCustomizationJobOutput, error) {
 	output, err := conn.GetModelCustomizationJob(ctx, input)
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -537,19 +554,15 @@ func findModelCustomizationJobByID(ctx context.Context, conn *bedrock.Client, id
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if status := output.Status; status == awstypes.ModelCustomizationJobStatusStopped {
-		return nil, &retry.NotFoundError{
-			Message:     string(status),
-			LastRequest: input,
-		}
-	}
-
 	return output, nil
 }
 
 func statusModelCustomizationJob(ctx context.Context, conn *bedrock.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findModelCustomizationJobByID(ctx, conn, id)
+		input := &bedrock.GetModelCustomizationJobInput{
+			JobIdentifier: aws.String(id),
+		}
+		output, err := findModelCustomizationJob(ctx, conn, input)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
