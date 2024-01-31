@@ -178,6 +178,10 @@ func resourceUserGroupDelete(ctx context.Context, d *schema.ResourceData, meta i
 		UserPoolId: aws.String(userPoolID),
 	})
 
+	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Cognito User Group (%s): %s", d.Id(), err)
 	}
@@ -207,7 +211,7 @@ func userGroupCreateResourceID(userPoolID, groupName string) string {
 }
 
 func userGroupParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, userGroupResourceIDSeparator)
+	parts := strings.SplitN(id, userGroupResourceIDSeparator, 2)
 
 	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
 		return parts[0], parts[1], nil
