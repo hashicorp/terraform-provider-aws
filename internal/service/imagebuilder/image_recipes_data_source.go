@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 )
 
-// @SDKDataSource("aws_imagebuilder_image_recipes")
+// @SDKDataSource("aws_imagebuilder_image_recipes", name="Image Recipes")
 func DataSourceImageRecipes() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceImageRecipesRead,
@@ -35,7 +35,7 @@ func DataSourceImageRecipes() *schema.Resource {
 			"owner": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"Self", "Shared", "Amazon"}, false),
+				ValidateFunc: validation.StringInSlice(imagebuilder.Ownership_Values(), false),
 			},
 		},
 	}

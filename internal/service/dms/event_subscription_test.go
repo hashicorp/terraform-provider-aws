@@ -33,16 +33,16 @@ func TestAccDMSEventSubscription_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventSubscriptionConfig_enabled(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "source_type", "replication-instance"),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "failure"),
-					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "sns_topic_arn", snsTopicResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source_type", "replication-instance"),
 				),
 			},
 			{
@@ -133,12 +133,13 @@ func TestAccDMSEventSubscription_eventCategories(t *testing.T) {
 		CheckDestroy:             testAccCheckEventSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEventSubscriptionConfig_categories2(rName, "creation", "failure"),
+				Config: testAccEventSubscriptionConfig_eventCategories(rName, "creation", "failure"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "creation"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "failure"),
+					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "1"),
 				),
 			},
 			{
@@ -147,12 +148,13 @@ func TestAccDMSEventSubscription_eventCategories(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccEventSubscriptionConfig_categories2(rName, "configuration change", "deletion"),
+				Config: testAccEventSubscriptionConfig_eventCategories(rName, "configuration change", "deletion"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEventSubscriptionExists(ctx, resourceName, &eventSubscription),
 					resource.TestCheckResourceAttr(resourceName, "event_categories.#", "2"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "configuration change"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "event_categories.*", "deletion"),
+					resource.TestCheckResourceAttr(resourceName, "source_ids.#", "1"),
 				),
 			},
 		},
@@ -282,13 +284,12 @@ resource "aws_dms_event_subscription" "test" {
   enabled          = %[2]t
   event_categories = ["creation", "failure"]
   source_type      = "replication-instance"
-  source_ids       = [aws_dms_replication_instance.test.replication_instance_id]
   sns_topic_arn    = aws_sns_topic.test.arn
 }
 `, rName, enabled))
 }
 
-func testAccEventSubscriptionConfig_categories2(rName string, eventCategory1 string, eventCategory2 string) string {
+func testAccEventSubscriptionConfig_eventCategories(rName string, eventCategory1, eventCategory2 string) string {
 	return acctest.ConfigCompose(testAccEventSubscriptionConfig_base(rName), fmt.Sprintf(`
 resource "aws_dms_event_subscription" "test" {
   name             = %[1]q

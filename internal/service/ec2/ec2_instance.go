@@ -1799,6 +1799,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			instanceCreditSpecification := expandInstanceCreditSpecificationRequest(v.([]interface{})[0].(map[string]interface{}))
 			instanceCreditSpecification.InstanceId = aws.String(d.Id())
 			input := &ec2.ModifyInstanceCreditSpecificationInput{
+				ClientToken:                  aws.String(id.UniqueId()),
 				InstanceCreditSpecifications: []*ec2.InstanceCreditSpecificationRequest{instanceCreditSpecification},
 			}
 

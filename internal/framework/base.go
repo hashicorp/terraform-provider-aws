@@ -107,6 +107,12 @@ func (w *WithImportByID) ImportState(ctx context.Context, request resource.Impor
 	resource.ImportStatePassthroughID(ctx, path.Root(names.AttrID), request, response)
 }
 
+// WithNoOpUpdate is intended to be embedded in resources which have no need of an Update method.
+type WithNoOpUpdate struct{}
+
+func (w *WithNoOpUpdate) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+}
+
 // DataSourceWithConfigure is a structure to be embedded within a DataSource that implements the DataSourceWithConfigure interface.
 type DataSourceWithConfigure struct {
 	withMeta
