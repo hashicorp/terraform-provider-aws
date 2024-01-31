@@ -58,6 +58,7 @@ func TestAccSSMContacts_serial(t *testing.T) {
 			"startTime":  testRotation_startTime,
 			"contactIds": testRotation_contactIds,
 			"recurrence": testRotation_recurrence,
+			"tags":       testRotation_tags,
 		},
 		"RotationDataSource": {
 			"basic":           testRotationDataSource_basic,
