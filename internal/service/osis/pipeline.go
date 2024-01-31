@@ -268,7 +268,7 @@ func (r *resourcePipeline) Create(ctx context.Context, req resource.CreateReques
 		if resp.Diagnostics.HasError() {
 			return
 		}
-		in.VpcOptions = expandVpcOptions(ctx, vpcOptions)
+		in.VpcOptions = expandVPCOptions(ctx, vpcOptions)
 	}
 
 	// Retry for IAM eventual consistency
@@ -780,7 +780,7 @@ func expandCloudWatchLogDestination(tfList []cloudWatchLogDestinationData) *awst
 	}
 }
 
-func expandVpcOptions(ctx context.Context, tfList []vpcOptionsData) *awstypes.VpcOptions {
+func expandVPCOptions(ctx context.Context, tfList []vpcOptionsData) *awstypes.VpcOptions {
 	if len(tfList) == 0 {
 		return nil
 	}
