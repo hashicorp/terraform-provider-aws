@@ -24,16 +24,16 @@ resource "aws_ssmcontacts_rotation" "example" {
 
   recurrence {
     number_of_on_calls    = 1
-	recurrence_multiplier = 1
+    recurrence_multiplier = 1
     daily_settings {
       hour_of_day    = 9
       minute_of_hour = 00
     }
   }
- 
- time_zone_id = "Australia/Sydney"
 
- depends_on = [aws_ssmincidents_replication_set.example]
+  time_zone_id = "Australia/Sydney"
+
+  depends_on = [aws_ssmincidents_replication_set.example]
 }
 ```
 
@@ -49,7 +49,7 @@ resource "aws_ssmcontacts_rotation" "example" {
 
   recurrence {
     number_of_on_calls    = 1
-	recurrence_multiplier = 1
+    recurrence_multiplier = 1
     weekly_settings {
       day_of_week = "WED"
       hand_off_time {
@@ -65,7 +65,7 @@ resource "aws_ssmcontacts_rotation" "example" {
         minute_of_hour = 57
       }
     }
-    
+
     shift_coverages {
       map_block_key = "MON"
       coverage_times {
@@ -86,10 +86,10 @@ resource "aws_ssmcontacts_rotation" "example" {
   time_zone_id = "Australia/Sydney"
 
   tags = {
-	key1 = "tag1"
-	key2 = "tag2"
+    key1 = "tag1"
+    key2 = "tag2"
   }
-  
+
   depends_on = [aws_ssmincidents_replication_set.example]
 }
 ```
@@ -106,7 +106,7 @@ resource "aws_ssmcontacts_rotation" "example" {
 
   recurrence {
     number_of_on_calls    = 1
-	recurrence_multiplier = 1
+    recurrence_multiplier = 1
     monthly_settings {
       day_of_month = 20
       hand_off_time {
@@ -122,10 +122,10 @@ resource "aws_ssmcontacts_rotation" "example" {
       }
     }
   }
- 
- time_zone_id = "Australia/Sydney"
 
- depends_on = [aws_ssmincidents_replication_set.example]
+  time_zone_id = "Australia/Sydney"
+
+  depends_on = [aws_ssmincidents_replication_set.example]
 }
 ```
 
