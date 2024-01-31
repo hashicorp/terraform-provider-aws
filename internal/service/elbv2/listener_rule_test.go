@@ -877,6 +877,8 @@ func TestAccELBV2ListenerRule_EmptyAction(t *testing.T) {
 		testcase := testcase
 
 		t.Run(string(name), func(t *testing.T) {
+			t.Parallel()
+
 			ctx := acctest.Context(t)
 			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -892,7 +894,6 @@ func TestAccELBV2ListenerRule_EmptyAction(t *testing.T) {
 					},
 				},
 			})
-
 		})
 	}
 }
