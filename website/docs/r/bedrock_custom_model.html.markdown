@@ -13,205 +13,75 @@ Model customization is the process of providing training data to a base model in
 
 This Terraform resource interacts with two Amazon Bedrock entities:
 1. A Continued Pre-training or Fine-tuning job which is started when the Terraform resource is created. The customization job can take several hours to run to completion. The duration of the job depends on the size of the training data (number of records, input tokens, and output tokens), and [hyperparameters](https://docs.aws.amazon.com/bedrock/latest/userguide/custom-models-hp.html) (number of epochs, and batch size).
-2. The custom model produced on successful completion of the customization job.
+2. The custom model output on successful completion of the customization job.
 
 This resource's [behaviors](https://developer.hashicorp.com/terraform/language/resources/behavior) correspond to operations on these Amazon Bedrock entities:
 * [_Create_](https://developer.hashicorp.com/terraform/plugin/framework/resources/create) starts the customization job and immediately returns.
-* [_Read_](https://developer.hashicorp.com/terraform/plugin/framework/resources/read) returns the status and results of the customization job. If the customization job has completed, the custom model's properties are returned.
-* [_Update_](https://developer.hashicorp.com/terraform/plugin/framework/resources/update) updates the customization job's [tags](https://docs.aws.amazon.com/bedrock/latest/userguide/tagging.html), and the tags on any custom model produced by the job.
-* [_Delete_](https://developer.hashicorp.com/terraform/plugin/framework/resources/delete) stops the customization job if it is still active. If the customization job has completed, the custom model produced by the job is deleted.
+* [_Read_](https://developer.hashicorp.com/terraform/plugin/framework/resources/read) returns the status and results of the customization job. If the customization job has completed, the output model's properties are returned.
+* [_Update_](https://developer.hashicorp.com/terraform/plugin/framework/resources/update) updates the customization job's [tags](https://docs.aws.amazon.com/bedrock/latest/userguide/tagging.html).
+* [_Delete_](https://developer.hashicorp.com/terraform/plugin/framework/resources/delete) stops the customization job if it is still active. If the customization job has completed, the custom model output by the job is deleted.
 
 ## Example Usage
 
 ```terraform
-resource "random_id" "id" {
-  byte_length = 8
-}
-
-data aws_caller_identity current {}
-
-resource aws_s3_bucket training_data {
-  bucket = "bedrock-training-data-${random_id.id.hex}"
-}
-
-resource aws_s3_bucket validation_data {
-  bucket = "bedrock-validation-data-${random_id.id.hex}"
-}
-
-resource aws_s3_bucket output_data {
-  bucket = "bedrock-output-data-${random_id.id.hex}"
-}
-
-resource "aws_s3_bucket_object" "training_data" {
-  bucket = aws_s3_bucket.training_data.id
-  key    = "myfolder/training_data.jsonl"
-  source = "./testdata/training_data.jsonl"
-  etag   = filemd5("./testdata/training_data.jsonl")
-}
-
-resource "aws_s3_bucket_object" "validation_data" {
-  bucket = aws_s3_bucket.validation_data.id
-  key    = "myfolder/validation_data.jsonl"
-  source = "./testdata/validation_data.jsonl"
-  etag   = filemd5("./testdata/validation_data.jsonl")
-}
-
-resource "aws_iam_role" "bedrock_fine_tuning" {
-  name = "bedrock-fine-tuning-${random_id.id.hex}"
-
-  assume_role_policy = <<EOF
-{
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Effect": "Allow",
-			"Principal": {
-				"Service": "bedrock.amazonaws.com"
-			},
-			"Action": "sts:AssumeRole",
-			"Condition": {
-				"StringEquals": {
-					"aws:SourceAccount": "${data.aws_caller_identity.current.account_id}"
-				},
-				"ArnEquals": {
-					"aws:SourceArn": "arn:aws:bedrock:us-east-1:${data.aws_caller_identity.current.account_id}:model-customization-job/*"
-				}
-			}
-		}
-	] 
-}
-EOF
-}
-
-resource "aws_iam_policy" "BedrockAccessTrainingValidationS3Policy" {
-  name        = "BedrockAccessTrainingValidationS3Policy_${random_id.id.hex}"
-  path        = "/"
-  description = "BedrockAccessTrainingValidationS3Policy"
-
-  policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Effect" : "Allow",
-        "Action" : [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:ListBucket",
-          "s3:ListObjects"
-        ],
-        "Resource" : [
-          "${aws_s3_bucket.training_data.arn}",
-          "${aws_s3_bucket.training_data.arn}/myfolder",
-          "${aws_s3_bucket.training_data.arn}/myfolder/*",
-          "${aws_s3_bucket.validation_data.arn}/myfolder",
-          "${aws_s3_bucket.validation_data.arn}/myfolder/*"
-        ]
-      }
-    ]
-  })
-}
-
-resource "aws_iam_policy" "BedrockAccessOutputS3Policy" {
-  name        = "BedrockAccessOutputS3Policy_${random_id.id.hex}"
-  path        = "/"
-  description = "BedrockAccessOutputS3Policy"
-
-  policy = jsonencode({
-    "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Effect" : "Allow",
-        "Action" : [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:ListBucket",
-          "s3:ListObjects"
-        ],
-        "Resource" : [
-          "${aws_s3_bucket.output_data.arn}/myfolder",
-          "${aws_s3_bucket.output_data.arn}/myfolder/*"
-        ]
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "bedrock_attachment_1" {
-  role       = aws_iam_role.bedrock_fine_tuning.name
-  policy_arn = aws_iam_policy.BedrockAccessTrainingValidationS3Policy.arn
-}
-
-resource "aws_iam_role_policy_attachment" "bedrock_attachment_2" {
-  role       = aws_iam_role.bedrock_fine_tuning.name
-  policy_arn = aws_iam_policy.BedrockAccessOutputS3Policy.arn
-}
-
-resource "aws_bedrock_custom_model" "test" {
-  custom_model_name = "tf-test-${random_id.id.hex}"
-  job_name          = "tf-test-${random_id.id.hex}"
-  base_model_arn    = "amazon.titan-text-express-v1"
-  hyper_parameters = {
-    "epochCount"              = "1"
-    "batchSize"               = "1"
-    "learningRate"            = "0.005"
-    "learningRateWarmupSteps" = "0"
-  }
-  output_data_config   = "s3://${aws_s3_bucket.output_data.id}/myfolder/"
-  role_arn             = aws_iam_role.bedrock_fine_tuning.arn
-  training_data_config = "s3://${aws_s3_bucket.training_data.id}/myfolder/training_data.jsonl"
-}
+TODO
 ```
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
-* `base_model_identifier` - Name of the base model. Type: String. Required: Yes. Length Constraints: Minimum length of 1. Maximum length of 2048. Pattern: `^(arn:aws(-[^:]+)?:bedrock:[a-z0-9-]{1,20}:(([0-9]{12}:custom-model/[a-z0-9-]{1,63}[.]{1}[a-z0-9-]{1,63}/[a-z0-9]{12})|(:foundation-model/[a-z0-9-]{1,63}[.]{1}[a-z0-9-]{1,63}([a-z0-9-]{1,63}[.]){0,2}[a-z0-9-]{1,63}([:][a-z0-9-]{1,63}){0,2})))|([a-z0-9-]{1,63}[.]{1}[a-z0-9-]{1,63}([.]?[a-z0-9-]{1,63})([:][a-z0-9-]{1,63}){0,2})|(([0-9a-zA-Z][_-]?)+)$`
-* `custom_model_name` - Name for the custom model. Type: String. Required: Yes. Length Constraints: Minimum length of 1. Maximum length of 63. Pattern: `^([0-9a-zA-Z][_-]?)+$`
-* `job_name` - Enter a unique name for the fine-tuning job. Type: String. Required: Yes. Length Constraints: Minimum length of 1. Maximum length of 63. Pattern: `^[a-zA-Z0-9](-*[a-zA-Z0-9\+\-\.])*$`
-* `output_data_config` - S3 location for the output data. Type: String. Required: Yes
-* `role_arn` - The Amazon Resource Name (ARN) of an IAM role that Bedrock can assume to perform tasks on your behalf. Type: String. Required: Yes. Length Constraints: Minimum length of 0. Maximum length of 2048. Pattern: `^arn:aws(-[^:]+)?:iam::([0-9]{12})?:role/.+$`
-* `training_data_config` - Information about the training dataset. Type: String. Required: Yes
-
-The following arguments are optional:
-
-* `client_request_token` - Unique token value that you can provide. The GetModelCustomizationJob response includes the same token value. Type: String. Required: No. Length Constraints: Minimum length of 1. Maximum length of 256. Pattern: `^[a-zA-Z0-9](-*[a-zA-Z0-9])*$`
-* `custom_model_kms_key_id` - The custom model is encrypted at rest using this key. Type: String. Required: No. Length Constraints: Minimum length of 1. Maximum length of 2048. Pattern: `^arn:aws(-[^:]+)?:kms:[a-zA-Z0-9-]*:[0-9]{12}:((key/[a-zA-Z0-9-]{36})|(alias/[a-zA-Z0-9-_/]+))$`
-* `validation_data_config` - Information about the validation dataset. Type: string. Required: No.
-* `vpc_config` - VPC configuration (optional). Configuration parameters for the private Virtual Private Cloud (VPC) that contains the resources you are using for this job. Type: VpcConfig object. Required: No.
-* `job_tags` - (Optional) Key-value mapping of tags for the fine-tuning job.
-* `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `base_model_identifier` - (Required) The Amazon Resource Name (ARN) of the base model.
+* `custom_model_kms_key_id` - (Optional) The custom model is encrypted at rest using this key.
+* `custom_model_name` - (Required) Name for the custom model.
+* `customization_type` -(Optional) The customization type. Valid values: `FINE_TUNING`, `CONTINUED_PRE_TRAINING`.
+* `hyperparameters` - (Required) [Parameters](https://docs.aws.amazon.com/bedrock/latest/userguide/custom-models-hp.html) related to tuning the model.
+* `job_name` - (Required) A name for the customization job.
+* `output_data_config` - (Required) S3 location for the output data.
+    * `s3_uri` - (Required) The S3 URI where the output data is stored.
+* `role_arn` - (Required) The Amazon Resource Name (ARN) of an IAM role that Bedrock can assume to perform tasks on your behalf.
+* `tags` - (Optional) A map of tags to assign to the customization job and custom model. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `training_data_config` - (Required) Information about the training dataset.
+    * `s3_uri` - (Required) The S3 URI where the training data is stored.
+* `validation_data_config` - (Optional) Information about the validation dataset.
+    * `validator` - (Required) Information about the validators.
+        * `s3_uri` - (Required) The S3 URI where the validation data is stored.
+* `vpc_config` - (Optional) Configuration parameters for the private Virtual Private Cloud (VPC) that contains the resources you are using for this job.
+    * `security_group_ids` – (Required) VPC configuration security group IDs.
+    * `subnet_ids` – (Required) VPC configuration subnets.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `custom_model_arn` - The ARN of the output model.
+* `job_arn` - The ARN of the customization job.
+* `job_status` - The status of the customization job. A successful job transitions from `InProgress` to `Completed` when the output model is ready to use.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
-
-### VpcConfig Object
-
-* `security_group_ids` – (Required) VPC configuration security group Ids. Type: Array of strings. Array Members: Minimum number of 1 item. Maximum number of 5 items. Length Constraints: Minimum length of 0. Maximum length of 32. Pattern: `^[-0-9a-zA-Z]+$`
-* `subnet_ids` – (Required) VPC configuration subnets. Type: Array of strings. Array Members: Minimum number of 1 item. Maximum number of 16 items. Length Constraints: Minimum length of 0. Maximum length of 32. Pattern: `^[-0-9a-zA-Z]+$`
+* `training_metrics` - Metrics associated with the customization job.
+    * `training_loss` - Loss metric associated with the customization job.
+* `validation_metrics` - The loss metric for each validator that you provided.
+    * `validation_loss` - The validation loss associated with the validator.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `120m`)
+* `delete` - (Default `120m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Custom Model using the `model_id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Bedrock Custom Model using the `job_arn`. For example:
 
 ```terraform
 import {
-  to       = aws_bedrock_custom_model.my_model
-  model_id = "my_model_arn"
+  to       = aws_bedrock_custom_model.example
+  model_id = "arn:aws:bedrock:us-west-2:123456789012:model-customization-job/amazon.titan-text-express-v1:0:8k/1y5n57gh5y2e"
 }
 ```
 
-Using `terraform import`, import Bedrock custom model using the `model_id`. For example:
+Using `terraform import`, import Bedrock custom model using the `job_arn`. For example:
 
 ```console
-% terraform import aws_bedrock_custom_model.my_model my_model_arn
+% terraform import aws_bedrock_custom_model.example arn:aws:bedrock:us-west-2:123456789012:model-customization-job/amazon.titan-text-express-v1:0:8k/1y5n57gh5y2e
 ```
