@@ -172,6 +172,45 @@ func TestAccBedrockCustomModel_validationDataConfig(t *testing.T) {
 	})
 }
 
+func TestAccBedrockCustomModel_validationDataConfigWaitForCompletion(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_custom_model.test"
+	var v bedrock.GetModelCustomizationJobOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomModelConfig_validationDataConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomModelExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "validation_data_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "validation_data_config.0.validator.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "validation_data_config.0.validator.0.s3_uri"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"base_model_identifier"},
+			},
+			{
+				PreConfig:    func() {},
+				Config:       testAccCustomModelConfig_validationDataConfig(rName),
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "job_status", "Completed"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccBedrockCustomModel_vpcConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
