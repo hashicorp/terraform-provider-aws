@@ -368,7 +368,7 @@ func statusEventDataStore(ctx context.Context, conn *cloudtrail.Client, arn stri
 	}
 }
 
-func waitEventDataStoreAvailable(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) (*cloudtrail.GetEventDataStoreOutput, error) {
+func waitEventDataStoreAvailable(ctx context.Context, conn *cloudtrail.Client, arn string, timeout time.Duration) (*cloudtrail.GetEventDataStoreOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.EventDataStoreStatusCreated),
 		Target:  enum.Slice(types.EventDataStoreStatusEnabled),
