@@ -15,7 +15,7 @@ import (
 
 func TestAccBedrockFoundationModelsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	datasourceName := "aws_bedrock_foundation_models.test"
+	datasourceName := "data.aws_bedrock_foundation_models.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
@@ -35,7 +35,7 @@ func TestAccBedrockFoundationModelsDataSource_basic(t *testing.T) {
 
 func TestAccBedrockFoundationModelsDataSource_byCustomizationType(t *testing.T) {
 	ctx := acctest.Context(t)
-	datasourceName := "aws_bedrock_foundation_models.test"
+	datasourceName := "data.aws_bedrock_foundation_models.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
@@ -55,7 +55,7 @@ func TestAccBedrockFoundationModelsDataSource_byCustomizationType(t *testing.T) 
 
 func TestAccBedrockFoundationModelsDataSource_byInferenceType(t *testing.T) {
 	ctx := acctest.Context(t)
-	datasourceName := "aws_bedrock_foundation_models.test"
+	datasourceName := "data.aws_bedrock_foundation_models.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
@@ -75,7 +75,7 @@ func TestAccBedrockFoundationModelsDataSource_byInferenceType(t *testing.T) {
 
 func TestAccBedrockFoundationModelsDataSource_byOutputModality(t *testing.T) {
 	ctx := acctest.Context(t)
-	datasourceName := "aws_bedrock_foundation_models.test"
+	datasourceName := "data.aws_bedrock_foundation_models.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
