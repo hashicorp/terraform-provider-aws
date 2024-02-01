@@ -141,6 +141,37 @@ func TestAccBedrockCustomModel_tags(t *testing.T) {
 	})
 }
 
+func TestAccBedrockCustomModel_validationDataConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_custom_model.test"
+	var v bedrock.GetModelCustomizationJobOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomModelConfig_validationDataConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomModelExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "validation_data_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "validation_data_config.0.validator.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "validation_data_config.0.validator.0.s3_uri"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"base_model_identifier"},
+			},
+		},
+	})
+}
+
 func TestAccBedrockCustomModel_vpcConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -427,6 +458,38 @@ resource "aws_bedrock_custom_model" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccCustomModelConfig_validationDataConfig(rName string) string {
+	return acctest.ConfigCompose(testAccCustomModelConfig_base(rName), fmt.Sprintf(`
+resource "aws_bedrock_custom_model" "test" {
+  custom_model_name     = %[1]q
+  job_name              = %[1]q
+  base_model_identifier = data.aws_bedrock_foundation_model.test.model_arn
+  role_arn              = aws_iam_role.test.arn
+
+  hyperparameters = {
+    "epochCount"              = "1"
+    "batchSize"               = "1"
+    "learningRate"            = "0.005"
+    "learningRateWarmupSteps" = "0"
+  }
+
+  output_data_config {
+    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
+  }
+
+  training_data_config {
+    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
+  }
+
+  validation_data_config {
+    validator {
+      s3_uri = "s3://${aws_s3_bucket.validation.id}/data/validate.jsonl"
+    }
+  }
+}
+`, rName))
 }
 
 func testAccCustomModelConfig_vpcConfig(rName string) string {

@@ -662,7 +662,7 @@ type customModelTrainingMetricsModel struct {
 }
 
 type customModelValidationDataConfigModel struct {
-	Validators fwtypes.ListNestedObjectValueOf[customModelValidatorConfigModel] `tfsdk:"validators"`
+	Validators fwtypes.ListNestedObjectValueOf[customModelValidatorConfigModel] `tfsdk:"validator"`
 }
 
 type customModelValidationMetricsModel struct {
