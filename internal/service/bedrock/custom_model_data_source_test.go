@@ -15,6 +15,10 @@ import (
 
 func TestAccBedrockCustomModelDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_custom_model.test"
 	datasourceName := "data.aws_bedrock_custom_model.test"
