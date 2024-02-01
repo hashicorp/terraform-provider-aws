@@ -5,127 +5,190 @@ package apprunner
 
 import (
 	"context"
-	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/apprunner"
-	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	apprunner_types "github.com/aws/aws-sdk-go-v2/service/apprunner/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/apprunner"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/resource"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_apprunner_start_deployment", name="Start Deployment")
-func resourceStartDeployment() *schema.Resource {
-	return &schema.Resource{
-		CreateWithoutTimeout: resourceStartDeploymentCreate,
-		ReadWithoutTimeout:   resourceStartDeploymentRead,
-		DeleteWithoutTimeout: schema.NoopContext,
+// @FrameworkResource(name="Start Deployment")
+func newResourceStartDeployment(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceStartDeployment{}
+	r.SetDefaultCreateTimeout(5 * time.Minute)
+	r.SetDefaultReadTimeout(5 * time.Minute)
 
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+	return r, nil
+}
 
-		Schema: map[string]*schema.Schema{
-			"service_arn": {
-				Type:     schema.TypeString,
+type resourceStartDeployment struct {
+	framework.ResourceWithConfigure
+	framework.WithTimeouts
+}
+
+func (r *resourceStartDeployment) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+	resp.TypeName = "aws_apprunner_start_deployment"
+}
+
+const (
+	ResNameStartDeployment = "Start Deployment"
+)
+
+func (r *resourceStartDeployment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	resp.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"aws_account_id": schema.StringAttribute{
 				Required: true,
-				ForceNew: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
-			"operation_id": {
-				Type:     schema.TypeString,
+			"operation_id": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"started_at": {
-				Type:     schema.TypeString,
+			"started_at": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"ended_at": {
-				Type:     schema.TypeString,
+			"ended_at": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
-			"status": {
-				Type:     schema.TypeString,
+			"status": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
+		},
+		Blocks: map[string]schema.Block{
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Delete: true,
+			}),
 		},
 	}
 }
 
-func resourceStartDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func (r *resourceStartDeployment) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	conn := r.Meta().AppRunnerClient(ctx)
 
-	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
-
-	service_arn := d.Get("service_arn").(string)
-	input := &apprunner.StartDeploymentInput{
-		ServiceArn: aws.String(service_arn),
+	var plan resourceStartDeploymentData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
-	output, err := conn.StartDeployment(ctx, input)
+	in := &apprunner.StartDeploymentInput{
+		ServiceArn: aws.String(plan.ServiceARN.ValueString()),
+	}
 
+	out, err := conn.StartDeployment(ctx, in)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "initiating App Runner Start Deployment Operation (%s): %s", d.Id(), err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AppRunner, create.ErrActionCreating, ResNameStartDeployment, plan.ServiceARN.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	d.SetId(aws.ToString(output.OperationId))
-
-	if _, err := waitStartDeploymentSucceeded(ctx, conn, service_arn); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for App Runner Start Deployment Operation (%s) create: %s", d.Id(), err)
+	if out == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AppRunner, create.ErrActionCreating, ResNameStartDeployment, plan.ServiceARN.String(), nil),
+			"no output",
+		)
+		return
 	}
 
-	return append(diags, resourceStartDeploymentRead(ctx, d, meta)...)
+	plan.OperationID = flex.StringToFramework(ctx, out.OperationId)
+
+	_, err := waitStartDeploymentSucceeded(ctx, conn, plan.ServiceARN.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForCreation, ResNameStartDeployment, plan.ServiceARN.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func resourceStartDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
+func (r *resourceStartDeployment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	conn := r.Meta().QuickSightConn(ctx)
 
-	output, err := findStartDeploymentOperationByServiceARN(ctx, meta.(*conns.AWSClient).AppRunnerClient(ctx), d.Get("service_arn").(string))
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] App Runner Start Deployment Operation (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
+	var state resourceStartDeploymentData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
+	out, err := findStartDeploymentOperationByServiceARN(ctx, conn, state.ServiceARN.ValueString())
+	if tfresource.NotFound(err) {
+		resp.State.RemoveResource(ctx)
+		return
+	}
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "finding App Runner Start Deployment Operation (%s): %s", d.Id(), err)
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.AppRunner, create.ErrActionReading, ResNameStartDeployment, state.ServiceARN.String(), err),
+			err.Error(),
+		)
+		return
 	}
 
-	d.Set("operation_id", output.Id)
-	d.Set("started_at", aws.ToTime(output.StartedAt).Format(time.RFC3339))
-	d.Set("ended_at", aws.ToTime(output.EndedAt).Format(time.RFC3339))
-	d.Set("status", output.Status)
+	state.OperationID = flex.StringToFramework(ctx, out.Id)
+	state.StartedAt = flex.StringToFramework(ctx, out.StartedAt)
+	state.EndedAt = flex.StringToFramework(ctx, out.EndedAt)
+	state.Status = flex.StringToFramework(ctx, out.Status)
 
-	return diags
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func waitStartDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, arn string) (*types.OperationSummary, error) {
+func (r *resourceStartDeployment) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func waitStartDeploymentSucceeded(ctx context.Context, conn *apprunner.AppRunner, arn string) (*apprunner_types.OperationSummary, error) {
 	const (
 		timeout = 15 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{},
-		Target:  enum.Slice(types.OperationStatusSucceeded),
+		Target:  []string{string(apprunner_types.OperationStatusSucceeded)},
 		Refresh: statusStartDeployment(ctx, conn, arn),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*types.OperationSummary); ok {
+	if output, ok := outputRaw.(*apprunner_types.OperationSummary); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func statusStartDeployment(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
+func statusStartDeployment(ctx context.Context, conn *apprunner.AppRunner, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findStartDeploymentOperationByServiceARN(ctx, conn, arn)
 
@@ -141,7 +204,7 @@ func statusStartDeployment(ctx context.Context, conn *apprunner.Client, arn stri
 	}
 }
 
-func findStartDeploymentOperationByServiceARN(ctx context.Context, conn *apprunner.Client, arn string) (*types.OperationSummary, error) {
+func findStartDeploymentOperationByServiceARN(ctx context.Context, conn *apprunner.AppRunner, arn string) (*apprunner_types.OperationSummary, error) {
 	input := &apprunner.ListOperationsInput{
 		ServiceArn: aws.String(arn),
 	}
@@ -159,10 +222,10 @@ func findStartDeploymentOperationByServiceARN(ctx context.Context, conn *apprunn
 		}
 	}
 
-	var operation types.OperationSummary
+	var operation apprunner_types.OperationSummary
 	var found bool
 	for _, op := range output.OperationSummaryList {
-		if aws.ToString(op.TargetArn) == arn {
+		if aws.String(op.TargetArn) == aws.String(arn) {
 			operation = op
 			found = true
 			break
@@ -177,4 +240,12 @@ func findStartDeploymentOperationByServiceARN(ctx context.Context, conn *apprunn
 	}
 
 	return &operation, nil
+}
+
+type resourceStartDeploymentData struct {
+	ServiceARN  types.String `tf:"service_arn"`
+	OperationID types.String `tf:"operation_id"`
+	StartedAt   types.String `tf:"started_at"`
+	EndedAt     types.String `tf:"ended_at"`
+	Status      types.String `tf:"status"`
 }
