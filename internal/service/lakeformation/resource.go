@@ -43,6 +43,11 @@ func ResourceResource() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"with_federation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+			},
 			"use_service_linked_role": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -65,6 +70,10 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.RoleArn = aws.String(v.(string))
 	} else {
 		input.UseServiceLinkedRole = aws.Bool(true)
+	}
+
+	if v, ok := d.GetOk("with_federation"); ok {
+		input.WithFederation = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("use_service_linked_role"); ok {
@@ -107,6 +116,8 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if output == nil || output.ResourceInfo == nil {
 		return sdkdiag.AppendErrorf(diags, "reading resource Lake Formation Resource (%s): empty response", d.Id())
 	}
+
+	d.Set("with_federation", output.ResourceInfo.WithFederation)
 
 	// d.Set("arn", output.ResourceInfo.ResourceArn) // output not including resource arn currently
 	d.Set("role_arn", output.ResourceInfo.RoleArn)

@@ -21,11 +21,13 @@ import (
 	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	codeartifact_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codeartifact"
 	codebuild_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codebuild"
 	codecatalyst_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codecatalyst"
 	codecommit_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codecommit"
 	codedeploy_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codedeploy"
 	codeguruprofiler_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codeguruprofiler"
+	codegurureviewer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codegurureviewer"
 	codepipeline_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codepipeline"
 	codestarconnections_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarconnections"
 	codestarnotifications_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarnotifications"
@@ -103,6 +105,7 @@ import (
 	ssmcontacts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmcontacts"
 	ssmincidents_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmincidents"
 	ssmsap_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssmsap"
+	sso_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sso"
 	ssoadmin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	sts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sts"
 	swf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/swf"
@@ -137,8 +140,6 @@ import (
 	cloudtrail_sdkv1 "github.com/aws/aws-sdk-go/service/cloudtrail"
 	cloudwatch_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatch"
 	cloudwatchrum_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchrum"
-	codeartifact_sdkv1 "github.com/aws/aws-sdk-go/service/codeartifact"
-	codegurureviewer_sdkv1 "github.com/aws/aws-sdk-go/service/codegurureviewer"
 	cognitoidentity_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentity"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	configservice_sdkv1 "github.com/aws/aws-sdk-go/service/configservice"
@@ -404,8 +405,8 @@ func (c *AWSClient) CloudWatchConn(ctx context.Context) *cloudwatch_sdkv1.CloudW
 	return errs.Must(conn[*cloudwatch_sdkv1.CloudWatch](ctx, c, names.CloudWatch, make(map[string]any)))
 }
 
-func (c *AWSClient) CodeArtifactConn(ctx context.Context) *codeartifact_sdkv1.CodeArtifact {
-	return errs.Must(conn[*codeartifact_sdkv1.CodeArtifact](ctx, c, names.CodeArtifact, make(map[string]any)))
+func (c *AWSClient) CodeArtifactClient(ctx context.Context) *codeartifact_sdkv2.Client {
+	return errs.Must(client[*codeartifact_sdkv2.Client](ctx, c, names.CodeArtifact, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeBuildClient(ctx context.Context) *codebuild_sdkv2.Client {
@@ -424,8 +425,8 @@ func (c *AWSClient) CodeGuruProfilerClient(ctx context.Context) *codeguruprofile
 	return errs.Must(client[*codeguruprofiler_sdkv2.Client](ctx, c, names.CodeGuruProfiler, make(map[string]any)))
 }
 
-func (c *AWSClient) CodeGuruReviewerConn(ctx context.Context) *codegurureviewer_sdkv1.CodeGuruReviewer {
-	return errs.Must(conn[*codegurureviewer_sdkv1.CodeGuruReviewer](ctx, c, names.CodeGuruReviewer, make(map[string]any)))
+func (c *AWSClient) CodeGuruReviewerClient(ctx context.Context) *codegurureviewer_sdkv2.Client {
+	return errs.Must(client[*codegurureviewer_sdkv2.Client](ctx, c, names.CodeGuruReviewer, make(map[string]any)))
 }
 
 func (c *AWSClient) CodePipelineClient(ctx context.Context) *codepipeline_sdkv2.Client {
@@ -1042,6 +1043,10 @@ func (c *AWSClient) SSMIncidentsClient(ctx context.Context) *ssmincidents_sdkv2.
 
 func (c *AWSClient) SSMSAPClient(ctx context.Context) *ssmsap_sdkv2.Client {
 	return errs.Must(client[*ssmsap_sdkv2.Client](ctx, c, names.SSMSAP, make(map[string]any)))
+}
+
+func (c *AWSClient) SSOClient(ctx context.Context) *sso_sdkv2.Client {
+	return errs.Must(client[*sso_sdkv2.Client](ctx, c, names.SSO, make(map[string]any)))
 }
 
 func (c *AWSClient) SSOAdminClient(ctx context.Context) *ssoadmin_sdkv2.Client {

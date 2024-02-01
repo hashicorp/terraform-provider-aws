@@ -27,11 +27,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.8.6
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.15.7
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.31.0
+	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.23.6
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.10.6
 	github.com/aws/aws-sdk-go-v2/service/codecommit v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.22.3
 	github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.18.6
+	github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.22.6
 	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.22.6
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.22.1
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.20.6
@@ -109,6 +111,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.20.6
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.27.6
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.10.6
+	github.com/aws/aws-sdk-go-v2/service/sso v1.18.7
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.23.7
 	github.com/aws/aws-sdk-go-v2/service/sts v1.26.7
 	github.com/aws/aws-sdk-go-v2/service/swf v1.20.7
@@ -181,7 +184,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.8.11 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.10.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.16.10 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.18.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.21.7 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect

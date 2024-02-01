@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"time"
 
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -528,15 +528,13 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		config.DefaultTagsConfig = expandDefaultTags(ctx, v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	if v, ok := d.GetOk("endpoints"); ok && v.(*schema.Set).Len() > 0 {
-		endpoints, err := expandEndpoints(ctx, v.(*schema.Set).List())
-
-		if err != nil {
-			return nil, sdkdiag.AppendFromErr(diags, err)
-		}
-
-		config.Endpoints = endpoints
+	v := d.Get("endpoints")
+	endpoints, dx := expandEndpoints(ctx, v.(*schema.Set).List())
+	diags = append(diags, dx...)
+	if diags.HasError() {
+		return nil, diags
 	}
+	config.Endpoints = endpoints
 
 	if v, ok := d.GetOk("forbidden_account_ids"); ok && v.(*schema.Set).Len() > 0 {
 		config.ForbiddenAccountIds = flex.ExpandStringValueSet(v.(*schema.Set))
@@ -864,10 +862,8 @@ func expandIgnoreTags(ctx context.Context, tfMap map[string]interface{}) *tftags
 	return ignoreConfig
 }
 
-func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string, error) {
-	if len(tfList) == 0 {
-		return nil, nil
-	}
+func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string, diag.Diagnostics) {
+	var diags diag.Diagnostics
 
 	endpoints := make(map[string]string)
 
@@ -878,19 +874,25 @@ func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string
 			continue
 		}
 
-		for _, alias := range names.Aliases() {
-			pkg, err := names.ProviderPackageForAlias(alias)
-
-			if err != nil {
-				return nil, fmt.Errorf("failed to assign endpoint (%s): %w", alias, err)
-			}
+		for _, endpoint := range names.Endpoints() {
+			pkg := endpoint.ProviderPackage
 
 			if endpoints[pkg] == "" {
-				if v := tfMap[alias].(string); v != "" {
+				if v := tfMap[pkg].(string); v != "" {
 					endpoints[pkg] = v
+				} else {
+					for _, alias := range endpoint.Aliases {
+						if v := tfMap[alias].(string); v != "" {
+							endpoints[pkg] = v
+							break
+						}
+					}
 				}
 			}
 		}
+	}
+	if diags.HasError() {
+		return nil, diags
 	}
 
 	for _, pkg := range names.ProviderPackages() {
@@ -898,22 +900,44 @@ func expandEndpoints(_ context.Context, tfList []interface{}) (map[string]string
 			continue
 		}
 
-		envVar := names.TfAwsEnvVar(pkg)
-		if envVar != "" {
-			if v := os.Getenv(envVar); v != "" {
+		// We only need to handle the services with custom envvars here before we hand off to `aws-sdk-go-base`
+		tfAwsEnvVar := names.TfAwsEnvVar(pkg)
+		deprecatedEnvVar := names.DeprecatedEnvVar(pkg)
+		if tfAwsEnvVar == "" && deprecatedEnvVar == "" {
+			continue
+		}
+
+		awsEnvVar := names.AwsServiceEnvVar(pkg)
+		if awsEnvVar != "" {
+			if v := os.Getenv(awsEnvVar); v != "" {
 				endpoints[pkg] = v
 				continue
 			}
 		}
 
-		if deprecatedEnvVar := names.DeprecatedEnvVar(pkg); deprecatedEnvVar != "" {
-			if v := os.Getenv(deprecatedEnvVar); v != "" {
-				// TODO: Make this a Warning Diagnostic
-				log.Printf("[WARN] The environment variable %q is deprecated. Use %q instead.", deprecatedEnvVar, envVar)
+		if tfAwsEnvVar != "" {
+			if v := os.Getenv(tfAwsEnvVar); v != "" {
+				diags = append(diags, DeprecatedEnvVarDiag(tfAwsEnvVar, awsEnvVar))
 				endpoints[pkg] = v
+				continue
+			}
+		}
+
+		if deprecatedEnvVar != "" {
+			if v := os.Getenv(deprecatedEnvVar); v != "" {
+				diags = append(diags, DeprecatedEnvVarDiag(deprecatedEnvVar, awsEnvVar))
+				endpoints[pkg] = v
+				continue
 			}
 		}
 	}
 
-	return endpoints, nil
+	return endpoints, diags
+}
+
+func DeprecatedEnvVarDiag(envvar, replacement string) diag.Diagnostic {
+	return errs.NewWarningDiagnostic(
+		"Deprecated Environment Variable",
+		fmt.Sprintf(`The environment variable "%s" is deprecated. Use environment variable "%s" instead.`, envvar, replacement),
+	)
 }
