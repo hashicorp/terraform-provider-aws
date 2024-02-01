@@ -8,5 +8,6 @@ var (
 	ResourceCustomModel                         = newCustomModelResource
 	ResourceModelInvocationLoggingConfiguration = newResourceModelInvocationLoggingConfiguration
 
-	FindModelCustomizationJobByID = findModelCustomizationJobByID
+	FindModelCustomizationJobByID      = findModelCustomizationJobByID
+	WaitModelCustomizationJobCompleted = waitModelCustomizationJobCompleted
 )
