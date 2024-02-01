@@ -121,7 +121,7 @@ func TestAccS3BucketMetric_withFilterAccessPoint(t *testing.T) {
 	})
 }
 
-func TestAccS3BucketMetric_withFilterAccessPointAndPrefixAndMultipleTags(t *testing.T) {
+func TestAccS3BucketMetric_withFilterAccessPointAndPrefixAndMultiTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf types.MetricsConfiguration
 	rInt := sdkacctest.RandInt()
