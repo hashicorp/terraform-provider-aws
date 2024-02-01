@@ -179,7 +179,7 @@ func environmentMembershipParseResourceID(id string) (string, string, error) {
 		return parts[0], parts[1], nil
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected ENVIRONMENTID%[2]USERARN", id, environmentMembershipResourceIDSeparator)
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected ENVIRONMENTID%[2]sUSERARN", id, environmentMembershipResourceIDSeparator)
 }
 
 func findEnvironmentMembershipByTwoPartKey(ctx context.Context, conn *cloud9.Client, envID, userARN string) (*types.EnvironmentMember, error) {
