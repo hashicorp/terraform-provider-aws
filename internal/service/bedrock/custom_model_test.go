@@ -7,7 +7,9 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -229,12 +231,16 @@ func TestAccBedrockCustomModel_validationDataConfigWaitForCompletion(t *testing.
 				ImportStateVerifyIgnore: []string{"base_model_identifier"},
 			},
 			{
-				// TODO Wait for completion.
-				PreConfig:    func() {},
-				Config:       testAccCustomModelConfig_validationDataConfig(rName),
-				RefreshState: true,
+				PreConfig: func() {
+					testAccWaitModelCustomizationJobCompleted(ctx, t, &v)
+				},
+				Config: testAccCustomModelConfig_validationDataConfig(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "job_status", "Completed"),
+					resource.TestCheckResourceAttr(resourceName, "training_metrics.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "training_metrics.0.training_loss"),
+					resource.TestCheckResourceAttr(resourceName, "validation_metrics.#", "1"),
+					resource.TestCheckResourceAttrSet(resourceName, "validation_metrics.0.validation_loss"),
 				),
 			},
 		},
@@ -270,6 +276,20 @@ func TestAccBedrockCustomModel_vpcConfig(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccWaitModelCustomizationJobCompleted(ctx context.Context, t *testing.T, v *bedrock.GetModelCustomizationJobOutput) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockClient(ctx)
+
+	jobARN := aws.ToString(v.JobArn)
+	const (
+		timeout = 2 * time.Hour
+	)
+	_, err := tfbedrock.WaitModelCustomizationJobCompleted(ctx, conn, jobARN, timeout)
+
+	if err != nil {
+		t.Logf("waiting for Bedrock Custom Model customization job (%s) complete: %s", jobARN, err)
+	}
 }
 
 func testAccCheckCustomModelDestroy(ctx context.Context) resource.TestCheckFunc {

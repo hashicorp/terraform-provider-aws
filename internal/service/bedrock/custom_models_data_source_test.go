@@ -6,6 +6,7 @@ package bedrock_test
 import (
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -16,14 +17,24 @@ func TestAccBedrockCustomModelsDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	datasourceName := "data.aws_bedrock_custom_models.test"
+	resourceName := "aws_bedrock_custom_model.test"
+	var v bedrock.GetModelCustomizationJobOutput
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
-			// TODO: Create custom model and wait for it to be created.
 			{
+				Config: testAccCustomModelConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomModelExists(ctx, resourceName, &v),
+				),
+			},
+			{
+				PreConfig: func() {
+					testAccWaitModelCustomizationJobCompleted(ctx, t, &v)
+				},
 				Config: testAccCustomModelsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(datasourceName, "id"),
