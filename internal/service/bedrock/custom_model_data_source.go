@@ -176,32 +176,3 @@ type customModelDataSourceModel struct {
 	ValidationDataConfig fwtypes.ListNestedObjectValueOf[customModelValidationDataConfigModel] `tfsdk:"validation_data_config"`
 	ValidationMetrics    fwtypes.ListNestedObjectValueOf[customModelValidationMetricsModel]    `tfsdk:"validation_metrics"`
 }
-
-type customModelOutputDataConfigModel struct {
-	S3URI types.String `tfsdk:"s3_uri"`
-}
-
-type customModelTrainingDataConfigModel struct {
-	S3URI types.String `tfsdk:"s3_uri"`
-}
-
-type customModelTrainingMetricsModel struct {
-	TrainingLoss types.Float64 `tfsdk:"training_loss"`
-}
-
-type customModelValidationDataConfigModel struct {
-	Validators fwtypes.ListNestedObjectValueOf[customModelValidatorConfigModel] `tfsdk:"validators"`
-}
-
-type customModelValidationMetricsModel struct {
-	ValidationLoss types.Float64 `tfsdk:"validation_loss"`
-}
-
-type customModelValidatorConfigModel struct {
-	S3URI types.String `tfsdk:"s3_uri"`
-}
-
-type customModelVPCConfigModel struct {
-	SecurityGroupIDs fwtypes.SetValueOf[types.String] `tfsdk:"security_group_ids"`
-	SubnetIDs        fwtypes.SetValueOf[types.String] `tfsdk:"subnet_ids"`
-}
