@@ -71,7 +71,7 @@ func TestAccS3BucketMetric_withEmptyFilter(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketMetricsExistsConfig(ctx, resourceName, &conf),
 				),
-				ExpectError: regexache.MustCompile(`one of .* must be specified`),
+				ExpectError: regexache.MustCompile(`(?is)one of.*must be specified`),
 			},
 		},
 	})
