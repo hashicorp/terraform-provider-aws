@@ -141,6 +141,35 @@ func TestAccBedrockCustomModel_tags(t *testing.T) {
 	})
 }
 
+func TestAccBedrockCustomModel_kmsKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_custom_model.test"
+	var v bedrock.GetModelCustomizationJobOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckCustomModelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCustomModelConfig_kmsKey(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckCustomModelExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrSet(resourceName, "custom_model_kms_key_id"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"base_model_identifier"},
+			},
+		},
+	})
+}
+
 func TestAccBedrockCustomModel_validationDataConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -490,6 +519,40 @@ resource "aws_bedrock_custom_model" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccCustomModelConfig_kmsKey(rName string) string {
+	return acctest.ConfigCompose(testAccCustomModelConfig_base(rName), fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_bedrock_custom_model" "test" {
+  custom_model_name     = %[1]q
+  job_name              = %[1]q
+  base_model_identifier = data.aws_bedrock_foundation_model.test.model_arn
+  role_arn              = aws_iam_role.test.arn
+
+  custom_model_kms_key_id = aws_kms_key.test.arn
+  customization_type      = "FINE_TUNING"
+
+  hyperparameters = {
+    "epochCount"              = "1"
+    "batchSize"               = "1"
+    "learningRate"            = "0.005"
+    "learningRateWarmupSteps" = "0"
+  }
+
+  output_data_config {
+    s3_uri = "s3://${aws_s3_bucket.output.id}/data/"
+  }
+
+  training_data_config {
+    s3_uri = "s3://${aws_s3_bucket.training.id}/data/train.jsonl"
+  }
+}
+`, rName))
 }
 
 func testAccCustomModelConfig_validationDataConfig(rName string) string {
