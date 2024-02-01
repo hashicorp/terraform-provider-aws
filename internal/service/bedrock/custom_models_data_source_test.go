@@ -39,6 +39,8 @@ func TestAccBedrockCustomModelsDataSource_basic(t *testing.T) {
 
 func testAccCustomModelsDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccCustomModelConfig_basic(rName), `
-data "aws_bedrock_custom_models" "test" {}
+data "aws_bedrock_custom_models" "test" {
+  depends_on = [aws_bedrock_custom_model.test]
+}
 `)
 }

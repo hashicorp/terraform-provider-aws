@@ -128,7 +128,7 @@ func (d *customModelDataSource) Read(ctx context.Context, request datasource.Rea
 	conn := d.Meta().BedrockClient(ctx)
 
 	modelID := data.ModelID.ValueString()
-	output, err := findCustomModelByID(ctx, conn, modelID)
+	outputGM, err := findCustomModelByID(ctx, conn, modelID)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Custom Model (%s)", modelID), err.Error())
@@ -136,14 +136,31 @@ func (d *customModelDataSource) Read(ctx context.Context, request datasource.Rea
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	jobARN := aws.ToString(outputGM.JobArn)
+	outputGJ, err := findModelCustomizationJobByID(ctx, conn, jobARN)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Custom Model customization job (%s)", jobARN), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, outputGM, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Some fields are only available in GetModelCustomizationJobOutput.
+	var dataFromGetModelCustomizationJob resourceCustomModelData
+	response.Diagnostics.Append(fwflex.Flatten(ctx, outputGJ, &dataFromGetModelCustomizationJob)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	data.ID = types.StringValue(modelID)
+	data.JobName = dataFromGetModelCustomizationJob.JobName
+	data.ValidationDataConfig = dataFromGetModelCustomizationJob.ValidationDataConfig
 
-	jobARN := aws.ToString(output.JobArn)
 	jobTags, err := listTags(ctx, conn, jobARN)
 
 	if err != nil {
@@ -154,7 +171,7 @@ func (d *customModelDataSource) Read(ctx context.Context, request datasource.Rea
 
 	data.JobTags = fwflex.FlattenFrameworkStringValueMap(ctx, jobTags.IgnoreAWS().Map())
 
-	modelARN := aws.ToString(output.ModelArn)
+	modelARN := aws.ToString(outputGM.ModelArn)
 	modelTags, err := listTags(ctx, conn, modelARN)
 
 	if err != nil {

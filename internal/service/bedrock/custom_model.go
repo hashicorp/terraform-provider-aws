@@ -402,15 +402,15 @@ func (r *customModelResource) Read(ctx context.Context, request resource.ReadReq
 			return
 		}
 
-		var customModelData resourceCustomModelData
-		response.Diagnostics.Append(fwflex.Flatten(ctx, outputGM, &customModelData)...)
+		var dataFromGetCustomModel resourceCustomModelData
+		response.Diagnostics.Append(fwflex.Flatten(ctx, outputGM, &dataFromGetCustomModel)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
 		data.CustomModelARN = fwflex.StringToFramework(ctx, outputGM.ModelArn)
-		data.TrainingMetrics = customModelData.TrainingMetrics
-		data.ValidationMetrics = customModelData.ValidationMetrics
+		data.TrainingMetrics = dataFromGetCustomModel.TrainingMetrics
+		data.ValidationMetrics = dataFromGetCustomModel.ValidationMetrics
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
