@@ -29,7 +29,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceEnvironmentEC2,
+			Factory:  resourceEnvironmentEC2,
 			TypeName: "aws_cloud9_environment_ec2",
 			Name:     "Environment EC2",
 			Tags: &types.ServicePackageResourceTags{
