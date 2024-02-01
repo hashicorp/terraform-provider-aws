@@ -49,6 +49,33 @@ resource "aws_s3_bucket_metric" "example-filtered" {
 }
 ```
 
+### Add metrics configuration with S3 object filter for S3 Access Point
+
+```terraform
+resource "aws_s3_bucket" "example" {
+  bucket = "example"
+}
+
+resource "aws_s3_access_point" "example-access-point" {
+  bucket = aws_s3_bucket.example.id
+  name   = "example-access-point"
+}
+
+resource "aws_s3_bucket_metric" "example-filtered" {
+  bucket = aws_s3_bucket.example.id
+  name   = "ImportantBlueDocuments"
+
+  filter {
+    access_point = aws_s3_access_point.example-access-point.arn
+
+    tags = {
+      priority = "high"
+      class    = "blue"
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -61,6 +88,7 @@ The `filter` metric configuration supports the following:
 
 ~> **NOTE:** At least one of `prefix` or `tags` is required when specifying a `filter`
 
+* `access_point` - (Optional) S3 Access Point ARN for filtering (singular).
 * `prefix` - (Optional) Object prefix for filtering (singular).
 * `tags` - (Optional) Object tags for filtering (up to 10).
 
