@@ -72,36 +72,3 @@ func FindEnvironmentByID(ctx context.Context, conn *cloud9.Cloud9, id string) (*
 
 	return output, nil
 }
-
-func FindEnvironmentMembershipByID(ctx context.Context, conn *cloud9.Cloud9, envId, userArn string) (*cloud9.EnvironmentMember, error) {
-	input := &cloud9.DescribeEnvironmentMembershipsInput{
-		EnvironmentId: aws.String(envId),
-		UserArn:       aws.String(userArn),
-	}
-	out, err := conn.DescribeEnvironmentMembershipsWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, cloud9.ErrCodeNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	envs := out.Memberships
-
-	if len(envs) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	env := envs[0]
-
-	if env == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return env, nil
-}

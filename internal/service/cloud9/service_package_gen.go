@@ -37,8 +37,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceEnvironmentMembership,
+			Factory:  resourceEnvironmentMembership,
 			TypeName: "aws_cloud9_environment_membership",
+			Name:     "Environment Membership",
 		},
 	}
 }

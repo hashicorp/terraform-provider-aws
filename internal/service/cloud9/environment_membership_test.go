@@ -128,7 +128,7 @@ func testAccCheckEnvironmentMemberExists(ctx context.Context, n string, res *clo
 			return err
 		}
 
-		out, err := tfcloud9.FindEnvironmentMembershipByID(ctx, conn, envId, userArn)
+		out, err := tfcloud9.FindEnvironmentMembershipByTwoPartKey(ctx, conn, envId, userArn)
 		if err != nil {
 			return err
 		}
@@ -153,7 +153,7 @@ func testAccCheckEnvironmentMemberDestroy(ctx context.Context) resource.TestChec
 				return err
 			}
 
-			_, err = tfcloud9.FindEnvironmentMembershipByID(ctx, conn, envId, userArn)
+			_, err = tfcloud9.FindEnvironmentMembershipByTwoPartKey(ctx, conn, envId, userArn)
 
 			if tfresource.NotFound(err) {
 				continue
