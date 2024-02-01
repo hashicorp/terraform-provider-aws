@@ -63,5 +63,5 @@ func testAccCustomModelDataSourceConfig_basic(rName string) string {
 data "aws_bedrock_custom_model" "test" {
   model_id = aws_bedrock_custom_model.test.model_arn
 }
-`, rName)
+`)
 }
