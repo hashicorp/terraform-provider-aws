@@ -301,7 +301,7 @@ func testAccCheckCustomModelDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := tfbedrock.FindModelCustomizationJobByID(ctx, conn, rs.Primary.ID)
+			output, err := tfbedrock.FindModelCustomizationJobByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -309,6 +309,19 @@ func testAccCheckCustomModelDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			if err != nil {
 				return err
+			}
+
+			// Check the custom model.
+			if modelARN := aws.ToString(output.OutputModelArn); modelARN != "" {
+				_, err := tfbedrock.FindCustomModelByID(ctx, conn, modelARN)
+
+				if tfresource.NotFound(err) {
+					continue
+				}
+
+				if err != nil {
+					return err
+				}
 			}
 
 			return fmt.Errorf("Bedrock Custom Model %s still exists", rs.Primary.ID)
