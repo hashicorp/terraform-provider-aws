@@ -329,7 +329,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_lakeformation_resource" "test" {
-  arn                     = aws_s3_bucket.test.arn
+  arn                   = aws_s3_bucket.test.arn
   hybrid_access_enabled = true
 }
 `, rName)
