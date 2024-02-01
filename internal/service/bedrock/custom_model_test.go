@@ -200,6 +200,7 @@ func TestAccBedrockCustomModel_validationDataConfigWaitForCompletion(t *testing.
 				ImportStateVerifyIgnore: []string{"base_model_identifier"},
 			},
 			{
+				// TODO Wait for completion.
 				PreConfig:    func() {},
 				Config:       testAccCustomModelConfig_validationDataConfig(rName),
 				RefreshState: true,
@@ -323,53 +324,48 @@ resource "aws_s3_object" "validation" {
 resource "aws_iam_role" "test" {
   name = %[1]q
 
+  # See https://docs.aws.amazon.com/bedrock/latest/userguide/model-customization-iam-role.html#model-customization-iam-role-trust.
   assume_role_policy = <<EOF
 {
-	"Version": "2012-10-17",
-	"Statement": [
-		{
-			"Effect": "Allow",
-			"Principal": {
-				"Service": "bedrock.amazonaws.com"
-			},
-			"Action": "sts:AssumeRole",
-			"Condition": {
-				"StringEquals": {
-					"aws:SourceAccount": "${data.aws_caller_identity.current.account_id}"
-				},
-				"ArnEquals": {
-					"aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:model-customization-job/*"
-				}
-			}
-		}
-	] 
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "bedrock.amazonaws.com"
+    },
+    "Action": "sts:AssumeRole",
+    "Condition": {
+      "StringEquals": {
+        "aws:SourceAccount": "${data.aws_caller_identity.current.account_id}"
+      },
+      "ArnEquals": {
+        "aws:SourceArn": "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:model-customization-job/*"
+      }
+    }
+  }]
 }
 EOF
 }
 
+# See https://docs.aws.amazon.com/bedrock/latest/userguide/model-customization-iam-role.html#model-customization-iam-role-s3.
 resource "aws_iam_policy" "training" {
   name = "%[1]s-training"
 
   policy = jsonencode({
     "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Effect" : "Allow",
-        "Action" : [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:ListBucket",
-          "s3:ListObjects"
-        ],
-        "Resource" : [
-          "${aws_s3_bucket.training.arn}",
-          "${aws_s3_bucket.training.arn}/data",
-          "${aws_s3_bucket.training.arn}/data/*",
-          "${aws_s3_bucket.validation.arn}/data",
-          "${aws_s3_bucket.validation.arn}/data/*"
-        ]
-      }
-    ]
+    "Statement" : [{
+      "Effect" : "Allow",
+      "Action" : [
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      "Resource" : [
+        "${aws_s3_bucket.training.arn}",
+        "${aws_s3_bucket.training.arn}/*",
+        "${aws_s3_bucket.validation.arn}",
+        "${aws_s3_bucket.validation.arn}/*"
+      ]
+    }]
   })
 }
 
@@ -378,21 +374,18 @@ resource "aws_iam_policy" "output" {
 
   policy = jsonencode({
     "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Effect" : "Allow",
-        "Action" : [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:ListBucket",
-          "s3:ListObjects"
-        ],
-        "Resource" : [
-          "${aws_s3_bucket.output.arn}/data",
-          "${aws_s3_bucket.output.arn}/data/*"
-        ]
-      }
-    ]
+    "Statement" : [{
+      "Effect" : "Allow",
+      "Action" : [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:ListBucket"
+      ],
+      "Resource" : [
+        "${aws_s3_bucket.output.arn}",
+        "${aws_s3_bucket.output.arn}/*"
+      ]
+    }]
   })
 }
 
@@ -547,24 +540,22 @@ resource "aws_iam_policy" "vpc" {
 
   policy = jsonencode({
     "Version" : "2012-10-17",
-    "Statement" : [
-      {
-        "Effect" : "Allow",
-        "Action" : [
-          "ec2:DescribeNetworkInterfaces",
-          "ec2:DescribeVpcs",
-          "ec2:DescribeDhcpOptions",
-          "ec2:DescribeSubnets",
-          "ec2:DescribeSecurityGroups",
-          "ec2:CreateNetworkInterface",
-          "ec2:CreateNetworkInterfacePermission",
-          "ec2:DeleteNetworkInterface",
-          "ec2:DeleteNetworkInterfacePermission",
-          "ec2:CreateTags"
-        ],
-        "Resource" : "*"
-      }
-    ]
+    "Statement" : [{
+      "Effect" : "Allow",
+      "Action" : [
+        "ec2:DescribeNetworkInterfaces",
+        "ec2:DescribeVpcs",
+        "ec2:DescribeDhcpOptions",
+        "ec2:DescribeSubnets",
+        "ec2:DescribeSecurityGroups",
+        "ec2:CreateNetworkInterface",
+        "ec2:CreateNetworkInterfacePermission",
+        "ec2:DeleteNetworkInterface",
+        "ec2:DeleteNetworkInterfacePermission",
+        "ec2:CreateTags"
+      ],
+      "Resource" : "*"
+    }]
   })
 }
 
