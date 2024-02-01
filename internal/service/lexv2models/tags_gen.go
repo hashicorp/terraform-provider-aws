@@ -20,7 +20,7 @@ import (
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *lexmodelsv2.Client, identifier string, optFns ...func(*lexmodelsv2.Options)) (tftags.KeyValueTags, error) {
 	input := &lexmodelsv2.ListTagsForResourceInput{
-		ResourceArn: aws.String(identifier),
+		ResourceARN: aws.String(identifier),
 	}
 
 	output, err := conn.ListTagsForResource(ctx, input, optFns...)
@@ -92,7 +92,7 @@ func updateTags(ctx context.Context, conn *lexmodelsv2.Client, identifier string
 	removedTags = removedTags.IgnoreSystem(names.LexV2Models)
 	if len(removedTags) > 0 {
 		input := &lexmodelsv2.UntagResourceInput{
-			ResourceArn: aws.String(identifier),
+			ResourceARN: aws.String(identifier),
 			TagKeys:     removedTags.Keys(),
 		}
 
@@ -107,7 +107,7 @@ func updateTags(ctx context.Context, conn *lexmodelsv2.Client, identifier string
 	updatedTags = updatedTags.IgnoreSystem(names.LexV2Models)
 	if len(updatedTags) > 0 {
 		input := &lexmodelsv2.TagResourceInput{
-			ResourceArn: aws.String(identifier),
+			ResourceARN: aws.String(identifier),
 			Tags:        Tags(updatedTags),
 		}
 

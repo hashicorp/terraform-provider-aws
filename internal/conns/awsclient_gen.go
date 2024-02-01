@@ -232,7 +232,6 @@ import (
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	ssm_sdkv1 "github.com/aws/aws-sdk-go/service/ssm"
 	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
-	synthetics_sdkv1 "github.com/aws/aws-sdk-go/service/synthetics"
 	transfer_sdkv1 "github.com/aws/aws-sdk-go/service/transfer"
 	waf_sdkv1 "github.com/aws/aws-sdk-go/service/waf"
 	wafregional_sdkv1 "github.com/aws/aws-sdk-go/service/wafregional"
@@ -1120,10 +1119,6 @@ func (c *AWSClient) SimpleDBConn(ctx context.Context) *simpledb_sdkv1.SimpleDB {
 
 func (c *AWSClient) StorageGatewayConn(ctx context.Context) *storagegateway_sdkv1.StorageGateway {
 	return errs.Must(conn[*storagegateway_sdkv1.StorageGateway](ctx, c, names.StorageGateway, make(map[string]any)))
-}
-
-func (c *AWSClient) SyntheticsConn(ctx context.Context) *synthetics_sdkv1.Synthetics {
-	return errs.Must(conn[*synthetics_sdkv1.Synthetics](ctx, c, names.Synthetics, make(map[string]any)))
 }
 
 func (c *AWSClient) SyntheticsClient(ctx context.Context) *synthetics_sdkv2.Client {
