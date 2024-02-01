@@ -589,6 +589,40 @@ func findTrails(ctx context.Context, conn *cloudtrail.Client, input *cloudtrail.
 	return output.TrailList, nil
 }
 
+func findTrailInfoByName(ctx context.Context, conn *cloudtrail.Client, name string) (*types.TrailInfo, error) {
+	output, err := findTrailInfos(ctx, conn, func(v *types.TrailInfo) bool {
+		return aws.ToString(v.Name) == name
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTrailInfos(ctx context.Context, conn *cloudtrail.Client, filter tfslices.Predicate[*types.TrailInfo]) ([]types.TrailInfo, error) {
+	input := &cloudtrail.ListTrailsInput{}
+	var output []types.TrailInfo
+
+	pages := cloudtrail.NewListTrailsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Trails {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
 func setLogging(ctx context.Context, conn *cloudtrail.Client, name string, enabled bool) error {
 	if enabled {
 		input := &cloudtrail.StartLoggingInput{
