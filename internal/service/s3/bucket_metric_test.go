@@ -728,7 +728,7 @@ resource "aws_s3_bucket_metric" "test" {
 
   filter {
     access_point = %[2]q
-		prefix = %[3]q
+    prefix       = %[3]q
 
     tags = {
       "tag1" = %[4]q
@@ -747,7 +747,7 @@ resource "aws_s3_bucket_metric" "test" {
 
   filter {
     access_point = %[2]q
-		prefix = %[3]q
+    prefix       = %[3]q
 
     tags = {
       "tag1" = %[4]q
@@ -765,7 +765,7 @@ resource "aws_s3_bucket_metric" "test" {
 
   filter {
     access_point = %[2]q
-		prefix = %[3]q
+    prefix       = %[3]q
   }
 }
 `, metricName, accessPoint, prefix))
