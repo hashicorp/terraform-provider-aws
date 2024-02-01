@@ -56,6 +56,12 @@ func ResourceResource() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"with_federation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 		},
 	}
 }
@@ -81,6 +87,10 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("use_service_linked_role"); ok {
 		input.UseServiceLinkedRole = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("with_federation"); ok {
+		input.WithFederation = aws.Bool(v.(bool))
 	}
 
 	_, err := conn.RegisterResourceWithContext(ctx, input)
@@ -118,6 +128,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("last_modified", v.Format(time.RFC3339))
 	}
 	d.Set("role_arn", resource.RoleArn)
+	d.Set("with_federation", resource.WithFederation)
 
 	return diags
 }
