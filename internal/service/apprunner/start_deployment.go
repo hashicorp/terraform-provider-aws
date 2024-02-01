@@ -103,7 +103,7 @@ func (r *resourceStartDeployment) Create(ctx context.Context, req resource.Creat
 		ServiceArn: aws.String(plan.ServiceARN.ValueString()),
 	}
 
-	out, err := conn.StartDeployment(ctx, in)
+	out, err := conn.StartDeploymentWithContext(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.AppRunner, create.ErrActionCreating, ResNameStartDeployment, plan.ServiceARN.String(), err),
@@ -135,7 +135,7 @@ func (r *resourceStartDeployment) Create(ctx context.Context, req resource.Creat
 }
 
 func (r *resourceStartDeployment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().QuickSightConn(ctx)
+	conn := r.Meta().AppRunnerClient(ctx)
 
 	var state resourceStartDeploymentData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -209,7 +209,7 @@ func findStartDeploymentOperationByServiceARN(ctx context.Context, conn *apprunn
 		ServiceArn: aws.String(arn),
 	}
 
-	output, err := conn.ListOperations(ctx, input)
+	output, err := conn.ListOperationsWithContext(ctx, input)
 
 	if err != nil {
 		return nil, err
