@@ -314,11 +314,8 @@ func resourceTrailCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			return conn.CreateTrail(ctx, input)
 		},
 		func(err error) (bool, error) {
-			if errs.IsAErrorMessageContains[*types.InvalidCloudWatchLogsRoleArnException](err, "Access denied.") {
-				return true, err
-			}
-
-			if errs.IsAErrorMessageContains[*types.InvalidCloudWatchLogsLogGroupArnException](err, "Access denied.") {
+			if errs.IsAErrorMessageContains[*types.InvalidCloudWatchLogsRoleArnException](err, "Access denied.") ||
+				errs.IsAErrorMessageContains[*types.InvalidCloudWatchLogsLogGroupArnException](err, "Access denied.") {
 				return true, err
 			}
 
@@ -493,11 +490,8 @@ func resourceTrailUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 				return conn.UpdateTrail(ctx, input)
 			},
 			func(err error) (bool, error) {
-				if errs.IsAErrorMessageContains[*types.InvalidCloudWatchLogsRoleArnException](err, "Access denied.") {
-					return true, err
-				}
-
-				if errs.IsAErrorMessageContains[*types.InvalidCloudWatchLogsLogGroupArnException](err, "Access denied.") {
+				if errs.IsAErrorMessageContains[*types.InvalidCloudWatchLogsRoleArnException](err, "Access denied.") ||
+					errs.IsAErrorMessageContains[*types.InvalidCloudWatchLogsLogGroupArnException](err, "Access denied.") {
 					return true, err
 				}
 
