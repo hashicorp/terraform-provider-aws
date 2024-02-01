@@ -37,6 +37,7 @@ func ResourceResource() *schema.Resource {
 			"hybrid_access_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
+				Computed: true,
 				ForceNew: true,
 			},
 			"last_modified": {

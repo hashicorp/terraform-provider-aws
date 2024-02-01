@@ -37,7 +37,7 @@ func TestAccLakeFormationResource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckResourceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "hybrid_access_enabled", ""),
+					resource.TestCheckResourceAttr(resourceName, "hybrid_access_enabled", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", bucketResourceName, "arn"),
 				),
 			},
