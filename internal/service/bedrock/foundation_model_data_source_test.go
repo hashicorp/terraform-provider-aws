@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBedrockFoundationModelDataSource_basic(t *testing.T) {
@@ -15,7 +16,8 @@ func TestAccBedrockFoundationModelDataSource_basic(t *testing.T) {
 	datasourceName := "data.aws_bedrock_foundation_model.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
