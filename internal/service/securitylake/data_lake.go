@@ -38,7 +38,7 @@ import (
 
 // @FrameworkResource(name="Data Lake")
 // @Tags(identifierAttribute="arn")
-func newDataLakeResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+func newDataLakeResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &dataLakeResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
