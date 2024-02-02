@@ -23,6 +23,7 @@ func TestAccQBusinessApp_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application qbusiness.GetApplicationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_qbusiness_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -38,12 +39,23 @@ func TestAccQBusinessApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", rName),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAppConfig_basic(rName1),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAppExists(ctx, resourceName, &application),
+					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "display_name", rName1),
+					resource.TestCheckResourceAttr(resourceName, "description", rName1),
+				),
 			},
 		},
 	})
@@ -221,6 +233,7 @@ data "aws_partition" "current" {}
 
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
+  description          = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
 }
 

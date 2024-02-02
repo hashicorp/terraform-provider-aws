@@ -209,7 +209,7 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if d.HasChange("display_name") {
-		input.DisplayName = aws.String(d.Get("display_nanme").(string))
+		input.DisplayName = aws.String(d.Get("display_name").(string))
 	}
 
 	if d.HasChange("iam_service_role_arn") {
