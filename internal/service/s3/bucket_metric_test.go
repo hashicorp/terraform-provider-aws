@@ -6,6 +6,7 @@ package s3_test
 import (
 	"context"
 	"fmt"
+	"math/rand"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -84,7 +85,7 @@ func TestAccS3BucketMetric_withFilterAccessPoint(t *testing.T) {
 	resourceName := "aws_s3_bucket_metric.test"
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
-	baseAccessPointArn := "arn:aws:s3:us-east-1:123456789012:accesspoint"
+	baseAccessPointArn := generateARN("aws:s3", names.USEast1RegionID, "accesspoint")
 	accessPoint := fmt.Sprintf("%s/ap-%d", baseAccessPointArn, rInt)
 	accessPointUpdate := fmt.Sprintf("%s/ap-update-%d", baseAccessPointArn, rInt)
 
@@ -128,7 +129,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefixAndMultiTags(t *testing
 	resourceName := "aws_s3_bucket_metric.test"
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
-	baseAccessPointArn := "arn:aws:s3:us-east-1:123456789012:accesspoint"
+	baseAccessPointArn := generateARN("aws:s3", names.USEast1RegionID, "accesspoint")
 	accessPoint := fmt.Sprintf("%s/ap-%d", baseAccessPointArn, rInt)
 	accessPointUpdate := fmt.Sprintf("%s/ap-update-%d", baseAccessPointArn, rInt)
 	prefix := fmt.Sprintf("prefix-%d/", rInt)
@@ -184,7 +185,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefixAndSingleTag(t *testing
 	resourceName := "aws_s3_bucket_metric.test"
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
-	baseAccessPointArn := "arn:aws:s3:us-east-1:123456789012:accesspoint"
+	baseAccessPointArn := generateARN("aws:s3", names.USEast1RegionID, "accesspoint")
 	accessPoint := fmt.Sprintf("%s/ap-%d", baseAccessPointArn, rInt)
 	accessPointUpdate := fmt.Sprintf("%s/ap-update-%d", baseAccessPointArn, rInt)
 	prefix := fmt.Sprintf("prefix-%d/", rInt)
@@ -236,7 +237,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndPrefix(t *testing.T) {
 	resourceName := "aws_s3_bucket_metric.test"
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
-	baseAccessPointArn := "arn:aws:s3:us-east-1:123456789012:accesspoint"
+	baseAccessPointArn := generateARN("aws:s3", names.USEast1RegionID, "accesspoint")
 	accessPoint := fmt.Sprintf("%s/ap-%d", baseAccessPointArn, rInt)
 	accessPointUpdate := fmt.Sprintf("%s/ap-update-%d", baseAccessPointArn, rInt)
 	prefix := fmt.Sprintf("prefix-%d/", rInt)
@@ -284,7 +285,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndMultipleTags(t *testing.T) {
 	resourceName := "aws_s3_bucket_metric.test"
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
-	baseAccessPointArn := "arn:aws:s3:us-east-1:123456789012:accesspoint"
+	baseAccessPointArn := generateARN("aws:s3", names.USEast1RegionID, "accesspoint")
 	accessPoint := fmt.Sprintf("%s/ap-%d", baseAccessPointArn, rInt)
 	accessPointUpdate := fmt.Sprintf("%s/ap-update-%d", baseAccessPointArn, rInt)
 	tag1 := fmt.Sprintf("tag1-%d", rInt)
@@ -336,7 +337,7 @@ func TestAccS3BucketMetric_withFilterAccessPointAndSingleTag(t *testing.T) {
 	resourceName := "aws_s3_bucket_metric.test"
 	bucketName := fmt.Sprintf("tf-acc-%d", rInt)
 	metricName := t.Name()
-	baseAccessPointArn := "arn:aws:s3:us-east-1:123456789012:accesspoint"
+	baseAccessPointArn := generateARN("aws:s3", names.USEast1RegionID, "accesspoint")
 	accessPoint := fmt.Sprintf("%s/ap-%d", baseAccessPointArn, rInt)
 	accessPointUpdate := fmt.Sprintf("%s/ap-update-%d", baseAccessPointArn, rInt)
 	tag1 := fmt.Sprintf("tag-%d", rInt)
@@ -686,6 +687,11 @@ func testAccCheckBucketMetricsExistsConfig(ctx context.Context, n string, v *typ
 
 		return nil
 	}
+}
+
+func generateARN(partition, region, resource string) string {
+	randAccount := fmt.Sprintf("%012d", rand.Intn(1e12))
+	return "arn:" + partition + ":" + region + ":" + randAccount + ":" + resource
 }
 
 func testAccBucketMetricConfig_base(bucketName string) string {
