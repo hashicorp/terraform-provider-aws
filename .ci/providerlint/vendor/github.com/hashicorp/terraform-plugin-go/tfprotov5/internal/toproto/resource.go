@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package toproto
 
 import (
@@ -10,215 +13,130 @@ func GetMetadata_ResourceMetadata(in *tfprotov5.ResourceMetadata) *tfplugin5.Get
 		return nil
 	}
 
-	return &tfplugin5.GetMetadata_ResourceMetadata{
+	resp := &tfplugin5.GetMetadata_ResourceMetadata{
 		TypeName: in.TypeName,
 	}
+
+	return resp
 }
 
-func ValidateResourceTypeConfig_Request(in *tfprotov5.ValidateResourceTypeConfigRequest) (*tfplugin5.ValidateResourceTypeConfig_Request, error) {
-	resp := &tfplugin5.ValidateResourceTypeConfig_Request{
-		TypeName: in.TypeName,
+func ValidateResourceTypeConfig_Response(in *tfprotov5.ValidateResourceTypeConfigResponse) *tfplugin5.ValidateResourceTypeConfig_Response {
+	if in == nil {
+		return nil
 	}
-	if in.Config != nil {
-		resp.Config = DynamicValue(in.Config)
+
+	resp := &tfplugin5.ValidateResourceTypeConfig_Response{
+		Diagnostics: Diagnostics(in.Diagnostics),
 	}
-	return resp, nil
+
+	return resp
 }
 
-func ValidateResourceTypeConfig_Response(in *tfprotov5.ValidateResourceTypeConfigResponse) (*tfplugin5.ValidateResourceTypeConfig_Response, error) {
-	diags, err := Diagnostics(in.Diagnostics)
-	if err != nil {
-		return nil, err
+func UpgradeResourceState_Response(in *tfprotov5.UpgradeResourceStateResponse) *tfplugin5.UpgradeResourceState_Response {
+	if in == nil {
+		return nil
 	}
-	return &tfplugin5.ValidateResourceTypeConfig_Response{
-		Diagnostics: diags,
-	}, nil
-}
 
-func UpgradeResourceState_Request(in *tfprotov5.UpgradeResourceStateRequest) (*tfplugin5.UpgradeResourceState_Request, error) {
-	resp := &tfplugin5.UpgradeResourceState_Request{
-		TypeName: in.TypeName,
-		Version:  in.Version,
-	}
-	if in.RawState != nil {
-		resp.RawState = RawState(in.RawState)
-	}
-	return resp, nil
-}
-
-func UpgradeResourceState_Response(in *tfprotov5.UpgradeResourceStateResponse) (*tfplugin5.UpgradeResourceState_Response, error) {
-	diags, err := Diagnostics(in.Diagnostics)
-	if err != nil {
-		return nil, err
-	}
 	resp := &tfplugin5.UpgradeResourceState_Response{
-		Diagnostics: diags,
+		Diagnostics:   Diagnostics(in.Diagnostics),
+		UpgradedState: DynamicValue(in.UpgradedState),
 	}
-	if in.UpgradedState != nil {
-		resp.UpgradedState = DynamicValue(in.UpgradedState)
-	}
-	return resp, nil
+
+	return resp
 }
 
-func ReadResource_Request(in *tfprotov5.ReadResourceRequest) (*tfplugin5.ReadResource_Request, error) {
-	resp := &tfplugin5.ReadResource_Request{
-		TypeName: in.TypeName,
-		Private:  in.Private,
+func ReadResource_Response(in *tfprotov5.ReadResourceResponse) *tfplugin5.ReadResource_Response {
+	if in == nil {
+		return nil
 	}
-	if in.CurrentState != nil {
-		resp.CurrentState = DynamicValue(in.CurrentState)
-	}
-	if in.ProviderMeta != nil {
-		resp.ProviderMeta = DynamicValue(in.ProviderMeta)
-	}
-	return resp, nil
-}
 
-func ReadResource_Response(in *tfprotov5.ReadResourceResponse) (*tfplugin5.ReadResource_Response, error) {
 	resp := &tfplugin5.ReadResource_Response{
-		Private: in.Private,
+		Diagnostics: Diagnostics(in.Diagnostics),
+		NewState:    DynamicValue(in.NewState),
+		Private:     in.Private,
 	}
-	diags, err := Diagnostics(in.Diagnostics)
-	if err != nil {
-		return resp, err
-	}
-	resp.Diagnostics = diags
-	if in.NewState != nil {
-		resp.NewState = DynamicValue(in.NewState)
-	}
-	return resp, nil
+
+	return resp
 }
 
-func PlanResourceChange_Request(in *tfprotov5.PlanResourceChangeRequest) (*tfplugin5.PlanResourceChange_Request, error) {
-	resp := &tfplugin5.PlanResourceChange_Request{
-		TypeName:     in.TypeName,
-		PriorPrivate: in.PriorPrivate,
+func PlanResourceChange_Response(in *tfprotov5.PlanResourceChangeResponse) *tfplugin5.PlanResourceChange_Response {
+	if in == nil {
+		return nil
 	}
-	if in.Config != nil {
-		resp.Config = DynamicValue(in.Config)
-	}
-	if in.PriorState != nil {
-		resp.PriorState = DynamicValue(in.PriorState)
-	}
-	if in.ProposedNewState != nil {
-		resp.ProposedNewState = DynamicValue(in.ProposedNewState)
-	}
-	if in.ProviderMeta != nil {
-		resp.ProviderMeta = DynamicValue(in.ProviderMeta)
-	}
-	return resp, nil
-}
 
-func PlanResourceChange_Response(in *tfprotov5.PlanResourceChangeResponse) (*tfplugin5.PlanResourceChange_Response, error) {
 	resp := &tfplugin5.PlanResourceChange_Response{
+		Diagnostics:      Diagnostics(in.Diagnostics),
+		LegacyTypeSystem: in.UnsafeToUseLegacyTypeSystem, //nolint:staticcheck
 		PlannedPrivate:   in.PlannedPrivate,
-		LegacyTypeSystem: in.UnsafeToUseLegacyTypeSystem, //nolint:staticcheck
+		PlannedState:     DynamicValue(in.PlannedState),
+		RequiresReplace:  AttributePaths(in.RequiresReplace),
 	}
-	requiresReplace, err := AttributePaths(in.RequiresReplace)
-	if err != nil {
-		return resp, err
-	}
-	resp.RequiresReplace = requiresReplace
-	diags, err := Diagnostics(in.Diagnostics)
-	if err != nil {
-		return resp, err
-	}
-	resp.Diagnostics = diags
-	if in.PlannedState != nil {
-		resp.PlannedState = DynamicValue(in.PlannedState)
-	}
-	return resp, nil
+
+	return resp
 }
 
-func ApplyResourceChange_Request(in *tfprotov5.ApplyResourceChangeRequest) (*tfplugin5.ApplyResourceChange_Request, error) {
-	resp := &tfplugin5.ApplyResourceChange_Request{
-		TypeName:       in.TypeName,
-		PlannedPrivate: in.PlannedPrivate,
+func ApplyResourceChange_Response(in *tfprotov5.ApplyResourceChangeResponse) *tfplugin5.ApplyResourceChange_Response {
+	if in == nil {
+		return nil
 	}
-	if in.Config != nil {
-		resp.Config = DynamicValue(in.Config)
-	}
-	if in.PriorState != nil {
-		resp.PriorState = DynamicValue(in.PriorState)
-	}
-	if in.PlannedState != nil {
-		resp.PlannedState = DynamicValue(in.PlannedState)
-	}
-	if in.ProviderMeta != nil {
-		resp.ProviderMeta = DynamicValue(in.ProviderMeta)
-	}
-	return resp, nil
-}
 
-func ApplyResourceChange_Response(in *tfprotov5.ApplyResourceChangeResponse) (*tfplugin5.ApplyResourceChange_Response, error) {
 	resp := &tfplugin5.ApplyResourceChange_Response{
-		Private:          in.Private,
+		Diagnostics:      Diagnostics(in.Diagnostics),
 		LegacyTypeSystem: in.UnsafeToUseLegacyTypeSystem, //nolint:staticcheck
+		NewState:         DynamicValue(in.NewState),
+		Private:          in.Private,
 	}
-	diags, err := Diagnostics(in.Diagnostics)
-	if err != nil {
-		return resp, err
-	}
-	resp.Diagnostics = diags
-	if in.NewState != nil {
-		resp.NewState = DynamicValue(in.NewState)
-	}
-	return resp, nil
+
+	return resp
 }
 
-func ImportResourceState_Request(in *tfprotov5.ImportResourceStateRequest) (*tfplugin5.ImportResourceState_Request, error) {
-	return &tfplugin5.ImportResourceState_Request{
-		TypeName: in.TypeName,
-		Id:       in.ID,
-	}, nil
+func ImportResourceState_Response(in *tfprotov5.ImportResourceStateResponse) *tfplugin5.ImportResourceState_Response {
+	if in == nil {
+		return nil
+	}
+
+	resp := &tfplugin5.ImportResourceState_Response{
+		Diagnostics:       Diagnostics(in.Diagnostics),
+		ImportedResources: ImportResourceState_ImportedResources(in.ImportedResources),
+	}
+
+	return resp
 }
 
-func ImportResourceState_Response(in *tfprotov5.ImportResourceStateResponse) (*tfplugin5.ImportResourceState_Response, error) {
-	importedResources, err := ImportResourceState_ImportedResources(in.ImportedResources)
-	if err != nil {
-		return nil, err
+func ImportResourceState_ImportedResource(in *tfprotov5.ImportedResource) *tfplugin5.ImportResourceState_ImportedResource {
+	if in == nil {
+		return nil
 	}
-	diags, err := Diagnostics(in.Diagnostics)
-	if err != nil {
-		return nil, err
-	}
-	return &tfplugin5.ImportResourceState_Response{
-		ImportedResources: importedResources,
-		Diagnostics:       diags,
-	}, nil
-}
 
-func ImportResourceState_ImportedResource(in *tfprotov5.ImportedResource) (*tfplugin5.ImportResourceState_ImportedResource, error) {
 	resp := &tfplugin5.ImportResourceState_ImportedResource{
-		TypeName: in.TypeName,
 		Private:  in.Private,
+		State:    DynamicValue(in.State),
+		TypeName: in.TypeName,
 	}
-	if in.State != nil {
-		resp.State = DynamicValue(in.State)
-	}
-	return resp, nil
+
+	return resp
 }
 
-func ImportResourceState_ImportedResources(in []*tfprotov5.ImportedResource) ([]*tfplugin5.ImportResourceState_ImportedResource, error) {
+func ImportResourceState_ImportedResources(in []*tfprotov5.ImportedResource) []*tfplugin5.ImportResourceState_ImportedResource {
 	resp := make([]*tfplugin5.ImportResourceState_ImportedResource, 0, len(in))
+
 	for _, i := range in {
-		if i == nil {
-			resp = append(resp, nil)
-			continue
-		}
-		r, err := ImportResourceState_ImportedResource(i)
-		if err != nil {
-			return resp, err
-		}
-		resp = append(resp, r)
+		resp = append(resp, ImportResourceState_ImportedResource(i))
 	}
-	return resp, nil
+
+	return resp
 }
 
-// we have to say this next thing to get golint to stop yelling at us about the
-// underscores in the function names. We want the function names to match
-// actually-generated code, so it feels like fair play. It's just a shame we
-// lose golint for the entire file.
-//
-// This file is not actually generated. You can edit it. Ignore this next line.
-// Code generated by hand ignore this next bit DO NOT EDIT.
+func MoveResourceState_Response(in *tfprotov5.MoveResourceStateResponse) *tfplugin5.MoveResourceState_Response {
+	if in == nil {
+		return nil
+	}
+
+	resp := &tfplugin5.MoveResourceState_Response{
+		Diagnostics:   Diagnostics(in.Diagnostics),
+		TargetPrivate: in.TargetPrivate,
+		TargetState:   DynamicValue(in.TargetState),
+	}
+
+	return resp
+}
