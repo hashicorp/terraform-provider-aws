@@ -404,20 +404,22 @@ func resourcePatchBaselineDelete(ctx context.Context, d *schema.ResourceData, me
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[INFO] Deleting SSM Patch Baseline: %s", d.Id())
-
-	params := &ssm.DeletePatchBaselineInput{
+	input := &ssm.DeletePatchBaselineInput{
 		BaselineId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeletePatchBaselineWithContext(ctx, params)
+	_, err := conn.DeletePatchBaselineWithContext(ctx, input)
+
 	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeResourceInUseException) {
-		// Reset the default patch baseline before retrying
+		// Reset the default patch baseline before retrying.
 		diags = append(diags, defaultPatchBaselineRestoreOSDefault(ctx, meta.(*conns.AWSClient).SSMClient(ctx), types.OperatingSystem(d.Get("operating_system").(string)))...)
 		if diags.HasError() {
 			return
 		}
-		_, err = conn.DeletePatchBaselineWithContext(ctx, params)
+
+		_, err = conn.DeletePatchBaselineWithContext(ctx, input)
 	}
+
 	if err != nil {
 		diags = sdkdiag.AppendErrorf(diags, "deleting SSM Patch Baseline (%s): %s", d.Id(), err)
 	}
