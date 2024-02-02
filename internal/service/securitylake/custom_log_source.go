@@ -309,7 +309,6 @@ func findCustomLogSourceBySourceName(ctx context.Context, conn *securitylake.Cli
 	}
 
 	return nil, tfresource.NewEmptyResultError(sourceName)
-
 }
 
 type customLogSourceResourceModel struct {
