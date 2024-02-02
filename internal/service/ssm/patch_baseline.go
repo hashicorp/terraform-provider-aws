@@ -350,44 +350,44 @@ func resourcePatchBaselineUpdate(ctx context.Context, d *schema.ResourceData, me
 			BaselineId: aws.String(d.Id()),
 		}
 
-		if d.HasChange("name") {
-			input.Name = aws.String(d.Get("name").(string))
-		}
-
-		if d.HasChange("description") {
-			input.Description = aws.String(d.Get("description").(string))
+		if d.HasChange("approval_rule") {
+			input.ApprovalRules = expandPatchRuleGroup(d)
 		}
 
 		if d.HasChange("approved_patches") {
 			input.ApprovedPatches = flex.ExpandStringSet(d.Get("approved_patches").(*schema.Set))
 		}
 
-		if d.HasChange("rejected_patches") {
-			input.RejectedPatches = flex.ExpandStringSet(d.Get("rejected_patches").(*schema.Set))
-		}
-
 		if d.HasChange("approved_patches_compliance_level") {
 			input.ApprovedPatchesComplianceLevel = aws.String(d.Get("approved_patches_compliance_level").(string))
-		}
-
-		if d.HasChange("approval_rule") {
-			input.ApprovalRules = expandPatchRuleGroup(d)
-		}
-
-		if d.HasChange("global_filter") {
-			input.GlobalFilters = expandPatchFilterGroup(d)
-		}
-
-		if d.HasChange("source") {
-			input.Sources = expandPatchSource(d)
 		}
 
 		if d.HasChange("approved_patches_enable_non_security") {
 			input.ApprovedPatchesEnableNonSecurity = aws.Bool(d.Get("approved_patches_enable_non_security").(bool))
 		}
 
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
+		}
+
+		if d.HasChange("global_filter") {
+			input.GlobalFilters = expandPatchFilterGroup(d)
+		}
+
+		if d.HasChange("name") {
+			input.Name = aws.String(d.Get("name").(string))
+		}
+
+		if d.HasChange("rejected_patches") {
+			input.RejectedPatches = flex.ExpandStringSet(d.Get("rejected_patches").(*schema.Set))
+		}
+
 		if d.HasChange("rejected_patches_action") {
 			input.RejectedPatchesAction = aws.String(d.Get("rejected_patches_action").(string))
+		}
+
+		if d.HasChange("source") {
+			input.Sources = expandPatchSource(d)
 		}
 
 		_, err := conn.UpdatePatchBaselineWithContext(ctx, input)
