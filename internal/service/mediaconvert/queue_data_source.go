@@ -43,10 +43,7 @@ func DataSourceQueue() *schema.Resource {
 
 func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn, err := GetAccountClient(ctx, meta.(*conns.AWSClient))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Media Convert Account Client: %s", err)
-	}
+	conn := meta.(*conns.AWSClient).MediaConvertConn(ctx)
 
 	id := d.Get("id").(string)
 	queue, err := FindQueueByName(ctx, conn, id)

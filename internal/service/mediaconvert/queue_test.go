@@ -26,7 +26,7 @@ func TestAccMediaConvertQueue_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, mediaconvert.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
@@ -57,7 +57,7 @@ func TestAccMediaConvertQueue_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, mediaconvert.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
@@ -81,7 +81,7 @@ func TestAccMediaConvertQueue_withTags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, mediaconvert.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
@@ -129,7 +129,7 @@ func TestAccMediaConvertQueue_reservationPlanSettings(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, mediaconvert.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
@@ -172,7 +172,7 @@ func TestAccMediaConvertQueue_withStatus(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, mediaconvert.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
@@ -209,7 +209,7 @@ func TestAccMediaConvertQueue_withDescription(t *testing.T) {
 	description2 := sdkacctest.RandomWithPrefix("Description: ")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, mediaconvert.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
@@ -239,12 +239,9 @@ func testAccCheckQueueDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn, err := tfmediaconvert.GetAccountClient(ctx, acctest.Provider.Meta().(*conns.AWSClient))
-			if err != nil {
-				return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
-			}
+			conn := acctest.Provider.Meta().(*conns.AWSClient).MediaConvertConn(ctx)
 
-			_, err = tfmediaconvert.FindQueueByName(ctx, conn, rs.Primary.ID)
+			_, err := tfmediaconvert.FindQueueByName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -268,10 +265,7 @@ func testAccCheckQueueExists(ctx context.Context, n string, v *mediaconvert.Queu
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn, err := tfmediaconvert.GetAccountClient(ctx, acctest.Provider.Meta().(*conns.AWSClient))
-		if err != nil {
-			return fmt.Errorf("Error getting Media Convert Account Client: %s", err)
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaConvertConn(ctx)
 
 		output, err := tfmediaconvert.FindQueueByName(ctx, conn, rs.Primary.ID)
 
@@ -282,18 +276,6 @@ func testAccCheckQueueExists(ctx context.Context, n string, v *mediaconvert.Queu
 		*v = *output
 
 		return nil
-	}
-}
-
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	_, err := tfmediaconvert.GetAccountClient(ctx, acctest.Provider.Meta().(*conns.AWSClient))
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 

@@ -5,11 +5,9 @@ package mediaconvert
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/mediaconvert"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -98,10 +96,7 @@ func ResourceQueue() *schema.Resource {
 
 func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn, err := GetAccountClient(ctx, meta.(*conns.AWSClient))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Media Convert Account Client: %s", err)
-	}
+	conn := meta.(*conns.AWSClient).MediaConvertConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &mediaconvert.CreateQueueInput{
@@ -132,10 +127,7 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn, err := GetAccountClient(ctx, meta.(*conns.AWSClient))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Media Convert Account Client: %s", err)
-	}
+	conn := meta.(*conns.AWSClient).MediaConvertConn(ctx)
 
 	queue, err := FindQueueByName(ctx, conn, d.Id())
 
@@ -171,10 +163,7 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn, err := GetAccountClient(ctx, meta.(*conns.AWSClient))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Media Convert Account Client: %s", err)
-	}
+	conn := meta.(*conns.AWSClient).MediaConvertConn(ctx)
 
 	if d.HasChanges("description", "reservation_plan_settings", "status") {
 		input := &mediaconvert.UpdateQueueInput{
@@ -190,7 +179,7 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.ReservationPlanSettings = expandReservationPlanSettings(v[0].(map[string]interface{}))
 		}
 
-		_, err = conn.UpdateQueueWithContext(ctx, input)
+		_, err := conn.UpdateQueueWithContext(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Media Convert Queue (%s): %s", d.Id(), err)
@@ -209,13 +198,10 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn, err := GetAccountClient(ctx, meta.(*conns.AWSClient))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Media Convert Account Client: %s", err)
-	}
+	conn := meta.(*conns.AWSClient).MediaConvertConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Media Convert Queue: %s", d.Id())
-	_, err = conn.DeleteQueueWithContext(ctx, &mediaconvert.DeleteQueueInput{
+	_, err := conn.DeleteQueueWithContext(ctx, &mediaconvert.DeleteQueueInput{
 		Name: aws.String(d.Id()),
 	})
 
@@ -253,42 +239,4 @@ func FindQueueByName(ctx context.Context, conn *mediaconvert.MediaConvert, name 
 	}
 
 	return output.Queue, nil
-}
-
-func GetAccountClient(ctx context.Context, awsClient *conns.AWSClient) (*mediaconvert.MediaConvert, error) {
-	const mutexKey = `mediaconvertaccountconn`
-	conns.GlobalMutexKV.Lock(mutexKey)
-	defer conns.GlobalMutexKV.Unlock(mutexKey)
-
-	if awsClient.MediaConvertAccountConn != nil {
-		return awsClient.MediaConvertAccountConn, nil
-	}
-
-	input := &mediaconvert.DescribeEndpointsInput{
-		Mode: aws.String(mediaconvert.DescribeEndpointsModeDefault),
-	}
-
-	output, err := awsClient.MediaConvertConn(ctx).DescribeEndpointsWithContext(ctx, input)
-
-	if err != nil {
-		return nil, fmt.Errorf("describing MediaConvert Endpoints: %w", err)
-	}
-
-	if output == nil || len(output.Endpoints) == 0 || output.Endpoints[0] == nil || output.Endpoints[0].Url == nil {
-		return nil, fmt.Errorf("describing MediaConvert Endpoints: empty response or URL")
-	}
-
-	endpointURL := aws.StringValue(output.Endpoints[0].Url)
-
-	sess, err := session.NewSession(&awsClient.MediaConvertConn(ctx).Config)
-
-	if err != nil {
-		return nil, fmt.Errorf("creating AWS MediaConvert session: %w", err)
-	}
-
-	conn := mediaconvert.New(sess.Copy(&aws.Config{Endpoint: aws.String(endpointURL)}))
-
-	awsClient.MediaConvertAccountConn = conn
-
-	return conn, nil
 }
