@@ -5,5 +5,8 @@ package ssm
 
 // Exports for use in tests only.
 var (
-	ResourcePatchBaseline = resourcePatchBaseline
+	ResourceDefaultPatchBaseline = resourceDefaultPatchBaseline
+	ResourcePatchBaseline        = resourcePatchBaseline
+
+	FindPatchBaselineByID = findPatchBaselineByID
 )

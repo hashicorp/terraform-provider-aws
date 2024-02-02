@@ -284,7 +284,7 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	output, err := FindPatchBaselineByID(ctx, conn, d.Id())
+	output, err := findPatchBaselineByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SSM Patch Baseline (%s) not found, removing from state", d.Id())
@@ -419,7 +419,7 @@ func resourcePatchBaselineDelete(ctx context.Context, d *schema.ResourceData, me
 	return
 }
 
-func FindPatchBaselineByID(ctx context.Context, conn *ssm.SSM, id string) (*ssm.GetPatchBaselineOutput, error) {
+func findPatchBaselineByID(ctx context.Context, conn *ssm.SSM, id string) (*ssm.GetPatchBaselineOutput, error) {
 	input := &ssm.GetPatchBaselineInput{
 		BaselineId: aws.String(id),
 	}
