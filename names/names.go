@@ -71,6 +71,7 @@ const (
 	KinesisEndpointID                    = "kinesis"
 	LambdaEndpointID                     = "lambda"
 	LexV2ModelsEndpointID                = "models-v2-lex"
+	MediaConvertEndpointID               = "mediaconvert"
 	MediaLiveEndpointID                  = "medialive"
 	MQEndpointID                         = "mq"
 	ObservabilityAccessManagerEndpointID = "oam"
