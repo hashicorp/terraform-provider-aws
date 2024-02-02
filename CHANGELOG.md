@@ -3,7 +3,10 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_bedrock_custom_model` ([#34310](https://github.com/hashicorp/terraform-provider-aws/issues/34310))
+* **New Data Source:** `aws_bedrock_custom_models` ([#34310](https://github.com/hashicorp/terraform-provider-aws/issues/34310))
 * **New Data Source:** `aws_ssmcontacts_rotation` ([#32710](https://github.com/hashicorp/terraform-provider-aws/issues/32710))
+* **New Resource:** `aws_bedrock_custom_model` ([#34310](https://github.com/hashicorp/terraform-provider-aws/issues/34310))
 * **New Resource:** `aws_lexv2models_slot` ([#34617](https://github.com/hashicorp/terraform-provider-aws/issues/34617))
 * **New Resource:** `aws_lexv2models_slot_type` ([#35555](https://github.com/hashicorp/terraform-provider-aws/issues/35555))
 * **New Resource:** `aws_rekognition_collection` ([#35407](https://github.com/hashicorp/terraform-provider-aws/issues/35407))
