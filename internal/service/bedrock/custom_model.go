@@ -280,7 +280,7 @@ func (r *customModelResource) Schema(ctx context.Context, request resource.Schem
 }
 
 func (r *customModelResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data resourceCustomModelData
+	var data customModelResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -331,7 +331,7 @@ func (r *customModelResource) Create(ctx context.Context, request resource.Creat
 }
 
 func (r *customModelResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceCustomModelData
+	var data customModelResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -402,7 +402,7 @@ func (r *customModelResource) Read(ctx context.Context, request resource.ReadReq
 			return
 		}
 
-		var dataFromGetCustomModel resourceCustomModelData
+		var dataFromGetCustomModel customModelResourceModel
 		response.Diagnostics.Append(fwflex.Flatten(ctx, outputGM, &dataFromGetCustomModel)...)
 		if response.Diagnostics.HasError() {
 			return
@@ -417,7 +417,7 @@ func (r *customModelResource) Read(ctx context.Context, request resource.ReadReq
 }
 
 func (r *customModelResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new resourceCustomModelData
+	var old, new customModelResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -438,7 +438,7 @@ func (r *customModelResource) Update(ctx context.Context, request resource.Updat
 }
 
 func (r *customModelResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data resourceCustomModelData
+	var data customModelResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -616,7 +616,7 @@ func waitModelCustomizationJobStopped(ctx context.Context, conn *bedrock.Client,
 	return nil, err
 }
 
-type resourceCustomModelData struct {
+type customModelResourceModel struct {
 	BaseModelIdentifier  fwtypes.ARN                                                           `tfsdk:"base_model_identifier"`
 	CustomModelARN       types.String                                                          `tfsdk:"custom_model_arn"`
 	CustomModelKmsKeyID  fwtypes.ARN                                                           `tfsdk:"custom_model_kms_key_id"`
@@ -639,13 +639,13 @@ type resourceCustomModelData struct {
 	VPCConfig            fwtypes.ListNestedObjectValueOf[customModelVPCConfigModel]            `tfsdk:"vpc_config"`
 }
 
-func (data *resourceCustomModelData) InitFromID() error {
+func (data *customModelResourceModel) InitFromID() error {
 	data.JobARN = data.ID
 
 	return nil
 }
 
-func (data *resourceCustomModelData) setID() {
+func (data *customModelResourceModel) setID() {
 	data.ID = data.JobARN
 }
 
