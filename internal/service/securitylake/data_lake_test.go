@@ -5,7 +5,6 @@ package securitylake_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -15,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsecuritylake "github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -337,31 +335,29 @@ func testAccCheckDataLakeDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return create.Error(names.SecurityLake, create.ErrActionCheckingDestroyed, tfsecuritylake.ResNameDataLake, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Security Lake Data Lake %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckDataLakeExists(ctx context.Context, name string, datalake *types.DataLakeResource) resource.TestCheckFunc {
+func testAccCheckDataLakeExists(ctx context.Context, n string, v *types.DataLakeResource) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.SecurityLake, create.ErrActionCheckingExistence, tfsecuritylake.ResNameDataLake, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.SecurityLake, create.ErrActionCheckingExistence, tfsecuritylake.ResNameDataLake, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
-		resp, err := tfsecuritylake.FindDataLakeByARN(ctx, conn, rs.Primary.ID)
+
+		output, err := tfsecuritylake.FindDataLakeByARN(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return create.Error(names.SecurityLake, create.ErrActionCheckingExistence, tfsecuritylake.ResNameDataLake, rs.Primary.ID, err)
+			return err
 		}
 
-		*datalake = *resp
+		*v = *output
 
 		return nil
 	}

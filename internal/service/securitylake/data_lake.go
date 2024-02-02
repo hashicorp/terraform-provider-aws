@@ -23,9 +23,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -47,22 +47,18 @@ func newDataLakeResource(_ context.Context) (resource.ResourceWithConfigure, err
 	return r, nil
 }
 
-const (
-	ResNameDataLake = "Data Lake"
-)
-
 type dataLakeResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *dataLakeResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_securitylake_data_lake"
+func (r *dataLakeResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_securitylake_data_lake"
 }
 
-func (r *dataLakeResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *dataLakeResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arn":        framework.ARNAttributeComputedOnly(),
 			names.AttrID: framework.IDAttribute(),
@@ -81,6 +77,7 @@ func (r *dataLakeResource) Schema(ctx context.Context, req resource.SchemaReques
 			"configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[dataLakeConfigurationModel](ctx),
 				Validators: []validator.List{
+					listvalidator.IsRequired(),
 					listvalidator.SizeAtLeast(1),
 					listvalidator.SizeAtMost(1),
 				},
@@ -174,30 +171,29 @@ func (r *dataLakeResource) Schema(ctx context.Context, req resource.SchemaReques
 	}
 }
 
-func (r *dataLakeResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *dataLakeResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data dataLakeResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().SecurityLakeClient(ctx)
 
-	var data dataLakeResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
 	input := &securitylake.CreateDataLakeInput{}
-	resp.Diagnostics.Append(flex.Expand(ctx, data, input)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(flex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateDataLake(ctx, input)
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionCreating, ResNameDataLake, data.ID.ValueString(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError("creating Security Lake Data Lake", err.Error())
+
 		return
 	}
 
@@ -209,16 +205,14 @@ func (r *dataLakeResource) Create(ctx context.Context, req resource.CreateReques
 	dataLake, err = waitDataLakeCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionWaitingForCreation, ResNameDataLake, data.ID.ValueString(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Security Lake Data Lake (%s) create", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
 	var configuration dataLakeConfigurationModel
-	resp.Diagnostics.Append(flex.Flatten(ctx, dataLake, &configuration)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(flex.Flatten(ctx, dataLake, &configuration)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -226,41 +220,42 @@ func (r *dataLakeResource) Create(ctx context.Context, req resource.CreateReques
 	data.Configurations = fwtypes.NewListNestedObjectValueOfPtr(ctx, &configuration)
 	data.S3BucketARN = flex.StringToFramework(ctx, dataLake.S3BucketArn)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *dataLakeResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().SecurityLakeClient(ctx)
-
+func (r *dataLakeResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data dataLakeResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	if err := data.InitFromID(); err != nil {
-		resp.Diagnostics.AddError("parsing resource ID", err.Error())
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+
 		return
 	}
+
+	conn := r.Meta().SecurityLakeClient(ctx)
 
 	dataLake, err := findDataLakeByARN(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionReading, ResNameDataLake, data.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Security Lake Data Lake (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
 	var configuration dataLakeConfigurationModel
-	resp.Diagnostics.Append(flex.Flatten(ctx, dataLake, &configuration)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(flex.Flatten(ctx, dataLake, &configuration)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -275,59 +270,55 @@ func (r *dataLakeResource) Read(ctx context.Context, req resource.ReadRequest, r
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *dataLakeResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().SecurityLakeClient(ctx)
-
+func (r *dataLakeResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new dataLakeResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &new)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-	resp.Diagnostics.Append(req.State.Get(ctx, &old)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().SecurityLakeClient(ctx)
 
 	if !new.Configurations.Equal(old.Configurations) {
 		input := &securitylake.UpdateDataLakeInput{}
-		resp.Diagnostics.Append(flex.Expand(ctx, new, input)...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(flex.Expand(ctx, new, input)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
 		_, err := conn.UpdateDataLake(ctx, input)
 
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.SecurityLake, create.ErrActionUpdating, ResNameDataLake, new.ID.ValueString(), err),
-				err.Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("updating Security Lake Data Lake (%s)", new.ID.ValueString()), err.Error())
+
 			return
 		}
 
 		if _, err := waitDataLakeUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.SecurityLake, create.ErrActionWaitingForUpdate, ResNameDataLake, new.ID.ValueString(), err),
-				err.Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Security Lake Data Lake (%s) update", new.ID.ValueString()), err.Error())
+
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &new)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *dataLakeResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().SecurityLakeClient(ctx)
-
+func (r *dataLakeResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data dataLakeResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().SecurityLakeClient(ctx)
 
 	_, err := conn.DeleteDataLake(ctx, &securitylake.DeleteDataLakeInput{
 		Regions: []string{errs.Must(regionFromARNString(data.ID.ValueString()))},
@@ -340,24 +331,99 @@ func (r *dataLakeResource) Delete(ctx context.Context, req resource.DeleteReques
 	}
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionDeleting, ResNameDataLake, data.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Security Lake Data Lake (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
 	if _, err = waitDataLakeDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionWaitingForDeletion, ResNameDataLake, data.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Security Lake Data Lake (%s) delete", data.ID.ValueString()), err.Error())
+
 		return
 	}
 }
 
 func (r *dataLakeResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, req, resp)
+}
+
+func findDataLakeByARN(ctx context.Context, conn *securitylake.Client, arn string) (*awstypes.DataLakeResource, error) {
+	input := &securitylake.ListDataLakesInput{
+		Regions: []string{errs.Must(regionFromARNString(arn))},
+	}
+
+	return findDataLake(ctx, conn, input, func(v *awstypes.DataLakeResource) bool {
+		return aws.ToString(v.DataLakeArn) == arn
+	})
+}
+
+func findDataLake(ctx context.Context, conn *securitylake.Client, input *securitylake.ListDataLakesInput, filter tfslices.Predicate[*awstypes.DataLakeResource]) (*awstypes.DataLakeResource, error) {
+	output, err := findDataLakes(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findDataLakes(ctx context.Context, conn *securitylake.Client, input *securitylake.ListDataLakesInput, filter tfslices.Predicate[*awstypes.DataLakeResource]) ([]*awstypes.DataLakeResource, error) {
+	var dataLakes []*awstypes.DataLakeResource
+
+	output, err := conn.ListDataLakes(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	for _, v := range output.DataLakes {
+		v := v
+		if v := &v; filter(v) {
+			dataLakes = append(dataLakes, v)
+		}
+	}
+
+	return dataLakes, nil
+}
+
+func statusDataLakeCreate(ctx context.Context, conn *securitylake.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findDataLakeByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.CreateStatus), nil
+	}
+}
+
+func statusDataLakeUpdate(ctx context.Context, conn *securitylake.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findDataLakeByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output.UpdateStatus == nil {
+			return nil, "", nil
+		}
+
+		return output, string(output.UpdateStatus.Status), nil
+	}
 }
 
 func waitDataLakeCreated(ctx context.Context, conn *securitylake.Client, arn string, timeout time.Duration) (*awstypes.DataLakeResource, error) {
@@ -429,40 +495,15 @@ func waitDataLakeDeleted(ctx context.Context, conn *securitylake.Client, arn str
 	return nil, err
 }
 
-func statusDataLakeCreate(ctx context.Context, conn *securitylake.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findDataLakeByARN(ctx, conn, arn)
+// regionFromARNString return the AWS Region from the specified ARN string.
+func regionFromARNString(s string) (string, error) {
+	v, err := arn.Parse(s)
 
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.CreateStatus), nil
+	if err != nil {
+		return "", err
 	}
-}
 
-func statusDataLakeUpdate(ctx context.Context, conn *securitylake.Client, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findDataLakeByARN(ctx, conn, arn)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if output.UpdateStatus == nil {
-			return nil, "", nil
-		}
-
-		return output, string(output.UpdateStatus.Status), nil
-	}
+	return v.Region, nil
 }
 
 type dataLakeResourceModel struct {
@@ -514,58 +555,4 @@ type dataLakeLifecycleTransitionModel struct {
 type dataLakeReplicationConfigurationModel struct {
 	Regions fwtypes.SetValueOf[types.String] `tfsdk:"regions"`
 	RoleARN fwtypes.ARN                      `tfsdk:"role_arn"`
-}
-
-func findDataLakeByARN(ctx context.Context, conn *securitylake.Client, arn string) (*awstypes.DataLakeResource, error) {
-	input := &securitylake.ListDataLakesInput{
-		Regions: []string{errs.Must(regionFromARNString(arn))},
-	}
-
-	return findDataLake(ctx, conn, input, func(v *awstypes.DataLakeResource) bool {
-		return aws.ToString(v.DataLakeArn) == arn
-	})
-}
-
-func findDataLake(ctx context.Context, conn *securitylake.Client, input *securitylake.ListDataLakesInput, filter tfslices.Predicate[*awstypes.DataLakeResource]) (*awstypes.DataLakeResource, error) {
-	output, err := findDataLakes(ctx, conn, input, filter)
-
-	if err != nil {
-		return nil, err
-	}
-
-	return tfresource.AssertSinglePtrResult(output)
-}
-
-func findDataLakes(ctx context.Context, conn *securitylake.Client, input *securitylake.ListDataLakesInput, filter tfslices.Predicate[*awstypes.DataLakeResource]) ([]*awstypes.DataLakeResource, error) {
-	var dataLakes []*awstypes.DataLakeResource
-
-	output, err := conn.ListDataLakes(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	for _, v := range output.DataLakes {
-		v := v
-		if v := &v; filter(v) {
-			dataLakes = append(dataLakes, v)
-		}
-	}
-
-	return dataLakes, nil
-}
-
-// regionFromARNString return the AWS Region from the specified ARN string.
-func regionFromARNString(s string) (string, error) {
-	v, err := arn.Parse(s)
-
-	if err != nil {
-		return "", err
-	}
-
-	return v.Region, nil
 }
