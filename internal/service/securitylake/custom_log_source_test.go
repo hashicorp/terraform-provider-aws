@@ -155,7 +155,7 @@ resource "aws_iam_role_policy" "test" {
   name = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
   role = aws_iam_role.test.name
 
-  policy     = <<POLICY
+  policy = <<POLICY
 {
   "Version": "2012-10-17",
   "Statement": [{
