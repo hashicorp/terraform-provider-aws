@@ -6,7 +6,7 @@ package mediaconvert
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -15,7 +15,8 @@ import (
 )
 
 // @SDKDataSource("aws_media_convert_queue", name="Queue")
-func DataSourceQueue() *schema.Resource {
+// @Tags(identifierAttribute="arn")
+func dataSourceQueue() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceQueueRead,
 
@@ -43,31 +44,20 @@ func DataSourceQueue() *schema.Resource {
 
 func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaConvertConn(ctx)
+	conn := meta.(*conns.AWSClient).MediaConvertClient(ctx)
 
 	id := d.Get("id").(string)
-	queue, err := FindQueueByName(ctx, conn, id)
+	queue, err := findQueueByName(ctx, conn, id)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Media Convert Queue (%s): %s", id, err)
 	}
 
-	arn, name := aws.StringValue(queue.Arn), aws.StringValue(queue.Name)
+	name := aws.ToString(queue.Name)
 	d.SetId(name)
-	d.Set("arn", arn)
+	d.Set("arn", queue.Arn)
 	d.Set("name", name)
 	d.Set("status", queue.Status)
-
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	tags, err := listTags(ctx, conn, arn)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Media Convert Queue (%s): %s", arn, err)
-	}
-
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
 
 	return diags
 }
