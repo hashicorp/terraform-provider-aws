@@ -17,6 +17,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -230,7 +231,10 @@ func ResourcePatchBaseline() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.Sequence(
+			resourceObjectCustomizeDiff,
+			verify.SetTagsDiff,
+		),
 	}
 }
 
@@ -584,4 +588,32 @@ func flattenPatchSource(sources []*ssm.PatchSource) []map[string]interface{} {
 	}
 
 	return result
+}
+
+func resourceObjectCustomizeDiff(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+	if hasObjectContentChanges(d) {
+		return d.SetNewComputed("json")
+	}
+
+	return nil
+}
+
+func hasObjectContentChanges(d verify.ResourceDiffer) bool {
+	for _, key := range []string{
+		"description",
+		"global_filter",
+		"approval_rule",
+		"approved_patches",
+		"rejected_patches",
+		"operating_system",
+		"approved_patches_compliance_level",
+		"rejected_patches_action",
+		"approved_patches_enable_non_security",
+		"source",
+	} {
+		if d.HasChange(key) {
+			return true
+		}
+	}
+	return false
 }
