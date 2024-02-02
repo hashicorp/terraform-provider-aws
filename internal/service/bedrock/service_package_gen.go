@@ -17,11 +17,19 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceFoundationModel,
+			Factory: newCustomModelDataSource,
+			Name:    "Custom Model",
+		},
+		{
+			Factory: newCustomModelsDataSource,
+			Name:    "Custom Models",
+		},
+		{
+			Factory: newFoundationModelDataSource,
 			Name:    "Foundation Model",
 		},
 		{
-			Factory: newDataSourceFoundationModels,
+			Factory: newFoundationModelsDataSource,
 			Name:    "Foundation Models",
 		},
 	}
@@ -29,6 +37,13 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newCustomModelResource,
+			Name:    "Custom Model",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "job_arn",
+			},
+		},
 		{
 			Factory: newResourceModelInvocationLoggingConfiguration,
 			Name:    "Model Invocation Logging Configuration",
