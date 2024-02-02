@@ -215,14 +215,15 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "getting Media Convert Account Client: %s", err)
 	}
 
-	delOpts := &mediaconvert.DeleteQueueInput{
+	log.Printf("[DEBUG] Deleting Media Convert Queue: %s", d.Id())
+	_, err = conn.DeleteQueueWithContext(ctx, &mediaconvert.DeleteQueueInput{
 		Name: aws.String(d.Id()),
-	}
+	})
 
-	_, err = conn.DeleteQueueWithContext(ctx, delOpts)
 	if tfawserr.ErrCodeEquals(err, mediaconvert.ErrCodeNotFoundException) {
 		return diags
 	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Media Convert Queue (%s): %s", d.Id(), err)
 	}
