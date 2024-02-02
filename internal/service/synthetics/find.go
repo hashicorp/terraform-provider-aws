@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-var errResourceNotFound = &awstypes.ResourceNotFoundException{}
+var errResourceNotFoundException = &awstypes.ResourceNotFoundException{}
 
 func FindCanaryByName(ctx context.Context, conn *synthetics.Client, name string) (*awstypes.Canary, error) {
 	input := &synthetics.GetCanaryInput{
@@ -27,7 +27,7 @@ func FindCanaryByName(ctx context.Context, conn *synthetics.Client, name string)
 	if err != nil {
 		// error is not being asserted into type *awstypes.ResourceNotFoundException but has all the properties
 		// of the error.
-		if strings.Contains(err.Error(), errResourceNotFound.ErrorCode()) {
+		if strings.Contains(err.Error(), errResourceNotFoundException.ErrorCode()) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
