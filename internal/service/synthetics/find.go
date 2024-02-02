@@ -25,6 +25,8 @@ func FindCanaryByName(ctx context.Context, conn *synthetics.Client, name string)
 	output, err := conn.GetCanary(ctx, input)
 
 	if err != nil {
+		// error is not being asserted into type *awstypes.ResourceNotFoundException but has all the properties
+		// of the error.
 		if strings.Contains(err.Error(), errResourceNotFound.ErrorCode()) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
@@ -34,7 +36,7 @@ func FindCanaryByName(ctx context.Context, conn *synthetics.Client, name string)
 
 		return nil, err
 	}
-	
+
 	if output == nil || output.Canary == nil || output.Canary.Status == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
