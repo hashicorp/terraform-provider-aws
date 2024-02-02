@@ -404,13 +404,13 @@ func resourceDatasourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		DataSourceId:  aws.String(datasource_id),
 	}
 
-	if d.HasChange("document_enrichment_configuration") {
-		input.DocumentEnrichmentConfiguration = expandDocumentEnrichmentConfiguration(d.Get("document_enrichment_configuration").([]interface{}))
+	if v, ok := d.GetOk("document_enrichment_configuration"); ok {
+		input.DocumentEnrichmentConfiguration = expandDocumentEnrichmentConfiguration(v.([]interface{}))
 	}
 
-	if d.HasChange("configuration") {
+	if v, ok := d.GetOk("configuration"); ok {
 		var conf map[string]interface{}
-		err = json.Unmarshal([]byte(d.Get("configuration").(string)), &conf)
+		err = json.Unmarshal([]byte(v.(string)), &conf)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "unmarshal qbusiness datasource configuration: %s", err)
 		}
@@ -418,24 +418,24 @@ func resourceDatasourceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		input.Configuration = document.NewLazyDocument(conf)
 	}
 
-	if d.HasChange("display_name") {
-		input.DisplayName = aws.String(d.Get("display_name").(string))
+	if v, ok := d.GetOk("display_name"); ok {
+		input.DisplayName = aws.String(v.(string))
 	}
 
-	if d.HasChange("iam_service_role_arn") {
-		input.RoleArn = aws.String(d.Get("iam_service_role_arn").(string))
+	if v, ok := d.GetOk("iam_service_role_arn"); ok {
+		input.RoleArn = aws.String(v.(string))
 	}
 
-	if d.HasChange("sync_schedule") {
-		input.SyncSchedule = aws.String(d.Get("sync_schedule").(string))
+	if v, ok := d.GetOk("sync_schedule"); ok {
+		input.SyncSchedule = aws.String(v.(string))
 	}
 
-	if d.HasChange("vpc_configuration") {
-		input.VpcConfiguration = expandVPCConfiguration(d.Get("vpc_configuration").([]interface{}))
+	if v, ok := d.GetOk("vpc_configuration"); ok {
+		input.VpcConfiguration = expandVPCConfiguration(v.([]interface{}))
 	}
 
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
 	}
 
 	_, err = conn.UpdateDataSource(ctx, &input)
