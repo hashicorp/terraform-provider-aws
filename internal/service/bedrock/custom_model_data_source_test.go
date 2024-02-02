@@ -44,9 +44,9 @@ func TestAccBedrockCustomModelDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "hyperparameters", datasourceName, "hyperparameters"),
 					resource.TestCheckResourceAttrPair(resourceName, "job_arn", datasourceName, "job_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "job_name", datasourceName, "job_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "model_arn", datasourceName, "model_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "model_kms_key_arn", datasourceName, "model_kms_key_arn"),
-					resource.TestCheckResourceAttrPair(resourceName, "model_name", datasourceName, "model_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_model_arn", datasourceName, "model_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_model_kms_key_id", datasourceName, "model_kms_key_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "custom_model_name", datasourceName, "model_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "output_data_config.#", datasourceName, "output_data_config.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "training_data_config.#", datasourceName, "training_data_config.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "training_metrics.#", datasourceName, "training_metrics.#"),
@@ -61,7 +61,7 @@ func TestAccBedrockCustomModelDataSource_basic(t *testing.T) {
 func testAccCustomModelDataSourceConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccCustomModelConfig_basic(rName), `
 data "aws_bedrock_custom_model" "test" {
-  model_id = aws_bedrock_custom_model.test.model_arn
+  model_id = aws_bedrock_custom_model.test.custom_model_arn
 }
 `)
 }
