@@ -178,21 +178,21 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if d.HasChanges("description", "reservation_plan_settings", "status") {
-		updateOpts := &mediaconvert.UpdateQueueInput{
+		input := &mediaconvert.UpdateQueueInput{
 			Name:   aws.String(d.Id()),
 			Status: aws.String(d.Get("status").(string)),
 		}
 
 		if v, ok := d.GetOk("description"); ok {
-			updateOpts.Description = aws.String(v.(string))
+			input.Description = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("reservation_plan_settings"); ok {
-			reservationPlanSettings := v.([]interface{})[0].(map[string]interface{})
-			updateOpts.ReservationPlanSettings = expandReservationPlanSettings(reservationPlanSettings)
+		if v, ok := d.Get("reservation_plan_settings").([]interface{}); ok && len(v) > 0 && v[0] != nil {
+			input.ReservationPlanSettings = expandReservationPlanSettings(v[0].(map[string]interface{}))
 		}
 
-		_, err = conn.UpdateQueueWithContext(ctx, updateOpts)
+		_, err = conn.UpdateQueueWithContext(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Media Convert Queue (%s): %s", d.Id(), err)
 		}
