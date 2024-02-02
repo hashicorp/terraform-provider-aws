@@ -34,8 +34,11 @@ import (
 const (
 	VPCCIDRMaxIPv4 = 28
 	VPCCIDRMinIPv4 = 16
-	VPCCIDRMaxIPv6 = 56
+	VPCCIDRMaxIPv6 = 60
+	VPCCIDRMinIPv6 = 44
 )
+
+var VPCCIDRValidIPv6Masks = []int{44, 48, 52, 56, 60}
 
 // @SDKResource("aws_vpc", name="VPC")
 // @Tags(identifierAttribute="id")
@@ -141,7 +144,7 @@ func ResourceVPC() *schema.Resource {
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 				ValidateFunc: validation.All(
 					verify.ValidIPv6CIDRNetworkAddress,
-					validation.IsCIDRNetwork(VPCCIDRMaxIPv6, VPCCIDRMaxIPv6)),
+					validation.IsCIDRNetwork(VPCCIDRMinIPv6, VPCCIDRMaxIPv6)),
 			},
 			"ipv6_cidr_block_network_border_group": {
 				Type:         schema.TypeString,
@@ -157,7 +160,7 @@ func ResourceVPC() *schema.Resource {
 			"ipv6_netmask_length": {
 				Type:          schema.TypeInt,
 				Optional:      true,
-				ValidateFunc:  validation.IntInSlice([]int{VPCCIDRMaxIPv6}),
+				ValidateFunc:  validation.IntInSlice(VPCCIDRValidIPv6Masks),
 				ConflictsWith: []string{"ipv6_cidr_block"},
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 			},
