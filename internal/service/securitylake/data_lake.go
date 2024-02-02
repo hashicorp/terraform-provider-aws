@@ -321,9 +321,15 @@ func (r *dataLakeResource) Delete(ctx context.Context, request resource.DeleteRe
 
 	conn := r.Meta().SecurityLakeClient(ctx)
 
-	_, err := conn.DeleteDataLake(ctx, &securitylake.DeleteDataLakeInput{
-		Regions: []string{errs.Must(regionFromARNString(data.ID.ValueString()))},
-	})
+	// "ConflictException: The request failed because your Security Lake configuration or resources are currently being updated. Wait a few minutes and then try again."
+	const (
+		timeout = 2 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ConflictException](ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteDataLake(ctx, &securitylake.DeleteDataLakeInput{
+			Regions: []string{errs.Must(regionFromARNString(data.ID.ValueString()))},
+		})
+	}, "Wait a few minutes and then try again")
 
 	// No data lake:
 	// "An error occurred (AccessDeniedException) when calling the DeleteDataLake operation: User: ... is not authorized to perform: securitylake:DeleteDataLake", or
