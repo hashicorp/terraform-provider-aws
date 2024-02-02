@@ -5,6 +5,7 @@ package synthetics
 
 import (
 	"context"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/synthetics"
@@ -14,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+var errResourceNotFound = &awstypes.ResourceNotFoundException{}
+
 func FindCanaryByName(ctx context.Context, conn *synthetics.Client, name string) (*awstypes.Canary, error) {
 	input := &synthetics.GetCanaryInput{
 		Name: aws.String(name),
@@ -21,17 +24,17 @@ func FindCanaryByName(ctx context.Context, conn *synthetics.Client, name string)
 
 	output, err := conn.GetCanary(ctx, input)
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
 	if err != nil {
+		if strings.Contains(err.Error(), errResourceNotFound.ErrorCode()) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
 		return nil, err
 	}
-
+	
 	if output == nil || output.Canary == nil || output.Canary.Status == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
