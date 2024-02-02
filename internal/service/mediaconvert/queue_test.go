@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/mediaconvert"
+	"github.com/aws/aws-sdk-go-v2/service/mediaconvert/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,17 +17,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmediaconvert "github.com/hashicorp/terraform-provider-aws/internal/service/mediaconvert"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMediaConvertQueue_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queue mediaconvert.Queue
+	var queue types.Queue
 	resourceName := "aws_media_convert_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, mediaconvert.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConvertEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -37,8 +38,9 @@ func TestAccMediaConvertQueue_basic(t *testing.T) {
 					testAccCheckQueueExists(ctx, resourceName, &queue),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mediaconvert", regexache.MustCompile(`queues/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "pricing_plan", mediaconvert.PricingPlanOnDemand),
-					resource.TestCheckResourceAttr(resourceName, "status", mediaconvert.QueueStatusActive),
+					resource.TestCheckResourceAttr(resourceName, "pricing_plan", string(types.PricingPlanOnDemand)),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.QueueStatusActive)),
 				),
 			},
 			{
@@ -52,13 +54,13 @@ func TestAccMediaConvertQueue_basic(t *testing.T) {
 
 func TestAccMediaConvertQueue_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queue mediaconvert.Queue
+	var queue types.Queue
 	resourceName := "aws_media_convert_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, mediaconvert.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConvertEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -76,13 +78,13 @@ func TestAccMediaConvertQueue_disappears(t *testing.T) {
 
 func TestAccMediaConvertQueue_withTags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queue mediaconvert.Queue
+	var queue types.Queue
 	resourceName := "aws_media_convert_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, mediaconvert.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConvertEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -124,35 +126,35 @@ func TestAccMediaConvertQueue_reservationPlanSettings(t *testing.T) {
 	acctest.Skip(t, "MediaConvert Reserved Queues are $400/month and cannot be deleted for 1 year.")
 
 	ctx := acctest.Context(t)
-	var queue mediaconvert.Queue
+	var queue types.Queue
 	resourceName := "aws_media_convert_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, mediaconvert.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConvertEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueueConfig_reserved(rName, mediaconvert.CommitmentOneYear, mediaconvert.RenewalTypeAutoRenew, 1),
+				Config: testAccQueueConfig_reserved(rName, string(types.CommitmentOneYear), string(types.RenewalTypeAutoRenew), 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "pricing_plan", mediaconvert.PricingPlanReserved),
+					resource.TestCheckResourceAttr(resourceName, "pricing_plan", string(types.PricingPlanReserved)),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.commitment", mediaconvert.CommitmentOneYear),
-					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.renewal_type", mediaconvert.RenewalTypeAutoRenew),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.commitment", string(types.CommitmentOneYear)),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.renewal_type", string(types.RenewalTypeAutoRenew)),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.reserved_slots", "1"),
 				),
 			},
 			{
-				Config: testAccQueueConfig_reserved(rName, mediaconvert.CommitmentOneYear, mediaconvert.RenewalTypeExpire, 2),
+				Config: testAccQueueConfig_reserved(rName, string(types.CommitmentOneYear), string(types.RenewalTypeExpire), 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "pricing_plan", mediaconvert.PricingPlanReserved),
+					resource.TestCheckResourceAttr(resourceName, "pricing_plan", string(types.PricingPlanReserved)),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.commitment", mediaconvert.CommitmentOneYear),
-					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.renewal_type", mediaconvert.RenewalTypeExpire),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.commitment", string(types.CommitmentOneYear)),
+					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.renewal_type", string(types.RenewalTypeExpire)),
 					resource.TestCheckResourceAttr(resourceName, "reservation_plan_settings.0.reserved_slots", "1"),
 				),
 			},
@@ -167,28 +169,28 @@ func TestAccMediaConvertQueue_reservationPlanSettings(t *testing.T) {
 
 func TestAccMediaConvertQueue_withStatus(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queue mediaconvert.Queue
+	var queue types.Queue
 	resourceName := "aws_media_convert_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, mediaconvert.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConvertEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccQueueConfig_status(rName, mediaconvert.QueueStatusPaused),
+				Config: testAccQueueConfig_status(rName, string(types.QueueStatusPaused)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "status", mediaconvert.QueueStatusPaused),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.QueueStatusPaused)),
 				),
 			},
 			{
-				Config: testAccQueueConfig_status(rName, mediaconvert.QueueStatusActive),
+				Config: testAccQueueConfig_status(rName, string(types.QueueStatusActive)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckQueueExists(ctx, resourceName, &queue),
-					resource.TestCheckResourceAttr(resourceName, "status", mediaconvert.QueueStatusActive),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.QueueStatusActive)),
 				),
 			},
 			{
@@ -202,7 +204,7 @@ func TestAccMediaConvertQueue_withStatus(t *testing.T) {
 
 func TestAccMediaConvertQueue_withDescription(t *testing.T) {
 	ctx := acctest.Context(t)
-	var queue mediaconvert.Queue
+	var queue types.Queue
 	resourceName := "aws_media_convert_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	description1 := sdkacctest.RandomWithPrefix("Description: ")
@@ -210,7 +212,7 @@ func TestAccMediaConvertQueue_withDescription(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, mediaconvert.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaConvertEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckQueueDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -239,7 +241,7 @@ func testAccCheckQueueDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).MediaConvertConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).MediaConvertClient(ctx)
 
 			_, err := tfmediaconvert.FindQueueByName(ctx, conn, rs.Primary.ID)
 
@@ -258,14 +260,14 @@ func testAccCheckQueueDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckQueueExists(ctx context.Context, n string, v *mediaconvert.Queue) resource.TestCheckFunc {
+func testAccCheckQueueExists(ctx context.Context, n string, v *types.Queue) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaConvertConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaConvertClient(ctx)
 
 		output, err := tfmediaconvert.FindQueueByName(ctx, conn, rs.Primary.ID)
 
@@ -342,5 +344,5 @@ resource "aws_media_convert_queue" "test" {
     reserved_slots = %[5]d
   }
 }
-`, rName, mediaconvert.PricingPlanReserved, commitment, renewalType, reservedSlots)
+`, rName, string(types.PricingPlanReserved), commitment, renewalType, reservedSlots)
 }
