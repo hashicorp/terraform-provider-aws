@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -325,8 +326,10 @@ func (r *dataLakeResource) Delete(ctx context.Context, request resource.DeleteRe
 	})
 
 	// No data lake:
-	// "An error occurred (AccessDeniedException) when calling the DeleteDataLake operation: User: ... is not authorized to perform: securitylake:DeleteDataLake"
-	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to perform") {
+	// "An error occurred (AccessDeniedException) when calling the DeleteDataLake operation: User: ... is not authorized to perform: securitylake:DeleteDataLake", or
+	// "UnauthorizedException: Unauthorized"
+	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to perform") ||
+		tfawserr.ErrMessageContains(err, errCodeUnauthorizedException, "Unauthorized") {
 		return
 	}
 
