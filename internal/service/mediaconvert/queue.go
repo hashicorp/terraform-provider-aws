@@ -101,27 +101,29 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "getting Media Convert Account Client: %s", err)
 	}
 
-	createOpts := &mediaconvert.CreateQueueInput{
-		Name:        aws.String(d.Get("name").(string)),
-		Status:      aws.String(d.Get("status").(string)),
+	name := d.Get("name").(string)
+	input := &mediaconvert.CreateQueueInput{
+		Name:        aws.String(name),
 		PricingPlan: aws.String(d.Get("pricing_plan").(string)),
+		Status:      aws.String(d.Get("status").(string)),
 		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
-		createOpts.Description = aws.String(v.(string))
+		input.Description = aws.String(v.(string))
 	}
 
 	if v, ok := d.Get("reservation_plan_settings").([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		createOpts.ReservationPlanSettings = expandReservationPlanSettings(v[0].(map[string]interface{}))
+		input.ReservationPlanSettings = expandReservationPlanSettings(v[0].(map[string]interface{}))
 	}
 
-	resp, err := conn.CreateQueueWithContext(ctx, createOpts)
+	output, err := conn.CreateQueueWithContext(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Media Convert Queue: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Media Convert Queue (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.Queue.Name))
+	d.SetId(aws.StringValue(output.Queue.Name))
 
 	return append(diags, resourceQueueRead(ctx, d, meta)...)
 }
