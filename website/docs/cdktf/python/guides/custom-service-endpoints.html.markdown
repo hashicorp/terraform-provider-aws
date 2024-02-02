@@ -227,6 +227,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>location</code> (or <code>locationservice</code>)</li>
   <li><code>logs</code> (or <code>cloudwatchlog</code> or <code>cloudwatchlogs</code>)</li>
   <li><code>lookoutmetrics</code></li>
+  <li><code>m2</code></li>
   <li><code>macie2</code></li>
   <li><code>mediaconnect</code></li>
   <li><code>mediaconvert</code></li>
@@ -414,4 +415,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.0 input-8f1d9921e146fff2de735b493054710c8a2e5fcfb4b568cfa99572ffb0bac719 -->
+<!-- cache-key: cdktf-0.20.1 input-87c0080be30af700eaee1b06aff7d221a7ac06c3e91a88868e87ef9546706e7a -->

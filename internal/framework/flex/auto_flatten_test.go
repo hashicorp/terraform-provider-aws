@@ -259,11 +259,11 @@ func TestFlatten(t *testing.T) {
 					types.StringValue("a"),
 					types.StringValue("b"),
 				}),
-				Field5: fwtypes.NewMapValueOf[types.String](ctx, map[string]basetypes.StringValue{
+				Field5: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
 					"A": types.StringValue("a"),
 					"B": types.StringValue("b"),
 				}),
-				Field6: fwtypes.NewMapValueOf[types.String](ctx, map[string]basetypes.StringValue{
+				Field6: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
 					"A": types.StringValue("a"),
 					"B": types.StringValue("b"),
 				}),
@@ -624,7 +624,7 @@ func TestFlattenGeneric(t *testing.T) {
 			},
 			Target: &TestFlexTF11{},
 			WantTarget: &TestFlexTF11{
-				FieldInner: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+				FieldInner: fwtypes.NewMapValueOfMust[basetypes.StringValue](ctx, map[string]attr.Value{
 					"x": types.StringValue("y"),
 				}),
 			},
@@ -719,7 +719,7 @@ func TestFlattenGeneric(t *testing.T) {
 			Target: &TestFlexTF14{},
 			WantTarget: &TestFlexTF14{
 				FieldOuter: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF11{
-					FieldInner: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+					FieldInner: fwtypes.NewMapValueOfMust[basetypes.StringValue](ctx, map[string]attr.Value{
 						"x": types.StringValue("y"),
 					}),
 				}),
@@ -895,7 +895,7 @@ func TestFlattenGeneric(t *testing.T) {
 						},
 					}),
 				}),
-				SessionAttributes: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+				SessionAttributes: fwtypes.NewMapValueOfMust[basetypes.StringValue](ctx, map[string]attr.Value{
 					"x": basetypes.NewStringValue("y"),
 				}),
 			},
