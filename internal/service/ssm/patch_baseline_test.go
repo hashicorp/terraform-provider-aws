@@ -13,7 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go/service/ssm"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/tfjsonpath"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
@@ -32,6 +34,11 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPatchBaselineConfig_basic(name),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("json")),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &before),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
@@ -58,6 +65,11 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 			},
 			{
 				Config: testAccPatchBaselineConfig_basicUpdated(name),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectUnknownValue(resourceName, tfjsonpath.New("json")),
+					},
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPatchBaselineExists(ctx, resourceName, &after),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ssm", regexache.MustCompile(`patchbaseline/pb-.+`)),
