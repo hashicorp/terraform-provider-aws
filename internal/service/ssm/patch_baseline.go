@@ -32,7 +32,7 @@ import (
 
 // @SDKResource("aws_ssm_patch_baseline", name="Patch Baseline")
 // @Tags(identifierAttribute="id", resourceType="PatchBaseline")
-func ResourcePatchBaseline() *schema.Resource {
+func resourcePatchBaseline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePatchBaselineCreate,
 		ReadWithoutTimeout:   resourcePatchBaselineRead,
@@ -224,10 +224,6 @@ func ResourcePatchBaseline() *schema.Resource {
 		),
 	}
 }
-
-const (
-	resNamePatchBaseline = "Patch Baseline"
-)
 
 func resourcePatchBaselineCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics

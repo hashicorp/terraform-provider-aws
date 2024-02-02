@@ -202,7 +202,7 @@ func sweepPatchBaselines(region string) error {
 
 		for _, identity := range page.BaselineIdentities {
 			baselineID := aws.ToString(identity.BaselineId)
-			r := ResourcePatchBaseline()
+			r := resourcePatchBaseline()
 			d := r.Data(nil)
 			d.SetId(baselineID)
 			d.Set("operating_system", identity.OperatingSystem)
