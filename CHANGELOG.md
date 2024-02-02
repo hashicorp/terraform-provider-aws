@@ -13,7 +13,8 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_redshift_cluster: Add `multi_az` attribute ([#35508](https://github.com/hashicorp/terraform-provider-aws/issues/35508))
-* resource/aws_lakeformation_resource: Add with_federation argument ([#35154](https://github.com/hashicorp/terraform-provider-aws/issues/35154))
+* resource/aws_lakeformation_resource: Add `hybrid_access_enabled` argument ([#35571](https://github.com/hashicorp/terraform-provider-aws/issues/35571))
+* resource/aws_lakeformation_resource: Add `with_federation` argument ([#35154](https://github.com/hashicorp/terraform-provider-aws/issues/35154))
 * resource/aws_redshift_cluster: Add `multi_az` argument ([#35508](https://github.com/hashicorp/terraform-provider-aws/issues/35508))
 * resource/aws_redshiftserverless_endpoint_access: Add `owner_account` argument ([#35509](https://github.com/hashicorp/terraform-provider-aws/issues/35509))
 * resource/aws_wafv2_rule_group: Add `header_order` to `field_to_match` configuration blocks ([#35521](https://github.com/hashicorp/terraform-provider-aws/issues/35521))
