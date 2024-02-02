@@ -7,14 +7,15 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/mediaconvert"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/mediaconvert"
+	"github.com/aws/aws-sdk-go-v2/service/mediaconvert/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -23,8 +24,8 @@ import (
 )
 
 // @SDKResource("aws_media_convert_queue", name="Queue")
-// @Tags
-func ResourceQueue() *schema.Resource {
+// @Tags(identifierAttribute="arn")
+func resourceQueue() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceQueueCreate,
 		ReadWithoutTimeout:   resourceQueueRead,
@@ -40,21 +41,21 @@ func ResourceQueue() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"description": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"pricing_plan": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      mediaconvert.PricingPlanOnDemand,
-				ValidateFunc: validation.StringInSlice(mediaconvert.PricingPlan_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          types.PricingPlanOnDemand,
+				ValidateDiagFunc: enum.Validate[types.PricingPlan](),
 			},
 			"reservation_plan_settings": {
 				Type:     schema.TypeList,
@@ -64,14 +65,14 @@ func ResourceQueue() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"commitment": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(mediaconvert.Commitment_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.Commitment](),
 						},
 						"renewal_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(mediaconvert.RenewalType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.RenewalType](),
 						},
 						"reserved_slots": {
 							Type:     schema.TypeInt,
@@ -81,10 +82,10 @@ func ResourceQueue() *schema.Resource {
 				},
 			},
 			"status": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      mediaconvert.QueueStatusActive,
-				ValidateFunc: validation.StringInSlice(mediaconvert.QueueStatus_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          types.QueueStatusActive,
+				ValidateDiagFunc: enum.Validate[types.QueueStatus](),
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -96,13 +97,13 @@ func ResourceQueue() *schema.Resource {
 
 func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaConvertConn(ctx)
+	conn := meta.(*conns.AWSClient).MediaConvertClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &mediaconvert.CreateQueueInput{
 		Name:        aws.String(name),
-		PricingPlan: aws.String(d.Get("pricing_plan").(string)),
-		Status:      aws.String(d.Get("status").(string)),
+		PricingPlan: types.PricingPlan(d.Get("pricing_plan").(string)),
+		Status:      types.QueueStatus(d.Get("status").(string)),
 		Tags:        getTagsIn(ctx),
 	}
 
@@ -114,22 +115,22 @@ func resourceQueueCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ReservationPlanSettings = expandReservationPlanSettings(v[0].(map[string]interface{}))
 	}
 
-	output, err := conn.CreateQueueWithContext(ctx, input)
+	output, err := conn.CreateQueue(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Media Convert Queue (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Queue.Name))
+	d.SetId(aws.ToString(output.Queue.Name))
 
 	return append(diags, resourceQueueRead(ctx, d, meta)...)
 }
 
 func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaConvertConn(ctx)
+	conn := meta.(*conns.AWSClient).MediaConvertClient(ctx)
 
-	queue, err := FindQueueByName(ctx, conn, d.Id())
+	queue, err := findQueueByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Media Convert Queue (%s) not found, removing from state", d.Id())
@@ -145,30 +146,26 @@ func resourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("description", queue.Description)
 	d.Set("name", queue.Name)
 	d.Set("pricing_plan", queue.PricingPlan)
-	if err := d.Set("reservation_plan_settings", flattenReservationPlan(queue.ReservationPlan)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting reservation_plan_settings: %s", err)
+	if queue.ReservationPlan != nil {
+		if err := d.Set("reservation_plan_settings", []interface{}{flattenReservationPlan(queue.ReservationPlan)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting reservation_plan_settings: %s", err)
+		}
+	} else {
+		d.Set("reservation_plan_settings", nil)
 	}
 	d.Set("status", queue.Status)
-
-	tags, err := listTags(ctx, conn, aws.StringValue(queue.Arn))
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for Media Convert Queue (%s): %s", d.Id(), err)
-	}
-
-	setTagsOut(ctx, Tags(tags))
 
 	return diags
 }
 
 func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaConvertConn(ctx)
+	conn := meta.(*conns.AWSClient).MediaConvertClient(ctx)
 
-	if d.HasChanges("description", "reservation_plan_settings", "status") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &mediaconvert.UpdateQueueInput{
 			Name:   aws.String(d.Id()),
-			Status: aws.String(d.Get("status").(string)),
+			Status: types.QueueStatus(d.Get("status").(string)),
 		}
 
 		if v, ok := d.GetOk("description"); ok {
@@ -179,17 +176,10 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			input.ReservationPlanSettings = expandReservationPlanSettings(v[0].(map[string]interface{}))
 		}
 
-		_, err := conn.UpdateQueueWithContext(ctx, input)
+		_, err := conn.UpdateQueue(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Media Convert Queue (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := updateTags(ctx, conn, d.Get("arn").(string), o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
@@ -198,14 +188,14 @@ func resourceQueueUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).MediaConvertConn(ctx)
+	conn := meta.(*conns.AWSClient).MediaConvertClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Media Convert Queue: %s", d.Id())
-	_, err := conn.DeleteQueueWithContext(ctx, &mediaconvert.DeleteQueueInput{
+	_, err := conn.DeleteQueue(ctx, &mediaconvert.DeleteQueueInput{
 		Name: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, mediaconvert.ErrCodeNotFoundException) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
 
@@ -216,14 +206,14 @@ func resourceQueueDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func FindQueueByName(ctx context.Context, conn *mediaconvert.MediaConvert, name string) (*mediaconvert.Queue, error) {
+func findQueueByName(ctx context.Context, conn *mediaconvert.Client, name string) (*types.Queue, error) {
 	input := &mediaconvert.GetQueueInput{
 		Name: aws.String(name),
 	}
 
-	output, err := conn.GetQueueWithContext(ctx, input)
+	output, err := conn.GetQueue(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, mediaconvert.ErrCodeNotFoundException) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -239,4 +229,40 @@ func FindQueueByName(ctx context.Context, conn *mediaconvert.MediaConvert, name 
 	}
 
 	return output.Queue, nil
+}
+
+func expandReservationPlanSettings(tfMap map[string]interface{}) *types.ReservationPlanSettings {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.ReservationPlanSettings{}
+
+	if v, ok := tfMap["commitment"]; ok {
+		apiObject.Commitment = types.Commitment(v.(string))
+	}
+
+	if v, ok := tfMap["renewal_type"]; ok {
+		apiObject.RenewalType = types.RenewalType(v.(string))
+	}
+
+	if v, ok := tfMap["reserved_slots"]; ok {
+		apiObject.ReservedSlots = aws.Int32(int32(v.(int)))
+	}
+
+	return apiObject
+}
+
+func flattenReservationPlan(apiObject *types.ReservationPlan) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"commitment":     apiObject.Commitment,
+		"renewal_type":   apiObject.RenewalType,
+		"reserved_slots": aws.ToInt32(apiObject.ReservedSlots),
+	}
+
+	return tfMap
 }
