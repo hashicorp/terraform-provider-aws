@@ -103,6 +103,7 @@ const (
 	SSOAdminEndpointID                   = "sso"
 	STSEndpointID                        = "sts"
 	SWFEndpointID                        = "swf"
+	SyntheticsEndpointID                 = "synthetics"
 	TimestreamWriteEndpointID            = "ingest.timestream"
 	TranscribeEndpointID                 = "transcribe"
 	VerifiedPermissionsEndpointID        = "verifiedpermissions"

@@ -110,6 +110,7 @@ import (
 	ssoadmin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssoadmin"
 	sts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sts"
 	swf_sdkv2 "github.com/aws/aws-sdk-go-v2/service/swf"
+	synthetics_sdkv2 "github.com/aws/aws-sdk-go-v2/service/synthetics"
 	timestreamwrite_sdkv2 "github.com/aws/aws-sdk-go-v2/service/timestreamwrite"
 	transcribe_sdkv2 "github.com/aws/aws-sdk-go-v2/service/transcribe"
 	verifiedpermissions_sdkv2 "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
@@ -231,7 +232,6 @@ import (
 	simpledb_sdkv1 "github.com/aws/aws-sdk-go/service/simpledb"
 	ssm_sdkv1 "github.com/aws/aws-sdk-go/service/ssm"
 	storagegateway_sdkv1 "github.com/aws/aws-sdk-go/service/storagegateway"
-	synthetics_sdkv1 "github.com/aws/aws-sdk-go/service/synthetics"
 	transfer_sdkv1 "github.com/aws/aws-sdk-go/service/transfer"
 	waf_sdkv1 "github.com/aws/aws-sdk-go/service/waf"
 	wafregional_sdkv1 "github.com/aws/aws-sdk-go/service/wafregional"
@@ -1121,8 +1121,8 @@ func (c *AWSClient) StorageGatewayConn(ctx context.Context) *storagegateway_sdkv
 	return errs.Must(conn[*storagegateway_sdkv1.StorageGateway](ctx, c, names.StorageGateway, make(map[string]any)))
 }
 
-func (c *AWSClient) SyntheticsConn(ctx context.Context) *synthetics_sdkv1.Synthetics {
-	return errs.Must(conn[*synthetics_sdkv1.Synthetics](ctx, c, names.Synthetics, make(map[string]any)))
+func (c *AWSClient) SyntheticsClient(ctx context.Context) *synthetics_sdkv2.Client {
+	return errs.Must(client[*synthetics_sdkv2.Client](ctx, c, names.Synthetics, make(map[string]any)))
 }
 
 func (c *AWSClient) TimestreamWriteClient(ctx context.Context) *timestreamwrite_sdkv2.Client {

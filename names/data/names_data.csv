@@ -73,7 +73,7 @@ evidently,evidently,cloudwatchevidently,evidently,,evidently,,cloudwatchevidentl
 internetmonitor,internetmonitor,internetmonitor,internetmonitor,,internetmonitor,,,InternetMonitor,InternetMonitor,,,2,,aws_internetmonitor_,,internetmonitor_,CloudWatch Internet Monitor,Amazon,,,,,,,InternetMonitor,ListMonitors,,
 logs,logs,cloudwatchlogs,cloudwatchlogs,,logs,,cloudwatchlog;cloudwatchlogs,Logs,CloudWatchLogs,,,2,aws_cloudwatch_(log_|query_),aws_logs_,,cloudwatch_log_;cloudwatch_query_,CloudWatch Logs,Amazon,,,,,,,CloudWatch Logs,ListAnomalies,,
 rum,rum,cloudwatchrum,rum,,rum,,cloudwatchrum,RUM,CloudWatchRUM,,1,,,aws_rum_,,rum_,CloudWatch RUM,Amazon,,,,,,,RUM,ListAppMonitors,,
-synthetics,synthetics,synthetics,synthetics,,synthetics,,,Synthetics,Synthetics,,1,,,aws_synthetics_,,synthetics_,CloudWatch Synthetics,Amazon,,,,,,,synthetics,ListGroups,,
+synthetics,synthetics,synthetics,synthetics,,synthetics,,,Synthetics,Synthetics,,,2,,aws_synthetics_,,synthetics_,CloudWatch Synthetics,Amazon,,,,,,,synthetics,ListGroups,,
 codeartifact,codeartifact,codeartifact,codeartifact,,codeartifact,,,CodeArtifact,CodeArtifact,,,2,,aws_codeartifact_,,codeartifact_,CodeArtifact,AWS,,,,,,,codeartifact,ListDomains,,
 codebuild,codebuild,codebuild,codebuild,,codebuild,,,CodeBuild,CodeBuild,,,2,,aws_codebuild_,,codebuild_,CodeBuild,AWS,,,,,,,CodeBuild,ListBuildBatches,,
 codecommit,codecommit,codecommit,codecommit,,codecommit,,,CodeCommit,CodeCommit,,,2,,aws_codecommit_,,codecommit_,CodeCommit,AWS,,,,,,,CodeCommit,ListRepositories,,
