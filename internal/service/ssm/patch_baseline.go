@@ -42,50 +42,6 @@ func ResourcePatchBaseline() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(3, 128),
-					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
-				),
-			},
-
-			"description": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 1024),
-			},
-
-			"global_filter": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 4,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(ssm.PatchFilterKey_Values(), false),
-						},
-						"values": {
-							Type:     schema.TypeList,
-							Required: true,
-							MaxItems: 20,
-							MinItems: 1,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(1, 64),
-							},
-						},
-					},
-				},
-			},
-
 			"approval_rule": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -96,26 +52,22 @@ func ResourcePatchBaseline() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.IntBetween(0, 100),
 						},
-
 						"approve_until_date": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringMatch(regexache.MustCompile(`([12]\d{3}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01]))`), "must be formatted YYYY-MM-DD"),
 						},
-
 						"compliance_level": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							Default:      ssm.PatchComplianceLevelUnspecified,
 							ValidateFunc: validation.StringInSlice(ssm.PatchComplianceLevel_Values(), false),
 						},
-
 						"enable_non_security": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							Default:  false,
 						},
-
 						"patch_filter": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -143,7 +95,6 @@ func ResourcePatchBaseline() *schema.Resource {
 					},
 				},
 			},
-
 			"approved_patches": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -153,7 +104,68 @@ func ResourcePatchBaseline() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 100),
 				},
 			},
-
+			"approved_patches_compliance_level": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ssm.PatchComplianceLevelUnspecified,
+				ValidateFunc: validation.StringInSlice(ssm.PatchComplianceLevel_Values(), false),
+			},
+			"approved_patches_enable_non_security": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"description": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 1024),
+			},
+			"global_filter": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 4,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(ssm.PatchFilterKey_Values(), false),
+						},
+						"values": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 20,
+							MinItems: 1,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(1, 64),
+							},
+						},
+					},
+				},
+			},
+			"json": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(3, 128),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+				),
+			},
+			"operating_system": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      ssm.OperatingSystemWindows,
+				ValidateFunc: validation.StringInSlice(ssm.OperatingSystem_Values(), false),
+			},
 			"rejected_patches": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -163,38 +175,23 @@ func ResourcePatchBaseline() *schema.Resource {
 					ValidateFunc: validation.StringLenBetween(1, 100),
 				},
 			},
-
-			"operating_system": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      ssm.OperatingSystemWindows,
-				ValidateFunc: validation.StringInSlice(ssm.OperatingSystem_Values(), false),
-			},
-
-			"approved_patches_compliance_level": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      ssm.PatchComplianceLevelUnspecified,
-				ValidateFunc: validation.StringInSlice(ssm.PatchComplianceLevel_Values(), false),
-			},
 			"rejected_patches_action": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(ssm.PatchAction_Values(), false),
 			},
-			"approved_patches_enable_non_security": {
-				Type:     schema.TypeBool,
-				Optional: true,
-			},
-
 			"source": {
 				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 20,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"configuration": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringLenBetween(1, 1024),
+						},
 						"name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -203,13 +200,6 @@ func ResourcePatchBaseline() *schema.Resource {
 								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,50}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
 							),
 						},
-
-						"configuration": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringLenBetween(1, 1024),
-						},
-
 						"products": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -222,11 +212,6 @@ func ResourcePatchBaseline() *schema.Resource {
 					},
 				},
 			},
-			"json": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
