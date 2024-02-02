@@ -40,7 +40,7 @@ func newCustomLogSourceResource(context.Context) (resource.ResourceWithConfigure
 type customLogSourceResource struct {
 	framework.ResourceWithConfigure
 	framework.WithNoUpdate
-	framework.WithTimeouts
+	framework.WithImportByID
 }
 
 func (r *customLogSourceResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {

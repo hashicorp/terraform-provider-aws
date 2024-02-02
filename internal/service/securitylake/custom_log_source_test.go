@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/securitylake/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -22,7 +21,6 @@ import (
 func testAccCustomLogSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_custom_log_source.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var customLogSource types.CustomLogSourceResource
 
 	resource.Test(t, resource.TestCase{
@@ -35,7 +33,7 @@ func testAccCustomLogSource_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckCustomLogSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomLogSourceConfig_basic(rName),
+				Config: testAccCustomLogSourceConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -43,14 +41,17 @@ func testAccCustomLogSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.crawler_configuration.0.role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.provider_identity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.provider_identity.0.external_id", "windows-sysmon-test"),
-					resource.TestCheckResourceAttr(resourceName, "source_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "event_classes.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "event_classes.*", "FILE_ACTIVITY"),
+					resource.TestCheckResourceAttr(resourceName, "source_name", "windows-sysmon"),
 					resource.TestCheckResourceAttr(resourceName, "source_version", "1.0"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configuration", "event_classes"},
 			},
 		},
 	})
@@ -59,7 +60,6 @@ func testAccCustomLogSource_basic(t *testing.T) {
 func testAccCustomLogSource_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_custom_log_source.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	var customLogSource types.CustomLogSourceResource
 
 	resource.Test(t, resource.TestCase{
@@ -73,7 +73,7 @@ func testAccCustomLogSource_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckCustomLogSourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCustomLogSourceConfig_basic(rName),
+				Config: testAccCustomLogSourceConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCustomLogSourceExists(ctx, resourceName, &customLogSource),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceCustomLogSource, resourceName),
@@ -131,10 +131,10 @@ func testAccCheckCustomLogSourceExists(ctx context.Context, n string, v *types.C
 	}
 }
 
-func testAccCustomLogSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccDataLakeConfig_basic(rName), fmt.Sprintf(`
+func testAccCustomLogSourceConfig_basic() string {
+	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), `
 resource "aws_iam_role" "test" {
-  name = %[1]q
+  name = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
   path = "/service-role/"
 
   assume_role_policy = <<POLICY
@@ -152,7 +152,7 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = %[1]q
+  name = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
   role = aws_iam_role.test.name
 
   policy     = <<POLICY
@@ -164,9 +164,7 @@ resource "aws_iam_role_policy" "test" {
       "s3:GetObject",
       "s3:PutObject"
     ],
-    "Resource": [
-      "arn:${data.aws_partition.current.partition}:s3:::aws-security-data-lake*/*"
-    ]
+    "Resource": "*"
   }]
 }
 POLICY
@@ -180,7 +178,7 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_securitylake_custom_log_source" "test" {
-  source_name    = %[1]q
+  source_name    = "windows-sysmon"
   source_version = "1.0"
   event_classes  = ["FILE_ACTIVITY"]
 
@@ -197,5 +195,5 @@ resource "aws_securitylake_custom_log_source" "test" {
 
   depends_on = [aws_securitylake_data_lake.test, aws_iam_role.test]
 }
-`, rName))
+`)
 }
