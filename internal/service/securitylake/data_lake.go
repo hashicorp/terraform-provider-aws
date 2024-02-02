@@ -28,7 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -182,7 +182,7 @@ func (r *dataLakeResource) Create(ctx context.Context, request resource.CreateRe
 	conn := r.Meta().SecurityLakeClient(ctx)
 
 	input := &securitylake.CreateDataLakeInput{}
-	response.Diagnostics.Append(flex.Expand(ctx, data, input)...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -200,7 +200,7 @@ func (r *dataLakeResource) Create(ctx context.Context, request resource.CreateRe
 
 	// Set values for unknowns.
 	dataLake := &output.DataLakes[0]
-	data.DataLakeARN = flex.StringToFramework(ctx, dataLake.DataLakeArn)
+	data.DataLakeARN = fwflex.StringToFramework(ctx, dataLake.DataLakeArn)
 	data.setID()
 
 	dataLake, err = waitDataLakeCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
@@ -212,14 +212,14 @@ func (r *dataLakeResource) Create(ctx context.Context, request resource.CreateRe
 	}
 
 	var configuration dataLakeConfigurationModel
-	response.Diagnostics.Append(flex.Flatten(ctx, dataLake, &configuration)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, dataLake, &configuration)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	// Set values for unknowns after creation is complete.
 	data.Configurations = fwtypes.NewListNestedObjectValueOfPtr(ctx, &configuration)
-	data.S3BucketARN = flex.StringToFramework(ctx, dataLake.S3BucketArn)
+	data.S3BucketARN = fwflex.StringToFramework(ctx, dataLake.S3BucketArn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -255,13 +255,13 @@ func (r *dataLakeResource) Read(ctx context.Context, request resource.ReadReques
 	}
 
 	var configuration dataLakeConfigurationModel
-	response.Diagnostics.Append(flex.Flatten(ctx, dataLake, &configuration)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, dataLake, &configuration)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	data.Configurations = fwtypes.NewListNestedObjectValueOfPtr(ctx, &configuration)
-	data.S3BucketARN = flex.StringToFramework(ctx, dataLake.S3BucketArn)
+	data.S3BucketARN = fwflex.StringToFramework(ctx, dataLake.S3BucketArn)
 
 	// Transparent tagging fails with "ResourceNotFoundException: The request failed because the specified resource doesn't exist."
 	// if the data lake's AWS Region isn't the configured one.
@@ -289,7 +289,7 @@ func (r *dataLakeResource) Update(ctx context.Context, request resource.UpdateRe
 
 	if !new.Configurations.Equal(old.Configurations) {
 		input := &securitylake.UpdateDataLakeInput{}
-		response.Diagnostics.Append(flex.Expand(ctx, new, input)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}

@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -112,7 +112,7 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 	conn := r.Meta().SecurityLakeClient(ctx)
 
 	input := &securitylake.CreateAwsLogSourceInput{}
-	response.Diagnostics.Append(flex.Expand(ctx, data, input)...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -126,7 +126,7 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 	}
 
 	// Set values for unknowns.
-	data.ID = flex.StringValueToFramework(ctx, input.Sources[0].SourceName)
+	data.ID = fwflex.StringValueToFramework(ctx, input.Sources[0].SourceName)
 
 	logSource, err := findAWSLogSourceBySourceName(ctx, conn, awstypes.AwsLogSourceName(data.ID.ValueString()))
 
@@ -142,8 +142,8 @@ func (r *awsLogSourceResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	sourceData.Accounts.SetValue = flex.FlattenFrameworkStringValueSet(ctx, logSource.Accounts)
-	sourceData.SourceVersion = flex.StringToFramework(ctx, logSource.SourceVersion)
+	sourceData.Accounts.SetValue = fwflex.FlattenFrameworkStringValueSet(ctx, logSource.Accounts)
+	sourceData.SourceVersion = fwflex.StringToFramework(ctx, logSource.SourceVersion)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -174,7 +174,7 @@ func (r *awsLogSourceResource) Read(ctx context.Context, request resource.ReadRe
 
 	// We can't use AutoFlEx with the top-level resource model because the API structure uses Go interfaces.
 	var sourceData awsLogSourceSourceModel
-	response.Diagnostics.Append(flex.Flatten(ctx, logSource, &sourceData)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, logSource, &sourceData)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -194,7 +194,7 @@ func (r *awsLogSourceResource) Delete(ctx context.Context, request resource.Dele
 	conn := r.Meta().SecurityLakeClient(ctx)
 
 	input := &securitylake.DeleteAwsLogSourceInput{}
-	response.Diagnostics.Append(flex.Expand(ctx, data, input)...)
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
