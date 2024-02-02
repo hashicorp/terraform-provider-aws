@@ -21,12 +21,7 @@ import (
 
 func testAccDataLake_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var datalake types.DataLakeResource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securitylake_data_lake.test"
 
 	resource.Test(t, resource.TestCase{
@@ -40,7 +35,7 @@ func testAccDataLake_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataLakeConfig_basic(rName),
+				Config: testAccDataLakeConfig_basic(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -67,7 +62,6 @@ func testAccDataLake_basic(t *testing.T) {
 func testAccDataLake_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var datalake types.DataLakeResource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securitylake_data_lake.test"
 
 	resource.Test(t, resource.TestCase{
@@ -81,7 +75,7 @@ func testAccDataLake_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataLakeConfig_basic(rName),
+				Config: testAccDataLakeConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceDataLake, resourceName),
@@ -94,12 +88,7 @@ func testAccDataLake_disappears(t *testing.T) {
 
 func testAccDataLake_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var datalake types.DataLakeResource
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securitylake_data_lake.test"
 
 	resource.Test(t, resource.TestCase{
@@ -113,7 +102,7 @@ func testAccDataLake_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDataLakeConfig_tags1(rName, "key1", "value1"),
+				Config: testAccDataLakeConfig_tags1("key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -127,7 +116,7 @@ func testAccDataLake_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn"},
 			},
 			{
-				Config: testAccDataLakeConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDataLakeConfig_tags2("key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -136,7 +125,7 @@ func testAccDataLake_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDataLakeConfig_tags1(rName, "key2", "value2"),
+				Config: testAccDataLakeConfig_tags1("key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -149,10 +138,6 @@ func testAccDataLake_tags(t *testing.T) {
 
 func testAccDataLake_lifeCycle(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var datalake types.DataLakeResource
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securitylake_data_lake.test"
@@ -197,10 +182,6 @@ func testAccDataLake_lifeCycle(t *testing.T) {
 
 func testAccDataLake_lifeCycleUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var datalake types.DataLakeResource
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securitylake_data_lake.test"
@@ -267,10 +248,6 @@ func testAccDataLake_lifeCycleUpdate(t *testing.T) {
 
 func testAccDataLake_replication(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	var datalake types.DataLakeResource
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securitylake_data_lake.region_2"
@@ -363,8 +340,7 @@ func testAccCheckDataLakeExists(ctx context.Context, n string, v *types.DataLake
 	}
 }
 
-func testAccDataLakeConfigConfig_base(rName string) string {
-	return `
+const testAccDataLakeConfigConfig_base = `
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
@@ -534,61 +510,60 @@ resource "aws_kms_key" "test" {
 POLICY
 }
 `
-}
 
-func testAccDataLakeConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base(rName), fmt.Sprintf(`
+func testAccDataLakeConfig_basic() string {
+	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base, fmt.Sprintf(`
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
   configuration {
-    region = %[2]q
+    region = %[1]q
   }
 
   depends_on = [aws_iam_role.meta_store_manager]
 }
-`, rName, acctest.Region()))
+`, acctest.Region()))
 }
 
-func testAccDataLakeConfig_tags1(rName, tag1Key, tag1Value string) string {
-	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base(rName), fmt.Sprintf(`
+func testAccDataLakeConfig_tags1(tag1Key, tag1Value string) string {
+	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base, fmt.Sprintf(`
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
   configuration {
-    region = %[4]q
+    region = %[3]q
   }
 
   tags = {
-    %[2]q = %[3]q
+    %[1]q = %[2]q
   }
 
   depends_on = [aws_iam_role.meta_store_manager]
 }
-`, rName, tag1Key, tag1Value, acctest.Region()))
+`, tag1Key, tag1Value, acctest.Region()))
 }
 
-func testAccDataLakeConfig_tags2(rName, tag1Key, tag1Value, tag2Key, tag2Value string) string {
-	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base(rName), fmt.Sprintf(`
+func testAccDataLakeConfig_tags2(tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base, fmt.Sprintf(`
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
   configuration {
-    region = %[6]q
+    region = %[5]q
   }
 
   tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
+    %[1]q = %[2]q
+    %[3]q = %[4]q
   }
 
   depends_on = [aws_iam_role.meta_store_manager]
 }
-`, rName, tag1Key, tag1Value, tag2Key, tag2Value, acctest.Region()))
+`, tag1Key, tag1Value, tag2Key, tag2Value, acctest.Region()))
 }
 
 func testAccDataLakeConfig_lifeCycle(rName string) string {
-	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base, fmt.Sprintf(`
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
@@ -624,7 +599,7 @@ resource "aws_securitylake_data_lake" "test" {
 }
 
 func testAccDataLakeConfig_lifeCycleUpdate(rName string) string {
-	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base, fmt.Sprintf(`
 resource "aws_securitylake_data_lake" "test" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
@@ -656,7 +631,7 @@ resource "aws_securitylake_data_lake" "test" {
 }
 
 func testAccDataLakeConfig_replication(rName string) string {
-	return acctest.ConfigCompose(testAccDataLakeConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_securitylake_data_lake" "region_2" {
   meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
 
