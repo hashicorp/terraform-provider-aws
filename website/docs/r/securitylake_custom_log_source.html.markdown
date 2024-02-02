@@ -35,30 +35,29 @@ resource "aws_securitylake_custom_log_source" "example" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
+* `configuration` - (Required) The configuration for the third-party custom source.
+    * `crawler_configuration` - (Required) The configuration for the Glue Crawler for the third-party custom source.
+        * `role_arn` - (Required) The Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role to be used by the AWS Glue crawler.
+    * `provider_identity` - (Required) The identity of the log provider for the third-party custom source.
+        * `external_id` - (Required) The external ID used to estalish trust relationship with the AWS identity.
+        * `principal` - (Required) The AWS identity principal.
 * `event_classes` - (Required) The Open Cybersecurity Schema Framework (OCSF) event classes which describes the type of data that the custom source will send to Security Lake.
-* `configuration` - (Required) SThe configuration for the third-party custom source.
 * `source_name` - (Required) Specify the name for a third-party custom source. This must be a Regionally unique value.
 * `source_version` - (Optional) Specify the source version for the third-party custom source, to limit log collection to a specific version of custom data source.
 
-Configurations support the following:
-
-* `crawler_configuration` - (Required) The configuration for the Glue Crawler for the third-party custom source.
-* `provider_identity` - (Optional) The identity of the log provider for the third-party custom source.
-
-Crawler Configuration support the following:
-
-* `role_arn` - (Required) The Amazon Resource Name (ARN) of the AWS Identity and Access Management (IAM) role to be used by the AWS Glue crawler.
-
-Provider Identity support the following:
-
-* `external_id` - (Required) The external ID used to estalish trust relationship with the AWS identity.
-* `principal` - (Required) The AWS identity principal.
-
 ## Attribute Reference
 
-This resource exports no additional attributes.
+This resource exports the following attributes in addition to the arguments above:
+
+* `attributes` - The attributes of a third-party custom source.
+    * `crawler_arn` - The ARN of the AWS Glue crawler.
+    * `database_arn` - The ARN of the AWS Glue database where results are written.
+    * `table_arn` - The ARN of the AWS Glue table.
+* `provider_details` - The details of the log provider for a third-party custom source.
+    * `location` - The location of the partition in the Amazon S3 bucket for Security Lake.
+    * `role_arn` - The ARN of the IAM role to be used by the entity putting logs into your custom source partition.
 
 ## Import
 
