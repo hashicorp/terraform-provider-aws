@@ -239,36 +239,36 @@ func resourcePatchBaselineCreate(ctx context.Context, d *schema.ResourceData, me
 		Tags:                           getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("description"); ok {
-		input.Description = aws.String(v.(string))
+	if _, ok := d.GetOk("approval_rule"); ok {
+		input.ApprovalRules = expandPatchRuleGroup(d)
 	}
 
 	if v, ok := d.GetOk("approved_patches"); ok && v.(*schema.Set).Len() > 0 {
 		input.ApprovedPatches = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("rejected_patches"); ok && v.(*schema.Set).Len() > 0 {
-		input.RejectedPatches = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := d.GetOk("approved_patches_enable_non_security"); ok {
+		input.ApprovedPatchesEnableNonSecurity = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("description"); ok {
+		input.Description = aws.String(v.(string))
 	}
 
 	if _, ok := d.GetOk("global_filter"); ok {
 		input.GlobalFilters = expandPatchFilterGroup(d)
 	}
 
-	if _, ok := d.GetOk("approval_rule"); ok {
-		input.ApprovalRules = expandPatchRuleGroup(d)
-	}
-
-	if _, ok := d.GetOk("source"); ok {
-		input.Sources = expandPatchSource(d)
-	}
-
-	if v, ok := d.GetOk("approved_patches_enable_non_security"); ok {
-		input.ApprovedPatchesEnableNonSecurity = aws.Bool(v.(bool))
+	if v, ok := d.GetOk("rejected_patches"); ok && v.(*schema.Set).Len() > 0 {
+		input.RejectedPatches = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("rejected_patches_action"); ok {
 		input.RejectedPatchesAction = aws.String(v.(string))
+	}
+
+	if _, ok := d.GetOk("source"); ok {
+		input.Sources = expandPatchSource(d)
 	}
 
 	output, err := conn.CreatePatchBaselineWithContext(ctx, input)
