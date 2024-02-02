@@ -18,12 +18,14 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -286,17 +288,15 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	params := &ssm.GetPatchBaselineInput{
-		BaselineId: aws.String(d.Id()),
+	output, err := FindPatchBaselineByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] SSM Patch Baseline (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	resp, err := conn.GetPatchBaselineWithContext(ctx, params)
 	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
-			log.Printf("[WARN] SSM Patch Baseline (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "reading SSM Patch Baseline (%s): %s", d.Id(), err)
 	}
 
@@ -306,36 +306,32 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 		Service:   "ssm",
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("patchbaseline/%s", strings.TrimPrefix(d.Id(), "/")),
-	}
+	}.String()
 
-	jsonDoc, err := json.MarshalIndent(resp, "", "  ")
+	jsonDoc, err := json.MarshalIndent(output, "", "  ")
 	if err != nil {
-		// should never happen if the above code is correct
-		return sdkdiag.AppendErrorf(diags, "Formatting json representation: formatting JSON: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	jsonString := string(jsonDoc)
 
-	d.Set("arn", arn.String())
-	d.Set("name", resp.Name)
-	d.Set("description", resp.Description)
+	if err := d.Set("approval_rule", flattenPatchRuleGroup(output.ApprovalRules)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting approval_rule: %s", err)
+	}
+	d.Set("approved_patches", aws.StringValueSlice(output.ApprovedPatches))
+	d.Set("approved_patches_compliance_level", output.ApprovedPatchesComplianceLevel)
+	d.Set("approved_patches_enable_non_security", output.ApprovedPatchesEnableNonSecurity)
+	d.Set("arn", arn)
+	d.Set("description", output.Description)
+	if err := d.Set("global_filter", flattenPatchFilterGroup(output.GlobalFilters)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting global_filter: %s", err)
+	}
 	d.Set("json", jsonString)
-	d.Set("operating_system", resp.OperatingSystem)
-	d.Set("approved_patches_compliance_level", resp.ApprovedPatchesComplianceLevel)
-	d.Set("approved_patches", flex.FlattenStringList(resp.ApprovedPatches))
-	d.Set("rejected_patches", flex.FlattenStringList(resp.RejectedPatches))
-	d.Set("rejected_patches_action", resp.RejectedPatchesAction)
-	d.Set("approved_patches_enable_non_security", resp.ApprovedPatchesEnableNonSecurity)
-
-	if err := d.Set("global_filter", flattenPatchFilterGroup(resp.GlobalFilters)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting global filters: %s", err)
-	}
-
-	if err := d.Set("approval_rule", flattenPatchRuleGroup(resp.ApprovalRules)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting approval rules: %s", err)
-	}
-
-	if err := d.Set("source", flattenPatchSource(resp.Sources)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting patch sources: %s", err)
+	d.Set("name", output.Name)
+	d.Set("operating_system", output.OperatingSystem)
+	d.Set("rejected_patches", aws.StringValueSlice(output.RejectedPatches))
+	d.Set("rejected_patches_action", output.RejectedPatchesAction)
+	if err := d.Set("source", flattenPatchSource(output.Sources)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting source: %s", err)
 	}
 
 	return diags
@@ -425,6 +421,31 @@ func resourcePatchBaselineDelete(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	return
+}
+
+func FindPatchBaselineByID(ctx context.Context, conn *ssm.SSM, id string) (*ssm.GetPatchBaselineOutput, error) {
+	input := &ssm.GetPatchBaselineInput{
+		BaselineId: aws.String(id),
+	}
+
+	output, err := conn.GetPatchBaselineWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, ssm.ErrCodeDoesNotExistException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func expandPatchFilterGroup(d *schema.ResourceData) *ssm.PatchFilterGroup {
