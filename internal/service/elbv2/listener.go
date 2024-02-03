@@ -214,8 +214,18 @@ func ResourceListener() *schema.Resource {
 							},
 						},
 						"forward": {
-							Type:     schema.TypeList,
-							Optional: true,
+							Type:                  schema.TypeList,
+							Optional:              true,
+							DiffSuppressOnRefresh: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if regexache.MustCompile(`^default_action\.\d+\.forward\.#$`).MatchString(k) {
+									return old == "1" && new == "0"
+								}
+								if regexache.MustCompile(`^default_action\.\d+\.forward\.\d+\.target_group\.#$`).MatchString(k) {
+									return old == "1" && new == "0"
+								}
+								return false
+							},
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -928,9 +938,15 @@ func expandLbListenerActionForwardConfigTargetGroupStickinessConfig(l []interfac
 		return nil
 	}
 
+	// The Plugin SDK stores a `nil` returned by the API as a `0` in the state. This is a invalid value.
+	var duration *int32
+	if v := tfMap["duration"].(int); v > 0 {
+		duration = aws.Int32(int32(v))
+	}
+
 	return &awstypes.TargetGroupStickinessConfig{
 		Enabled:         aws.Bool(tfMap["enabled"].(bool)),
-		DurationSeconds: aws.Int32(int32(tfMap["duration"].(int))),
+		DurationSeconds: duration,
 	}
 }
 
@@ -949,11 +965,7 @@ func flattenLbListenerActions(d *schema.ResourceData, Actions []awstypes.Action)
 
 		switch action.Type {
 		case awstypes.ActionTypeEnumForward:
-			if aws.ToString(action.TargetGroupArn) != "" {
-				m["target_group_arn"] = aws.ToString(action.TargetGroupArn)
-			} else {
-				m["forward"] = flattenLbListenerActionForwardConfig(action.ForwardConfig)
-			}
+			flattenLbForwardAction(d, i, action, m)
 
 		case awstypes.ActionTypeEnumRedirect:
 			m["redirect"] = flattenLbListenerActionRedirectConfig(action.RedirectConfig)
@@ -979,6 +991,50 @@ func flattenLbListenerActions(d *schema.ResourceData, Actions []awstypes.Action)
 	}
 
 	return vActions
+}
+
+func flattenLbForwardAction(d *schema.ResourceData, i int, awsAction awstypes.Action, actionMap map[string]any) {
+	// On create and update, we have a Config
+	// On refresh, we have a populated State
+	// On import, we have an empty State and empty Config
+
+	if rawConfig := d.GetRawConfig(); rawConfig.IsKnown() && !rawConfig.IsNull() {
+		defaultActions := rawConfig.GetAttr("default_action")
+		flattenLbForwardActionOneOf(defaultActions, i, awsAction, actionMap)
+		return
+	}
+
+	rawState := d.GetRawState()
+	defaultActions := rawState.GetAttr("default_action")
+
+	if defaultActions.LengthInt() > 0 {
+		flattenLbForwardActionOneOf(defaultActions, i, awsAction, actionMap)
+		return
+	}
+
+	flattenLbForwardActionBoth(defaultActions, i, awsAction, actionMap)
+}
+
+func flattenLbForwardActionOneOf(defaultActions cty.Value, i int, awsAction awstypes.Action, actionMap map[string]any) {
+	if defaultActions.IsKnown() && !defaultActions.IsNull() {
+		index := cty.NumberIntVal(int64(i))
+		if defaultActions.HasIndex(index).True() {
+			action := defaultActions.Index(index)
+			if action.IsKnown() && !action.IsNull() {
+				forward := action.GetAttr("forward")
+				if forward.IsKnown() && forward.LengthInt() > 0 {
+					actionMap["forward"] = flattenLbListenerActionForwardConfig(awsAction.ForwardConfig)
+				} else {
+					actionMap["target_group_arn"] = aws.ToString(awsAction.TargetGroupArn)
+				}
+			}
+		}
+	}
+}
+
+func flattenLbForwardActionBoth(defaultActions cty.Value, i int, awsAction awstypes.Action, actionMap map[string]any) {
+	actionMap["target_group_arn"] = aws.ToString(awsAction.TargetGroupArn)
+	actionMap["forward"] = flattenLbListenerActionForwardConfig(awsAction.ForwardConfig)
 }
 
 func flattenMutualAuthenticationAttributes(description *awstypes.MutualAuthenticationAttributes) []interface{} {
