@@ -569,27 +569,35 @@ func TestAccELBV2ListenerRule_priority(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.first", &rule),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.first", "priority", "1"),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.third", "priority", "3"),
 				),
 			},
 			{
-				Config: testAccListenerRuleConfig_priorityLast(rName),
+				Config: testAccListenerRuleConfig_priorityLastNoPriority(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.last", &rule),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.last", "priority", "4"),
 				),
 			},
 			{
-				Config: testAccListenerRuleConfig_priorityStatic(rName),
+				Config: testAccListenerRuleConfig_priorityLastSpecifyPriority(rName, "7"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.last", &rule),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.last", "priority", "7"),
 				),
 			},
 			{
-				Config: testAccListenerRuleConfig_priorityLast(rName),
+				Config: testAccListenerRuleConfig_priorityLastNoPriority(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.last", &rule),
 					resource.TestCheckResourceAttr("aws_lb_listener_rule.last", "priority", "7"),
+				),
+			},
+			{
+				Config: testAccListenerRuleConfig_priorityLastSpecifyPriority(rName, "6"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, "aws_lb_listener_rule.last", &rule),
+					resource.TestCheckResourceAttr("aws_lb_listener_rule.last", "priority", "6"),
 				),
 			},
 			{
@@ -2684,7 +2692,8 @@ resource "aws_lb_listener" "test2" {
 }
 
 func testAccListenerRuleConfig_priorityFirst(rName string) string {
-	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithListener(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccListenerRuleConfig_baseWithListener(rName), fmt.Sprintf(`
 resource "aws_lb_listener_rule" "first" {
   listener_arn = aws_lb_listener.test.arn
 
@@ -2728,8 +2737,9 @@ resource "aws_lb_listener_rule" "third" {
 `, rName))
 }
 
-func testAccListenerRuleConfig_priorityLast(rName string) string {
-	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithListener(rName), fmt.Sprintf(`
+func testAccListenerRuleConfig_priorityLastNoPriority(rName string) string {
+	return acctest.ConfigCompose(
+		testAccListenerRuleConfig_priorityFirst(rName), fmt.Sprintf(`
 resource "aws_lb_listener_rule" "last" {
   listener_arn = aws_lb_listener.test.arn
 
@@ -2751,11 +2761,12 @@ resource "aws_lb_listener_rule" "last" {
 `, rName))
 }
 
-func testAccListenerRuleConfig_priorityStatic(rName string) string {
-	return acctest.ConfigCompose(testAccListenerRuleConfig_baseWithListener(rName), fmt.Sprintf(`
+func testAccListenerRuleConfig_priorityLastSpecifyPriority(rName, priority string) string {
+	return acctest.ConfigCompose(
+		testAccListenerRuleConfig_priorityFirst(rName), fmt.Sprintf(`
 resource "aws_lb_listener_rule" "last" {
   listener_arn = aws_lb_listener.test.arn
-  priority     = 7
+  priority     = %[2]s
 
   action {
     type             = "forward"
@@ -2772,7 +2783,7 @@ resource "aws_lb_listener_rule" "last" {
     Name = %[1]q
   }
 }
-`, rName))
+`, rName, priority))
 }
 
 func testAccListenerRuleConfig_priorityParallelism(rName string) string {
