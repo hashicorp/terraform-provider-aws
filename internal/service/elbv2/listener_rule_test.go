@@ -12,15 +12,15 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"golang.org/x/exp/slices"
 )
@@ -70,7 +70,7 @@ func TestLBListenerARNFromRuleARN(t *testing.T) {
 
 func TestAccELBV2ListenerRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Rule
+	var conf awstypes.Rule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener_rule.test"
 	listenerResourceName := "aws_lb_listener.test"
@@ -117,7 +117,7 @@ func TestAccELBV2ListenerRule_basic(t *testing.T) {
 
 func TestAccELBV2ListenerRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Rule
+	var conf awstypes.Rule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener_rule.test"
 
@@ -141,7 +141,7 @@ func TestAccELBV2ListenerRule_disappears(t *testing.T) {
 
 func TestAccELBV2ListenerRule_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Rule
+	var conf awstypes.Rule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener_rule.test"
 
@@ -182,7 +182,7 @@ func TestAccELBV2ListenerRule_tags(t *testing.T) {
 
 func TestAccELBV2ListenerRule_forwardWeighted(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Rule
+	var conf awstypes.Rule
 	lbName := fmt.Sprintf("testrule-weighted-%s", sdkacctest.RandString(13))
 	targetGroupName1 := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
 	targetGroupName2 := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
@@ -282,7 +282,7 @@ func TestAccELBV2ListenerRule_forwardTargetARNAndBlock(t *testing.T) {
 // TestAccELBV2ListenerRule_backwardsCompatibility confirms that the resource type `aws_alb_listener_rule` works
 func TestAccELBV2ListenerRule_backwardsCompatibility(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Rule
+	var conf awstypes.Rule
 	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
 	targetGroupName := fmt.Sprintf("testtargetgroup-%s", sdkacctest.RandString(10))
 
@@ -330,7 +330,7 @@ func TestAccELBV2ListenerRule_backwardsCompatibility(t *testing.T) {
 
 func TestAccELBV2ListenerRule_redirect(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Rule
+	var conf awstypes.Rule
 	lbName := fmt.Sprintf("testrule-redirect-%s", sdkacctest.RandString(14))
 
 	resourceName := "aws_lb_listener_rule.static"
@@ -420,7 +420,7 @@ func TestAccELBV2ListenerRule_redirect(t *testing.T) {
 
 func TestAccELBV2ListenerRule_fixedResponse(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Rule
+	var conf awstypes.Rule
 	lbName := fmt.Sprintf("testrule-fixedresponse-%s", sdkacctest.RandString(9))
 
 	resourceName := "aws_lb_listener_rule.static"
@@ -460,7 +460,7 @@ func TestAccELBV2ListenerRule_fixedResponse(t *testing.T) {
 // Updating Action breaks Condition change logic GH-11323 and GH-11362
 func TestAccELBV2ListenerRule_updateFixedResponse(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule elbv2.Rule
+	var rule awstypes.Rule
 	lbName := fmt.Sprintf("testrule-basic-%s", sdkacctest.RandString(13))
 
 	resourceName := "aws_lb_listener_rule.static"
@@ -491,7 +491,7 @@ func TestAccELBV2ListenerRule_updateFixedResponse(t *testing.T) {
 
 func TestAccELBV2ListenerRule_updateRulePriority(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after elbv2.Rule
+	var before, after awstypes.Rule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener_rule.test"
 
@@ -522,7 +522,7 @@ func TestAccELBV2ListenerRule_updateRulePriority(t *testing.T) {
 
 func TestAccELBV2ListenerRule_changeListenerRuleARNForcesNew(t *testing.T) {
 	ctx := acctest.Context(t)
-	var before, after elbv2.Rule
+	var before, after awstypes.Rule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lb_listener_rule.test"
 
@@ -551,7 +551,7 @@ func TestAccELBV2ListenerRule_changeListenerRuleARNForcesNew(t *testing.T) {
 
 func TestAccELBV2ListenerRule_priority(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule elbv2.Rule
+	var rule awstypes.Rule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	if testing.Short() {
@@ -646,7 +646,7 @@ func TestAccELBV2ListenerRule_priority(t *testing.T) {
 
 func TestAccELBV2ListenerRule_cognito(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Rule
+	var conf awstypes.Rule
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -690,7 +690,7 @@ func TestAccELBV2ListenerRule_cognito(t *testing.T) {
 
 func TestAccELBV2ListenerRule_oidc(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Rule
+	var conf awstypes.Rule
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -734,7 +734,7 @@ func TestAccELBV2ListenerRule_oidc(t *testing.T) {
 
 func TestAccELBV2ListenerRule_Action_defaultOrder(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule elbv2.Rule
+	var rule awstypes.Rule
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -767,7 +767,7 @@ func TestAccELBV2ListenerRule_Action_defaultOrder(t *testing.T) {
 
 func TestAccELBV2ListenerRule_Action_specifyOrder(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule elbv2.Rule
+	var rule awstypes.Rule
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -801,7 +801,7 @@ func TestAccELBV2ListenerRule_Action_specifyOrder(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/6171
 func TestAccELBV2ListenerRule_Action_actionDisappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var rule elbv2.Rule
+	var rule awstypes.Rule
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -940,7 +940,7 @@ func TestAccELBV2ListenerRule_conditionAttributesCount(t *testing.T) {
 
 func TestAccELBV2ListenerRule_conditionHostHeader(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Rule
+	var conf awstypes.Rule
 	lbName := fmt.Sprintf("testrule-hostHeader-%s", sdkacctest.RandString(12))
 
 	resourceName := "aws_lb_listener_rule.static"
@@ -980,7 +980,7 @@ func TestAccELBV2ListenerRule_conditionHostHeader(t *testing.T) {
 
 func TestAccELBV2ListenerRule_conditionHTTPHeader(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Rule
+	var conf awstypes.Rule
 	lbName := fmt.Sprintf("testrule-httpHeader-%s", sdkacctest.RandString(12))
 
 	resourceName := "aws_lb_listener_rule.static"
@@ -1048,7 +1048,7 @@ func TestAccELBV2ListenerRule_ConditionHTTPHeader_invalid(t *testing.T) {
 
 func TestAccELBV2ListenerRule_conditionHTTPRequestMethod(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Rule
+	var conf awstypes.Rule
 	lbName := fmt.Sprintf("testrule-httpRequest-%s", sdkacctest.RandString(11))
 
 	resourceName := "aws_lb_listener_rule.static"
@@ -1088,7 +1088,7 @@ func TestAccELBV2ListenerRule_conditionHTTPRequestMethod(t *testing.T) {
 
 func TestAccELBV2ListenerRule_conditionPathPattern(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Rule
+	var conf awstypes.Rule
 	lbName := fmt.Sprintf("testrule-pathPattern-%s", sdkacctest.RandString(11))
 
 	resourceName := "aws_lb_listener_rule.static"
@@ -1128,7 +1128,7 @@ func TestAccELBV2ListenerRule_conditionPathPattern(t *testing.T) {
 
 func TestAccELBV2ListenerRule_conditionQueryString(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Rule
+	var conf awstypes.Rule
 	lbName := fmt.Sprintf("testrule-queryString-%s", sdkacctest.RandString(11))
 
 	resourceName := "aws_lb_listener_rule.static"
@@ -1192,7 +1192,7 @@ func TestAccELBV2ListenerRule_conditionQueryString(t *testing.T) {
 
 func TestAccELBV2ListenerRule_conditionSourceIP(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Rule
+	var conf awstypes.Rule
 	lbName := fmt.Sprintf("testrule-sourceIp-%s", sdkacctest.RandString(14))
 
 	resourceName := "aws_lb_listener_rule.static"
@@ -1232,7 +1232,7 @@ func TestAccELBV2ListenerRule_conditionSourceIP(t *testing.T) {
 
 func TestAccELBV2ListenerRule_conditionUpdateMixed(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Rule
+	var conf awstypes.Rule
 	lbName := fmt.Sprintf("testrule-mixed-%s", sdkacctest.RandString(17))
 
 	resourceName := "aws_lb_listener_rule.static"
@@ -1311,7 +1311,7 @@ func TestAccELBV2ListenerRule_conditionUpdateMixed(t *testing.T) {
 
 func TestAccELBV2ListenerRule_conditionMultiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Rule
+	var conf awstypes.Rule
 	lbName := fmt.Sprintf("testrule-condMulti-%s", sdkacctest.RandString(13))
 
 	resourceName := "aws_lb_listener_rule.static"
@@ -1395,7 +1395,7 @@ func TestAccELBV2ListenerRule_conditionMultiple(t *testing.T) {
 
 func TestAccELBV2ListenerRule_conditionUpdateMultiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Rule
+	var conf awstypes.Rule
 	lbName := fmt.Sprintf("testrule-condMulti-%s", sdkacctest.RandString(13))
 
 	resourceName := "aws_lb_listener_rule.static"
@@ -1491,12 +1491,12 @@ func TestAccELBV2ListenerRule_conditionUpdateMultiple(t *testing.T) {
 	})
 }
 
-func testAccCheckListenerRuleActionOrderDisappears(ctx context.Context, rule *elbv2.Rule, actionOrderToDelete int) resource.TestCheckFunc {
+func testAccCheckListenerRuleActionOrderDisappears(ctx context.Context, rule *awstypes.Rule, actionOrderToDelete int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		var newActions []*elbv2.Action
+		var newActions []awstypes.Action
 
 		for i, action := range rule.Actions {
-			if int(aws.Int64Value(action.Order)) == actionOrderToDelete {
+			if int(aws.ToInt32(action.Order)) == actionOrderToDelete {
 				newActions = slices.Delete(rule.Actions, i, i+1)
 				break
 			}
@@ -1506,22 +1506,22 @@ func testAccCheckListenerRuleActionOrderDisappears(ctx context.Context, rule *el
 			return fmt.Errorf("Unable to find action order %d from actions: %#v", actionOrderToDelete, rule.Actions)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
-		input := &elbv2.ModifyRuleInput{
+		input := &elasticloadbalancingv2.ModifyRuleInput{
 			Actions: newActions,
 			RuleArn: rule.RuleArn,
 		}
 
-		_, err := conn.ModifyRuleWithContext(ctx, input)
+		_, err := conn.ModifyRule(ctx, input)
 
 		return err
 	}
 }
 
-func testAccCheckListenerRuleNotRecreated(t *testing.T, before, after *elbv2.Rule) resource.TestCheckFunc {
+func testAccCheckListenerRuleNotRecreated(t *testing.T, before, after *awstypes.Rule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.RuleArn), aws.StringValue(after.RuleArn); before != after {
+		if before, after := aws.ToString(before.RuleArn), aws.ToString(after.RuleArn); before != after {
 			t.Fatalf("ELBv2 Listener Rule (%s) was recreated: %s", before, after)
 		}
 
@@ -1529,9 +1529,9 @@ func testAccCheckListenerRuleNotRecreated(t *testing.T, before, after *elbv2.Rul
 	}
 }
 
-func testAccCheckListenerRuleRecreated(t *testing.T, before, after *elbv2.Rule) resource.TestCheckFunc {
+func testAccCheckListenerRuleRecreated(t *testing.T, before, after *awstypes.Rule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.RuleArn), aws.StringValue(after.RuleArn); before == after {
+		if before, after := aws.ToString(before.RuleArn), aws.ToString(after.RuleArn); before == after {
 			t.Fatalf("ELBv2 Listener Rule (%s) was not recreated", before)
 		}
 
@@ -1539,7 +1539,7 @@ func testAccCheckListenerRuleRecreated(t *testing.T, before, after *elbv2.Rule) 
 	}
 }
 
-func testAccCheckListenerRuleExists(ctx context.Context, n string, res *elbv2.Rule) resource.TestCheckFunc {
+func testAccCheckListenerRuleExists(ctx context.Context, n string, res *awstypes.Rule) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1550,10 +1550,10 @@ func testAccCheckListenerRuleExists(ctx context.Context, n string, res *elbv2.Ru
 			return errors.New("No Listener Rule ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
-		describe, err := conn.DescribeRulesWithContext(ctx, &elbv2.DescribeRulesInput{
-			RuleArns: []*string{aws.String(rs.Primary.ID)},
+		describe, err := conn.DescribeRules(ctx, &elasticloadbalancingv2.DescribeRulesInput{
+			RuleArns: []string{rs.Primary.ID},
 		})
 
 		if err != nil {
@@ -1565,22 +1565,22 @@ func testAccCheckListenerRuleExists(ctx context.Context, n string, res *elbv2.Ru
 			return errors.New("Listener Rule not found")
 		}
 
-		*res = *describe.Rules[0]
+		*res = describe.Rules[0]
 		return nil
 	}
 }
 
 func testAccCheckListenerRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lb_listener_rule" && rs.Type != "aws_alb_listener_rule" {
 				continue
 			}
 
-			describe, err := conn.DescribeRulesWithContext(ctx, &elbv2.DescribeRulesInput{
-				RuleArns: []*string{aws.String(rs.Primary.ID)},
+			describe, err := conn.DescribeRules(ctx, &elasticloadbalancingv2.DescribeRulesInput{
+				RuleArns: []string{rs.Primary.ID},
 			})
 
 			if err == nil {
@@ -1591,7 +1591,7 @@ func testAccCheckListenerRuleDestroy(ctx context.Context) resource.TestCheckFunc
 			}
 
 			// Verify the error
-			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeRuleNotFoundException) {
+			if errs.IsA[*awstypes.RuleNotFoundException](err) {
 				return nil
 			} else {
 				return fmt.Errorf("Unexpected error checking LB Listener Rule destroyed: %s", err)
