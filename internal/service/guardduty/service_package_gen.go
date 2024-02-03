@@ -77,6 +77,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_guardduty_member",
 		},
 		{
+			Factory:  ResourceMemberDetectorFeature,
+			TypeName: "aws_guardduty_member_detector_feature",
+			Name:     "Member Detector Feature",
+		},
+		{
 			Factory:  ResourceOrganizationAdminAccount,
 			TypeName: "aws_guardduty_organization_admin_account",
 		},
