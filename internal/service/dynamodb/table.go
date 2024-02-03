@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -1795,25 +1796,6 @@ func replicaPITR(ctx context.Context, conn *dynamodb.DynamoDB, tableName string,
 	return enabled, nil
 }
 
-func replicaStream(ctx context.Context, conn *dynamodb.DynamoDB, tableName string, region string, tfVersion string) (string, string) {
-	// This does not return an error because it is attempting to add "Computed"-only information to replica - tolerating errors.
-	session, err := conns.NewSessionForRegion(&conn.Config, region, tfVersion)
-	if err != nil {
-		log.Printf("[WARN] Attempting to get replica (%s) stream information, ignoring encountered error: %s", tableName, err)
-		return "", ""
-	}
-
-	conn = dynamodb.New(session)
-
-	table, err := FindTableByName(ctx, conn, tableName)
-	if err != nil {
-		log.Printf("[WARN] When attempting to get replica (%s) stream information, ignoring encountered error: %s", tableName, err)
-		return "", ""
-	}
-
-	return aws.StringValue(table.LatestStreamArn), aws.StringValue(table.LatestStreamLabel)
-}
-
 func addReplicaPITRs(ctx context.Context, conn *dynamodb.DynamoDB, tableName string, tfVersion string, replicas []interface{}) ([]interface{}, error) {
 	// This non-standard approach is needed because PITR info for a replica
 	// must come from a region-specific connection.
@@ -1844,9 +1826,28 @@ func enrichReplicas(ctx context.Context, conn *dynamodb.DynamoDB, arn, tableName
 		}
 		replica[names.AttrARN] = newARN
 
-		streamARN, streamLabel := replicaStream(ctx, conn, tableName, replica["region_name"].(string), tfVersion)
-		replica["stream_arn"] = streamARN
-		replica["stream_label"] = streamLabel
+		session, err := conns.NewSessionForRegion(&conn.Config, replica["region_name"].(string), tfVersion)
+		if err != nil {
+			log.Printf("[WARN] Attempting to get replica (%s) stream information, ignoring encountered error: %s", tableName, err)
+			return nil, fmt.Errorf("")
+		}
+
+		conn = dynamodb.New(session)
+
+		table, err := FindTableByName(ctx, conn, tableName)
+		if err != nil {
+			log.Printf("[WARN] When attempting to get replica (%s) stream information, ignoring encountered error: %s", tableName, err)
+			return nil, fmt.Errorf("")
+		}
+
+		replica["stream_arn"] = aws.StringValue(table.LatestStreamArn)
+		replica["stream_label"] = aws.StringValue(table.LatestStreamLabel)
+
+		if table.SSEDescription != nil {
+			log.Printf("[WARN] in enrichReplicas setting KMS key arn")
+			replica[names.AttrKMSKeyARN] = aws.StringValue(table.SSEDescription.KMSMasterKeyArn)
+		}
+
 		replicas[i] = replica
 	}
 
