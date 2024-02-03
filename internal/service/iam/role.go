@@ -47,7 +47,7 @@ import (
 const (
 	roleNameMaxLen       = 64
 	roleNamePrefixMaxLen = roleNameMaxLen - id.UniqueIDSuffixLength
-	ResNameRole       = "IAM Role"
+	ResNameRole          = "IAM Role"
 )
 
 // @FrameworkResource(name="Role")
@@ -67,6 +67,7 @@ func (r *resourceIamRole) Metadata(_ context.Context, request resource.MetadataR
 	response.TypeName = "aws_iam_role"
 }
 
+// TODO: move this to Modify plan if both aren't empty
 func EditPlanForSameReorderedPolicies() planmodifier.Map {
 	return editPlanForSameReorderedPolicies{}
 }
@@ -415,7 +416,7 @@ func (r *resourceIamRole) UpgradeState(ctx context.Context) map[int64]resource.S
 func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
 	fmt.Println("Top of state upgrade")
 	type resourceIamRoleDataV0 struct {
-		ARN                 types.String `tfsdk:"arn"`
+        ARN                 types.String `tfsdk:"arn"`
 		AssumeRolePolicy    types.String `tfsdk:"assume_role_policy"`
 		CreateDate          types.String `tfsdk:"create_date"`
 		Description         types.String `tfsdk:"description"`
@@ -437,7 +438,6 @@ func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.Upgrade
 
 	resp.Diagnostics.Append(req.State.Get(ctx, &roleDataV0)...)
 	if resp.Diagnostics.HasError() {
-		fmt.Println("There was an error :(")
 		return
 	}
 
@@ -452,9 +452,13 @@ func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.Upgrade
 		ID:                  roleDataV0.ID,
 		MaxSessionDuration:  roleDataV0.MaxSessionDuration,
 		Name:                roleDataV0.Name,
+		NamePrefix:          types.StringNull(),
 		Path:                roleDataV0.Path,
 		UniqueID:            roleDataV0.UniqueID,
-		NamePrefix:          roleDataV0.NamePrefix,
+		// NamePrefix:          roleDataV0.NamePrefix,
+		ManagedPolicyArns:   types.SetNull(fwtypes.ARNType),
+		InlinePolicies:      types.MapNull(fwtypes.IAMPolicyType),
+		PermissionsBoundary: fwtypes.ARNNull(),
 		Tags:                roleDataV0.Tags,
 		TagsAll:             roleDataV0.TagsAll,
 	}
@@ -462,42 +466,12 @@ func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.Upgrade
 	// TODO: fix this later?
 	// roleDataCurrent.NamePrefix = types.StringNull()
 
-	// if roleDataV0.NamePrefix.ValueString() == "" {
-	// roleDataCurrent.NamePrefix = types.StringNull()
-	// // fmt.Println("Name prefix is empty!")
-	// }
-
-	// TODO: do something with this once I get to that test
-	// var policyARNs []string
-	// roleDataCurrent.ManagedPolicyArns = flex.FlattenFrameworkStringValueSet(ctx, policyARNs)
-	roleDataCurrent.ManagedPolicyArns = types.SetNull(fwtypes.ARNType)
-
-	// TODO: do something with this once I get to that test
-	// temp := make(map[string]string)
-	// roleDataCurrent.InlinePolicies = flex.FlattenFrameworkStringValueMap(ctx, temp)
-	roleDataCurrent.InlinePolicies = types.MapNull(fwtypes.IAMPolicyType)
-
-	// TODO: update this to be string is empty check?
-	if roleDataV0.PermissionsBoundary.ValueString() != "" {
-		roleDataCurrent.PermissionsBoundary = fwtypes.ARNValue(roleDataV0.PermissionsBoundary.ValueString())
-	} else {
-		roleDataCurrent.PermissionsBoundary = fwtypes.ARNNull()
-	}
-
-	// var managedPolicies []string
-	// resp.Diagnostics.Append(plan.ManagedPolicyArns.ElementsAs(ctx, &managedPolicies, false)...)
-	// if resp.Diagnostics.HasError() {
-	// return
-	// }
-
-	// if jobQueueDataV0.SchedulingPolicyARN.ValueString() == "" {
-	// jobQueueDataV2.SchedulingPolicyARN = fwtypes.ARNNull()
-	// }
-
 	diags := resp.State.Set(ctx, roleDataCurrent)
 	resp.Diagnostics.Append(diags...)
 	fmt.Println("Bottom of state upgrade")
 }
+
+// TODO: maybe refreshFromOutput
 
 func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().IAMConn(ctx)
