@@ -2276,13 +2276,16 @@ func sweepVPCEndpointServices(region string) error {
 		}
 
 		for _, v := range page.ServiceConfigurations {
-			if aws.StringValue(v.ServiceState) == ec2.ServiceStateDeleted {
+			id := aws.StringValue(v.ServiceId)
+
+			if state := aws.StringValue(v.ServiceState); state == ec2.ServiceStateDeleted {
+				log.Printf("[INFO] Skipping EC2 VPC Endpoint Service %s: ServiceState=%s", id, state)
 				continue
 			}
 
 			r := ResourceVPCEndpointService()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ServiceId))
+			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -2324,13 +2327,21 @@ func sweepVPCEndpoints(region string) error {
 		}
 
 		for _, v := range page.VpcEndpoints {
-			if aws.StringValue(v.State) == vpcEndpointStateDeleted {
+			id := aws.StringValue(v.VpcEndpointId)
+
+			if state := aws.StringValue(v.State); state == vpcEndpointStateDeleted {
+				log.Printf("[INFO] Skipping EC2 VPC Endpoint %s: State=%s", id, state)
+				continue
+			}
+
+			if requesterManaged := aws.BoolValue(v.RequesterManaged); requesterManaged {
+				log.Printf("[INFO] Skipping EC2 VPC Endpoint %s: RequesterManaged=%t", id, requesterManaged)
 				continue
 			}
 
 			r := ResourceVPCEndpoint()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.VpcEndpointId))
+			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
