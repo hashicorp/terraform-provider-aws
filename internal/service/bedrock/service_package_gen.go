@@ -45,7 +45,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
-			Factory: newResourceModelInvocationLoggingConfiguration,
+			Factory: newModelInvocationLoggingConfigurationResource,
 			Name:    "Model Invocation Logging Configuration",
 		},
 	}
