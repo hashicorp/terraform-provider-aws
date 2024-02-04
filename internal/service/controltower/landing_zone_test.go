@@ -169,7 +169,7 @@ const landingZoneVersion = "3.3"
 
 var testAccLandingZoneConfig_basic = fmt.Sprintf(`
 resource "aws_controltower_landing_zone" "test" {
-  manifest_json = jsondecode(file("${path.module}/fixtures/LandingZoneManifest.json"))
+  manifest_json = file("${path.module}/test-fixtures/LandingZoneManifest.json")
 
   version = %[2]q
 }
@@ -178,7 +178,7 @@ resource "aws_controltower_landing_zone" "test" {
 func testAccLandingZoneConfig_tags1(tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_controltower_landing_zone" "test" {
-  manifest_json = jsondecode(file("${path.module}/fixtures/LandingZoneManifest.json"))
+  manifest_json = jfile("${path.module}/test-fixtures/LandingZoneManifest.json")
 
   version = %[2]q
 
@@ -192,7 +192,7 @@ resource "aws_controltower_landing_zone" "test" {
 func testAccLandingZoneConfig_tags2(tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_controltower_landing_zone" "test" {
-  manifest_json = jsondecode(file("${path.module}/fixtures/LandingZoneManifest.json"))
+  manifest_json = file("${path.module}/test-fixtures/LandingZoneManifest.json")
 
   version = %[2]q
 
