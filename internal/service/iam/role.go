@@ -452,14 +452,13 @@ func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.Upgrade
 		ID:                  roleDataV0.ID,
 		MaxSessionDuration:  roleDataV0.MaxSessionDuration,
 		Name:                roleDataV0.Name,
-		NamePrefix:          types.StringNull(),
+		NamePrefix:          roleDataV0.NamePrefix,
 		Path:                roleDataV0.Path,
 		UniqueID:            roleDataV0.UniqueID,
-		// NamePrefix:          roleDataV0.NamePrefix,
-		ManagedPolicyArns: types.SetNull(fwtypes.ARNType),
-		InlinePolicies:    types.MapNull(fwtypes.IAMPolicyType),
-		Tags:              roleDataV0.Tags,
-		TagsAll:           roleDataV0.TagsAll,
+		ManagedPolicyArns:   types.SetNull(fwtypes.ARNType),
+		InlinePolicies:      types.MapNull(fwtypes.IAMPolicyType),
+		Tags:                roleDataV0.Tags,
+		TagsAll:             roleDataV0.TagsAll,
 	}
 
 	if roleDataV0.PermissionsBoundary.ValueString() == "" {
@@ -467,6 +466,24 @@ func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.Upgrade
 	} else {
 		roleDataCurrent.PermissionsBoundary = fwtypes.ARNValue(roleDataV0.PermissionsBoundary.ValueString())
 	}
+
+	type inlinePolicyData struct {
+		Name   types.String `tfsdk:"name"`
+		Policy types.String `tfsdk:"policy"`
+	}
+
+	var inlinePolicies []inlinePolicyData
+	resp.Diagnostics.Append(roleDataV0.InlinePolicy.ElementsAs(ctx, &inlinePolicies, false)...)
+	if resp.Diagnostics.HasError() {
+		fmt.Println("Hitting error of inlinePolicyData")
+		return
+	}
+
+	inlinePoliciesMap := make(map[string]string)
+	for _, inlinePolicy := range inlinePolicies {
+		inlinePoliciesMap[inlinePolicy.Name.ValueString()] = inlinePolicy.Policy.ValueString()
+	}
+	roleDataCurrent.InlinePolicies = flex.FlattenFrameworkStringValueMap(ctx, inlinePoliciesMap)
 
 	diags := resp.State.Set(ctx, roleDataCurrent)
 	resp.Diagnostics.Append(diags...)
@@ -531,8 +548,9 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	roleName := aws.StringValue(output.Role.RoleName)
 
 	if !plan.InlinePolicies.IsNull() && !plan.InlinePolicies.IsUnknown() {
-		inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, plan.InlinePolicies)
-		policies := expandRoleInlinePolicies(roleName, inline_policies_map)
+		inlinePoliciesMap := flex.ExpandFrameworkStringValueMap(ctx, plan.InlinePolicies)
+
+		policies := expandRoleInlinePolicies(roleName, inlinePoliciesMap)
 		if err := r.addRoleInlinePolicies(ctx, policies); err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameRole, name, nil),

@@ -146,6 +146,47 @@ func TestAccIAMRole_description(t *testing.T) {
 	})
 }
 
+func TestAccIAMRole_MigrateFromPluginSDK_description(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.35.0",
+					},
+				},
+				Config: testAccRoleConfig_description(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "path", "/"),
+					resource.TestCheckResourceAttr(resourceName, "description", "This 1s a D3scr!pti0n with weird content: &@90ë\"'{«¡Çø}"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				// NOTE: Have to update docs to reflect this because giant issue
+				// Can't not use PlanOnly anymore with terraform-plugin-testing
+				// https://github.com/hashicorp/terraform-plugin-testing/issues/256
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Config: testAccRoleConfig_description(rName),
+			},
+		},
+	})
+}
+
 func TestAccIAMRole_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf iam.Role
@@ -202,7 +243,51 @@ func TestAccIAMRole_namePrefix(t *testing.T) {
 	})
 }
 
-// TODO: name prefix test
+// TODO: name prefix migration test
+func TestAccIAMRole_MigrateFromPluginSDK_namePrefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf iam.Role
+	resourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.35.0",
+					},
+				},
+				Config: testAccRoleConfig_namePrefix(acctest.ResourcePrefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", acctest.ResourcePrefix),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", acctest.ResourcePrefix),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				// NOTE: Have to update docs to reflect this because giant issue
+				// Can't not use PlanOnly anymore with terraform-plugin-testing
+				// https://github.com/hashicorp/terraform-plugin-testing/issues/256
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Config: testAccRoleConfig_namePrefix(acctest.ResourcePrefix),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", acctest.ResourcePrefix),
+					resource.TestCheckResourceAttr(resourceName, "name_prefix", acctest.ResourcePrefix),
+				),
+			},
+		},
+	})
+}
 
 func TestAccIAMRole_testNameChange(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -818,7 +903,7 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 
 func TestAccIAMRole_MigrateFromPluginSDK_InlinePolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.Role
+	var role iam.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
@@ -837,15 +922,10 @@ func TestAccIAMRole_MigrateFromPluginSDK_InlinePolicy(t *testing.T) {
 				},
 				Config: testAccRoleConfig_policyInlineLegacy(rName, policyName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "path", "/"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "force_detach_policies", "false"),
+					testAccCheckRoleExists(ctx, resourceName, &role),
 					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 				),
 			},
 			{
@@ -859,6 +939,12 @@ func TestAccIAMRole_MigrateFromPluginSDK_InlinePolicy(t *testing.T) {
 					},
 				},
 				Config: testAccRoleConfig_policyInline(rName, policyName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+				),
 			},
 		},
 	})
