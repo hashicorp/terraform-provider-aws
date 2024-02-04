@@ -456,15 +456,17 @@ func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.Upgrade
 		Path:                roleDataV0.Path,
 		UniqueID:            roleDataV0.UniqueID,
 		// NamePrefix:          roleDataV0.NamePrefix,
-		ManagedPolicyArns:   types.SetNull(fwtypes.ARNType),
-		InlinePolicies:      types.MapNull(fwtypes.IAMPolicyType),
-		PermissionsBoundary: fwtypes.ARNNull(),
-		Tags:                roleDataV0.Tags,
-		TagsAll:             roleDataV0.TagsAll,
+		ManagedPolicyArns: types.SetNull(fwtypes.ARNType),
+		InlinePolicies:    types.MapNull(fwtypes.IAMPolicyType),
+		Tags:              roleDataV0.Tags,
+		TagsAll:           roleDataV0.TagsAll,
 	}
 
-	// TODO: fix this later?
-	// roleDataCurrent.NamePrefix = types.StringNull()
+	if roleDataV0.PermissionsBoundary.ValueString() == "" {
+		roleDataCurrent.PermissionsBoundary = fwtypes.ARNNull()
+	} else {
+		roleDataCurrent.PermissionsBoundary = fwtypes.ARNValue(roleDataV0.PermissionsBoundary.ValueString())
+	}
 
 	diags := resp.State.Set(ctx, roleDataCurrent)
 	resp.Diagnostics.Append(diags...)

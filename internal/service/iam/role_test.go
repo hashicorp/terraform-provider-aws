@@ -87,6 +87,9 @@ func TestAccIAMRole_MigrateFromPluginSDK_basic(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				// NOTE: Have to update docs to reflect this because giant issue
+				// Can't not use PlanOnly anymore with terraform-plugin-testing
+				// https://github.com/hashicorp/terraform-plugin-testing/issues/256
 				ConfigPlanChecks: resource.ConfigPlanChecks{
 					PreApply: []plancheck.PlanCheck{
 						plancheck.ExpectEmptyPlan(),
@@ -571,11 +574,15 @@ func TestAccIAMRole_MigrateFromPluginSDK_MaxSessionDuration(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccRoleConfig_maxSessionDuration(rName, 3700),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "max_session_duration", "3700"),
-				),
+				// NOTE: Have to update docs to reflect this because giant issue
+				// Can't not use PlanOnly anymore with terraform-plugin-testing
+				// https://github.com/hashicorp/terraform-plugin-testing/issues/256
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Config: testAccRoleConfig_maxSessionDuration(rName, 3700),
 			},
 		},
 	})
@@ -702,12 +709,15 @@ func TestAccIAMRole_MigrateFromPluginSDK_PermissionBoundary(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
-					testAccCheckRolePermissionsBoundary(&role, permissionsBoundary1),
-				),
+				// NOTE: Have to update docs to reflect this because giant issue
+				// Can't not use PlanOnly anymore with terraform-plugin-testing
+				// https://github.com/hashicorp/terraform-plugin-testing/issues/256
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
 			},
 		},
 	})
