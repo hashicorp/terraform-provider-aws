@@ -35,6 +35,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)AWS"
+            - pattern-not-regex: "[Aa]wsSdkId"
     severity: WARNING
   - id: aws-in-var-name
     languages:
@@ -53,6 +54,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)AWS"
+            - pattern-not-regex: "[Aa]wsSdkId"
     severity: WARNING
 {{- range $i, $s := .BadCaps }}
   - id: caps{{- $i }}-in-func-name
@@ -68,6 +70,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "({{ $s }})"
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: caps{{- $i }}-in-const-name
     languages:
@@ -112,6 +115,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)EC2"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: ec2-in-const-name
     languages:

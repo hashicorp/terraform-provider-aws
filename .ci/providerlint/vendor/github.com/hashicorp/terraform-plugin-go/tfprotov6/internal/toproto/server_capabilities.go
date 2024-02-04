@@ -13,8 +13,11 @@ func ServerCapabilities(in *tfprotov6.ServerCapabilities) *tfplugin6.ServerCapab
 		return nil
 	}
 
-	return &tfplugin6.ServerCapabilities{
+	resp := &tfplugin6.ServerCapabilities{
 		GetProviderSchemaOptional: in.GetProviderSchemaOptional,
+		MoveResourceState:         in.MoveResourceState,
 		PlanDestroy:               in.PlanDestroy,
 	}
+
+	return resp
 }
