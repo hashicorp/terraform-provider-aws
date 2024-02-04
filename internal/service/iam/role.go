@@ -416,7 +416,7 @@ func (r *resourceIamRole) UpgradeState(ctx context.Context) map[int64]resource.S
 func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
 	fmt.Println("Top of state upgrade")
 	type resourceIamRoleDataV0 struct {
-        ARN                 types.String `tfsdk:"arn"`
+		ARN                 types.String `tfsdk:"arn"`
 		AssumeRolePolicy    types.String `tfsdk:"assume_role_policy"`
 		CreateDate          types.String `tfsdk:"create_date"`
 		Description         types.String `tfsdk:"description"`
