@@ -19,9 +19,9 @@ import (
 
 // Custom S3 tag service update functions using the same format as generated code.
 
-// BucketListTags lists S3 bucket tags.
+// bucketListTags lists S3 bucket tags.
 // The identifier is the bucket name.
-func BucketListTags(ctx context.Context, conn *s3.Client, identifier string, optFns ...func(*s3.Options)) (tftags.KeyValueTags, error) {
+func bucketListTags(ctx context.Context, conn *s3.Client, identifier string, optFns ...func(*s3.Options)) (tftags.KeyValueTags, error) {
 	input := &s3.GetBucketTaggingInput{
 		Bucket: aws.String(identifier),
 	}
@@ -42,14 +42,14 @@ func BucketListTags(ctx context.Context, conn *s3.Client, identifier string, opt
 	return keyValueTags(ctx, output.TagSet), nil
 }
 
-// BucketUpdateTags updates S3 bucket tags.
+// bucketUpdateTags updates S3 bucket tags.
 // The identifier is the bucket name.
-func BucketUpdateTags(ctx context.Context, conn *s3.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*s3.Options)) error {
+func bucketUpdateTags(ctx context.Context, conn *s3.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*s3.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
 	// We need to also consider any existing ignored tags.
-	allTags, err := BucketListTags(ctx, conn, identifier, optFns...)
+	allTags, err := bucketListTags(ctx, conn, identifier, optFns...)
 
 	if err != nil {
 		return fmt.Errorf("listing resource tags (%s): %w", identifier, err)
@@ -85,8 +85,8 @@ func BucketUpdateTags(ctx context.Context, conn *s3.Client, identifier string, o
 	return nil
 }
 
-// ObjectListTags lists S3 object tags.
-func ObjectListTags(ctx context.Context, conn *s3.Client, bucket, key string, optFns ...func(*s3.Options)) (tftags.KeyValueTags, error) {
+// objectListTags lists S3 object tags.
+func objectListTags(ctx context.Context, conn *s3.Client, bucket, key string, optFns ...func(*s3.Options)) (tftags.KeyValueTags, error) {
 	input := &s3.GetObjectTaggingInput{
 		Bucket: aws.String(bucket),
 		Key:    aws.String(key),
@@ -105,13 +105,13 @@ func ObjectListTags(ctx context.Context, conn *s3.Client, bucket, key string, op
 	return keyValueTags(ctx, output.TagSet), nil
 }
 
-// ObjectUpdateTags updates S3 object tags.
-func ObjectUpdateTags(ctx context.Context, conn *s3.Client, bucket, key string, oldTagsMap, newTagsMap any, optFns ...func(*s3.Options)) error {
+// objectUpdateTags updates S3 object tags.
+func objectUpdateTags(ctx context.Context, conn *s3.Client, bucket, key string, oldTagsMap, newTagsMap any, optFns ...func(*s3.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
 	// We need to also consider any existing ignored tags.
-	allTags, err := ObjectListTags(ctx, conn, bucket, key, optFns...)
+	allTags, err := objectListTags(ctx, conn, bucket, key, optFns...)
 
 	if err != nil {
 		return fmt.Errorf("listing resource tags (%s/%s): %w", bucket, key, err)

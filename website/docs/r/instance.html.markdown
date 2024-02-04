@@ -411,6 +411,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN of the instance.
 * `capacity_reservation_specification` - Capacity reservation specification of the instance.
+* `id` - ID of the instance.
 * `instance_state` - State of the instance. One of: `pending`, `running`, `shutting-down`, `terminated`, `stopping`, `stopped`. See [Instance Lifecycle](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-lifecycle.html) for more information.
 * `outpost_arn` - ARN of the Outpost the instance is assigned to.
 * `password_data` - Base-64 encoded encrypted password data for the instance. Useful for getting the administrator password for instances running Microsoft Windows. This attribute is only exported if `get_password_data` is true. Note that this encrypted value will be stored in the state file, as with all exported attributes. See [GetPasswordData](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_GetPasswordData.html) for more information.

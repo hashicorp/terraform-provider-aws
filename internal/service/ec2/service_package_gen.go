@@ -542,6 +542,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceClientVPNAuthorizationRule,
 			TypeName: "aws_ec2_client_vpn_authorization_rule",
+			Name:     "Client VPN Authorization Rule",
 		},
 		{
 			Factory:  ResourceClientVPNEndpoint,
@@ -554,10 +555,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceClientVPNNetworkAssociation,
 			TypeName: "aws_ec2_client_vpn_network_association",
+			Name:     "Client VPN Network Association",
 		},
 		{
 			Factory:  ResourceClientVPNRoute,
 			TypeName: "aws_ec2_client_vpn_route",
+			Name:     "Client VPN Route",
 		},
 		{
 			Factory:  ResourceFleet,
@@ -647,6 +650,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceTrafficMirrorFilterRule,
 			TypeName: "aws_ec2_traffic_mirror_filter_rule",
+			Name:     "Traffic Mirror Filter Rule",
 		},
 		{
 			Factory:  ResourceTrafficMirrorSession,
@@ -1033,6 +1037,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceVPCEndpointConnectionNotification,
 			TypeName: "aws_vpc_endpoint_connection_notification",
+			Name:     "VPC Endpoint Connection Notification",
 		},
 		{
 			Factory:  ResourceVPCEndpointPolicy,

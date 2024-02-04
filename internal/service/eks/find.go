@@ -195,7 +195,7 @@ func FindOIDCIdentityProviderConfigByClusterNameAndConfigName(ctx context.Contex
 		ClusterName: aws.String(clusterName),
 		IdentityProviderConfig: &types.IdentityProviderConfig{
 			Name: aws.String(configName),
-			Type: aws.String(IdentityProviderConfigTypeOIDC),
+			Type: aws.String(identityProviderConfigTypeOIDC),
 		},
 	}
 
