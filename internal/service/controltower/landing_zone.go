@@ -98,13 +98,13 @@ func resourceLandingZoneCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
-	manifestJSON, err := structure.NormalizeJsonString(d.Get("manifest_json").(string))
+	manifest, err := json.SmithyDocumentFromString(d.Get("manifest_json").(string), document.NewLazyDocument)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &controltower.CreateLandingZoneInput{
-		Manifest: document.NewLazyDocument(manifestJSON),
+		Manifest: manifest,
 		Tags:     getTagsIn(ctx),
 		Version:  aws.String(d.Get("version").(string)),
 	}
@@ -175,14 +175,14 @@ func resourceLandingZoneUpdate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		manifestJSON, err := structure.NormalizeJsonString(d.Get("manifest_json").(string))
+		manifest, err := json.SmithyDocumentFromString(d.Get("manifest_json").(string), document.NewLazyDocument)
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input := &controltower.UpdateLandingZoneInput{
 			LandingZoneIdentifier: aws.String(d.Id()),
-			Manifest:              document.NewLazyDocument(manifestJSON),
+			Manifest:              manifest,
 			Version:               aws.String(d.Get("version").(string)),
 		}
 
