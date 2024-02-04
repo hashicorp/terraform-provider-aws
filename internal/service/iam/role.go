@@ -52,7 +52,7 @@ const (
 
 // @FrameworkResource(name="Role")
 // @Tags(identifierAttribute="id")
-func newResourceRole(_ context.Context) (resource.ResourceWithConfigure, error) {
+func NewResourceRole(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIamRole{}
 	r.SetMigratedFromPluginSDK(true)
 

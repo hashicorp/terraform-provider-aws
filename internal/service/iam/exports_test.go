@@ -5,7 +5,7 @@ package iam
 
 // Exports for use in tests only.
 var (
-	ResourceRole                  = newResourceRole
+	ResourceRole                  = NewResourceRole
 	ResourceGroupPolicyAttachment = resourceGroupPolicyAttachment
 	ResourcePolicyAttachment      = resourcePolicyAttachment
 	ResourceRolePolicyAttachment  = resourceRolePolicyAttachment

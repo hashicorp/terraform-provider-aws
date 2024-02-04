@@ -22,7 +22,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceRole,
+			Factory: NewResourceRole,
 			Name:    "Role",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
