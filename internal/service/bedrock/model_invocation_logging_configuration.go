@@ -64,7 +64,8 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 						CustomType: fwtypes.NewObjectTypeOf[cloudWatchConfigModel](ctx),
 						Attributes: map[string]schema.Attribute{
 							"log_group_name": schema.StringAttribute{
-								Required: true,
+								// Required: true,
+								Optional: true,
 							},
 							"role_arn": schema.StringAttribute{
 								CustomType: fwtypes.ARNType,
@@ -76,7 +77,8 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 								CustomType: fwtypes.NewObjectTypeOf[s3ConfigModel](ctx),
 								Attributes: map[string]schema.Attribute{
 									"bucket_name": schema.StringAttribute{
-										Required: true,
+										// Required: true,
+										Optional: true,
 									},
 									"key_prefix": schema.StringAttribute{
 										Optional: true,
@@ -89,7 +91,8 @@ func (r *resourceModelInvocationLoggingConfiguration) Schema(ctx context.Context
 						CustomType: fwtypes.NewObjectTypeOf[s3ConfigModel](ctx),
 						Attributes: map[string]schema.Attribute{
 							"bucket_name": schema.StringAttribute{
-								Required: true,
+								// Required: true,
+								Optional: true,
 							},
 							"key_prefix": schema.StringAttribute{
 								Optional: true,
