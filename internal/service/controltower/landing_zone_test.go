@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/controltower"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -26,6 +27,7 @@ func testAccLandingZone_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
+			testAccPreCheckNoLandingZone(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerEndpointID),
 		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx),
@@ -59,6 +61,7 @@ func testAccLandingZone_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
+			testAccPreCheckNoLandingZone(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -85,6 +88,7 @@ func testAccLandingZone_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
+			testAccPreCheckNoLandingZone(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerEndpointID),
 		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx),
@@ -122,6 +126,27 @@ func testAccLandingZone_tags(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccPreCheckNoLandingZone(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ControlTowerClient(ctx)
+
+	input := &controltower.ListLandingZonesInput{}
+	var n int
+	pages := controltower.NewListLandingZonesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			t.Fatalf("unexpected PreCheck error: %s", err)
+		}
+
+		n += len(page.LandingZones)
+	}
+
+	if n > 0 {
+		t.Skip("skipping since Landing Zone already exists")
+	}
 }
 
 func testAccCheckLandingZoneExists(ctx context.Context, n string) resource.TestCheckFunc {
