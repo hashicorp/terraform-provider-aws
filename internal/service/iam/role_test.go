@@ -939,12 +939,6 @@ func TestAccIAMRole_MigrateFromPluginSDK_InlinePolicy(t *testing.T) {
 					},
 				},
 				Config: testAccRoleConfig_policyInline(rName, policyName1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
-				),
 			},
 		},
 	})
@@ -967,8 +961,6 @@ func TestAccIAMRole_InlinePolicy_badJSON(t *testing.T) {
 		},
 	})
 }
-
-// TODO: So close on this, for some reason namePrefix is showing up when Plan is modified... very annoying
 
 // // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19444
 func TestAccIAMRole_InlinePolicy_ignoreOrder(t *testing.T) {
@@ -1082,7 +1074,47 @@ func TestAccIAMRole_ManagedPolicy_basic(t *testing.T) {
 	})
 }
 
-// TODO: Managed policy arns upgrade test
+func TestAccIAMRole_MigrateFromPluginSDK_ManagedPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var role iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.34.0",
+					},
+				},
+				Config: testAccRoleConfig_policyManaged(rName, policyName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				// NOTE: Have to update docs to reflect this because giant issue
+				// Can't not use PlanOnly anymore with terraform-plugin-testing
+				// https://github.com/hashicorp/terraform-plugin-testing/issues/256
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Config: testAccRoleConfig_policyManaged(rName, policyName1),
+			},
+		},
+	})
+}
 
 func TestAccIAMRole_ManagedPolicy_badARN(t *testing.T) {
 	ctx := acctest.Context(t)

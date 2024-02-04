@@ -414,7 +414,6 @@ func (r *resourceIamRole) UpgradeState(ctx context.Context) map[int64]resource.S
 
 // TODO: ok finish working on this to perform upgrade cleanly
 func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
-	fmt.Println("Top of state upgrade")
 	type resourceIamRoleDataV0 struct {
 		ARN                 types.String `tfsdk:"arn"`
 		AssumeRolePolicy    types.String `tfsdk:"assume_role_policy"`
@@ -441,8 +440,6 @@ func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.Upgrade
 		return
 	}
 
-	fmt.Println("Made it here!")
-
 	roleDataCurrent := resourceIamRoleData{
 		ARN:                 fwtypes.ARNValue(roleDataV0.ARN.ValueString()),
 		AssumeRolePolicy:    fwtypes.IAMPolicyValue(roleDataV0.AssumeRolePolicy.ValueString()),
@@ -456,7 +453,6 @@ func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.Upgrade
 		Path:                roleDataV0.Path,
 		UniqueID:            roleDataV0.UniqueID,
 		ManagedPolicyArns:   types.SetNull(fwtypes.ARNType),
-		InlinePolicies:      types.MapNull(fwtypes.IAMPolicyType),
 		Tags:                roleDataV0.Tags,
 		TagsAll:             roleDataV0.TagsAll,
 	}
@@ -475,7 +471,6 @@ func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.Upgrade
 	var inlinePolicies []inlinePolicyData
 	resp.Diagnostics.Append(roleDataV0.InlinePolicy.ElementsAs(ctx, &inlinePolicies, false)...)
 	if resp.Diagnostics.HasError() {
-		fmt.Println("Hitting error of inlinePolicyData")
 		return
 	}
 
@@ -484,10 +479,16 @@ func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.Upgrade
 		inlinePoliciesMap[inlinePolicy.Name.ValueString()] = inlinePolicy.Policy.ValueString()
 	}
 	roleDataCurrent.InlinePolicies = flex.FlattenFrameworkStringValueMap(ctx, inlinePoliciesMap)
+	var policyARNs []string
+
+	resp.Diagnostics.Append(roleDataV0.ManagedPolicyArns.ElementsAs(ctx, &policyARNs, false)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	roleDataCurrent.ManagedPolicyArns = flex.FlattenFrameworkStringValueSet(ctx, policyARNs)
 
 	diags := resp.State.Set(ctx, roleDataCurrent)
 	resp.Diagnostics.Append(diags...)
-	fmt.Println("Bottom of state upgrade")
 }
 
 // TODO: maybe refreshFromOutput
