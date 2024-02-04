@@ -146,47 +146,6 @@ func TestAccIAMRole_description(t *testing.T) {
 	})
 }
 
-func TestAccIAMRole_MigrateFromPluginSDK_description(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf iam.Role
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_iam_role.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		CheckDestroy: testAccCheckRoleDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.35.0",
-					},
-				},
-				Config: testAccRoleConfig_description(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "path", "/"),
-					resource.TestCheckResourceAttr(resourceName, "description", "This 1s a D3scr!pti0n with weird content: &@90ë\"'{«¡Çø}"),
-				),
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				// NOTE: Have to update docs to reflect this because giant issue
-				// Can't not use PlanOnly anymore with terraform-plugin-testing
-				// https://github.com/hashicorp/terraform-plugin-testing/issues/256
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
-				Config: testAccRoleConfig_description(rName),
-			},
-		},
-	})
-}
-
 func TestAccIAMRole_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf iam.Role
@@ -238,52 +197,6 @@ func TestAccIAMRole_namePrefix(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-// TODO: name prefix migration test
-func TestAccIAMRole_MigrateFromPluginSDK_namePrefix(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf iam.Role
-	resourceName := "aws_iam_role.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		CheckDestroy: testAccCheckRoleDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.35.0",
-					},
-				},
-				Config: testAccRoleConfig_namePrefix(acctest.ResourcePrefix),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", acctest.ResourcePrefix),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", acctest.ResourcePrefix),
-				),
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				// NOTE: Have to update docs to reflect this because giant issue
-				// Can't not use PlanOnly anymore with terraform-plugin-testing
-				// https://github.com/hashicorp/terraform-plugin-testing/issues/256
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
-				Config: testAccRoleConfig_namePrefix(acctest.ResourcePrefix),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-					acctest.CheckResourceAttrNameFromPrefix(resourceName, "name", acctest.ResourcePrefix),
-					resource.TestCheckResourceAttr(resourceName, "name_prefix", acctest.ResourcePrefix),
-				),
 			},
 		},
 	})
@@ -633,46 +546,6 @@ func TestAccIAMRole_maxSessionDuration(t *testing.T) {
 	})
 }
 
-func TestAccIAMRole_MigrateFromPluginSDK_MaxSessionDuration(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf iam.Role
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_iam_role.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		CheckDestroy: testAccCheckRoleDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.34.0",
-					},
-				},
-				Config: testAccRoleConfig_maxSessionDuration(rName, 3700),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "max_session_duration", "3700"),
-				),
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				// NOTE: Have to update docs to reflect this because giant issue
-				// Can't not use PlanOnly anymore with terraform-plugin-testing
-				// https://github.com/hashicorp/terraform-plugin-testing/issues/256
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
-				Config: testAccRoleConfig_maxSessionDuration(rName, 3700),
-			},
-		},
-	})
-}
-
 func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 	ctx := acctest.Context(t)
 	var role iam.Role
@@ -761,48 +634,6 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
 					testAccCheckRolePermissionsBoundary(&role, permissionsBoundary1),
 				),
-			},
-		},
-	})
-}
-
-func TestAccIAMRole_MigrateFromPluginSDK_PermissionBoundary(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var role iam.Role
-	resourceName := "aws_iam_role.test"
-	permissionsBoundary1 := fmt.Sprintf("arn:%s:iam::aws:policy/AdministratorAccess", acctest.Partition())
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		CheckDestroy: testAccCheckRoleDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.34.0",
-					},
-				},
-				Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", permissionsBoundary1),
-					testAccCheckRolePermissionsBoundary(&role, permissionsBoundary1),
-				),
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				// NOTE: Have to update docs to reflect this because giant issue
-				// Can't not use PlanOnly anymore with terraform-plugin-testing
-				// https://github.com/hashicorp/terraform-plugin-testing/issues/256
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
-				Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
 			},
 		},
 	})
@@ -1069,48 +900,6 @@ func TestAccIAMRole_ManagedPolicy_basic(t *testing.T) {
 					"managed_policy_arns.0",
 					"managed_policy_arns.#",
 				},
-			},
-		},
-	})
-}
-
-func TestAccIAMRole_MigrateFromPluginSDK_ManagedPolicy(t *testing.T) {
-	ctx := acctest.Context(t)
-	var role iam.Role
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_iam_role.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
-		CheckDestroy: testAccCheckRoleDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "5.34.0",
-					},
-				},
-				Config: testAccRoleConfig_policyManaged(rName, policyName1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
-				),
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				// NOTE: Have to update docs to reflect this because giant issue
-				// Can't not use PlanOnly anymore with terraform-plugin-testing
-				// https://github.com/hashicorp/terraform-plugin-testing/issues/256
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectEmptyPlan(),
-					},
-				},
-				Config: testAccRoleConfig_policyManaged(rName, policyName1),
 			},
 		},
 	})
