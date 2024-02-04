@@ -97,23 +97,23 @@ func (m editPlanForSameReorderedPolicies) PlanModifyMap(ctx context.Context, req
 	}
 
 	// TODO: do this more official way?
-	plan_inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, req.PlanValue)
+	planInlinePoliciesMap := flex.ExpandFrameworkStringValueMap(ctx, req.PlanValue)
 
-	if len(plan_inline_policies_map) == 0 {
+	if len(planInlinePoliciesMap) == 0 {
 		return
 	}
-	state_inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, req.StateValue)
+	stateInlinePoliciesMap := flex.ExpandFrameworkStringValueMap(ctx, req.StateValue)
 
 	// If policies match, set plan for policy to use state version so that we don't see if diff bc ordering does not matter
-	for name, plan_policy_doc := range plan_inline_policies_map {
-		if state_policy_doc, ok := state_inline_policies_map[name]; ok {
-			if verify.PolicyStringsEquivalent(plan_policy_doc, state_policy_doc) {
-				plan_inline_policies_map[name] = state_policy_doc
+	for name, planPolicyDoc := range planInlinePoliciesMap {
+		if statePolicyDoc, ok := stateInlinePoliciesMap[name]; ok {
+			if verify.PolicyStringsEquivalent(planPolicyDoc, statePolicyDoc) {
+				planInlinePoliciesMap[name] = statePolicyDoc
 			}
 		}
 	}
 
-	resp.PlanValue = flex.FlattenFrameworkStringValueMap(ctx, plan_inline_policies_map)
+	resp.PlanValue = flex.FlattenFrameworkStringValueMap(ctx, planInlinePoliciesMap)
 }
 
 func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
@@ -182,17 +182,6 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				// validRolePolicyName,
 				// ),
 				// },
-				// "policy": {
-				// Type:                  schema.TypeString,
-				// Optional:              true, // semantically required but syntactically optional to allow empty inline_policy
-				// ValidateFunc:          verify.ValidIAMPolicyJSON,
-				// DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				// DiffSuppressOnRefresh: true,
-				// StateFunc: func(v interface{}) string {
-				// json, _ := verify.LegacyPolicyNormalize(v)
-				// return json
-				// },
-				// },
 			},
 			"managed_policy_arns": schema.SetAttribute{
 				Optional:    true,
@@ -257,8 +246,6 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			"permissions_boundary": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
-				// Computed:   true,
-				// Default:    stringdefault.StaticString(""),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -303,7 +290,6 @@ func oldSDKRoleSchema(ctx context.Context) schema.Schema {
 			},
 			"assume_role_policy": schema.StringAttribute{
 				Required: true,
-				// TODO Validate,
 			},
 			"create_date": schema.StringAttribute{
 				Computed: true,
@@ -320,7 +306,6 @@ func oldSDKRoleSchema(ctx context.Context) schema.Schema {
 				Optional: true,
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
-				// TODO Default:false,
 			},
 			"id": framework.IDAttribute(),
 			"managed_policy_arns": schema.SetAttribute{
@@ -533,10 +518,6 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	}
 
 	output, err := retryCreateRole(ctx, conn, input)
-
-	// TODO: So this needs tags... do we need on resourceIamRoleData?
-	// if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-	// input.Tags = nil
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -765,8 +746,8 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 		}
 
 		var configPoliciesList []*iam.PutRolePolicyInput
-		inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, state.InlinePolicies)
-		configPoliciesList = expandRoleInlinePolicies(aws.StringValue(role.RoleName), inline_policies_map)
+		inlinePoliciesMap := flex.ExpandFrameworkStringValueMap(ctx, state.InlinePolicies)
+		configPoliciesList = expandRoleInlinePolicies(aws.StringValue(role.RoleName), inlinePoliciesMap)
 
 		if !inlinePoliciesEquivalent(inlinePolicies, configPoliciesList) {
 			state.InlinePolicies = flex.FlattenFrameworkStringValueMap(ctx, flattenRoleInlinePolicies(inlinePolicies))
@@ -911,45 +892,45 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	if !plan.InlinePolicies.Equal(state.InlinePolicies) && inlinePoliciesActualDiff(ctx, &plan, &state) {
-		old_inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, state.InlinePolicies)
-		new_inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, plan.InlinePolicies)
+		oldInlinePoliciesMap := flex.ExpandFrameworkStringValueMap(ctx, state.InlinePolicies)
+		newInlinePoliciesMap := flex.ExpandFrameworkStringValueMap(ctx, plan.InlinePolicies)
 
-		var remove_policy_names []string
-		for k := range old_inline_policies_map {
-			if _, ok := new_inline_policies_map[k]; !ok {
-				remove_policy_names = append(remove_policy_names, k)
+		var removePolicyNames []string
+		for k := range oldInlinePoliciesMap {
+			if _, ok := newInlinePoliciesMap[k]; !ok {
+				removePolicyNames = append(removePolicyNames, k)
 			}
 		}
 
 		// need set like object to store policy names we want to add
-		add_policy_names := make(map[string]int64)
-		for k, v := range new_inline_policies_map {
-			val, ok := old_inline_policies_map[k]
+		addPolicyNames := make(map[string]int64)
+		for k, v := range newInlinePoliciesMap {
+			val, ok := oldInlinePoliciesMap[k]
 			// If the key exists
 			if !ok {
-				add_policy_names[k] = 0
+				addPolicyNames[k] = 0
 				continue
 			}
 
 			if !verify.PolicyStringsEquivalent(v, val) {
-				add_policy_names[k] = 0
+				addPolicyNames[k] = 0
 			}
 		}
 
 		roleName := state.Name.ValueString()
-		nsPolicies := expandRoleInlinePolicies(roleName, new_inline_policies_map)
+		nsPolicies := expandRoleInlinePolicies(roleName, newInlinePoliciesMap)
 
 		// getting policy objects we want to add based on add_policy_names map
-		var add_policies []*iam.PutRolePolicyInput
+		var addPolicies []*iam.PutRolePolicyInput
 		for _, val := range nsPolicies {
-			if _, ok := add_policy_names[*val.PolicyName]; ok {
-				add_policies = append(add_policies, val)
+			if _, ok := addPolicyNames[*val.PolicyName]; ok {
+				addPolicies = append(addPolicies, val)
 			} else {
 			}
 		}
 
 		// Always add before delete
-		if err := r.addRoleInlinePolicies(ctx, add_policies); err != nil {
+		if err := r.addRoleInlinePolicies(ctx, addPolicies); err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.ID.String(), plan.InlinePolicies.String(), err),
 				err.Error(),
@@ -957,7 +938,7 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 			return
 		}
 
-		if err := deleteRoleInlinePolicies(ctx, conn, roleName, remove_policy_names); err != nil {
+		if err := deleteRoleInlinePolicies(ctx, conn, roleName, removePolicyNames); err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.IAM, create.ErrActionUpdating, state.ID.String(), plan.InlinePolicies.String(), err),
 				err.Error(),
@@ -1359,11 +1340,11 @@ func (r resourceIamRole) addRoleInlinePolicies(ctx context.Context, policies []*
 func inlinePoliciesActualDiff(ctx context.Context, plan *resourceIamRoleData, state *resourceIamRoleData) bool {
 	roleName := state.Name.ValueString()
 
-	old_inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, state.InlinePolicies)
-	new_inline_policies_map := flex.ExpandFrameworkStringValueMap(ctx, plan.InlinePolicies)
+	oldInlinePoliciesMap := flex.ExpandFrameworkStringValueMap(ctx, state.InlinePolicies)
+	newInlinePoliciesMap := flex.ExpandFrameworkStringValueMap(ctx, plan.InlinePolicies)
 
-	osPolicies := expandRoleInlinePolicies(roleName, old_inline_policies_map)
-	nsPolicies := expandRoleInlinePolicies(roleName, new_inline_policies_map)
+	osPolicies := expandRoleInlinePolicies(roleName, oldInlinePoliciesMap)
+	nsPolicies := expandRoleInlinePolicies(roleName, newInlinePoliciesMap)
 
 	return !inlinePoliciesEquivalent(nsPolicies, osPolicies)
 }
