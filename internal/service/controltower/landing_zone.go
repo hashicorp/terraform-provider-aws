@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/json"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -153,7 +154,17 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("drift_status", nil)
 	}
 	d.Set("latest_available_version", landingZone.LatestAvailableVersion)
-	d.Set("manifest_json", landingZone.Manifest)
+	if landingZone.Manifest != nil {
+		v, err := json.SmithyDocumentToString(landingZone.Manifest)
+
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		d.Set("manifest_json", v)
+	} else {
+		d.Set("manifest_json", nil)
+	}
 	d.Set("version", landingZone.Version)
 
 	return diags
