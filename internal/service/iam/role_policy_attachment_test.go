@@ -98,33 +98,32 @@ func TestAccIAMRolePolicyAttachment_disappears(t *testing.T) {
 	})
 }
 
-// TODO: fix later
-// func TestAccIAMRolePolicyAttachment_Disappears_role(t *testing.T) {
-// ctx := acctest.Context(t)
-// roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// resourceName := "aws_iam_role_policy_attachment.test1"
-// iamRoleResourceName := "aws_iam_role.test"
+func TestAccIAMRolePolicyAttachment_Disappears_role(t *testing.T) {
+	ctx := acctest.Context(t)
+	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role_policy_attachment.test1"
+	iamRoleResourceName := "aws_iam_role.test"
 
-// resource.ParallelTest(t, resource.TestCase{
-// PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-// ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// CheckDestroy:             testAccCheckRolePolicyAttachmentDestroy(ctx),
-// Steps: []resource.TestStep{
-// {
-// Config: testAccRolePolicyAttachmentConfig_attach(roleName, policyName),
-// Check: resource.ComposeTestCheckFunc(
-// testAccCheckRolePolicyAttachmentExists(ctx, resourceName),
-// // DeleteConflict: Cannot delete entity, must detach all policies first.
-// acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRolePolicyAttachment(), resourceName),
-// acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRole(), iamRoleResourceName),
-// ),
-// ExpectNonEmptyPlan: true,
-// },
-// },
-// })
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRolePolicyAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRolePolicyAttachmentConfig_attach(roleName, policyName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRolePolicyAttachmentExists(ctx, resourceName),
+					// DeleteConflict: Cannot delete entity, must detach all policies first.
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRolePolicyAttachment(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRole, iamRoleResourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 
 func testAccCheckRolePolicyAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
