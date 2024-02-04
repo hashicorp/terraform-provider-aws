@@ -18,6 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
@@ -69,8 +71,15 @@ func resourceLandingZone() *schema.Resource {
 				Computed: true,
 			},
 			"manifest_json": {
-				Type:     schema.TypeString,
-				Required: true,
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := structure.NormalizeJsonString(v)
+					return json
+				},
 			},
 			"version": {
 				Type:     schema.TypeString,
@@ -88,9 +97,13 @@ func resourceLandingZoneCreate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
-	manifestJson := d.Get("manifest_json").(string)
+	manifestJSON, err := structure.NormalizeJsonString(d.Get("manifest_json").(string))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	input := &controltower.CreateLandingZoneInput{
-		Manifest: document.NewLazyDocument(manifestJson),
+		Manifest: document.NewLazyDocument(manifestJSON),
 		Tags:     getTagsIn(ctx),
 		Version:  aws.String(d.Get("version").(string)),
 	}
@@ -150,11 +163,15 @@ func resourceLandingZoneUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
-	manifestJson := d.Get("manifest_json").(string)
 	if d.HasChangesExcept("tags", "tags_all") {
+		manifestJSON, err := structure.NormalizeJsonString(d.Get("manifest_json").(string))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
 		input := &controltower.UpdateLandingZoneInput{
 			LandingZoneIdentifier: aws.String(d.Id()),
-			Manifest:              document.NewLazyDocument(manifestJson),
+			Manifest:              document.NewLazyDocument(manifestJSON),
 			Version:               aws.String(d.Get("version").(string)),
 		}
 
