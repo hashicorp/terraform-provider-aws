@@ -850,18 +850,15 @@ func TestAccIAMRole_MigrateFromPluginSDK_InlinePolicy(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccRoleConfig_policyInline(rName, policyName1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "path", "/"),
-					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "description", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
-					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "force_detach_policies", "false"),
-					resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "1"),
-				),
+				// NOTE: Have to update docs to reflect this because giant issue
+				// Can't not use PlanOnly anymore with terraform-plugin-testing
+				// https://github.com/hashicorp/terraform-plugin-testing/issues/256
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Config: testAccRoleConfig_policyInline(rName, policyName1),
 			},
 		},
 	})
