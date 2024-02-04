@@ -140,11 +140,7 @@ func resourceLandingZoneRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("drift_status", nil)
 	}
 	d.Set("latest_available_version", landingZone.LatestAvailableVersion)
-	if landingZone.Manifest != nil {
-		d.Set("manifest_json", landingZone.Manifest)
-	} else {
-		d.Set("manifest_json", nil)
-	}
+	d.Set("manifest_json", landingZone.Manifest)
 	d.Set("version", landingZone.Version)
 
 	return diags
