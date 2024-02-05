@@ -146,6 +146,10 @@ message ServerCapabilities {
     // normally, and the caller can used a cached copy of the provider's
     // schema.
     bool get_provider_schema_optional = 2;
+
+    // The move_resource_state capability signals that a provider supports the
+    // MoveResourceState RPC.
+    bool move_resource_state = 3;
 }
 
 message Function {
@@ -230,7 +234,7 @@ service Provider {
     rpc PlanResourceChange(PlanResourceChange.Request) returns (PlanResourceChange.Response);
     rpc ApplyResourceChange(ApplyResourceChange.Request) returns (ApplyResourceChange.Response);
     rpc ImportResourceState(ImportResourceState.Request) returns (ImportResourceState.Response);
-
+    rpc MoveResourceState(MoveResourceState.Request) returns (MoveResourceState.Response);
     rpc ReadDataSource(ReadDataSource.Request) returns (ReadDataSource.Response);
 
     // Functions
@@ -464,6 +468,42 @@ message ImportResourceState {
     message Response {
         repeated ImportedResource imported_resources = 1;
         repeated Diagnostic diagnostics = 2;
+    }
+}
+
+message MoveResourceState {
+    message Request {
+        // The address of the provider the resource is being moved from.
+        string source_provider_address = 1;
+
+        // The resource type that the resource is being moved from.
+        string source_type_name = 2;
+
+        // The schema version of the resource type that the resource is being
+        // moved from.
+        int64 source_schema_version = 3;
+
+        // The raw state of the resource being moved. Only the json field is
+        // populated, as there should be no legacy providers using the flatmap
+        // format that support newly introduced RPCs.
+        RawState source_state = 4;
+
+        // The resource type that the resource is being moved to.
+        string target_type_name = 5;
+
+        // The private state of the resource being moved.
+        bytes source_private = 6;
+    }
+
+    message Response {
+        // The state of the resource after it has been moved.
+        DynamicValue target_state = 1;
+
+        // Any diagnostics that occurred during the move.
+        repeated Diagnostic diagnostics = 2;
+
+        // The private state of the resource after it has been moved.
+        bytes target_private = 3;
     }
 }
 
