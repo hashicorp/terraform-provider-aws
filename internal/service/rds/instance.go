@@ -223,39 +223,40 @@ func ResourceInstance() *schema.Resource {
 			},
 			"domain": {
 				Type:          schema.TypeString,
-				ConflictsWith: []string{"domain_fqdn", "domain_ou", "domain_auth_secret_arn", "domain_dns_ips"},
 				Optional:      true,
+				ConflictsWith: []string{"domain_fqdn", "domain_ou", "domain_auth_secret_arn", "domain_dns_ips"},
 			},
 			"domain_auth_secret_arn": {
 				Type:          schema.TypeString,
-				ConflictsWith: []string{"domain", "domain_iam_role_name"},
 				Optional:      true,
+				ValidateFunc:  verify.ValidARN,
+				ConflictsWith: []string{"domain", "domain_iam_role_name"},
 			},
 			"domain_dns_ips": {
-				Type:          schema.TypeSet,
-				ConflictsWith: []string{"domain", "domain_iam_role_name"},
-				Optional:      true,
-				MinItems:      2,
-				MaxItems:      2,
+				Type:     schema.TypeSet,
+				Optional: true,
+				MinItems: 2,
+				MaxItems: 2,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.IsIPAddress,
 				},
+				ConflictsWith: []string{"domain", "domain_iam_role_name"},
 			},
 			"domain_fqdn": {
 				Type:          schema.TypeString,
-				ConflictsWith: []string{"domain", "domain_iam_role_name"},
 				Optional:      true,
+				ConflictsWith: []string{"domain", "domain_iam_role_name"},
 			},
 			"domain_iam_role_name": {
 				Type:          schema.TypeString,
-				ConflictsWith: []string{"domain_fqdn", "domain_ou", "domain_auth_secret_arn", "domain_dns_ips"},
 				Optional:      true,
+				ConflictsWith: []string{"domain_fqdn", "domain_ou", "domain_auth_secret_arn", "domain_dns_ips"},
 			},
 			"domain_ou": {
 				Type:          schema.TypeString,
-				ConflictsWith: []string{"domain", "domain_iam_role_name"},
 				Optional:      true,
+				ConflictsWith: []string{"domain", "domain_iam_role_name"},
 			},
 			"enabled_cloudwatch_logs_exports": {
 				Type:     schema.TypeSet,
@@ -1117,8 +1118,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DomainAuthSecretArn = aws.String(v.(string))
 		}
 
-		if v := d.Get("domain_dns_ips").(*schema.Set).List(); len(v) == 2 {
-			input.DomainDnsIps = flex.ExpandStringList(v)
+		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
+			input.DomainDnsIps = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("domain_fqdn"); ok {
@@ -1370,8 +1371,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DomainAuthSecretArn = aws.String(v.(string))
 		}
 
-		if v := d.Get("domain_dns_ips").(*schema.Set).List(); len(v) == 2 {
-			input.DomainDnsIps = flex.ExpandStringList(v)
+		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
+			input.DomainDnsIps = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
@@ -1537,8 +1538,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DomainAuthSecretArn = aws.String(v.(string))
 		}
 
-		if v := d.Get("domain_dns_ips").(*schema.Set).List(); len(v) == 2 {
-			input.DomainDnsIps = flex.ExpandStringList(v)
+		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
+			input.DomainDnsIps = flex.ExpandStringSet(v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("domain_fqdn"); ok {
@@ -1770,12 +1771,13 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.Set("deletion_protection", v.DeletionProtection)
 	if len(v.DomainMemberships) > 0 && v.DomainMemberships[0] != nil {
-		d.Set("domain", v.DomainMemberships[0].Domain)
-		d.Set("domain_auth_secret_arn", v.DomainMemberships[0].AuthSecretArn)
-		d.Set("domain_dns_ips", v.DomainMemberships[0].DnsIps)
-		d.Set("domain_fqdn", v.DomainMemberships[0].FQDN)
-		d.Set("domain_iam_role_name", v.DomainMemberships[0].IAMRoleName)
-		d.Set("domain_ou", v.DomainMemberships[0].OU)
+		v := v.DomainMemberships[0]
+		d.Set("domain", v.Domain)
+		d.Set("domain_auth_secret_arn", v.AuthSecretArn)
+		d.Set("domain_dns_ips", aws.StringValueSlice(v.DnsIps))
+		d.Set("domain_fqdn", v.FQDN)
+		d.Set("domain_iam_role_name", v.IAMRoleName)
+		d.Set("domain_ou", v.OU)
 	} else {
 		d.Set("domain", nil)
 		d.Set("domain_auth_secret_arn", nil)
@@ -2158,17 +2160,16 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 	// Always set this. Fixes TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection
 	input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
 
-	if d.HasChanges("domain", "domain_iam_role_name", "domain_fqdn", "domain_ou", "domain_auth_secret_arn", "domain_dns_ips") {
+	if d.HasChanges("domain", "domain_auth_secret_arn", "domain_dns_ips", "domain_fqdn", "domain_iam_role_name", "domain_ou") {
 		needsModify = true
 		input.Domain = aws.String(d.Get("domain").(string))
 		input.DomainAuthSecretArn = aws.String(d.Get("domain_auth_secret_arn").(string))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
+			input.DomainDnsIps = flex.ExpandStringValueSet(v.(*schema.Set))
+		}
 		input.DomainFqdn = aws.String(d.Get("domain_fqdn").(string))
 		input.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
 		input.DomainOu = aws.String(d.Get("domain_ou").(string))
-		if v := d.Get("domain_dns_ips").(*schema.Set).List(); len(v) == 2 {
-			needsModify = true
-			input.DomainDnsIps = flex.ExpandStringValueList(v)
-		}
 	}
 
 	if d.HasChange("enabled_cloudwatch_logs_exports") {
