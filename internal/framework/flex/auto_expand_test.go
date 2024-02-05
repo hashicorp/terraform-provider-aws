@@ -755,14 +755,29 @@ func TestExpandSimpleSingleNestedBlock(t *testing.T) {
 	type aws02 struct {
 		Field1 *aws01
 	}
+	type aws03 struct {
+		Field1 aws01
+	}
 
 	ctx := context.Background()
 	testCases := autoFlexTestCases{
 		{
-			TestName:   "single nested block",
+			TestName:   "single nested block pointer",
 			Source:     &tf02{Field1: fwtypes.NewObjectValueOf[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
 			Target:     &aws02{},
 			WantTarget: &aws02{Field1: &aws01{Field1: aws.String("a"), Field2: 1}},
+		},
+		{
+			TestName:   "single nested block nil",
+			Source:     &tf02{Field1: fwtypes.NewObjectValueOfNull[tf01](ctx)},
+			Target:     &aws02{},
+			WantTarget: &aws02{},
+		},
+		{
+			TestName:   "single nested block value",
+			Source:     &tf02{Field1: fwtypes.NewObjectValueOf[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
+			Target:     &aws03{},
+			WantTarget: &aws03{Field1: aws01{Field1: aws.String("a"), Field2: 1}},
 		},
 	}
 	runAutoExpandTestCases(ctx, t, testCases)
