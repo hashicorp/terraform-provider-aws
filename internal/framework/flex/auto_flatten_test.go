@@ -31,14 +31,7 @@ func TestFlatten(t *testing.T) {
 	testTimeStr := "2013-09-25T09:34:01Z"
 	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr))
 
-	testCases := []struct {
-		Context    context.Context //nolint:containedctx // testing context use
-		TestName   string
-		Source     any
-		Target     any
-		WantErr    bool
-		WantTarget any
-	}{
+	testCases := autoFlexTestCases{
 		{
 			TestName: "nil Source and Target",
 			WantErr:  true,
@@ -466,14 +459,7 @@ func TestFlattenGeneric(t *testing.T) {
 
 	ctx := context.Background()
 
-	testCases := []struct {
-		Context    context.Context //nolint:containedctx // testing context use
-		TestName   string
-		Source     any
-		Target     any
-		WantErr    bool
-		WantTarget any
-	}{
+	testCases := autoFlexTestCases{
 		{
 			TestName:   "nil *struct Source and single list Target",
 			Source:     &TestFlexAWS06{},

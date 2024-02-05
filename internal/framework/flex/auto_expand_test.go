@@ -290,7 +290,7 @@ func TestExpand(t *testing.T) {
 		},
 	}
 
-	runAutoFlexTestCases(ctx, t, testCases)
+	runAutoExpandTestCases(ctx, t, testCases)
 }
 
 func TestExpandGeneric(t *testing.T) {
@@ -734,7 +734,7 @@ func TestExpandGeneric(t *testing.T) {
 		},
 	}
 
-	runAutoFlexTestCases(ctx, t, testCases)
+	runAutoExpandTestCases(ctx, t, testCases)
 }
 
 /*
@@ -781,7 +781,7 @@ type autoFlexTestCase struct {
 
 type autoFlexTestCases []autoFlexTestCase
 
-func runAutoFlexTestCases(ctx context.Context, t *testing.T, testCases autoFlexTestCases) {
+func runAutoExpandTestCases(ctx context.Context, t *testing.T, testCases autoFlexTestCases) {
 	t.Helper()
 
 	for _, testCase := range testCases {
