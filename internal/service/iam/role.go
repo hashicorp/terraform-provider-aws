@@ -10,13 +10,14 @@ import (
 	"net/url"
 	"time"
 
-	// "github.com/YakDriver/regexache"
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -67,36 +68,30 @@ func (r *resourceIamRole) Metadata(_ context.Context, request resource.MetadataR
 	response.TypeName = "aws_iam_role"
 }
 
-// TODO: move this to Modify plan if both aren't empty
+// As this is map and logic a little more complex, felt appropriate to make it's own planmodifier
 func EditPlanForSameReorderedPolicies() planmodifier.Map {
 	return editPlanForSameReorderedPolicies{}
 }
 
 type editPlanForSameReorderedPolicies struct{}
 
-// TODO: edit this once we get working
 func (m editPlanForSameReorderedPolicies) Description(_ context.Context) string {
-	return "Once set, the value of this attribute in state will not change."
+	return "If plan and state of inline policy is the same equivalent policy, do not include in plan"
 }
 
-// TODO: edit this once we get working
 func (m editPlanForSameReorderedPolicies) MarkdownDescription(_ context.Context) string {
-	return "Once set, the value of this attribute in state will not change."
+	return "If plan and state of inline policy is the same equivalent policy, do not include in plan"
 }
 
-// TODO: move to modify plan??
 func (m editPlanForSameReorderedPolicies) PlanModifyMap(ctx context.Context, req planmodifier.MapRequest, resp *planmodifier.MapResponse) {
-	// Do nothing if there is no state value.
 	if req.PlanValue.IsUnknown() || req.PlanValue.IsNull() {
 		return
 	}
 
-	// TODO: something with making sure not just unknown but has value
 	if req.StateValue.IsUnknown() || req.StateValue.IsNull() {
 		return
 	}
 
-	// TODO: do this more official way?
 	planInlinePoliciesMap := flex.ExpandFrameworkStringValueMap(ctx, req.PlanValue)
 
 	if len(planInlinePoliciesMap) == 0 {
@@ -133,6 +128,7 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				Required:   true,
 				CustomType: fwtypes.IAMPolicyType,
 				// TODO: possible plan validator? Or normalize what is going into state
+				// TODO: should add test case as well to validate
 				// DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				// DiffSuppressOnRefresh: true,
 				// StateFunc: func(v interface{}) string {
@@ -164,24 +160,16 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
-			// TODO: maybe mapof of IAMPolicytype?
 			"inline_policies": schema.MapAttribute{
 				ElementType: fwtypes.IAMPolicyType,
 				Optional:    true,
 				PlanModifiers: []planmodifier.Map{
 					EditPlanForSameReorderedPolicies(),
-					// TODO: custom plan modifier for something like editing plan is fine
 				},
-				// TODO: custom validator for name stuff?
-				// TODO: validators and name func for both
-				// "name": {
-				// Type:     schema.TypeString,
-				// Optional: true, // semantically required but syntactically optional to allow empty inline_policy
-				// ValidateFunc: validation.All(
-				// validation.StringIsNotEmpty,
-				// validRolePolicyName,
-				// ),
-				// },
+				Validators: []validator.Map{
+					mapvalidator.KeysAre(stringvalidator.LengthBetween(1, rolePolicyNameMaxLen)),
+					mapvalidator.KeysAre(stringvalidator.RegexMatches(regexache.MustCompile(`^[\w+=,.@-]*$`), "must match [\\w+=,.@-]")),
+				},
 			},
 			"managed_policy_arns": schema.SetAttribute{
 				Optional:    true,
@@ -210,10 +198,9 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(roleNameMaxLen),
-					// TODO: uncomment when ready
-					// stringvalidator.ConflictsWith(
-					// path.MatchRelative().AtParent().AtName("name_prefix"),
-					// ),
+					stringvalidator.ConflictsWith(
+						path.MatchRelative().AtParent().AtName("name_prefix"),
+					),
 				},
 			},
 			"name_prefix": schema.StringAttribute{
@@ -235,10 +222,8 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				Default:  stringdefault.StaticString("/"),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplaceIfConfigured(),
-					// TODO: can I do this and remove setting in Update/read?
 					stringplanmodifier.UseStateForUnknown(),
 				},
-				// Default: stringdefault.StaticString("/"),
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 512),
 				},
