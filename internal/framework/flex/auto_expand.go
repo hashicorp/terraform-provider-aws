@@ -333,7 +333,7 @@ func (expander autoExpander) list(ctx context.Context, vFrom basetypes.ListValua
 
 	case basetypes.ObjectTypable:
 		if vFrom, ok := vFrom.(fwtypes.NestedObjectCollectionValue); ok {
-			diags.Append(expander.nestedObject(ctx, vFrom, vTo)...)
+			diags.Append(expander.nestedObjectCollection(ctx, vFrom, vTo)...)
 			return diags
 		}
 	}
@@ -487,7 +487,7 @@ func (expander autoExpander) set(ctx context.Context, vFrom basetypes.SetValuabl
 
 	case basetypes.ObjectTypable:
 		if vFrom, ok := vFrom.(fwtypes.NestedObjectCollectionValue); ok {
-			diags.Append(expander.nestedObject(ctx, vFrom, vTo)...)
+			diags.Append(expander.nestedObjectCollection(ctx, vFrom, vTo)...)
 			return diags
 		}
 	}
@@ -546,8 +546,8 @@ func (expander autoExpander) setOfString(ctx context.Context, vFrom basetypes.Se
 	return diags
 }
 
-// nestedObject copies a Plugin Framework NestedObjectValue value to a compatible AWS API value.
-func (expander autoExpander) nestedObject(ctx context.Context, vFrom fwtypes.NestedObjectCollectionValue, vTo reflect.Value) diag.Diagnostics {
+// nestedObjectCollection copies a Plugin Framework NestedObjectCollectionValue value to a compatible AWS API value.
+func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom fwtypes.NestedObjectCollectionValue, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := vTo.Type(); vTo.Kind() {
@@ -607,7 +607,7 @@ func (expander autoExpander) nestedObject(ctx context.Context, vFrom fwtypes.Nes
 }
 
 // nestedObjectToStruct copies a Plugin Framework NestedObjectValue to a compatible AWS API (*)struct value.
-func (expander autoExpander) nestedObjectToStruct(ctx context.Context, vFrom fwtypes.NestedObjectCollectionValue, tStruct reflect.Type, vTo reflect.Value) diag.Diagnostics {
+func (expander autoExpander) nestedObjectToStruct(ctx context.Context, vFrom fwtypes.NestedObjectValue, tStruct reflect.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Get the nested Object as a pointer.
@@ -634,7 +634,7 @@ func (expander autoExpander) nestedObjectToStruct(ctx context.Context, vFrom fwt
 	return diags
 }
 
-// nestedObjectToSlice copies a Plugin Framework NestedObjectValue to a compatible AWS API [](*)struct value.
+// nestedObjectToSlice copies a Plugin Framework NestedObjectCollectionValue to a compatible AWS API [](*)struct value.
 func (expander autoExpander) nestedObjectToSlice(ctx context.Context, vFrom fwtypes.NestedObjectCollectionValue, tSlice, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
@@ -670,7 +670,7 @@ func (expander autoExpander) nestedObjectToSlice(ctx context.Context, vFrom fwty
 	return diags
 }
 
-// nestedKeyObjectToMap copies a Plugin Framework NestedObjectValue to a compatible AWS API map[string]struct value.
+// nestedKeyObjectToMap copies a Plugin Framework NestedObjectCollectionValue to a compatible AWS API map[string]struct value.
 func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, vFrom fwtypes.NestedObjectCollectionValue, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
