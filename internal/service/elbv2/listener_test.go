@@ -2343,7 +2343,7 @@ resource "aws_iam_server_certificate" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccListenerConfig_actionForward_ForwardBlockAddAction(rName, key, certificate string) string {
+func testAccListenerConfig_actionForward_ForwardBlockWeightAndStickiness(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName),
 		fmt.Sprintf(`
@@ -2355,28 +2355,17 @@ resource "aws_lb_listener" "test" {
   certificate_arn   = aws_iam_server_certificate.test.arn
 
   default_action {
-    type = "authenticate-oidc"
-
-    authenticate_oidc {
-      authorization_endpoint = "https://example.com/authorization_endpoint"
-      client_id              = "s6BhdRkqt3"
-      client_secret          = "7Fjfp0ZBr1KtDRbnfVdmIw"
-      issuer                 = "https://example.com"
-      token_endpoint         = "https://example.com/token_endpoint"
-      user_info_endpoint     = "https://example.com/user_info_endpoint"
-
-      authentication_request_extra_params = {
-        param = "test"
-      }
-    }
-  }
-
-  default_action {
     type = "forward"
 
     forward {
       target_group {
-        arn = aws_lb_target_group.test.arn
+        arn    = aws_lb_target_group.test.arn
+        weight = 2
+      }
+
+      stickiness {
+        enabled  = true
+        duration = 3600
       }
     }
   }
@@ -2426,7 +2415,7 @@ resource "aws_iam_server_certificate" "test" {
 `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
-func testAccListenerConfig_actionForward_ForwardBlockWeightAndStickiness(rName, key, certificate string) string {
+func testAccListenerConfig_actionForward_ForwardBlockAddAction(rName, key, certificate string) string {
 	return acctest.ConfigCompose(
 		testAccListenerConfig_base(rName),
 		fmt.Sprintf(`
@@ -2438,17 +2427,28 @@ resource "aws_lb_listener" "test" {
   certificate_arn   = aws_iam_server_certificate.test.arn
 
   default_action {
+    type = "authenticate-oidc"
+
+    authenticate_oidc {
+      authorization_endpoint = "https://example.com/authorization_endpoint"
+      client_id              = "s6BhdRkqt3"
+      client_secret          = "7Fjfp0ZBr1KtDRbnfVdmIw"
+      issuer                 = "https://example.com"
+      token_endpoint         = "https://example.com/token_endpoint"
+      user_info_endpoint     = "https://example.com/user_info_endpoint"
+
+      authentication_request_extra_params = {
+        param = "test"
+      }
+    }
+  }
+
+  default_action {
     type = "forward"
 
     forward {
       target_group {
-        arn    = aws_lb_target_group.test.arn
-        weight = 2
-      }
-
-      stickiness {
-        enabled  = true
-        duration = 3600
+        arn = aws_lb_target_group.test.arn
       }
     }
   }

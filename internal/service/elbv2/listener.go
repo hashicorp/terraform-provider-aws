@@ -1015,11 +1015,11 @@ func flattenLbForwardAction(d *schema.ResourceData, i int, awsAction awstypes.Ac
 	flattenLbForwardActionBoth(defaultActions, i, awsAction, actionMap)
 }
 
-func flattenLbForwardActionOneOf(defaultActions cty.Value, i int, awsAction awstypes.Action, actionMap map[string]any) {
-	if defaultActions.IsKnown() && !defaultActions.IsNull() {
+func flattenLbForwardActionOneOf(actions cty.Value, i int, awsAction awstypes.Action, actionMap map[string]any) {
+	if actions.IsKnown() && !actions.IsNull() {
 		index := cty.NumberIntVal(int64(i))
-		if defaultActions.HasIndex(index).True() {
-			action := defaultActions.Index(index)
+		if actions.HasIndex(index).True() {
+			action := actions.Index(index)
 			if action.IsKnown() && !action.IsNull() {
 				forward := action.GetAttr("forward")
 				if forward.IsKnown() && forward.LengthInt() > 0 {

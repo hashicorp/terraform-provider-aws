@@ -98,8 +98,18 @@ func ResourceListenerRule() *schema.Resource {
 						},
 
 						"forward": {
-							Type:     schema.TypeList,
-							Optional: true,
+							Type:                  schema.TypeList,
+							Optional:              true,
+							DiffSuppressOnRefresh: true,
+							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+								if regexache.MustCompile(`^action\.\d+\.forward\.#$`).MatchString(k) {
+									return old == "1" && new == "0"
+								}
+								if regexache.MustCompile(`^action\.\d+\.forward\.\d+\.target_group\.#$`).MatchString(k) {
+									return old == "1" && new == "0"
+								}
+								return false
+							},
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -600,11 +610,21 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 
 		switch action.Type {
 		case awstypes.ActionTypeEnumForward:
-			if aws.ToString(action.TargetGroupArn) != "" {
-				actionMap["target_group_arn"] = aws.ToString(action.TargetGroupArn)
-			} else {
-				actionMap["forward"] = flattenLbListenerActionForwardConfig(action.ForwardConfig)
+			if rawConfig := d.GetRawConfig(); rawConfig.IsKnown() && !rawConfig.IsNull() {
+				defaultActions := rawConfig.GetAttr("action")
+				flattenLbForwardActionOneOf(defaultActions, i, action, actionMap)
+				break
 			}
+
+			rawState := d.GetRawState()
+			defaultActions := rawState.GetAttr("action")
+
+			if defaultActions.LengthInt() > 0 {
+				flattenLbForwardActionOneOf(defaultActions, i, action, actionMap)
+				break
+			}
+
+			flattenLbForwardActionBoth(defaultActions, i, action, actionMap)
 
 		case awstypes.ActionTypeEnumRedirect:
 			actionMap["redirect"] = flattenLbListenerActionRedirectConfig(action.RedirectConfig)
