@@ -88,13 +88,13 @@ type regexNotMatchesValidator struct {
 }
 
 // Description describes the validation in plain text formatting.
-func (validator regexNotMatchesValidator) Description(_ context.Context) string {
-	return fmt.Sprintf("value must not match regular expression '%s'", validator.regexp)
+func (v regexNotMatchesValidator) Description(_ context.Context) string {
+	return fmt.Sprintf("value must not match regular expression '%s'", v.regexp)
 }
 
 // MarkdownDescription describes the validation in Markdown formatting.
-func (validator regexNotMatchesValidator) MarkdownDescription(ctx context.Context) string {
-	return validator.Description(ctx)
+func (v regexNotMatchesValidator) MarkdownDescription(ctx context.Context) string {
+	return v.Description(ctx)
 }
 
 // Validate performs the validation.
@@ -304,7 +304,7 @@ type resourceIamRoleData struct {
 	TagsAll             types.Map         `tfsdk:"tags_all"`
 }
 
-func oldSDKRoleSchema(ctx context.Context) schema.Schema {
+func oldSDKRoleSchema() schema.Schema {
 	return schema.Schema{
 		Version: 0,
 		Attributes: map[string]schema.Attribute{
@@ -398,17 +398,17 @@ func oldSDKRoleSchema(ctx context.Context) schema.Schema {
 }
 
 func (r *resourceIamRole) UpgradeState(ctx context.Context) map[int64]resource.StateUpgrader {
-	schemaV0 := oldSDKRoleSchema(ctx)
+	schemaV0 := oldSDKRoleSchema()
 
 	return map[int64]resource.StateUpgrader{
 		0: {
 			PriorSchema:   &schemaV0,
-			StateUpgrader: upgradeIAMRoleResourceStateV0toV1,
+			StateUpgrader: upgradeRoleResourceStateV0toV1,
 		},
 	}
 }
 
-func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
+func upgradeRoleResourceStateV0toV1(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
 	type resourceIamRoleDataV0 struct {
 		ARN                 types.String `tfsdk:"arn"`
 		AssumeRolePolicy    types.String `tfsdk:"assume_role_policy"`
@@ -499,7 +499,7 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.IAM, create.ErrActionCreating, ResNameRole, plan.AssumeRolePolicy.String(), nil),
-			errors.New(fmt.Sprintf("assume_role_policy (%s) is invalid JSON: %s", assumeRolePolicy, err)).Error(),
+			fmt.Errorf("assume_role_policy (%s) is invalid JSON: %s", assumeRolePolicy, err).Error(),
 		)
 		return
 	}
