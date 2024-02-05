@@ -7637,7 +7637,7 @@ resource "aws_security_group" "test" {
     Name = %[1]q
   }
 }
-		  
+
 resource "aws_security_group_rule" "test" {
   type        = "egress"
   from_port   = 0
@@ -7770,7 +7770,7 @@ resource "aws_db_instance" "test" {
 }
 
 resource "aws_secretsmanager_secret" "example-2" {
-  name = "%[1]s-2"
+  name       = "%[1]s-2"
   kms_key_id = aws_kms_key.example.arn
 
   policy = <<POLICY
@@ -7794,11 +7794,11 @@ resource "aws_secretsmanager_secret" "example-2" {
   }]
 }
 POLICY
-  }
+}
 
 resource "aws_secretsmanager_secret_version" "example-2" {
   secret_id     = aws_secretsmanager_secret.example-2.id
-  secret_string = jsonencode({"CUSTOMER_MANAGED_ACTIVE_DIRECTORY_USERNAME": "Admin", "CUSTOMER_MANAGED_ACTIVE_DIRECTORY_PASSWORD": "avoid-plaintext-passwords"})
+  secret_string = jsonencode({ "CUSTOMER_MANAGED_ACTIVE_DIRECTORY_USERNAME" : "Admin", "CUSTOMER_MANAGED_ACTIVE_DIRECTORY_PASSWORD" : "avoid-plaintext-passwords" })
 }
 `, rName, domain, domainOu))
 }
