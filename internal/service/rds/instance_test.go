@@ -7686,31 +7686,24 @@ resource "aws_secretsmanager_secret" "example" {
   kms_key_id = aws_kms_key.example.arn
 
   policy = <<POLICY
-  {
-    "Version": "2012-10-17",
-    "Statement":
-    [
-        {
-            "Effect": "Allow",
-            "Principal":
-            {
-                "Service": "rds.amazonaws.com"
-            },
-            "Action": "secretsmanager:GetSecretValue",
-            "Resource": "*",
-            "Condition":
-            {
-                "StringEquals":
-                {
-                    "aws:sourceAccount": "${data.aws_caller_identity.current.account_id}"
-                },
-                "ArnLike":
-                {
-                    "aws:sourceArn": "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:*"
-                }
-            }
-        }
-    ]
+{
+  "Version": "2012-10-17",
+  "Statement":[{
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "rds.amazonaws.com"
+    },
+    "Action": "secretsmanager:GetSecretValue",
+    "Resource": "*",
+    "Condition": {
+      "StringEquals": {
+        "aws:sourceAccount": "${data.aws_caller_identity.current.account_id}"
+      },
+      "ArnLike": {
+        "aws:sourceArn": "arn:${data.aws_partition.current.partition}:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:*"
+      }
+    }
+  }]
 }
 POLICY
 }
@@ -7788,7 +7781,7 @@ resource "aws_secretsmanager_secret" "example-2" {
         "aws:sourceAccount": "${data.aws_caller_identity.current.account_id}"
       },
       "ArnLike": {
-        "aws:sourceArn": "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:*"
+        "aws:sourceArn": "arn:${data.aws_partition.current.partition}:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:*"
       }
     }
   }]
