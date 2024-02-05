@@ -368,26 +368,6 @@ func resourceInstanceResourceV0() *schema.Resource {
 				Optional: true,
 			},
 
-			"domain_fqdn": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"domain_ou": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"domain_auth_secret_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"domain_dns_ips": {
-				Type:     schema.TypeSet,
-				Optional: true,
-			},
-
 			"performance_insights_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -563,27 +543,6 @@ func resourceInstanceResourceV1() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
-			"domain_fqdn": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"domain_ou": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"domain_auth_secret_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-
-			"domain_dns_ips": {
-				Type:     schema.TypeSet,
-				Optional: true,
-			},
-
 			"enabled_cloudwatch_logs_exports": {
 				Type:     schema.TypeSet,
 				Optional: true,
