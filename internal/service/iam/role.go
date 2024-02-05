@@ -50,9 +50,11 @@ import (
 )
 
 const (
-	roleNameMaxLen       = 64
-	roleNamePrefixMaxLen = roleNameMaxLen - id.UniqueIDSuffixLength
-	ResNameRole          = "IAM Role"
+	roleNameMaxLen        = 64
+	roleNamePrefixMaxLen  = roleNameMaxLen - id.UniqueIDSuffixLength
+	ResNameRole           = "IAM Role"
+	MaxSessionDurationMin = 3600
+	MaxSessionDurationMax = 43200
 )
 
 // @FrameworkResource(name="Role")
@@ -219,9 +221,9 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			"max_session_duration": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
-				Default:  int64default.StaticInt64(3600),
+				Default:  int64default.StaticInt64(MaxSessionDurationMin),
 				Validators: []validator.Int64{
-					int64validator.Between(3600, 43200),
+					int64validator.Between(MaxSessionDurationMin, MaxSessionDurationMax),
 				},
 				PlanModifiers: []planmodifier.Int64{
 					int64planmodifier.UseStateForUnknown(),
@@ -655,7 +657,6 @@ func (r *resourceIamRole) ModifyPlan(ctx context.Context, request resource.Modif
 		if state.NamePrefix.ValueString() == plan.NamePrefix.ValueString() {
 			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("name_prefix"), state.NamePrefix)...)
 		}
-
 	}
 	r.SetTagsAll(ctx, request, response)
 }
@@ -934,7 +935,6 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 		for _, val := range nsPolicies {
 			if _, ok := addPolicyNames[*val.PolicyName]; ok {
 				addPolicies = append(addPolicies, val)
-			} else {
 			}
 		}
 
@@ -954,7 +954,6 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 			)
 			return
 		}
-
 	}
 
 	if !plan.ManagedPolicyArns.Equal(state.ManagedPolicyArns) {
