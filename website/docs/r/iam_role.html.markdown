@@ -85,7 +85,7 @@ resource "aws_iam_role" "example" {
         },
       ]
     })
-    "policy-8675309"   = data.aws_iam_policy_document.inline_policy.json
+    "policy-8675309" = data.aws_iam_policy_document.inline_policy.json
   }
 
 }
