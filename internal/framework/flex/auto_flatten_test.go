@@ -426,32 +426,7 @@ func TestFlatten(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-
-			testCtx := ctx //nolint:contextcheck // simplify use of testing context
-			if testCase.Context != nil {
-				testCtx = testCase.Context
-			}
-
-			err := Flatten(testCtx, testCase.Source, testCase.Target)
-			gotErr := err != nil
-
-			if gotErr != testCase.WantErr {
-				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
-			}
-
-			if gotErr {
-				if !testCase.WantErr {
-					t.Errorf("err = %q", err)
-				}
-			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
+	runAutoFlattenTestCases(ctx, t, testCases)
 }
 
 func TestFlattenGeneric(t *testing.T) {
@@ -887,6 +862,12 @@ func TestFlattenGeneric(t *testing.T) {
 			},
 		},
 	}
+
+	runAutoFlattenTestCases(ctx, t, testCases)
+}
+
+func runAutoFlattenTestCases(ctx context.Context, t *testing.T, testCases autoFlexTestCases) {
+	t.Helper()
 
 	for _, testCase := range testCases {
 		testCase := testCase
