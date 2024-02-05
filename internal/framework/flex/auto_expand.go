@@ -111,7 +111,7 @@ func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValua
 		return diags
 	}
 
-	switch vTo.Kind() {
+	switch tTo := vTo.Type(); vTo.Kind() {
 	case reflect.Bool:
 		//
 		// types.Bool -> bool.
@@ -120,7 +120,7 @@ func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValua
 		return diags
 
 	case reflect.Ptr:
-		switch vTo.Type().Elem().Kind() {
+		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Bool:
 			//
 			// types.Bool -> *bool.
@@ -148,7 +148,7 @@ func (expander autoExpander) float64(ctx context.Context, vFrom basetypes.Float6
 		return diags
 	}
 
-	switch vTo.Kind() {
+	switch tTo := vTo.Type(); vTo.Kind() {
 	case reflect.Float32, reflect.Float64:
 		//
 		// types.Float32/types.Float64 -> float32/float64.
@@ -157,7 +157,7 @@ func (expander autoExpander) float64(ctx context.Context, vFrom basetypes.Float6
 		return diags
 
 	case reflect.Ptr:
-		switch vTo.Type().Elem().Kind() {
+		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Float32:
 			//
 			// types.Float32/types.Float64 -> *float32.
@@ -193,7 +193,7 @@ func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Val
 		return diags
 	}
 
-	switch vTo.Kind() {
+	switch tTo := vTo.Type(); vTo.Kind() {
 	case reflect.Int32, reflect.Int64:
 		//
 		// types.Int32/types.Int64 -> int32/int64.
@@ -202,7 +202,7 @@ func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Val
 		return diags
 
 	case reflect.Ptr:
-		switch vTo.Type().Elem().Kind() {
+		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Int32:
 			//
 			// types.Int32/types.Int64 -> *int32.
@@ -238,13 +238,14 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 		return diags
 	}
 
-	switch vTo.Kind() {
+	switch tTo := vTo.Type(); vTo.Kind() {
 	case reflect.String:
 		//
 		// types.String -> string.
 		//
 		vTo.SetString(v.ValueString())
 		return diags
+
 	case reflect.Struct:
 		//
 		// fwtypes.Timestamp --> time.Time
@@ -253,14 +254,16 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 			vTo.Set(reflect.ValueOf(t.ValueTimestamp()))
 			return diags
 		}
+
 	case reflect.Ptr:
-		switch vTo.Type().Elem().Kind() {
+		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.String:
 			//
 			// types.String -> *string.
 			//
 			vTo.Set(reflect.ValueOf(v.ValueStringPointer()))
 			return diags
+
 		case reflect.Struct:
 			//
 			// fwtypes.Timestamp --> *time.Time
@@ -299,6 +302,7 @@ func (expander autoExpander) object(ctx context.Context, vFrom basetypes.ObjectV
 			diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tTo, vTo)...)
 			return diags
 		}
+
 	case reflect.Ptr:
 		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Struct:
@@ -410,6 +414,7 @@ func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuab
 	case basetypes.StringTypable:
 		diags.Append(expander.mapOfString(ctx, v, vTo)...)
 		return diags
+
 	case basetypes.ObjectTypable:
 		if vFrom, ok := vFrom.(fwtypes.ObjectMapValue); ok {
 			diags.Append(expander.objectMap(ctx, vFrom, vTo)...)
@@ -577,6 +582,7 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom f
 			//
 			diags.Append(expander.nestedKeyObjectToMap(ctx, vFrom, tElem, vTo)...)
 			return diags
+
 		case reflect.Ptr:
 			//
 			// types.List(OfObject) -> map[string]*struct
@@ -729,10 +735,12 @@ func (expander autoExpander) objectMap(ctx context.Context, vFrom fwtypes.Object
 		case reflect.Ptr:
 			diags.Append(expander.mappedObjectToStruct(ctx, vFrom, tElem, vTo)...)
 			return diags
+
 		case reflect.Struct:
 			diags.Append(expander.mappedObjectToStruct(ctx, vFrom, tElem, vTo)...)
 			return diags
 		}
+
 	case reflect.Ptr:
 		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Struct:
