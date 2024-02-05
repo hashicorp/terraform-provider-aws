@@ -20,10 +20,10 @@ type listNestedObjectTypeOf[T any] struct {
 }
 
 var (
-	_ basetypes.ListTypable  = (*listNestedObjectTypeOf[struct{}])(nil)
-	_ NestedObjectType       = (*listNestedObjectTypeOf[struct{}])(nil)
-	_ basetypes.ListValuable = (*ListNestedObjectValueOf[struct{}])(nil)
-	_ NestedObjectValue      = (*ListNestedObjectValueOf[struct{}])(nil)
+	_ basetypes.ListTypable       = (*listNestedObjectTypeOf[struct{}])(nil)
+	_ NestedObjectCollectionType  = (*listNestedObjectTypeOf[struct{}])(nil)
+	_ basetypes.ListValuable      = (*ListNestedObjectValueOf[struct{}])(nil)
+	_ NestedObjectCollectionValue = (*ListNestedObjectValueOf[struct{}])(nil)
 )
 
 func NewListNestedObjectTypeOf[T any](ctx context.Context) listNestedObjectTypeOf[T] {

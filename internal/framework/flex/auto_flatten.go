@@ -297,7 +297,7 @@ func (flattener autoFlattener) ptr(ctx context.Context, vFrom reflect.Value, tTo
 func (flattener autoFlattener) struct_(ctx context.Context, vFrom reflect.Value, isNilFrom bool, tTo attr.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
+	if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
 		//
 		// *struct -> types.List(OfObject).
 		//
@@ -472,7 +472,7 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 			}
 
 		case reflect.Struct:
-			if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
+			if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
 				//
 				// []*struct -> types.List(OfObject).
 				//
@@ -482,7 +482,7 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 		}
 
 	case reflect.Struct:
-		if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
+		if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
 			//
 			// []struct -> types.List(OfObject).
 			//
@@ -512,7 +512,7 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 				//
 				// map[string]struct -> fwtypes.ListNestedObjectOf[Object]
 				//
-				if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
+				if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
 					diags.Append(flattener.structMapToObjectList(ctx, vFrom, tTo, vTo)...)
 					return diags
 				}
@@ -520,7 +520,7 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 				//
 				// map[string]struct -> fwtypes.ListNestedObjectOf[Object]
 				//
-				if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
+				if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
 					diags.Append(flattener.structMapToObjectList(ctx, vFrom, tTo, vTo)...)
 					return diags
 				}
@@ -582,7 +582,7 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 					return diags
 				}
 
-				if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
+				if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
 					diags.Append(flattener.structMapToObjectList(ctx, vFrom, tTo, vTo)...)
 					return diags
 				}
@@ -592,7 +592,7 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 					//
 					// map[string]struct -> fwtypes.ListNestedObjectOf[Object]
 					//
-					if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
+					if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
 						diags.Append(flattener.structMapToObjectList(ctx, vFrom, tTo, vTo)...)
 						return diags
 					}
@@ -700,7 +700,7 @@ func (flattener autoFlattener) structMapToObjectMap(ctx context.Context, vFrom r
 	return diags
 }
 
-func (flattener autoFlattener) structMapToObjectList(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) structMapToObjectList(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectCollectionType, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if vFrom.IsNil() {
@@ -760,7 +760,7 @@ func (flattener autoFlattener) structMapToObjectList(ctx context.Context, vFrom 
 }
 
 // structToNestedObject copies an AWS API struct value to a compatible Plugin Framework NestedObjectValue value.
-func (flattener autoFlattener) structToNestedObject(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) structToNestedObject(ctx context.Context, vFrom reflect.Value, isNullFrom bool, tTo fwtypes.NestedObjectCollectionType, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if isNullFrom {
@@ -798,7 +798,7 @@ func (flattener autoFlattener) structToNestedObject(ctx context.Context, vFrom r
 }
 
 // sliceOfStructNestedObject copies an AWS API []struct value to a compatible Plugin Framework NestedObjectValue value.
-func (flattener autoFlattener) sliceOfStructNestedObject(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) sliceOfStructNestedObject(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectCollectionType, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if vFrom.IsNil() {

@@ -10,9 +10,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 )
 
-// NestedObjectType extends the Type interface for types that represent nested Objects.
+// NestedObjectCollectionType extends the Type interface for types that represent
+// collections (Lists or Sets) of nested Objects.
 // It isn't generic on the Go struct type as it's referenced within AutoFlEx.
-type NestedObjectType interface {
+type NestedObjectCollectionType interface {
 	attr.Type
 
 	// NewObjectPtr returns a new, empty value as an object pointer (Go *struct).
@@ -31,9 +32,9 @@ type NestedObjectType interface {
 	ValueFromObjectSlice(context.Context, any) (attr.Value, diag.Diagnostics)
 }
 
-// NestedObjectValue extends the Value interface for values that represent nested Objects.
+// NestedObjectCollectionValue extends the Value interface for values that represent collections of nested Objects.
 // It isn't generic on the Go struct type as it's referenced within AutoFlEx.
-type NestedObjectValue interface {
+type NestedObjectCollectionValue interface {
 	attr.Value
 
 	// ToObjectPtr returns the value as an object pointer (Go *struct).
