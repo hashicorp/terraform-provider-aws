@@ -783,6 +783,57 @@ func TestExpandSimpleSingleNestedBlock(t *testing.T) {
 	runAutoExpandTestCases(ctx, t, testCases)
 }
 
+func TestExpandComplexSingleNestedBlock(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field1 types.Bool                        `tfsdk:"field1"`
+		Field2 fwtypes.ListValueOf[types.String] `tfsdk:"field2"`
+	}
+	type aws01 struct {
+		Field1 bool
+		Field2 []string
+	}
+
+	type tf02 struct {
+		Field1 fwtypes.ObjectValueOf[tf01] `tfsdk:"field1"`
+	}
+	type aws02 struct {
+		Field1 *aws01
+	}
+
+	type tf03 struct {
+		Field1 fwtypes.ObjectValueOf[tf02] `tfsdk:"field1"`
+	}
+	type aws03 struct {
+		Field1 *aws02
+	}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName: "single nested block pointer",
+			Source: &tf03{
+				Field1: fwtypes.NewObjectValueOf[tf02](
+					ctx,
+					&tf02{
+						Field1: fwtypes.NewObjectValueOf[tf01](
+							ctx,
+							&tf01{
+								Field1: types.BoolValue(true),
+								Field2: fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("a"), types.StringValue("b")}),
+							},
+						),
+					},
+				),
+			},
+			Target:     &aws03{},
+			WantTarget: &aws03{Field1: &aws02{Field1: &aws01{Field1: true, Field2: []string{"a", "b"}}}},
+		},
+	}
+	runAutoExpandTestCases(ctx, t, testCases)
+}
+
 type autoFlexTestCase struct {
 	Context    context.Context //nolint:containedctx // testing context use
 	TestName   string
