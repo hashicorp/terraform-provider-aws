@@ -800,3 +800,76 @@ func TestExpandGeneric(t *testing.T) {
 		})
 	}
 }
+
+func TestExpandSingleNestedBlock(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field1 types.String `tfsdk:"field1"`
+		Field2 types.Int64  `tfsdk:"field2"`
+	}
+	type tf02 struct {
+		Field1 fwtypes.ObjectValueOf[tf01] `tfsdk:"field1"`
+	}
+
+	type aws01 struct {
+		Field1 *string
+		Field2 int64
+	}
+	type aws02 struct {
+		Field1 *aws01
+	}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName:   "single nested block",
+			Source:     &tf02{Field1: fwtypes.NewObjectValueOf[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
+			Target:     &aws02{},
+			WantTarget: &aws02{Field1: &aws01{Field1: aws.String("a"), Field2: 1}},
+		},
+	}
+	runAutoFlexTestCases(ctx, t, testCases)
+}
+
+type autoFlexTestCase struct {
+	Context    context.Context //nolint:containedctx // testing context use
+	TestName   string
+	Source     any
+	Target     any
+	WantErr    bool
+	WantTarget any
+}
+
+type autoFlexTestCases []autoFlexTestCase
+
+func runAutoFlexTestCases(ctx context.Context, t *testing.T, testCases autoFlexTestCases) {
+	t.Helper()
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			testCtx := ctx //nolint:contextcheck // simplify use of testing context
+			if testCase.Context != nil {
+				testCtx = testCase.Context
+			}
+
+			err := Expand(testCtx, testCase.Source, testCase.Target)
+			gotErr := err != nil
+
+			if gotErr != testCase.WantErr {
+				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
+			}
+
+			if gotErr {
+				if !testCase.WantErr {
+					t.Errorf("err = %q", err)
+				}
+			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
