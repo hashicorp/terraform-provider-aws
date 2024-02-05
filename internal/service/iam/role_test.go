@@ -618,7 +618,6 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 				PreConfig: func() {
 					// delete the boundary manually
 					conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
-					fmt.Println(fmt.Sprintf("test role name: %s", *role.RoleName))
 					input := &iam.DeleteRolePermissionsBoundaryInput{
 						RoleName: role.RoleName,
 					}
@@ -1241,9 +1240,6 @@ func testAccCheckRoleExists(ctx context.Context, n string, v *iam.Role) resource
 		if rs.Primary.ID == "" {
 			return fmt.Errorf("No IAM Role ID is set")
 		}
-
-		// TODO: Debugging
-		fmt.Println(fmt.Sprintf("testAccCheckRoleExists ID: %s", rs.Primary.ID))
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
