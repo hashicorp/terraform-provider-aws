@@ -57,6 +57,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fis v1.21.6
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.19.6
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.23.6
+	github.com/aws/aws-sdk-go-v2/service/guardduty v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.20.6
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.21.8
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.21.0

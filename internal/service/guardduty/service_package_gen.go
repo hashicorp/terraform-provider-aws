@@ -5,6 +5,8 @@ package guardduty
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	guardduty_sdkv2 "github.com/aws/aws-sdk-go-v2/service/guardduty"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
@@ -25,7 +27,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourceMemberDetectorFeature,
+			Name:    "Member Detector Feature",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -77,11 +84,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_guardduty_member",
 		},
 		{
-			Factory:  ResourceMemberDetectorFeature,
-			TypeName: "aws_guardduty_member_detector_feature",
-			Name:     "Member Detector Feature",
-		},
-		{
 			Factory:  ResourceOrganizationAdminAccount,
 			TypeName: "aws_guardduty_organization_admin_account",
 		},
@@ -119,6 +121,17 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*g
 	sess := config["session"].(*session_sdkv1.Session)
 
 	return guardduty_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*guardduty_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return guardduty_sdkv2.NewFromConfig(cfg, func(o *guardduty_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

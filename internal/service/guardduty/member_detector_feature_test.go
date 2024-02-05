@@ -61,16 +61,15 @@ func testAccMemberDetectorFeature_additionalConfiguration(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccMemberDetectorFeatureConfig_additionalConfiguration(accountID, "ENABLED", "DISABLED"),
+				Config: testAccMemberDetectorFeatureConfig_additionalConfiguration(accountID, "DISABLED", "ENABLED"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccMemberDetectorFeatureExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", "ENABLED"),
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "2"),
-					// TODO: member_detector_feature_test.go:53: Step 1/1 error: After applying this test step, the plan was not empty.
-					//resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.status", "ENABLED"),
-					//resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "ECS_FARGATE_AGENT_MANAGEMENT"),
-					//resource.TestCheckResourceAttr(resourceName, "additional_configuration.1.status", "DISABLED"),
-					//resource.TestCheckResourceAttr(resourceName, "additional_configuration.1.name", "EKS_ADDON_MANAGEMENT"),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.status", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.name", "EKS_ADDON_MANAGEMENT"),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.1.status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.1.name", "ECS_FARGATE_AGENT_MANAGEMENT"),
 					resource.TestCheckResourceAttr(resourceName, "name", "RUNTIME_MONITORING"),
 					resource.TestCheckResourceAttr(resourceName, "account_id", accountID),
 				),
@@ -129,7 +128,7 @@ func testAccMemberDetectorFeatureExists(ctx context.Context, n string) resource.
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GuardDutyClient(ctx)
 
 		_, err := tfguardduty.FindMemberDetectorFeatureByThreePartKey(ctx, conn, rs.Primary.Attributes["detector_id"], rs.Primary.Attributes["account_id"], rs.Primary.Attributes["name"])
 
@@ -158,14 +157,15 @@ resource "aws_guardduty_member_detector_feature" "test" {
 
 	additional_configuration {
 		name        = "EKS_ADDON_MANAGEMENT"
-		status      = "%[3]s"
-	}
-	additional_configuration {
-		name        = "ECS_FARGATE_AGENT_MANAGEMENT"
 		status      = "%[2]s"
 	}
+
+	additional_configuration {
+		name        = "ECS_FARGATE_AGENT_MANAGEMENT"
+		status      = "%[3]s"
+	}
 }
-`, accountID, ecsStatus, eksStatus))
+`, accountID, eksStatus, ecsStatus))
 }
 
 func testAccMemberDetectorFeatureConfig_multiple(accountID, status1, status2, status3 string) string {
