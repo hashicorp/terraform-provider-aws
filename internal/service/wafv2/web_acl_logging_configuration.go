@@ -321,7 +321,7 @@ func expandFilters(l []interface{}) []*wafv2.Filter {
 
 	var filters []*wafv2.Filter
 
-	sort.Slice(l, func(i, j int) bool {
+	sort.SliceStable(l, func(i, j int) bool {
 		prio1, _ := l[i].(map[string]interface{})["priority"].(int)
 		prio2, _ := l[j].(map[string]interface{})["priority"].(int)
 		return prio1 < prio2
