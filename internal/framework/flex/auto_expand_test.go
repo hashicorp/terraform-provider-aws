@@ -737,21 +737,20 @@ func TestExpandGeneric(t *testing.T) {
 	runAutoExpandTestCases(ctx, t, testCases)
 }
 
-/*
-func TestExpandSingleNestedBlock(t *testing.T) {
+func TestExpandSimpleSingleNestedBlock(t *testing.T) {
 	t.Parallel()
 
 	type tf01 struct {
 		Field1 types.String `tfsdk:"field1"`
 		Field2 types.Int64  `tfsdk:"field2"`
 	}
-	type tf02 struct {
-		Field1 fwtypes.ObjectValueOf[tf01] `tfsdk:"field1"`
-	}
-
 	type aws01 struct {
 		Field1 *string
 		Field2 int64
+	}
+
+	type tf02 struct {
+		Field1 fwtypes.ObjectValueOf[tf01] `tfsdk:"field1"`
 	}
 	type aws02 struct {
 		Field1 *aws01
@@ -766,9 +765,8 @@ func TestExpandSingleNestedBlock(t *testing.T) {
 			WantTarget: &aws02{Field1: &aws01{Field1: aws.String("a"), Field2: 1}},
 		},
 	}
-	runAutoFlexTestCases(ctx, t, testCases)
+	runAutoExpandTestCases(ctx, t, testCases)
 }
-*/
 
 type autoFlexTestCase struct {
 	Context    context.Context //nolint:containedctx // testing context use

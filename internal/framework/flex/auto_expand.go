@@ -76,6 +76,10 @@ func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.V
 		return diags
 
 	// Aggregate types.
+	case basetypes.ObjectValuable:
+		diags.Append(expander.object(ctx, vFrom, vTo)...)
+		return diags
+
 	case basetypes.ListValuable:
 		diags.Append(expander.list(ctx, vFrom, vTo)...)
 		return diags
@@ -265,6 +269,42 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 				vTo.Set(reflect.ValueOf(t.ValueTimestampPointer()))
 				return diags
 			}
+		}
+	}
+
+	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
+		"from": vFrom.Type(ctx),
+		"to":   vTo.Kind(),
+	})
+
+	return diags
+}
+
+// string copies a Plugin Framework Object(ish) value to a compatible AWS API value.
+func (expander autoExpander) object(ctx context.Context, vFrom basetypes.ObjectValuable, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	_, d := vFrom.ToObjectValue(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	switch vTo.Kind() {
+	case reflect.Struct:
+		//
+		// types.Object -> struct.
+		//
+
+		// TODO
+	case reflect.Ptr:
+		switch vTo.Type().Elem().Kind() {
+		case reflect.Struct:
+			//
+			// fwtypes.Timestamp --> *time.Time
+			//
+
+			// TODO
 		}
 	}
 
