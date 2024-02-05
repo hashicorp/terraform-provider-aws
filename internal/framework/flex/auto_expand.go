@@ -290,21 +290,25 @@ func (expander autoExpander) object(ctx context.Context, vFrom basetypes.ObjectV
 		return diags
 	}
 
-	switch vTo.Kind() {
+	switch tTo := vTo.Type(); vTo.Kind() {
 	case reflect.Struct:
 		//
 		// types.Object -> struct.
 		//
-
-		// TODO
+		if vFrom, ok := vFrom.(fwtypes.NestedObjectValue); ok {
+			diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tTo, vTo)...)
+			return diags
+		}
 	case reflect.Ptr:
-		switch vTo.Type().Elem().Kind() {
+		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Struct:
 			//
-			// fwtypes.Timestamp --> *time.Time
+			// types.Object --> *struct
 			//
-
-			// TODO
+			if vFrom, ok := vFrom.(fwtypes.NestedObjectValue); ok {
+				diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tElem, vTo)...)
+				return diags
+			}
 		}
 	}
 
