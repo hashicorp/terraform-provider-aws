@@ -378,6 +378,7 @@ The following arguments are optional:
 * `dedicated_master_type` - (Optional) Instance type of the dedicated main nodes in the cluster.
 * `instance_count` - (Optional) Number of instances in the cluster.
 * `instance_type` - (Optional) Instance type of data nodes in the cluster.
+* `multi_az_with_standby_enabled` - (Optional) Whether a multi-AZ domain is turned on with a standby AZ. For more information, see [Configuring a multi-AZ domain in Amazon OpenSearch Service](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/managedomains-multiaz.html).
 * `warm_count` - (Optional) Number of warm nodes in the cluster. Valid values are between `2` and `150`. `warm_count` can be only and must be set when `warm_enabled` is set to `true`.
 * `warm_enabled` - (Optional) Whether to enable warm storage.
 * `warm_type` - (Optional) Instance type for the OpenSearch cluster's warm nodes. Valid values are `ultrawarm1.medium.search`, `ultrawarm1.large.search` and `ultrawarm1.xlarge.search`. `warm_type` can be only and must be set when `warm_enabled` is set to `true`.
