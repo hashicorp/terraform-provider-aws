@@ -485,8 +485,6 @@ func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.Upgrade
 	resp.Diagnostics.Append(diags...)
 }
 
-// TODO: maybe refreshFromOutput
-
 func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().IAMConn(ctx)
 
@@ -570,7 +568,7 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := roleCreateTags(ctx, conn, name, tags)
 
-		// TODO: read errors or something
+		// TODO: not sure how to convert this to framework
 		// If default tags only, continue. Otherwise, error.
 		// if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		// return append(diags, resourceRoleRead(ctx, d, meta)...)
@@ -617,10 +615,6 @@ func (r resourceIamRole) Delete(ctx context.Context, req resource.DeleteRequest,
 	err := DeleteRole(ctx, conn, state.Name.ValueString(), state.ForceDetachPolicies.ValueBool(), hasInline, hasManaged)
 
 	if err != nil {
-		// TODO: do something like this to skip deletes on roles that are gone?
-		// if err.IsA[*awstypes.ResourceNotFoundException](err) {
-		// return
-		// }
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.IAM, create.ErrActionDeleting, state.Name.String(), state.ARN.String(), err),
 			err.Error(),
@@ -679,7 +673,7 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 		return FindRoleByName(ctx, conn, state.ID.ValueString())
 	}, true)
 
-	// NOTE: Same issue here, I left old conditional here as example, not sure what else can/should be done
+	// NOTE: Same issue here, left old conditional here as example, not sure what else can/should be done
 	// if !d.IsNewResource() && tfresource.NotFound(err) {
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
