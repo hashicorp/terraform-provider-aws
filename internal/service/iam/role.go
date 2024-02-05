@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"net/url"
+	"regexp"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -16,6 +17,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -66,6 +68,48 @@ type resourceIamRole struct {
 
 func (r *resourceIamRole) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_iam_role"
+}
+
+// TODO: should stringvalidator have something like `RegexNotMatches`? Making custom one for now that's opposite of given one
+// From terraform-plugin-framework, just the opposite implementation
+// https://github.com/hashicorp/terraform-plugin-framework-validators/blob/main/stringvalidator/regex_matches.go
+func RegexNotMatches(regexp *regexp.Regexp, message string) validator.String {
+	return regexNotMatchesValidator{
+		regexp:  regexp,
+		message: message,
+	}
+}
+
+type regexNotMatchesValidator struct {
+	regexp  *regexp.Regexp
+	message string
+}
+
+// Description describes the validation in plain text formatting.
+func (validator regexNotMatchesValidator) Description(_ context.Context) string {
+	return fmt.Sprintf("value must not match regular expression '%s'", validator.regexp)
+}
+
+// MarkdownDescription describes the validation in Markdown formatting.
+func (validator regexNotMatchesValidator) MarkdownDescription(ctx context.Context) string {
+	return validator.Description(ctx)
+}
+
+// Validate performs the validation.
+func (v regexNotMatchesValidator) ValidateString(ctx context.Context, request validator.StringRequest, response *validator.StringResponse) {
+	if request.ConfigValue.IsNull() || request.ConfigValue.IsUnknown() {
+		return
+	}
+
+	value := request.ConfigValue.ValueString()
+
+	if v.regexp.MatchString(value) {
+		response.Diagnostics.Append(validatordiag.InvalidAttributeValueMatchDiagnostic(
+			request.Path,
+			v.Description(ctx),
+			value,
+		))
+	}
 }
 
 // As this is map and logic a little more complex, felt appropriate to make it's own planmodifier
@@ -140,12 +184,9 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				Default:  stringdefault.StaticString(""),
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(0, 1000),
+					stringvalidator.RegexMatches(regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`),
+					RegexNotMatches(regexache.MustCompile("[“‘]"), "cannot contain specially formatted single or double quotes: [“‘]"),
 				},
-				// TODO: need to add validators and test
-				// ValidateFunc: validation.All(
-				// validation.StringDoesNotMatch(regexache.MustCompile("[“‘]"), "cannot contain specially formatted single or double quotes: [“‘]"),
-				// validation.StringMatch(regexache.MustCompile(`[\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*`), `must satisfy regular expression pattern: [\p{L}\p{M}\p{Z}\p{S}\p{N}\p{P}]*)`),
-				// ),
 			},
 			"force_detach_policies": schema.BoolAttribute{
 				Optional: true,
