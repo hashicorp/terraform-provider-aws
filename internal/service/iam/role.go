@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -769,9 +770,12 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 			)
 			return
 		}
-		state.ManagedPolicyArns = flex.FlattenFrameworkStringValueSet(ctx, policyARNs)
+		if len(policyARNs) == 0 {
+			state.ManagedPolicyArns = types.SetValueMust(fwtypes.ARNType, []attr.Value{})
+		} else {
+			state.ManagedPolicyArns = flex.FlattenFrameworkStringValueSet(ctx, policyARNs)
+		}
 	}
-
 	setTagsOut(ctx, role.Tags)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
