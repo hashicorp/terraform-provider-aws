@@ -25,6 +25,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -192,6 +193,9 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 				Optional: true,
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"inline_policies": schema.MapAttribute{
 				ElementType: fwtypes.IAMPolicyType,
@@ -368,19 +372,9 @@ func oldSDKRoleSchema(ctx context.Context) schema.Schema {
 			},
 			"permissions_boundary": schema.StringAttribute{
 				Optional: true,
-				// TODO Validate,
 			},
-			"tags": // TODO tftags.TagsAttribute()
-			schema.MapAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
-			},
-			"tags_all": // TODO tftags.TagsAttributeComputedOnly()
-			schema.MapAttribute{
-				ElementType: types.StringType,
-				Optional:    true,
-				Computed:    true,
-			},
+			"tags":     tftags.TagsAttribute(),
+			"tags_all": tftags.TagsAttributeComputedOnly(),
 			"unique_id": schema.StringAttribute{
 				Computed: true,
 			},
@@ -391,11 +385,9 @@ func oldSDKRoleSchema(ctx context.Context) schema.Schema {
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
 							Optional: true,
-							// TODO Validate,
 						},
 						"policy": schema.StringAttribute{
 							Optional: true,
-							// TODO Validate,
 						},
 					},
 				},
@@ -415,7 +407,6 @@ func (r *resourceIamRole) UpgradeState(ctx context.Context) map[int64]resource.S
 	}
 }
 
-// TODO: ok finish working on this to perform upgrade cleanly
 func upgradeIAMRoleResourceStateV0toV1(ctx context.Context, req resource.UpgradeStateRequest, resp *resource.UpgradeStateResponse) {
 	type resourceIamRoleDataV0 struct {
 		ARN                 types.String `tfsdk:"arn"`
@@ -725,9 +716,7 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	state.UniqueID = flex.StringToFramework(ctx, role.RoleId)
 
 	if state.ForceDetachPolicies.IsNull() {
-		// TODO: better way to do this that is more framework friendly?
-		temp := false
-		state.ForceDetachPolicies = flex.BoolToFramework(ctx, &temp)
+		state.ForceDetachPolicies = types.BoolValue(false)
 	}
 
 	if role.PermissionsBoundary != nil {
