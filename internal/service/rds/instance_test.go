@@ -82,6 +82,7 @@ func TestAccRDSInstance_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "parameter_group_name", regexache.MustCompile(`^default\.mysql\d`)),
 					resource.TestCheckResourceAttr(resourceName, "port", "3306"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+					resource.TestCheckResourceAttr(resourceName, "replicas.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_id"),
 					resource.TestCheckResourceAttr(resourceName, "status", "available"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
@@ -1151,6 +1152,15 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "db_name", sourceResourceName, "db_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "username", sourceResourceName, "username"),
+
+					resource.TestCheckResourceAttr(sourceResourceName, "replicas.#", "0"), // Before refreshing source, it will not be aware of replicas
+				),
+			},
+			{
+				// Confirm that `replicas` is populated after refreshing source
+				RefreshState: true,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(sourceResourceName, "replicas.#", "1"),
 				),
 			},
 			{
@@ -3814,6 +3824,48 @@ func TestAccRDSInstance_cloudWatchLogsExport(t *testing.T) {
 					"password",
 					"skip_final_snapshot",
 					"delete_automated_backups",
+				},
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_EnabledCloudWatchLogsExports_db2(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_db_instance.test"
+	// Requires an IBM Db2 License set as environmental variable.
+	// Licensing pre-requisite: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/db2-licensing.html.
+	customerID := acctest.SkipIfEnvVarNotSet(t, "RDS_DB2_CUSTOMER_ID")
+	siteID := acctest.SkipIfEnvVarNotSet(t, "RDS_DB2_SITE_ID")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_EnabledCloudWatchLogsExports_db2(rName, customerID, siteID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"final_snapshot_identifier",
+					"password",
+					"skip_final_snapshot",
 				},
 			},
 		},
@@ -7858,6 +7910,42 @@ resource "aws_db_instance" "test" {
   skip_final_snapshot = true
 }
 `, deletionProtection, rName))
+}
+
+func testAccInstanceConfig_EnabledCloudWatchLogsExports_db2(rName, customerId, siteId string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassDB2(),
+		fmt.Sprintf(`
+resource "aws_db_parameter_group" "test" {
+  name   = "tf-db2-pg-%[1]s"
+  family = data.aws_rds_engine_version.default.parameter_group_family
+
+  parameter {
+    name         = "rds.ibm_customer_id"
+    value        = %[2]s
+    apply_method = "immediate"
+  }
+  parameter {
+    name         = "rds.ibm_site_id"
+    value        = %[3]s
+    apply_method = "immediate"
+  }
+}
+
+resource "aws_db_instance" "test" {
+  allocated_storage               = 100
+  db_name                         = "test"
+  enabled_cloudwatch_logs_exports = ["diag.log", "notify.log"]
+  engine                          = data.aws_rds_orderable_db_instance.test.engine
+  engine_version                  = data.aws_rds_orderable_db_instance.test.engine_version
+  identifier                      = %[1]q
+  instance_class                  = data.aws_rds_orderable_db_instance.test.instance_class
+  parameter_group_name            = aws_db_parameter_group.test.name
+  password                        = "avoid-plaintext-passwords"
+  username                        = "tfacctest"
+  skip_final_snapshot             = true
+}
+`, rName, customerId, siteId))
 }
 
 func testAccInstanceConfig_EnabledCloudWatchLogsExports_oracle(rName string) string {
