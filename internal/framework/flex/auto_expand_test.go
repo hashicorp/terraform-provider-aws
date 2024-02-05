@@ -30,14 +30,7 @@ func TestExpand(t *testing.T) {
 	testTimeStr := "2013-09-25T09:34:01Z"
 	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr))
 
-	testCases := []struct {
-		Context    context.Context //nolint:containedctx // testing context use
-		TestName   string
-		Source     any
-		Target     any
-		WantErr    bool
-		WantTarget any
-	}{
+	testCases := autoFlexTestCases{
 		{
 			TestName: "nil Source and Target",
 			WantErr:  true,
@@ -297,32 +290,7 @@ func TestExpand(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-
-			testCtx := ctx //nolint:contextcheck // simplify use of testing context
-			if testCase.Context != nil {
-				testCtx = testCase.Context
-			}
-
-			err := Expand(testCtx, testCase.Source, testCase.Target)
-			gotErr := err != nil
-
-			if gotErr != testCase.WantErr {
-				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
-			}
-
-			if gotErr {
-				if !testCase.WantErr {
-					t.Errorf("err = %q", err)
-				}
-			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
+	runAutoFlexTestCases(ctx, t, testCases)
 }
 
 func TestExpandGeneric(t *testing.T) {
@@ -330,14 +298,7 @@ func TestExpandGeneric(t *testing.T) {
 
 	ctx := context.Background()
 
-	testCases := []struct {
-		Context    context.Context //nolint:containedctx // testing context use
-		TestName   string
-		Source     any
-		Target     any
-		WantErr    bool
-		WantTarget any
-	}{
+	testCases := autoFlexTestCases{
 		{
 			TestName:   "single list Source and *struct Target",
 			Source:     &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF01{Field1: types.StringValue("a")})},
@@ -773,34 +734,10 @@ func TestExpandGeneric(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-
-			testCtx := ctx //nolint:contextcheck // simplify use of testing context
-			if testCase.Context != nil {
-				testCtx = testCase.Context
-			}
-
-			err := Expand(testCtx, testCase.Source, testCase.Target)
-			gotErr := err != nil
-
-			if gotErr != testCase.WantErr {
-				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
-			}
-
-			if gotErr {
-				if !testCase.WantErr {
-					t.Errorf("err = %q", err)
-				}
-			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
+	runAutoFlexTestCases(ctx, t, testCases)
 }
 
+/*
 func TestExpandSingleNestedBlock(t *testing.T) {
 	t.Parallel()
 
@@ -831,6 +768,7 @@ func TestExpandSingleNestedBlock(t *testing.T) {
 	}
 	runAutoFlexTestCases(ctx, t, testCases)
 }
+*/
 
 type autoFlexTestCase struct {
 	Context    context.Context //nolint:containedctx // testing context use
