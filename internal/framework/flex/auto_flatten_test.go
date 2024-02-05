@@ -866,6 +866,52 @@ func TestFlattenGeneric(t *testing.T) {
 	runAutoFlattenTestCases(ctx, t, testCases)
 }
 
+func TestFlattenSimpleSingleNestedBlock(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field1 types.String `tfsdk:"field1"`
+		Field2 types.Int64  `tfsdk:"field2"`
+	}
+	type aws01 struct {
+		Field1 *string
+		Field2 int64
+	}
+
+	type tf02 struct {
+		Field1 fwtypes.ObjectValueOf[tf01] `tfsdk:"field1"`
+	}
+	type aws02 struct {
+		Field1 *aws01
+	}
+	type aws03 struct {
+		Field1 aws01
+	}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName:   "single nested block pointer",
+			Source:     &aws02{Field1: &aws01{Field1: aws.String("a"), Field2: 1}},
+			Target:     &tf02{},
+			WantTarget: &tf02{Field1: fwtypes.NewObjectValueOf[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
+		},
+		{
+			TestName:   "single nested block nil",
+			Source:     &aws02{},
+			Target:     &tf02{},
+			WantTarget: &tf02{Field1: fwtypes.NewObjectValueOfNull[tf01](ctx)},
+		},
+		{
+			TestName:   "single nested block value",
+			Source:     &aws03{Field1: aws01{Field1: aws.String("a"), Field2: 1}},
+			Target:     &tf02{},
+			WantTarget: &tf02{Field1: fwtypes.NewObjectValueOf[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
+		},
+	}
+	runAutoFlattenTestCases(ctx, t, testCases)
+}
+
 func runAutoFlattenTestCases(ctx context.Context, t *testing.T, testCases autoFlexTestCases) {
 	t.Helper()
 
