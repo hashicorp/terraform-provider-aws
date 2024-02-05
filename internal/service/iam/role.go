@@ -127,14 +127,6 @@ func (r *resourceIamRole) Schema(ctx context.Context, req resource.SchemaRequest
 			"assume_role_policy": schema.StringAttribute{
 				Required:   true,
 				CustomType: fwtypes.IAMPolicyType,
-				// TODO: possible plan validator? Or normalize what is going into state
-				// TODO: should add test case as well to validate
-				// DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				// DiffSuppressOnRefresh: true,
-				// StateFunc: func(v interface{}) string {
-				// json, _ := structure.NormalizeJsonString(v)
-				// return json
-				// },
 			},
 			"create_date": schema.StringAttribute{
 				Computed: true,
@@ -627,6 +619,10 @@ func (r *resourceIamRole) ModifyPlan(ctx context.Context, request resource.Modif
 
 		if state.Description.ValueString() == plan.Description.ValueString() {
 			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("description"), state.Description)...)
+		}
+
+		if state.AssumeRolePolicy.ValueString() == plan.AssumeRolePolicy.ValueString() {
+			response.Diagnostics.Append(response.Plan.SetAttribute(ctx, path.Root("assume_role_policy"), state.AssumeRolePolicy)...)
 		}
 
 		if state.NamePrefix.ValueString() == plan.NamePrefix.ValueString() {
