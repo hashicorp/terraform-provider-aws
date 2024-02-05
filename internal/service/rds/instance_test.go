@@ -7625,18 +7625,17 @@ func testAccInstanceConfig_baseMSSQLSelfManagedDomain(rName string) string {
 		testAccInstanceConfig_baseVPC(rName),
 		testAccInstanceConfig_ServiceRole(rName),
 		fmt.Sprintf(`
-
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_security_group" "test" {
-	name   = %[1]q
-	vpc_id = aws_vpc.test.id
-	
-	tags = {
-		Name = %[1]q
-	}
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 		  
 resource "aws_security_group_rule" "test" {
@@ -7683,8 +7682,9 @@ resource "aws_kms_key" "example" {
 }
 
 resource "aws_secretsmanager_secret" "example" {
-  name = %[1]q
+  name       = %[1]q
   kms_key_id = aws_kms_key.example.arn
+
   policy = <<POLICY
   {
     "Version": "2012-10-17",
@@ -7714,10 +7714,10 @@ resource "aws_secretsmanager_secret" "example" {
 }
 POLICY
 }
-	
+
 resource "aws_secretsmanager_secret_version" "example" {
   secret_id     = aws_secretsmanager_secret.example.id
-  secret_string = jsonencode({"CUSTOMER_MANAGED_ACTIVE_DIRECTORY_USERNAME": "Admin", "CUSTOMER_MANAGED_ACTIVE_DIRECTORY_PASSWORD": "avoid-plaintext-passwords"})
+  secret_string = jsonencode({ "CUSTOMER_MANAGED_ACTIVE_DIRECTORY_USERNAME" : "Admin", "CUSTOMER_MANAGED_ACTIVE_DIRECTORY_PASSWORD" : "avoid-plaintext-passwords" })
 }
 `, rName))
 }
@@ -7726,7 +7726,6 @@ func testAccInstanceConfig_mssqlSelfManagedDomain(rName, domain, domainOu string
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_baseMSSQLSelfManagedDomain(rName),
 		fmt.Sprintf(`
-
 resource "aws_db_instance" "test" {
   allocated_storage       = 20
   backup_retention_period = 0
@@ -7751,7 +7750,6 @@ func testAccInstanceConfig_mssqlUpdateSelfManagedDomain(rName, domain, domainOu 
 	return acctest.ConfigCompose(
 		testAccInstanceConfig_baseMSSQLSelfManagedDomain(rName),
 		fmt.Sprintf(`
-
 resource "aws_db_instance" "test" {
   allocated_storage       = 20
   apply_immediately       = true
@@ -7772,42 +7770,36 @@ resource "aws_db_instance" "test" {
 }
 
 resource "aws_secretsmanager_secret" "example-2" {
-	name = "%[1]s-2"
-	kms_key_id = aws_kms_key.example.arn
-	policy = <<POLICY
-	{
-	  "Version": "2012-10-17",
-	  "Statement":
-	  [
-		  {
-			  "Effect": "Allow",
-			  "Principal":
-			  {
-				  "Service": "rds.amazonaws.com"
-			  },
-			  "Action": "secretsmanager:GetSecretValue",
-			  "Resource": "*",
-			  "Condition":
-			  {
-				  "StringEquals":
-				  {
-					  "aws:sourceAccount": "${data.aws_caller_identity.current.account_id}"
-				  },
-				  "ArnLike":
-				  {
-					  "aws:sourceArn": "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:*"
-				  }
-			  }
-		  }
-	  ]
-  }
-  POLICY
+  name = "%[1]s-2"
+  kms_key_id = aws_kms_key.example.arn
+
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement":[{
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "rds.amazonaws.com"
+    },
+    "Action": "secretsmanager:GetSecretValue",
+    "Resource": "*",
+    "Condition": {
+      "StringEquals": {
+        "aws:sourceAccount": "${data.aws_caller_identity.current.account_id}"
+      },
+      "ArnLike": {
+        "aws:sourceArn": "arn:aws:rds:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:db:*"
+      }
+    }
+  }]
+}
+POLICY
   }
 
-  resource "aws_secretsmanager_secret_version" "example-2" {
-	secret_id     = aws_secretsmanager_secret.example-2.id
-	secret_string = jsonencode({"CUSTOMER_MANAGED_ACTIVE_DIRECTORY_USERNAME": "Admin", "CUSTOMER_MANAGED_ACTIVE_DIRECTORY_PASSWORD": "avoid-plaintext-passwords"})
-  }
+resource "aws_secretsmanager_secret_version" "example-2" {
+  secret_id     = aws_secretsmanager_secret.example-2.id
+  secret_string = jsonencode({"CUSTOMER_MANAGED_ACTIVE_DIRECTORY_USERNAME": "Admin", "CUSTOMER_MANAGED_ACTIVE_DIRECTORY_PASSWORD": "avoid-plaintext-passwords"})
+}
 `, rName, domain, domainOu))
 }
 
@@ -7846,10 +7838,10 @@ resource "aws_db_instance" "test" {
   username                = "tfacctest"
   vpc_security_group_ids  = [aws_security_group.test.id]
 
-  domain_fqdn             = %[2]q
-  domain_ou               = %[3]q
-  domain_auth_secret_arn  = aws_secretsmanager_secret_version.example.arn
-  domain_dns_ips          = ["123.124.125.126", "123.124.125.127"]
+  domain_fqdn            = %[2]q
+  domain_ou              = %[3]q
+  domain_auth_secret_arn = aws_secretsmanager_secret_version.example.arn
+  domain_dns_ips         = ["123.124.125.126", "123.124.125.127"]
 
   snapshot_identifier = aws_db_snapshot.origin.id
 }
