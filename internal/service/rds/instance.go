@@ -2161,15 +2161,18 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 	// Always set this. Fixes TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection
 	input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
 
-	if d.HasChanges("domain", "domain_auth_secret_arn", "domain_dns_ips", "domain_fqdn", "domain_iam_role_name", "domain_ou") {
+	// "InvalidParameterCombination: Specify the parameters for either AWS Managed Active Directory or self-managed Active Directory".
+	if d.HasChanges("domain", "domain_iam_role_name") {
 		needsModify = true
 		input.Domain = aws.String(d.Get("domain").(string))
+		input.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
+	} else if d.HasChanges("domain_auth_secret_arn", "domain_dns_ips", "domain_fqdn", "domain_ou") {
+		needsModify = true
 		input.DomainAuthSecretArn = aws.String(d.Get("domain_auth_secret_arn").(string))
 		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
 			input.DomainDnsIps = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 		input.DomainFqdn = aws.String(d.Get("domain_fqdn").(string))
-		input.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
 		input.DomainOu = aws.String(d.Get("domain_ou").(string))
 	}
 
