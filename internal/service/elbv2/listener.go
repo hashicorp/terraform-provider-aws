@@ -1251,7 +1251,8 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 		tga := action.GetAttr("target_group_arn")
 		f := action.GetAttr("forward")
 
-		if !tga.IsNull() && (!f.IsNull() && f.LengthInt() > 0) {
+		// If `ignore_changes` is set, even if there is no value in the configuration, the value in RawConfig is "" on refresh.
+		if (tga.IsKnown() && !tga.IsNull() && tga.AsString() != "") && (f.IsKnown() && !f.IsNull() && f.LengthInt() > 0) {
 			*diags = append(*diags, errs.NewAttributeErrorDiagnostic(actionPath,
 				"Invalid Attribute Combination",
 				fmt.Sprintf("Only one of %q or %q can be specified.",
