@@ -246,6 +246,7 @@ func ResourceInstance() *schema.Resource {
 			"domain_fqdn": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ConflictsWith: []string{"domain", "domain_iam_role_name"},
 			},
 			"domain_iam_role_name": {
