@@ -182,7 +182,7 @@ func (r *resourceModelInvocationLoggingConfiguration) Delete(ctx context.Context
 	_, err := conn.DeleteModelInvocationLoggingConfiguration(ctx, &bedrock.DeleteModelInvocationLoggingConfigurationInput{})
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("deleteing Bedrock Model Invocation Logging Configuration (%s)", data.ID.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Model Invocation Logging Configuration (%s)", data.ID.ValueString()), err.Error())
 
 		return
 	}
