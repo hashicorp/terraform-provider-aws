@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_s3_bucket_metric: Add support for filtering by `access_point` for [S3 bucket metric configuration](https://docs.aws.amazon.com/AmazonS3/latest/userguide/metrics-configurations-filter.html)
+resource/aws_s3_bucket_metric: Add `filter.access_point` argument
 ```

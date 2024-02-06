@@ -86,7 +86,7 @@ This resource supports the following arguments:
 
 The `filter` metric configuration supports the following:
 
-~> **NOTE:** At least one of `prefix` or `tags` is required when specifying a `filter`
+~> **NOTE:** At least one of `access_point`, `prefix`, or `tags` is required when specifying a `filter`
 
 * `access_point` - (Optional) S3 Access Point ARN for filtering (singular).
 * `prefix` - (Optional) Object prefix for filtering (singular).
