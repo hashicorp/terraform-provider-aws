@@ -133,14 +133,7 @@ func findContainerPolicyByContainerName(ctx context.Context, conn *mediastore.Cl
 
 	output, err := conn.GetContainerPolicy(ctx, input)
 
-	if errs.IsA[*awstypes.ContainerNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if errs.IsA[*awstypes.PolicyNotFoundException](err) {
+	if errs.IsA[*awstypes.ContainerNotFoundException](err) || errs.IsA[*awstypes.PolicyNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
