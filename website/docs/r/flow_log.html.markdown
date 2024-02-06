@@ -191,7 +191,7 @@ This argument supports the following arguments:
 * `transit_gateway_id` - (Optional) Transit Gateway ID to attach to
 * `transit_gateway_attachment_id` - (Optional) Transit Gateway Attachment ID to attach to
 * `vpc_id` - (Optional) VPC ID to attach to
-* `log_format` - (Optional) The fields to include in the flow log record, in the order in which they should appear.
+* `log_format` - (Optional) The fields to include in the flow log record. Accepted format example: `"$${interface-id} $${srcaddr} $${dstaddr} $${srcport} $${dstport}"`.
 * `max_aggregation_interval` - (Optional) The maximum interval of time
   during which a flow of packets is captured and aggregated into a flow
   log record. Valid Values: `60` seconds (1 minute) or `600` seconds (10

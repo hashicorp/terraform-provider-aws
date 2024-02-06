@@ -188,6 +188,16 @@ func resourceVirtualClusterDelete(ctx context.Context, d *schema.ResourceData, m
 		return diags
 	}
 
+	// Not actually a validation exception
+	if tfawserr.ErrMessageContains(err, emrcontainers.ErrCodeValidationException, "not found") {
+		return diags
+	}
+
+	// Not actually a validation exception
+	if tfawserr.ErrMessageContains(err, emrcontainers.ErrCodeValidationException, "already terminated") {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EMR Containers Virtual Cluster (%s): %s", d.Id(), err)
 	}

@@ -6,29 +6,36 @@ package types
 import (
 	"context"
 	"fmt"
-	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
-var _ basetypes.MapTypable = MapTypeOf[struct{}]{}
+var (
+	_ basetypes.MapTypable  = mapTypeOf[basetypes.StringValue]{}
+	_ basetypes.MapValuable = MapValueOf[basetypes.StringValue]{}
+)
 
-// MapTypeOf is the attribute type of a MapValueOf.
-type MapTypeOf[T any] struct {
+var (
+	// MapOfStringType is a custom type used for defining a Map of strings.
+	MapOfStringType = mapTypeOf[basetypes.StringValue]{basetypes.MapType{ElemType: basetypes.StringType{}}}
+)
+
+type mapTypeOf[T attr.Value] struct {
 	basetypes.MapType
 }
 
-func NewMapTypeOf[T any](ctx context.Context) MapTypeOf[T] {
-	return MapTypeOf[T]{basetypes.MapType{ElemType: ElementTypeMust[T](ctx)}}
+func NewMapTypeOf[T attr.Value](ctx context.Context) mapTypeOf[T] {
+	var zero T
+	return mapTypeOf[T]{basetypes.MapType{ElemType: zero.Type(ctx)}}
 }
 
-func (t MapTypeOf[T]) Equal(o attr.Type) bool {
-	other, ok := o.(MapTypeOf[T])
+func (t mapTypeOf[T]) Equal(o attr.Type) bool {
+	other, ok := o.(mapTypeOf[T])
 
 	if !ok {
 		return false
@@ -37,16 +44,19 @@ func (t MapTypeOf[T]) Equal(o attr.Type) bool {
 	return t.MapType.Equal(other.MapType)
 }
 
-func (t MapTypeOf[T]) String() string {
-	return "types.MapTypeOf[" + t.ElementType().String() + "]"
+func (t mapTypeOf[T]) String() string {
+	var zero T
+	return fmt.Sprintf("%T", zero)
 }
 
-func (t MapTypeOf[T]) ValueFromMap(ctx context.Context, in basetypes.MapValue) (basetypes.MapValuable, diag.Diagnostics) {
+func (t mapTypeOf[T]) ValueFromMap(ctx context.Context, in basetypes.MapValue) (basetypes.MapValuable, diag.Diagnostics) {
 	var diags diag.Diagnostics
+	var zero T
 
 	if in.IsNull() {
 		return NewMapValueOfNull[T](ctx), diags
 	}
+
 	if in.IsUnknown() {
 		return NewMapValueOfUnknown[T](ctx), diags
 	}
@@ -55,10 +65,10 @@ func (t MapTypeOf[T]) ValueFromMap(ctx context.Context, in basetypes.MapValue) (
 	// internal organs of framework and autoflex only to discover the
 	// first argument in this call should be an element type not the map
 	// type.
-	mapValue, d := basetypes.NewMapValue(t.ElementType(), in.Elements())
+	mapValue, d := basetypes.NewMapValue(zero.Type(ctx), in.Elements())
 	diags.Append(d...)
 	if diags.HasError() {
-		return NewMapValueOfUnknown[T](ctx), diags
+		return basetypes.NewMapUnknown(types.StringType), diags
 	}
 
 	value := MapValueOf[T]{
@@ -68,7 +78,7 @@ func (t MapTypeOf[T]) ValueFromMap(ctx context.Context, in basetypes.MapValue) (
 	return value, diags
 }
 
-func (t MapTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+func (t mapTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
 	attrValue, err := t.MapType.ValueFromTerraform(ctx, in)
 
 	if err != nil {
@@ -88,14 +98,12 @@ func (t MapTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) 
 	return mapValuable, nil
 }
 
-func (t MapTypeOf[T]) ValueType(ctx context.Context) attr.Value {
+func (t mapTypeOf[T]) ValueType(ctx context.Context) attr.Value {
 	return MapValueOf[T]{}
 }
 
-var _ basetypes.MapValuable = MapValueOf[struct{}]{}
-
-// MapValueOf represents a Terraform Plugin Framework Map value whose elements are of type MapTypeOf.
-type MapValueOf[T any] struct {
+// MapValueOf represents a Terraform Plugin Framework Map value whose elements are of type mapTypeOf.
+type MapValueOf[T attr.Value] struct {
 	basetypes.MapValue
 }
 
@@ -113,32 +121,27 @@ func (v MapValueOf[T]) Type(ctx context.Context) attr.Type {
 	return NewMapTypeOf[T](ctx)
 }
 
-func NewMapValueOfNull[T any](ctx context.Context) MapValueOf[T] {
-	return MapValueOf[T]{MapValue: basetypes.NewMapNull(NewMapTypeOf[T](ctx))}
-}
+func NewMapValueOf[T attr.Value](ctx context.Context, elements map[string]attr.Value) (MapValueOf[T], diag.Diagnostics) {
+	var zero T
 
-func NewMapValueOfUnknown[T any](ctx context.Context) MapValueOf[T] {
-	return MapValueOf[T]{MapValue: basetypes.NewMapUnknown(NewMapTypeOf[T](ctx))}
-}
-
-func NewMapValueOf[T any](ctx context.Context, elements map[string]T) MapValueOf[T] {
-	return MapValueOf[T]{MapValue: fwdiag.Must(basetypes.NewMapValueFrom(ctx, ElementTypeMust[T](ctx), elements))}
-}
-
-func ElementType[T any](ctx context.Context) (attr.Type, error) {
-	var t T
-	val := reflect.ValueOf(t)
-	typ := val.Type()
-
-	v, ok := val.Interface().(attr.Value)
-
-	if !ok {
-		return nil, fmt.Errorf("%T has unsupported type: %s", t, typ)
+	mapValue, diags := basetypes.NewMapValue(zero.Type(ctx), elements)
+	if diags.HasError() {
+		return NewMapValueOfUnknown[T](ctx), diags
 	}
 
-	return v.Type(ctx), nil
+	return MapValueOf[T]{MapValue: mapValue}, diags
 }
 
-func ElementTypeMust[T any](ctx context.Context) attr.Type {
-	return errs.Must(ElementType[T](ctx))
+func NewMapValueOfNull[T attr.Value](ctx context.Context) MapValueOf[T] {
+	var zero T
+	return MapValueOf[T]{MapValue: basetypes.NewMapNull(zero.Type(ctx))}
+}
+
+func NewMapValueOfUnknown[T attr.Value](ctx context.Context) MapValueOf[T] {
+	var zero T
+	return MapValueOf[T]{MapValue: basetypes.NewMapUnknown(zero.Type(ctx))}
+}
+
+func NewMapValueOfMust[T attr.Value](ctx context.Context, elements map[string]attr.Value) MapValueOf[T] {
+	return fwdiag.Must(NewMapValueOf[T](ctx, elements))
 }

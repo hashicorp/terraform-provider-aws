@@ -59,4 +59,4 @@ This data source exports the following attributes in addition to the arguments a
 * `bootstrapBrokersVpcConnectivitySaslScram` - A string containing one or more DNS names (or IP addresses) and SASL SCRAM port pairs for VPC connectivity.
 * `bootstrapBrokersVpcConnectivityTls` - A string containing one or more DNS names (or IP addresses) and TLS port pairs for VPC connectivity.
 
-<!-- cache-key: cdktf-0.20.0 input-c62e2a25ae47b21dfca65ee277dec62f4413fa7f5888eeace6de8bb886b62d13 -->
+<!-- cache-key: cdktf-0.20.1 input-c62e2a25ae47b21dfca65ee277dec62f4413fa7f5888eeace6de8bb886b62d13 -->

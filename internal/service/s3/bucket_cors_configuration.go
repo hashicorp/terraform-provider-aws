@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_s3_bucket_cors_configuration")
-func ResourceBucketCorsConfiguration() *schema.Resource {
+// @SDKResource("aws_s3_bucket_cors_configuration", name="Bucket CORS Configuration")
+func resourceBucketCorsConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCorsConfigurationCreate,
 		ReadWithoutTimeout:   resourceBucketCorsConfigurationRead,
