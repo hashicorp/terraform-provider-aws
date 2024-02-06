@@ -6,6 +6,7 @@ package mediastore_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/mediastore"
@@ -23,6 +24,9 @@ func TestAccMediaStoreContainer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_media_store_container.test"
 
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName = strings.ReplaceAll(rName, "-", "_")
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MedialStoreEndpointID),
@@ -30,7 +34,7 @@ func TestAccMediaStoreContainer_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckContainerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerConfig_basic(sdkacctest.RandString(5)),
+				Config: testAccContainerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerExists(ctx, resourceName),
 				),
@@ -46,8 +50,10 @@ func TestAccMediaStoreContainer_basic(t *testing.T) {
 
 func TestAccMediaStoreContainer_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	rName := sdkacctest.RandString(5)
 	resourceName := "aws_media_store_container.test"
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName = strings.ReplaceAll(rName, "-", "_")
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -60,7 +66,6 @@ func TestAccMediaStoreContainer_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("tf_mediastore_%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar"),
 					resource.TestCheckResourceAttr(resourceName, "tags.fizz", "buzz"),
 				),
@@ -70,7 +75,6 @@ func TestAccMediaStoreContainer_tags(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("tf_mediastore_%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "tags.foo", "bar2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.fizz2", "buzz2"),
 				),
@@ -95,6 +99,9 @@ func TestAccMediaStoreContainer_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_media_store_container.test"
 
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName = strings.ReplaceAll(rName, "-", "_")
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.MedialStoreEndpointID),
@@ -102,7 +109,7 @@ func TestAccMediaStoreContainer_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckContainerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccContainerConfig_basic(sdkacctest.RandString(5)),
+				Config: testAccContainerConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckContainerExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmediastore.ResourceContainer(), resourceName),
@@ -177,7 +184,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 func testAccContainerConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_media_store_container" "test" {
-  name = "tf_mediastore_%[1]s"
+  name = %[1]q
 }
 `, rName)
 }
@@ -185,10 +192,10 @@ resource "aws_media_store_container" "test" {
 func testAccContainerConfig_tags(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_media_store_container" "test" {
-  name = "tf_mediastore_%[1]s"
+  name = %[1]q
 
   tags = {
-    Name = "tf_mediastore_%[1]s"
+    Name = %[1]q
 
     %[2]s = %[3]q
     %[4]s = %[5]q
