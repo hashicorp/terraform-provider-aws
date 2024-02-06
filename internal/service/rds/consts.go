@@ -185,9 +185,11 @@ const (
 	ExportableLogTypeAgent      = "agent"
 	ExportableLogTypeAlert      = "alert"
 	ExportableLogTypeAudit      = "audit"
+	ExportableLogTypeDiagLog    = "diag.log"
 	ExportableLogTypeError      = "error"
 	ExportableLogTypeGeneral    = "general"
 	ExportableLogTypeListener   = "listener"
+	ExportableLogTypeNotifyLog  = "notify.log"
 	ExportableLogTypeOEMAgent   = "oemagent"
 	ExportableLogTypePostgreSQL = "postgresql"
 	ExportableLogTypeSlowQuery  = "slowquery"
@@ -211,9 +213,11 @@ func InstanceExportableLogType_Values() []string {
 		ExportableLogTypeAgent,
 		ExportableLogTypeAlert,
 		ExportableLogTypeAudit,
+		ExportableLogTypeDiagLog,
 		ExportableLogTypeError,
 		ExportableLogTypeGeneral,
 		ExportableLogTypeListener,
+		ExportableLogTypeNotifyLog,
 		ExportableLogTypeOEMAgent,
 		ExportableLogTypePostgreSQL,
 		ExportableLogTypeSlowQuery,
