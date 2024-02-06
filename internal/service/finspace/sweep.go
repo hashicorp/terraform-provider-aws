@@ -48,7 +48,8 @@ func sweepKxEnvironments(region string) error {
 		for _, v := range page.Environments {
 			id := aws.ToString(v.EnvironmentId)
 
-			if status := v.Status; status == types.EnvironmentStatusDeleted || status == types.EnvironmentStatusDeleting || status == types.EnvironmentStatusCreating {
+			switch status := v.Status; status {
+			case types.EnvironmentStatusDeleted, types.EnvironmentStatusDeleting, types.EnvironmentStatusCreating, types.EnvironmentStatusFailedDeletion:
 				log.Printf("[INFO] Skipping FinSpace Kx Environment %s: Status=%s", id, status)
 				continue
 			}
