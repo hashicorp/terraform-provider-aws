@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
-	"github.com/aws/aws-sdk-go-v2/service/m2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -35,7 +35,6 @@ func TestAccCloudFrontKeyValueStore_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CloudFront)
-			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -58,43 +57,33 @@ func TestAccCloudFrontKeyValueStore_basic(t *testing.T) {
 	})
 }
 
-// func TestAccCloudFrontKeyValueStore_disappears(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	if testing.Short() {
-// 		t.Skip("skipping long-running test in short mode")
-// 	}
+func TestAccCloudFrontKeyValueStore_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 
-// 	var keyvaluestore cloudfront.DescribeKeyValueStoreOutput
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	resourceName := "aws_cloudfront_key_value_store.test"
+	var keyvaluestore cloudfront.DescribeKeyValueStoreOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_key_value_store.test"
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			acctest.PreCheck(ctx, t)
-// 			acctest.PreCheckPartitionHasService(t, names.CloudFront)
-// 			testAccPreCheck(t)
-// 		},
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckKeyValueStoreDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccKeyValueStoreConfig_basic(rName, testAccKeyValueStoreVersionNewer),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
-// 					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-// 					// but expects a new resource factory function as the third argument. To expose this
-// 					// private function to the testing package, you may need to add a line like the following
-// 					// to exports_test.go:
-// 					//
-// 					//   var ResourceKeyValueStore = newResourceKeyValueStore
-// 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.DescribeKeyValueStoreResponse, resourceName),
-// 				),
-// 				ExpectNonEmptyPlan: true,
-// 			},
-// 		},
-// 	})
-// }
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.CloudFront)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyValueStoreDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyValueStoreConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceKeyValueStore, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 
 func testAccCheckKeyValueStoreDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -108,7 +97,7 @@ func testAccCheckKeyValueStoreDestroy(ctx context.Context) resource.TestCheckFun
 			_, err := conn.DescribeKeyValueStore(ctx, &cloudfront.DescribeKeyValueStoreInput{
 				Name: aws.String(rs.Primary.ID),
 			})
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if errs.IsA[*awstypes.EntityNotFound](err) {
 				return nil
 			}
 			if err != nil {
@@ -147,30 +136,6 @@ func testAccCheckKeyValueStoreExists(ctx context.Context, name string, keyvalues
 		return nil
 	}
 }
-
-// func testAccPreCheck(ctx context.Context, t *testing.T) {
-// 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
-
-// 	input := &cloudfront.ListKeyValueStoresInput{}
-// 	_, err := conn.ListKeyValueStores(ctx, input)
-
-// 	if acctest.PreCheckSkipError(err) {
-// 		t.Skipf("skipping acceptance testing: %s", err)
-// 	}
-// 	if err != nil {
-// 		t.Fatalf("unexpected PreCheck error: %s", err)
-// 	}
-// }
-
-// func testAccCheckKeyValueStoreNotRecreated(before, after *cloudfront.DescribeKeyValueStoreResponse) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		if before, after := aws.ToString(before.KeyValueStoreId), aws.ToString(after.KeyValueStoreId); before != after {
-// 			return create.Error(names.CloudFront, create.ErrActionCheckingNotRecreated, tfcloudfront.ResNameKeyValueStore, aws.ToString(before.KeyValueStoreId), errors.New("recreated"))
-// 		}
-
-// 		return nil
-// 	}
-// }
 
 func testAccKeyValueStoreConfig_basic(rName string) string {
 	return fmt.Sprintf(`
