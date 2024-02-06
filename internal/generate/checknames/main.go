@@ -21,7 +21,7 @@ import (
 )
 
 const (
-	lineOffset = 1 // translate from 0-based to 1-based index
+	lineOffset = 2 // 1 for skipping header line + 1 to translate from 0-based to 1-based index
 )
 
 // DocPrefix tests/column needs to be reworked for compatibility with tfproviderdocs
@@ -98,15 +98,15 @@ func main() {
 			}
 		}
 
-		if l.ClientSDKV1() == "" && l.ClientSDKV2() == "" && !l.Exclude() {
+		if !l.ClientSDKV1() && !l.ClientSDKV2() && !l.Exclude() {
 			log.Fatalf("in service data, line %d, for service %s, at least one of ClientSDKV1 or ClientSDKV2 must have a value if Exclude is blank", i+lineOffset, l.HumanFriendly())
 		}
 
-		if l.ClientSDKV1() != "" && (l.GoV1Package() == "" || l.GoV1ClientTypeName() == "") {
+		if l.ClientSDKV1() && (l.GoV1Package() == "" || l.GoV1ClientTypeName() == "") {
 			log.Fatalf("in service data, line %d, for service %s, SDKVersion is set to 1 so neither GoV1Package nor GoV1ClientTypeName can be blank", i+lineOffset, l.HumanFriendly())
 		}
 
-		if l.ClientSDKV2() != "" && l.GoV2Package() == "" {
+		if l.ClientSDKV2() && l.GoV2Package() == "" {
 			log.Fatalf("in service data, line %d, for service %s, SDKVersion is set to 2 so GoV2Package cannot be blank", i+lineOffset, l.HumanFriendly())
 		}
 
@@ -174,7 +174,11 @@ func main() {
 		}
 
 		if l.SdkId() == "" && !l.Exclude() {
-			log.Printf("in service data, line %d, for service %s, SdkId is required unless Exclude is set", i+lineOffset, l.HumanFriendly())
+			log.Fatalf("in service data, line %d, for service %s, SdkId is required unless Exclude is set", i+lineOffset, l.HumanFriendly())
+		}
+
+		if l.EndpointAPICall() == "" && !l.NotImplemented() && !l.Exclude() {
+			log.Fatalf("in service data, line %d, for service %s, EndpointAPICall is required for unless NotImplemented or Exclude is set", i+lineOffset, l.HumanFriendly())
 		}
 
 		rre := l.ResourcePrefixActual()
@@ -191,7 +195,7 @@ func main() {
 
 		allChecks++
 	}
-	fmt.Printf("  Performed %d checks on service data, 0 errors.\n", (allChecks * 39))
+	fmt.Printf("  Performed %d checks on service data, 0 errors.\n", (allChecks * 40))
 
 	var fileErrs bool
 

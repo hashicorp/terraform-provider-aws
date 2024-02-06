@@ -10,6 +10,10 @@ import (
 )
 
 const (
+	awsSdkId = "Elastic Load Balancing v2"
+)
+
+const (
 	propagationTimeout = 2 * time.Minute
 )
 

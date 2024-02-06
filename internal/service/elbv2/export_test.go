@@ -4,7 +4,26 @@
 package elbv2
 
 // Exports for use in tests only.
+const (
+	AwsSdkId = awsSdkId
+)
+
 var (
+	FindListenerByARN             = findListenerByARN
 	HealthCheckProtocolEnumValues = healthCheckProtocolEnumValues
 	ProtocolVersionEnumValues     = protocolVersionEnumValues
+)
+
+const (
+	MutualAuthenticationOff         = mutualAuthenticationOff
+	MutualAuthenticationVerify      = mutualAuthenticationVerify
+	MutualAuthenticationPassthrough = mutualAuthenticationPassthrough
+)
+
+const (
+	AlpnPolicyHTTP1Only      = alpnPolicyHTTP1Only
+	AlpnPolicyHTTP2Only      = alpnPolicyHTTP2Only
+	AlpnPolicyHTTP2Optional  = alpnPolicyHTTP2Optional
+	AlpnPolicyHTTP2Preferred = alpnPolicyHTTP2Preferred
+	AlpnPolicyNone           = alpnPolicyNone
 )

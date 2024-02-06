@@ -26,7 +26,8 @@ import (
 )
 
 const (
-	secretVersionStageCurrent = "AWSCURRENT"
+	secretVersionStageCurrent  = "AWSCURRENT"
+	secretVersionStagePrevious = "AWSPREVIOUS"
 )
 
 // @SDKResource("aws_secretsmanager_secret_version", name="Secret Version")
@@ -169,14 +170,46 @@ func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, me
 	os, ns := o.(*schema.Set), n.(*schema.Set)
 	add, del := flex.ExpandStringValueSet(ns.Difference(os)), flex.ExpandStringValueSet(os.Difference(ns))
 
+	var listedVersionIDs bool
 	for _, stage := range add {
-		input := &secretsmanager.UpdateSecretVersionStageInput{
+		inputU := &secretsmanager.UpdateSecretVersionStageInput{
 			MoveToVersionId: aws.String(versionID),
 			SecretId:        aws.String(secretID),
 			VersionStage:    aws.String(stage),
 		}
 
-		_, err := conn.UpdateSecretVersionStage(ctx, input)
+		if !listedVersionIDs {
+			if stage == secretVersionStageCurrent {
+				inputL := &secretsmanager.ListSecretVersionIdsInput{
+					SecretId: aws.String(secretID),
+				}
+				var versionStageCurrentVersionID string
+
+				paginator := secretsmanager.NewListSecretVersionIdsPaginator(conn, inputL)
+			listVersionIDs:
+				for paginator.HasMorePages() {
+					page, err := paginator.NextPage(ctx)
+
+					if err != nil {
+						return sdkdiag.AppendErrorf(diags, "listing Secrets Manager Secret (%s) version IDs: %s", secretID, err)
+					}
+
+					for _, version := range page.Versions {
+						for _, versionStage := range version.VersionStages {
+							if versionStage == secretVersionStageCurrent {
+								versionStageCurrentVersionID = aws.ToString(version.VersionId)
+								break listVersionIDs
+							}
+						}
+					}
+				}
+
+				inputU.RemoveFromVersionId = aws.String(versionStageCurrentVersionID)
+				listedVersionIDs = true
+			}
+		}
+
+		_, err := conn.UpdateSecretVersionStage(ctx, inputU)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "adding Secrets Manager Secret Version (%s) stage (%s): %s", d.Id(), stage, err)
@@ -187,6 +220,11 @@ func resourceSecretVersionUpdate(ctx context.Context, d *schema.ResourceData, me
 		// InvalidParameterException: You can only move staging label AWSCURRENT to a different secret version. It can’t be completely removed.
 		if stage == secretVersionStageCurrent {
 			log.Printf("[INFO] Skipping removal of AWSCURRENT staging label for secret %q version %q", secretID, versionID)
+			continue
+		}
+
+		// If we added AWSCURRENT to this version then any AWSPREVIOUS label will have been moved to another version.
+		if listedVersionIDs && stage == secretVersionStagePrevious {
 			continue
 		}
 
@@ -251,7 +289,7 @@ func resourceSecretVersionDelete(ctx context.Context, d *schema.ResourceData, me
 			return nil, err
 		}
 
-		if len(output.VersionStages) == 0 || (len(output.VersionStages) == 1 && output.VersionStages[0] == secretVersionStageCurrent) {
+		if len(output.VersionStages) == 0 || (len(output.VersionStages) == 1 && (output.VersionStages[0] == secretVersionStageCurrent || output.VersionStages[0] == secretVersionStagePrevious)) {
 			return nil, &retry.NotFoundError{}
 		}
 

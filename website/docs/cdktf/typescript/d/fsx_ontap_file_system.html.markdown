@@ -54,7 +54,7 @@ In addition to all arguments above, the following attributes are exported:
 * `dnsName` - DNS name for the file system (e.g. `fs-12345678.corp.example.com`).
 * `endpointIpAddressRange` - (Multi-AZ only) Specifies the IP address range in which the endpoints to access your file system exist.
 * `endpoints` - The Management and Intercluster FileSystemEndpoints that are used to access data or to manage the file system using the NetApp ONTAP CLI, REST API, or NetApp SnapMirror. See [FileSystemEndpoints](#file-system-endpoints) below.
-* `ha_pairs` - The number of HA pairs for the file system.
+* `haPairs` - The number of HA pairs for the file system.
 * `id` - Identifier of the file system (e.g. `fs-12345678`).
 * `kmsKeyId` - ARN for the KMS Key to encrypt the file system at rest.
 * `networkInterfaceIds` - The IDs of the elastic network interfaces from which a specific file system is accessible.
@@ -66,7 +66,7 @@ In addition to all arguments above, the following attributes are exported:
 * `subnetIds` - Specifies the IDs of the subnets that the file system is accessible from. For the MULTI_AZ_1 file system deployment type, there are two subnet IDs, one for the preferred file server and one for the standby file server. The preferred file server subnet identified in the `preferredSubnetId` property.
 * `tags` - The tags associated with the file system.
 * `throughputCapacity` - The sustained throughput of an Amazon FSx file system in Megabytes per second (MBps). If the file system uses multiple HA pairs this will equal throuthput_capacity_per_ha_pair x ha_pairs
-* `throughput_capacity_per_ha_pair` - The sustained throughput of each HA pair for an Amazon FSx file system in Megabytes per second (MBps).
+* `throughputCapacityPerHaPair` - The sustained throughput of each HA pair for an Amazon FSx file system in Megabytes per second (MBps).
 * `vpcId` - The ID of the primary virtual private cloud (VPC) for the file system.
 * `weeklyMaintenanceStartTime` - The preferred start time (in `D:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
 
@@ -85,4 +85,4 @@ In addition to all arguments above, the following attributes are exported:
 * `DNSName` - The file system's DNS name. You can mount your file system using its DNS name.
 * `IpAddresses` - IP addresses of the file system endpoint.
 
-<!-- cache-key: cdktf-0.20.0 input-61ee4666c4715dc5142dd755e5c30e597669f668aa73e98d4ecdf85468818540 -->
+<!-- cache-key: cdktf-0.20.1 input-61ee4666c4715dc5142dd755e5c30e597669f668aa73e98d4ecdf85468818540 -->
