@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.50.9
+	github.com/aws/aws-sdk-go v1.50.11
 	github.com/aws/aws-sdk-go-v2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/config v1.26.6
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.11
@@ -122,7 +122,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.8.4
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.5.6
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.27.6
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.35.8
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.35.9
 	github.com/aws/aws-sdk-go-v2/service/xray v1.23.7
 	github.com/aws/smithy-go v1.19.0
 	github.com/beevik/etree v1.3.0
