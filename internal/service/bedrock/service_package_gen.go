@@ -52,7 +52,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newProvisionedModelThroughputResource,
 			Name:    "Provisioned Model Throughput",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: "provisioned_model_arn",
 			},
 		},
 	}

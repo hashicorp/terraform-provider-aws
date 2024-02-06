@@ -34,7 +34,7 @@ import (
 )
 
 // @FrameworkResource(name="Provisioned Model Throughput")
-// @Tags(identifierAttribute="arn")
+// @Tags(identifierAttribute="provisioned_model_arn")
 func newProvisionedModelThroughputResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceProvisionedModelThroughput{}
 
@@ -57,9 +57,8 @@ func (r *resourceProvisionedModelThroughput) Metadata(_ context.Context, request
 func (r *resourceProvisionedModelThroughput) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"commitment_duration": schema.StringAttribute{
-				Required:   true,
+				Optional:   true,
 				CustomType: fwtypes.StringEnumType[awstypes.CommitmentDuration](),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -79,7 +78,8 @@ func (r *resourceProvisionedModelThroughput) Schema(ctx context.Context, request
 					int64planmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrName: schema.StringAttribute{
+			"provisioned_model_arn": framework.ARNAttributeComputedOnly(),
+			"provisioned_model_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -313,8 +313,8 @@ type provisionedModelThroughputResourceModel struct {
 	ID                   types.String                                    `tfsdk:"id"`
 	ModelARN             fwtypes.ARN                                     `tfsdk:"model_arn"`
 	ModelUnits           types.Int64                                     `tfsdk:"model_units"`
-	ProvisionedModelARN  types.String                                    `tfsdk:"arn"`
-	ProvisionedModelName types.String                                    `tfsdk:"name"`
+	ProvisionedModelARN  types.String                                    `tfsdk:"provisioned_model_arn"`
+	ProvisionedModelName types.String                                    `tfsdk:"provisioned_model_name"`
 	Tags                 types.Map                                       `tfsdk:"tags"`
 	TagsAll              types.Map                                       `tfsdk:"tags_all"`
 	Timeouts             timeouts.Value                                  `tfsdk:"timeouts"`
