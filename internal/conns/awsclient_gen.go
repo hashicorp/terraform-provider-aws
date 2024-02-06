@@ -21,6 +21,7 @@ import (
 	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudtrail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudtrail"
+	cloudwatch_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	codeartifact_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codeartifact"
 	codebuild_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codebuild"
@@ -140,7 +141,6 @@ import (
 	cloudfront_sdkv1 "github.com/aws/aws-sdk-go/service/cloudfront"
 	cloudhsmv2_sdkv1 "github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	cloudsearch_sdkv1 "github.com/aws/aws-sdk-go/service/cloudsearch"
-	cloudwatch_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatch"
 	cloudwatchrum_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	cognitoidentity_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentity"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -401,8 +401,8 @@ func (c *AWSClient) CloudTrailClient(ctx context.Context) *cloudtrail_sdkv2.Clie
 	return errs.Must(client[*cloudtrail_sdkv2.Client](ctx, c, names.CloudTrail, make(map[string]any)))
 }
 
-func (c *AWSClient) CloudWatchConn(ctx context.Context) *cloudwatch_sdkv1.CloudWatch {
-	return errs.Must(conn[*cloudwatch_sdkv1.CloudWatch](ctx, c, names.CloudWatch, make(map[string]any)))
+func (c *AWSClient) CloudWatchClient(ctx context.Context) *cloudwatch_sdkv2.Client {
+	return errs.Must(client[*cloudwatch_sdkv2.Client](ctx, c, names.CloudWatch, make(map[string]any)))
 }
 
 func (c *AWSClient) CodeArtifactClient(ctx context.Context) *codeartifact_sdkv2.Client {
