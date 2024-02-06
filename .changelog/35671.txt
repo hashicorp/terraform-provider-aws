@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_lb_listener: Was not storing `default_action[].forward` in state if only a single `target_group` was set.
+```
+
+```release-note:bug
+resource/aws_lb_listener_rule: Was not storing `action[].forward` in state if only a single `target_group` was set.
+```
