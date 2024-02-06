@@ -378,6 +378,7 @@ The following arguments are optional:
 * `dedicated_master_type` - (Optional) Instance type of the dedicated main nodes in the cluster.
 * `instance_count` - (Optional) Number of instances in the cluster.
 * `instance_type` - (Optional) Instance type of data nodes in the cluster.
+* `multi_az_with_standby_enabled` - (Optional) Whether a multi-AZ domain is turned on with a standby AZ. For more information, see [Configuring a multi-AZ domain in Amazon OpenSearch Service](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/managedomains-multiaz.html).
 * `warm_count` - (Optional) Number of warm nodes in the cluster. Valid values are between `2` and `150`. `warm_count` can be only and must be set when `warm_enabled` is set to `true`.
 * `warm_enabled` - (Optional) Whether to enable warm storage.
 * `warm_type` - (Optional) Instance type for the OpenSearch cluster's warm nodes. Valid values are `ultrawarm1.medium.search`, `ultrawarm1.large.search` and `ultrawarm1.xlarge.search`. `warm_type` can be only and must be set when `warm_enabled` is set to `true`.
@@ -407,7 +408,7 @@ AWS documentation: [Amazon Cognito Authentication for Dashboard](https://docs.aw
 * `custom_endpoint_enabled` - (Optional) Whether to enable custom endpoint for the OpenSearch domain.
 * `custom_endpoint` - (Optional) Fully qualified domain for your custom endpoint.
 * `enforce_https` - (Optional) Whether or not to require HTTPS. Defaults to `true`.
-* `tls_security_policy` - (Optional) Name of the TLS security policy that needs to be applied to the HTTPS endpoint. Valid values:  `Policy-Min-TLS-1-0-2019-07` and `Policy-Min-TLS-1-2-2019-07`. Terraform will only perform drift detection if a configuration value is provided.
+* `tls_security_policy` - (Optional) Name of the TLS security policy that needs to be applied to the HTTPS endpoint. For valid values, refer to the [AWS documentation](https://docs.aws.amazon.com/opensearch-service/latest/APIReference/API_DomainEndpointOptions.html#opensearchservice-Type-DomainEndpointOptions-TLSSecurityPolicy). Terraform will only perform drift detection if a configuration value is provided.
 
 ### ebs_options
 

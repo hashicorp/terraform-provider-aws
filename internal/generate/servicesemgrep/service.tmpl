@@ -41,6 +41,7 @@
             - pattern-not-regex: ^testAccWAFRateBasedRule.+
             {{- end }}
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
 {{- end }}
 {{- if .MainAlias }}
