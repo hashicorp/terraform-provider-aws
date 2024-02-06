@@ -11,11 +11,11 @@ import (
 	"sync"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	config_sdkv2 "github.com/aws/aws-sdk-go-v2/config"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
-	mediaconvert_sdkv1 "github.com/aws/aws-sdk-go/service/mediaconvert"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -24,17 +24,16 @@ import (
 )
 
 type AWSClient struct {
-	AccountID               string
-	DefaultTagsConfig       *tftags.DefaultConfig
-	DNSSuffix               string
-	IgnoreTagsConfig        *tftags.IgnoreConfig
-	MediaConvertAccountConn *mediaconvert_sdkv1.MediaConvert
-	Partition               string
-	Region                  string
-	ReverseDNSPrefix        string
-	ServicePackages         map[string]ServicePackage
-	Session                 *session_sdkv1.Session
-	TerraformVersion        string
+	AccountID         string
+	DefaultTagsConfig *tftags.DefaultConfig
+	DNSSuffix         string
+	IgnoreTagsConfig  *tftags.IgnoreConfig
+	Partition         string
+	Region            string
+	ReverseDNSPrefix  string
+	ServicePackages   map[string]ServicePackage
+	Session           *session_sdkv1.Session
+	TerraformVersion  string
 
 	awsConfig                 *aws_sdkv2.Config
 	clients                   map[string]any
@@ -178,10 +177,10 @@ func (c *AWSClient) GlobalAcceleratorHostedZoneID() string {
 }
 
 // apiClientConfig returns the AWS API client configuration parameters for the specified service.
-func (c *AWSClient) apiClientConfig(servicePackageName string) map[string]any {
+func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName string) map[string]any {
 	m := map[string]any{
 		"aws_sdkv2_config": c.awsConfig,
-		"endpoint":         c.endpoints[servicePackageName],
+		"endpoint":         c.resolveEndpoint(ctx, servicePackageName),
 		"partition":        c.Partition,
 		"session":          c.Session,
 	}
@@ -199,6 +198,58 @@ func (c *AWSClient) apiClientConfig(servicePackageName string) map[string]any {
 	}
 
 	return m
+}
+func (c *AWSClient) resolveEndpoint(ctx context.Context, servicePackageName string) string {
+	endpoint := c.endpoints[servicePackageName]
+	if endpoint != "" {
+		return endpoint
+	}
+
+	// Only continue if there is an SDK v1 package. SDK v2 supports envvars and config file
+	if names.ClientSDKV1(servicePackageName) {
+		endpoint = aws_sdkv2.ToString(c.awsConfig.BaseEndpoint)
+
+		envvar := names.AwsServiceEnvVar(servicePackageName)
+		svc := os.Getenv(envvar)
+		if svc != "" {
+			return svc
+		}
+
+		if base := os.Getenv("AWS_ENDPOINT_URL"); base != "" {
+			return base
+		}
+
+		sdkId := names.SdkId(servicePackageName)
+		endpoint, found, err := resolveServiceBaseEndpoint(ctx, sdkId, c.awsConfig.ConfigSources)
+		if found && err == nil {
+			return endpoint
+		}
+	}
+	return endpoint
+}
+
+// serviceBaseEndpointProvider is needed to search for all providers
+// that provide a configured service endpoint
+type serviceBaseEndpointProvider interface {
+	GetServiceBaseEndpoint(ctx context.Context, sdkID string) (string, bool, error)
+}
+
+// resolveServiceBaseEndpoint is used to retrieve service endpoints from configured sources
+// while allowing for configured endpoints to be disabled
+func resolveServiceBaseEndpoint(ctx context.Context, sdkID string, configs []any) (value string, found bool, err error) {
+	if val, found, _ := config_sdkv2.GetIgnoreConfiguredEndpoints(ctx, configs); found && val {
+		return "", false, nil
+	}
+
+	for _, cs := range configs {
+		if p, ok := cs.(serviceBaseEndpointProvider); ok {
+			value, found, err = p.GetServiceBaseEndpoint(ctx, sdkID)
+			if err != nil || found {
+				break
+			}
+		}
+	}
+	return
 }
 
 // conn returns the AWS SDK for Go v1 API client for the specified service.
@@ -234,7 +285,7 @@ func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string, e
 		return zero, fmt.Errorf("no AWS SDK v1 API client factory: %s", servicePackageName)
 	}
 
-	config := c.apiClientConfig(servicePackageName)
+	config := c.apiClientConfig(ctx, servicePackageName)
 	maps.Copy(config, extra) // Extras overwrite per-service defaults.
 	conn, err := v.NewConn(ctx, config)
 	if err != nil {
@@ -293,7 +344,7 @@ func client[T any](ctx context.Context, c *AWSClient, servicePackageName string,
 		return zero, fmt.Errorf("no AWS SDK v2 API client factory: %s", servicePackageName)
 	}
 
-	config := c.apiClientConfig(servicePackageName)
+	config := c.apiClientConfig(ctx, servicePackageName)
 	maps.Copy(config, extra) // Extras overwrite per-service defaults.
 	client, err := v.NewClient(ctx, config)
 	if err != nil {

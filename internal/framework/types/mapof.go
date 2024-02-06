@@ -16,22 +16,26 @@ import (
 )
 
 var (
-	_ basetypes.MapTypable  = MapTypeOf[basetypes.StringValue]{}
+	_ basetypes.MapTypable  = mapTypeOf[basetypes.StringValue]{}
 	_ basetypes.MapValuable = MapValueOf[basetypes.StringValue]{}
 )
 
-// MapTypeOf is the attribute type of a MapValueOf.
-type MapTypeOf[T attr.Value] struct {
+var (
+	// MapOfStringType is a custom type used for defining a Map of strings.
+	MapOfStringType = mapTypeOf[basetypes.StringValue]{basetypes.MapType{ElemType: basetypes.StringType{}}}
+)
+
+type mapTypeOf[T attr.Value] struct {
 	basetypes.MapType
 }
 
-func NewMapTypeOf[T attr.Value](ctx context.Context) MapTypeOf[T] {
+func NewMapTypeOf[T attr.Value](ctx context.Context) mapTypeOf[T] {
 	var zero T
-	return MapTypeOf[T]{basetypes.MapType{ElemType: zero.Type(ctx)}}
+	return mapTypeOf[T]{basetypes.MapType{ElemType: zero.Type(ctx)}}
 }
 
-func (t MapTypeOf[T]) Equal(o attr.Type) bool {
-	other, ok := o.(MapTypeOf[T])
+func (t mapTypeOf[T]) Equal(o attr.Type) bool {
+	other, ok := o.(mapTypeOf[T])
 
 	if !ok {
 		return false
@@ -40,18 +44,19 @@ func (t MapTypeOf[T]) Equal(o attr.Type) bool {
 	return t.MapType.Equal(other.MapType)
 }
 
-func (t MapTypeOf[T]) String() string {
+func (t mapTypeOf[T]) String() string {
 	var zero T
 	return fmt.Sprintf("%T", zero)
 }
 
-func (t MapTypeOf[T]) ValueFromMap(ctx context.Context, in basetypes.MapValue) (basetypes.MapValuable, diag.Diagnostics) {
+func (t mapTypeOf[T]) ValueFromMap(ctx context.Context, in basetypes.MapValue) (basetypes.MapValuable, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	var zero T
 
 	if in.IsNull() {
 		return NewMapValueOfNull[T](ctx), diags
 	}
+
 	if in.IsUnknown() {
 		return NewMapValueOfUnknown[T](ctx), diags
 	}
@@ -73,7 +78,7 @@ func (t MapTypeOf[T]) ValueFromMap(ctx context.Context, in basetypes.MapValue) (
 	return value, diags
 }
 
-func (t MapTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+func (t mapTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
 	attrValue, err := t.MapType.ValueFromTerraform(ctx, in)
 
 	if err != nil {
@@ -93,11 +98,11 @@ func (t MapTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) 
 	return mapValuable, nil
 }
 
-func (t MapTypeOf[T]) ValueType(ctx context.Context) attr.Value {
+func (t mapTypeOf[T]) ValueType(ctx context.Context) attr.Value {
 	return MapValueOf[T]{}
 }
 
-// MapValueOf represents a Terraform Plugin Framework Map value whose elements are of type MapTypeOf.
+// MapValueOf represents a Terraform Plugin Framework Map value whose elements are of type mapTypeOf.
 type MapValueOf[T attr.Value] struct {
 	basetypes.MapValue
 }
