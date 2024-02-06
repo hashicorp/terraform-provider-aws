@@ -140,7 +140,7 @@ func findContainerPolicyByContainerName(ctx context.Context, conn *mediastore.Cl
 		}
 	}
 
-	if output == nil || &output == nil {
+	if output == nil || output.Policy == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
