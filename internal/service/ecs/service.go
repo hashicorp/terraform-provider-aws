@@ -414,6 +414,36 @@ func ResourceService() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
+									"tls": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"issuer_cert_authority": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"aws_pca_authority_arn": {
+																Type:     schema.TypeString,
+																Required: true,
+															},
+														},
+													},
+												},
+												"kms_key_id": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+												"role_arn": {
+													Type:     schema.TypeString,
+													Required: true,
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -764,9 +794,9 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
-	// if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(service.ServiceConnectConfiguration)); err != nil {
-	// 	return fmt.Errorf("setting service_connect_configuration for (%s): %w", d.Id(), err)
-	// }
+	//if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(service.ServiceConnectConfiguration)); err != nil {
+	//	return sdkdiag.AppendErrorf(diags, "setting service_connect_configuration: %s", err)
+	//}
 
 	if err := d.Set("service_registries", flattenServiceRegistries(service.ServiceRegistries)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting service_registries: %s", err)
@@ -1441,10 +1471,47 @@ func expandServices(srv []interface{}) []*ecs.ServiceConnectService {
 			config.PortName = aws.String(v)
 		}
 
+		if v, ok := raw["tls"].([]interface{}); ok && len(v) > 0 {
+			config.Tls = expandTls(v)
+		}
+
 		out = append(out, &config)
 	}
 
 	return out
+}
+
+func expandTls(tls []interface{}) *ecs.ServiceConnectTlsConfiguration {
+	if len(tls) == 0 {
+		return nil
+	}
+
+	raw := tls[0].(map[string]interface{})
+	tlsConfig := &ecs.ServiceConnectTlsConfiguration{}
+	if v, ok := raw["issuer_cert_authority"].([]interface{}); ok && len(v) > 0 {
+		tlsConfig.IssuerCertificateAuthority = expandIssuerCertAuthority(v)
+	}
+	if v, ok := raw["kms_key"].(string); ok && v != "" {
+		tlsConfig.KmsKey = aws.String(v)
+	}
+	if v, ok := raw["role_arn"].(string); ok && v != "" {
+		tlsConfig.RoleArn = aws.String(v)
+	}
+	return tlsConfig
+}
+
+func expandIssuerCertAuthority(pca []interface{}) *ecs.ServiceConnectTlsCertificateAuthority {
+	if len(pca) == 0 {
+		return nil
+	}
+
+	raw := pca[0].(map[string]interface{})
+	config := &ecs.ServiceConnectTlsCertificateAuthority{}
+
+	if v, ok := raw["aws_pca_authority_arn"].(string); ok && v != "" {
+		config.AwsPcaAuthorityArn = aws.String(v)
+	}
+	return config
 }
 
 func expandClientAliases(srv []interface{}) []*ecs.ServiceConnectClientAlias {

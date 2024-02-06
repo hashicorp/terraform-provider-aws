@@ -4237,6 +4237,32 @@ resource "aws_ecs_service" "test" {
 
 func testAccServiceConfig_serviceConnectAllAttributes(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_iam_role" "test" {
+	  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ecs.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+  managed_policy_arns = ["arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonECSInfrastructureRolePolicyForServiceConnectTransportLayerSecurity"]
+}
+
 resource "aws_service_discovery_http_namespace" "test" {
   name = %[1]q
 }
@@ -4297,9 +4323,55 @@ resource "aws_ecs_service" "test" {
       discovery_name        = "test"
       ingress_port_override = 8443
       port_name             = "tf-test"
+      tls {
+        issuer_cert_authority {
+		  aws_pca_authority_arn = 	aws_acmpca_certificate_authority.test.arn
+        }
+        kms_key_id = aws_kms_key.test.arn
+        role_arn = aws_iam_role.test.arn	
+      }
     }
   }
 }
+
+resource "aws_acmpca_certificate_authority_certificate" "test" {
+  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
+
+  certificate       = aws_acmpca_certificate.test.certificate
+  certificate_chain = aws_acmpca_certificate.test.certificate_chain
+}
+
+resource "aws_acmpca_certificate" "test" {
+  certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
+  certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
+  signing_algorithm           = "SHA512WITHRSA"
+
+  template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate/V1"
+
+  validity {
+    type  = "YEARS"
+    value = 1
+  }
+}
+
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  type                            = "ROOT"
+  usage_mode = "SHORT_LIVED_CERTIFICATE"
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = %[1]q
+    }
+  }
+  tags = {
+	AmazonECSManaged = "true"
+  }
+}
+
+data "aws_partition" "current" {}
 `, rName)
 }
 

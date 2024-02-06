@@ -241,6 +241,20 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 * `namespace` - (Optional) The namespace name or ARN of the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) for use with Service Connect.
 * `service` - (Optional) The list of Service Connect service objects. See below.
 
+### tls
+
+`tls` supports the following:
+
+* `issuer_cert_authority` - (Required) The details of the certificate authority which will issue the certificate.
+* `kms_key_id` - (Required) The KMS key used to encrypt the private key in Secrets Manager.
+* `role_arn` - (Required) The ARN of the IAM Role that's associated with the Service Connect TLS.
+
+### issuer_cert_authority
+
+`issuer_cert_authority` supports the following:
+
+* `aws_pca_authority_arn`: The ARN of the [`aws_acmpca_certificate_authority`](/docs/providers/aws/r/acmpca_certificate_authority.html) used to create the TLS Certificates.
+
 ### log_configuration
 
 `log_configuration` supports the following:
@@ -264,6 +278,7 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 * `discovery_name` - (Optional) The name of the new AWS Cloud Map service that Amazon ECS creates for this Amazon ECS service.
 * `ingress_port_override` - (Optional) The port number for the Service Connect proxy to listen on.
 * `port_name` - (Required) The name of one of the `portMappings` from all the containers in the task definition of this Amazon ECS service.
+* `tls` - (Optional) The configuration for enabling Transport Layer Security (TLS)
 
 ### client_alias
 
