@@ -57,6 +57,31 @@ func TestAccMediaStoreContainerPolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccMediaStoreContainerPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_media_store_container_policy.test"
+
+	rName = strings.ReplaceAll(rName, "-", "_")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MedialStoreEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContainerPolicyConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContainerPolicyExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmediastore.ResourceContainerPolicy(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckContainerPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreClient(ctx)
