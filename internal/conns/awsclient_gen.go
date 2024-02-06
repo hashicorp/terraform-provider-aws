@@ -20,6 +20,7 @@ import (
 	chimesdkvoice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
+	cloudfront_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
 	codeartifact_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codeartifact"
 	codebuild_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codebuild"
@@ -386,6 +387,10 @@ func (c *AWSClient) CloudFormationConn(ctx context.Context) *cloudformation_sdkv
 
 func (c *AWSClient) CloudFrontConn(ctx context.Context) *cloudfront_sdkv1.CloudFront {
 	return errs.Must(conn[*cloudfront_sdkv1.CloudFront](ctx, c, names.CloudFront, make(map[string]any)))
+}
+
+func (c *AWSClient) CloudFrontClient(ctx context.Context) *cloudfront_sdkv2.Client {
+	return errs.Must(client[*cloudfront_sdkv2.Client](ctx, c, names.CloudFront, make(map[string]any)))
 }
 
 func (c *AWSClient) CloudHSMV2Conn(ctx context.Context) *cloudhsmv2_sdkv1.CloudHSMV2 {
