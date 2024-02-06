@@ -161,7 +161,7 @@ func testAccCheckContainerExists(ctx context.Context, name string) resource.Test
 			return fmt.Errorf("retrieving MediaStore Container (%s): %w", rs.Primary.ID, err)
 		}
 
-		return err
+		return nil
 	}
 }
 

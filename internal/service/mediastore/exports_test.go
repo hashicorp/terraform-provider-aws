@@ -5,5 +5,6 @@ package mediastore
 
 // Exports for use in tests only.
 var (
-	FindContainerByName = findContainerByName
+	FindContainerByName                = findContainerByName
+	FindContainerPolicyByContainerName = findContainerPolicyByContainerName
 )
