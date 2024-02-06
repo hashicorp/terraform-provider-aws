@@ -1813,22 +1813,25 @@ func addReplicaPITRs(ctx context.Context, conn *dynamodb.DynamoDB, tableName str
 	return replicas, nil
 }
 
-func enrichReplicas(ctx context.Context, conn *dynamodb.DynamoDB, arn, tableName, tfVersion string, replicas []interface{}) ([]interface{}, error) {
+func enrichReplicas(ctx context.Context, conn *dynamodb.DynamoDB, arn, tableName, tfVersion string, tfList []interface{}) ([]interface{}, error) {
 	// This non-standard approach is needed because PITR info for a replica
 	// must come from a region-specific connection.
-	for i, replicaRaw := range replicas {
-		replica := replicaRaw.(map[string]interface{})
+	for i, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
 
-		newARN, err := ARNForNewRegion(arn, replica["region_name"].(string))
+		newARN, err := ARNForNewRegion(arn, tfMap["region_name"].(string))
 		if err != nil {
 			return nil, fmt.Errorf("creating new-region ARN: %s", err)
 		}
-		replica[names.AttrARN] = newARN
+		tfMap[names.AttrARN] = newARN
 
-		session, err := conns.NewSessionForRegion(&conn.Config, replica["region_name"].(string), tfVersion)
+		session, err := conns.NewSessionForRegion(&conn.Config, tfMap["region_name"].(string), tfVersion)
 		if err != nil {
 			log.Printf("[WARN] Attempting to get replica (%s) stream information, ignoring encountered error: %s", tableName, err)
-			return nil, fmt.Errorf("")
+			continue
 		}
 
 		conn = dynamodb.New(session)
@@ -1836,21 +1839,20 @@ func enrichReplicas(ctx context.Context, conn *dynamodb.DynamoDB, arn, tableName
 		table, err := FindTableByName(ctx, conn, tableName)
 		if err != nil {
 			log.Printf("[WARN] When attempting to get replica (%s) stream information, ignoring encountered error: %s", tableName, err)
-			return nil, fmt.Errorf("")
+			continue
 		}
 
-		replica["stream_arn"] = aws.StringValue(table.LatestStreamArn)
-		replica["stream_label"] = aws.StringValue(table.LatestStreamLabel)
+		tfMap["stream_arn"] = aws.StringValue(table.LatestStreamArn)
+		tfMap["stream_label"] = aws.StringValue(table.LatestStreamLabel)
 
 		if table.SSEDescription != nil {
-			log.Printf("[WARN] in enrichReplicas setting KMS key arn")
-			replica[names.AttrKMSKeyARN] = aws.StringValue(table.SSEDescription.KMSMasterKeyArn)
+			tfMap[names.AttrKMSKeyARN] = aws.StringValue(table.SSEDescription.KMSMasterKeyArn)
 		}
 
-		replicas[i] = replica
+		tfList[i] = tfMap
 	}
 
-	return replicas, nil
+	return tfList, nil
 }
 
 func addReplicaTagPropagates(configReplicas *schema.Set, replicas []interface{}) []interface{} {
