@@ -47,8 +47,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_dynamodb_global_table",
 		},
 		{
-			Factory:  ResourceKinesisStreamingDestination,
+			Factory:  resourceKinesisStreamingDestination,
 			TypeName: "aws_dynamodb_kinesis_streaming_destination",
+			Name:     "Kinesis Streaming Destination",
 		},
 		{
 			Factory:  ResourceTable,

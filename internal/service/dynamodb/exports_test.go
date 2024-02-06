@@ -5,5 +5,8 @@ package dynamodb
 
 // Exports for use in tests only.
 var (
-	ListTags = listTags
+	ResourceKinesisStreamingDestination = resourceKinesisStreamingDestination
+
+	FindKinesisDataStreamDestinationByTwoPartKey = findKinesisDataStreamDestinationByTwoPartKey
+	ListTags                                     = listTags
 )
