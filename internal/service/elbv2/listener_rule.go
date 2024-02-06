@@ -10,6 +10,7 @@ import (
 	"log"
 	"sort"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -92,12 +93,17 @@ func ResourceListenerRule() *schema.Resource {
 						},
 
 						"target_group_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumForward),
+							ValidateFunc:     verify.ValidARN,
 						},
 
 						"forward": {
+							// Type:             schema.TypeList,
+							// Optional:         true,
+							// DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumForward),
+							// MaxItems:         1,
 							Type:                  schema.TypeList,
 							Optional:              true,
 							DiffSuppressOnRefresh: true,
@@ -151,9 +157,10 @@ func ResourceListenerRule() *schema.Resource {
 						},
 
 						"redirect": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumRedirect),
+							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"host": {
@@ -204,9 +211,10 @@ func ResourceListenerRule() *schema.Resource {
 						},
 
 						"fixed_response": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumFixedResponse),
+							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"content_type": {
@@ -238,9 +246,10 @@ func ResourceListenerRule() *schema.Resource {
 						},
 
 						"authenticate_cognito": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumAuthenticateCognito),
+							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"authentication_request_extra_params": {
@@ -287,9 +296,10 @@ func ResourceListenerRule() *schema.Resource {
 						},
 
 						"authenticate_oidc": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumAuthenticateOidc),
+							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"authentication_request_extra_params": {
@@ -478,6 +488,21 @@ func ResourceListenerRule() *schema.Resource {
 			verify.SetTagsDiff,
 			validateListenerActionsCustomDiff("action"),
 		),
+	}
+}
+
+func suppressIfActionTypeNot(t awstypes.ActionTypeEnum) schema.SchemaDiffSuppressFunc {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		take := 2
+		i := strings.IndexFunc(k, func(r rune) bool {
+			if r == '.' {
+				take -= 1
+				return take == 0
+			}
+			return false
+		})
+		at := k[:i+1] + "type"
+		return awstypes.ActionTypeEnum(d.Get(at).(string)) != t
 	}
 }
 

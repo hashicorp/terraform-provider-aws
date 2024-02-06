@@ -75,9 +75,10 @@ func ResourceListener() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"authenticate_cognito": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumAuthenticateCognito),
+							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"authentication_request_extra_params": {
@@ -123,9 +124,10 @@ func ResourceListener() *schema.Resource {
 							},
 						},
 						"authenticate_oidc": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumAuthenticateOidc),
+							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"authentication_request_extra_params": {
@@ -183,9 +185,10 @@ func ResourceListener() *schema.Resource {
 							},
 						},
 						"fixed_response": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumFixedResponse),
+							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"content_type": {
@@ -214,11 +217,15 @@ func ResourceListener() *schema.Resource {
 							},
 						},
 						"forward": {
-							Type:                  schema.TypeList,
-							Optional:              true,
-							DiffSuppressOnRefresh: true,
-							DiffSuppressFunc:      diffSuppressMissingForward("default_action"),
-							MaxItems:              1,
+							// Type:                  schema.TypeList,
+							// Optional:              true,
+							// DiffSuppressOnRefresh: true,
+							// DiffSuppressFunc:      diffSuppressMissingForward("default_action"),
+							// MaxItems:              1,
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumForward),
+							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"target_group": {
@@ -272,9 +279,10 @@ func ResourceListener() *schema.Resource {
 							ValidateFunc: validation.IntBetween(listenerActionOrderMin, listenerActionOrderMax),
 						},
 						"redirect": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:             schema.TypeList,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumRedirect),
+							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"host": {
@@ -319,9 +327,10 @@ func ResourceListener() *schema.Resource {
 							},
 						},
 						"target_group_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
+							Type:             schema.TypeString,
+							Optional:         true,
+							DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumForward),
+							ValidateFunc:     verify.ValidARN,
 						},
 						"type": {
 							Type:             schema.TypeString,
@@ -390,6 +399,21 @@ func ResourceListener() *schema.Resource {
 			verify.SetTagsDiff,
 			validateListenerActionsCustomDiff("default_action"),
 		),
+	}
+}
+
+func suppressIfDefaultActionTypeNot(t awstypes.ActionTypeEnum) schema.SchemaDiffSuppressFunc {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		take := 2
+		i := strings.IndexFunc(k, func(r rune) bool {
+			if r == '.' {
+				take -= 1
+				return take == 0
+			}
+			return false
+		})
+		at := k[:i+1] + "type"
+		return awstypes.ActionTypeEnum(d.Get(at).(string)) != t
 	}
 }
 
