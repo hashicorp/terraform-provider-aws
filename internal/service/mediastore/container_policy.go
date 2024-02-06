@@ -115,11 +115,7 @@ func resourceContainerPolicyDelete(ctx context.Context, d *schema.ResourceData, 
 
 	_, err := conn.DeleteContainerPolicy(ctx, input)
 
-	if errs.IsA[*awstypes.ContainerNotFoundException](err) {
-		return diags
-	}
-
-	if errs.IsA[*awstypes.PolicyNotFoundException](err) {
+	if errs.IsA[*awstypes.ContainerNotFoundException](err) || errs.IsA[*awstypes.PolicyNotFoundException](err) {
 		return diags
 	}
 
