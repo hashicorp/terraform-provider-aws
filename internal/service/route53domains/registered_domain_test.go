@@ -101,7 +101,7 @@ func testAccRegisteredDomain_contacts(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.city", "Little Nowhere"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.contact_type", "ASSOCIATION"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.country_code", "GB"),
-					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.email", "test1@example.com"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.email", "terraform-acctest+aws-route53domains-test1@hashicorp.com"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.fax", "+44.123456788"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.first_name", "Sys"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.last_name", "Admin"),
@@ -113,7 +113,7 @@ func testAccRegisteredDomain_contacts(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.city", "New York City"),
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.contact_type", "COMPANY"),
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.country_code", "US"),
-					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.email", "test2@example.com"),
+					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.email", "terraform-acctest+aws-route53domains-test2@hashicorp.com"),
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.first_name", "Terraform"),
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.last_name", "Team"),
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.organization_name", "HashiCorp"),
@@ -125,7 +125,7 @@ func testAccRegisteredDomain_contacts(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.city", "Prague"),
 					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.contact_type", "PERSON"),
 					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.country_code", "CZ"),
-					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.email", "test3@example.com"),
+					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.email", "terraform-acctest+aws-route53domains-test3@hashicorp.com"),
 					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.first_name", "Franz"),
 					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.last_name", "Kafka"),
 					resource.TestCheckResourceAttr(resourceName, "tech_contact.0.phone_number", "+420.224372434"),
@@ -323,7 +323,7 @@ resource "aws_route53domains_registered_domain" "test" {
     city              = "Little Nowhere"
     contact_type      = "ASSOCIATION"
     country_code      = "GB"
-    email             = "test1@example.com"
+    email             = "terraform-acctest+aws-route53domains-test1@hashicorp.com"
     fax               = "+44.123456788"
     first_name        = "Sys"
     last_name         = "Admin"
@@ -337,7 +337,7 @@ resource "aws_route53domains_registered_domain" "test" {
     city              = "New York City"
     contact_type      = "COMPANY"
     country_code      = "US"
-    email             = "test2@example.com"
+    email             = "terraform-acctest+aws-route53domains-test2@hashicorp.com"
     first_name        = "Terraform" # Changing owner's first or last name is a change of ownership.
     last_name         = "Team"
     organization_name = "HashiCorp"
@@ -351,7 +351,7 @@ resource "aws_route53domains_registered_domain" "test" {
     city           = "Prague"
     contact_type   = "PERSON"
     country_code   = "CZ"
-    email          = "test3@example.com"
+    email          = "terraform-acctest+aws-route53domains-test3@hashicorp.com"
     first_name     = "Franz"
     last_name      = "Kafka"
     phone_number   = "+420.224372434"
