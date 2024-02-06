@@ -991,8 +991,8 @@ func flattenLbForwardAction(d *schema.ResourceData, attrName string, i int, awsA
 	// On import, we have an empty State and empty Config
 
 	if rawConfig := d.GetRawConfig(); rawConfig.IsKnown() && !rawConfig.IsNull() {
-		defaultActions := rawConfig.GetAttr(attrName)
-		flattenLbForwardActionOneOf(defaultActions, i, awsAction, actionMap)
+		actions := rawConfig.GetAttr(attrName)
+		flattenLbForwardActionOneOf(actions, i, awsAction, actionMap)
 		return
 	}
 
@@ -1004,7 +1004,7 @@ func flattenLbForwardAction(d *schema.ResourceData, attrName string, i int, awsA
 		return
 	}
 
-	flattenLbForwardActionBoth(defaultActions, i, awsAction, actionMap)
+	flattenLbForwardActionBoth(i, awsAction, actionMap)
 }
 
 func flattenLbForwardActionOneOf(actions cty.Value, i int, awsAction awstypes.Action, actionMap map[string]any) {
@@ -1024,7 +1024,7 @@ func flattenLbForwardActionOneOf(actions cty.Value, i int, awsAction awstypes.Ac
 	}
 }
 
-func flattenLbForwardActionBoth(defaultActions cty.Value, i int, awsAction awstypes.Action, actionMap map[string]any) {
+func flattenLbForwardActionBoth(i int, awsAction awstypes.Action, actionMap map[string]any) {
 	actionMap["target_group_arn"] = aws.ToString(awsAction.TargetGroupArn)
 	actionMap["forward"] = flattenLbListenerActionForwardConfig(awsAction.ForwardConfig)
 }
