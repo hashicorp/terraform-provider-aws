@@ -102,7 +102,7 @@ func resourceKinesisStreamingDestinationRead(ctx context.Context, d *schema.Reso
 	}
 
 	if err != nil {
-		return diag.Errorf("reading DynamoDB Kinesis Streaming Destination (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DynamoDB Kinesis Streaming Destination (%s): %s", d.Id(), err)
 	}
 
 	d.Set("stream_arn", output.StreamArn)
