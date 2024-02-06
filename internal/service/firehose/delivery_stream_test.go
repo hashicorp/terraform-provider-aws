@@ -1820,12 +1820,17 @@ func TestAccFirehoseDeliveryStream_openSearchServerlessUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.type", "Lambda"),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.0.parameter_name", "LambdaArn"),
-					resource.TestCheckResourceAttrSet(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.0.parameter_value"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.1.parameter_name", "BufferSizeInMBs"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.1.parameter_value", "1.1"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.2.parameter_name", "BufferIntervalInSeconds"),
-					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.2.parameter_value", "70"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.*", map[string]string{
+						"parameter_name": "LambdaArn",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.*", map[string]string{
+						"parameter_name":  "BufferSizeInMBs",
+						"parameter_value": "1.1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "opensearchserverless_configuration.0.processing_configuration.0.processors.0.parameters.*", map[string]string{
+						"parameter_name":  "BufferIntervalInSeconds",
+						"parameter_value": "70",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.retry_duration", "300"),
 					resource.TestCheckResourceAttrSet(resourceName, "opensearchserverless_configuration.0.role_arn"),
 					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.0.s3_backup_mode", "FailedDocumentsOnly"),
