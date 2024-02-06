@@ -980,12 +980,12 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.OptionGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("password"); ok {
-			input.MasterUserPassword = aws.String(v.(string))
-		}
-
 		if v, ok := d.GetOk("parameter_group_name"); ok {
 			input.DBParameterGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("password"); ok {
+			input.MasterUserPassword = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("performance_insights_enabled"); ok {
@@ -1410,11 +1410,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			requiresModifyDbInstance = true
 		}
 
-		if v, ok := d.GetOk("password"); ok {
-			modifyDbInstanceInput.MasterUserPassword = aws.String(v.(string))
-			requiresModifyDbInstance = true
-		}
-
 		if v, ok := d.GetOk("monitoring_interval"); ok {
 			modifyDbInstanceInput.MonitoringInterval = aws.Int64(int64(v.(int)))
 			requiresModifyDbInstance = true
@@ -1435,6 +1430,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("parameter_group_name"); ok {
 			input.DBParameterGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("password"); ok {
+			modifyDbInstanceInput.MasterUserPassword = aws.String(v.(string))
+			requiresModifyDbInstance = true
 		}
 
 		if v, ok := d.GetOk("port"); ok {
