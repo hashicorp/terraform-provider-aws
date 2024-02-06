@@ -601,51 +601,9 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	sort.Slice(rule.Actions, func(i, j int) bool {
 		return aws.ToInt32(rule.Actions[i].Order) < aws.ToInt32(rule.Actions[j].Order)
 	})
-	actions := make([]interface{}, len(rule.Actions))
-	for i, action := range rule.Actions {
-		actionMap := map[string]interface{}{
-			"type":  string(action.Type),
-			"order": aws.ToInt32(action.Order),
-		}
-
-		switch action.Type {
-		case awstypes.ActionTypeEnumForward:
-			if rawConfig := d.GetRawConfig(); rawConfig.IsKnown() && !rawConfig.IsNull() {
-				defaultActions := rawConfig.GetAttr("action")
-				flattenLbForwardActionOneOf(defaultActions, i, action, actionMap)
-				break
-			}
-
-			rawState := d.GetRawState()
-			defaultActions := rawState.GetAttr("action")
-
-			if defaultActions.LengthInt() > 0 {
-				flattenLbForwardActionOneOf(defaultActions, i, action, actionMap)
-				break
-			}
-
-			flattenLbForwardActionBoth(defaultActions, i, action, actionMap)
-
-		case awstypes.ActionTypeEnumRedirect:
-			actionMap["redirect"] = flattenLbListenerActionRedirectConfig(action.RedirectConfig)
-
-		case awstypes.ActionTypeEnumFixedResponse:
-			actionMap["fixed_response"] = flattenLbListenerActionFixedResponseConfig(action.FixedResponseConfig)
-
-		case awstypes.ActionTypeEnumAuthenticateCognito:
-			actionMap["authenticate_cognito"] = flattenLbListenerActionAuthenticateCognitoConfig(action.AuthenticateCognitoConfig)
-
-		case awstypes.ActionTypeEnumAuthenticateOidc:
-			// The LB API currently provides no way to read the ClientSecret
-			// Instead we passthrough the configuration value into the state
-			clientSecret := d.Get("action." + strconv.Itoa(i) + ".authenticate_oidc.0.client_secret").(string)
-
-			actionMap["authenticate_oidc"] = flattenAuthenticateOIDCActionConfig(action.AuthenticateOidcConfig, clientSecret)
-		}
-
-		actions[i] = actionMap
+	if err := d.Set("action", flattenLbListenerActions(d, "action", rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting action: %s", err)
 	}
-	d.Set("action", actions)
 
 	conditions := make([]interface{}, len(rule.Conditions))
 	for i, condition := range rule.Conditions {

@@ -521,7 +521,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	sort.Slice(listener.DefaultActions, func(i, j int) bool {
 		return aws.ToInt32(listener.DefaultActions[i].Order) < aws.ToInt32(listener.DefaultActions[j].Order)
 	})
-	if err := d.Set("default_action", flattenLbListenerActions(d, listener.DefaultActions)); err != nil {
+	if err := d.Set("default_action", flattenLbListenerActions(d, "default_action", listener.DefaultActions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
 	}
 	d.Set("load_balancer_arn", listener.LoadBalancerArn)
@@ -950,14 +950,14 @@ func expandLbListenerActionForwardConfigTargetGroupStickinessConfig(l []interfac
 	}
 }
 
-func flattenLbListenerActions(d *schema.ResourceData, Actions []awstypes.Action) []interface{} {
-	if len(Actions) == 0 {
+func flattenLbListenerActions(d *schema.ResourceData, attrName string, actions []awstypes.Action) []interface{} {
+	if len(actions) == 0 {
 		return []interface{}{}
 	}
 
 	var vActions []interface{}
 
-	for i, action := range Actions {
+	for i, action := range actions {
 		m := map[string]interface{}{
 			"type":  string(action.Type),
 			"order": aws.ToInt32(action.Order),
@@ -965,7 +965,7 @@ func flattenLbListenerActions(d *schema.ResourceData, Actions []awstypes.Action)
 
 		switch action.Type {
 		case awstypes.ActionTypeEnumForward:
-			flattenLbForwardAction(d, i, action, m)
+			flattenLbForwardAction(d, attrName, i, action, m)
 
 		case awstypes.ActionTypeEnumRedirect:
 			m["redirect"] = flattenLbListenerActionRedirectConfig(action.RedirectConfig)
@@ -980,7 +980,7 @@ func flattenLbListenerActions(d *schema.ResourceData, Actions []awstypes.Action)
 			// The LB API currently provides no way to read the ClientSecret
 			// Instead we passthrough the configuration value into the state
 			var clientSecret string
-			if v, ok := d.GetOk("default_action." + strconv.Itoa(i) + ".authenticate_oidc.0.client_secret"); ok {
+			if v, ok := d.GetOk(attrName + "." + strconv.Itoa(i) + ".authenticate_oidc.0.client_secret"); ok {
 				clientSecret = v.(string)
 			}
 
@@ -993,19 +993,19 @@ func flattenLbListenerActions(d *schema.ResourceData, Actions []awstypes.Action)
 	return vActions
 }
 
-func flattenLbForwardAction(d *schema.ResourceData, i int, awsAction awstypes.Action, actionMap map[string]any) {
+func flattenLbForwardAction(d *schema.ResourceData, attrName string, i int, awsAction awstypes.Action, actionMap map[string]any) {
 	// On create and update, we have a Config
 	// On refresh, we have a populated State
 	// On import, we have an empty State and empty Config
 
 	if rawConfig := d.GetRawConfig(); rawConfig.IsKnown() && !rawConfig.IsNull() {
-		defaultActions := rawConfig.GetAttr("default_action")
+		defaultActions := rawConfig.GetAttr(attrName)
 		flattenLbForwardActionOneOf(defaultActions, i, awsAction, actionMap)
 		return
 	}
 
 	rawState := d.GetRawState()
-	defaultActions := rawState.GetAttr("default_action")
+	defaultActions := rawState.GetAttr(attrName)
 
 	if defaultActions.LengthInt() > 0 {
 		flattenLbForwardActionOneOf(defaultActions, i, awsAction, actionMap)
