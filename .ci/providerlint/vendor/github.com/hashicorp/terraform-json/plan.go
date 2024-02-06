@@ -4,6 +4,7 @@
 package tfjson
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -29,6 +30,12 @@ const (
 
 // Plan represents the entire contents of an output Terraform plan.
 type Plan struct {
+	// useJSONNumber opts into the behavior of calling
+	// json.Decoder.UseNumber prior to decoding the plan, which turns
+	// numbers into json.Numbers instead of float64s. Set it using
+	// Plan.UseJSONNumber.
+	useJSONNumber bool
+
 	// The version of the plan format. This should always match the
 	// PlanFormatVersion constant in this package, or else an unmarshal
 	// will be unstable.
@@ -85,6 +92,14 @@ type ResourceAttribute struct {
 	Attribute []json.RawMessage `json:"attribute"`
 }
 
+// UseJSONNumber controls whether the Plan will be decoded using the
+// json.Number behavior or the float64 behavior. When b is true, the Plan will
+// represent numbers in PlanOutputs as json.Numbers. When b is false, the
+// Plan will represent numbers in PlanOutputs as float64s.
+func (p *Plan) UseJSONNumber(b bool) {
+	p.useJSONNumber = b
+}
+
 // Validate checks to ensure that the plan is present, and the
 // version matches the version supported by this library.
 func (p *Plan) Validate() error {
@@ -127,7 +142,11 @@ func (p *Plan) UnmarshalJSON(b []byte) error {
 	type rawPlan Plan
 	var plan rawPlan
 
-	err := json.Unmarshal(b, &plan)
+	dec := json.NewDecoder(bytes.NewReader(b))
+	if p.useJSONNumber {
+		dec.UseNumber()
+	}
+	err := dec.Decode(&plan)
 	if err != nil {
 		return err
 	}
@@ -227,6 +246,15 @@ type Change struct {
 	// might change in the future. However, not all Importing changes will
 	// contain generated config.
 	GeneratedConfig string `json:"generated_config,omitempty"`
+
+	// ReplacePaths contains a set of paths that point to attributes/elements
+	// that are causing the overall resource to be replaced rather than simply
+	// updated.
+	//
+	// This field is always a slice of indexes, where an index in this context
+	// is either an integer pointing to a child of a set/list, or a string
+	// pointing to the child of a map, object, or block.
+	ReplacePaths []interface{} `json:"replace_paths,omitempty"`
 }
 
 // Importing is a nested object for the resource import metadata.

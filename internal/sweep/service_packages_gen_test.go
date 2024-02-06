@@ -175,6 +175,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftdata"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshiftserverless"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/rekognition"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourceexplorer2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroupstaggingapi"
@@ -211,6 +212,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmcontacts"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmincidents"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssmsap"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/sso"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ssoadmin"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/sts"
@@ -402,6 +404,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		redshift.ServicePackage(ctx),
 		redshiftdata.ServicePackage(ctx),
 		redshiftserverless.ServicePackage(ctx),
+		rekognition.ServicePackage(ctx),
 		resourceexplorer2.ServicePackage(ctx),
 		resourcegroups.ServicePackage(ctx),
 		resourcegroupstaggingapi.ServicePackage(ctx),
@@ -438,6 +441,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		ssmcontacts.ServicePackage(ctx),
 		ssmincidents.ServicePackage(ctx),
 		ssmsap.ServicePackage(ctx),
+		sso.ServicePackage(ctx),
 		ssoadmin.ServicePackage(ctx),
 		storagegateway.ServicePackage(ctx),
 		sts.ServicePackage(ctx),
