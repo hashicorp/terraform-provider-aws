@@ -672,8 +672,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	// Some API calls (e.g. CreateDBInstanceReadReplica and
-	// RestoreDBInstanceFromDBSnapshot do not support all parameters to
+	// Some API calls (e.g. CreateDBInstanceReadReplica, RestoreDBInstanceFromDBSnapshot
+	// RestoreDBInstanceToPointInTime do not support all parameters to
 	// correctly apply all settings in one pass. For missing parameters or
 	// unsupported configurations, we may need to call ModifyDBInstance
 	// afterwards to prevent Terraform operators from API errors or needing
@@ -980,12 +980,12 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.OptionGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("password"); ok {
-			input.MasterUserPassword = aws.String(v.(string))
-		}
-
 		if v, ok := d.GetOk("parameter_group_name"); ok {
 			input.DBParameterGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("password"); ok {
+			input.MasterUserPassword = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("performance_insights_enabled"); ok {
@@ -1430,6 +1430,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("parameter_group_name"); ok {
 			input.DBParameterGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("password"); ok {
+			modifyDbInstanceInput.MasterUserPassword = aws.String(v.(string))
+			requiresModifyDbInstance = true
 		}
 
 		if v, ok := d.GetOk("port"); ok {
