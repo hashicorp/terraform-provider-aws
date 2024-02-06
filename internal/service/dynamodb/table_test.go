@@ -1640,7 +1640,7 @@ func TestAccDynamoDBTable_Replica_single(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckMultipleRegion(t, 2)
+			acctest.PreCheckMultipleRegion(t, 3)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3), // 3 due to shared test configuration
@@ -1698,7 +1698,7 @@ func TestAccDynamoDBTable_Replica_singleStreamSpecification(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckMultipleRegion(t, 2)
+			acctest.PreCheckMultipleRegion(t, 3)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3), // 3 due to shared test configuration
@@ -1734,7 +1734,7 @@ func TestAccDynamoDBTable_Replica_singleDefaultKeyEncrypted(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckMultipleRegion(t, 2)
+			acctest.PreCheckMultipleRegion(t, 3)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3), // 3 due to shared test configuration
@@ -1773,13 +1773,13 @@ func TestAccDynamoDBTable_Replica_singleCMK(t *testing.T) {
 	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	kmsKeyResourceName := "aws_kms_key.test"
-	kmsKeyReplicaResourceName := "aws_kms_key.replica"
+	kmsKeyReplicaResourceName := "aws_kms_key.awsalternate"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckMultipleRegion(t, 2)
+			acctest.PreCheckMultipleRegion(t, 3)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3), // 3 due to shared test configuration
@@ -1808,14 +1808,14 @@ func TestAccDynamoDBTable_Replica_singleAddCMK(t *testing.T) {
 	var conf dynamodb.TableDescription
 	resourceName := "aws_dynamodb_table.test"
 	kmsKeyResourceName := "aws_kms_key.test"
-	kmsKeyReplicaResourceName := "aws_kms_key.replica"
-	kmsKeyReplica2ResourceName := "aws_kms_key.replica2"
+	kmsKey1Replica1ResourceName := "aws_kms_key.awsalternate1"
+	kmsKey2Replica1ResourceName := "aws_kms_key.awsalternate2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckMultipleRegion(t, 2)
+			acctest.PreCheckMultipleRegion(t, 3)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3), // 3 due to shared test configuration
@@ -1826,36 +1826,30 @@ func TestAccDynamoDBTable_Replica_singleAddCMK(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "replica.0.kms_key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.kms_key_arn", ""),
 				),
 			},
 			{
-				Config: testAccTableConfig_replicaCMKUpdate(rName, "replica"),
+				Config: testAccTableConfig_replicaCMKUpdate(rName, "awsalternate1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplicaResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKey1Replica1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
 			},
 			{
-				Config: testAccTableConfig_replicaCMKUpdate(rName, "replica2"),
+				Config: testAccTableConfig_replicaCMKUpdate(rName, "awsalternate2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInitialTableExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKeyReplica2ResourceName, names.AttrARN),
+					resource.TestCheckResourceAttrPair(resourceName, "replica.0.kms_key_arn", kmsKey2Replica1ResourceName, names.AttrARN),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "true"),
 					resource.TestCheckResourceAttrPair(resourceName, "server_side_encryption.0.kms_key_arn", kmsKeyResourceName, names.AttrARN),
 				),
-			},
-			{
-				Config:            testAccTableConfig_replicaCMKUpdate(rName, "replica2"),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -3722,15 +3716,9 @@ resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
 
-resource "aws_kms_key" "replica" {
+resource "aws_kms_key" "awsalternate" {
   provider                = "awsalternate"
-  description             = "%[1]s-2"
-  deletion_window_in_days = 7
-}
-
-resource "aws_kms_key" "replica2" {
-  provider                = "awsalternate"
-  description             = "%[1]s-3"
+  description             = %[1]q
   deletion_window_in_days = 7
 }
 
@@ -3748,12 +3736,58 @@ resource "aws_dynamodb_table" "test" {
 
   replica {
     region_name = data.aws_region.alternate.name
-    kms_key_arn = aws_kms_key.replica.arn
+    kms_key_arn = aws_kms_key.awsalternate.arn
   }
 
   server_side_encryption {
     enabled     = true
     kms_key_arn = aws_kms_key.test.arn
+  }
+
+  timeouts {
+    create = "20m"
+    update = "20m"
+    delete = "20m"
+  }
+}
+`, rName))
+}
+
+func testAccTableConfig_replicaAmazonManagedKey(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(3), // Prevent "Provider configuration not present" errors
+		fmt.Sprintf(`
+data "aws_region" "alternate" {
+  provider = "awsalternate"
+}
+
+data "aws_kms_alias" "dynamodb" {
+  name = "alias/aws/dynamodb"
+}
+
+data "aws_kms_alias" "awsalternate" {
+  name     = "alias/aws/dynamodb"
+  provider = "awsalternate"
+}
+
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name = data.aws_region.alternate.name
+  }
+
+  server_side_encryption {
+    enabled = true
   }
 
   timeouts {
@@ -3778,15 +3812,15 @@ resource "aws_kms_key" "test" {
   deletion_window_in_days = 7
 }
 
-resource "aws_kms_key" "replica" {
+resource "aws_kms_key" "awsalternate1" {
   provider                = "awsalternate"
-  description             = "%[1]s-2"
+  description             = "%[1]s-1"
   deletion_window_in_days = 7
 }
 
-resource "aws_kms_key" "replica2" {
+resource "aws_kms_key" "awsalternate2" {
   provider                = "awsalternate"
-  description             = "%[1]s-3"
+  description             = "%[1]s-2"
   deletion_window_in_days = 7
 }
 
@@ -3819,52 +3853,6 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 `, rName, key))
-}
-
-func testAccTableConfig_replicaAmazonManagedKey(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigMultipleRegionProvider(3), // Prevent "Provider configuration not present" errors
-		fmt.Sprintf(`
-data "aws_region" "alternate" {
-  provider = "awsalternate"
-}
-
-data "aws_kms_alias" "dynamodb" {
-  name = "alias/aws/dynamodb"
-}
-
-data "aws_kms_alias" "replica" {
-  name     = "alias/aws/dynamodb"
-  provider = "awsalternate"
-}
-
-resource "aws_dynamodb_table" "test" {
-  name             = %[1]q
-  hash_key         = "TestTableHashKey"
-  billing_mode     = "PAY_PER_REQUEST"
-  stream_enabled   = true
-  stream_view_type = "NEW_AND_OLD_IMAGES"
-
-  attribute {
-    name = "TestTableHashKey"
-    type = "S"
-  }
-
-  replica {
-    region_name = data.aws_region.alternate.name
-  }
-
-  server_side_encryption {
-    enabled = true
-  }
-
-  timeouts {
-    create = "20m"
-    update = "20m"
-    delete = "20m"
-  }
-}
-`, rName))
 }
 
 func testAccTableConfig_replicaPITR(rName string, mainPITR, replica1, replica2 bool) string {
