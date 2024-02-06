@@ -101,16 +101,8 @@ func ResourceListenerRule() *schema.Resource {
 							Type:                  schema.TypeList,
 							Optional:              true,
 							DiffSuppressOnRefresh: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if regexache.MustCompile(`^action\.\d+\.forward\.#$`).MatchString(k) {
-									return old == "1" && new == "0"
-								}
-								if regexache.MustCompile(`^action\.\d+\.forward\.\d+\.target_group\.#$`).MatchString(k) {
-									return old == "1" && new == "0"
-								}
-								return false
-							},
-							MaxItems: 1,
+							DiffSuppressFunc:      diffSuppressMissingForward("action"),
+							MaxItems:              1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"target_group": {

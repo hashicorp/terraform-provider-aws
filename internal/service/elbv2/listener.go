@@ -217,16 +217,8 @@ func ResourceListener() *schema.Resource {
 							Type:                  schema.TypeList,
 							Optional:              true,
 							DiffSuppressOnRefresh: true,
-							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-								if regexache.MustCompile(`^default_action\.\d+\.forward\.#$`).MatchString(k) {
-									return old == "1" && new == "0"
-								}
-								if regexache.MustCompile(`^default_action\.\d+\.forward\.\d+\.target_group\.#$`).MatchString(k) {
-									return old == "1" && new == "0"
-								}
-								return false
-							},
-							MaxItems: 1,
+							DiffSuppressFunc:      diffSuppressMissingForward("default_action"),
+							MaxItems:              1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"target_group": {
@@ -1376,5 +1368,17 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 				string(actionType),
 			))
 		}
+	}
+}
+
+func diffSuppressMissingForward(attrName string) schema.SchemaDiffSuppressFunc {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		if regexache.MustCompile(fmt.Sprintf(`^%s\.\d+\.forward\.#$`, attrName)).MatchString(k) {
+			return old == "1" && new == "0"
+		}
+		if regexache.MustCompile(fmt.Sprintf(`^%s\.\d+\.forward\.\d+\.target_group\.#$`, attrName)).MatchString(k) {
+			return old == "1" && new == "0"
+		}
+		return false
 	}
 }
