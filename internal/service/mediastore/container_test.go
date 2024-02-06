@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/mediastore"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/mediastore"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfmediastore "github.com/hashicorp/terraform-provider-aws/internal/service/mediastore"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMediaStoreContainer_basic(t *testing.T) {
@@ -24,7 +25,7 @@ func TestAccMediaStoreContainer_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, mediastore.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MedialStoreEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -50,7 +51,7 @@ func TestAccMediaStoreContainer_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, mediastore.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MedialStoreEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -90,31 +91,50 @@ func TestAccMediaStoreContainer_tags(t *testing.T) {
 	})
 }
 
+func TestAccMediaStoreContainer_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_media_store_container.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MedialStoreEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckContainerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccContainerConfig_basic(sdkacctest.RandString(5)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckContainerExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmediastore.ResourceContainer(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckContainerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_media_store_container" {
 				continue
 			}
 
-			input := &mediastore.DescribeContainerInput{
-				ContainerName: aws.String(rs.Primary.ID),
+			_, err := tfmediastore.FindContainerByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			resp, err := conn.DescribeContainerWithContext(ctx, input)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, mediastore.ErrCodeContainerNotFoundException) {
-					return nil
-				}
 				return err
 			}
 
-			if *resp.Container.Status != mediastore.ContainerStatusDeleting {
-				return fmt.Errorf("MediaStore Container (%s) not deleted", rs.Primary.ID)
-			}
+			return fmt.Errorf("container (%s) still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
@@ -126,24 +146,24 @@ func testAccCheckContainerExists(ctx context.Context, name string) resource.Test
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreClient(ctx)
 
-		input := &mediastore.DescribeContainerInput{
-			ContainerName: aws.String(rs.Primary.ID),
+		_, err := tfmediastore.FindContainerByName(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return fmt.Errorf("retrieving MediaStore Container (%s): %w", rs.Primary.ID, err)
 		}
-
-		_, err := conn.DescribeContainerWithContext(ctx, input)
 
 		return err
 	}
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MediaStoreClient(ctx)
 
 	input := &mediastore.ListContainersInput{}
 
-	_, err := conn.ListContainersWithContext(ctx, input)
+	_, err := conn.ListContainers(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -157,7 +177,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 func testAccContainerConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_media_store_container" "test" {
-  name = "tf_mediastore_%s"
+  name = "tf_mediastore_%[1]s"
 }
 `, rName)
 }
