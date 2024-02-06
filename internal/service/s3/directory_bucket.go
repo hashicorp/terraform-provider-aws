@@ -34,7 +34,7 @@ var (
 )
 
 func isDirectoryBucket(bucket string) bool {
-	return directoryBucketNameRegex.MatchString(bucket)
+	return bucketNameTypeFor(bucket) == bucketNameTypeDirectoryBucket
 }
 
 // @FrameworkResource(name="Directory Bucket")

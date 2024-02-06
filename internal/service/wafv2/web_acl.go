@@ -69,6 +69,7 @@ func ResourceWebACL() *schema.Resource {
 					Computed: true,
 				},
 				"captcha_config":       outerCaptchaConfigSchema(),
+				"challenge_config":     outerChallengeConfigSchema(),
 				"custom_response_body": customResponseBodySchema(),
 				"default_action": {
 					Type:     schema.TypeList,
@@ -179,6 +180,7 @@ func resourceWebACLCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	input := &wafv2.CreateWebACLInput{
 		AssociationConfig: expandAssociationConfig(d.Get("association_config").([]interface{})),
 		CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
+		ChallengeConfig:   expandChallengeConfig(d.Get("challenge_config").([]interface{})),
 		DefaultAction:     expandDefaultAction(d.Get("default_action").([]interface{})),
 		Name:              aws.String(name),
 		Rules:             expandWebACLRules(d.Get("rule").(*schema.Set).List()),
@@ -239,6 +241,9 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err := d.Set("captcha_config", flattenCaptchaConfig(webACL.CaptchaConfig)); err != nil {
 		return diag.Errorf("setting captcha_config: %s", err)
 	}
+	if err := d.Set("challenge_config", flattenChallengeConfig(webACL.ChallengeConfig)); err != nil {
+		return diag.Errorf("setting challenge_config: %s", err)
+	}
 	if err := d.Set("custom_response_body", flattenCustomResponseBodies(webACL.CustomResponseBodies)); err != nil {
 		return diag.Errorf("setting custom_response_body: %s", err)
 	}
@@ -282,6 +287,7 @@ func resourceWebACLUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		input := &wafv2.UpdateWebACLInput{
 			AssociationConfig: expandAssociationConfig(d.Get("association_config").([]interface{})),
 			CaptchaConfig:     expandCaptchaConfig(d.Get("captcha_config").([]interface{})),
+			ChallengeConfig:   expandChallengeConfig(d.Get("challenge_config").([]interface{})),
 			DefaultAction:     expandDefaultAction(d.Get("default_action").([]interface{})),
 			Id:                aws.String(aclID),
 			LockToken:         aws.String(aclLockToken),
