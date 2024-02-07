@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrock"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrock/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
@@ -198,35 +197,6 @@ func (r *resourceProvisionedModelThroughput) Delete(ctx context.Context, request
 
 		return
 	}
-}
-
-func (r *resourceProvisionedModelThroughput) putModelInvocationLoggingConfiguration(ctx context.Context, data *modelInvocationLoggingConfigurationResourceModel) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := r.Meta().BedrockClient(ctx)
-
-	input := &bedrock.PutModelInvocationLoggingConfigurationInput{}
-	diags.Append(fwflex.Expand(ctx, data, input)...)
-	if diags.HasError() {
-		return diags
-	}
-
-	// Example:
-	//   ValidationException: Failed to validate permissions for log group: <group>, with role: <role>. Verify
-	//   the IAM role permissions are correct.
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.ValidationException](ctx, propagationTimeout,
-		func() (interface{}, error) {
-			return conn.PutModelInvocationLoggingConfiguration(ctx, input)
-		},
-		"Failed to validate permissions for log group",
-	)
-
-	if err != nil {
-		diags.AddError("putting Bedrock Model Invocation Logging Configuration", err.Error())
-
-		return diags
-	}
-
-	return diags
 }
 
 func findProvisionedModelThroughputByID(ctx context.Context, conn *bedrock.Client, id string) (*bedrock.GetProvisionedModelThroughputOutput, error) {

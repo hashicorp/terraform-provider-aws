@@ -11,5 +11,6 @@ var (
 	FindCustomModelByID                     = findCustomModelByID
 	FindModelCustomizationJobByID           = findModelCustomizationJobByID
 	FindModelInvocationLoggingConfiguration = findModelInvocationLoggingConfiguration
+	FindProvisionedModelThroughputByID      = findProvisionedModelThroughputByID
 	WaitModelCustomizationJobCompleted      = waitModelCustomizationJobCompleted
 )
