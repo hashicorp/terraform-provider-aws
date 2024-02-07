@@ -111,6 +111,7 @@ const (
 	SyntheticsEndpointID                 = "synthetics"
 	TimestreamWriteEndpointID            = "ingest.timestream"
 	TranscribeEndpointID                 = "transcribe"
+	TransferEndpointID                   = "transfer"
 	VerifiedPermissionsEndpointID        = "verifiedpermissions"
 	VPCLatticeEndpointID                 = "vpc-lattice"
 	XRayEndpointID                       = "xray"
