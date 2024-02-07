@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/cloudwatch"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,17 +17,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcloudwatch "github.com/hashicorp/terraform-provider-aws/internal/service/cloudwatch"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCloudWatchMetricAlarm_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
+	var alarm types.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -63,13 +64,13 @@ func TestAccCloudWatchMetricAlarm_basic(t *testing.T) {
 
 func TestAccCloudWatchMetricAlarm_AlarmActions_ec2Automate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
+	var alarm types.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -112,13 +113,13 @@ func TestAccCloudWatchMetricAlarm_AlarmActions_ec2Automate(t *testing.T) {
 
 func TestAccCloudWatchMetricAlarm_AlarmActions_snsTopic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
+	var alarm types.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -140,13 +141,13 @@ func TestAccCloudWatchMetricAlarm_AlarmActions_snsTopic(t *testing.T) {
 
 func TestAccCloudWatchMetricAlarm_AlarmActions_swfAction(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
+	var alarm types.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -168,13 +169,13 @@ func TestAccCloudWatchMetricAlarm_AlarmActions_swfAction(t *testing.T) {
 
 func TestAccCloudWatchMetricAlarm_dataPointsToAlarm(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
+	var alarm types.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -191,13 +192,13 @@ func TestAccCloudWatchMetricAlarm_dataPointsToAlarm(t *testing.T) {
 
 func TestAccCloudWatchMetricAlarm_treatMissingData(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
+	var alarm types.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -233,13 +234,13 @@ func TestAccCloudWatchMetricAlarm_treatMissingData(t *testing.T) {
 
 func TestAccCloudWatchMetricAlarm_evaluateLowSampleCountPercentiles(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
+	var alarm types.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -263,13 +264,13 @@ func TestAccCloudWatchMetricAlarm_evaluateLowSampleCountPercentiles(t *testing.T
 
 func TestAccCloudWatchMetricAlarm_extendedStatistic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
+	var alarm types.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -416,13 +417,13 @@ func TestAccCloudWatchMetricAlarm_extendedStatistic(t *testing.T) {
 
 func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
+	var alarm types.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -445,9 +446,10 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"metric_query"},
 			},
 			{
 				Config: testAccMetricAlarmConfig_metricQueryExpressionReference(rName),
@@ -476,9 +478,10 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"metric_query"},
 			},
 			{
 				Config: testAccMetricAlarmConfig_metricQueryCrossAccount(rName),
@@ -491,9 +494,10 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"metric_query"},
 			},
 			{
 				Config: testAccMetricAlarmConfig_metricQueryExpressionReferenceUpdated(rName),
@@ -517,9 +521,10 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"metric_query"},
 			},
 			{
 				Config: testAccMetricAlarmConfig_metricQueryExpressionReference(rName),
@@ -529,9 +534,10 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"metric_query"},
 			},
 			{
 				Config: testAccMetricAlarmConfig_anomalyDetectionExpression(rName),
@@ -548,9 +554,10 @@ func TestAccCloudWatchMetricAlarm_metricQuery(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"metric_query"},
 			},
 		},
 	})
@@ -561,7 +568,7 @@ func TestAccCloudWatchMetricAlarm_missingStatistic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -575,13 +582,13 @@ func TestAccCloudWatchMetricAlarm_missingStatistic(t *testing.T) {
 
 func TestAccCloudWatchMetricAlarm_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
+	var alarm types.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -621,13 +628,13 @@ func TestAccCloudWatchMetricAlarm_tags(t *testing.T) {
 
 func TestAccCloudWatchMetricAlarm_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var alarm cloudwatch.MetricAlarm
+	var alarm types.MetricAlarm
 	resourceName := "aws_cloudwatch_metric_alarm.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricAlarmDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -643,18 +650,14 @@ func TestAccCloudWatchMetricAlarm_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckMetricAlarmExists(ctx context.Context, n string, v *cloudwatch.MetricAlarm) resource.TestCheckFunc {
+func testAccCheckMetricAlarmExists(ctx context.Context, n string, v *types.MetricAlarm) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No CloudWatch Metric Alarm ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchClient(ctx)
 
 		output, err := tfcloudwatch.FindMetricAlarmByName(ctx, conn, rs.Primary.ID)
 
@@ -670,7 +673,7 @@ func testAccCheckMetricAlarmExists(ctx context.Context, n string, v *cloudwatch.
 
 func testAccCheckMetricAlarmDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudWatchClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_metric_alarm" {
