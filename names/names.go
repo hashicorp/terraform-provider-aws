@@ -55,6 +55,7 @@ const (
 	ControlTowerEndpointID               = "controltower"
 	DocDBElasticEndpointID               = "docdb-elastic"
 	DSEndpointID                         = "ds"
+	EC2EndpointID                        = "ec2"
 	ECREndpointID                        = "api.ecr"
 	ECSEndpointID                        = "ecs"
 	EKSEndpointID                        = "eks"
