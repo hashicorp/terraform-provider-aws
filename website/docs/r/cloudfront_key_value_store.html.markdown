@@ -35,7 +35,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) identifying your CloudFront KeyValueStore.
-* `id` - A unique identifier for the KeyValueStore.
+* `id` - A unique identifier for the KeyValueStore. Same as `name`.
 * `etag` - ETag hash of the KeyValueStore.
 
 
@@ -54,12 +54,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_cloudfront_key_value_store.example
-  id = "key_value_store-id-12345678"
+  id = "example_store"
 }
 ```
 
 Using `terraform import`, import CloudFront Key Value Store using the `id`. For example:
 
 ```console
-% terraform import aws_cloudfront_key_value_store.example key_value_store-id-12345678
+% terraform import aws_cloudfront_key_value_store.example example_store
 ```
