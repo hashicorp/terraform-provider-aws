@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccProvisionedModelThroughput_basic(t *testing.T) {
+func TestAccBedrockProvisionedModelThroughput_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_provisioned_model_throughput.test"
@@ -52,8 +52,8 @@ func TestAccProvisionedModelThroughput_basic(t *testing.T) {
 	})
 }
 
-// TODO TestAccProvisionedModelThroughput_disappears
-// TODO TestAccProvisionedModelThroughput_tags
+// TODO TestAccBedrockProvisionedModelThroughput_disappears
+// TODO TestAccBedrockProvisionedModelThroughput_tags
 
 func testAccCheckProvisionedModelThroughputDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
