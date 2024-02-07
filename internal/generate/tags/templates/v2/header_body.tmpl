@@ -38,6 +38,9 @@ import (
 	{{- if .LoggingPkg }}
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	{{- end }}
+	{{- if .TfSlicesPkg }}
+    tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	{{- end }}
 	{{- if .TfResourcePkg }}
     "github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	{{- end }}
