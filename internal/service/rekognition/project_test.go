@@ -33,10 +33,10 @@ func TestAccRekognitionProject_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.Rekognition)
+			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
 			testAccProjectPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Rekognition),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProjectDestroy(ctx, feature, rProjectId),
 		Steps: []resource.TestStep{
@@ -70,10 +70,10 @@ func TestAccRekognitionProject_ContentModeration(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.Rekognition)
+			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
 			testAccProjectPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Rekognition),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -112,10 +112,10 @@ func TestAccRekognitionProject_CustomLabels(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.Rekognition)
+			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
 			testAccProjectPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Rekognition),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProjectDestroy(ctx, feature, rProjectId),
 		Steps: []resource.TestStep{
@@ -149,10 +149,10 @@ func TestAccRekognitionProject_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.Rekognition)
+			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
 			testAccProjectPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Rekognition),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProjectDestroy(ctx, feature, rProjectId),
 		Steps: []resource.TestStep{

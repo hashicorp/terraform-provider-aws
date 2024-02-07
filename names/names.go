@@ -21,7 +21,6 @@ import (
 	"strings"
 
 	"github.com/hashicorp/terraform-provider-aws/names/data"
-	"golang.org/x/exp/slices"
 )
 
 // These "should" be defined by the AWS Go SDK v2, but currently aren't.
@@ -39,6 +38,8 @@ const (
 	ChimeSDKVoiceEndpointID              = "voice-chime"
 	ChimeSDKMediaPipelinesEndpointID     = "media-pipelines-chime"
 	CleanRoomsEndpointID                 = "cleanrooms"
+	CloudTrailEndpointID                 = "cloudtrail"
+	CloudWatchEndpointID                 = "monitoring"
 	CloudWatchLogsEndpointID             = "logs"
 	CodeArtifactEndpointID               = "codeartifact"
 	CodeBuildEndpointID                  = "codebuild"
@@ -72,7 +73,9 @@ const (
 	KinesisEndpointID                    = "kinesis"
 	LambdaEndpointID                     = "lambda"
 	LexV2ModelsEndpointID                = "models-v2-lex"
+	MediaConvertEndpointID               = "mediaconvert"
 	MediaLiveEndpointID                  = "medialive"
+	MedialStoreEndpointID                = "mediastore"
 	MQEndpointID                         = "mq"
 	ObservabilityAccessManagerEndpointID = "oam"
 	OpenSearchServerlessEndpointID       = "aoss"
@@ -81,6 +84,7 @@ const (
 	PricingEndpointID                    = "pricing"
 	QLDBEndpointID                       = "qldb"
 	RedshiftDataEndpointID               = "redshift-data"
+	RekognitionEndpointID                = "rekognition"
 	ResourceExplorer2EndpointID          = "resource-explorer-2"
 	ResourceGroupsEndpointID             = "resource-groups"
 	ResourceGroupsTaggingAPIEndpointID   = "tagging"
@@ -102,6 +106,7 @@ const (
 	SSOAdminEndpointID                   = "sso"
 	STSEndpointID                        = "sts"
 	SWFEndpointID                        = "swf"
+	SyntheticsEndpointID                 = "synthetics"
 	TimestreamWriteEndpointID            = "ingest.timestream"
 	TranscribeEndpointID                 = "transcribe"
 	VerifiedPermissionsEndpointID        = "verifiedpermissions"
@@ -239,7 +244,9 @@ func ReverseDNS(hostname string) string {
 // described in detail in README.md.
 type ServiceDatum struct {
 	Aliases            []string
+	AwsServiceEnvVar   string
 	Brand              string
+	ClientSDKV1        bool
 	DeprecatedEnvVar   string
 	EndpointOnly       bool
 	GoV1ClientTypeName string
@@ -247,6 +254,7 @@ type ServiceDatum struct {
 	GoV2Package        string
 	HumanFriendly      string
 	ProviderNameUpper  string
+	SdkId              string
 	TfAwsEnvVar        string
 }
 
@@ -283,7 +291,9 @@ func readCSVIntoServiceData() error {
 		p := l.ProviderPackage()
 
 		serviceData[p] = &ServiceDatum{
+			AwsServiceEnvVar:   l.AwsServiceEnvVar(),
 			Brand:              l.Brand(),
+			ClientSDKV1:        l.ClientSDKV1(),
 			DeprecatedEnvVar:   l.DeprecatedEnvVar(),
 			EndpointOnly:       l.EndpointOnly(),
 			GoV1ClientTypeName: l.GoV1ClientTypeName(),
@@ -291,6 +301,7 @@ func readCSVIntoServiceData() error {
 			GoV2Package:        l.GoV2Package(),
 			HumanFriendly:      l.HumanFriendly(),
 			ProviderNameUpper:  l.ProviderNameUpper(),
+			SdkId:              l.SdkId(),
 			TfAwsEnvVar:        l.TfAwsEnvVar(),
 		}
 
@@ -353,11 +364,7 @@ func Endpoints() []Endpoint {
 			ProviderPackage: k,
 		}
 		if len(v.Aliases) > 1 {
-			idx := slices.Index(v.Aliases, k)
-			if idx != -1 {
-				aliases := slices.Delete(v.Aliases, idx, idx+1)
-				ep.Aliases = aliases
-			}
+			ep.Aliases = v.Aliases[1:]
 		}
 		endpoints = append(endpoints, ep)
 	}
@@ -392,6 +399,7 @@ func ProviderNameUpper(service string) (string, error) {
 	return "", fmt.Errorf("no service data found for %s", service)
 }
 
+// Deprecated `AWS_<service>_ENDPOINT` envvar defined for some services
 func DeprecatedEnvVar(service string) string {
 	if v, ok := serviceData[service]; ok {
 		return v.DeprecatedEnvVar
@@ -400,12 +408,39 @@ func DeprecatedEnvVar(service string) string {
 	return ""
 }
 
+// Deprecated `TF_AWS_<service>_ENDPOINT` envvar defined for some services
 func TfAwsEnvVar(service string) string {
 	if v, ok := serviceData[service]; ok {
 		return v.TfAwsEnvVar
 	}
 
 	return ""
+}
+
+// Standard service endpoint envvar defined by AWS
+func AwsServiceEnvVar(service string) string {
+	if v, ok := serviceData[service]; ok {
+		return v.AwsServiceEnvVar
+	}
+
+	return ""
+}
+
+// Service SDK ID from AWS SDK for Go v2
+func SdkId(service string) string {
+	if v, ok := serviceData[service]; ok {
+		return v.SdkId
+	}
+
+	return ""
+}
+
+func ClientSDKV1(service string) bool {
+	if v, ok := serviceData[service]; ok {
+		return v.ClientSDKV1
+	}
+
+	return false
 }
 
 func FullHumanFriendly(service string) (string, error) {
