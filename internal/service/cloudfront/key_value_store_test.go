@@ -92,6 +92,9 @@ func TestAccCloudFrontKeyValueStore_Comment(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_key_value_store.test"
 
+	comment1 := "comment1"
+	comment2 := "comment2"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
@@ -99,10 +102,10 @@ func TestAccCloudFrontKeyValueStore_Comment(t *testing.T) {
 		CheckDestroy:             testAccCheckKeyValueStoreDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudFrontKeyValueStoreConfigComment(rName, "comment1"),
+				Config: testAccCloudFrontKeyValueStoreConfigComment(rName, comment1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
-					resource.TestCheckResourceAttr(resourceName, "comment", "comment1"),
+					resource.TestCheckResourceAttr(resourceName, "comment", comment1),
 				),
 			},
 			{
@@ -112,10 +115,10 @@ func TestAccCloudFrontKeyValueStore_Comment(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"last_modified_time"},
 			},
 			{
-				Config: testAccCloudFrontKeyValueStoreConfigComment(rName, "comment1"),
+				Config: testAccCloudFrontKeyValueStoreConfigComment(rName, comment2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
-					resource.TestCheckResourceAttr(resourceName, "comment", "comment1"),
+					resource.TestCheckResourceAttr(resourceName, "comment", comment2),
 				),
 			},
 		},
