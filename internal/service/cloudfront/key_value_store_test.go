@@ -85,6 +85,43 @@ func TestAccCloudFrontKeyValueStore_disappears(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontKeyValueStore_Comment(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var keyvaluestore cloudfront.DescribeKeyValueStoreOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_key_value_store.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFront),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyValueStoreDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCloudFrontKeyValueStoreConfigComment(rName, "comment1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
+					resource.TestCheckResourceAttr(resourceName, "comment", "comment1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"last_modified_time"},
+			},
+			{
+				Config: testAccCloudFrontKeyValueStoreConfigComment(rName, "comment1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
+					resource.TestCheckResourceAttr(resourceName, "comment", "comment1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckKeyValueStoreDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
@@ -135,6 +172,15 @@ func testAccCheckKeyValueStoreExists(ctx context.Context, name string, keyvalues
 
 		return nil
 	}
+}
+
+func testAccCloudFrontKeyValueStoreConfigComment(rName string, comment string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_key_value_store" "test" {
+	name    = %[1]q
+  comment = %[2]q
+}
+`, rName, comment)
 }
 
 func testAccKeyValueStoreConfig_basic(rName string) string {
