@@ -14,7 +14,7 @@ Terraform resource for managing an AWS VPC Lattice Listener.
 
 ### Fixed response action
 
-```
+```terraform
 resource "aws_vpclattice_service" "test" {
   name = %[1]q
 }
@@ -33,7 +33,7 @@ resource "aws_vpclattice_listener" "test" {
 
 ### Forward action
 
-```
+```terraform
 resource "aws_vpclattice_service" "test" {
   name = "example"
 }
@@ -65,7 +65,7 @@ resource "aws_vpclattice_listener" "example" {
 
 ### Forward action with weighted target groups
 
-```
+```terraform
 resource "aws_vpclattice_service" "test" {
   name = "example"
 }
