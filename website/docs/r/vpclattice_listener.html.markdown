@@ -15,14 +15,14 @@ Terraform resource for managing an AWS VPC Lattice Listener.
 ### Fixed response action
 
 ```terraform
-resource "aws_vpclattice_service" "test" {
-  name = %[1]q
+resource "aws_vpclattice_service" "example" {
+  name = "example"
 }
 
-resource "aws_vpclattice_listener" "test" {
-  name               = %[1]q
+resource "aws_vpclattice_listener" "example" {
+  name               = "example"
   protocol           = "HTTPS"
-  service_identifier = aws_vpclattice_service.test.id
+  service_identifier = aws_vpclattice_service.example.id
   default_action {
     fixed_response {
       status_code = 404
@@ -34,7 +34,7 @@ resource "aws_vpclattice_listener" "test" {
 ### Forward action
 
 ```terraform
-resource "aws_vpclattice_service" "test" {
+resource "aws_vpclattice_service" "example" {
   name = "example"
 }
 
@@ -45,7 +45,7 @@ resource "aws_vpclattice_target_group" "example" {
   config {
     port           = 80
     protocol       = "HTTP"
-    vpc_identifier = aws_vpc.test.id
+    vpc_identifier = aws_vpc.example.id
   }
 }
 
@@ -66,7 +66,7 @@ resource "aws_vpclattice_listener" "example" {
 ### Forward action with weighted target groups
 
 ```terraform
-resource "aws_vpclattice_service" "test" {
+resource "aws_vpclattice_service" "example" {
   name = "example"
 }
 
@@ -77,7 +77,7 @@ resource "aws_vpclattice_target_group" "example1" {
   config {
     port           = 80
     protocol       = "HTTP"
-    vpc_identifier = aws_vpc.test.id
+    vpc_identifier = aws_vpc.example.id
   }
 }
 
@@ -88,7 +88,7 @@ resource "aws_vpclattice_target_group" "example2" {
   config {
     port           = 8080
     protocol       = "HTTP"
-    vpc_identifier = aws_vpc.test.id
+    vpc_identifier = aws_vpc.example.id
   }
 }
 
