@@ -118,7 +118,6 @@ func DataSourceFunction() *schema.Resource {
 			"last_modified": {
 				Type:     schema.TypeString,
 				Computed: true,
-				Optional: true,
 			},
 			"layers": {
 				Type:     schema.TypeList,

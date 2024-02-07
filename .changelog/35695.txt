@@ -1,0 +1,6 @@
+```release-note:bug
+resource/resource_aws_lambda_function: Add `Optional` flag for `last_modified` attribute to allow it to be ignored from Plans
+resource/aws_lakeformation_resource: Add `Optional` flag for `last_modified` attribute to allow it to be ignored from Plans
+resource/aws_synthetics_canary: Add `Optional` flag for `last_modified` attribute to allow it to be ignored from Plans
+resource/aws_schemas_schema: Add `Optional` flag for `last_modified` attribute to allow it to be ignored from Plans
+```
