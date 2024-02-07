@@ -2841,7 +2841,7 @@ resource "aws_rds_cluster_instance" "test" {
     ignore_changes = [engine_version]
   }
 }
-`, engine, upgrade, allowMajorVersionUpgrade, applyImmediately, rName, preferredClasses)
+`, engine, upgrade, allowMajorVersionUpgrade, applyImmediately, rName, mainInstanceClasses)
 }
 
 func testAccClusterConfig_allowMajorVersionUpgradeCustomParameters(rName string, allowMajorVersionUpgrade bool, engine string, engineVersion string, applyImmediate bool) string {
@@ -2902,7 +2902,7 @@ resource "aws_db_parameter_group" "test" {
 		rName,
 		engine,
 		engineVersion,
-		preferredClasses,
+		mainInstanceClasses,
 		applyImmediate,
 		engine+strings.Split(engineVersion, ".")[0])
 }
@@ -2944,7 +2944,7 @@ resource "aws_rds_cluster_instance" "test" {
   identifier         = %[4]q
   instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 }
-`, engine, preferredClasses, allowMajorVersionUpgrade, rName)
+`, engine, mainInstanceClasses, allowMajorVersionUpgrade, rName)
 }
 
 func testAccClusterConfig_minorVersion(rName, engine, engineVersion, family string) string {
@@ -2989,7 +2989,7 @@ resource "aws_rds_cluster_instance" "test" {
     ignore_changes = [engine_version]
   }
 }
-`, rName, family, engine, engineVersion, preferredClasses)
+`, rName, family, engine, engineVersion, mainInstanceClasses)
 }
 
 func testAccClusterConfig_availabilityZones(rName string) string {
@@ -3033,7 +3033,7 @@ resource "aws_rds_cluster" "test" {
   master_username           = "test"
   skip_final_snapshot       = true
 }
-`, tfrds.ClusterEngineMySQL, preferredClasses, rName))
+`, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName))
 }
 
 func testAccClusterConfig_allocatedStorage(rName string) string {
@@ -3063,7 +3063,7 @@ resource "aws_rds_cluster" "test" {
   master_username           = "test"
   skip_final_snapshot       = true
 }
-`, tfrds.ClusterEngineMySQL, preferredClasses, rName))
+`, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName))
 }
 
 func testAccClusterConfig_iops(rName string) string {
@@ -3093,7 +3093,7 @@ resource "aws_rds_cluster" "test" {
   master_username           = "test"
   skip_final_snapshot       = true
 }
-`, tfrds.ClusterEngineMySQL, preferredClasses, rName))
+`, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName))
 }
 
 func testAccClusterConfig_dbClusterInstanceClass(rName string, oddClasses bool) string {
@@ -3292,7 +3292,7 @@ resource "aws_rds_cluster" "test" {
   engine_mode                     = "provisioned"
   engine_version                  = data.aws_rds_orderable_db_instance.test.engine_version
 }
-`, tfrds.ClusterEnginePostgres, preferredClasses, rName, enabledCloudwatchLogExports1))
+`, tfrds.ClusterEnginePostgres, mainInstanceClasses, rName, enabledCloudwatchLogExports1))
 }
 
 func testAccClusterConfig_enabledCloudWatchLogsExportsPostgreSQL2(rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2 string) string {
@@ -3325,7 +3325,7 @@ resource "aws_rds_cluster" "test" {
   engine_mode                     = "provisioned"
   engine_version                  = data.aws_rds_orderable_db_instance.test.engine_version
 }
-`, tfrds.ClusterEnginePostgres, preferredClasses, rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2))
+`, tfrds.ClusterEnginePostgres, mainInstanceClasses, rName, enabledCloudwatchLogExports1, enabledCloudwatchLogExports2))
 }
 
 func testAccClusterConfig_kmsKey(n int) string {
@@ -3502,7 +3502,7 @@ resource "aws_rds_cluster_instance" "test" {
   engine             = aws_rds_cluster.test.engine
   instance_class     = data.aws_rds_orderable_db_instance.test.instance_class
 }
-`, tfrds.ClusterEngineAuroraPostgreSQL, upgrade, rName, preferredClasses)
+`, tfrds.ClusterEngineAuroraPostgreSQL, upgrade, rName, mainInstanceClasses)
 }
 
 func testAccClusterConfig_port(rName string, port int) string {
@@ -3892,7 +3892,7 @@ resource "aws_rds_cluster" "alternate" {
     aws_rds_cluster_instance.test,
   ]
 }
-`, tfrds.ClusterEngineAuroraMySQL, preferredClasses, rName))
+`, tfrds.ClusterEngineAuroraMySQL, mainInstanceClasses, rName))
 }
 
 func testAccClusterConfig_networkType(rName string, networkType string) string {
@@ -3922,7 +3922,7 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot  = true
   apply_immediately    = true
 }
-`, rName, tfrds.ClusterEngineAuroraPostgreSQL, preferredClasses, networkType))
+`, rName, tfrds.ClusterEngineAuroraPostgreSQL, mainInstanceClasses, networkType))
 }
 
 func testAccClusterConfig_deletionProtection(rName string, deletionProtection bool) string {
@@ -4061,7 +4061,7 @@ resource "aws_rds_cluster" "test" {
   master_username           = "foo"
   skip_final_snapshot       = true
 }
-`, tfrds.ClusterEngineAuroraPostgreSQL, preferredClasses, rName)
+`, tfrds.ClusterEngineAuroraPostgreSQL, mainInstanceClasses, rName)
 }
 
 func testAccClusterConfig_GlobalClusterID_primarySecondaryClusters(rNameGlobal, rNamePrimary, rNameSecondary string) string {
@@ -4166,7 +4166,7 @@ resource "aws_rds_cluster_instance" "secondary" {
   engine             = aws_rds_cluster.secondary.engine
   engine_version     = aws_rds_cluster.secondary.engine_version
 }
-`, tfrds.ClusterEngineAuroraMySQL, preferredClasses, rNameGlobal, rNamePrimary, rNameSecondary))
+`, tfrds.ClusterEngineAuroraMySQL, mainInstanceClasses, rNameGlobal, rNamePrimary, rNameSecondary))
 }
 
 func testAccClusterConfig_GlobalClusterID_secondaryClustersWriteForwarding(rNameGlobal, rNamePrimary, rNameSecondary string) string {
@@ -4272,7 +4272,7 @@ resource "aws_rds_cluster_instance" "secondary" {
   engine             = aws_rds_cluster.secondary.engine
   engine_version     = aws_rds_cluster.secondary.engine_version
 }
-`, tfrds.ClusterEngineAuroraMySQL, preferredClasses, rNameGlobal, rNamePrimary, rNameSecondary))
+`, tfrds.ClusterEngineAuroraMySQL, mainInstanceClasses, rNameGlobal, rNamePrimary, rNameSecondary))
 }
 
 func testAccClusterConfig_GlobalClusterID_replicationSourceID(rName string) string {
@@ -4377,7 +4377,7 @@ resource "aws_rds_cluster_instance" "secondary" {
   identifier         = "%[3]s-secondary"
   instance_class     = aws_rds_cluster_instance.primary.instance_class
 }
-`, tfrds.ClusterEngineAuroraPostgreSQL, preferredClasses, rName))
+`, tfrds.ClusterEngineAuroraPostgreSQL, mainInstanceClasses, rName))
 }
 
 func testAccClusterConfig_scalingConfiguration(rName string, autoPause bool, maxCapacity, minCapacity, secondsUntilAutoPause int, timeoutAction string) string {
@@ -4864,7 +4864,7 @@ resource "aws_rds_cluster" "test" {
   storage_type        = %[3]q
 }
 
-`, tfrds.ClusterEngineAuroraPostgreSQL, preferredClasses, storageType, rName)
+`, tfrds.ClusterEngineAuroraPostgreSQL, mainInstanceClasses, storageType, rName)
 }
 
 func testAccClusterConfig_auroraStorageTypeNotDefined(rName string) string {
@@ -4889,7 +4889,7 @@ resource "aws_rds_cluster" "test" {
   skip_final_snapshot = true
 }
 
-`, tfrds.ClusterEngineAuroraPostgreSQL, preferredClasses, rName)
+`, tfrds.ClusterEngineAuroraPostgreSQL, mainInstanceClasses, rName)
 }
 
 func testAccClusterConfig_enableHTTPEndpoint(rName string, enableHttpEndpoint bool) string {
