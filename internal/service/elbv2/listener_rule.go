@@ -100,10 +100,6 @@ func ResourceListenerRule() *schema.Resource {
 						},
 
 						"forward": {
-							// Type:             schema.TypeList,
-							// Optional:         true,
-							// DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumForward),
-							// MaxItems:         1,
 							Type:                  schema.TypeList,
 							Optional:              true,
 							DiffSuppressOnRefresh: true,

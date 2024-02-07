@@ -217,11 +217,6 @@ func ResourceListener() *schema.Resource {
 							},
 						},
 						"forward": {
-							// Type:                  schema.TypeList,
-							// Optional:              true,
-							// DiffSuppressOnRefresh: true,
-							// DiffSuppressFunc:      diffSuppressMissingForward("default_action"),
-							// MaxItems:              1,
 							Type:             schema.TypeList,
 							Optional:         true,
 							DiffSuppressFunc: suppressIfDefaultActionTypeNot(awstypes.ActionTypeEnumForward),
