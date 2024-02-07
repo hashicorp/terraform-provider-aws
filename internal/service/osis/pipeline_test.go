@@ -5,7 +5,6 @@ package osis_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -17,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfosis "github.com/hashicorp/terraform-provider-aws/internal/service/osis"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -25,7 +23,6 @@ import (
 
 func TestAccOpenSearchIngestionPipeline_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var pipeline types.Pipeline
 	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
 	resourceName := "aws_osis_pipeline.test"
@@ -64,7 +61,6 @@ func TestAccOpenSearchIngestionPipeline_basic(t *testing.T) {
 
 func TestAccOpenSearchIngestionPipeline_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var pipeline types.Pipeline
 	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
 	resourceName := "aws_osis_pipeline.test"
@@ -93,7 +89,6 @@ func TestAccOpenSearchIngestionPipeline_disappears(t *testing.T) {
 
 func TestAccOpenSearchIngestionPipeline_buffer(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var pipeline types.Pipeline
 	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
 	resourceName := "aws_osis_pipeline.test"
@@ -137,7 +132,6 @@ func TestAccOpenSearchIngestionPipeline_buffer(t *testing.T) {
 
 func TestAccOpenSearchIngestionPipeline_encryption(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var pipeline types.Pipeline
 	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
 	resourceName := "aws_osis_pipeline.test"
@@ -172,7 +166,6 @@ func TestAccOpenSearchIngestionPipeline_encryption(t *testing.T) {
 
 func TestAccOpenSearchIngestionPipeline_logPublishing(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var pipeline types.Pipeline
 	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
 	resourceName := "aws_osis_pipeline.test"
@@ -209,7 +202,6 @@ func TestAccOpenSearchIngestionPipeline_logPublishing(t *testing.T) {
 
 func TestAccOpenSearchIngestionPipeline_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var pipeline types.Pipeline
 	rName := fmt.Sprintf("%s-%s", acctest.ResourcePrefix, sdkacctest.RandString(10))
 	resourceName := "aws_osis_pipeline.test"
@@ -307,35 +299,32 @@ func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			if err != nil {
-				return create.Error(names.OpenSearchIngestion, create.ErrActionCheckingDestroyed, tfosis.ResNamePipeline, rs.Primary.ID, err)
+				return err
 			}
 
-			return create.Error(names.OpenSearchIngestion, create.ErrActionCheckingDestroyed, tfosis.ResNamePipeline, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("OpenSearch Ingestion Pipeline %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckPipelineExists(ctx context.Context, name string, pipeline *types.Pipeline) resource.TestCheckFunc {
+func testAccCheckPipelineExists(ctx context.Context, n string, v *types.Pipeline) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.OpenSearchIngestion, create.ErrActionCheckingExistence, tfosis.ResNamePipeline, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.OpenSearchIngestion, create.ErrActionCheckingExistence, tfosis.ResNamePipeline, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchIngestionClient(ctx)
-		resp, err := tfosis.FindPipelineByID(ctx, conn, rs.Primary.ID)
+
+		output, err := tfosis.FindPipelineByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.OpenSearchIngestion, create.ErrActionCheckingExistence, tfosis.ResNamePipeline, rs.Primary.ID, err)
+			return err
 		}
 
-		*pipeline = *resp
+		*v = *output
 
 		return nil
 	}

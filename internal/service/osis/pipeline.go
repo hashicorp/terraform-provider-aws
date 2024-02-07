@@ -6,6 +6,7 @@ package osis
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -17,8 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -27,10 +26,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -39,8 +40,8 @@ import (
 
 // @FrameworkResource(name="Pipeline")
 // @Tags(identifierAttribute="arn")
-func newResourcePipeline(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourcePipeline{}
+func newPipelineResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &pipelineResource{}
 
 	r.SetDefaultCreateTimeout(45 * time.Minute)
 	r.SetDefaultUpdateTimeout(45 * time.Minute)
@@ -49,26 +50,22 @@ func newResourcePipeline(_ context.Context) (resource.ResourceWithConfigure, err
 	return r, nil
 }
 
-const (
-	ResNamePipeline       = "Pipeline"
-	iamPropagationTimeout = time.Minute * 1
-)
-
-type resourcePipeline struct {
+type pipelineResource struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourcePipeline) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_osis_pipeline"
+func (r *pipelineResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_osis_pipeline"
 }
 
-func (r *resourcePipeline) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"id":  framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"ingest_endpoint_urls": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
 				Computed:    true,
 				ElementType: types.StringType,
 				PlanModifiers: []planmodifier.Set{
@@ -87,6 +84,7 @@ func (r *resourcePipeline) Schema(ctx context.Context, req resource.SchemaReques
 					int64validator.AtLeast(1),
 				},
 			},
+			"pipeline_arn": framework.ARNAttributeComputedOnly(),
 			"pipeline_configuration_body": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
@@ -107,6 +105,7 @@ func (r *resourcePipeline) Schema(ctx context.Context, req resource.SchemaReques
 		},
 		Blocks: map[string]schema.Block{
 			"buffer_options": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[bufferOptionsModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -119,25 +118,21 @@ func (r *resourcePipeline) Schema(ctx context.Context, req resource.SchemaReques
 				},
 			},
 			"encryption_at_rest_options": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[encryptionAtRestOptionsModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"kms_key_arn": schema.StringAttribute{
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
 							CustomType: fwtypes.ARNType,
 							Required:   true,
-							Validators: []validator.String{
-								stringvalidator.LengthBetween(7, 2048),
-							},
 						},
 					},
 				},
 			},
 			"log_publishing_options": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[logPublishingOptionsModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -149,6 +144,7 @@ func (r *resourcePipeline) Schema(ctx context.Context, req resource.SchemaReques
 					},
 					Blocks: map[string]schema.Block{
 						"cloudwatch_log_destination": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[cloudWatchLogDestinationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
@@ -166,417 +162,237 @@ func (r *resourcePipeline) Schema(ctx context.Context, req resource.SchemaReques
 					},
 				},
 			},
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 			"vpc_options": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[vpcOptionsModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"security_group_ids": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
 							Optional:    true,
 							ElementType: types.StringType,
 							Validators: []validator.Set{
 								setvalidator.SizeBetween(1, 12),
-								setvalidator.ValueStringsAre(
-									stringvalidator.All(
-										stringvalidator.LengthAtLeast(11),
-										stringvalidator.LengthAtMost(20),
-									),
-								),
 							},
 						},
 						"subnet_ids": schema.SetAttribute{
+							CustomType:  fwtypes.SetOfStringType,
 							Required:    true,
 							ElementType: types.StringType,
 							Validators: []validator.Set{
 								setvalidator.SizeBetween(1, 12),
-								setvalidator.ValueStringsAre(
-									stringvalidator.All(
-										stringvalidator.LengthAtLeast(15),
-										stringvalidator.LengthAtMost(24),
-									),
-								),
 							},
 						},
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
 		},
 	}
 }
 
-func (r *resourcePipeline) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().OpenSearchIngestionClient(ctx)
-
-	var plan resourcePipelineData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *pipelineResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data pipelineResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := &osis.CreatePipelineInput{
-		MaxUnits:                  aws.Int32(int32(plan.MaxUnits.ValueInt64())),
-		MinUnits:                  aws.Int32(int32(plan.MinUnits.ValueInt64())),
-		PipelineConfigurationBody: aws.String(plan.PipelineConfigurationBody.ValueString()),
-		PipelineName:              aws.String(plan.PipelineName.ValueString()),
-		Tags:                      getTagsIn(ctx),
+	conn := r.Meta().OpenSearchIngestionClient(ctx)
+
+	name := data.PipelineName.ValueString()
+	input := &osis.CreatePipelineInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	if !plan.BufferOptions.IsNull() {
-		var bufferOptions []bufferOptionsData
-		resp.Diagnostics.Append(plan.BufferOptions.ElementsAs(ctx, &bufferOptions, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+	// Additional fields.
+	input.Tags = getTagsIn(ctx)
 
-		in.BufferOptions = expandBufferOptions(bufferOptions)
-	}
-
-	if !plan.EncryptionAtRestOptions.IsNull() {
-		var encryptionAtRestOptions []encryptionAtRestOptionsData
-		resp.Diagnostics.Append(plan.EncryptionAtRestOptions.ElementsAs(ctx, &encryptionAtRestOptions, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		in.EncryptionAtRestOptions = expandEncryptionAtRestOptions(encryptionAtRestOptions)
-	}
-
-	if !plan.LogPublishingOptions.IsNull() {
-		var logPublishingOptions []logPublishingOptionsData
-		resp.Diagnostics.Append(plan.LogPublishingOptions.ElementsAs(ctx, &logPublishingOptions, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		logPublishingOptionsInput, d := expandLogPublishingOptions(ctx, logPublishingOptions)
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		in.LogPublishingOptions = logPublishingOptionsInput
-	}
-
-	if !plan.VpcOptions.IsNull() {
-		var vpcOptions []vpcOptionsData
-		resp.Diagnostics.Append(plan.VpcOptions.ElementsAs(ctx, &vpcOptions, false)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
-		in.VpcOptions = expandVPCOptions(ctx, vpcOptions)
-	}
-
-	// Retry for IAM eventual consistency
-	var out *osis.CreatePipelineOutput
-	err := tfresource.Retry(ctx, iamPropagationTimeout, func() *retry.RetryError {
-		var err error
-		out, err = conn.CreatePipeline(ctx, in)
-		if err != nil {
-			var ve *awstypes.ValidationException
-			if errors.As(err, &ve) {
-				return retry.RetryableError(err)
-			}
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
+	// Retry for IAM eventual consistency.
+	_, err := tfresource.RetryWhenIsA[*awstypes.ValidationException](ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreatePipeline(ctx, input)
 	})
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchIngestion, create.ErrActionCreating, ResNamePipeline, plan.PipelineName.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.Pipeline == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchIngestion, create.ErrActionCreating, ResNamePipeline, plan.PipelineName.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating OpenSearch Ingestion Pipeline (%s)", name), err.Error())
+
 		return
 	}
 
-	state := plan
-	state.ID = flex.StringToFramework(ctx, out.Pipeline.PipelineName)
+	data.setID()
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	waitOut, err := waitPipelineCreated(ctx, conn, aws.ToString(out.Pipeline.PipelineName), createTimeout)
+	pipeline, err := waitPipelineCreated(ctx, conn, name, r.CreateTimeout(ctx, data.Timeouts))
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchIngestion, create.ErrActionWaitingForCreation, ResNamePipeline, plan.PipelineName.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for OpenSearch Ingestion Pipeline (%s) create", name), err.Error())
+
 		return
 	}
 
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, waitOut)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	// Set values for unknowns.
+	data.IngestEndpointUrls.SetValue = fwflex.FlattenFrameworkStringValueSet(ctx, pipeline.IngestEndpointUrls)
+	data.PipelineARN = flex.StringToFramework(ctx, pipeline.PipelineArn)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourcePipeline) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().OpenSearchIngestionClient(ctx)
-
-	var state resourcePipelineData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *pipelineResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data pipelineResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findPipelineByID(ctx, conn, state.ID.ValueString())
+	if err := data.InitFromID(); err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+
+		return
+	}
+
+	conn := r.Meta().OpenSearchIngestionClient(ctx)
+
+	name := data.PipelineName.ValueString()
+	pipeline, err := findPipelineByName(ctx, conn, name)
+
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchIngestion, create.ErrActionSetting, ResNamePipeline, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading OpenSearch Ingestion Pipeline (%s)", name), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, pipeline, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourcePipeline) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().OpenSearchIngestionClient(ctx)
-
-	var plan, state resourcePipelineData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *pipelineResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new pipelineResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.BufferOptions.Equal(state.BufferOptions) ||
-		!plan.EncryptionAtRestOptions.Equal(state.EncryptionAtRestOptions) ||
-		!plan.LogPublishingOptions.Equal(state.LogPublishingOptions) ||
-		!plan.MaxUnits.Equal(state.MaxUnits) ||
-		!plan.MinUnits.Equal(state.MinUnits) ||
-		!plan.PipelineConfigurationBody.Equal(state.PipelineConfigurationBody) {
-		in := &osis.UpdatePipelineInput{
-			PipelineName: aws.String(plan.PipelineName.ValueString()),
+	conn := r.Meta().OpenSearchIngestionClient(ctx)
+
+	if !new.BufferOptions.Equal(old.BufferOptions) ||
+		!new.EncryptionAtRestOptions.Equal(old.EncryptionAtRestOptions) ||
+		!new.LogPublishingOptions.Equal(old.LogPublishingOptions) ||
+		!new.MaxUnits.Equal(old.MaxUnits) ||
+		!new.MinUnits.Equal(old.MinUnits) ||
+		!new.PipelineConfigurationBody.Equal(old.PipelineConfigurationBody) {
+		input := &osis.UpdatePipelineInput{}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		if response.Diagnostics.HasError() {
+			return
 		}
 
-		if !plan.MaxUnits.IsNull() {
-			in.MaxUnits = aws.Int32(int32(plan.MaxUnits.ValueInt64()))
-		}
+		name := new.PipelineName.ValueString()
+		_, err := conn.UpdatePipeline(ctx, input)
 
-		if !plan.MinUnits.IsNull() {
-			in.MinUnits = aws.Int32(int32(plan.MinUnits.ValueInt64()))
-		}
-
-		if !plan.PipelineConfigurationBody.IsNull() {
-			in.PipelineConfigurationBody = aws.String(plan.PipelineConfigurationBody.ValueString())
-		}
-
-		if !plan.BufferOptions.IsNull() {
-			var bufferOptions []bufferOptionsData
-			resp.Diagnostics.Append(plan.BufferOptions.ElementsAs(ctx, &bufferOptions, false)...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-
-			in.BufferOptions = expandBufferOptions(bufferOptions)
-		}
-
-		if !plan.EncryptionAtRestOptions.IsNull() {
-			var encryptionAtRestOptions []encryptionAtRestOptionsData
-			resp.Diagnostics.Append(plan.EncryptionAtRestOptions.ElementsAs(ctx, &encryptionAtRestOptions, false)...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-			in.EncryptionAtRestOptions = expandEncryptionAtRestOptions(encryptionAtRestOptions)
-		}
-		if !plan.LogPublishingOptions.IsNull() {
-			var logPublishingOptions []logPublishingOptionsData
-			resp.Diagnostics.Append(plan.LogPublishingOptions.ElementsAs(ctx, &logPublishingOptions, false)...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-
-			logPublishingOptionsInput, d := expandLogPublishingOptions(ctx, logPublishingOptions)
-			resp.Diagnostics.Append(d...)
-			if resp.Diagnostics.HasError() {
-				return
-			}
-			in.LogPublishingOptions = logPublishingOptionsInput
-		}
-
-		out, err := conn.UpdatePipeline(ctx, in)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.OpenSearchIngestion, create.ErrActionUpdating, ResNamePipeline, plan.ID.String(), err),
-				err.Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("updating OpenSearch Ingestion Pipeline (%s)", name), err.Error())
+
 			return
 		}
-		if out == nil || out.Pipeline == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.OpenSearchIngestion, create.ErrActionUpdating, ResNamePipeline, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
-			)
+
+		if _, err := waitPipelineUpdated(ctx, conn, name, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for OpenSearch Ingestion Pipeline (%s) update", name), err.Error())
+
 			return
 		}
 	}
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	waitOut, err := waitPipelineUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchIngestion, create.ErrActionWaitingForUpdate, ResNamePipeline, plan.ID.String(), err),
-			err.Error(),
-		)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+}
+
+func (r *pipelineResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data pipelineResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(plan.refreshFromOutput(ctx, waitOut)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-}
-
-func (r *resourcePipeline) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().OpenSearchIngestionClient(ctx)
 
-	var state resourcePipelineData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	name := data.PipelineName.ValueString()
+	input := &osis.DeletePipelineInput{
+		PipelineName: aws.String(name),
+	}
+
+	_, err := conn.DeletePipeline(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
-	in := &osis.DeletePipelineInput{
-		PipelineName: aws.String(state.ID.ValueString()),
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting OpenSearch Ingestion Pipeline (%s)", name), err.Error())
+
+		return
 	}
 
-	_, err := conn.DeletePipeline(ctx, in)
+	if _, err := waitPipelineDeleted(ctx, conn, name, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for OpenSearch Ingestion Pipeline (%s) delete", name), err.Error())
 
-	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return
+		return
+	}
+}
+
+func (r *pipelineResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
+}
+
+func findPipelineByName(ctx context.Context, conn *osis.Client, name string) (*awstypes.Pipeline, error) {
+	input := &osis.GetPipelineInput{
+		PipelineName: aws.String(name),
+	}
+
+	output, err := conn.GetPipeline(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchIngestion, create.ErrActionDeleting, ResNamePipeline, state.ID.String(), err),
-			err.Error(),
-		)
-		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitPipelineDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.OpenSearchIngestion, create.ErrActionWaitingForDeletion, ResNamePipeline, state.ID.String(), err),
-			err.Error(),
-		)
-		return
+		return nil, err
 	}
+
+	if output == nil || output.Pipeline == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Pipeline, nil
 }
 
-// refreshFromOutput writes state data from an AWS response object
-func (pd *resourcePipelineData) refreshFromOutput(ctx context.Context, out *awstypes.Pipeline) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if out == nil {
-		return diags
-	}
-
-	pd.ARN = flex.StringToFramework(ctx, out.PipelineArn)
-	pd.ID = flex.StringToFramework(ctx, out.PipelineName)
-	pd.PipelineName = flex.StringToFramework(ctx, out.PipelineName)
-	pd.PipelineConfigurationBody = flex.StringToFramework(ctx, out.PipelineConfigurationBody)
-	minUnits := int64(out.MinUnits)
-	pd.MinUnits = flex.Int64ToFramework(ctx, &minUnits)
-	maxUnits := int64(out.MaxUnits)
-	pd.MaxUnits = flex.Int64ToFramework(ctx, &maxUnits)
-	pd.IngestEndpointUrls = flex.FlattenFrameworkStringValueSet(ctx, out.IngestEndpointUrls)
-
-	bufferOptions, d := flattenBufferOptions(ctx, out.BufferOptions)
-	diags.Append(d...)
-	pd.BufferOptions = bufferOptions
-
-	encryptionAtRestOptions, d := flattenEncryptionAtRestOptions(ctx, out.EncryptionAtRestOptions)
-	diags.Append(d...)
-	pd.EncryptionAtRestOptions = encryptionAtRestOptions
-
-	logPublishingOptions, d := flattenLogPublishingOptions(ctx, out.LogPublishingOptions)
-	diags.Append(d...)
-	pd.LogPublishingOptions = logPublishingOptions
-
-	setTagsOut(ctx, out.Tags)
-	return diags
-}
-
-func (r *resourcePipeline) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
-func (r *resourcePipeline) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func waitPipelineCreated(ctx context.Context, conn *osis.Client, id string, timeout time.Duration) (*awstypes.Pipeline, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.PipelineStatusCreating, awstypes.PipelineStatusStarting),
-		Target:     enum.Slice(awstypes.PipelineStatusActive),
-		Refresh:    statusPipeline(ctx, conn, id),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.Pipeline); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitPipelineUpdated(ctx context.Context, conn *osis.Client, id string, timeout time.Duration) (*awstypes.Pipeline, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.PipelineStatusUpdating),
-		Target:     enum.Slice(awstypes.PipelineStatusActive),
-		Refresh:    statusPipeline(ctx, conn, id),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.Pipeline); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitPipelineDeleted(ctx context.Context, conn *osis.Client, id string, timeout time.Duration) (*awstypes.Pipeline, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.PipelineStatusDeleting),
-		Target:     []string{},
-		Refresh:    statusPipeline(ctx, conn, id),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.Pipeline); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusPipeline(ctx context.Context, conn *osis.Client, id string) retry.StateRefreshFunc {
+func statusPipeline(ctx context.Context, conn *osis.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findPipelineByID(ctx, conn, id)
+		output, err := findPipelineByName(ctx, conn, name)
+
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -585,224 +401,126 @@ func statusPipeline(ctx context.Context, conn *osis.Client, id string) retry.Sta
 			return nil, "", err
 		}
 
-		return out, string(out.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func findPipelineByID(ctx context.Context, conn *osis.Client, id string) (*awstypes.Pipeline, error) {
-	in := &osis.GetPipelineInput{
-		PipelineName: aws.String(id),
+func waitPipelineCreated(ctx context.Context, conn *osis.Client, name string, timeout time.Duration) (*awstypes.Pipeline, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.PipelineStatusCreating, awstypes.PipelineStatusStarting),
+		Target:     enum.Slice(awstypes.PipelineStatusActive),
+		Refresh:    statusPipeline(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
 	}
 
-	out, err := conn.GetPipeline(ctx, in)
-	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Pipeline); ok {
+		if reason := output.StatusReason; reason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Description)))
 		}
 
-		return nil, err
+		return output, err
 	}
 
-	if out == nil || out.Pipeline == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out.Pipeline, nil
+	return nil, err
 }
 
-func flattenBufferOptions(ctx context.Context, apiObject *awstypes.BufferOptions) (types.List, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: bufferOptionsAttrTypes}
-
-	if apiObject == nil {
-		return types.ListValueMust(elemType, []attr.Value{}), diags
+func waitPipelineUpdated(ctx context.Context, conn *osis.Client, name string, timeout time.Duration) (*awstypes.Pipeline, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.PipelineStatusUpdating),
+		Target:     enum.Slice(awstypes.PipelineStatusActive),
+		Refresh:    statusPipeline(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
 	}
 
-	obj := map[string]attr.Value{
-		"persistent_buffer_enabled": flex.BoolToFramework(ctx, apiObject.PersistentBufferEnabled),
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Pipeline); ok {
+		if reason := output.StatusReason; reason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Description)))
+		}
+
+		return output, err
 	}
-	objVal, d := types.ObjectValue(bufferOptionsAttrTypes, obj)
-	diags.Append(d...)
 
-	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-	diags.Append(d...)
-
-	return listVal, diags
+	return nil, err
 }
 
-func flattenEncryptionAtRestOptions(ctx context.Context, apiObject *awstypes.EncryptionAtRestOptions) (types.List, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: encryptionAtRestOptionsAttrTypes}
-
-	if apiObject == nil {
-		return types.ListValueMust(elemType, []attr.Value{}), diags
+func waitPipelineDeleted(ctx context.Context, conn *osis.Client, name string, timeout time.Duration) (*awstypes.Pipeline, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(awstypes.PipelineStatusDeleting),
+		Target:     []string{},
+		Refresh:    statusPipeline(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
 	}
 
-	obj := map[string]attr.Value{
-		"kms_key_arn": flex.StringToFramework(ctx, apiObject.KmsKeyArn),
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Pipeline); ok {
+		if reason := output.StatusReason; reason != nil {
+			tfresource.SetLastError(err, errors.New(aws.ToString(reason.Description)))
+		}
+
+		return output, err
 	}
-	objVal, d := types.ObjectValue(encryptionAtRestOptionsAttrTypes, obj)
-	diags.Append(d...)
 
-	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-	diags.Append(d...)
-
-	return listVal, diags
+	return nil, err
 }
 
-func flattenLogPublishingOptions(ctx context.Context, apiObject *awstypes.LogPublishingOptions) (types.List, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: logPublishingOptionsAttrTypes}
-
-	if apiObject == nil {
-		return types.ListValueMust(elemType, []attr.Value{}), diags
-	}
-
-	cloudWatchLogDestination, d := flattenCloudWatchLogDestination(ctx, apiObject.CloudWatchLogDestination)
-	diags.Append(d...)
-
-	obj := map[string]attr.Value{
-		"is_logging_enabled":         flex.BoolToFramework(ctx, apiObject.IsLoggingEnabled),
-		"cloudwatch_log_destination": cloudWatchLogDestination,
-	}
-	objVal, d := types.ObjectValue(logPublishingOptionsAttrTypes, obj)
-	diags.Append(d...)
-
-	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-	diags.Append(d...)
-
-	return listVal, diags
+type pipelineResourceModel struct {
+	BufferOptions             fwtypes.ListNestedObjectValueOf[bufferOptionsModel]           `tfsdk:"buffer_options"`
+	EncryptionAtRestOptions   fwtypes.ListNestedObjectValueOf[encryptionAtRestOptionsModel] `tfsdk:"encryption_at_rest_options"`
+	ID                        types.String                                                  `tfsdk:"id"`
+	IngestEndpointUrls        fwtypes.SetValueOf[types.String]                              `tfsdk:"ingest_endpoint_urls"`
+	LogPublishingOptions      fwtypes.ListNestedObjectValueOf[logPublishingOptionsModel]    `tfsdk:"log_publishing_options"`
+	MaxUnits                  types.Int64                                                   `tfsdk:"max_units"`
+	MinUnits                  types.Int64                                                   `tfsdk:"min_units"`
+	PipelineARN               types.String                                                  `tfsdk:"pipeline_arn"`
+	PipelineConfigurationBody types.String                                                  `tfsdk:"pipeline_configuration_body"`
+	PipelineName              types.String                                                  `tfsdk:"pipeline_name"`
+	Tags                      types.Map                                                     `tfsdk:"tags"`
+	TagsAll                   types.Map                                                     `tfsdk:"tags_all"`
+	Timeouts                  timeouts.Value                                                `tfsdk:"timeouts"`
+	VPCOptions                fwtypes.ListNestedObjectValueOf[vpcOptionsModel]              `tfsdk:"vpc_options"`
 }
 
-func flattenCloudWatchLogDestination(ctx context.Context, apiObject *awstypes.CloudWatchLogDestination) (types.List, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: cloudWatchLogDestinationAttrTypes}
+func (data *pipelineResourceModel) InitFromID() error {
+	data.PipelineName = data.ID
 
-	if apiObject == nil {
-		return types.ListValueMust(elemType, []attr.Value{}), diags
-	}
-
-	obj := map[string]attr.Value{
-		"log_group": flex.StringToFramework(ctx, apiObject.LogGroup),
-	}
-	objVal, d := types.ObjectValue(cloudWatchLogDestinationAttrTypes, obj)
-	diags.Append(d...)
-
-	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-	diags.Append(d...)
-
-	return listVal, diags
+	return nil
 }
 
-func expandBufferOptions(tfList []bufferOptionsData) *awstypes.BufferOptions {
-	if len(tfList) == 0 {
-		return nil
-	}
-	bo := tfList[0]
-	return &awstypes.BufferOptions{
-		PersistentBufferEnabled: aws.Bool(bo.PersistentBufferEnabled.ValueBool()),
-	}
+func (data *pipelineResourceModel) setID() {
+	data.ID = data.PipelineName
 }
 
-func expandEncryptionAtRestOptions(tfList []encryptionAtRestOptionsData) *awstypes.EncryptionAtRestOptions {
-	if len(tfList) == 0 {
-		return nil
-	}
-	earo := tfList[0]
-	return &awstypes.EncryptionAtRestOptions{
-		KmsKeyArn: aws.String(earo.KmsKeyArn.ValueString()),
-	}
-}
-
-func expandLogPublishingOptions(ctx context.Context, tfList []logPublishingOptionsData) (*awstypes.LogPublishingOptions, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	if len(tfList) == 0 {
-		return nil, diags
-	}
-
-	lpo := tfList[0]
-	apiObject := &awstypes.LogPublishingOptions{}
-	if !lpo.IsLoggingEnabled.IsNull() {
-		apiObject.IsLoggingEnabled = aws.Bool(lpo.IsLoggingEnabled.ValueBool())
-	}
-
-	if !lpo.CloudWatchLogDestination.IsNull() {
-		var cloudWatchLogDestination []cloudWatchLogDestinationData
-		diags.Append(lpo.CloudWatchLogDestination.ElementsAs(ctx, &cloudWatchLogDestination, false)...)
-		apiObject.CloudWatchLogDestination = expandCloudWatchLogDestination(cloudWatchLogDestination)
-	}
-
-	return apiObject, diags
-}
-
-func expandCloudWatchLogDestination(tfList []cloudWatchLogDestinationData) *awstypes.CloudWatchLogDestination {
-	if len(tfList) == 0 {
-		return nil
-	}
-	cwld := tfList[0]
-	return &awstypes.CloudWatchLogDestination{
-		LogGroup: aws.String(cwld.LogGroup.ValueString()),
-	}
-}
-
-func expandVPCOptions(ctx context.Context, tfList []vpcOptionsData) *awstypes.VpcOptions {
-	if len(tfList) == 0 {
-		return nil
-	}
-	vo := tfList[0]
-	apiObject := &awstypes.VpcOptions{
-		SubnetIds: flex.ExpandFrameworkStringValueSet(ctx, vo.SubnetIds),
-	}
-
-	if !vo.SecurityGroupIds.IsNull() {
-		apiObject.SecurityGroupIds = flex.ExpandFrameworkStringValueSet(ctx, vo.SecurityGroupIds)
-	}
-
-	return apiObject
-}
-
-type resourcePipelineData struct {
-	ARN                       types.String   `tfsdk:"arn"`
-	BufferOptions             types.List     `tfsdk:"buffer_options"`
-	EncryptionAtRestOptions   types.List     `tfsdk:"encryption_at_rest_options"`
-	ID                        types.String   `tfsdk:"id"`
-	IngestEndpointUrls        types.Set      `tfsdk:"ingest_endpoint_urls"`
-	LogPublishingOptions      types.List     `tfsdk:"log_publishing_options"`
-	MaxUnits                  types.Int64    `tfsdk:"max_units"`
-	MinUnits                  types.Int64    `tfsdk:"min_units"`
-	PipelineConfigurationBody types.String   `tfsdk:"pipeline_configuration_body"`
-	PipelineName              types.String   `tfsdk:"pipeline_name"`
-	Tags                      types.Map      `tfsdk:"tags"`
-	TagsAll                   types.Map      `tfsdk:"tags_all"`
-	Timeouts                  timeouts.Value `tfsdk:"timeouts"`
-	VpcOptions                types.List     `tfsdk:"vpc_options"`
-}
-
-type bufferOptionsData struct {
+type bufferOptionsModel struct {
 	PersistentBufferEnabled types.Bool `tfsdk:"persistent_buffer_enabled"`
 }
 
-type encryptionAtRestOptionsData struct {
+type encryptionAtRestOptionsModel struct {
 	KmsKeyArn fwtypes.ARN `tfsdk:"kms_key_arn"`
 }
 
-type logPublishingOptionsData struct {
-	CloudWatchLogDestination types.List `tfsdk:"cloudwatch_log_destination"`
-	IsLoggingEnabled         types.Bool `tfsdk:"is_logging_enabled"`
+type logPublishingOptionsModel struct {
+	CloudWatchLogDestination fwtypes.ListNestedObjectValueOf[cloudWatchLogDestinationModel] `tfsdk:"cloudwatch_log_destination"`
+	IsLoggingEnabled         types.Bool                                                     `tfsdk:"is_logging_enabled"`
 }
 
-type cloudWatchLogDestinationData struct {
+type cloudWatchLogDestinationModel struct {
 	LogGroup types.String `tfsdk:"log_group"`
 }
 
-type vpcOptionsData struct {
-	SecurityGroupIds types.Set `tfsdk:"security_group_ids"`
-	SubnetIds        types.Set `tfsdk:"subnet_ids"`
+type vpcOptionsModel struct {
+	SecurityGroupIDs fwtypes.SetValueOf[types.String] `tfsdk:"security_group_ids"`
+	SubnetIDs        fwtypes.SetValueOf[types.String] `tfsdk:"subnet_ids"`
 }
 
 var (

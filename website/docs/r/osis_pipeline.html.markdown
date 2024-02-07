@@ -111,9 +111,9 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - Amazon Resource Name (ARN) of the pipeline.
 * `id` - Unique identifier for the pipeline.
 * `ingest_endpoint_urls` - The list of ingestion endpoints for the pipeline, which you can send data to.
+* `pipeline_arn` - Amazon Resource Name (ARN) of the pipeline.
 
 ## Timeouts
 
