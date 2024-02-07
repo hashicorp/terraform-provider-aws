@@ -21,7 +21,7 @@ func createTagsV2(ctx context.Context, conn *ec2.Client, identifier string, tags
 	newTagsMap := keyValueTagsV2(ctx, tags)
 
 	_, err := tfresource.RetryWhenAWSErrCodeContains(ctx, eventualConsistencyTimeout, func() (interface{}, error) {
-		return nil, updateTagsV2(ctx, conn, identifier, nil, newTagsMap)
+		return nil, updateTagsV2(ctx, conn, identifier, nil, newTagsMap, optFns...)
 	}, ".NotFound")
 
 	if err != nil {
