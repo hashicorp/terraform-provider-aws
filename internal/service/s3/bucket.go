@@ -45,7 +45,7 @@ import (
 const (
 	// General timeout for S3 bucket changes to propagate.
 	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html#ConsistencyModel.
-	bucketPropagationTimeout = 2 * time.Minute // nosemgrep:ci.s3-in-const-name, ci.s3-in-var-name
+	bucketPropagationTimeout = 2 * time.Minute
 )
 
 // @SDKResource("aws_s3_bucket", name="Bucket")
