@@ -1280,6 +1280,25 @@ func TestAccLambdaFunction_loggingConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logging_config.0.system_log_level", "DEBUG"),
 				),
 			},
+			{
+				Config: testAccFunctionConfig_updateLoggingConfigLevelsUnspecified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.application_log_level", "TRACE"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.system_log_level", "DEBUG"),
+				),
+			},
+			{
+				Config: testAccFunctionConfig_loggingConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.application_log_level", ""),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.log_format", "Text"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.system_log_level", ""),
+				),
+			},
 		},
 	})
 }
@@ -3434,6 +3453,24 @@ resource "aws_lambda_function" "test" {
     application_log_level = "TRACE"
     log_format            = "JSON"
     system_log_level      = "DEBUG"
+  }
+}
+`, rName))
+}
+
+func testAccFunctionConfig_updateLoggingConfigLevelsUnspecified(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs16.x"
+
+  logging_config {
+    log_format = "JSON"
   }
 }
 `, rName))
