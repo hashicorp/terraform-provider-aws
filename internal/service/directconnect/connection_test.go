@@ -136,6 +136,17 @@ func TestAccDirectConnectConnection_encryptionMode(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
 				),
 			},
+			{
+				Config: testAccConnectionConfig_encryptionModeUnknown(connectionName, ckn, cak),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConnectionExists(ctx, resourceName, &connection),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "directconnect", regexache.MustCompile(`dxcon/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "unknown"),
+					resource.TestCheckResourceAttrSet(resourceName, "location"),
+					resource.TestCheckResourceAttr(resourceName, "name", connectionName),
+					resource.TestCheckResourceAttr(resourceName, "skip_destroy", "true"),
+				),
+			},
 		},
 	})
 }
@@ -463,6 +474,24 @@ resource "aws_dx_connection" "test" {
   location        = "CSOW"
   bandwidth       = "100Gbps"
   encryption_mode = "should_encrypt"
+  skip_destroy    = true
+}
+
+resource "aws_dx_macsec_key_association" "test" {
+  connection_id = aws_dx_connection.test.id
+  ckn           = %[2]q
+  cak           = %[3]q
+}
+`, rName, ckn, cak)
+}
+
+func testAccConnectionConfig_encryptionModeUnknown(rName, ckn, cak string) string {
+	return fmt.Sprintf(`
+resource "aws_dx_connection" "test" {
+  name            = %[1]q
+  location        = "CSOW"
+  bandwidth       = "100Gbps"
+  encryption_mode = "unknown"
   skip_destroy    = true
 }
 

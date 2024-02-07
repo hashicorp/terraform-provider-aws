@@ -49,7 +49,7 @@ func ResourceConnection() *schema.Resource {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"no_encrypt", "should_encrypt", "must_encrypt"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"no_encrypt", "should_encrypt", "must_encrypt", "unknown"}, false),
 			},
 			"has_logical_redundancy": {
 				Type:     schema.TypeString,
@@ -169,7 +169,7 @@ func ResourceConnection() *schema.Resource {
 				Type:         schema.TypeString,
 				Computed:     true,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"no_encrypt", "should_encrypt", "must_encrypt"}, false),
+				ValidateFunc: validation.StringInSlice([]string{"no_encrypt", "should_encrypt", "must_encrypt", "unknown"}, false),
 			},
 			"has_logical_redundancy": {
 				Type:     schema.TypeString,
