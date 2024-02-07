@@ -11,10 +11,8 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/launchwizard/types"
-	"github.com/aws/smithy-go"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -79,7 +77,6 @@ func (r *resourceDeployment) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Description: "Name of the deployment",
 			},
-
 			"deployment_pattern": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -210,36 +207,14 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 	wait_out, err := waitDeploymentCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 
 	if err != nil {
-		session_timeout := false
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionWaitingForCreation, ResNameDeployment, plan.Name.String(), err),
+			err.Error(),
+		)
 
-		if wait_out == nil {
-			//Creation can take multiple hours
-			//it is likely that the session token expired. Assuming that the Creation is still in Progress.
-			//in that case the deployment should not be tainted and the resource should be checked during next read
-			var opErr *smithy.OperationError
-			var respErr *awshttp.ResponseError
-			var apiErr *smithy.GenericAPIError
-
-			if errors.As(err, &opErr) {
-				if errors.As(opErr.Err, &respErr) {
-					if errors.As(respErr.Err, &apiErr) && apiErr.ErrorCode() == "ExpiredTokenException" {
-						resp.Diagnostics.AddWarning("Session Timeout", "Session Token expired. Launch Wizard Deployment continues in background")
-						session_timeout = true
-					}
-				}
-			}
-		}
-
-		if plan.SkipDestroyAfterFailure.ValueBool() || session_timeout {
-			if !session_timeout {
-				resp.Diagnostics.AddError("Deployment Failed", "Launch Wizard Deployment failed. Resource will be replaced on next apply to allow troubleshooting.")
-			}
+		if plan.SkipDestroyAfterFailure.ValueBool() {
+			resp.Diagnostics.AddWarning("skip_destroy_after_failure is set", "Resource will be replaced on next apply to allow troubleshooting.")
 		} else {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionWaitingForCreation, ResNameDeployment, plan.Name.String(), err),
-				err.Error(),
-			)
-
 			//Delete Deployment if creation failed
 			in := &launchwizard.DeleteDeploymentInput{
 				DeploymentId: aws.String(plan.ID.ValueString()),
@@ -248,10 +223,10 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 			_, err := conn.DeleteDeployment(ctx, in)
 
 			if err != nil {
-				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-					resp.Diagnostics.AddError(
-						create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionWaitingForCreation, ResNameDeployment, plan.ID.String(), err), err.Error())
-				}
+				// if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+				resp.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionWaitingForCreation, ResNameDeployment, plan.ID.String(), err), err.Error())
+				// }
 			}
 
 			deleteTimeout := r.DeleteTimeout(ctx, plan.Timeouts)
@@ -265,7 +240,10 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 		}
 	}
 
-	plan.Status = flex.StringToFramework(ctx, (*string)(&wait_out.Status))
+	if wait_out != nil {
+		plan.Status = flex.StringToFramework(ctx, (*string)(&wait_out.Status))
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 

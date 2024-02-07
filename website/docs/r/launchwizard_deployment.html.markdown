@@ -13,6 +13,8 @@ SAP Installation Media needs to be provided in an S3 bucket prior to deployment.
 
 The API only supports initial deployments. Certain Operations (like adding additional instances in HA deployments) still require console usage. Also, it is not possible to clone deployments that were created using the API.
 
+~> **Note:** Some deployments can run mulitple hours. Please consider the maximum session duration of your access token if the deployment fails due to an `ExpiredTokenException`
+
 ## Example Usage
 
 ### Simple Example: SAP HANA Database - Single Instance
