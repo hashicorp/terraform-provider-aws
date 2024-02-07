@@ -3757,8 +3757,8 @@ resource "aws_lb_listener" "test" {
   port              = "80"
 
   default_action {
-	target_group_arn = aws_lb_target_group.test.arn
-	type = "redirect"
+    target_group_arn = aws_lb_target_group.test.arn
+    type             = "redirect"
 
     redirect {
       port        = "443"
