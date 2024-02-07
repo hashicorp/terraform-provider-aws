@@ -3,14 +3,24 @@
 NOTES:
 
 * data-source/aws_media_convert_queue: The AWS Elemental MediaConvert service has been converted to use standard [Regional endpoints](https://docs.aws.amazon.com/general/latest/gr/mediaconvert.html#mediaconvert_region) instead of deprecated per-account endpoints ([#35615](https://github.com/hashicorp/terraform-provider-aws/issues/35615))
+* resource/aws_controltower_landing_zone: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#34595](https://github.com/hashicorp/terraform-provider-aws/issues/34595))
 * resource/aws_media_convert_queue: The AWS Elemental MediaConvert service has been converted to use standard [Regional endpoints](https://docs.aws.amazon.com/general/latest/gr/mediaconvert.html#mediaconvert_region) instead of deprecated per-account endpoints ([#35615](https://github.com/hashicorp/terraform-provider-aws/issues/35615))
 
 FEATURES:
 
+* **New Resource:** `aws_controltower_landing_zone` ([#34595](https://github.com/hashicorp/terraform-provider-aws/issues/34595))
 * **New Resource:** `aws_securitylake_custom_log_source` ([#35354](https://github.com/hashicorp/terraform-provider-aws/issues/35354))
+
+ENHANCEMENTS:
+
+* resource/aws_cloudwatch_metric_stream: Add plan-time validation of `output_format` ([#35569](https://github.com/hashicorp/terraform-provider-aws/issues/35569))
+* resource/aws_db_instance: Add `diag.log` and `notify.log` as valid values for `enabled_cloudwatch_logs_exports` ([#35626](https://github.com/hashicorp/terraform-provider-aws/issues/35626))
+* resource/aws_db_instance: Add `domain_auth_secret_arn`, `domain_dns_ips`, `domain_fqdn`, and `domain_ou` arguments to support [self-managed Active Directory](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_SQLServer_SelfManagedActiveDirectory.html) ([#35500](https://github.com/hashicorp/terraform-provider-aws/issues/35500))
+* resource/aws_s3_bucket_metric: Add `filter.access_point` argument ([#35590](https://github.com/hashicorp/terraform-provider-aws/issues/35590))
 
 BUG FIXES:
 
+* resource/aws_db_instance: Creating resource from point-in-time recovery now handles `password` attribute correctly ([#35589](https://github.com/hashicorp/terraform-provider-aws/issues/35589))
 * resource/aws_ssm_patch_baseline: Mark `json` as Computed if there are content changes ([#35606](https://github.com/hashicorp/terraform-provider-aws/issues/35606))
 
 ## 5.35.0 (February  2, 2024)
