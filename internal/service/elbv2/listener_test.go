@@ -67,6 +67,9 @@ func TestAccELBV2Listener_Application_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
 			},
 		},
 	})
@@ -115,6 +118,9 @@ func TestAccELBV2Listener_Network_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
 			},
 		},
 	})
@@ -142,7 +148,7 @@ func TestAccELBV2Listener_Gateway_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "alpn_policy"),
 					resource.TestCheckNoResourceAttr(resourceName, "certificate_arn"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "0"), // A Gateway Listener can only have one action, so the API never returns a value
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.authenticate_cognito.#", "0"),
@@ -163,6 +169,9 @@ func TestAccELBV2Listener_Gateway_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
 			},
 		},
 	})
@@ -221,6 +230,9 @@ func TestAccELBV2Listener_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
 			},
 			{
 				Config: testAccListenerConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -232,12 +244,81 @@ func TestAccELBV2Listener_tags(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
+			},
+			{
 				Config: testAccListenerConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckListenerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2Listener_updateForwardBasic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Listener
+	resourceName := "aws_lb_listener.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName = rName[:30]
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_forwardBasic(rName, "test1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test1", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
+			},
+			{
+				Config: testAccListenerConfig_forwardBasic(rName, "test2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test2", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
 			},
 		},
 	})
@@ -265,7 +346,6 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.#", "2"),
@@ -289,7 +369,6 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.#", "2"),
@@ -313,12 +392,19 @@ func TestAccELBV2Listener_forwardWeighted(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test1", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
 			},
 		},
 	})
@@ -337,6 +423,557 @@ func TestAccELBV2Listener_forwardTargetARNAndBlock(t *testing.T) {
 			{
 				Config:      testAccListenerConfig_forwardTargetARNAndBlock(rName),
 				ExpectError: regexache.MustCompile(regexp.QuoteMeta(`Only one of "default_action[0].target_group_arn" or "default_action[0].forward" can be specified`)),
+			},
+		},
+	})
+}
+
+func TestAccELBV2Listener_ActionForward_TargetGroupARNToForwardBlock_NoChanges(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Listener
+	resourceName := "aws_lb_listener.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_actionForward_TargetGroupARN(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
+			},
+			{
+				Config: testAccListenerConfig_actionForward_ForwardBlockBasic(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_group.0.arn", "aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.target_group_arn",
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2Listener_ActionForward_ForwardBlock_AddStickiness(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Listener
+	resourceName := "aws_lb_listener.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_actionForward_ForwardBlockBasic(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_group.0.arn", "aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.target_group_arn",
+				},
+			},
+			{
+				Config: testAccListenerConfig_actionForward_ForwardBlockStickiness(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_group.0.arn", "aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.target_group_arn",
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2Listener_ActionForward_ForwardBlock_RemoveStickiness(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Listener
+	resourceName := "aws_lb_listener.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_actionForward_ForwardBlockStickiness(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_group.0.arn", "aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.target_group_arn",
+				},
+			},
+			{
+				Config: testAccListenerConfig_actionForward_ForwardBlockBasic(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_group.0.arn", "aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.target_group_arn",
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2Listener_ActionForward_TargetGroupARNToForwardBlock_WeightAndStickiness(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Listener
+	resourceName := "aws_lb_listener.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_actionForward_TargetGroupARN(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
+			},
+			{
+				Config: testAccListenerConfig_actionForward_ForwardBlockWeightAndStickiness(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_group.0.arn", "aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", "2"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.target_group_arn",
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2Listener_ActionForward_ForwardBlockToTargetGroupARN_NoChanges(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Listener
+	resourceName := "aws_lb_listener.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_actionForward_ForwardBlockBasic(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_group.0.arn", "aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.target_group_arn",
+				},
+			},
+			{
+				Config: testAccListenerConfig_actionForward_TargetGroupARN(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2Listener_ActionForward_ForwardBlockToTargetGroupARN_WeightAndStickiness(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Listener
+	resourceName := "aws_lb_listener.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_actionForward_ForwardBlockWeightAndStickiness(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_group.0.arn", "aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", "2"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "3600"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.target_group_arn",
+				},
+			},
+			{
+				Config: testAccListenerConfig_actionForward_TargetGroupARN(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test", "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2Listener_ActionForward_ForwardBlock_AddAction(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Listener
+	resourceName := "aws_lb_listener.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_actionForward_ForwardBlockBasic(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_group.0.arn", "aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.target_group_arn",
+				},
+			},
+			{
+				Config: testAccListenerConfig_actionForward_ForwardBlockAddAction(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "authenticate-oidc"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.1.type", "forward"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.0.target_group.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.1.forward.0.target_group.0.arn", "aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.0.target_group.0.weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.0.stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.0.stickiness.0.duration", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.0.stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.1.target_group_arn", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.authenticate_oidc.0.client_secret",
+					"default_action.1.target_group_arn",
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2Listener_ActionForward_ForwardBlock_RemoveAction(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Listener
+	resourceName := "aws_lb_listener.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_actionForward_ForwardBlockAddAction(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "authenticate-oidc"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.1.type", "forward"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.0.target_group.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.1.forward.0.target_group.0.arn", "aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.0.target_group.0.weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.0.stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.0.stickiness.0.duration", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.1.forward.0.stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.1.target_group_arn", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.authenticate_oidc.0.client_secret",
+					"default_action.1.target_group_arn",
+				},
+			},
+			{
+				Config: testAccListenerConfig_actionForward_ForwardBlockBasic(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.forward.0.target_group.0.arn", "aws_lb_target_group.test", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.0.weight", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.target_group_arn",
+				},
+			},
+		},
+	})
+}
+
+func TestAccELBV2Listener_ActionForward_IgnoreFields(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Listener
+	resourceName := "aws_lb_listener.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rName = rName[:30]
+	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckListenerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccListenerConfig_actionForward_ForwardBlockMultiTargetWithIgnore(rName, key, certificate),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
+					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
+					resource.TestCheckResourceAttr(resourceName, "port", "440"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.target_group.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.0.stickiness.0.duration", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -363,7 +1000,6 @@ func TestAccELBV2Listener_Protocol_upd(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "UDP"),
 					resource.TestCheckResourceAttr(resourceName, "port", "514"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
@@ -374,6 +1010,9 @@ func TestAccELBV2Listener_Protocol_upd(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
 			},
 		},
 	})
@@ -401,17 +1040,22 @@ func TestAccELBV2Listener_backwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_alb_target_group.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.authenticate_cognito.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.authenticate_oidc.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.fixed_response.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.forward.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
 			},
 		},
 	})
@@ -440,7 +1084,6 @@ func TestAccELBV2Listener_Protocol_https(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
@@ -457,6 +1100,9 @@ func TestAccELBV2Listener_Protocol_https(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
 			},
 		},
 	})
@@ -484,14 +1130,11 @@ func TestAccELBV2Listener_mutualAuthentication(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.mode", tfelbv2.MutualAuthenticationVerify),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.ignore_client_certificate_expiry", "false"),
 					resource.TestCheckResourceAttrPair(resourceName, "mutual_authentication.0.trust_store_arn", "aws_lb_trust_store.test", "arn"),
-
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
-
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
@@ -504,6 +1147,9 @@ func TestAccELBV2Listener_mutualAuthentication(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
 			},
 		},
 	})
@@ -531,14 +1177,11 @@ func TestAccELBV2Listener_mutualAuthenticationPassthrough(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.mode", tfelbv2.MutualAuthenticationPassthrough),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.ignore_client_certificate_expiry", "false"),
 					resource.TestCheckResourceAttr(resourceName, "mutual_authentication.0.trust_store_arn", ""),
-
 					resource.TestCheckResourceAttrPair(resourceName, "load_balancer_arn", "aws_lb.test", "arn"),
-
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexache.MustCompile("listener/.+$")),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "forward"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.0.target_group_arn", "aws_lb_target_group.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
@@ -551,6 +1194,9 @@ func TestAccELBV2Listener_mutualAuthenticationPassthrough(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
 			},
 		},
 	})
@@ -620,6 +1266,9 @@ func TestAccELBV2Listener_Protocol_tls(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.forward",
+				},
 			},
 		},
 	})
@@ -646,7 +1295,6 @@ func TestAccELBV2Listener_redirect(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "redirect"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "1"),
@@ -689,7 +1337,6 @@ func TestAccELBV2Listener_fixedResponse(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTP"),
 					resource.TestCheckResourceAttr(resourceName, "port", "80"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "fixed-response"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.target_group_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.redirect.#", "0"),
@@ -731,7 +1378,6 @@ func TestAccELBV2Listener_cognito(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "authenticate-cognito"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_action.0.authenticate_cognito.0.user_pool_arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_action.0.authenticate_cognito.0.user_pool_client_id"),
@@ -739,7 +1385,6 @@ func TestAccELBV2Listener_cognito(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.authenticate_cognito.0.authentication_request_extra_params.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.authenticate_cognito.0.authentication_request_extra_params.param", "test"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.1.type", "forward"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.1.order", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.1.target_group_arn", "aws_lb_target_group.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", "aws_iam_server_certificate.test", "arn"),
 				),
@@ -748,6 +1393,9 @@ func TestAccELBV2Listener_cognito(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.1.forward",
+				},
 			},
 		},
 	})
@@ -776,7 +1424,6 @@ func TestAccELBV2Listener_oidc(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.0.order", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.type", "authenticate-oidc"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.authenticate_oidc.0.authorization_endpoint", "https://example.com/authorization_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.authenticate_oidc.0.client_id", "s6BhdRkqt3"),
@@ -786,17 +1433,19 @@ func TestAccELBV2Listener_oidc(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.authenticate_oidc.0.user_info_endpoint", "https://example.com/user_info_endpoint"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.authenticate_oidc.0.authentication_request_extra_params.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.authenticate_oidc.0.authentication_request_extra_params.param", "test"),
-					resource.TestCheckResourceAttr(resourceName, "default_action.1.order", "2"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.1.type", "forward"),
 					resource.TestCheckResourceAttrPair(resourceName, "default_action.1.target_group_arn", "aws_lb_target_group.test", "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_arn", "aws_iam_server_certificate.test", "arn"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"default_action.0.authenticate_oidc.0.client_secret"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.authenticate_oidc.0.client_secret",
+					"default_action.1.forward",
+				},
 			},
 		},
 	})
@@ -826,10 +1475,13 @@ func TestAccELBV2Listener_DefaultAction_defaultOrder(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"default_action.0.authenticate_oidc.0.client_secret"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.authenticate_oidc.0.client_secret",
+					"default_action.1.forward",
+				},
 			},
 		},
 	})
@@ -859,10 +1511,13 @@ func TestAccELBV2Listener_DefaultAction_specifyOrder(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"default_action.0.authenticate_oidc.0.client_secret"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"default_action.0.authenticate_oidc.0.client_secret",
+					"default_action.1.forward",
+				},
 			},
 		},
 	})
@@ -1232,6 +1887,67 @@ resource "aws_lb_target_group" "test" {
 `, rName))
 }
 
+func testAccListenerConfig_forwardBasic(rName, targetName string) string {
+	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTP"
+  port              = "440"
+
+  default_action {
+    type             = "forward"
+    target_group_arn = aws_lb_target_group.%[2]s.arn
+  }
+}
+
+resource "aws_lb" "test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+}
+
+resource "aws_lb_target_group" "test1" {
+  name     = "%[1]s-1"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+}
+
+resource "aws_lb_target_group" "test2" {
+  name     = "%[1]s-2"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+}
+`, rName, targetName))
+}
+
 func testAccListenerConfig_forwardWeighted(rName, rName2 string) string {
 	return acctest.ConfigCompose(testAccListenerConfig_base(rName), fmt.Sprintf(`
 resource "aws_lb_listener" "test" {
@@ -1469,6 +2185,461 @@ resource "aws_lb_target_group" "test" {
   }
 }
 `, rName))
+}
+
+func testAccListenerConfig_actionForward_TargetGroupARN(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccListenerConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTPS"
+  port              = "443"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_iam_server_certificate.test.arn
+
+  default_action {
+    type = "forward"
+
+    target_group_arn = aws_lb_target_group.test.arn
+  }
+}
+
+resource "aws_lb" "test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_iam_server_certificate" "test" {
+  name             = %[1]q
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+  `, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
+}
+
+func testAccListenerConfig_actionForward_ForwardBlockBasic(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccListenerConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTPS"
+  port              = "440"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_iam_server_certificate.test.arn
+
+  default_action {
+    type = "forward"
+
+    forward {
+      target_group {
+        arn = aws_lb_target_group.test.arn
+      }
+    }
+  }
+}
+
+resource "aws_lb" "test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_iam_server_certificate" "test" {
+  name             = %[1]q
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
+}
+
+func testAccListenerConfig_actionForward_ForwardBlockStickiness(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccListenerConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTPS"
+  port              = "440"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_iam_server_certificate.test.arn
+
+  default_action {
+    type = "forward"
+
+    forward {
+      target_group {
+        arn = aws_lb_target_group.test.arn
+      }
+
+      stickiness {
+        enabled  = true
+        duration = 3600
+      }
+    }
+  }
+}
+
+resource "aws_lb" "test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_iam_server_certificate" "test" {
+  name             = %[1]q
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
+}
+
+func testAccListenerConfig_actionForward_ForwardBlockWeightAndStickiness(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccListenerConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTPS"
+  port              = "443"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_iam_server_certificate.test.arn
+
+  default_action {
+    type = "forward"
+
+    forward {
+      target_group {
+        arn    = aws_lb_target_group.test.arn
+        weight = 2
+      }
+
+      stickiness {
+        enabled  = true
+        duration = 3600
+      }
+    }
+  }
+}
+
+resource "aws_lb" "test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_iam_server_certificate" "test" {
+  name             = %[1]q
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
+}
+
+func testAccListenerConfig_actionForward_ForwardBlockAddAction(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccListenerConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTPS"
+  port              = "443"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_iam_server_certificate.test.arn
+
+  default_action {
+    type = "authenticate-oidc"
+
+    authenticate_oidc {
+      authorization_endpoint = "https://example.com/authorization_endpoint"
+      client_id              = "s6BhdRkqt3"
+      client_secret          = "7Fjfp0ZBr1KtDRbnfVdmIw"
+      issuer                 = "https://example.com"
+      token_endpoint         = "https://example.com/token_endpoint"
+      user_info_endpoint     = "https://example.com/user_info_endpoint"
+
+      authentication_request_extra_params = {
+        param = "test"
+      }
+    }
+  }
+
+  default_action {
+    type = "forward"
+
+    forward {
+      target_group {
+        arn = aws_lb_target_group.test.arn
+      }
+    }
+  }
+}
+
+resource "aws_lb" "test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_iam_server_certificate" "test" {
+  name             = %[1]q
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
+}
+
+func testAccListenerConfig_actionForward_ForwardBlockMultiTargetWithIgnore(rName, key, certificate string) string {
+	return acctest.ConfigCompose(
+		testAccListenerConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_lb_listener" "test" {
+  load_balancer_arn = aws_lb.test.id
+  protocol          = "HTTPS"
+  port              = "440"
+  ssl_policy        = "ELBSecurityPolicy-2016-08"
+  certificate_arn   = aws_iam_server_certificate.test.arn
+
+  default_action {
+    type = "forward"
+
+    forward {
+      target_group {
+        arn    = aws_lb_target_group.test.arn
+        weight = 100
+      }
+
+      target_group {
+        arn    = aws_lb_target_group.test2.arn
+        weight = 0
+      }
+    }
+  }
+
+  lifecycle {
+    ignore_changes = [
+      default_action[0].forward,
+      default_action[0].target_group_arn,
+    ]
+  }
+}
+
+resource "aws_lb" "test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.test.id]
+  subnets         = aws_subnet.test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test" {
+  name     = %[1]q
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_lb_target_group" "test2" {
+  name     = "%[1]s-2"
+  port     = 8080
+  protocol = "HTTP"
+  vpc_id   = aws_vpc.test.id
+
+  health_check {
+    path                = "/health"
+    interval            = 60
+    port                = 8081
+    protocol            = "HTTP"
+    timeout             = 3
+    healthy_threshold   = 3
+    unhealthy_threshold = 3
+    matcher             = "200-299"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_iam_server_certificate" "test" {
+  name             = %[1]q
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(key)))
 }
 
 func testAccListenerConfig_changeForwardWeightedToBasic(rName, rName2 string) string {
@@ -2236,8 +3407,7 @@ resource "aws_lb_listener" "test" {
   certificate_arn   = aws_iam_server_certificate.test.arn
 
   default_action {
-    order = 1
-    type  = "authenticate-oidc"
+    type = "authenticate-oidc"
 
     authenticate_oidc {
       authorization_endpoint = "https://example.com/authorization_endpoint"
@@ -2254,7 +3424,6 @@ resource "aws_lb_listener" "test" {
   }
 
   default_action {
-    order            = 2
     type             = "forward"
     target_group_arn = aws_lb_target_group.test.arn
   }

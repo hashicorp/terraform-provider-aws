@@ -214,9 +214,11 @@ func ResourceListener() *schema.Resource {
 							},
 						},
 						"forward": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
+							Type:                  schema.TypeList,
+							Optional:              true,
+							DiffSuppressOnRefresh: true,
+							DiffSuppressFunc:      diffSuppressMissingForward("default_action"),
+							MaxItems:              1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"target_group": {
@@ -511,7 +513,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	sort.Slice(listener.DefaultActions, func(i, j int) bool {
 		return aws.ToInt32(listener.DefaultActions[i].Order) < aws.ToInt32(listener.DefaultActions[j].Order)
 	})
-	if err := d.Set("default_action", flattenLbListenerActions(d, listener.DefaultActions)); err != nil {
+	if err := d.Set("default_action", flattenLbListenerActions(d, "default_action", listener.DefaultActions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
 	}
 	d.Set("load_balancer_arn", listener.LoadBalancerArn)
@@ -928,20 +930,26 @@ func expandLbListenerActionForwardConfigTargetGroupStickinessConfig(l []interfac
 		return nil
 	}
 
+	// The Plugin SDK stores a `nil` returned by the API as a `0` in the state. This is a invalid value.
+	var duration *int32
+	if v := tfMap["duration"].(int); v > 0 {
+		duration = aws.Int32(int32(v))
+	}
+
 	return &awstypes.TargetGroupStickinessConfig{
 		Enabled:         aws.Bool(tfMap["enabled"].(bool)),
-		DurationSeconds: aws.Int32(int32(tfMap["duration"].(int))),
+		DurationSeconds: duration,
 	}
 }
 
-func flattenLbListenerActions(d *schema.ResourceData, Actions []awstypes.Action) []interface{} {
-	if len(Actions) == 0 {
+func flattenLbListenerActions(d *schema.ResourceData, attrName string, actions []awstypes.Action) []interface{} {
+	if len(actions) == 0 {
 		return []interface{}{}
 	}
 
 	var vActions []interface{}
 
-	for i, action := range Actions {
+	for i, action := range actions {
 		m := map[string]interface{}{
 			"type":  string(action.Type),
 			"order": aws.ToInt32(action.Order),
@@ -949,11 +957,7 @@ func flattenLbListenerActions(d *schema.ResourceData, Actions []awstypes.Action)
 
 		switch action.Type {
 		case awstypes.ActionTypeEnumForward:
-			if aws.ToString(action.TargetGroupArn) != "" {
-				m["target_group_arn"] = aws.ToString(action.TargetGroupArn)
-			} else {
-				m["forward"] = flattenLbListenerActionForwardConfig(action.ForwardConfig)
-			}
+			flattenLbForwardAction(d, attrName, i, action, m)
 
 		case awstypes.ActionTypeEnumRedirect:
 			m["redirect"] = flattenLbListenerActionRedirectConfig(action.RedirectConfig)
@@ -968,7 +972,7 @@ func flattenLbListenerActions(d *schema.ResourceData, Actions []awstypes.Action)
 			// The LB API currently provides no way to read the ClientSecret
 			// Instead we passthrough the configuration value into the state
 			var clientSecret string
-			if v, ok := d.GetOk("default_action." + strconv.Itoa(i) + ".authenticate_oidc.0.client_secret"); ok {
+			if v, ok := d.GetOk(attrName + "." + strconv.Itoa(i) + ".authenticate_oidc.0.client_secret"); ok {
 				clientSecret = v.(string)
 			}
 
@@ -979,6 +983,50 @@ func flattenLbListenerActions(d *schema.ResourceData, Actions []awstypes.Action)
 	}
 
 	return vActions
+}
+
+func flattenLbForwardAction(d *schema.ResourceData, attrName string, i int, awsAction awstypes.Action, actionMap map[string]any) {
+	// On create and update, we have a Config
+	// On refresh, we have a populated State
+	// On import, we have an empty State and empty Config
+
+	if rawConfig := d.GetRawConfig(); rawConfig.IsKnown() && !rawConfig.IsNull() {
+		actions := rawConfig.GetAttr(attrName)
+		flattenLbForwardActionOneOf(actions, i, awsAction, actionMap)
+		return
+	}
+
+	rawState := d.GetRawState()
+	defaultActions := rawState.GetAttr(attrName)
+
+	if defaultActions.LengthInt() > 0 {
+		flattenLbForwardActionOneOf(defaultActions, i, awsAction, actionMap)
+		return
+	}
+
+	flattenLbForwardActionBoth(awsAction, actionMap)
+}
+
+func flattenLbForwardActionOneOf(actions cty.Value, i int, awsAction awstypes.Action, actionMap map[string]any) {
+	if actions.IsKnown() && !actions.IsNull() {
+		index := cty.NumberIntVal(int64(i))
+		if actions.HasIndex(index).True() {
+			action := actions.Index(index)
+			if action.IsKnown() && !action.IsNull() {
+				forward := action.GetAttr("forward")
+				if forward.IsKnown() && forward.LengthInt() > 0 {
+					actionMap["forward"] = flattenLbListenerActionForwardConfig(awsAction.ForwardConfig)
+				} else {
+					actionMap["target_group_arn"] = aws.ToString(awsAction.TargetGroupArn)
+				}
+			}
+		}
+	}
+}
+
+func flattenLbForwardActionBoth(awsAction awstypes.Action, actionMap map[string]any) {
+	actionMap["target_group_arn"] = aws.ToString(awsAction.TargetGroupArn)
+	actionMap["forward"] = flattenLbListenerActionForwardConfig(awsAction.ForwardConfig)
 }
 
 func flattenMutualAuthenticationAttributes(description *awstypes.MutualAuthenticationAttributes) []interface{} {
@@ -1195,7 +1243,8 @@ func listenerActionPlantimeValidate(actionPath cty.Path, action cty.Value, diags
 		tga := action.GetAttr("target_group_arn")
 		f := action.GetAttr("forward")
 
-		if !tga.IsNull() && (!f.IsNull() && f.LengthInt() > 0) {
+		// If `ignore_changes` is set, even if there is no value in the configuration, the value in RawConfig is "" on refresh.
+		if (tga.IsKnown() && !tga.IsNull() && tga.AsString() != "") && (f.IsKnown() && !f.IsNull() && f.LengthInt() > 0) {
 			*diags = append(*diags, errs.NewAttributeErrorDiagnostic(actionPath,
 				"Invalid Attribute Combination",
 				fmt.Sprintf("Only one of %q or %q can be specified.",
@@ -1319,5 +1368,17 @@ func listenerActionRuntimeValidate(actionPath cty.Path, action map[string]any, d
 				string(actionType),
 			))
 		}
+	}
+}
+
+func diffSuppressMissingForward(attrName string) schema.SchemaDiffSuppressFunc {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		if regexache.MustCompile(fmt.Sprintf(`^%s\.\d+\.forward\.#$`, attrName)).MatchString(k) {
+			return old == "1" && new == "0"
+		}
+		if regexache.MustCompile(fmt.Sprintf(`^%s\.\d+\.forward\.\d+\.target_group\.#$`, attrName)).MatchString(k) {
+			return old == "1" && new == "0"
+		}
+		return false
 	}
 }
