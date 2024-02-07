@@ -146,7 +146,7 @@ mediaconvert,mediaconvert,mediaconvert,mediaconvert,,mediaconvert,,,MediaConvert
 medialive,medialive,medialive,medialive,,medialive,,,MediaLive,MediaLive,,,2,,aws_medialive_,,medialive_,Elemental MediaLive,AWS,,,,,,,MediaLive,ListOfferings,,
 mediapackage,mediapackage,mediapackage,mediapackage,,mediapackage,,,MediaPackage,MediaPackage,,,2,aws_media_package_,aws_mediapackage_,,media_package_,Elemental MediaPackage,AWS,,,,,,,MediaPackage,ListChannels,,
 mediapackage-vod,mediapackagevod,mediapackagevod,mediapackagevod,,mediapackagevod,,,MediaPackageVOD,MediaPackageVod,,1,,,aws_mediapackagevod_,,mediapackagevod_,Elemental MediaPackage VOD,AWS,,x,,,,,MediaPackage Vod,,,
-mediastore,mediastore,mediastore,mediastore,,mediastore,,,MediaStore,MediaStore,,1,,aws_media_store_,aws_mediastore_,,media_store_,Elemental MediaStore,AWS,,,,,,,MediaStore,ListContainers,,
+mediastore,mediastore,mediastore,mediastore,,mediastore,,,MediaStore,MediaStore,,,2,aws_media_store_,aws_mediastore_,,media_store_,Elemental MediaStore,AWS,,,,,,,MediaStore,ListContainers,,
 mediastore-data,mediastoredata,mediastoredata,mediastoredata,,mediastoredata,,,MediaStoreData,MediaStoreData,,1,,,aws_mediastoredata_,,mediastoredata_,Elemental MediaStore Data,AWS,,x,,,,,MediaStore Data,,,
 mediatailor,mediatailor,mediatailor,mediatailor,,mediatailor,,,MediaTailor,MediaTailor,,1,,,aws_mediatailor_,,media_tailor_,Elemental MediaTailor,AWS,,x,,,,,MediaTailor,,,
 ,,,,,,,,,,,,,,,,,Elemental On-Premises,AWS,x,,,,,,,,,No SDK support

@@ -75,6 +75,7 @@ const (
 	LexV2ModelsEndpointID                = "models-v2-lex"
 	MediaConvertEndpointID               = "mediaconvert"
 	MediaLiveEndpointID                  = "medialive"
+	MedialStoreEndpointID                = "mediastore"
 	MQEndpointID                         = "mq"
 	ObservabilityAccessManagerEndpointID = "oam"
 	OpenSearchServerlessEndpointID       = "aoss"
