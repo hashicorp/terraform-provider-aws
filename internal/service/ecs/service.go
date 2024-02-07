@@ -433,9 +433,9 @@ func ResourceService() *schema.Resource {
 														},
 													},
 												},
-												"kms_key_id": {
+												"kms_key": {
 													Type:     schema.TypeString,
-													Required: true,
+													Optional: true,
 												},
 												"role_arn": {
 													Type:     schema.TypeString,

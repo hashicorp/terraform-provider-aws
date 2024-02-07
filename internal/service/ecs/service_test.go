@@ -4240,6 +4240,40 @@ func testAccServiceConfig_serviceConnectAllAttributes(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
+  policy = data.aws_iam_policy_document.test.json
+}
+
+
+data "aws_iam_policy_document" "test" {
+  policy_id = "KMSPolicy"
+
+  statement {
+    sid       = "Root User Permissions"
+    effect    = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = [
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+    actions   = [
+      "kms:*"]
+    resources = [ "*"]
+  }
+
+  statement {
+    sid       = "EC2 kms permissions"
+    effect    = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = [ aws_iam_role.test.arn ]
+    }
+    actions   = [
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:GenerateDataKey",
+      "kms:GenerateDataKeyPair"]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_role" "test" {
@@ -4327,7 +4361,7 @@ resource "aws_ecs_service" "test" {
         issuer_cert_authority {
 		  aws_pca_authority_arn = 	aws_acmpca_certificate_authority.test.arn
         }
-        kms_key_id = aws_kms_key.test.arn
+        kms_key = aws_kms_key.test.arn
         role_arn = aws_iam_role.test.arn	
       }
     }
@@ -4372,6 +4406,7 @@ resource "aws_acmpca_certificate_authority" "test" {
 }
 
 data "aws_partition" "current" {}
+data "aws_caller_identity" "current" {}
 `, rName)
 }
 
