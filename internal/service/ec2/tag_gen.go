@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ec2_tag")
-func ResourceTag() *schema.Resource {
+// @SDKResource("aws_ec2_tag", name="EC2 Resource Tag")
+func resourceTag() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTagCreate,
 		ReadWithoutTimeout:   resourceTagRead,
