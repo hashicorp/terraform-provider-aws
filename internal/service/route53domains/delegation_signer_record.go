@@ -42,7 +42,7 @@ func newDelegationSignerRecordResource(context.Context) (resource.ResourceWithCo
 
 type delegationSignerRecordResource struct {
 	framework.ResourceWithConfigure
-	framework.WithNoOpUpdate
+	framework.WithNoUpdate
 	framework.WithTimeouts
 	framework.WithImportByID
 }

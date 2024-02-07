@@ -10,13 +10,13 @@ import (
 	"log"
 	"sort"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -92,17 +92,17 @@ func ResourceListenerRule() *schema.Resource {
 						},
 
 						"target_group_arn": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumForward),
-							ValidateFunc:     verify.ValidARN,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 
 						"forward": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumForward),
-							MaxItems:         1,
+							Type:                  schema.TypeList,
+							Optional:              true,
+							DiffSuppressOnRefresh: true,
+							DiffSuppressFunc:      diffSuppressMissingForward("action"),
+							MaxItems:              1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"target_group": {
@@ -151,10 +151,9 @@ func ResourceListenerRule() *schema.Resource {
 						},
 
 						"redirect": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumRedirect),
-							MaxItems:         1,
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"host": {
@@ -205,10 +204,9 @@ func ResourceListenerRule() *schema.Resource {
 						},
 
 						"fixed_response": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumFixedResponse),
-							MaxItems:         1,
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"content_type": {
@@ -240,10 +238,9 @@ func ResourceListenerRule() *schema.Resource {
 						},
 
 						"authenticate_cognito": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumAuthenticateCognito),
-							MaxItems:         1,
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"authentication_request_extra_params": {
@@ -290,10 +287,9 @@ func ResourceListenerRule() *schema.Resource {
 						},
 
 						"authenticate_oidc": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumAuthenticateOidc),
-							MaxItems:         1,
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"authentication_request_extra_params": {
@@ -477,24 +473,11 @@ func ResourceListenerRule() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: customdiff.Sequence(
-			verify.SetTagsDiff,
-		),
-	}
-}
 
-func suppressIfActionTypeNot(t awstypes.ActionTypeEnum) schema.SchemaDiffSuppressFunc {
-	return func(k, old, new string, d *schema.ResourceData) bool {
-		take := 2
-		i := strings.IndexFunc(k, func(r rune) bool {
-			if r == '.' {
-				take -= 1
-				return take == 0
-			}
-			return false
-		})
-		at := k[:i+1] + "type"
-		return awstypes.ActionTypeEnum(d.Get(at).(string)) != t
+		CustomizeDiff: customdiff.All(
+			verify.SetTagsDiff,
+			validateListenerActionsCustomDiff("action"),
+		),
 	}
 }
 
@@ -508,12 +491,12 @@ func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, met
 		Tags:        getTagsInV2(ctx),
 	}
 
-	var err error
-
-	input.Actions, err = expandLbListenerActions(d.Get("action").([]interface{}))
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
+	input.Actions = expandLbListenerActions(cty.GetAttrPath("action"), d.Get("action").([]any), &diags)
+	if diags.HasError() {
+		return diags
 	}
+
+	var err error
 
 	input.Conditions, err = lbListenerRuleConditions(d.Get("condition").(*schema.Set).List())
 	if err != nil {
@@ -610,41 +593,9 @@ func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta 
 	sort.Slice(rule.Actions, func(i, j int) bool {
 		return aws.ToInt32(rule.Actions[i].Order) < aws.ToInt32(rule.Actions[j].Order)
 	})
-	actions := make([]interface{}, len(rule.Actions))
-	for i, action := range rule.Actions {
-		actionMap := map[string]interface{}{
-			"type":  string(action.Type),
-			"order": aws.ToInt32(action.Order),
-		}
-
-		switch action.Type {
-		case awstypes.ActionTypeEnumForward:
-			if aws.ToString(action.TargetGroupArn) != "" {
-				actionMap["target_group_arn"] = aws.ToString(action.TargetGroupArn)
-			} else {
-				actionMap["forward"] = flattenLbListenerActionForwardConfig(action.ForwardConfig)
-			}
-
-		case awstypes.ActionTypeEnumRedirect:
-			actionMap["redirect"] = flattenLbListenerActionRedirectConfig(action.RedirectConfig)
-
-		case awstypes.ActionTypeEnumFixedResponse:
-			actionMap["fixed_response"] = flattenLbListenerActionFixedResponseConfig(action.FixedResponseConfig)
-
-		case awstypes.ActionTypeEnumAuthenticateCognito:
-			actionMap["authenticate_cognito"] = flattenLbListenerActionAuthenticateCognitoConfig(action.AuthenticateCognitoConfig)
-
-		case awstypes.ActionTypeEnumAuthenticateOidc:
-			// The LB API currently provides no way to read the ClientSecret
-			// Instead we passthrough the configuration value into the state
-			clientSecret := d.Get("action." + strconv.Itoa(i) + ".authenticate_oidc.0.client_secret").(string)
-
-			actionMap["authenticate_oidc"] = flattenAuthenticateOIDCActionConfig(action.AuthenticateOidcConfig, clientSecret)
-		}
-
-		actions[i] = actionMap
+	if err := d.Set("action", flattenLbListenerActions(d, "action", rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting action: %s", err)
 	}
-	d.Set("action", actions)
 
 	conditions := make([]interface{}, len(rule.Conditions))
 	for i, condition := range rule.Conditions {
@@ -734,10 +685,9 @@ func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if d.HasChange("action") {
-			var err error
-			input.Actions, err = expandLbListenerActions(d.Get("action").([]interface{}))
-			if err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
+			input.Actions = expandLbListenerActions(cty.GetAttrPath("action"), d.Get("action").([]any), &diags)
+			if diags.HasError() {
+				return diags
 			}
 			requestUpdate = true
 		}

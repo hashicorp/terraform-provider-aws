@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"testing"
 
@@ -2732,7 +2733,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_defaults(t *testing.T) {
 						Config: testAccTargetGroupConfig_Instance_HealthCheck_basic(protocol, healthCheckProtocol),
 					}
 					if tc.invalidHealthCheckProtocol {
-						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol))
+						step.ExpectError = regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`Attribute "health_check[0].protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol)))
 					} else {
 						step.Check = resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -2879,9 +2880,9 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcher(t *testing.T) {
 						Config: testAccTargetGroupConfig_Instance_HealthCheck_matcher(protocol, healthCheckProtocol, tc.matcher),
 					}
 					if tc.invalidHealthCheckProtocol {
-						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol))
+						step.ExpectError = regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`Attribute "health_check[0].protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol)))
 					} else if tc.invalidConfig {
-						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.matcher" cannot be specified when "health_check.protocol" is "%s".`, healthCheckProtocol))
+						step.ExpectError = regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`Attribute "health_check[0].matcher" cannot be specified when "health_check[0].protocol" is "%s".`, healthCheckProtocol)))
 					} else {
 						step.Check = resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -3021,9 +3022,9 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_path(t *testing.T) {
 						Config: testAccTargetGroupConfig_Instance_HealthCheck_path(protocol, healthCheckProtocol, tc.path),
 					}
 					if tc.invalidHealthCheckProtocol {
-						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol))
+						step.ExpectError = regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`Attribute "health_check[0].protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol)))
 					} else if tc.invalidConfig {
-						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.path" cannot be specified when "health_check.protocol" is "%s".`, healthCheckProtocol))
+						step.ExpectError = regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`Attribute "health_check[0].path" cannot be specified when "health_check[0].protocol" is "%s".`, healthCheckProtocol)))
 					} else {
 						step.Check = resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -3173,11 +3174,11 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcherOutOfRange(t *testing.T
 						Config: testAccTargetGroupConfig_Instance_HealthCheck_matcher(protocol, healthCheckProtocol, tc.matcher),
 					}
 					if tc.invalidHealthCheckProtocol {
-						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol))
+						step.ExpectError = regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`Attribute "health_check[0].protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol)))
 					} else if tc.invalidConfig {
-						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.matcher" cannot be specified when "health_check.protocol" is "%s".`, healthCheckProtocol))
+						step.ExpectError = regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`Attribute "health_check[0].matcher" cannot be specified when "health_check[0].protocol" is "%s".`, healthCheckProtocol)))
 					} else {
-						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`ValidationError: Health check matcher HTTP code '%s' must be within '%s' inclusive`, tc.matcher, tc.validRange))
+						step.ExpectError = regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`ValidationError: Health check matcher HTTP code '%s' must be within '%s' inclusive`, tc.matcher, tc.validRange)))
 					}
 					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -3310,7 +3311,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_defaults(t *testing.T) {
 						Config: testAccTargetGroupConfig_Instance_HealhCheckGRPC_basic(protocol, healthCheckProtocol),
 					}
 					if tc.invalidHealthCheckProtocol {
-						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol))
+						step.ExpectError = regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`Attribute "health_check[0].protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol)))
 					} else {
 						step.Check = resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -3387,9 +3388,9 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_path(t *testing.T) {
 						Config: testAccTargetGroupConfig_Instance_HealhCheckGRPC_path(protocol, healthCheckProtocol, tc.path),
 					}
 					if tc.invalidHealthCheckProtocol {
-						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol))
+						step.ExpectError = regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`Attribute "health_check[0].protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol)))
 					} else if tc.invalidConfig {
-						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.path" cannot be specified when "health_check.protocol" is "%s".`, healthCheckProtocol))
+						step.ExpectError = regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`Attribute "health_check[0].path" cannot be specified when "health_check[0].protocol" is "%s".`, healthCheckProtocol)))
 					} else {
 						step.Check = resource.ComposeAggregateTestCheckFunc(
 							testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -3454,9 +3455,9 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_matcherOutOfRange(t *testi
 						Config: testAccTargetGroupConfig_Instance_HealhCheckGRPC_matcher(protocol, healthCheckProtocol, tc.matcher),
 					}
 					if tc.invalidHealthCheckProtocol {
-						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol))
+						step.ExpectError = regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`Attribute "health_check[0].protocol" cannot have value "%s" when "protocol" is "%s".`, healthCheckProtocol, protocol)))
 					} else {
-						step.ExpectError = regexache.MustCompile(fmt.Sprintf(`ValidationError: Health check matcher GRPC code '%s' must be within '0-99' inclusive`, tc.matcher))
+						step.ExpectError = regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`ValidationError: Health check matcher GRPC code '%s' must be within '0-99' inclusive`, tc.matcher)))
 					}
 					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -4032,7 +4033,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol(t *testing.T) {
 				Config: testAccTargetGroupConfig_Lambda_HealthCheck_protocol(healthCheckProtocol),
 			}
 			if tc.invalidHealthCheckProtocol {
-				step.ExpectError = regexache.MustCompile(fmt.Sprintf(`Attribute "health_check.protocol" cannot have value %q when "target_type" is "lambda"`, healthCheckProtocol))
+				step.ExpectError = regexache.MustCompile(regexp.QuoteMeta(fmt.Sprintf(`Attribute "health_check[0].protocol" cannot have value %q when "target_type" is "lambda"`, healthCheckProtocol)))
 			} else if tc.warning {
 				step.Check = resource.ComposeAggregateTestCheckFunc(
 					testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
