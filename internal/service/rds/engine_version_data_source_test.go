@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
 func TestAccRDSEngineVersionDataSource_basic(t *testing.T) {
@@ -34,6 +35,7 @@ func TestAccRDSEngineVersionDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "engine", engine),
 					resource.TestCheckResourceAttr(dataSourceName, "version", version),
+					resource.TestCheckResourceAttr(dataSourceName, "version_actual", version),
 					resource.TestCheckResourceAttr(dataSourceName, "parameter_group_family", paramGroup),
 
 					resource.TestCheckResourceAttrSet(dataSourceName, "default_character_set"),
@@ -69,6 +71,7 @@ func TestAccRDSEngineVersionDataSource_upgradeTargets(t *testing.T) {
 				Config: testAccEngineVersionDataSourceConfig_upgradeTargets(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "valid_upgrade_targets.#", regexache.MustCompile(`^[1-9][0-9]*`)),
+					resource.TestCheckResourceAttrSet(dataSourceName, "version_actual"),
 				),
 			},
 		},
@@ -89,6 +92,87 @@ func TestAccRDSEngineVersionDataSource_preferred(t *testing.T) {
 				Config: testAccEngineVersionDataSourceConfig_preferred(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "version", "8.0.32"),
+					resource.TestCheckResourceAttr(dataSourceName, "version_actual", "8.0.32"),
+				),
+			},
+			{
+				Config: testAccEngineVersionDataSourceConfig_preferred2(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "version", "8.0.32"),
+					resource.TestCheckResourceAttr(dataSourceName, "version_actual", "8.0.32"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSEngineVersionDataSource_preferredVersionsPreferredUpgradeTargets(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_rds_engine_version.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades("mysql", `"5.7.37", "5.7.38", "5.7.39"`, `"8.0.34"`),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "version", "5.7.39"),
+				),
+			},
+			{
+				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades("mysql", `"5.7.44", "5.7.38", "5.7.39"`, `"8.0.32","8.0.33"`),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "version", "5.7.44"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSEngineVersionDataSource_preferredUpgradeTargetsVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_rds_engine_version.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEngineVersionDataSourceConfig_preferredUpgradeTargetsVersion("mysql", "5.7", `"8.0.44", "8.0.35", "8.0.34"`),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`^5\.7`)),
+					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^5\.7\.`)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSEngineVersionDataSource_preferredMajorTargets(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_rds_engine_version.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEngineVersionDataSourceConfig_preferredMajorTarget("mysql"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`^5\.7\.`)),
+				),
+			},
+			{
+				Config: testAccEngineVersionDataSourceConfig_preferredMajorTarget("aurora-postgresql"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`^15\.`)),
 				),
 			},
 		},
@@ -128,7 +212,8 @@ func TestAccRDSEngineVersionDataSource_defaultOnlyExplicit(t *testing.T) {
 			{
 				Config: testAccEngineVersionDataSourceConfig_defaultOnlyExplicit(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`^8\.0\.`)),
+					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`^8\.0`)),
+					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^8\.0\.`)),
 				),
 			},
 		},
@@ -149,6 +234,7 @@ func TestAccRDSEngineVersionDataSource_includeAll(t *testing.T) {
 				Config: testAccEngineVersionDataSourceConfig_includeAll(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "version", "8.0.20"),
+					resource.TestCheckResourceAttr(dataSourceName, "version_actual", "8.0.20"),
 				),
 			},
 		},
@@ -166,10 +252,57 @@ func TestAccRDSEngineVersionDataSource_filter(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_filter(),
+				Config: testAccEngineVersionDataSourceConfig_filter(tfrds.ClusterEngineAuroraPostgreSQL, "serverless"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceName, "version"),
+					resource.TestCheckResourceAttr(dataSourceName, "supported_modes.0", "serverless"),
+				),
+			},
+			{
+				Config: testAccEngineVersionDataSourceConfig_filter(tfrds.ClusterEngineAuroraPostgreSQL, "global"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(dataSourceName, "version"),
+					resource.TestCheckResourceAttr(dataSourceName, "supported_modes.0", "global"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSEngineVersionDataSource_latest(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_rds_engine_version.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEngineVersionDataSourceConfig_latest(true, `"13.9", "12.7", "11.12", "15.4", "10.17", "9.6.22"`),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "version", "15.4"),
+				),
+			},
+			{
+				Config: testAccEngineVersionDataSourceConfig_latest(false, `"13.9", "12.7", "11.12", "15.4", "10.17", "9.6.22"`),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "version", "13.9"),
-					resource.TestCheckResourceAttr(dataSourceName, "supported_modes.0", "serverless"),
+				),
+			},
+			{
+				Config: testAccEngineVersionDataSourceConfig_latest2("aurora-postgresql", "15"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`^15`)),
+					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^15\.[0-9]`)),
+				),
+			},
+			{
+				Config: testAccEngineVersionDataSourceConfig_latest2("mysql", "8.0"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`^8\.0`)),
+					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^8\.0\.[0-9]+$`)),
 				),
 			},
 		},
@@ -223,6 +356,52 @@ data "aws_rds_engine_version" "test" {
 `
 }
 
+func testAccEngineVersionDataSourceConfig_preferred2() string {
+	return `
+data "aws_rds_engine_version" "test" {
+  engine             = "mysql"
+  version            = "8.0"
+  preferred_versions = ["85.9.12", "8.0.32", "8.0.31"]
+}
+`
+}
+
+func testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(engine, preferredVersions, preferredUpgrades string) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "test" {
+  engine                    = %[1]q
+  latest				    = true
+  preferred_versions        = [%[2]s]
+  preferred_upgrade_targets = [%[3]s]
+}
+`, engine, preferredVersions, preferredUpgrades)
+}
+
+func testAccEngineVersionDataSourceConfig_preferredUpgradeTargetsVersion(engine, version, preferredUpgrades string) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "test" {
+  engine                    = %[1]q
+  version                   = %[2]q
+  preferred_upgrade_targets = [%[3]s]
+}
+`, engine, version, preferredUpgrades)
+}
+
+func testAccEngineVersionDataSourceConfig_preferredMajorTarget(engine string) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "latest" {
+  engine = %[1]q
+  latest = true
+}
+
+data "aws_rds_engine_version" "test" {
+  engine                  = %[1]q
+  latest				  = true
+  preferred_major_targets = [data.aws_rds_engine_version.latest.version]
+}
+`, engine)
+}
+
 func testAccEngineVersionDataSourceConfig_defaultOnlyImplicit() string {
 	return `
 data "aws_rds_engine_version" "test" {
@@ -251,17 +430,38 @@ data "aws_rds_engine_version" "test" {
 `
 }
 
-func testAccEngineVersionDataSourceConfig_filter() string {
-	return `
+func testAccEngineVersionDataSourceConfig_filter(engine, engineMode string) string {
+	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
-  engine      = "aurora-postgresql"
-  version     = "13.9"
+  #engine      = "aurora-postgresql"
+  engine      = %[1]q
+  latest      = true
   include_all = true
 
   filter {
     name   = "engine-mode"
-    values = ["serverless"]
+    values = [%[2]q]
   }
 }
-`
+`, engine, engineMode)
+}
+
+func testAccEngineVersionDataSourceConfig_latest(latest bool, preferredVersions string) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "test" {
+  engine             = "aurora-postgresql"
+  latest             = %[1]t
+  preferred_versions = [%[2]s]
+}
+`, latest, preferredVersions)
+}
+
+func testAccEngineVersionDataSourceConfig_latest2(engine, majorVersion string) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "test" {
+  engine  = %[1]q
+  version = %[2]q
+  latest  = true
+}
+`, engine, majorVersion)
 }
