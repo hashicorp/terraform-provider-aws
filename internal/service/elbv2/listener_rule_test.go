@@ -1512,7 +1512,7 @@ func TestAccELBV2ListenerRule_EmptyAction(t *testing.T) {
 
 func TestAccELBV2ListenerRule_redirectWithTargetGroupARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf elbv2.Rule
+	var conf awstypes.Rule
 	lbName := fmt.Sprintf("testrule-redirect-%s", sdkacctest.RandString(14))
 
 	resourceName := "aws_lb_listener_rule.static"
