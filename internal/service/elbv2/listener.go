@@ -1004,7 +1004,7 @@ func flattenLbForwardAction(d *schema.ResourceData, attrName string, i int, awsA
 		return
 	}
 
-	flattenLbForwardActionBoth(i, awsAction, actionMap)
+	flattenLbForwardActionBoth(awsAction, actionMap)
 }
 
 func flattenLbForwardActionOneOf(actions cty.Value, i int, awsAction awstypes.Action, actionMap map[string]any) {
@@ -1024,7 +1024,7 @@ func flattenLbForwardActionOneOf(actions cty.Value, i int, awsAction awstypes.Ac
 	}
 }
 
-func flattenLbForwardActionBoth(i int, awsAction awstypes.Action, actionMap map[string]any) {
+func flattenLbForwardActionBoth(awsAction awstypes.Action, actionMap map[string]any) {
 	actionMap["target_group_arn"] = aws.ToString(awsAction.TargetGroupArn)
 	actionMap["forward"] = flattenLbListenerActionForwardConfig(awsAction.ForwardConfig)
 }
