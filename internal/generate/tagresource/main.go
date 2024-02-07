@@ -53,7 +53,6 @@ func main() {
 
 	servicePackage := os.Getenv("GOPACKAGE")
 	u, err := names.ProviderNameUpper(servicePackage)
-
 	if err != nil {
 		g.Fatalf("encountered: %s", err)
 	}
@@ -69,6 +68,7 @@ func main() {
 		UpdateTagsFunc: *updateTagsFunc,
 	}
 
+	g.Infof("Generating internal/service/%s/%s", servicePackage, resourceFilename)
 	d := g.NewGoFileDestination(resourceFilename)
 
 	if err := d.WriteTemplate("taggen", resourceTemplateBody, templateData); err != nil {
@@ -79,6 +79,7 @@ func main() {
 		g.Fatalf("generating file (%s): %s", resourceFilename, err)
 	}
 
+	g.Infof("Generating internal/service/%s/%s", servicePackage, resourceTestFilename)
 	d = g.NewGoFileDestination(resourceTestFilename)
 
 	if err := d.WriteTemplate("taggen", resourceTestTemplateBody, templateData); err != nil {
