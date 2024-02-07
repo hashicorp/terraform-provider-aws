@@ -67,7 +67,7 @@ const (
 	InstanceEngineSQLServerEnterprise = "sqlserver-ee"
 	InstanceEngineSQLServerExpress    = "sqlserver-ex"
 	InstanceEngineSQLServerStandard   = "sqlserver-se"
-	InstanceEngineSQLServerWeb        = "sqlserver-ewb"
+	InstanceEngineSQLServerWeb        = "sqlserver-web"
 )
 
 // https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/accessing-monitoring.html#Overview.DBInstance.Status.
