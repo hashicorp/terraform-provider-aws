@@ -32,9 +32,9 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 	input := &{{ .AWSService }}.{{ .TagOp }}Input{
 		{{- if not ( .TagTypeIDElem ) }}
 		{{- if .TagInIDNeedSlice }}
-		{{ .TagInIDElem }}:   aws.StringSlice([]string{identifier}),
+		{{ .TagInIDElem }}:   aws.StringSlice(tfslices.Of(identifier)),
 		{{- else if .TagInIDNeedValueSlice }}
-		{{ .TagInIDElem }}: []string{identifier},
+		{{ .TagInIDElem }}: tfslices.Of(identifier),
 		{{- else }}
 		{{ .TagInIDElem }}:   aws.String(identifier),
 		{{- end }}
@@ -79,9 +79,9 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		input := &{{ .TagPackage }}.{{ .UntagOp }}Input{
 			{{- if not ( .TagTypeIDElem ) }}
 			{{- if .TagInIDNeedSlice }}
-			{{ .TagInIDElem }}:   aws.StringSlice([]string{identifier}),
+			{{ .TagInIDElem }}:   aws.StringSlice(tfslices.Of(identifier)),
 			{{- else if .TagInIDNeedValueSlice }}
-			{{ .TagInIDElem }}: []string{identifier},
+			{{ .TagInIDElem }}: tfslices.Of(identifier),
 			{{- else }}
 			{{ .TagInIDElem }}:   aws.String(identifier),
 			{{- end }}
@@ -121,9 +121,9 @@ func {{ .UpdateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		input := &{{ .TagPackage }}.{{ .TagOp }}Input{
 			{{- if not ( .TagTypeIDElem ) }}
 			{{- if .TagInIDNeedSlice }}
-			{{ .TagInIDElem }}: aws.StringSlice([]string{identifier}),
+			{{ .TagInIDElem }}: aws.StringSlice(tfslices.Of(identifier)),
 			{{- else if .TagInIDNeedValueSlice }}
-			{{ .TagInIDElem }}: []string{identifier},
+			{{ .TagInIDElem }}: tfslices.Of(identifier),
 			{{- else }}
 			{{ .TagInIDElem }}: aws.String(identifier),
 			{{- end }}
