@@ -43,6 +43,7 @@ import (
 	dynamodb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	ecr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecr"
+	ecs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecs"
 	eks_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eks"
 	elasticache_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticache"
 	elasticloadbalancingv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
@@ -564,6 +565,10 @@ func (c *AWSClient) ECRPublicConn(ctx context.Context) *ecrpublic_sdkv1.ECRPubli
 
 func (c *AWSClient) ECSConn(ctx context.Context) *ecs_sdkv1.ECS {
 	return errs.Must(conn[*ecs_sdkv1.ECS](ctx, c, names.ECS, make(map[string]any)))
+}
+
+func (c *AWSClient) ECSClient(ctx context.Context) *ecs_sdkv2.Client {
+	return errs.Must(client[*ecs_sdkv2.Client](ctx, c, names.ECS, make(map[string]any)))
 }
 
 func (c *AWSClient) EFSConn(ctx context.Context) *efs_sdkv1.EFS {
