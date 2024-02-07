@@ -57,6 +57,7 @@ func ResourceSchema() *schema.Resource {
 			"last_modified": {
 				Type:     schema.TypeString,
 				Computed: true,
+				Optional: true,
 			},
 
 			"name": {

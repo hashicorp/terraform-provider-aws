@@ -226,6 +226,7 @@ func ResourceCanary() *schema.Resource {
 						"last_modified": {
 							Type:     schema.TypeString,
 							Computed: true,
+							Optional: true,
 						},
 						"last_started": {
 							Type:     schema.TypeString,

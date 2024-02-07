@@ -43,6 +43,7 @@ func ResourceResource() *schema.Resource {
 			"last_modified": {
 				Type:     schema.TypeString,
 				Computed: true,
+				Optional: true,
 			},
 			"role_arn": {
 				Type:         schema.TypeString,
