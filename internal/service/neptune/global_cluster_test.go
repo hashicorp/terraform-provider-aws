@@ -318,10 +318,6 @@ func testAccCheckGlobalClusterExists(ctx context.Context, n string, v *neptune.G
 			return fmt.Errorf("not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Neptune Global Cluster ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
 		output, err := tfneptune.FindGlobalClusterByID(ctx, conn, rs.Primary.ID)

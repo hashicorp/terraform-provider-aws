@@ -242,9 +242,10 @@ func TestAccSiteVPNConnection_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 		},
 	})
@@ -336,9 +337,10 @@ func TestAccSiteVPNConnection_withoutTGWorVGW(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 		},
 	})
@@ -372,9 +374,10 @@ func TestAccSiteVPNConnection_cloudWatchLogOptions(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
 				Config: testAccSiteVPNConnectionConfig_cloudWatchLogOptionsUpdated(rName, rBgpAsn),
@@ -416,9 +419,10 @@ func TestAccSiteVPNConnection_transitGatewayID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 		},
 	})
@@ -1229,9 +1233,10 @@ func TestAccSiteVPNConnection_staticRoutes(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 		},
 	})
@@ -1258,9 +1263,10 @@ func TestAccSiteVPNConnection_outsideAddressTypePrivate(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 		},
 	})
@@ -1287,9 +1293,10 @@ func TestAccSiteVPNConnection_outsideAddressTypePublic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 		},
 	})
@@ -1316,9 +1323,10 @@ func TestAccSiteVPNConnection_enableAcceleration(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 		},
 	})
@@ -1344,9 +1352,10 @@ func TestAccSiteVPNConnection_ipv6(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 		},
 	})
@@ -1374,9 +1383,10 @@ func TestAccSiteVPNConnection_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
 				Config: testAccSiteVPNConnectionConfig_tags2(rName, rBgpAsn, "key1", "value1updated", "key2", "value2"),
@@ -1421,9 +1431,10 @@ func TestAccSiteVPNConnection_specifyIPv4(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
 				Config: testAccSiteVPNConnectionConfig_localRemoteIPv4CIDRs(rName, rBgpAsn, "10.112.0.0/16", "10.222.32.0/24"),
@@ -1509,9 +1520,10 @@ func TestAccSiteVPNConnection_updateCustomerGatewayID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
 				Config: testAccSiteVPNConnectionConfig_customerGatewayIDUpdated(rName, rBgpAsn1, rBgpAsn2),
@@ -1546,9 +1558,10 @@ func TestAccSiteVPNConnection_updateVPNGatewayID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
 				Config: testAccSiteVPNConnectionConfig_vpnGatewayIDUpdated(rName, rBgpAsn),
@@ -1584,9 +1597,10 @@ func TestAccSiteVPNConnection_updateTransitGatewayID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
 				Config: testAccSiteVPNConnectionConfig_transitGatewayIDUpdated(rName, rBgpAsn),
@@ -1623,9 +1637,10 @@ func TestAccSiteVPNConnection_vpnGatewayIDToTransitGatewayID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
 				Config: testAccSiteVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName, rBgpAsn, true),
@@ -1662,9 +1677,10 @@ func TestAccSiteVPNConnection_transitGatewayIDToVPNGatewayID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"vgw_telemetry"},
 			},
 			{
 				Config: testAccSiteVPNConnectionConfig_transitGatewayIDOrVPNGatewayID(rName, rBgpAsn, false),

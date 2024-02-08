@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -67,13 +68,14 @@ func ResourceVerifiedAccessGroup() *schema.Resource {
 				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"kms_key_arn": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
 						"customer_managed_key_enabled": {
 							Type:     schema.TypeBool,
 							Optional: true,
+						},
+						"kms_key_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
@@ -103,6 +105,7 @@ func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceDa
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.CreateVerifiedAccessGroupInput{
+		ClientToken:              aws.String(id.UniqueId()),
 		TagSpecifications:        getTagSpecificationsInV2(ctx, types.ResourceTypeVerifiedAccessGroup),
 		VerifiedAccessInstanceId: aws.String(d.Get("verifiedaccess_instance_id").(string)),
 	}
@@ -182,6 +185,7 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 
 	if d.HasChangesExcept("policy_document", "tags", "tags_all", "sse_configuration") {
 		input := &ec2.ModifyVerifiedAccessGroupInput{
+			ClientToken:           aws.String(id.UniqueId()),
 			VerifiedAccessGroupId: aws.String(d.Id()),
 		}
 
@@ -239,6 +243,7 @@ func resourceVerifiedAccessGroupDelete(ctx context.Context, d *schema.ResourceDa
 
 	log.Printf("[INFO] Deleting Verified Access Group: %s", d.Id())
 	_, err := conn.DeleteVerifiedAccessGroup(ctx, &ec2.DeleteVerifiedAccessGroupInput{
+		ClientToken:           aws.String(id.UniqueId()),
 		VerifiedAccessGroupId: aws.String(d.Id()),
 	})
 

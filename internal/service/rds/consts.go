@@ -54,6 +54,9 @@ func StorageType_Values() []string {
 }
 
 const (
+	InstanceEngineCustomPrefix        = "custom-"
+	InstanceEngineDB2Advanced         = "db2-ae"
+	InstanceEngineDB2Standard         = "db2-se"
 	InstanceEngineMariaDB             = "mariadb"
 	InstanceEngineMySQL               = "mysql"
 	InstanceEngineOracleEnterprise    = "oracle-ee"
@@ -65,7 +68,6 @@ const (
 	InstanceEngineSQLServerExpress    = "sqlserver-ex"
 	InstanceEngineSQLServerStandard   = "sqlserver-se"
 	InstanceEngineSQLServerWeb        = "sqlserver-ewb"
-	InstanceEngineCustomPrefix        = "custom-"
 )
 
 // https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/accessing-monitoring.html#Overview.DBInstance.Status.
@@ -140,6 +142,13 @@ func ClusterEngine_Values() []string {
 	}
 }
 
+func ClusterInstanceEngine_Values() []string {
+	return []string{
+		ClusterEngineAuroraMySQL,
+		ClusterEngineAuroraPostgreSQL,
+	}
+}
+
 const (
 	GlobalClusterEngineAurora           = "aurora"
 	GlobalClusterEngineAuroraMySQL      = "aurora-mysql"
@@ -176,9 +185,11 @@ const (
 	ExportableLogTypeAgent      = "agent"
 	ExportableLogTypeAlert      = "alert"
 	ExportableLogTypeAudit      = "audit"
+	ExportableLogTypeDiagLog    = "diag.log"
 	ExportableLogTypeError      = "error"
 	ExportableLogTypeGeneral    = "general"
 	ExportableLogTypeListener   = "listener"
+	ExportableLogTypeNotifyLog  = "notify.log"
 	ExportableLogTypeOEMAgent   = "oemagent"
 	ExportableLogTypePostgreSQL = "postgresql"
 	ExportableLogTypeSlowQuery  = "slowquery"
@@ -202,9 +213,11 @@ func InstanceExportableLogType_Values() []string {
 		ExportableLogTypeAgent,
 		ExportableLogTypeAlert,
 		ExportableLogTypeAudit,
+		ExportableLogTypeDiagLog,
 		ExportableLogTypeError,
 		ExportableLogTypeGeneral,
 		ExportableLogTypeListener,
+		ExportableLogTypeNotifyLog,
 		ExportableLogTypeOEMAgent,
 		ExportableLogTypePostgreSQL,
 		ExportableLogTypeSlowQuery,

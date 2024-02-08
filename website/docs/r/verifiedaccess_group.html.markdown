@@ -26,8 +26,10 @@ resource "aws_verifiedaccess_group" "example" {
 resource "aws_kms_key" "test_key" {
   description = "KMS key for Verified Access Group test"
 }
+
 resource "aws_verifiedaccess_group" "test" {
   verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
+
   server_side_encryption_configuration {
 	  kms_key_arn = aws_kms_key.test_key.arn
   }
@@ -43,11 +45,11 @@ The following arguments are required:
 The following arguments are optional:
 
 * `description` - (Optional) Description of the verified access group.
+* `policy_document` - (Optional) The policy document that is associated with this resource.
+* `sse_configuration` - (Optional) Configuration block to use KMS keys for server-side encryption.
+    * `cmk_enabled` - (Optional) Boolean flag to indicate that the CMK should be used.
+    * `kms_key_arn` - (Optional) ARN of the KMS key to use.
 * `tags` - (Optional) Key-value mapping of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `policy_docment` - (Optional) The policy document that is associated with this resource.
-* `sse_configuration` - (Optional) Configuration block to use KMS keys for server-side encryption
-  * `kms_key_arn` - Arn of the KMS key to use
-  * `cmk_enabled` - Boolean flag to indicate that the CMK should be used 
 
 ## Attribute Reference
 
@@ -59,9 +61,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `owner` - AWS account number owning this resource.
 * `verifiedaccess_group_arn` - ARN of this verified acess group.
 * `verifiedaccess_group_id` - ID of this verified access group.
-* `sse_configuration` - Configuration information for KMS-based encryption.
-  * `kms_key_arn` - The Arn of the key being used.
-  * `cmk_enabled` - Boolean indicating if customer-managed keys (CMK) are being used.
 
 ## Timeouts
 

@@ -575,8 +575,7 @@ func (r *resourceManagedUserPoolClient) Read(ctx context.Context, request resour
 	state.RefreshTokenValidity = flex.Int64ToFramework(ctx, poolClient.RefreshTokenValidity)
 	state.SupportedIdentityProviders = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.SupportedIdentityProviders)
 	if state.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
-		attributeTypes := flex.AttributeTypesMust[tokenValidityUnits](ctx)
-		elemType := types.ObjectType{AttrTypes: attributeTypes}
+		elemType := fwtypes.NewObjectTypeOf[tokenValidityUnits](ctx).ObjectType
 		state.TokenValidityUnits = types.ListNull(elemType)
 	} else {
 		state.TokenValidityUnits = flattenTokenValidityUnits(ctx, poolClient.TokenValidityUnits)
@@ -657,8 +656,7 @@ func (r *resourceManagedUserPoolClient) Update(ctx context.Context, request reso
 	config.RefreshTokenValidity = flex.Int64ToFramework(ctx, poolClient.RefreshTokenValidity)
 	config.SupportedIdentityProviders = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.SupportedIdentityProviders)
 	if !state.TokenValidityUnits.IsNull() && plan.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
-		attributeTypes := flex.AttributeTypesMust[tokenValidityUnits](ctx)
-		elemType := types.ObjectType{AttrTypes: attributeTypes}
+		elemType := fwtypes.NewObjectTypeOf[tokenValidityUnits](ctx).ObjectType
 		config.TokenValidityUnits = types.ListNull(elemType)
 	} else {
 		config.TokenValidityUnits = flattenTokenValidityUnits(ctx, poolClient.TokenValidityUnits)
@@ -681,7 +679,7 @@ func (r *resourceManagedUserPoolClient) Delete(ctx context.Context, request reso
 	}
 
 	response.Diagnostics.AddWarning(
-		"Cognito User Pool Client (%s) not deleted",
+		fmt.Sprintf("Cognito User Pool Client (%s) not deleted", state.ID.ValueString()),
 		"User Pool Client is managed by another service and will be deleted when that resource is deleted. Removed from Terraform state.",
 	)
 }

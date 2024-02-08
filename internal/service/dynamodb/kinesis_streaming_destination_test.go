@@ -10,13 +10,13 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccDynamoDBKinesisStreamingDestination_basic(t *testing.T) {
@@ -121,36 +121,18 @@ resource "aws_dynamodb_kinesis_streaming_destination" "test" {
 `, rName)
 }
 
-func testAccCheckKinesisStreamingDestinationExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckKinesisStreamingDestinationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no ID is set")
-		}
-
-		tableName, streamArn, err := tfdynamodb.KinesisStreamingDestinationParseID(rs.Primary.ID)
-
-		if err != nil {
-			return err
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
 
-		output, err := tfdynamodb.FindKinesisDataStreamDestination(ctx, conn, streamArn, tableName)
+		_, err := tfdynamodb.FindKinesisDataStreamDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes["stream_arn"], rs.Primary.Attributes["table_name"])
 
-		if err != nil {
-			return err
-		}
-
-		if output == nil {
-			return fmt.Errorf("DynamoDB Kinesis Streaming Destination (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -163,15 +145,9 @@ func testAccCheckKinesisStreamingDestinationDestroy(ctx context.Context) resourc
 				continue
 			}
 
-			tableName, streamArn, err := tfdynamodb.KinesisStreamingDestinationParseID(rs.Primary.ID)
+			_, err := tfdynamodb.FindKinesisDataStreamDestinationByTwoPartKey(ctx, conn, rs.Primary.Attributes["stream_arn"], rs.Primary.Attributes["table_name"])
 
-			if err != nil {
-				return err
-			}
-
-			output, err := tfdynamodb.FindKinesisDataStreamDestination(ctx, conn, streamArn, tableName)
-
-			if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -179,9 +155,7 @@ func testAccCheckKinesisStreamingDestinationDestroy(ctx context.Context) resourc
 				return err
 			}
 
-			if output != nil {
-				return fmt.Errorf("DynamoDB Kinesis Streaming Destination (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("DynamoDB Kinesis Streaming Destination %s still exists", rs.Primary.ID)
 		}
 
 		return nil

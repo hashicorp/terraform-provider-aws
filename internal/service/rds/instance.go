@@ -222,12 +222,42 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 			},
 			"domain": {
-				Type:     schema.TypeString,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"domain_fqdn", "domain_ou", "domain_auth_secret_arn", "domain_dns_ips"},
+			},
+			"domain_auth_secret_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  verify.ValidARN,
+				ConflictsWith: []string{"domain", "domain_iam_role_name"},
+			},
+			"domain_dns_ips": {
+				Type:     schema.TypeSet,
 				Optional: true,
+				MinItems: 2,
+				MaxItems: 2,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsIPAddress,
+				},
+				ConflictsWith: []string{"domain", "domain_iam_role_name"},
+			},
+			"domain_fqdn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"domain", "domain_iam_role_name"},
 			},
 			"domain_iam_role_name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"domain_fqdn", "domain_ou", "domain_auth_secret_arn", "domain_dns_ips"},
+			},
+			"domain_ou": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"domain", "domain_iam_role_name"},
 			},
 			"enabled_cloudwatch_logs_exports": {
 				Type:     schema.TypeSet,
@@ -642,8 +672,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	// Some API calls (e.g. CreateDBInstanceReadReplica and
-	// RestoreDBInstanceFromDBSnapshot do not support all parameters to
+	// Some API calls (e.g. CreateDBInstanceReadReplica, RestoreDBInstanceFromDBSnapshot
+	// RestoreDBInstanceToPointInTime do not support all parameters to
 	// correctly apply all settings in one pass. For missing parameters or
 	// unsupported configurations, we may need to call ModifyDBInstance
 	// afterwards to prevent Terraform operators from API errors or needing
@@ -950,12 +980,12 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.OptionGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("password"); ok {
-			input.MasterUserPassword = aws.String(v.(string))
-		}
-
 		if v, ok := d.GetOk("parameter_group_name"); ok {
 			input.DBParameterGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("password"); ok {
+			input.MasterUserPassword = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("performance_insights_enabled"); ok {
@@ -1085,8 +1115,24 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Domain = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("domain_auth_secret_arn"); ok {
+			input.DomainAuthSecretArn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
+			input.DomainDnsIps = flex.ExpandStringSet(v.(*schema.Set))
+		}
+
+		if v, ok := d.GetOk("domain_fqdn"); ok {
+			input.DomainFqdn = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("domain_iam_role_name"); ok {
 			input.DomainIAMRoleName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_ou"); ok {
+			input.DomainOu = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
@@ -1314,6 +1360,22 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DomainIAMRoleName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("domain_fqdn"); ok {
+			input.DomainFqdn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_ou"); ok {
+			input.DomainOu = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_auth_secret_arn"); ok {
+			input.DomainAuthSecretArn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
+			input.DomainDnsIps = flex.ExpandStringSet(v.(*schema.Set))
+		}
+
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
@@ -1368,6 +1430,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("parameter_group_name"); ok {
 			input.DBParameterGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("password"); ok {
+			modifyDbInstanceInput.MasterUserPassword = aws.String(v.(string))
+			requiresModifyDbInstance = true
 		}
 
 		if v, ok := d.GetOk("port"); ok {
@@ -1473,8 +1540,24 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Domain = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("domain_auth_secret_arn"); ok {
+			input.DomainAuthSecretArn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
+			input.DomainDnsIps = flex.ExpandStringSet(v.(*schema.Set))
+		}
+
+		if v, ok := d.GetOk("domain_fqdn"); ok {
+			input.DomainFqdn = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("domain_iam_role_name"); ok {
 			input.DomainIAMRoleName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_ou"); ok {
+			input.DomainOu = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
@@ -1651,17 +1734,30 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	v, err := findDBInstanceByIDSDKv1(ctx, conn, d.Id())
+	var (
+		v   *rds.DBInstance
+		err error
+	)
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", d.Get("identifier").(string))
-		d.SetId("")
-		return nil
+	if d.IsNewResource() {
+		v, err = findDBInstanceByIDSDKv1(ctx, conn, d.Id())
+	} else {
+		v, err = findDBInstanceByIDSDKv1(ctx, conn, d.Id())
+		if tfresource.NotFound(err) {
+			v, err = findDBInstanceByIDSDKv1(ctx, conn, d.Get("identifier").(string))
+			if tfresource.NotFound(err) {
+				log.Printf("[WARN] RDS DB Instance (%s) not found, removing from state", d.Get("identifier").(string))
+				d.SetId("")
+				return nil
+			}
+		}
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Instance (%s): %s", d.Get("identifier").(string), err)
 	}
+
+	d.SetId(aws.StringValue(v.DbiResourceId))
 
 	d.Set("allocated_storage", v.AllocatedStorage)
 	d.Set("arn", v.DBInstanceArn)
@@ -1681,11 +1777,20 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.Set("deletion_protection", v.DeletionProtection)
 	if len(v.DomainMemberships) > 0 && v.DomainMemberships[0] != nil {
-		d.Set("domain", v.DomainMemberships[0].Domain)
-		d.Set("domain_iam_role_name", v.DomainMemberships[0].IAMRoleName)
+		v := v.DomainMemberships[0]
+		d.Set("domain", v.Domain)
+		d.Set("domain_auth_secret_arn", v.AuthSecretArn)
+		d.Set("domain_dns_ips", aws.StringValueSlice(v.DnsIps))
+		d.Set("domain_fqdn", v.FQDN)
+		d.Set("domain_iam_role_name", v.IAMRoleName)
+		d.Set("domain_ou", v.OU)
 	} else {
 		d.Set("domain", nil)
+		d.Set("domain_auth_secret_arn", nil)
+		d.Set("domain_dns_ips", nil)
+		d.Set("domain_fqdn", nil)
 		d.Set("domain_iam_role_name", nil)
+		d.Set("domain_ou", nil)
 	}
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(v.EnabledCloudwatchLogsExports))
 	d.Set("engine", v.Engine)
@@ -1831,21 +1936,9 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			"password",
 		) {
 			orchestrator := newBlueGreenOrchestrator(conn)
-			handler := newInstanceHandler(conn)
-			var cleaupWaiters []func(optFns ...tfresource.OptionsFunc)
-			defer func() {
-				if len(cleaupWaiters) == 0 {
-					return
-				}
+			defer orchestrator.CleanUp(ctx)
 
-				waiter, waiters := cleaupWaiters[0], cleaupWaiters[1:]
-				waiter()
-				for _, waiter := range waiters {
-					// Skip the delay for subsequent waiters. Since we're waiting for all of the waiters
-					// to complete, we don't need to run them concurrently, saving on network traffic.
-					waiter(tfresource.WithDelay(0))
-				}
-			}()
+			handler := newInstanceHandler(conn)
 
 			err := handler.precondition(ctx, d)
 			if err != nil {
@@ -1856,7 +1949,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Creating Blue/Green Deployment", d.Get("identifier").(string))
 
-			dep, err := orchestrator.createDeployment(ctx, createIn)
+			dep, err := orchestrator.CreateDeployment(ctx, createIn)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get("identifier").(string), err)
 			}
@@ -1883,7 +1976,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					return
 				}
 
-				cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
+				orchestrator.AddCleanupWaiter(func(ctx context.Context, conn *rds_sdkv2.Client, optFns ...tfresource.OptionsFunc) {
 					_, err = waitBlueGreenDeploymentDeleted(ctx, conn, aws.StringValue(deploymentIdentifier), deadline.Remaining(), optFns...)
 					if err != nil {
 						diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment: waiting for completion: %s", d.Get("identifier").(string), err)
@@ -1912,7 +2005,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 			log.Printf("[DEBUG] Updating RDS DB Instance (%s): Switching over Blue/Green Deployment", d.Get("identifier").(string))
 
-			dep, err = orchestrator.switchover(ctx, aws.StringValue(dep.BlueGreenDeploymentIdentifier), deadline.Remaining())
+			dep, err = orchestrator.Switchover(ctx, aws.StringValue(dep.BlueGreenDeploymentIdentifier), deadline.Remaining())
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): %s", d.Get("identifier").(string), err)
 			}
@@ -1968,7 +2061,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				return sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: %s", d.Get("identifier").(string), err)
 			}
 
-			cleaupWaiters = append(cleaupWaiters, func(optFns ...tfresource.OptionsFunc) {
+			orchestrator.AddCleanupWaiter(func(ctx context.Context, conn *rds_sdkv2.Client, optFns ...tfresource.OptionsFunc) {
 				_, err = waitDBInstanceDeleted(ctx, meta.(*conns.AWSClient).RDSConn(ctx), sourceARN.Identifier, deadline.Remaining(), optFns...)
 				if err != nil {
 					diags = sdkdiag.AppendErrorf(diags, "updating RDS DB Instance (%s): deleting Blue/Green Deployment source: waiting for completion: %s", d.Get("identifier").(string), err)
@@ -2073,10 +2166,19 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 	// Always set this. Fixes TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection
 	input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
 
+	// "InvalidParameterCombination: Specify the parameters for either AWS Managed Active Directory or self-managed Active Directory".
 	if d.HasChanges("domain", "domain_iam_role_name") {
 		needsModify = true
 		input.Domain = aws.String(d.Get("domain").(string))
 		input.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
+	} else if d.HasChanges("domain_auth_secret_arn", "domain_dns_ips", "domain_fqdn", "domain_ou") {
+		needsModify = true
+		input.DomainAuthSecretArn = aws.String(d.Get("domain_auth_secret_arn").(string))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
+			input.DomainDnsIps = flex.ExpandStringValueSet(v.(*schema.Set))
+		}
+		input.DomainFqdn = aws.String(d.Get("domain_fqdn").(string))
+		input.DomainOu = aws.String(d.Get("domain_ou").(string))
 	}
 
 	if d.HasChange("enabled_cloudwatch_logs_exports") {
@@ -2364,6 +2466,8 @@ func isStorageTypeGP3BelowAllocatedStorageThreshold(d *schema.ResourceData) bool
 	}
 
 	switch allocatedStorage, engine := d.Get("allocated_storage").(int), d.Get("engine").(string); engine {
+	case InstanceEngineDB2Advanced, InstanceEngineDB2Standard:
+		return allocatedStorage < 100
 	case InstanceEngineMariaDB, InstanceEngineMySQL, InstanceEnginePostgres:
 		return allocatedStorage < 400
 	case InstanceEngineOracleEnterprise, InstanceEngineOracleEnterpriseCDB, InstanceEngineOracleStandard2, InstanceEngineOracleStandard2CDB:
@@ -2605,7 +2709,7 @@ func waitDBInstanceAvailableSDKv1(ctx context.Context, conn *rds.RDS, id string,
 	return nil, err
 }
 
-func waitDBInstanceAvailableSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*rds.DBInstance, error) { //nolint:unparam
+func waitDBInstanceAvailableSDKv2(ctx context.Context, conn *rds_sdkv2.Client, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*rds.DBInstance, error) {
 	options := tfresource.Options{
 		PollInterval:              10 * time.Second,
 		Delay:                     1 * time.Minute,
@@ -2648,7 +2752,7 @@ func waitDBInstanceAvailableSDKv2(ctx context.Context, conn *rds_sdkv2.Client, i
 	return nil, err
 }
 
-func waitDBInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*rds.DBInstance, error) { //nolint:unparam
+func waitDBInstanceDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration, optFns ...tfresource.OptionsFunc) (*rds.DBInstance, error) {
 	options := tfresource.Options{
 		PollInterval:              10 * time.Second,
 		Delay:                     1 * time.Minute,
@@ -2822,6 +2926,7 @@ func dbInstanceValidBlueGreenEngines() []string {
 	return []string{
 		InstanceEngineMariaDB,
 		InstanceEngineMySQL,
+		InstanceEnginePostgres,
 	}
 }
 

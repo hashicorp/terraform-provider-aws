@@ -708,7 +708,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = "m3.medium"
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   }
 }
 

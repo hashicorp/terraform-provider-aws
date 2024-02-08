@@ -107,6 +107,8 @@ const (
 )
 
 func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	in := &ivschat.CreateRoomInput{
@@ -118,11 +120,11 @@ func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("maximum_message_length"); ok {
-		in.MaximumMessageLength = int32(v.(int))
+		in.MaximumMessageLength = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("maximum_message_rate_per_second"); ok {
-		in.MaximumMessageRatePerSecond = int32(v.(int))
+		in.MaximumMessageRatePerSecond = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("message_review_handler"); ok && len(v.([]interface{})) > 0 {
@@ -135,23 +137,25 @@ func resourceRoomCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	out, err := conn.CreateRoom(ctx, in)
 	if err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionCreating, ResNameRoom, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionCreating, ResNameRoom, d.Get("name").(string), err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.IVSChat, create.ErrActionCreating, ResNameRoom, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionCreating, ResNameRoom, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Arn))
 
 	if _, err := waitRoomCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionWaitingForCreation, ResNameRoom, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionWaitingForCreation, ResNameRoom, d.Id(), err)
 	}
 
-	return resourceRoomRead(ctx, d, meta)
+	return append(diags, resourceRoomRead(ctx, d, meta)...)
 }
 
 func resourceRoomRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	out, err := findRoomByID(ctx, conn, d.Id())
@@ -159,32 +163,34 @@ func resourceRoomRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IVSChat Room (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionReading, ResNameRoom, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionReading, ResNameRoom, d.Id(), err)
 	}
 
 	d.Set("arn", out.Arn)
 
 	if err := d.Set("logging_configuration_identifiers", flex.FlattenStringValueList(out.LoggingConfigurationIdentifiers)); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionSetting, ResNameRoom, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionSetting, ResNameRoom, d.Id(), err)
 	}
 
 	d.Set("maximum_message_length", out.MaximumMessageLength)
 	d.Set("maximum_message_rate_per_second", out.MaximumMessageRatePerSecond)
 
 	if err := d.Set("message_review_handler", flattenMessageReviewHandler(out.MessageReviewHandler)); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionSetting, ResNameRoom, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionSetting, ResNameRoom, d.Id(), err)
 	}
 
 	d.Set("name", out.Name)
 
-	return nil
+	return diags
 }
 
 func resourceRoomUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	update := false
@@ -199,12 +205,12 @@ func resourceRoomUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if d.HasChanges("maximum_message_length") {
-		in.MaximumMessageLength = int32(d.Get("maximum_message_length").(int))
+		in.MaximumMessageLength = aws.Int32(int32(d.Get("maximum_message_length").(int)))
 		update = true
 	}
 
 	if d.HasChanges("maximum_message_rate_per_second") {
-		in.MaximumMessageRatePerSecond = int32(d.Get("maximum_message_rate_per_second").(int))
+		in.MaximumMessageRatePerSecond = aws.Int32(int32(d.Get("maximum_message_rate_per_second").(int)))
 		update = true
 	}
 
@@ -219,23 +225,25 @@ func resourceRoomUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if !update {
-		return nil
+		return diags
 	}
 
 	log.Printf("[DEBUG] Updating IVSChat Room (%s): %#v", d.Id(), in)
 	out, err := conn.UpdateRoom(ctx, in)
 	if err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionUpdating, ResNameRoom, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionUpdating, ResNameRoom, d.Id(), err)
 	}
 
 	if _, err := waitRoomUpdated(ctx, conn, aws.ToString(out.Arn), d.Timeout(schema.TimeoutUpdate), in); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionWaitingForUpdate, ResNameRoom, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionWaitingForUpdate, ResNameRoom, d.Id(), err)
 	}
 
-	return resourceRoomRead(ctx, d, meta)
+	return append(diags, resourceRoomRead(ctx, d, meta)...)
 }
 
 func resourceRoomDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSChatClient(ctx)
 
 	log.Printf("[INFO] Deleting IVSChat Room %s", d.Id())
@@ -247,17 +255,17 @@ func resourceRoomDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.IVSChat, create.ErrActionDeleting, ResNameRoom, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionDeleting, ResNameRoom, d.Id(), err)
 	}
 
 	if _, err := waitRoomDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.IVSChat, create.ErrActionWaitingForDeletion, ResNameRoom, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVSChat, create.ErrActionWaitingForDeletion, ResNameRoom, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenMessageReviewHandler(apiObject *types.MessageReviewHandler) []interface{} {

@@ -15,8 +15,11 @@ import (
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
+	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 )
 
+// SuppressEquivalentPolicyDiffs returns a difference suppression function that compares
+// two JSON strings representing IAM policies and returns `true` if they are semantically equivalent.
 func SuppressEquivalentPolicyDiffs(k, old, new string, d *schema.ResourceData) bool {
 	return PolicyStringsEquivalent(old, new)
 }
@@ -46,7 +49,20 @@ func PolicyStringsEquivalent(s1, s2 string) bool {
 	return equivalent
 }
 
+// SuppressEquivalentJSONDiffs returns a difference suppression function that compares
+// two JSON strings and returns `true` if they are semantically equivalent.
 func SuppressEquivalentJSONDiffs(k, old, new string, d *schema.ResourceData) bool {
+	return JSONStringsEqual(old, new)
+}
+
+// SuppressEquivalentJSONWithEmptyDiffs returns a difference suppression function that compares
+// two JSON strings and returns `true` if they are semantically equivalent, handling empty
+// strings (`""`) and empty JSON strings (`"{}"`) as equivalent.
+// This is useful for suppressing diffs for non-IAM JSON policy documents.
+func SuppressEquivalentJSONWithEmptyDiffs(k, old, new string, d *schema.ResourceData) bool {
+	if old, new := strings.TrimSpace(old), strings.TrimSpace(new); (old == "" || old == "{}") && (new == "" || new == "{}") {
+		return true
+	}
 	return JSONStringsEqual(old, new)
 }
 
@@ -192,4 +208,18 @@ func LegacyPolicyToSet(exist, new string) (string, error) {
 	}
 
 	return policyToSet, nil
+}
+
+// SuppressEquivalentJSONRemovingFieldsDiffs returns a difference suppression function that compares
+// two JSON strings and returns `true` if they are equivalent once the specified fields have been removed.
+func SuppressEquivalentJSONRemovingFieldsDiffs(fields ...string) schema.SchemaDiffSuppressFunc {
+	return func(k, old, new string, d *schema.ResourceData) bool {
+		if !json.Valid([]byte(old)) || !json.Valid([]byte(new)) {
+			return old == new
+		}
+
+		old, new = tfjson.RemoveFields(old, fields...), tfjson.RemoveFields(new, fields...)
+
+		return JSONStringsEqual(old, new)
+	}
 }
