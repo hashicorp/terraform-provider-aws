@@ -771,6 +771,9 @@ service/networkfirewall:
 service/networkmanager:
   - 'internal/service/networkmanager/**/*'
   - 'website/**/networkmanager_*'
+service/networkmonitor:
+  - 'internal/service/networkmonitor/**/*'
+  - 'website/**/networkmonitor_*'
 service/nimble:
   - 'internal/service/nimble/**/*'
   - 'website/**/nimble_*'

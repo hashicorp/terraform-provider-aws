@@ -83,6 +83,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.7.7
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.18.6
 	github.com/aws/aws-sdk-go-v2/service/mq v1.20.7
+	github.com/aws/aws-sdk-go-v2/service/networkmonitor v1.0.1
 	github.com/aws/aws-sdk-go-v2/service/oam v1.7.7
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.9.6
 	github.com/aws/aws-sdk-go-v2/service/osis v1.6.6
