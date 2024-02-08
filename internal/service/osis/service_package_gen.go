@@ -24,7 +24,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newPipelineResource,
 			Name:    "Pipeline",
 			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
+				IdentifierAttribute: "pipeline_arn",
 			},
 		},
 	}

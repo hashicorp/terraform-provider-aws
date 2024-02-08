@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -39,7 +40,7 @@ import (
 )
 
 // @FrameworkResource(name="Pipeline")
-// @Tags(identifierAttribute="arn")
+// @Tags(identifierAttribute="pipeline_arn")
 func newPipelineResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &pipelineResource{}
 
@@ -169,6 +170,9 @@ func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRe
 			}),
 			"vpc_options": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[vpcOptionsModel](ctx),
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.RequiresReplace(),
+				},
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -178,6 +182,9 @@ func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRe
 							CustomType:  fwtypes.SetOfStringType,
 							Optional:    true,
 							ElementType: types.StringType,
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.RequiresReplace(),
+							},
 							Validators: []validator.Set{
 								setvalidator.SizeBetween(1, 12),
 							},
@@ -186,6 +193,9 @@ func (r *pipelineResource) Schema(ctx context.Context, request resource.SchemaRe
 							CustomType:  fwtypes.SetOfStringType,
 							Required:    true,
 							ElementType: types.StringType,
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.RequiresReplace(),
+							},
 							Validators: []validator.Set{
 								setvalidator.SizeBetween(1, 12),
 							},
