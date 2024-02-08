@@ -23,6 +23,40 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		{{- end }}
 		{{- end }}
 	}
+{{- if .ListTagsOpPaginated }}
+	var output []awstypes.{{ .TagType }}
+
+	pages := {{ .TagPackage  }}.New{{ .ListTagsOp }}Paginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+	{{ if and ( .ParentNotFoundErrCode ) ( .ParentNotFoundErrMsg ) }}
+			if tfawserr.ErrMessageContains(err, "{{ .ParentNotFoundErrCode }}", "{{ .ParentNotFoundErrMsg }}") {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+	{{- else if ( .ParentNotFoundErrCode ) }}
+			if tfawserr.ErrCodeEquals(err, "{{ .ParentNotFoundErrCode }}") {
+				return nil, &retry.NotFoundError{
+					LastError:   err,
+					LastRequest: input,
+				}
+			}
+	{{- end }}
+
+		if err != nil {
+			return tftags.New(ctx, nil), err
+		}
+
+		for _, v := range page.{{ .ListTagsOutTagsElem }} {
+			output = append(output, v)
+		}
+	}
+
+	return {{ .KeyValueTagsFunc }}(ctx, output{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
+{{- else }}
 
 	output, err := conn.{{ .ListTagsOp }}(ctx, input, optFns...)
 
@@ -47,6 +81,7 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 	}
 
 	return {{ .KeyValueTagsFunc }}(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}), nil
+{{- end }}
 }
 
 {{- if .IsDefaultListTags }}
