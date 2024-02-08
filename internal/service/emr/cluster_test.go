@@ -1632,6 +1632,7 @@ func TestAccEMRCluster_InstanceFleet_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"cluster_state", // Ignore RUNNING versus WAITING changes
 					"configurations",
+					"core_instance_fleet",
 					"keep_job_flow_alive_when_no_steps",
 				},
 			},
@@ -1658,6 +1659,7 @@ func TestAccEMRCluster_InstanceFleet_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"cluster_state", // Ignore RUNNING versus WAITING changes
 					"configurations",
+					"core_instance_fleet",
 					"keep_job_flow_alive_when_no_steps",
 				},
 			},
