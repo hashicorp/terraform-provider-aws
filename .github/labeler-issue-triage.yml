@@ -91,6 +91,8 @@ service/batch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_batch_'
 service/bedrock:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrock_'
+service/bedrockagent:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockagent_'
 service/billingconductor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_billingconductor_'
 service/braket:
