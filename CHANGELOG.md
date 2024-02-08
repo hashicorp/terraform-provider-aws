@@ -9,6 +9,8 @@ NOTES:
 FEATURES:
 
 * **New Resource:** `aws_controltower_landing_zone` ([#34595](https://github.com/hashicorp/terraform-provider-aws/issues/34595))
+* **New Resource:** `aws_osis_pipeline` ([#35582](https://github.com/hashicorp/terraform-provider-aws/issues/35582))
+* **New Resource:** `aws_redshift_data_share_authorization` ([#35703](https://github.com/hashicorp/terraform-provider-aws/issues/35703))
 * **New Resource:** `aws_securitylake_custom_log_source` ([#35354](https://github.com/hashicorp/terraform-provider-aws/issues/35354))
 
 ENHANCEMENTS:
