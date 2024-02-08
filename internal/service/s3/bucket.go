@@ -49,7 +49,7 @@ const (
 )
 
 // @SDKResource("aws_s3_bucket", name="Bucket")
-// @Tags
+// @Tags(identifierAttribute="bucket", resourceType="Bucket")
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,
@@ -772,6 +772,11 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket (%s) create: %s", d.Id(), err)
+	}
+
+	tagsIn := getTagsIn(ctx)
+	if len(tagsIn) != 0 {
+		bucketCreateTags(ctx, conn, d.Id(), tagsIn)
 	}
 
 	return append(diags, resourceBucketUpdate(ctx, d, meta)...)
@@ -1554,23 +1559,6 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "putting S3 Bucket (%s) object lock configuration: %s", d.Id(), err)
-		}
-	}
-
-	//
-	// Bucket Tags.
-	//
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		// Retry due to S3 eventual consistency.
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
-			terr := bucketUpdateTags(ctx, conn, d.Id(), o, n)
-			return nil, terr
-		}, errCodeNoSuchBucket)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) tags: %s", d.Id(), err)
 		}
 	}
 

@@ -12,12 +12,23 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
 // Custom S3 tag service update functions using the same format as generated code.
+
+func bucketCreateTags(ctx context.Context, conn *s3.Client, identifier string, tags []awstypes.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return bucketUpdateTags(ctx, conn, identifier, nil, keyValueTags(ctx, tags))
+}
 
 // bucketListTags lists S3 bucket tags.
 // The identifier is the bucket name.
@@ -60,7 +71,7 @@ func bucketUpdateTags(ctx context.Context, conn *s3.Client, identifier string, o
 	if len(newTags)+len(ignoredTags) > 0 {
 		input := &s3.PutBucketTaggingInput{
 			Bucket: aws.String(identifier),
-			Tagging: &types.Tagging{
+			Tagging: &awstypes.Tagging{
 				TagSet: Tags(newTags.Merge(ignoredTags)),
 			},
 		}
@@ -123,7 +134,7 @@ func objectUpdateTags(ctx context.Context, conn *s3.Client, bucket, key string, 
 		input := &s3.PutObjectTaggingInput{
 			Bucket: aws.String(bucket),
 			Key:    aws.String(key),
-			Tagging: &types.Tagging{
+			Tagging: &awstypes.Tagging{
 				TagSet: Tags(newTags.Merge(ignoredTags)),
 			},
 		}
@@ -146,5 +157,49 @@ func objectUpdateTags(ctx context.Context, conn *s3.Client, bucket, key string, 
 		}
 	}
 
+	return nil
+}
+
+// ListTags lists s3 service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
+	var (
+		tags tftags.KeyValueTags
+		err  error
+	)
+	switch resourceType {
+	case "Bucket":
+		tags, err = bucketListTags(ctx, meta.(*conns.AWSClient).S3Client(ctx), identifier)
+
+	default:
+		tflog.Warn(ctx, "ListTags not implemented for resource type", map[string]any{
+			"service_package": p.ServicePackageName(),
+			"resource_name":   resourceType,
+		})
+		return nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(tags)
+	}
+
+	return nil
+}
+
+// UpdateTags updates s3 service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
+	switch resourceType {
+	case "Bucket":
+		return bucketUpdateTags(ctx, meta.(*conns.AWSClient).S3Client(ctx), identifier, oldTags, newTags)
+	}
+	tflog.Warn(ctx, "UpdateTags not implemented for resource type", map[string]any{
+		"service_package": p.ServicePackageName(),
+		"resource_name":   resourceType,
+	})
 	return nil
 }
