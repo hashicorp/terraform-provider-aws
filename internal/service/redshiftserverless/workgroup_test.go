@@ -50,7 +50,7 @@ func TestAccRedshiftServerlessWorkgroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccRedshiftServerlessWorkgroup_baseCapacityAndPubliclyAccessible(t *testing.T) {
+func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_workgroup.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -62,10 +62,11 @@ func TestAccRedshiftServerlessWorkgroup_baseCapacityAndPubliclyAccessible(t *tes
 		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkgroupConfig_baseCapacityAndPubliclyAccessible(rName, 64, true),
+				Config: testAccWorkgroupConfig_baseAndMaxCapacityAndPubliclyAccessible(rName, 64, 128, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "64"),
+					resource.TestCheckResourceAttr(resourceName, "max_capacity", "128"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
 				),
 			},
@@ -75,10 +76,11 @@ func TestAccRedshiftServerlessWorkgroup_baseCapacityAndPubliclyAccessible(t *tes
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccWorkgroupConfig_baseCapacityAndPubliclyAccessible(rName, 128, false),
+				Config: testAccWorkgroupConfig_baseAndMaxCapacityAndPubliclyAccessible(rName, 128, 5632, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
+					resource.TestCheckResourceAttr(resourceName, "max_capacity", "5632"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 				),
 			},
@@ -343,7 +345,7 @@ resource "aws_redshiftserverless_workgroup" "test" {
 `, rName)
 }
 
-func testAccWorkgroupConfig_baseCapacityAndPubliclyAccessible(rName string, baseCapacity int, publiclyAccessible bool) string {
+func testAccWorkgroupConfig_baseAndMaxCapacityAndPubliclyAccessible(rName string, baseCapacity int, maxCapacity int, publiclyAccessible bool) string {
 	return fmt.Sprintf(`
 resource "aws_redshiftserverless_namespace" "test" {
   namespace_name = %[1]q
@@ -353,9 +355,10 @@ resource "aws_redshiftserverless_workgroup" "test" {
   namespace_name      = aws_redshiftserverless_namespace.test.namespace_name
   workgroup_name      = %[1]q
   base_capacity       = %[2]d
-  publicly_accessible = %[3]t
+  max_capacity        = %[3]d
+  publicly_accessible = %[4]t
 }
-`, rName, baseCapacity, publiclyAccessible)
+`, rName, baseCapacity, maxCapacity, publiclyAccessible)
 }
 
 func testAccWorkgroupConfig_configParameters(rName, maxQueryExecutionTime string) string {
