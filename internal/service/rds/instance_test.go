@@ -3980,7 +3980,7 @@ func TestAccRDSInstance_CloudWatchLogsExport_db2(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_EnabledCloudWatchLogsExports_db2(rName, customerID, siteID),
+				Config: testAccInstanceConfig_CloudWatchLogsExport_db2(rName, customerID, siteID),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "enabled_cloudwatch_logs_exports.#", "2"),
