@@ -20,7 +20,7 @@ import (
 func TestAccRDSEngineVersionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_rds_engine_version.test"
-	engine := "oracle-ee"
+	engine := tfrds.InstanceEngineOracleEnterprise
 	version := "19.0.0.0.ru-2020-07.rur-2020-07.r1"
 	paramGroup := "oracle-ee-19"
 
@@ -37,7 +37,6 @@ func TestAccRDSEngineVersionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "version", version),
 					resource.TestCheckResourceAttr(dataSourceName, "version_actual", version),
 					resource.TestCheckResourceAttr(dataSourceName, "parameter_group_family", paramGroup),
-
 					resource.TestCheckResourceAttrSet(dataSourceName, "default_character_set"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "engine_description"),
 					resource.TestMatchResourceAttr(dataSourceName, "exportable_log_types.#", regexache.MustCompile(`^[1-9][0-9]*`)),
@@ -117,13 +116,13 @@ func TestAccRDSEngineVersionDataSource_preferredVersionsPreferredUpgradeTargets(
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades("mysql", `"5.7.37", "5.7.38", "5.7.39"`, `"8.0.34"`),
+				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfrds.InstanceEngineMySQL, `"5.7.37", "5.7.38", "5.7.39"`, `"8.0.34"`),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "version", "5.7.39"),
 				),
 			},
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades("mysql", `"5.7.44", "5.7.38", "5.7.39"`, `"8.0.32","8.0.33"`),
+				Config: testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(tfrds.InstanceEngineMySQL, `"5.7.44", "5.7.38", "5.7.39"`, `"8.0.32","8.0.33"`),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "version", "5.7.44"),
 				),
@@ -143,7 +142,7 @@ func TestAccRDSEngineVersionDataSource_preferredUpgradeTargetsVersion(t *testing
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferredUpgradeTargetsVersion("mysql", "5.7", `"8.0.44", "8.0.35", "8.0.34"`),
+				Config: testAccEngineVersionDataSourceConfig_preferredUpgradeTargetsVersion(tfrds.InstanceEngineMySQL, "5.7", `"8.0.44", "8.0.35", "8.0.34"`),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`^5\.7`)),
 					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^5\.7\.`)),
@@ -164,13 +163,13 @@ func TestAccRDSEngineVersionDataSource_preferredMajorTargets(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferredMajorTarget("mysql"),
+				Config: testAccEngineVersionDataSourceConfig_preferredMajorTarget(tfrds.InstanceEngineMySQL),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`^5\.7\.`)),
 				),
 			},
 			{
-				Config: testAccEngineVersionDataSourceConfig_preferredMajorTarget("aurora-postgresql"),
+				Config: testAccEngineVersionDataSourceConfig_preferredMajorTarget(tfrds.InstanceEngineAuroraPostgreSQL),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`^15\.`)),
 				),
@@ -292,14 +291,14 @@ func TestAccRDSEngineVersionDataSource_latest(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEngineVersionDataSourceConfig_latest2("aurora-postgresql", "15"),
+				Config: testAccEngineVersionDataSourceConfig_latest2(tfrds.InstanceEngineAuroraPostgreSQL, "15"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`^15`)),
 					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^15\.[0-9]`)),
 				),
 			},
 			{
-				Config: testAccEngineVersionDataSourceConfig_latest2("mysql", "8.0"),
+				Config: testAccEngineVersionDataSourceConfig_latest2(tfrds.InstanceEngineMySQL, "8.0"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`^8\.0`)),
 					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^8\.0\.[0-9]+$`)),
@@ -313,7 +312,7 @@ func testAccEngineVersionPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
 	input := &rds.DescribeDBEngineVersionsInput{
-		Engine:      aws.String("mysql"),
+		Engine:      aws.String(tfrds.InstanceEngineMySQL),
 		DefaultOnly: aws.Bool(true),
 	}
 
@@ -339,31 +338,31 @@ data "aws_rds_engine_version" "test" {
 }
 
 func testAccEngineVersionDataSourceConfig_upgradeTargets() string {
-	return `
+	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
-  engine  = "mysql"
+  engine  = %[1]q
   version = "8.0.32"
 }
-`
+`, tfrds.InstanceEngineMySQL)
 }
 
 func testAccEngineVersionDataSourceConfig_preferred() string {
-	return `
+	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
-  engine             = "mysql"
+  engine             = %[1]q
   preferred_versions = ["85.9.12", "8.0.32", "8.0.31"]
 }
-`
+`, tfrds.InstanceEngineMySQL)
 }
 
 func testAccEngineVersionDataSourceConfig_preferred2() string {
-	return `
+	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
-  engine             = "mysql"
+  engine             = %[1]q
   version            = "8.0"
   preferred_versions = ["85.9.12", "8.0.32", "8.0.31"]
 }
-`
+`, tfrds.InstanceEngineMySQL)
 }
 
 func testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(engine, preferredVersions, preferredUpgrades string) string {
@@ -403,37 +402,36 @@ data "aws_rds_engine_version" "test" {
 }
 
 func testAccEngineVersionDataSourceConfig_defaultOnlyImplicit() string {
-	return `
+	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
-  engine = "mysql"
+  engine = %[1]q
 }
-`
+`, tfrds.InstanceEngineMySQL)
 }
 
 func testAccEngineVersionDataSourceConfig_defaultOnlyExplicit() string {
-	return `
+	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
-  engine       = "mysql"
+  engine       = %[1]q
   version      = "8.0"
   default_only = true
 }
-`
+`, tfrds.InstanceEngineMySQL)
 }
 
 func testAccEngineVersionDataSourceConfig_includeAll() string {
-	return `
+	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
-  engine      = "mysql"
+  engine      = %[1]q
   version     = "8.0.20"
   include_all = true
 }
-`
+`, tfrds.InstanceEngineMySQL)
 }
 
 func testAccEngineVersionDataSourceConfig_filter(engine, engineMode string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
-  #engine      = "aurora-postgresql"
   engine      = %[1]q
   latest      = true
   include_all = true
@@ -449,11 +447,11 @@ data "aws_rds_engine_version" "test" {
 func testAccEngineVersionDataSourceConfig_latest(latest bool, preferredVersions string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
-  engine             = "aurora-postgresql"
-  latest             = %[1]t
-  preferred_versions = [%[2]s]
+  engine             = %[1]q
+  latest             = %[2]t
+  preferred_versions = [%[3]s]
 }
-`, latest, preferredVersions)
+`, tfrds.InstanceEngineAuroraPostgreSQL, latest, preferredVersions)
 }
 
 func testAccEngineVersionDataSourceConfig_latest2(engine, majorVersion string) string {

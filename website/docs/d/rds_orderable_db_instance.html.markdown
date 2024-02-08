@@ -47,6 +47,7 @@ This data source supports the following arguments:
 * `license_model` - (Optional) License model. Examples of license models are `general-public-license`, `bring-your-own-license`, and `amazon-license`.
 * `preferred_engine_versions` - (Optional) Ordered list of preferred RDS DB instance engine versions. When `engine_latest_version` is not set, the data source will return the first match in this list that matches any other criteria. If the data source finds no preferred matches or multiple matches without `engine_latest_version`, it returns an error. **CAUTION:** We don't recommend using `preferred_engine_versions` without `preferred_instance_classes` since the data source returns an arbitrary `instance_class` based on the first one AWS returns that matches the engine version and any other criteria.
 * `preferred_instance_classes` - (Optional) Ordered list of preferred RDS DB instance classes. The data source will return the first match in this list that matches any other criteria. If the data source finds no preferred matches or multiple matches without `engine_latest_version`, it returns an error. If you use `preferred_instance_classes` without `preferred_engine_versions` or `engine_latest_version`, the data source returns an arbitrary `engine_version` based on the first one AWS returns matching the instance class and any other criteria.
+* `read_replica_capable` - (Optional) Whether a DB instance can have a read replica.
 * `storage_type` - (Optional) Storage types. Examples of storage types are `standard`, `io1`, `gp2`, and `aurora`.
 * `supported_engine_modes` - (Optional) Use to limit results to engine modes such as `provisioned`.
 * `supported_network_types` - (Optional) Use to limit results to network types `IPV4` or `DUAL`.
@@ -75,4 +76,3 @@ This data source exports the following attributes in addition to the arguments a
 * `min_storage_size` - Minimum storage size for a DB instance.
 * `multi_az_capable` - Whether a DB instance is Multi-AZ capable.
 * `outpost_capable` - Whether a DB instance supports RDS on Outposts.
-* `read_replica_capable` - Whether a DB instance can have a read replica.

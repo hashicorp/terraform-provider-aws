@@ -115,6 +115,7 @@ func DataSourceOrderableInstance() *schema.Resource {
 
 			"read_replica_capable": {
 				Type:     schema.TypeBool,
+				Optional: true,
 				Computed: true,
 			},
 
@@ -243,6 +244,12 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 		for _, instanceOption := range resp.OrderableDBInstanceOptions {
 			if instanceOption == nil {
 				continue
+			}
+
+			if v, ok := d.GetOk("read_replica_capable"); ok {
+				if aws.BoolValue(instanceOption.ReadReplicaCapable) != v.(bool) {
+					continue
+				}
 			}
 
 			if v, ok := d.GetOk("storage_type"); ok {

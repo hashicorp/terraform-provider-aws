@@ -86,6 +86,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_rds_orderable_db_instance",
 		},
 		{
+			Factory:  DataSourceParameterGroup,
+			TypeName: "aws_db_parameter_group",
+		},
+		{
 			Factory:  DataSourceReservedOffering,
 			TypeName: "aws_rds_reserved_instance_offering",
 		},

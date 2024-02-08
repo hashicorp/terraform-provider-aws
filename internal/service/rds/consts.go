@@ -54,6 +54,8 @@ func StorageType_Values() []string {
 }
 
 const (
+	InstanceEngineAuroraMySQL         = "aurora-mysql"
+	InstanceEngineAuroraPostgreSQL    = "aurora-postgresql"
 	InstanceEngineCustomPrefix        = "custom-"
 	InstanceEngineDB2Advanced         = "db2-ae"
 	InstanceEngineDB2Standard         = "db2-se"
