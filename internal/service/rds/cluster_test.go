@@ -4836,16 +4836,9 @@ data "aws_rds_engine_version" "default" {
   engine = %[1]q
 }
 
-data "aws_rds_orderable_db_instance" "default" {
-  engine                     = data.aws_rds_engine_version.default.engine
-  engine_version             = data.aws_rds_engine_version.default.version
-  preferred_instance_classes = [%[2]s]
-  storage_type               = %[3]q
-}
-
 resource "aws_rds_cluster" "test" {
   apply_immediately   = true
-  cluster_identifier  = %[4]q
+  cluster_identifier  = %[2]q
   engine              = data.aws_rds_engine_version.default.engine
   engine_version      = data.aws_rds_engine_version.default.version
   master_password     = "avoid-plaintext-passwords"
@@ -4854,7 +4847,7 @@ resource "aws_rds_cluster" "test" {
   storage_type        = %[3]q
 }
 
-`, tfrds.ClusterEngineAuroraPostgreSQL, mainInstanceClasses, storageType, rName)
+`, tfrds.ClusterEngineAuroraPostgreSQL, rName, storageType)
 }
 
 func testAccClusterConfig_auroraStorageTypeNotDefined(rName string) string {

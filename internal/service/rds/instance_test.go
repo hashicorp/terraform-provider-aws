@@ -31,22 +31,17 @@ import (
 )
 
 /*
-
 FAIL:
 TestAccRDSInstance_BlueGreenDeployment_outOfBand
 TestAccRDSInstance_BlueGreenDeployment_updateAndPromoteReplica
-TestAccRDSInstance_BlueGreenDeployment_updateInstanceClass
-TestAccRDSInstance_ReplicateSourceDB_replicaMode
 
 PASS:
-TestAccRDSInstance_ReplicateSourceDB_networkType
-TestAccRDSInstance_ReplicateSourceDB_deletionProtection
-TestAccRDSInstance_ReplicateSourceDB_parameterGroupTwoStep
 TestAccRDSInstance_BlueGreenDeployment_deletionProtectionBypassesBlueGreen
 TestAccRDSInstance_BlueGreenDeployment_passwordBypassesBlueGreen
 TestAccRDSInstance_BlueGreenDeployment_tags
 TestAccRDSInstance_BlueGreenDeployment_updateAndEnableBackups
 TestAccRDSInstance_BlueGreenDeployment_updateEngineVersion
+TestAccRDSInstance_BlueGreenDeployment_updateInstanceClass
 TestAccRDSInstance_BlueGreenDeployment_updateParameterGroup
 TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection
 TestAccRDSInstance_CloudWatchLogsExport_basic
@@ -94,6 +89,7 @@ TestAccRDSInstance_ReplicateSourceDB_caCertificateIdentifier
 TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName
 TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupNameRAMShared
 TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupNameVPCSecurityGroupIDs
+TestAccRDSInstance_ReplicateSourceDB_deletionProtection
 TestAccRDSInstance_ReplicateSourceDB_iamDatabaseAuthenticationEnabled
 TestAccRDSInstance_ReplicateSourceDB_iops
 TestAccRDSInstance_ReplicateSourceDB_maintenanceWindow
@@ -103,12 +99,15 @@ TestAccRDSInstance_ReplicateSourceDB_monitoring_sourceAlreadyExists
 TestAccRDSInstance_ReplicateSourceDB_multiAZ
 TestAccRDSInstance_ReplicateSourceDB_nameGenerated
 TestAccRDSInstance_ReplicateSourceDB_namePrefix
+TestAccRDSInstance_ReplicateSourceDB_networkType
 TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameDifferentSetOnBoth
 TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameReplicaCopiesValue
 TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameSameSetOnBoth
 TestAccRDSInstance_ReplicateSourceDB_parameterGroupNameSetOnReplica
+TestAccRDSInstance_ReplicateSourceDB_parameterGroupTwoStep
 TestAccRDSInstance_ReplicateSourceDB_performanceInsightsEnabled
 TestAccRDSInstance_ReplicateSourceDB_port
+TestAccRDSInstance_ReplicateSourceDB_replicaMode
 TestAccRDSInstance_ReplicateSourceDB_vpcSecurityGroupIDs
 TestAccRDSInstance_RestoreToPointInTime_manageMasterPassword
 TestAccRDSInstance_RestoreToPointInTime_monitoring
@@ -5233,7 +5232,7 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndPromoteReplica(t *testing.T
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_BlueGreenDeployment_prePromote(rName, false),
+				Config: testAccInstanceConfig_BlueGreenDeployment_prePromote(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, "identifier"),
@@ -5242,11 +5241,11 @@ func TestAccRDSInstance_BlueGreenDeployment_updateAndPromoteReplica(t *testing.T
 				),
 			},
 			{
-				Config: testAccInstanceConfig_BlueGreenDeployment_promote(rName, true),
+				Config: testAccInstanceConfig_BlueGreenDeployment_promote(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v2),
 					testAccCheckDBInstanceRecreated(&v1, &v2),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.update", "instance_class"),
 					resource.TestCheckResourceAttr(resourceName, "blue_green_update.0.enabled", "true"),
 				),
 			},
@@ -11562,16 +11561,18 @@ resource "aws_db_instance" "test" {
 `, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName)
 }
 
-func testAccInstanceConfig_BlueGreenDeployment_prePromote(rName string, oddClasses bool) string {
-	var halfClasses []string
-	start := 0
-	if oddClasses {
-		start = 1
+func testAccInstanceConfig_BlueGreenDeployment_prePromote(rName string) string {
+	var e []string
+	for i := 0; i < len(instanceClassesSlice); i += 2 {
+		e = append(e, instanceClassesSlice[i])
 	}
-	for i := start; i < len(instanceClassesSlice); i += 2 {
-		halfClasses = append(halfClasses, instanceClassesSlice[i])
+	evenClasses := strings.Join(e, ", ")
+
+	var o []string
+	for i := 1; i < len(instanceClassesSlice); i += 2 {
+		o = append(o, instanceClassesSlice[i])
 	}
-	halfMainInstClass := strings.Join(halfClasses, ", ")
+	oddClasses := strings.Join(o, ", ")
 
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
@@ -11587,11 +11588,20 @@ data "aws_rds_orderable_db_instance" "test" {
   preferred_instance_classes = [%[4]s]
 }
 
+data "aws_rds_orderable_db_instance" "update" {
+  engine         = data.aws_rds_engine_version.default.engine
+  engine_version = data.aws_rds_engine_version.default.version
+  license_model  = %[2]q
+  storage_type   = %[3]q
+
+  preferred_instance_classes = [%[5]s]
+}
+
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
-  identifier              = "%[5]s-source"
+  identifier              = "%[6]s-source"
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
@@ -11600,24 +11610,26 @@ resource "aws_db_instance" "source" {
 
 resource "aws_db_instance" "test" {
   backup_retention_period = 1
-  identifier              = %[5]q
+  identifier              = %[6]q
   instance_class          = aws_db_instance.source.instance_class
   replicate_source_db     = aws_db_instance.source.identifier
   skip_final_snapshot     = true
 }
-`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName)
+`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", oddClasses, evenClasses, rName)
 }
 
-func testAccInstanceConfig_BlueGreenDeployment_promote(rName string, oddClasses bool) string {
-	var halfClasses []string
-	start := 0
-	if oddClasses {
-		start = 1
+func testAccInstanceConfig_BlueGreenDeployment_promote(rName string) string {
+	var e []string
+	for i := 0; i < len(instanceClassesSlice); i += 2 {
+		e = append(e, instanceClassesSlice[i])
 	}
-	for i := start; i < len(instanceClassesSlice); i += 2 {
-		halfClasses = append(halfClasses, instanceClassesSlice[i])
+	evenClasses := strings.Join(e, ", ")
+
+	var o []string
+	for i := 1; i < len(instanceClassesSlice); i += 2 {
+		o = append(o, instanceClassesSlice[i])
 	}
-	halfMainInstClass := strings.Join(halfClasses, ", ")
+	oddClasses := strings.Join(o, ", ")
 
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
@@ -11633,8 +11645,17 @@ data "aws_rds_orderable_db_instance" "test" {
   preferred_instance_classes = [%[4]s]
 }
 
+data "aws_rds_orderable_db_instance" "update" {
+  engine         = data.aws_rds_engine_version.default.engine
+  engine_version = data.aws_rds_engine_version.default.version
+  license_model  = %[2]q
+  storage_type   = %[3]q
+
+  preferred_instance_classes = [%[5]s]
+}
+
 resource "aws_db_instance" "source" {
-  identifier              = "%[5]s-source"
+  identifier              = "%[6]s-source"
   allocated_storage       = 5
   backup_retention_period = 1
   engine                  = data.aws_rds_orderable_db_instance.test.engine
@@ -11645,15 +11666,15 @@ resource "aws_db_instance" "source" {
 }
 
 resource "aws_db_instance" "test" {
-  identifier          = %[5]q
-  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  identifier          = %[6]q
+  instance_class      = data.aws_rds_orderable_db_instance.update.instance_class
   skip_final_snapshot = true
 
   blue_green_update {
     enabled = true
   }
 }
-`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", halfMainInstClass, rName)
+`, tfrds.InstanceEngineMySQL, "general-public-license", "standard", oddClasses, evenClasses, rName)
 }
 
 func testAccInstanceConfig_BlueGreenDeployment_deletionProtection(rName string, deletionProtection bool, oddClasses bool) string {
@@ -11755,6 +11776,7 @@ data "aws_rds_orderable_db_instance" "test" {
 
 data "aws_rds_engine_version" "initial" {
   engine                    = %[3]q
+  latest                    = true
   preferred_upgrade_targets = [data.aws_rds_engine_version.update.version_actual]
 }
 
