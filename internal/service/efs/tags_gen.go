@@ -23,14 +23,27 @@ func listTags(ctx context.Context, conn efsiface.EFSAPI, identifier string) (tft
 	input := &efs.DescribeTagsInput{
 		FileSystemId: aws.String(identifier),
 	}
+	var output []*efs.Tag
 
-	output, err := conn.DescribeTagsWithContext(ctx, input)
+	err := conn.DescribeTagsPagesWithContext(ctx, input, func(page *efs.DescribeTagsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Tags {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return KeyValueTags(ctx, output), nil
 }
 
 // ListTags lists efs service tags and set them in Context.

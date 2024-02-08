@@ -24,14 +24,22 @@ func listTags(ctx context.Context, conn *cloudtrail.Client, identifier string, o
 	input := &cloudtrail.ListTagsInput{
 		ResourceIdList: tfslices.Of(identifier),
 	}
+	var output []awstypes.Tag
 
-	output, err := conn.ListTags(ctx, input, optFns...)
+	pages := cloudtrail.NewListTagsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	if err != nil {
-		return tftags.New(ctx, nil), err
+		if err != nil {
+			return tftags.New(ctx, nil), err
+		}
+
+		for _, v := range page.ResourceTagList[0].TagsList {
+			output = append(output, v)
+		}
 	}
 
-	return KeyValueTags(ctx, output.ResourceTagList[0].TagsList), nil
+	return KeyValueTags(ctx, output), nil
 }
 
 // ListTags lists cloudtrail service tags and set them in Context.
