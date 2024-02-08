@@ -151,7 +151,7 @@ func (d *customModelDataSource) Read(ctx context.Context, request datasource.Rea
 	}
 
 	// Some fields are only available in GetModelCustomizationJobOutput.
-	var dataFromGetModelCustomizationJob resourceCustomModelData
+	var dataFromGetModelCustomizationJob customModelResourceModel
 	response.Diagnostics.Append(fwflex.Flatten(ctx, outputGJ, &dataFromGetModelCustomizationJob)...)
 	if response.Diagnostics.HasError() {
 		return

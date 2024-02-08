@@ -1,4 +1,36 @@
 ## 5.36.0 (Unreleased)
+
+NOTES:
+
+* data-source/aws_media_convert_queue: The AWS Elemental MediaConvert service has been converted to use standard [Regional endpoints](https://docs.aws.amazon.com/general/latest/gr/mediaconvert.html#mediaconvert_region) instead of deprecated per-account endpoints ([#35615](https://github.com/hashicorp/terraform-provider-aws/issues/35615))
+* resource/aws_controltower_landing_zone: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#34595](https://github.com/hashicorp/terraform-provider-aws/issues/34595))
+* resource/aws_media_convert_queue: The AWS Elemental MediaConvert service has been converted to use standard [Regional endpoints](https://docs.aws.amazon.com/general/latest/gr/mediaconvert.html#mediaconvert_region) instead of deprecated per-account endpoints ([#35615](https://github.com/hashicorp/terraform-provider-aws/issues/35615))
+
+FEATURES:
+
+* **New Resource:** `aws_controltower_landing_zone` ([#34595](https://github.com/hashicorp/terraform-provider-aws/issues/34595))
+* **New Resource:** `aws_securitylake_custom_log_source` ([#35354](https://github.com/hashicorp/terraform-provider-aws/issues/35354))
+
+ENHANCEMENTS:
+
+* resource/aws_cloudwatch_metric_stream: Add plan-time validation of `output_format` ([#35569](https://github.com/hashicorp/terraform-provider-aws/issues/35569))
+* resource/aws_db_instance: Add `diag.log` and `notify.log` as valid values for `enabled_cloudwatch_logs_exports` ([#35626](https://github.com/hashicorp/terraform-provider-aws/issues/35626))
+* resource/aws_db_instance: Add `domain_auth_secret_arn`, `domain_dns_ips`, `domain_fqdn`, and `domain_ou` arguments to support [self-managed Active Directory](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/USER_SQLServer_SelfManagedActiveDirectory.html) ([#35500](https://github.com/hashicorp/terraform-provider-aws/issues/35500))
+* resource/aws_s3_bucket_metric: Add `filter.access_point` argument ([#35590](https://github.com/hashicorp/terraform-provider-aws/issues/35590))
+
+BUG FIXES:
+
+* resource/aws_db_instance: Creating resource from point-in-time recovery now handles `password` attribute correctly ([#35589](https://github.com/hashicorp/terraform-provider-aws/issues/35589))
+* resource/aws_dynamodb_table: Ensure that `replica`s are always set on Read ([#35630](https://github.com/hashicorp/terraform-provider-aws/issues/35630))
+* resource/aws_kinesis_firehose_delivery_stream: Change `extended_s3_configuration.processing_configuration.processors.parameters` from `TypeList` to `TypeSet` as order is not significant ([#35672](https://github.com/hashicorp/terraform-provider-aws/issues/35672))
+* resource/aws_lb_listener: Fixes unexpected diff when using `default_action` parameters which don't match the `type`. ([#35678](https://github.com/hashicorp/terraform-provider-aws/issues/35678))
+* resource/aws_lb_listener: Was incorrectly reporting conflicting `default_action[].target_group_arn` when `ignore_changes` was set. ([#35671](https://github.com/hashicorp/terraform-provider-aws/issues/35671))
+* resource/aws_lb_listener: Was not storing `default_action[].forward` in state if only a single `target_group` was set. ([#35671](https://github.com/hashicorp/terraform-provider-aws/issues/35671))
+* resource/aws_lb_listener_rule: Fixes unexpected diff when using `action` parameters which don't match the `type`. ([#35678](https://github.com/hashicorp/terraform-provider-aws/issues/35678))
+* resource/aws_lb_listener_rule: Was incorrectly reporting conflicting `action[].target_group_arn` when `ignore_changes` was set. ([#35671](https://github.com/hashicorp/terraform-provider-aws/issues/35671))
+* resource/aws_lb_listener_rule: Was not storing `action[].forward` in state if only a single `target_group` was set. ([#35671](https://github.com/hashicorp/terraform-provider-aws/issues/35671))
+* resource/aws_ssm_patch_baseline: Mark `json` as Computed if there are content changes ([#35606](https://github.com/hashicorp/terraform-provider-aws/issues/35606))
+
 ## 5.35.0 (February  2, 2024)
 
 FEATURES:

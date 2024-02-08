@@ -219,6 +219,7 @@ type TemplateData struct {
 	SkipTypesImp      bool
 	TfLogPkg          bool
 	TfResourcePkg     bool
+	TfSlicesPkg       bool
 	TimePkg           bool
 
 	IsDefaultListTags   bool
@@ -311,7 +312,12 @@ func main() {
 		SkipTypesImp:      *skipTypesImp,
 		TfLogPkg:          *updateTags,
 		TfResourcePkg:     (*getTag || *waitForPropagation),
-		TimePkg:           *waitForPropagation,
+		TfSlicesPkg: (*listTagsInFiltIDName != "" ||
+			*listTagsInIDNeedSlice != "" ||
+			*listTagsInIDNeedValueSlice != "" ||
+			*tagInIDNeedSlice != "" ||
+			*tagInIDNeedValueSlice != ""),
+		TimePkg: *waitForPropagation,
 
 		CreateTagsFunc:             createTagsFunc,
 		GetTagFunc:                 *getTagFunc,

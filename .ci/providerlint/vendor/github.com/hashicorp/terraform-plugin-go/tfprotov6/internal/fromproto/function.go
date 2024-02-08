@@ -8,9 +8,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/tfplugin6"
 )
 
-func CallFunctionRequest(in *tfplugin6.CallFunction_Request) (*tfprotov6.CallFunctionRequest, error) {
+func CallFunctionRequest(in *tfplugin6.CallFunction_Request) *tfprotov6.CallFunctionRequest {
 	if in == nil {
-		return nil, nil
+		return nil
 	}
 
 	resp := &tfprotov6.CallFunctionRequest{
@@ -22,15 +22,15 @@ func CallFunctionRequest(in *tfplugin6.CallFunction_Request) (*tfprotov6.CallFun
 		resp.Arguments = append(resp.Arguments, DynamicValue(argument))
 	}
 
-	return resp, nil
+	return resp
 }
 
-func GetFunctionsRequest(in *tfplugin6.GetFunctions_Request) (*tfprotov6.GetFunctionsRequest, error) {
+func GetFunctionsRequest(in *tfplugin6.GetFunctions_Request) *tfprotov6.GetFunctionsRequest {
 	if in == nil {
-		return nil, nil
+		return nil
 	}
 
 	resp := &tfprotov6.GetFunctionsRequest{}
 
-	return resp, nil
+	return resp
 }
