@@ -8,19 +8,24 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appflow"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appflow"
+	"github.com/aws/aws-sdk-go-v2/service/appflow/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_appflow_connector_profile")
-func ResourceConnectorProfile() *schema.Resource {
+// @SDKResource("aws_appflow_connector_profile", name="Connector Profile")
+func resourceConnectorProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConnectorProfileCreate,
 		ReadWithoutTimeout:   resourceConnectorProfileRead,
@@ -36,20 +41,6 @@ func ResourceConnectorProfile() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 256),
-					validation.StringMatch(regexache.MustCompile(`[\w/!@#+=.-]+`), "must match [\\w/!@#+=.-]+"),
-				),
-			},
-			"connection_mode": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(appflow.ConnectionMode_Values(), false),
-			},
 			"connector_label": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -58,6 +49,11 @@ func ResourceConnectorProfile() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][\w!@#.-]+`), "must contain only alphanumeric, exclamation point (!), at sign (@), number sign (#), period (.), and hyphen (-) characters"),
 					validation.StringLenBetween(1, 256),
 				),
+			},
+			"connection_mode": {
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[types.ConnectionMode](),
 			},
 			"connector_profile_config": {
 				Type:     schema.TypeList,
@@ -129,9 +125,9 @@ func ResourceConnectorProfile() *schema.Resource {
 													},
 												},
 												"authentication_type": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(appflow.AuthenticationType_Values(), false),
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[types.AuthenticationType](),
 												},
 												"basic": {
 													Type:     schema.TypeList,
@@ -566,9 +562,9 @@ func ResourceConnectorProfile() *schema.Resource {
 													ValidateFunc: validation.StringLenBetween(1, 8000),
 												},
 												"oauth2_grant_type": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(appflow.OAuth2GrantType_Values(), false),
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.OAuth2GrantType](),
 												},
 												"oauth_request": {
 													Type:     schema.TypeList,
@@ -959,9 +955,9 @@ func ResourceConnectorProfile() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"oauth2_grant_type": {
-																Type:         schema.TypeString,
-																Required:     true,
-																ValidateFunc: validation.StringInSlice(appflow.OAuth2GrantType_Values(), false),
+																Type:             schema.TypeString,
+																Required:         true,
+																ValidateDiagFunc: enum.Validate[types.OAuth2GrantType](),
 															},
 															"token_url": {
 																Type:     schema.TypeString,
@@ -1403,10 +1399,14 @@ func ResourceConnectorProfile() *schema.Resource {
 				},
 			},
 			"connector_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(appflow.ConnectorType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.ConnectorType](),
+			},
+			"credentials_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"kms_arn": {
 				Type:         schema.TypeString,
@@ -1415,22 +1415,29 @@ func ResourceConnectorProfile() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"credentials_arn": {
+			"name": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 256),
+					validation.StringMatch(regexache.MustCompile(`[\w/!@#+=.-]+`), "must match [\\w/!@#+=.-]+"),
+				),
 			},
 		},
 	}
 }
 
 func resourceConnectorProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &appflow.CreateConnectorProfileInput{
-		ConnectionMode:       aws.String(d.Get("connection_mode").(string)),
+		ConnectionMode:       types.ConnectionMode(d.Get("connection_mode").(string)),
 		ConnectorProfileName: aws.String(name),
-		ConnectorType:        aws.String(d.Get("connector_type").(string)),
+		ConnectorType:        types.ConnectorType(d.Get("connector_type").(string)),
 	}
 
 	if v, ok := d.Get("connector_label").(string); ok && len(v) > 0 {
@@ -1445,30 +1452,32 @@ func resourceConnectorProfileCreate(ctx context.Context, d *schema.ResourceData,
 		input.KmsArn = aws.String(v)
 	}
 
-	output, err := conn.CreateConnectorProfileWithContext(ctx, input)
+	output, err := conn.CreateConnectorProfile(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating AppFlow Connector Profile (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating AppFlow Connector Profile (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.ConnectorProfileArn))
+	d.SetId(aws.ToString(output.ConnectorProfileArn))
 
-	return resourceConnectorProfileRead(ctx, d, meta)
+	return append(diags, resourceConnectorProfileRead(ctx, d, meta)...)
 }
 
 func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn(ctx)
+	var diags diag.Diagnostics
 
-	connectorProfile, err := FindConnectorProfileByARN(ctx, conn, d.Id())
+	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
+
+	connectorProfile, err := findConnectorProfileByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AppFlow Connector Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading AppFlow Connector Profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading AppFlow Connector Profile (%s): %s", d.Id(), err)
 	}
 
 	// Credentials are not returned by any API operation. Instead, a
@@ -1478,24 +1487,25 @@ func resourceConnectorProfileRead(ctx context.Context, d *schema.ResourceData, m
 	// credentials resource -- but it is not documented in the API reference.
 	// (https://docs.aws.amazon.com/appflow/1.0/APIReference/API_ConnectorProfile.html#appflow-Type-ConnectorProfile-credentialsArn)
 	credentials := d.Get("connector_profile_config.0.connector_profile_credentials").([]interface{})
-
+	d.Set("arn", connectorProfile.ConnectorProfileArn)
 	d.Set("connection_mode", connectorProfile.ConnectionMode)
 	d.Set("connector_label", connectorProfile.ConnectorLabel)
-	d.Set("arn", connectorProfile.ConnectorProfileArn)
-	d.Set("name", connectorProfile.ConnectorProfileName)
 	d.Set("connector_profile_config", flattenConnectorProfileConfig(connectorProfile.ConnectorProfileProperties, credentials))
 	d.Set("connector_type", connectorProfile.ConnectorType)
 	d.Set("credentials_arn", connectorProfile.CredentialsArn)
+	d.Set("name", connectorProfile.ConnectorProfileName)
 
-	return nil
+	return diags
 }
 
 func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn(ctx)
-	name := d.Get("name").(string)
+	var diags diag.Diagnostics
 
+	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
+
+	name := d.Get("name").(string)
 	input := &appflow.UpdateConnectorProfileInput{
-		ConnectionMode:       aws.String(d.Get("connection_mode").(string)),
+		ConnectionMode:       types.ConnectionMode(d.Get("connection_mode").(string)),
 		ConnectorProfileName: aws.String(name),
 	}
 
@@ -1503,34 +1513,66 @@ func resourceConnectorProfileUpdate(ctx context.Context, d *schema.ResourceData,
 		input.ConnectorProfileConfig = expandConnectorProfileConfig(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	_, err := conn.UpdateConnectorProfileWithContext(ctx, input)
+	_, err := conn.UpdateConnectorProfile(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating AppFlow Connector Profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating AppFlow Connector Profile (%s): %s", d.Id(), err)
 	}
 
-	return resourceConnectorProfileRead(ctx, d, meta)
+	return append(diags, resourceConnectorProfileRead(ctx, d, meta)...)
 }
 
 func resourceConnectorProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppFlowConn(ctx)
+	var diags diag.Diagnostics
 
-	out, _ := FindConnectorProfileByARN(ctx, conn, d.Id())
+	conn := meta.(*conns.AWSClient).AppFlowClient(ctx)
 
 	log.Printf("[INFO] Deleting AppFlow Connector Profile: %s", d.Id())
-	_, err := conn.DeleteConnectorProfileWithContext(ctx, &appflow.DeleteConnectorProfileInput{
-		ConnectorProfileName: out.ConnectorProfileName,
+	_, err := conn.DeleteConnectorProfile(ctx, &appflow.DeleteConnectorProfileInput{
+		ConnectorProfileName: aws.String(d.Get("name").(string)),
 	})
 
-	if err != nil {
-		return diag.Errorf("deleting AppFlow Connector Profile (%s): %s", d.Id(), err)
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting AppFlow Connector Profile (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
-func expandConnectorProfileConfig(m map[string]interface{}) *appflow.ConnectorProfileConfig {
-	cpc := appflow.ConnectorProfileConfig{}
+func findConnectorProfileByARN(ctx context.Context, conn *appflow.Client, arn string) (*types.ConnectorProfile, error) {
+	input := &appflow.DescribeConnectorProfilesInput{}
+
+	pages := appflow.NewDescribeConnectorProfilesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*types.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.ConnectorProfileDetails {
+			if aws.ToString(v.ConnectorProfileArn) == arn {
+				return &v, nil
+			}
+		}
+	}
+
+	return nil, tfresource.NewEmptyResultError(input)
+}
+
+func expandConnectorProfileConfig(m map[string]interface{}) *types.ConnectorProfileConfig {
+	cpc := &types.ConnectorProfileConfig{}
 
 	if v, ok := m["connector_profile_credentials"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		cpc.ConnectorProfileCredentials = expandConnectorProfileCredentials(v[0].(map[string]interface{}))
@@ -1539,11 +1581,11 @@ func expandConnectorProfileConfig(m map[string]interface{}) *appflow.ConnectorPr
 		cpc.ConnectorProfileProperties = expandConnectorProfileProperties(v[0].(map[string]interface{}))
 	}
 
-	return &cpc
+	return cpc
 }
 
-func expandConnectorProfileCredentials(m map[string]interface{}) *appflow.ConnectorProfileCredentials {
-	cpc := appflow.ConnectorProfileCredentials{}
+func expandConnectorProfileCredentials(m map[string]interface{}) *types.ConnectorProfileCredentials {
+	cpc := &types.ConnectorProfileCredentials{}
 
 	if v, ok := m["amplitude"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		cpc.Amplitude = expandAmplitudeConnectorProfileCredentials(v[0].(map[string]interface{}))
@@ -1600,21 +1642,21 @@ func expandConnectorProfileCredentials(m map[string]interface{}) *appflow.Connec
 		cpc.Zendesk = expandZendeskConnectorProfileCredentials(v[0].(map[string]interface{}))
 	}
 
-	return &cpc
+	return cpc
 }
 
-func expandAmplitudeConnectorProfileCredentials(m map[string]interface{}) *appflow.AmplitudeConnectorProfileCredentials {
-	credentials := appflow.AmplitudeConnectorProfileCredentials{
+func expandAmplitudeConnectorProfileCredentials(m map[string]interface{}) *types.AmplitudeConnectorProfileCredentials {
+	credentials := &types.AmplitudeConnectorProfileCredentials{
 		ApiKey:    aws.String(m["api_key"].(string)),
 		SecretKey: aws.String(m["secret_key"].(string)),
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandCustomConnectorProfileCredentials(m map[string]interface{}) *appflow.CustomConnectorProfileCredentials {
-	credentials := appflow.CustomConnectorProfileCredentials{
-		AuthenticationType: aws.String(m["authentication_type"].(string)),
+func expandCustomConnectorProfileCredentials(m map[string]interface{}) *types.CustomConnectorProfileCredentials {
+	credentials := &types.CustomConnectorProfileCredentials{
+		AuthenticationType: types.AuthenticationType(m["authentication_type"].(string)),
 	}
 
 	if v, ok := m["api_key"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -1630,28 +1672,28 @@ func expandCustomConnectorProfileCredentials(m map[string]interface{}) *appflow.
 		credentials.Oauth2 = expandOAuth2Credentials(v[0].(map[string]interface{}))
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandDatadogConnectorProfileCredentials(m map[string]interface{}) *appflow.DatadogConnectorProfileCredentials {
-	credentials := appflow.DatadogConnectorProfileCredentials{
+func expandDatadogConnectorProfileCredentials(m map[string]interface{}) *types.DatadogConnectorProfileCredentials {
+	credentials := &types.DatadogConnectorProfileCredentials{
 		ApiKey:         aws.String(m["api_key"].(string)),
 		ApplicationKey: aws.String(m["application_key"].(string)),
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandDynatraceConnectorProfileCredentials(m map[string]interface{}) *appflow.DynatraceConnectorProfileCredentials {
-	credentials := appflow.DynatraceConnectorProfileCredentials{
+func expandDynatraceConnectorProfileCredentials(m map[string]interface{}) *types.DynatraceConnectorProfileCredentials {
+	credentials := &types.DynatraceConnectorProfileCredentials{
 		ApiToken: aws.String(m["api_token"].(string)),
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandGoogleAnalyticsConnectorProfileCredentials(m map[string]interface{}) *appflow.GoogleAnalyticsConnectorProfileCredentials {
-	credentials := appflow.GoogleAnalyticsConnectorProfileCredentials{
+func expandGoogleAnalyticsConnectorProfileCredentials(m map[string]interface{}) *types.GoogleAnalyticsConnectorProfileCredentials {
+	credentials := &types.GoogleAnalyticsConnectorProfileCredentials{
 		ClientId:     aws.String(m["client_id"].(string)),
 		ClientSecret: aws.String(m["client_secret"].(string)),
 	}
@@ -1666,11 +1708,11 @@ func expandGoogleAnalyticsConnectorProfileCredentials(m map[string]interface{}) 
 		credentials.RefreshToken = aws.String(v)
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandHoneycodeConnectorProfileCredentials(m map[string]interface{}) *appflow.HoneycodeConnectorProfileCredentials {
-	credentials := appflow.HoneycodeConnectorProfileCredentials{}
+func expandHoneycodeConnectorProfileCredentials(m map[string]interface{}) *types.HoneycodeConnectorProfileCredentials {
+	credentials := &types.HoneycodeConnectorProfileCredentials{}
 
 	if v, ok := m["access_token"].(string); ok && v != "" {
 		credentials.AccessToken = aws.String(v)
@@ -1682,22 +1724,22 @@ func expandHoneycodeConnectorProfileCredentials(m map[string]interface{}) *appfl
 		credentials.RefreshToken = aws.String(v)
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandInforNexusConnectorProfileCredentials(m map[string]interface{}) *appflow.InforNexusConnectorProfileCredentials {
-	credentials := appflow.InforNexusConnectorProfileCredentials{
+func expandInforNexusConnectorProfileCredentials(m map[string]interface{}) *types.InforNexusConnectorProfileCredentials {
+	credentials := &types.InforNexusConnectorProfileCredentials{
 		AccessKeyId:     aws.String(m["access_key_id"].(string)),
 		Datakey:         aws.String(m["datakey"].(string)),
 		SecretAccessKey: aws.String(m["secret_access_key"].(string)),
 		UserId:          aws.String(m["user_id"].(string)),
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandMarketoConnectorProfileCredentials(m map[string]interface{}) *appflow.MarketoConnectorProfileCredentials {
-	credentials := appflow.MarketoConnectorProfileCredentials{
+func expandMarketoConnectorProfileCredentials(m map[string]interface{}) *types.MarketoConnectorProfileCredentials {
+	credentials := &types.MarketoConnectorProfileCredentials{
 		ClientId:     aws.String(m["client_id"].(string)),
 		ClientSecret: aws.String(m["client_secret"].(string)),
 	}
@@ -1709,20 +1751,20 @@ func expandMarketoConnectorProfileCredentials(m map[string]interface{}) *appflow
 		credentials.OAuthRequest = expandOAuthRequest(v[0].(map[string]interface{}))
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandRedshiftConnectorProfileCredentials(m map[string]interface{}) *appflow.RedshiftConnectorProfileCredentials {
-	credentials := appflow.RedshiftConnectorProfileCredentials{
+func expandRedshiftConnectorProfileCredentials(m map[string]interface{}) *types.RedshiftConnectorProfileCredentials {
+	credentials := &types.RedshiftConnectorProfileCredentials{
 		Password: aws.String(m["password"].(string)),
 		Username: aws.String(m["username"].(string)),
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandSalesforceConnectorProfileCredentials(m map[string]interface{}) *appflow.SalesforceConnectorProfileCredentials {
-	credentials := appflow.SalesforceConnectorProfileCredentials{}
+func expandSalesforceConnectorProfileCredentials(m map[string]interface{}) *types.SalesforceConnectorProfileCredentials {
+	credentials := &types.SalesforceConnectorProfileCredentials{}
 
 	if v, ok := m["access_token"].(string); ok && v != "" {
 		credentials.AccessToken = aws.String(v)
@@ -1734,7 +1776,7 @@ func expandSalesforceConnectorProfileCredentials(m map[string]interface{}) *appf
 		credentials.JwtToken = aws.String(v)
 	}
 	if v, ok := m["oauth2_grant_type"].(string); ok && v != "" {
-		credentials.OAuth2GrantType = aws.String(v)
+		credentials.OAuth2GrantType = types.OAuth2GrantType(v)
 	}
 	if v, ok := m["oauth_request"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		credentials.OAuthRequest = expandOAuthRequest(v[0].(map[string]interface{}))
@@ -1743,11 +1785,11 @@ func expandSalesforceConnectorProfileCredentials(m map[string]interface{}) *appf
 		credentials.RefreshToken = aws.String(v)
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandSAPODataConnectorProfileCredentials(m map[string]interface{}) *appflow.SAPODataConnectorProfileCredentials {
-	credentials := appflow.SAPODataConnectorProfileCredentials{}
+func expandSAPODataConnectorProfileCredentials(m map[string]interface{}) *types.SAPODataConnectorProfileCredentials {
+	credentials := &types.SAPODataConnectorProfileCredentials{}
 
 	if v, ok := m["basic_auth_credentials"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		credentials.BasicAuthCredentials = expandBasicAuthCredentials(v[0].(map[string]interface{}))
@@ -1756,28 +1798,28 @@ func expandSAPODataConnectorProfileCredentials(m map[string]interface{}) *appflo
 		credentials.OAuthCredentials = expandOAuthCredentials(v[0].(map[string]interface{}))
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandServiceNowConnectorProfileCredentials(m map[string]interface{}) *appflow.ServiceNowConnectorProfileCredentials {
-	credentials := appflow.ServiceNowConnectorProfileCredentials{
+func expandServiceNowConnectorProfileCredentials(m map[string]interface{}) *types.ServiceNowConnectorProfileCredentials {
+	credentials := &types.ServiceNowConnectorProfileCredentials{
 		Password: aws.String(m["password"].(string)),
 		Username: aws.String(m["username"].(string)),
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandSingularConnectorProfileCredentials(m map[string]interface{}) *appflow.SingularConnectorProfileCredentials {
-	credentials := appflow.SingularConnectorProfileCredentials{
+func expandSingularConnectorProfileCredentials(m map[string]interface{}) *types.SingularConnectorProfileCredentials {
+	credentials := &types.SingularConnectorProfileCredentials{
 		ApiKey: aws.String(m["api_key"].(string)),
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandSlackConnectorProfileCredentials(m map[string]interface{}) *appflow.SlackConnectorProfileCredentials {
-	credentials := appflow.SlackConnectorProfileCredentials{
+func expandSlackConnectorProfileCredentials(m map[string]interface{}) *types.SlackConnectorProfileCredentials {
+	credentials := &types.SlackConnectorProfileCredentials{
 		AccessToken:  aws.String(m["access_token"].(string)),
 		ClientId:     aws.String(m["client_id"].(string)),
 		ClientSecret: aws.String(m["client_secret"].(string)),
@@ -1787,37 +1829,37 @@ func expandSlackConnectorProfileCredentials(m map[string]interface{}) *appflow.S
 		credentials.OAuthRequest = expandOAuthRequest(v[0].(map[string]interface{}))
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandSnowflakeConnectorProfileCredentials(m map[string]interface{}) *appflow.SnowflakeConnectorProfileCredentials {
-	credentials := appflow.SnowflakeConnectorProfileCredentials{
+func expandSnowflakeConnectorProfileCredentials(m map[string]interface{}) *types.SnowflakeConnectorProfileCredentials {
+	credentials := &types.SnowflakeConnectorProfileCredentials{
 		Password: aws.String(m["password"].(string)),
 		Username: aws.String(m["username"].(string)),
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandTrendmicroConnectorProfileCredentials(m map[string]interface{}) *appflow.TrendmicroConnectorProfileCredentials {
-	credentials := appflow.TrendmicroConnectorProfileCredentials{
+func expandTrendmicroConnectorProfileCredentials(m map[string]interface{}) *types.TrendmicroConnectorProfileCredentials {
+	credentials := &types.TrendmicroConnectorProfileCredentials{
 		ApiSecretKey: aws.String(m["api_secret_key"].(string)),
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandVeevaConnectorProfileCredentials(m map[string]interface{}) *appflow.VeevaConnectorProfileCredentials {
-	credentials := appflow.VeevaConnectorProfileCredentials{
+func expandVeevaConnectorProfileCredentials(m map[string]interface{}) *types.VeevaConnectorProfileCredentials {
+	credentials := &types.VeevaConnectorProfileCredentials{
 		Password: aws.String(m["password"].(string)),
 		Username: aws.String(m["username"].(string)),
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandZendeskConnectorProfileCredentials(m map[string]interface{}) *appflow.ZendeskConnectorProfileCredentials {
-	credentials := appflow.ZendeskConnectorProfileCredentials{
+func expandZendeskConnectorProfileCredentials(m map[string]interface{}) *types.ZendeskConnectorProfileCredentials {
+	credentials := &types.ZendeskConnectorProfileCredentials{
 		AccessToken:  aws.String(m["access_token"].(string)),
 		ClientId:     aws.String(m["client_id"].(string)),
 		ClientSecret: aws.String(m["client_secret"].(string)),
@@ -1827,11 +1869,11 @@ func expandZendeskConnectorProfileCredentials(m map[string]interface{}) *appflow
 		credentials.OAuthRequest = expandOAuthRequest(v[0].(map[string]interface{}))
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandOAuthRequest(m map[string]interface{}) *appflow.ConnectorOAuthRequest {
-	r := appflow.ConnectorOAuthRequest{}
+func expandOAuthRequest(m map[string]interface{}) *types.ConnectorOAuthRequest {
+	r := &types.ConnectorOAuthRequest{}
 
 	if v, ok := m["auth_code"].(string); ok && v != "" {
 		r.AuthCode = aws.String(v)
@@ -1841,11 +1883,11 @@ func expandOAuthRequest(m map[string]interface{}) *appflow.ConnectorOAuthRequest
 		r.RedirectUri = aws.String(v)
 	}
 
-	return &r
+	return r
 }
 
-func expandAPIKeyCredentials(m map[string]interface{}) *appflow.ApiKeyCredentials {
-	credentials := appflow.ApiKeyCredentials{}
+func expandAPIKeyCredentials(m map[string]interface{}) *types.ApiKeyCredentials {
+	credentials := &types.ApiKeyCredentials{}
 
 	if v, ok := m["api_key"].(string); ok && v != "" {
 		credentials.ApiKey = aws.String(v)
@@ -1855,11 +1897,11 @@ func expandAPIKeyCredentials(m map[string]interface{}) *appflow.ApiKeyCredential
 		credentials.ApiSecretKey = aws.String(v)
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandBasicAuthCredentials(m map[string]interface{}) *appflow.BasicAuthCredentials {
-	credentials := appflow.BasicAuthCredentials{}
+func expandBasicAuthCredentials(m map[string]interface{}) *types.BasicAuthCredentials {
+	credentials := &types.BasicAuthCredentials{}
 
 	if v, ok := m["password"].(string); ok && v != "" {
 		credentials.Password = aws.String(v)
@@ -1869,25 +1911,25 @@ func expandBasicAuthCredentials(m map[string]interface{}) *appflow.BasicAuthCred
 		credentials.Username = aws.String(v)
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandCustomAuthCredentials(m map[string]interface{}) *appflow.CustomAuthCredentials {
-	credentials := appflow.CustomAuthCredentials{}
+func expandCustomAuthCredentials(m map[string]interface{}) *types.CustomAuthCredentials {
+	credentials := &types.CustomAuthCredentials{}
 
 	if v, ok := m["credentials_map"].(map[string]interface{}); ok && len(v) > 0 {
-		credentials.CredentialsMap = flex.ExpandStringMap(v)
+		credentials.CredentialsMap = flex.ExpandStringValueMap(v)
 	}
 
 	if v, ok := m["custom_authentication_type"].(string); ok && v != "" {
 		credentials.CustomAuthenticationType = aws.String(v)
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandOAuthCredentials(m map[string]interface{}) *appflow.OAuthCredentials {
-	credentials := appflow.OAuthCredentials{
+func expandOAuthCredentials(m map[string]interface{}) *types.OAuthCredentials {
+	credentials := &types.OAuthCredentials{
 		ClientId:     aws.String(m["client_id"].(string)),
 		ClientSecret: aws.String(m["client_secret"].(string)),
 	}
@@ -1902,11 +1944,11 @@ func expandOAuthCredentials(m map[string]interface{}) *appflow.OAuthCredentials 
 		credentials.RefreshToken = aws.String(v)
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandOAuth2Credentials(m map[string]interface{}) *appflow.OAuth2Credentials {
-	credentials := appflow.OAuth2Credentials{}
+func expandOAuth2Credentials(m map[string]interface{}) *types.OAuth2Credentials {
+	credentials := &types.OAuth2Credentials{}
 
 	if v, ok := m["access_token"].(string); ok && v != "" {
 		credentials.AccessToken = aws.String(v)
@@ -1924,14 +1966,14 @@ func expandOAuth2Credentials(m map[string]interface{}) *appflow.OAuth2Credential
 		credentials.RefreshToken = aws.String(v)
 	}
 
-	return &credentials
+	return credentials
 }
 
-func expandConnectorProfileProperties(m map[string]interface{}) *appflow.ConnectorProfileProperties {
-	cpc := appflow.ConnectorProfileProperties{}
+func expandConnectorProfileProperties(m map[string]interface{}) *types.ConnectorProfileProperties {
+	cpc := &types.ConnectorProfileProperties{}
 
 	if v, ok := m["amplitude"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		cpc.Amplitude = v[0].(*appflow.AmplitudeConnectorProfileProperties)
+		cpc.Amplitude = v[0].(*types.AmplitudeConnectorProfileProperties)
 	}
 	if v, ok := m["custom_connector"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		cpc.CustomConnector = expandCustomConnectorProfileProperties(v[0].(map[string]interface{}))
@@ -1943,10 +1985,10 @@ func expandConnectorProfileProperties(m map[string]interface{}) *appflow.Connect
 		cpc.Dynatrace = expandDynatraceConnectorProfileProperties(v[0].(map[string]interface{}))
 	}
 	if v, ok := m["google_analytics"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		cpc.GoogleAnalytics = v[0].(*appflow.GoogleAnalyticsConnectorProfileProperties)
+		cpc.GoogleAnalytics = v[0].(*types.GoogleAnalyticsConnectorProfileProperties)
 	}
 	if v, ok := m["honeycode"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		cpc.Honeycode = v[0].(*appflow.HoneycodeConnectorProfileProperties)
+		cpc.Honeycode = v[0].(*types.HoneycodeConnectorProfileProperties)
 	}
 	if v, ok := m["infor_nexus"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		cpc.InforNexus = expandInforNexusConnectorProfileProperties(v[0].(map[string]interface{}))
@@ -1967,7 +2009,7 @@ func expandConnectorProfileProperties(m map[string]interface{}) *appflow.Connect
 		cpc.ServiceNow = expandServiceNowConnectorProfileProperties(v[0].(map[string]interface{}))
 	}
 	if v, ok := m["singular"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		cpc.Singular = v[0].(*appflow.SingularConnectorProfileProperties)
+		cpc.Singular = v[0].(*types.SingularConnectorProfileProperties)
 	}
 	if v, ok := m["slack"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		cpc.Slack = expandSlackConnectorProfileProperties(v[0].(map[string]interface{}))
@@ -1976,7 +2018,7 @@ func expandConnectorProfileProperties(m map[string]interface{}) *appflow.Connect
 		cpc.Snowflake = expandSnowflakeConnectorProfileProperties(v[0].(map[string]interface{}))
 	}
 	if v, ok := m["trendmicro"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		cpc.Trendmicro = v[0].(*appflow.TrendmicroConnectorProfileProperties)
+		cpc.Trendmicro = v[0].(*types.TrendmicroConnectorProfileProperties)
 	}
 	if v, ok := m["veeva"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		cpc.Veeva = expandVeevaConnectorProfileProperties(v[0].(map[string]interface{}))
@@ -1985,43 +2027,43 @@ func expandConnectorProfileProperties(m map[string]interface{}) *appflow.Connect
 		cpc.Zendesk = expandZendeskConnectorProfileProperties(v[0].(map[string]interface{}))
 	}
 
-	return &cpc
+	return cpc
 }
 
-func expandDatadogConnectorProfileProperties(m map[string]interface{}) *appflow.DatadogConnectorProfileProperties {
-	properties := appflow.DatadogConnectorProfileProperties{
+func expandDatadogConnectorProfileProperties(m map[string]interface{}) *types.DatadogConnectorProfileProperties {
+	properties := &types.DatadogConnectorProfileProperties{
 		InstanceUrl: aws.String(m["instance_url"].(string)),
 	}
 
-	return &properties
+	return properties
 }
 
-func expandDynatraceConnectorProfileProperties(m map[string]interface{}) *appflow.DynatraceConnectorProfileProperties {
-	properties := appflow.DynatraceConnectorProfileProperties{
+func expandDynatraceConnectorProfileProperties(m map[string]interface{}) *types.DynatraceConnectorProfileProperties {
+	properties := &types.DynatraceConnectorProfileProperties{
 		InstanceUrl: aws.String(m["instance_url"].(string)),
 	}
 
-	return &properties
+	return properties
 }
 
-func expandInforNexusConnectorProfileProperties(m map[string]interface{}) *appflow.InforNexusConnectorProfileProperties {
-	properties := appflow.InforNexusConnectorProfileProperties{
+func expandInforNexusConnectorProfileProperties(m map[string]interface{}) *types.InforNexusConnectorProfileProperties {
+	properties := &types.InforNexusConnectorProfileProperties{
 		InstanceUrl: aws.String(m["instance_url"].(string)),
 	}
 
-	return &properties
+	return properties
 }
 
-func expandMarketoConnectorProfileProperties(m map[string]interface{}) *appflow.MarketoConnectorProfileProperties {
-	properties := appflow.MarketoConnectorProfileProperties{
+func expandMarketoConnectorProfileProperties(m map[string]interface{}) *types.MarketoConnectorProfileProperties {
+	properties := &types.MarketoConnectorProfileProperties{
 		InstanceUrl: aws.String(m["instance_url"].(string)),
 	}
 
-	return &properties
+	return properties
 }
 
-func expandRedshiftConnectorProfileProperties(m map[string]interface{}) *appflow.RedshiftConnectorProfileProperties {
-	properties := appflow.RedshiftConnectorProfileProperties{
+func expandRedshiftConnectorProfileProperties(m map[string]interface{}) *types.RedshiftConnectorProfileProperties {
+	properties := &types.RedshiftConnectorProfileProperties{
 		BucketName:        aws.String(m["bucket_name"].(string)),
 		ClusterIdentifier: aws.String(m["cluster_identifier"].(string)),
 		RoleArn:           aws.String(m["role_arn"].(string)),
@@ -2037,50 +2079,50 @@ func expandRedshiftConnectorProfileProperties(m map[string]interface{}) *appflow
 		properties.DatabaseUrl = aws.String(v)
 	}
 
-	return &properties
+	return properties
 }
 
-func expandServiceNowConnectorProfileProperties(m map[string]interface{}) *appflow.ServiceNowConnectorProfileProperties {
-	properties := appflow.ServiceNowConnectorProfileProperties{
+func expandServiceNowConnectorProfileProperties(m map[string]interface{}) *types.ServiceNowConnectorProfileProperties {
+	properties := &types.ServiceNowConnectorProfileProperties{
 		InstanceUrl: aws.String(m["instance_url"].(string)),
 	}
 
-	return &properties
+	return properties
 }
 
-func expandSalesforceConnectorProfileProperties(m map[string]interface{}) *appflow.SalesforceConnectorProfileProperties {
-	properties := appflow.SalesforceConnectorProfileProperties{}
+func expandSalesforceConnectorProfileProperties(m map[string]interface{}) *types.SalesforceConnectorProfileProperties {
+	properties := &types.SalesforceConnectorProfileProperties{}
 
 	if v, ok := m["instance_url"].(string); ok && v != "" {
 		properties.InstanceUrl = aws.String(v)
 	}
 
 	if v, ok := m["is_sandbox_environment"].(bool); ok {
-		properties.IsSandboxEnvironment = aws.Bool(v)
+		properties.IsSandboxEnvironment = v
 	}
 
-	return &properties
+	return properties
 }
 
-func expandCustomConnectorProfileProperties(m map[string]interface{}) *appflow.CustomConnectorProfileProperties {
-	properties := appflow.CustomConnectorProfileProperties{}
+func expandCustomConnectorProfileProperties(m map[string]interface{}) *types.CustomConnectorProfileProperties {
+	properties := &types.CustomConnectorProfileProperties{}
 
 	if v, ok := m["oauth2_properties"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		properties.OAuth2Properties = expandOAuth2Properties(v[0].(map[string]interface{}))
 	}
 	if v, ok := m["profile_properties"].(map[string]interface{}); ok && len(v) > 0 {
-		properties.ProfileProperties = flex.ExpandStringMap(v)
+		properties.ProfileProperties = flex.ExpandStringValueMap(v)
 	}
 
-	return &properties
+	return properties
 }
 
-func expandSAPODataConnectorProfileProperties(m map[string]interface{}) *appflow.SAPODataConnectorProfileProperties {
-	properties := appflow.SAPODataConnectorProfileProperties{
+func expandSAPODataConnectorProfileProperties(m map[string]interface{}) *types.SAPODataConnectorProfileProperties {
+	properties := &types.SAPODataConnectorProfileProperties{
 		ApplicationHostUrl:     aws.String(m["application_host_url"].(string)),
 		ApplicationServicePath: aws.String(m["application_service_path"].(string)),
 		ClientNumber:           aws.String(m["client_number"].(string)),
-		PortNumber:             aws.Int64(int64(m["port_number"].(int))),
+		PortNumber:             aws.Int32(int32(m["port_number"].(int))),
 	}
 
 	if v, ok := m["logon_language"].(string); ok && v != "" {
@@ -2093,19 +2135,19 @@ func expandSAPODataConnectorProfileProperties(m map[string]interface{}) *appflow
 		properties.PrivateLinkServiceName = aws.String(v)
 	}
 
-	return &properties
+	return properties
 }
 
-func expandSlackConnectorProfileProperties(m map[string]interface{}) *appflow.SlackConnectorProfileProperties {
-	properties := appflow.SlackConnectorProfileProperties{
+func expandSlackConnectorProfileProperties(m map[string]interface{}) *types.SlackConnectorProfileProperties {
+	properties := &types.SlackConnectorProfileProperties{
 		InstanceUrl: aws.String(m["instance_url"].(string)),
 	}
 
-	return &properties
+	return properties
 }
 
-func expandSnowflakeConnectorProfileProperties(m map[string]interface{}) *appflow.SnowflakeConnectorProfileProperties {
-	properties := appflow.SnowflakeConnectorProfileProperties{
+func expandSnowflakeConnectorProfileProperties(m map[string]interface{}) *types.SnowflakeConnectorProfileProperties {
+	properties := &types.SnowflakeConnectorProfileProperties{
 		BucketName: aws.String(m["bucket_name"].(string)),
 		Stage:      aws.String(m["stage"].(string)),
 		Warehouse:  aws.String(m["warehouse"].(string)),
@@ -2127,49 +2169,49 @@ func expandSnowflakeConnectorProfileProperties(m map[string]interface{}) *appflo
 		properties.Region = aws.String(v)
 	}
 
-	return &properties
+	return properties
 }
 
-func expandVeevaConnectorProfileProperties(m map[string]interface{}) *appflow.VeevaConnectorProfileProperties {
-	properties := appflow.VeevaConnectorProfileProperties{
+func expandVeevaConnectorProfileProperties(m map[string]interface{}) *types.VeevaConnectorProfileProperties {
+	properties := &types.VeevaConnectorProfileProperties{
 		InstanceUrl: aws.String(m["instance_url"].(string)),
 	}
 
-	return &properties
+	return properties
 }
 
-func expandZendeskConnectorProfileProperties(m map[string]interface{}) *appflow.ZendeskConnectorProfileProperties {
-	properties := appflow.ZendeskConnectorProfileProperties{
+func expandZendeskConnectorProfileProperties(m map[string]interface{}) *types.ZendeskConnectorProfileProperties {
+	properties := &types.ZendeskConnectorProfileProperties{
 		InstanceUrl: aws.String(m["instance_url"].(string)),
 	}
 
-	return &properties
+	return properties
 }
 
-func expandOAuthProperties(m map[string]interface{}) *appflow.OAuthProperties {
-	properties := appflow.OAuthProperties{
+func expandOAuthProperties(m map[string]interface{}) *types.OAuthProperties {
+	properties := &types.OAuthProperties{
 		AuthCodeUrl: aws.String(m["auth_code_url"].(string)),
-		OAuthScopes: flex.ExpandStringList(m["oauth_scopes"].([]interface{})),
+		OAuthScopes: flex.ExpandStringValueList(m["oauth_scopes"].([]interface{})),
 		TokenUrl:    aws.String(m["token_url"].(string)),
 	}
 
-	return &properties
+	return properties
 }
 
-func expandOAuth2Properties(m map[string]interface{}) *appflow.OAuth2Properties {
-	properties := appflow.OAuth2Properties{
-		OAuth2GrantType: aws.String(m["oauth2_grant_type"].(string)),
+func expandOAuth2Properties(m map[string]interface{}) *types.OAuth2Properties {
+	properties := &types.OAuth2Properties{
+		OAuth2GrantType: types.OAuth2GrantType(m["oauth2_grant_type"].(string)),
 		TokenUrl:        aws.String(m["token_url"].(string)),
 	}
 
 	if v, ok := m["token_url_custom_properties"].(map[string]interface{}); ok && len(v) > 0 {
-		properties.TokenUrlCustomProperties = flex.ExpandStringMap(v)
+		properties.TokenUrlCustomProperties = flex.ExpandStringValueMap(v)
 	}
 
-	return &properties
+	return properties
 }
 
-func flattenConnectorProfileConfig(cpp *appflow.ConnectorProfileProperties, cpc []interface{}) []interface{} {
+func flattenConnectorProfileConfig(cpp *types.ConnectorProfileProperties, cpc []interface{}) []interface{} {
 	m := make(map[string]interface{})
 
 	m["connector_profile_properties"] = flattenConnectorProfileProperties(cpp)
@@ -2178,7 +2220,7 @@ func flattenConnectorProfileConfig(cpp *appflow.ConnectorProfileProperties, cpc 
 	return []interface{}{m}
 }
 
-func flattenConnectorProfileProperties(cpp *appflow.ConnectorProfileProperties) []interface{} {
+func flattenConnectorProfileProperties(cpp *types.ConnectorProfileProperties) []interface{} {
 	result := make(map[string]interface{})
 	m := make(map[string]interface{})
 
@@ -2189,11 +2231,11 @@ func flattenConnectorProfileProperties(cpp *appflow.ConnectorProfileProperties) 
 		result["custom_connector"] = flattenCustomConnectorProfileProperties(cpp.CustomConnector)
 	}
 	if cpp.Datadog != nil {
-		m["instance_url"] = aws.StringValue(cpp.Datadog.InstanceUrl)
+		m["instance_url"] = aws.ToString(cpp.Datadog.InstanceUrl)
 		result["datadog"] = []interface{}{m}
 	}
 	if cpp.Dynatrace != nil {
-		m["instance_url"] = aws.StringValue(cpp.Dynatrace.InstanceUrl)
+		m["instance_url"] = aws.ToString(cpp.Dynatrace.InstanceUrl)
 		result["dynatrace"] = []interface{}{m}
 	}
 	if cpp.GoogleAnalytics != nil {
@@ -2203,11 +2245,11 @@ func flattenConnectorProfileProperties(cpp *appflow.ConnectorProfileProperties) 
 		result["honeycode"] = []interface{}{m}
 	}
 	if cpp.InforNexus != nil {
-		m["instance_url"] = aws.StringValue(cpp.InforNexus.InstanceUrl)
+		m["instance_url"] = aws.ToString(cpp.InforNexus.InstanceUrl)
 		result["infor_nexus"] = []interface{}{m}
 	}
 	if cpp.Marketo != nil {
-		m["instance_url"] = aws.StringValue(cpp.Marketo.InstanceUrl)
+		m["instance_url"] = aws.ToString(cpp.Marketo.InstanceUrl)
 		result["marketo"] = []interface{}{m}
 	}
 	if cpp.Redshift != nil {
@@ -2220,14 +2262,14 @@ func flattenConnectorProfileProperties(cpp *appflow.ConnectorProfileProperties) 
 		result["salesforce"] = flattenSalesforceConnectorProfileProperties(cpp.Salesforce)
 	}
 	if cpp.ServiceNow != nil {
-		m["instance_url"] = aws.StringValue(cpp.ServiceNow.InstanceUrl)
+		m["instance_url"] = aws.ToString(cpp.ServiceNow.InstanceUrl)
 		result["service_now"] = []interface{}{m}
 	}
 	if cpp.Singular != nil {
 		result["singular"] = []interface{}{m}
 	}
 	if cpp.Slack != nil {
-		m["instance_url"] = aws.StringValue(cpp.Slack.InstanceUrl)
+		m["instance_url"] = aws.ToString(cpp.Slack.InstanceUrl)
 		result["slack"] = []interface{}{m}
 	}
 	if cpp.Snowflake != nil {
@@ -2237,39 +2279,39 @@ func flattenConnectorProfileProperties(cpp *appflow.ConnectorProfileProperties) 
 		result["trendmicro"] = []interface{}{m}
 	}
 	if cpp.Veeva != nil {
-		m["instance_url"] = aws.StringValue(cpp.Veeva.InstanceUrl)
+		m["instance_url"] = aws.ToString(cpp.Veeva.InstanceUrl)
 		result["veeva"] = []interface{}{m}
 	}
 	if cpp.Zendesk != nil {
-		m["instance_url"] = aws.StringValue(cpp.Zendesk.InstanceUrl)
+		m["instance_url"] = aws.ToString(cpp.Zendesk.InstanceUrl)
 		result["zendesk"] = []interface{}{m}
 	}
 
 	return []interface{}{result}
 }
 
-func flattenRedshiftConnectorProfileProperties(properties *appflow.RedshiftConnectorProfileProperties) []interface{} {
+func flattenRedshiftConnectorProfileProperties(properties *types.RedshiftConnectorProfileProperties) []interface{} {
 	m := make(map[string]interface{})
 
-	m["bucket_name"] = aws.StringValue(properties.BucketName)
+	m["bucket_name"] = aws.ToString(properties.BucketName)
 
 	if properties.BucketPrefix != nil {
-		m["bucket_prefix"] = aws.StringValue(properties.BucketPrefix)
+		m["bucket_prefix"] = aws.ToString(properties.BucketPrefix)
 	}
 
 	if properties.DatabaseUrl != nil {
-		m["database_url"] = aws.StringValue(properties.DatabaseUrl)
+		m["database_url"] = aws.ToString(properties.DatabaseUrl)
 	}
 
-	m["role_arn"] = aws.StringValue(properties.RoleArn)
-	m["cluster_identifier"] = aws.StringValue(properties.ClusterIdentifier)
-	m["data_api_role_arn"] = aws.StringValue(properties.DataApiRoleArn)
-	m["database_name"] = aws.StringValue(properties.DatabaseName)
+	m["role_arn"] = aws.ToString(properties.RoleArn)
+	m["cluster_identifier"] = aws.ToString(properties.ClusterIdentifier)
+	m["data_api_role_arn"] = aws.ToString(properties.DataApiRoleArn)
+	m["database_name"] = aws.ToString(properties.DatabaseName)
 
 	return []interface{}{m}
 }
 
-func flattenCustomConnectorProfileProperties(properties *appflow.CustomConnectorProfileProperties) []interface{} {
+func flattenCustomConnectorProfileProperties(properties *types.CustomConnectorProfileProperties) []interface{} {
 	m := make(map[string]interface{})
 
 	if properties.OAuth2Properties != nil {
@@ -2277,36 +2319,33 @@ func flattenCustomConnectorProfileProperties(properties *appflow.CustomConnector
 	}
 
 	if properties.ProfileProperties != nil {
-		m["profile_properties"] = aws.StringValueMap(properties.ProfileProperties)
+		m["profile_properties"] = properties.ProfileProperties
 	}
 
 	return []interface{}{m}
 }
 
-func flattenSalesforceConnectorProfileProperties(properties *appflow.SalesforceConnectorProfileProperties) []interface{} {
+func flattenSalesforceConnectorProfileProperties(properties *types.SalesforceConnectorProfileProperties) []interface{} {
 	m := make(map[string]interface{})
 
 	if properties.InstanceUrl != nil {
-		m["instance_url"] = aws.StringValue(properties.InstanceUrl)
+		m["instance_url"] = aws.ToString(properties.InstanceUrl)
 	}
-
-	if properties.IsSandboxEnvironment != nil {
-		m["is_sandbox_environment"] = aws.BoolValue(properties.IsSandboxEnvironment)
-	}
+	m["is_sandbox_environment"] = properties.IsSandboxEnvironment
 
 	return []interface{}{m}
 }
 
-func flattenSAPODataConnectorProfileProperties(properties *appflow.SAPODataConnectorProfileProperties) []interface{} {
+func flattenSAPODataConnectorProfileProperties(properties *types.SAPODataConnectorProfileProperties) []interface{} {
 	m := make(map[string]interface{})
 
-	m["application_host_url"] = aws.StringValue(properties.ApplicationHostUrl)
-	m["application_service_path"] = aws.StringValue(properties.ApplicationServicePath)
-	m["client_number"] = aws.StringValue(properties.ClientNumber)
-	m["port_number"] = aws.Int64Value(properties.PortNumber)
+	m["application_host_url"] = aws.ToString(properties.ApplicationHostUrl)
+	m["application_service_path"] = aws.ToString(properties.ApplicationServicePath)
+	m["client_number"] = aws.ToString(properties.ClientNumber)
+	m["port_number"] = aws.ToInt32(properties.PortNumber)
 
 	if properties.LogonLanguage != nil {
-		m["logon_language"] = aws.StringValue(properties.LogonLanguage)
+		m["logon_language"] = aws.ToString(properties.LogonLanguage)
 	}
 
 	if properties.OAuthProperties != nil {
@@ -2314,50 +2353,50 @@ func flattenSAPODataConnectorProfileProperties(properties *appflow.SAPODataConne
 	}
 
 	if properties.PrivateLinkServiceName != nil {
-		m["private_link_service_name"] = aws.StringValue(properties.PrivateLinkServiceName)
+		m["private_link_service_name"] = aws.ToString(properties.PrivateLinkServiceName)
 	}
 
 	return []interface{}{m}
 }
 
-func flattenSnowflakeConnectorProfileProperties(properties *appflow.SnowflakeConnectorProfileProperties) []interface{} {
+func flattenSnowflakeConnectorProfileProperties(properties *types.SnowflakeConnectorProfileProperties) []interface{} {
 	m := make(map[string]interface{})
 	if properties.AccountName != nil {
-		m["account_name"] = aws.StringValue(properties.AccountName)
+		m["account_name"] = aws.ToString(properties.AccountName)
 	}
 
-	m["bucket_name"] = aws.StringValue(properties.BucketName)
+	m["bucket_name"] = aws.ToString(properties.BucketName)
 
 	if properties.BucketPrefix != nil {
-		m["bucket_prefix"] = aws.StringValue(properties.BucketPrefix)
+		m["bucket_prefix"] = aws.ToString(properties.BucketPrefix)
 	}
 
 	if properties.Region != nil {
-		m["region"] = aws.StringValue(properties.Region)
+		m["region"] = aws.ToString(properties.Region)
 	}
 
-	m["stage"] = aws.StringValue(properties.Stage)
-	m["warehouse"] = aws.StringValue(properties.Warehouse)
+	m["stage"] = aws.ToString(properties.Stage)
+	m["warehouse"] = aws.ToString(properties.Warehouse)
 
 	return []interface{}{m}
 }
 
-func flattenOAuthProperties(properties *appflow.OAuthProperties) []interface{} {
+func flattenOAuthProperties(properties *types.OAuthProperties) []interface{} {
 	m := make(map[string]interface{})
 
-	m["auth_code_url"] = aws.StringValue(properties.AuthCodeUrl)
-	m["oauth_scopes"] = aws.StringValueSlice(properties.OAuthScopes)
-	m["token_url"] = aws.StringValue(properties.TokenUrl)
+	m["auth_code_url"] = aws.ToString(properties.AuthCodeUrl)
+	m["oauth_scopes"] = properties.OAuthScopes
+	m["token_url"] = aws.ToString(properties.TokenUrl)
 
 	return []interface{}{m}
 }
 
-func flattenOAuth2Properties(properties *appflow.OAuth2Properties) []interface{} {
+func flattenOAuth2Properties(properties *types.OAuth2Properties) []interface{} {
 	m := make(map[string]interface{})
 
-	m["oauth2_grant_type"] = aws.StringValue(properties.OAuth2GrantType)
-	m["token_url"] = aws.StringValue(properties.TokenUrl)
-	m["token_url_custom_properties"] = aws.StringValueMap(properties.TokenUrlCustomProperties)
+	m["oauth2_grant_type"] = properties.OAuth2GrantType
+	m["token_url"] = aws.ToString(properties.TokenUrl)
+	m["token_url_custom_properties"] = properties.TokenUrlCustomProperties
 
 	return []interface{}{m}
 }

@@ -111,8 +111,8 @@ This data source exports the following attributes in addition to the arguments a
 
 Cluster nodes (for `clusterNodes`) support the following attributes:
 
-* `nodeRole` - Whether the node is a leader node or a compute node
+* `node_role` - Whether the node is a leader node or a compute node
 * `privateIpAddress` - Private IP address of a node within a cluster
 * `publicIpAddress` - Public IP address of a node within a cluster
 
-<!-- cache-key: cdktf-0.19.0 input-b688cc951fcaa53d0c385e11d05c939768ec5145c1f1ba9b8e2ae85e93a68c87 -->
+<!-- cache-key: cdktf-0.20.1 input-b688cc951fcaa53d0c385e11d05c939768ec5145c1f1ba9b8e2ae85e93a68c87 -->

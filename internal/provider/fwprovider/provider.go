@@ -69,7 +69,11 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 			},
 			"http_proxy": schema.StringAttribute{
 				Optional:    true,
-				Description: "The address of an HTTP proxy to use when accessing the AWS API. Can also be configured using the `HTTP_PROXY` or `HTTPS_PROXY` environment variables.",
+				Description: "URL of a proxy to use for HTTP requests when accessing the AWS API. Can also be set using the `HTTP_PROXY` or `http_proxy` environment variables.",
+			},
+			"https_proxy": schema.StringAttribute{
+				Optional:    true,
+				Description: "URL of a proxy to use for HTTPS requests when accessing the AWS API. Can also be set using the `HTTPS_PROXY` or `https_proxy` environment variables.",
 			},
 			"insecure": schema.BoolAttribute{
 				Optional:    true,
@@ -78,6 +82,10 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 			"max_retries": schema.Int64Attribute{
 				Optional:    true,
 				Description: "The maximum number of times an AWS API request is\nbeing executed. If the API request still fails, an error is\nthrown.",
+			},
+			"no_proxy": schema.StringAttribute{
+				Optional:    true,
+				Description: "Comma-separated list of hosts that should not use HTTP or HTTPS proxies. Can also be set using the `NO_PROXY` or `no_proxy` environment variables.",
 			},
 			"profile": schema.StringAttribute{
 				Optional:    true,

@@ -461,7 +461,9 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   "1",
 						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":          "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":       "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          "0",
@@ -484,7 +486,9 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  "1",
 						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":          "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":       "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          "0",
@@ -512,7 +516,9 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.#":                    "1",
 						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.included_cookies.0": "test",
 						"statement.0.byte_match_statement.0.field_to_match.0.cookies.0.match_pattern.0.included_cookies.1": "cookie_test",
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":                               "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                                    "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":                            "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                                  "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                                     "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                               "0",
@@ -544,6 +550,32 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchHeaderOrder(ruleGroupName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleGroupExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/rulegroup/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.#":                                         "1",
+						"statement.0.byte_match_statement.#":                  "1",
+						"statement.0.byte_match_statement.0.field_to_match.#": "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":            "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                           "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                        "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":                   "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.0.oversize_handling": "MATCH",
+						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                        "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":                "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                      "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                         "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                   "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.single_header.#":                  "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.single_query_argument.#":          "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.uri_path.#":                       "0",
+					}),
+				),
+			},
+			{
 				Config: testAccRuleGroupConfig_byteMatchStatementFieldToMatchHeadersMatchPatternAll(ruleGroupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &v),
@@ -556,6 +588,7 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":                        "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                                       "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                                    "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":                               "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                                    "1",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.oversize_handling":                  "MATCH",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_scope":                        "ALL",
@@ -563,6 +596,7 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.all.#":              "1",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.included_headers.#": "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.excluded_headers.#": "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":                            "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                                  "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                                     "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                               "0",
@@ -585,6 +619,7 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":                        "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                                       "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                                    "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":                               "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                                    "1",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.oversize_handling":                  "MATCH",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_scope":                        "ALL",
@@ -594,6 +629,7 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.included_headers.0": "session",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.included_headers.1": "session-id",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.excluded_headers.#": "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":                            "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                                  "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                                     "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                               "0",
@@ -616,6 +652,7 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":                        "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                                       "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                                    "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":                               "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                                    "1",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.oversize_handling":                  "MATCH",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_scope":                        "ALL",
@@ -625,6 +662,7 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.excluded_headers.0": "session",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.excluded_headers.1": "session-id",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.0.match_pattern.0.included_headers.#": "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":                            "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                                  "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                                     "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":                               "0",
@@ -651,7 +689,9 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":          "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":       "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                "1",
 						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          "0",
@@ -674,7 +714,9 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":          "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":       "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          "1",
@@ -697,7 +739,9 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":          "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":       "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          "0",
@@ -721,7 +765,9 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":        "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                       "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":                    "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":               "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":                    "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":            "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":                  "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                     "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":               "0",
@@ -745,7 +791,9 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 						"statement.0.byte_match_statement.0.field_to_match.0.all_query_arguments.#":   "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.body.#":                  "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.cookies.#":               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":          "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.headers.#":               "0",
+						"statement.0.byte_match_statement.0.field_to_match.0.ja3_fingerprint.#":       "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.json_body.#":             "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.method.#":                "0",
 						"statement.0.byte_match_statement.0.field_to_match.0.query_string.#":          "0",
@@ -3275,6 +3323,53 @@ resource "aws_wafv2_rule_group" "test" {
           priority = 1
           type     = "NONE"
         }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName)
+}
+
+func testAccRuleGroupConfig_byteMatchStatementFieldToMatchHeaderOrder(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_rule_group" "test" {
+  capacity = 50
+  name     = %[1]q
+  scope    = "REGIONAL"
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      allow {}
+    }
+
+    statement {
+      byte_match_statement {
+        search_string = "host:user-agent:accept:authorization:referer"
+        field_to_match {
+          header_order {
+            oversize_handling = "MATCH"
+          }
+        }
+        text_transformation {
+          priority = 0
+          type     = "NONE"
+        }
+        positional_constraint = "STARTS_WITH"
       }
     }
 

@@ -6,33 +6,28 @@ package apprunner_test
 import (
 	"context"
 	"fmt"
-	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/apprunner"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapprunner "github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := os.Getenv("APPRUNNER_CUSTOM_DOMAIN")
-	if domain == "" {
-		t.Skip("Environment variable APPRUNNER_CUSTOM_DOMAIN is not set")
-	}
-
+	domain := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_custom_domain_association.test"
 	serviceResourceName := "aws_apprunner_service.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -44,7 +39,7 @@ func TestAccAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "dns_target"),
 					resource.TestCheckResourceAttr(resourceName, "domain_name", domain),
 					resource.TestCheckResourceAttr(resourceName, "enable_www_subdomain", "true"),
-					resource.TestCheckResourceAttr(resourceName, "status", tfapprunner.CustomDomainAssociationStatusPendingCertificateDNSValidation),
+					resource.TestCheckResourceAttr(resourceName, "status", "pending_certificate_dns_validation"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_arn", serviceResourceName, "arn"),
 				),
 			},
@@ -60,17 +55,13 @@ func TestAccAppRunnerCustomDomainAssociation_basic(t *testing.T) {
 
 func TestAccAppRunnerCustomDomainAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	domain := os.Getenv("APPRUNNER_CUSTOM_DOMAIN")
-	if domain == "" {
-		t.Skip("Environment variable APPRUNNER_CUSTOM_DOMAIN is not set")
-	}
-
+	domain := acctest.SkipIfEnvVarNotSet(t, "APPRUNNER_CUSTOM_DOMAIN")
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_apprunner_custom_domain_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apprunner.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomDomainAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,17 +84,11 @@ func testAccCheckCustomDomainAssociationDestroy(ctx context.Context) resource.Te
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
 
-			domainName, serviceArn, err := tfapprunner.CustomDomainAssociationParseID(rs.Primary.ID)
+			_, err := tfapprunner.FindCustomDomainByTwoPartKey(ctx, conn, rs.Primary.Attributes["domain_name"], rs.Primary.Attributes["service_arn"])
 
-			if err != nil {
-				return err
-			}
-
-			customDomain, err := tfapprunner.FindCustomDomain(ctx, conn, domainName, serviceArn)
-
-			if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -111,9 +96,7 @@ func testAccCheckCustomDomainAssociationDestroy(ctx context.Context) resource.Te
 				return err
 			}
 
-			if customDomain != nil {
-				return fmt.Errorf("App Runner Custom Domain Association (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("App Runner Custom Domain Association %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -127,29 +110,11 @@ func testAccCheckCustomDomainAssociationExists(ctx context.Context, n string) re
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No App Runner Custom Domain Association ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerClient(ctx)
 
-		domainName, serviceArn, err := tfapprunner.CustomDomainAssociationParseID(rs.Primary.ID)
+		_, err := tfapprunner.FindCustomDomainByTwoPartKey(ctx, conn, rs.Primary.Attributes["domain_name"], rs.Primary.Attributes["service_arn"])
 
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppRunnerConn(ctx)
-
-		customDomain, err := tfapprunner.FindCustomDomain(ctx, conn, domainName, serviceArn)
-
-		if err != nil {
-			return err
-		}
-
-		if customDomain == nil {
-			return fmt.Errorf("App Runner Custom Domain Association (%s) not found", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 

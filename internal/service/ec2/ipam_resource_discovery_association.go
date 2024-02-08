@@ -138,7 +138,7 @@ func resourceIPAMResourceDiscoveryAssociationRead(ctx context.Context, d *schema
 
 	setTagsOut(ctx, rda.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceIPAMResourceDiscoveryAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

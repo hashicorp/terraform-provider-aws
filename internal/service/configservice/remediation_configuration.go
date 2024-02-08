@@ -189,7 +189,7 @@ func resourceRemediationConfigurationPut(ctx context.Context, d *schema.Resource
 	log.Printf("[DEBUG] Creating AWSConfig remediation configuration: %s", inputs)
 	_, err := conn.PutRemediationConfigurationsWithContext(ctx, &inputs)
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionCreating, ResNameRemediationConfiguration, fmt.Sprintf("%+v", inputs), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionCreating, ResNameRemediationConfiguration, fmt.Sprintf("%+v", inputs), err)
 	}
 
 	d.SetId(name)
@@ -213,7 +213,7 @@ func resourceRemediationConfigurationRead(ctx context.Context, d *schema.Resourc
 	}
 
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
 	}
 
 	numberOfRemediationConfigurations := len(out.RemediationConfigurations)
@@ -224,7 +224,7 @@ func resourceRemediationConfigurationRead(ctx context.Context, d *schema.Resourc
 	}
 
 	if d.IsNewResource() && numberOfRemediationConfigurations < 1 {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), errors.New("none found after creation"))
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), errors.New("none found after creation"))
 	}
 
 	log.Printf("[DEBUG] AWS Config remediation configurations received: %s", out)
@@ -242,11 +242,11 @@ func resourceRemediationConfigurationRead(ctx context.Context, d *schema.Resourc
 	d.Set("maximum_automatic_attempts", remediationConfiguration.MaximumAutomaticAttempts)
 
 	if err := d.Set("execution_controls", flattenExecutionControls(remediationConfiguration.ExecutionControls)); err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
 	}
 
 	if err := d.Set("parameter", flattenRemediationParameterValues(remediationConfiguration.Parameters)); err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameRemediationConfiguration, d.Id(), err)
 	}
 
 	return diags
@@ -286,7 +286,7 @@ func resourceRemediationConfigurationDelete(ctx context.Context, d *schema.Resou
 	}
 
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionDeleting, ResNameRemediationConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionDeleting, ResNameRemediationConfiguration, d.Id(), err)
 	}
 
 	return diags

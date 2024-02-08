@@ -88,6 +88,14 @@ func RegisterSweepers() {
 		Name: "aws_iot_domain_configuration",
 		F:    sweepDomainConfigurations,
 	})
+
+	resource.AddTestSweepers("aws_iot_ca_certificate", &resource.Sweeper{
+		Name: "aws_iot_ca_certificate",
+		F:    sweepCACertificates,
+		Dependencies: []string{
+			"aws_iot_certificate",
+		},
+	})
 }
 
 func sweepCertificates(region string) error {
@@ -109,6 +117,7 @@ func sweepCertificates(region string) error {
 			r := ResourceCertificate()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.CertificateId))
+			d.Set("active", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -689,6 +698,51 @@ func sweepDomainConfigurations(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping IoT Domain Configurations (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepCACertificates(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.IoTConn(ctx)
+	input := &iot.ListCACertificatesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListCACertificatesPagesWithContext(ctx, input, func(page *iot.ListCACertificatesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Certificates {
+			r := ResourceCACertificate()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.CertificateId))
+			d.Set("active", true)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IoT CA Certificate sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing IoT CA Certificates (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping IoT CA Certificates (%s): %w", region, err)
 	}
 
 	return nil
