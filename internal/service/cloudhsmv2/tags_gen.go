@@ -23,14 +23,27 @@ func listTags(ctx context.Context, conn cloudhsmv2iface.CloudHSMV2API, identifie
 	input := &cloudhsmv2.ListTagsInput{
 		ResourceId: aws.String(identifier),
 	}
+	var output []*cloudhsmv2.Tag
 
-	output, err := conn.ListTagsWithContext(ctx, input)
+	err := conn.ListTagsPagesWithContext(ctx, input, func(page *cloudhsmv2.ListTagsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.TagList {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.TagList), nil
+	return KeyValueTags(ctx, output), nil
 }
 
 // ListTags lists cloudhsmv2 service tags and set them in Context.

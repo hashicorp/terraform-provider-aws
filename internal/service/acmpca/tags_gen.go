@@ -23,14 +23,27 @@ func listTags(ctx context.Context, conn acmpcaiface.ACMPCAAPI, identifier string
 	input := &acmpca.ListTagsInput{
 		CertificateAuthorityArn: aws.String(identifier),
 	}
+	var output []*acmpca.Tag
 
-	output, err := conn.ListTagsWithContext(ctx, input)
+	err := conn.ListTagsPagesWithContext(ctx, input, func(page *acmpca.ListTagsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Tags {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return KeyValueTags(ctx, output), nil
 }
 
 // ListTags lists acmpca service tags and set them in Context.
