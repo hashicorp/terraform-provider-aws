@@ -18,8 +18,8 @@ github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.50.12 h1:Gc6QS4Ys++cWSl63U+HyPbKeLVcoOvi6veayhcipPac=
-github.com/aws/aws-sdk-go v1.50.12/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/aws/aws-sdk-go v1.50.13 h1:yeXram2g7q8uKkQkAEeZyk9FmPzxI4UpGwAZGZtEGmM=
+github.com/aws/aws-sdk-go v1.50.13/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/aws/aws-sdk-go-v2 v1.24.1 h1:xAojnj+ktS95YZlDf0zxWBkbFtymPeDP+rvUQIH3uAU=
 github.com/aws/aws-sdk-go-v2 v1.24.1/go.mod h1:LNh45Br1YAkEKaAqvmE1m8FUx6a5b/V0oAKV7of29b4=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.5.4 h1:OCs21ST2LrepDfD3lwlQiOqIGp6JiEUqG84GzTDoyJs=
@@ -150,8 +150,8 @@ github.com/aws/aws-sdk-go-v2/service/iam v1.28.6 h1:P5oJkH50fc9mKjrzEMtYYCdMBhrb
 github.com/aws/aws-sdk-go-v2/service/iam v1.28.6/go.mod h1:kKI0gdVsf+Ev9knh/3lBJbchtX5LLNH25lAzx3KDj3Q=
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.21.8 h1:nUPGQCmsMAtmigP2SxTDrPdI0oh/IJ0EJzzA0LOEZ54=
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.21.8/go.mod h1:Ri8aeUocD6fxHviqgxzYvqrQREtD++dXJPAPMBJVESw=
-github.com/aws/aws-sdk-go-v2/service/inspector2 v1.22.0 h1:hMb748fEt5OFspPqIe4octMJax2lo6n9lTbwrDLducU=
-github.com/aws/aws-sdk-go-v2/service/inspector2 v1.22.0/go.mod h1:qOx//dGenntPy9C1ISg/Ucp3B8a2A+smcUus+UibYgE=
+github.com/aws/aws-sdk-go-v2/service/inspector2 v1.22.1 h1:z6wdyLkqM7tAtgPyC+2St8H6wgmJ28EhkM1lfmITxSo=
+github.com/aws/aws-sdk-go-v2/service/inspector2 v1.22.1/go.mod h1:qOx//dGenntPy9C1ISg/Ucp3B8a2A+smcUus+UibYgE=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.10.4 h1:/b31bi3YVNlkzkBrm9LfpaKoaYZUxIAj4sHfOTmLfqw=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.10.4/go.mod h1:2aGXHFmbInwgP9ZfpmdIfOELL79zhdNYNmReK8qDfdQ=
 github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.2.10 h1:L0ai8WICYHozIKK+OtPzVJBugL7culcuM4E4JOpIEm8=
@@ -178,8 +178,8 @@ github.com/aws/aws-sdk-go-v2/service/lambda v1.49.7 h1:YCvhGwdiZ9tKTjoIOE8jLt+3J
 github.com/aws/aws-sdk-go-v2/service/lambda v1.49.7/go.mod h1:xqjYGK1M7YTmyfZBW8LVAx7QnefUb/mE5BglUnxtx6E=
 github.com/aws/aws-sdk-go-v2/service/launchwizard v1.1.6 h1:2BF8Zg/855xUqUmqUJIeZ2jlG0NbW5e10pMp6NRnVqU=
 github.com/aws/aws-sdk-go-v2/service/launchwizard v1.1.6/go.mod h1:F8bGJVmBJ3eAvQs8FRmiTO3H9ca4J0NEFbDdxtnqZjI=
-github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.38.6 h1:ga1Fi7oHPIGIRZCvklA/+Wnn7h8YQgGdDGu7lmtAWsE=
-github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.38.6/go.mod h1:9PTPjsw9DKPkxNmhf2RObQ2YnCfb8QZ2JCwDPX+sCUQ=
+github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.39.0 h1:BAue8x0kq0WtH2yYieNZQ1wiyGZfx8o/xA30hRD3zhY=
+github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.39.0/go.mod h1:9PTPjsw9DKPkxNmhf2RObQ2YnCfb8QZ2JCwDPX+sCUQ=
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.34.0 h1:LvWkxBi/bsWHqj3bFTUuDLl4OAlbaM1HDZ9YPhj5+jg=
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.34.0/go.mod h1:35MKNS46RX7Lb9EIFP2bPy3WrJu+bxU6QgLis8K1aa4=
 github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.25.6 h1:dVIu7ZKZbSXFlkpFQmAe6fAU1mr2/LxyZwCS4kroQE4=
@@ -226,8 +226,8 @@ github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.23.6 h1:8+JMPb5tQaR3a8M4rmy
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.23.6/go.mod h1:QjdFj5wqWJFwihR+mv0mUDwz0g477qgDCBCeilHm5V8=
 github.com/aws/aws-sdk-go-v2/service/rekognition v1.36.0 h1:f6yBPx3emFoTcV1HSuZMYlknA9CpCrm/LU7dUpRZVhY=
 github.com/aws/aws-sdk-go-v2/service/rekognition v1.36.0/go.mod h1:AE/MWtubBxJ1XJmkC7Vpc6t07l94+u2gAaenbth9QkM=
-github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.8.6 h1:BCizhKEwboJtMxEJXbqXrRJ9vAvgCcu0hh7gCaELiaI=
-github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.8.6/go.mod h1:m6700TN38o3ZnlojnzjKhg3skB8Pq0bRV7XekprhfJY=
+github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.8.7 h1:XMeAAZUpjvKRwoZ7QCc+HavuVGX1gfcKBLrwGItIqvk=
+github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.8.7/go.mod h1:m6700TN38o3ZnlojnzjKhg3skB8Pq0bRV7XekprhfJY=
 github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.19.7 h1:H+HMUW2pUQHLph/7S6rwjCbJFH1vweRKm+AQVQRCVQY=
 github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.19.7/go.mod h1:KArFLStW+x9vxCePsnpPNcvTHKRAobb2IVgYPrOZsos=
 github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.19.7 h1:7eUbCh7rEJ0Me/1D5UyT5ksz4nWASR9R1/DMCxrQ3qE=
