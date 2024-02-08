@@ -774,10 +774,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket (%s) create: %s", d.Id(), err)
 	}
 
-	tagsIn := getTagsIn(ctx)
-	if len(tagsIn) != 0 {
-		bucketCreateTags(ctx, conn, d.Id(), tagsIn)
-	}
+	bucketCreateTags(ctx, conn, d.Id(), getTagsIn(ctx))
 
 	return append(diags, resourceBucketUpdate(ctx, d, meta)...)
 }
