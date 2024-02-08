@@ -1,4 +1,4 @@
-module github.com/hashicorp/terraform-provider-aws
+module github.com/hashicorp/terraform-provider-aws/v5
 
 go 1.20
 
