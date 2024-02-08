@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
@@ -532,22 +531,3 @@ type vpcOptionsModel struct {
 	SecurityGroupIDs fwtypes.SetValueOf[types.String] `tfsdk:"security_group_ids"`
 	SubnetIDs        fwtypes.SetValueOf[types.String] `tfsdk:"subnet_ids"`
 }
-
-var (
-	bufferOptionsAttrTypes = map[string]attr.Type{
-		"persistent_buffer_enabled": types.BoolType,
-	}
-
-	encryptionAtRestOptionsAttrTypes = map[string]attr.Type{
-		"kms_key_arn": types.StringType,
-	}
-
-	logPublishingOptionsAttrTypes = map[string]attr.Type{
-		"cloudwatch_log_destination": types.ListType{ElemType: types.ObjectType{AttrTypes: cloudWatchLogDestinationAttrTypes}},
-		"is_logging_enabled":         types.BoolType,
-	}
-
-	cloudWatchLogDestinationAttrTypes = map[string]attr.Type{
-		"log_group": types.StringType,
-	}
-)
