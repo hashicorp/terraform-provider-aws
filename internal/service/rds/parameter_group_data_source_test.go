@@ -44,7 +44,7 @@ func TestAccRDSParameterGroupDataSource_basic(t *testing.T) {
 
 const testAccParameterGroupDataSourceConfig_nonExistent = `
 data "aws_db_parameter_group" "test" {
-	name = "tf-acc-test-does-not-exist"
+  name = "tf-acc-test-does-not-exist"
 }
 `
 

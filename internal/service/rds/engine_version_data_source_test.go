@@ -369,7 +369,7 @@ func testAccEngineVersionDataSourceConfig_preferredVersionsPreferredUpgrades(eng
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine                    = %[1]q
-  latest				    = true
+  latest                    = true
   preferred_versions        = [%[2]s]
   preferred_upgrade_targets = [%[3]s]
 }
@@ -395,7 +395,7 @@ data "aws_rds_engine_version" "latest" {
 
 data "aws_rds_engine_version" "test" {
   engine                  = %[1]q
-  latest				  = true
+  latest                  = true
   preferred_major_targets = [data.aws_rds_engine_version.latest.version]
 }
 `, engine)

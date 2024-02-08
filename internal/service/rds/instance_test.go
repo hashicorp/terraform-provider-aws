@@ -32,10 +32,11 @@ import (
 
 /*
 FAIL:
-TestAccRDSInstance_BlueGreenDeployment_outOfBand
+
 TestAccRDSInstance_BlueGreenDeployment_updateAndPromoteReplica
 
 PASS:
+TestAccRDSInstance_BlueGreenDeployment_outOfBand
 TestAccRDSInstance_BlueGreenDeployment_deletionProtectionBypassesBlueGreen
 TestAccRDSInstance_BlueGreenDeployment_passwordBypassesBlueGreen
 TestAccRDSInstance_BlueGreenDeployment_tags

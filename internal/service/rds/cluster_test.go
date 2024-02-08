@@ -2835,7 +2835,7 @@ data "aws_rds_engine_version" "upgrade" {
 
 locals {
   parameter_group_family = %[2]t ? data.aws_rds_engine_version.upgrade.parameter_group_family : data.aws_rds_engine_version.test.parameter_group_family
-  engine_version = %[2]t ? data.aws_rds_engine_version.upgrade.version_actual : data.aws_rds_engine_version.test.version_actual
+  engine_version         = %[2]t ? data.aws_rds_engine_version.upgrade.version_actual : data.aws_rds_engine_version.test.version_actual
 }
 
 data "aws_rds_orderable_db_instance" "test" {
@@ -3260,7 +3260,6 @@ data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
   engine_latest_version      = true
   preferred_instance_classes = [%[2]s]
-  #supported_engine_modes     = ["provisioned"]
   storage_type               = "io1"
   supports_iops              = true
   supports_clusters          = true
@@ -3278,7 +3277,6 @@ resource "aws_rds_cluster" "test" {
   db_cluster_instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_subnet_group_name            = aws_db_subnet_group.test.name
   engine                          = data.aws_rds_orderable_db_instance.test.engine
-  #engine_mode                     = data.aws_rds_orderable_db_instance.test.supported_engine_modes[0]
   engine_mode                     = "provisioned"
   engine_version                  = data.aws_rds_orderable_db_instance.test.engine_version
 }
@@ -3293,7 +3291,6 @@ data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
   engine_latest_version      = true
   preferred_instance_classes = [%[2]s]
-  #supported_engine_modes     = ["provisioned"]
   storage_type               = "io1"
   supports_iops              = true
   supports_clusters          = true
@@ -3311,7 +3308,6 @@ resource "aws_rds_cluster" "test" {
   db_cluster_instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
   db_subnet_group_name            = aws_db_subnet_group.test.name
   engine                          = data.aws_rds_orderable_db_instance.test.engine
-  #engine_mode                     = data.aws_rds_orderable_db_instance.test.supported_engine_modes[0]
   engine_mode                     = "provisioned"
   engine_version                  = data.aws_rds_orderable_db_instance.test.engine_version
 }
@@ -3460,7 +3456,7 @@ data "aws_rds_engine_version" "test" {
 }
 
 data "aws_rds_engine_version" "upgrade" {
-  engine             = %[1]q
+  engine = %[1]q
 }
 
 locals {
@@ -3498,13 +3494,13 @@ resource "aws_rds_cluster_instance" "test" {
 func testAccClusterConfig_port(rName string, port int) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %[1]q
-  database_name                   = "mydb"
-  engine                          = %[2]q
-  master_password                 = "mustbeeightcharaters"
-  master_username                 = "foo"
-  port                            = %[3]d
-  skip_final_snapshot             = true
+  cluster_identifier  = %[1]q
+  database_name       = "mydb"
+  engine              = %[2]q
+  master_password     = "mustbeeightcharaters"
+  master_username     = "foo"
+  port                = %[3]d
+  skip_final_snapshot = true
 }
 `, rName, tfrds.ClusterEngineAuroraPostgreSQL, port)
 }
