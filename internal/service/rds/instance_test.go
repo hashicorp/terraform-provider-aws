@@ -11800,7 +11800,7 @@ resource "aws_db_instance" "test" {
   engine               = data.aws_rds_engine_version.default.engine
   engine_version       = data.aws_rds_engine_version.default.version
   instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_name              = data.aws_rds_engine_version.default.engine == %[2]q ? null : "test"
+  db_name              = data.aws_rds_engine_version.default.engine == "%[2]s" ? null : "test" # using %[2]q breaks linter
   password             = "avoid-plaintext-passwords"
   username             = "tfacctest"
   parameter_group_name = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
