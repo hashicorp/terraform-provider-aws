@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.50.12
+	github.com/aws/aws-sdk-go v1.50.13
 	github.com/aws/aws-sdk-go-v2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/config v1.26.6
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.11
@@ -64,7 +64,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.23.6
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.20.6
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.21.8
-	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.22.0
+	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.22.1
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.10.7
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.10.6
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.28.6
@@ -73,7 +73,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.24.7
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.49.7
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.1.6
-	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.38.6
+	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.25.6
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.10.8
@@ -97,7 +97,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rds v1.69.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.23.6
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.36.0
-	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.8.6
+	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.8.7
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.19.7
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.19.7
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.6.8
