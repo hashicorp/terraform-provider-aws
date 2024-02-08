@@ -22,7 +22,7 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		{{- end }}
 	}
 {{- if .ListTagsOpPaginated }}
-	var output []*{{ .TagPackage }}.{{ .TagType }}
+	var output []*{{ .TagPackage }}.{{or .TagType2 .TagType }}
 
 	err := conn.{{ .ListTagsOp }}PagesWithContext(ctx, input, func(page *{{ .TagPackage  }}.{{ .ListTagsOp }}Output, lastPage bool) bool {
 		if page == nil {

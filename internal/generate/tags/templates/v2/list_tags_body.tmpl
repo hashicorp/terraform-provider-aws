@@ -24,7 +24,7 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		{{- end }}
 	}
 {{- if .ListTagsOpPaginated }}
-	var output []awstypes.{{ .TagType }}
+	var output []awstypes.{{ or .TagType2 .TagType }}
 
 	pages := {{ .TagPackage  }}.New{{ .ListTagsOp }}Paginator(conn, input)
 	for pages.HasMorePages() {
