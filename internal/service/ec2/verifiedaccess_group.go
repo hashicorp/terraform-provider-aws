@@ -119,7 +119,7 @@ func resourceVerifiedAccessGroupCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if v, ok := d.GetOk("sse_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.SseSpecification = expandCreateVerifiedAccessGroupSseConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		input.SseSpecification = expandVerifiedAccessSseSpecificationRequest(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	output, err := conn.CreateVerifiedAccessGroup(ctx, input)
@@ -154,17 +154,16 @@ func resourceVerifiedAccessGroupRead(ctx context.Context, d *schema.ResourceData
 	d.Set("description", group.Description)
 	d.Set("last_updated_time", group.LastUpdatedTime)
 	d.Set("owner", group.Owner)
-	d.Set("verifiedaccess_group_arn", group.VerifiedAccessGroupArn)
-	d.Set("verifiedaccess_group_id", group.VerifiedAccessGroupId)
-	d.Set("verifiedaccess_instance_id", group.VerifiedAccessInstanceId)
-
 	if v := group.SseSpecification; v != nil {
-		if err := d.Set("sse_configuration", flattenCreateVerifiedAccessGroupSseConfiguration(v)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting sse configuration: %s", err)
+		if err := d.Set("sse_configuration", flattenVerifiedAccessSseSpecificationResponse(v)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting sse_configuration: %s", err)
 		}
 	} else {
 		d.Set("sse_configuration", nil)
 	}
+	d.Set("verifiedaccess_group_arn", group.VerifiedAccessGroupArn)
+	d.Set("verifiedaccess_group_id", group.VerifiedAccessGroupId)
+	d.Set("verifiedaccess_instance_id", group.VerifiedAccessInstanceId)
 
 	setTagsOutV2(ctx, group.Tags)
 
@@ -224,7 +223,7 @@ func resourceVerifiedAccessGroupUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 
 		if v, ok := d.GetOk("sse_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-			in.SseSpecification = expandCreateVerifiedAccessGroupSseConfiguration(v.([]interface{})[0].(map[string]interface{}))
+			in.SseSpecification = expandVerifiedAccessSseSpecificationRequest(v.([]interface{})[0].(map[string]interface{}))
 		}
 
 		_, err := conn.ModifyVerifiedAccessGroupPolicy(ctx, in)
@@ -258,7 +257,7 @@ func resourceVerifiedAccessGroupDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func expandCreateVerifiedAccessGroupSseConfiguration(tfMap map[string]interface{}) *types.VerifiedAccessSseSpecificationRequest {
+func expandVerifiedAccessSseSpecificationRequest(tfMap map[string]interface{}) *types.VerifiedAccessSseSpecificationRequest {
 	if tfMap == nil {
 		return nil
 	}
@@ -276,7 +275,7 @@ func expandCreateVerifiedAccessGroupSseConfiguration(tfMap map[string]interface{
 	return apiObject
 }
 
-func flattenCreateVerifiedAccessGroupSseConfiguration(apiObject *types.VerifiedAccessSseSpecificationResponse) []interface{} {
+func flattenVerifiedAccessSseSpecificationResponse(apiObject *types.VerifiedAccessSseSpecificationResponse) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

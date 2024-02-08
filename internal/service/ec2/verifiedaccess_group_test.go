@@ -96,7 +96,7 @@ func TestAccVerifiedAccessGroup_kms(t *testing.T) {
 	})
 }
 
-func TestAccVerifiedAccessGroup_updateKms(t *testing.T) {
+func TestAccVerifiedAccessGroup_updateKMS(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessGroup
 	resourceName := "aws_verifiedaccess_group.test"
@@ -467,27 +467,14 @@ func testAccVerifiedAccessGroupConfig_kms(rName, policyDoc string) string {
 resource "aws_kms_key" "test_key" {
   description = "KMS key for Verified Access Group test"
 }
-resource "aws_verifiedaccess_group" "test" {
-  verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
-  policy_document            = %[1]q 
-  sse_configuration {
-	kms_key_arn = aws_kms_key.test_key.arn
-	customer_managed_key_enabled = true
-  }
-}
-`, policyDoc))
-}
 
-func testAccVerifiedAccessGroupConfig_disableKms(rName, policyDoc string) string {
-	return acctest.ConfigCompose(testAccVerifiedAccessGroupConfig_base(rName), fmt.Sprintf(`
-resource "aws_kms_key" "test_key" {
-  description = "KMS key for Verified Access Group test"
-}
 resource "aws_verifiedaccess_group" "test" {
   verifiedaccess_instance_id = aws_verifiedaccess_instance_trust_provider_attachment.test.verifiedaccess_instance_id
   policy_document            = %[1]q
+
   sse_configuration {
-	customer_managed_key_enabled = false
+    kms_key_arn                  = aws_kms_key.test_key.arn
+    customer_managed_key_enabled = true
   }
 }
 `, policyDoc))
