@@ -52,7 +52,7 @@ func dataSourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, m
 		DBParameterGroupName: aws.String(groupName),
 	}
 
-	output, err := conn.DescribeDBParameterGroups(&input)
+	output, err := conn.DescribeDBParameterGroupsWithContext(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Parameter Groups (%s): %s", d.Get("name").(string), err)
 	}
