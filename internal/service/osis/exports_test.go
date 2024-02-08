@@ -7,5 +7,5 @@ package osis
 var (
 	ResourcePipeline = newPipelineResource
 
-	FindPipelineByID = findPipelineByName
+	FindPipelineByName = findPipelineByName
 )

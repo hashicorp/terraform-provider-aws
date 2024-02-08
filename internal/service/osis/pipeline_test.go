@@ -39,15 +39,19 @@ func TestAccOpenSearchIngestionPipeline_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPipelineConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &pipeline),
-					resource.TestCheckResourceAttr(resourceName, "min_units", "1"),
+					resource.TestCheckResourceAttr(resourceName, "buffer_options.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_at_rest_options.#", "0"),
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(resourceName, "ingest_endpoint_urls.#", 1),
+					resource.TestCheckResourceAttr(resourceName, "log_publishing_options.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "max_units", "1"),
+					resource.TestCheckResourceAttr(resourceName, "min_units", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "pipeline_arn", "osis", regexache.MustCompile(`pipeline/.+$`)),
 					resource.TestCheckResourceAttrSet(resourceName, "pipeline_configuration_body"),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "ingest_endpoint_urls.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "pipeline_name", "aws_osis_pipeline.test", "id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "osis", regexache.MustCompile(`pipeline/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "vpc_options.#", "0"),
 				),
 			},
 			{
@@ -292,7 +296,7 @@ func testAccCheckPipelineDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfosis.FindPipelineByID(ctx, conn, rs.Primary.ID)
+			_, err := tfosis.FindPipelineByName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -318,7 +322,7 @@ func testAccCheckPipelineExists(ctx context.Context, n string, v *types.Pipeline
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).OpenSearchIngestionClient(ctx)
 
-		output, err := tfosis.FindPipelineByID(ctx, conn, rs.Primary.ID)
+		output, err := tfosis.FindPipelineByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
