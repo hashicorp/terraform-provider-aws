@@ -32,6 +32,10 @@ func dataSourceObject() *schema.Resource {
 		ReadWithoutTimeout: dataSourceObjectRead,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"body": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -200,6 +204,9 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 		id += "@" + v.(string)
 	}
 	d.SetId(id)
+
+	arn := newObjectARN(meta.(*conns.AWSClient).Partition, bucket, key)
+	d.Set("arn", arn.String())
 
 	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
 	d.Set("cache_control", output.CacheControl)

@@ -69,6 +69,10 @@ func resourceObject() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[types.ObjectCannedACL](),
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"bucket": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -275,6 +279,9 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
+
+	arn := newObjectARN(meta.(*conns.AWSClient).Partition, bucket, key)
+	d.Set("arn", arn.String())
 
 	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
 	d.Set("cache_control", output.CacheControl)
@@ -786,4 +793,12 @@ func expandDefaultTags(ctx context.Context, tfMap map[string]interface{}) *tftag
 	}
 
 	return data
+}
+
+func newObjectARN(partition string, bucket, key string) arn.ARN {
+	return arn.ARN{
+		Partition: partition,
+		Service:   "s3",
+		Resource:  fmt.Sprintf("%s/%s", bucket, key),
+	}
 }

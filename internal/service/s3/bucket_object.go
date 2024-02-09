@@ -62,6 +62,10 @@ func resourceBucketObject() *schema.Resource {
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.ObjectCannedACL](),
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"bucket": {
 				Deprecated:   "Use the aws_s3_object resource instead",
 				Type:         schema.TypeString,
@@ -219,6 +223,9 @@ func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
+
+	arn := newObjectARN(meta.(*conns.AWSClient).Partition, bucket, key)
+	d.Set("arn", arn.String())
 
 	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
 	d.Set("cache_control", output.CacheControl)

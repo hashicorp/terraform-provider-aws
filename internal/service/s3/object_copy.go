@@ -48,6 +48,10 @@ func resourceObjectCopy() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[types.ObjectCannedACL](),
 				ConflictsWith:    []string{"grant"},
 			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"bucket": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -355,6 +359,9 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
+
+	arn := newObjectARN(meta.(*conns.AWSClient).Partition, bucket, key)
+	d.Set("arn", arn.String())
 
 	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
 	d.Set("cache_control", output.CacheControl)
