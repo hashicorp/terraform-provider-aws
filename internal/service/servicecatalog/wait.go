@@ -101,7 +101,11 @@ func waitProductDeleted(ctx context.Context, conn *servicecatalog.ServiceCatalog
 		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*servicecatalog.DescribeProductAsAdminOutput); ok {
+		return output, err
+	}
 
 	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		return nil, nil
