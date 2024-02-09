@@ -232,8 +232,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iam_user_group_membership",
 		},
 		{
-			Factory:  ResourceUserLoginProfile,
+			Factory:  resourceUserLoginProfile,
 			TypeName: "aws_iam_user_login_profile",
+			Name:     "User Login Profile",
 		},
 		{
 			Factory:  ResourceUserPolicy,

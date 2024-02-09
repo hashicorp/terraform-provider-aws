@@ -16,6 +16,7 @@ var (
 	ResourceServerCertificate     = resourceServerCertificate
 	ResourceServiceLinkedRole     = resourceServiceLinkedRole
 	ResourceUser                  = resourceUser
+	ResourceUserLoginProfile      = resourceUserLoginProfile
 	ResourceUserPolicyAttachment  = resourceUserPolicyAttachment
 	ResourceUserSSHKey            = resourceUserSSHKey
 	ResourceVirtualMFADevice      = resourceVirtualMFADevice
