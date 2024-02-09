@@ -207,14 +207,19 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 	wait_out, err := waitDeploymentCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionWaitingForCreation, ResNameDeployment, plan.Name.String(), err),
-			err.Error(),
-		)
-
 		if plan.SkipDestroyAfterFailure.ValueBool() {
-			resp.Diagnostics.AddWarning("skip_destroy_after_failure is set", "Resource will be replaced on next apply to allow troubleshooting.")
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionWaitingForCreation, ResNameDeployment, plan.Name.String(), err)+"Deployment will be replaced on next apply to allow troubleshooting.",
+				err.Error(),
+			)
 		} else {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.LaunchWizard, create.ErrActionWaitingForCreation, ResNameDeployment, plan.Name.String(), err)+"Deployment will be deleted.",
+				err.Error(),
+			)
+		}
+
+		if !plan.SkipDestroyAfterFailure.ValueBool() {
 			//Delete Deployment if creation failed
 			in := &launchwizard.DeleteDeploymentInput{
 				DeploymentId: aws.String(plan.ID.ValueString()),

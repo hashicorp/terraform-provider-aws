@@ -216,7 +216,11 @@ func TestAccLaunchWizardDeployment_SkipDestroyAfterFailure(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDeploymentConfig_basic(rName, testSpecFailure["specification_template"], testSpecFailure["deployment_pattern"], testSpecFailure["workload_name"], "true", ""),
-				ExpectError: regexache.MustCompile(".*Resource will be replaced on next apply*"),
+				ExpectError: regexache.MustCompile(".*Deployment will be replaced on next apply to allow troubleshooting.*"),
+			},
+			{
+				Config:      testAccDeploymentConfig_basic(rName, testSpecFailure["specification_template"], testSpecFailure["deployment_pattern"], testSpecFailure["workload_name"], "false", ""),
+				ExpectError: regexache.MustCompile(".*Deployment will be deleted*"),
 			},
 			{
 				Config: testAccDeploymentConfig_basic(rName, testSpec["specification_template"], testSpec["deployment_pattern"], testSpec["workload_name"], "true", ""),
