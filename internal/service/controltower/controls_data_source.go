@@ -6,18 +6,21 @@ package controltower
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/controltower"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/controltower"
+	"github.com/aws/aws-sdk-go-v2/service/controltower/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKDataSource("aws_controltower_controls")
-func DataSourceControls() *schema.Resource {
+// @SDKDataSource("aws_controltower_controls", name="Control")
+func dataSourceControls() *schema.Resource {
 	return &schema.Resource{
-		ReadWithoutTimeout: DataSourceControlsRead,
+		ReadWithoutTimeout: dataSourceControlsRead,
 
 		Schema: map[string]*schema.Schema{
 			"enabled_controls": {
@@ -34,36 +37,26 @@ func DataSourceControls() *schema.Resource {
 	}
 }
 
-func DataSourceControlsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ControlTowerConn(ctx)
+func dataSourceControlsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ControlTowerClient(ctx)
 
 	targetIdentifier := d.Get("target_identifier").(string)
 	input := &controltower.ListEnabledControlsInput{
 		TargetIdentifier: aws.String(targetIdentifier),
 	}
 
-	var controls []string
-	err := conn.ListEnabledControlsPagesWithContext(ctx, input, func(page *controltower.ListEnabledControlsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, control := range page.EnabledControls {
-			if control == nil {
-				continue
-			}
-			controls = append(controls, aws.StringValue(control.ControlIdentifier))
-		}
-
-		return !lastPage
-	})
+	controls, err := findEnabledControls(ctx, conn, input, tfslices.PredicateTrue[*types.EnabledControlSummary]())
 
 	if err != nil {
-		return diag.Errorf("listing ControlTower Controls (%s): %s", targetIdentifier, err)
+		return sdkdiag.AppendErrorf(diags, "reading ControlTower Controls (%s): %s", targetIdentifier, err)
 	}
 
 	d.SetId(targetIdentifier)
-	d.Set("enabled_controls", controls)
+	d.Set("enabled_controls", tfslices.ApplyToAll(controls, func(v *types.EnabledControlSummary) string {
+		return aws.ToString(v.ControlIdentifier)
+	}))
 
-	return nil
+	return diags
 }

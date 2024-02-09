@@ -29,7 +29,7 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         DataAwsVpclatticeServiceNetwork(self, "example",
-            service_network_identifier=""
+            service_network_identifier="snsa-01112223334445556"
         )
 ```
 
@@ -37,7 +37,7 @@ class MyConvertedCode(TerraformStack):
 
 The following arguments are required:
 
-* `service_network_identifier` - (Required) Identifier of the network service.
+* `service_network_identifier` - (Required) Identifier of the service network.
 
 ## Attribute Reference
 
@@ -52,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `number_of_associated_services` - Number of services associated with this service network.
 * `number_of_associated_vpcs` - Number of VPCs associated with this service network.
 
-<!-- cache-key: cdktf-0.18.0 input-c539f91d88b5096cbf562c14cc4bb30e227fb9632cb22b7e29fdfe584d5c8b9b -->
+<!-- cache-key: cdktf-0.20.1 input-f4109a8ce33f12e8a0ef307b66a1c9cc873bcdc0d442d07fb6e1314973b2d72a -->

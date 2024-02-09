@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_s3_bucket_accelerate_configuration")
-func ResourceBucketAccelerateConfiguration() *schema.Resource {
+// @SDKResource("aws_s3_bucket_accelerate_configuration", name="Bucket Accelerate Configuration")
+func resourceBucketAccelerateConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketAccelerateConfigurationCreate,
 		ReadWithoutTimeout:   resourceBucketAccelerateConfigurationRead,
@@ -70,15 +70,27 @@ func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketAccelerateConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "AccelerateConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
 
 	if err != nil {
 		return diag.Errorf("creating S3 Bucket (%s) Accelerate Configuration: %s", bucket, err)
 	}
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
+
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
+		return findBucketAccelerateConfiguration(ctx, conn, bucket, expectedBucketOwner)
+	})
+
+	if err != nil {
+		return diag.Errorf("waiting for S3 Bucket Accelerate Configuration (%s) create: %s", d.Id(), err)
+	}
 
 	return resourceBucketAccelerateConfigurationRead(ctx, d, meta)
 }
@@ -155,6 +167,7 @@ func resourceBucketAccelerateConfigurationDelete(ctx context.Context, d *schema.
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
+	log.Printf("[DEBUG] Deleting S3 Bucket Accelerate Configuration: %s", d.Id())
 	_, err = conn.PutBucketAccelerateConfiguration(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
@@ -164,6 +177,8 @@ func resourceBucketAccelerateConfigurationDelete(ctx context.Context, d *schema.
 	if err != nil {
 		return diag.Errorf("deleting S3 Bucket Accelerate Configuration (%s): %s", d.Id(), err)
 	}
+
+	// Don't wait for the accelerate configuration to disappear as it still exists after suspension.
 
 	return nil
 }

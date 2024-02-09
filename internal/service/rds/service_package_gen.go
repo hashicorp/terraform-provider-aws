@@ -52,6 +52,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_db_instances",
 		},
 		{
+			Factory:  DataSourceParameterGroup,
+			TypeName: "aws_db_parameter_group",
+		},
+		{
 			Factory:  DataSourceProxy,
 			TypeName: "aws_db_proxy",
 		},
@@ -229,6 +233,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceClusterRoleAssociation,
 			TypeName: "aws_rds_cluster_role_association",
+		},
+		{
+			Factory:  ResourceCustomDBEngineVersion,
+			TypeName: "aws_rds_custom_db_engine_version",
+			Name:     "Custom DB Engine Version",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceGlobalCluster,

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
@@ -37,6 +38,10 @@ func ResourceKey() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(2 * time.Minute),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -116,6 +121,13 @@ func ResourceKey() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"xks_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				RequiredWith: []string{"custom_key_store_id"},
+				ValidateFunc: validation.StringLenBetween(1, 128),
+			},
 		},
 	}
 }
@@ -153,11 +165,16 @@ func resourceKeyCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.CustomKeyStoreId = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("xks_key_id"); ok {
+		input.Origin = aws.String(kms.OriginTypeExternalKeyStore)
+		input.XksKeyId = aws.String(v.(string))
+	}
+
 	// AWS requires any principal in the policy to exist before the key is created.
 	// The KMS service's awareness of principals is limited by "eventual consistency".
 	// They acknowledge this here:
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
-	output, err := WaitIAMPropagation(ctx, func() (*kms.CreateKeyOutput, error) {
+	output, err := WaitIAMPropagation(ctx, d.Timeout(schema.TimeoutCreate), func() (*kms.CreateKeyOutput, error) {
 		return conn.CreateKeyWithContext(ctx, input)
 	})
 
@@ -228,6 +245,12 @@ func resourceKeyRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("key_id", key.metadata.KeyId)
 	d.Set("key_usage", key.metadata.KeyUsage)
 	d.Set("multi_region", key.metadata.MultiRegion)
+
+	if key.metadata.XksKeyConfiguration != nil {
+		d.Set("xks_key_id", key.metadata.XksKeyConfiguration.Id)
+	} else {
+		d.Set("xks_key_id", nil)
+	}
 
 	policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), key.policy)
 	if err != nil {

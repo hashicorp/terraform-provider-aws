@@ -21,6 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -29,6 +30,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -1004,7 +1006,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.SetId(aws.StringValue(instance.InstanceId))
 
-	instance, err = WaitInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	instance, err = waitInstanceCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) create: %s", d.Id(), err)
@@ -1313,10 +1315,10 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 			Attribute:  aws.String(ec2.InstanceAttributeNameDisableApiStop),
 			InstanceId: aws.String(d.Id()),
 		})
-		if err != nil && !verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
+		if err != nil && !errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 			return sdkdiag.AppendErrorf(diags, "getting attribute (%s): %s", ec2.InstanceAttributeNameDisableApiStop, err)
 		}
-		if !verify.ErrorISOUnsupported(meta.(*conns.AWSClient).Partition, err) {
+		if !errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 			d.Set("disable_api_stop", attr.DisableApiStop.Value)
 		}
 	}
@@ -1558,15 +1560,17 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		// HasChange() thinks there is a diff between what is set on the instance and what is set in state. We need to ensure that
 		// if a diff has occurred, it's not because it's a new instance.
 		if d.HasChange("source_dest_check") && !d.IsNewResource() || d.IsNewResource() && !sourceDestCheck {
-			log.Printf("[INFO] Modifying `source_dest_check` on Instance %s", d.Id())
-			_, err := conn.ModifyInstanceAttributeWithContext(ctx, &ec2.ModifyInstanceAttributeInput{
+			input := &ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
 				SourceDestCheck: &ec2.AttributeBooleanValue{
 					Value: aws.Bool(sourceDestCheck),
 				},
-			})
+			}
+
+			_, err := conn.ModifyInstanceAttributeWithContext(ctx, input)
+
 			if err != nil {
-				return create.DiagError(names.EC2, create.ErrActionUpdating, "Instance", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) SourceDestCheck attribute: %s", d.Id(), err)
 			}
 		}
 	}
@@ -1667,16 +1671,15 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		// "InvalidParameterCombination: Fields for multiple attribute types specified"
 		if d.HasChange("instance_type") {
 			if !d.HasChange("capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_id") {
-				log.Printf("[INFO] Modifying instance type %s", d.Id())
-
+				instanceType := d.Get("instance_type").(string)
 				input := &ec2.ModifyInstanceAttributeInput{
 					InstanceId: aws.String(d.Id()),
 					InstanceType: &ec2.AttributeValue{
-						Value: aws.String(d.Get("instance_type").(string)),
+						Value: aws.String(instanceType),
 					},
 				}
 
-				if err := modifyInstanceAttributeWithStopStart(ctx, conn, input); err != nil {
+				if err := modifyInstanceAttributeWithStopStart(ctx, conn, input, fmt.Sprintf("InstanceType (%s)", instanceType)); err != nil {
 					return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) type: %s", d.Id(), err)
 				}
 			}
@@ -1704,7 +1707,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				},
 			}
 
-			if err := modifyInstanceAttributeWithStopStart(ctx, conn, input); err != nil {
+			if err := modifyInstanceAttributeWithStopStart(ctx, conn, input, "UserData"); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) user data: %s", d.Id(), err)
 			}
 		}
@@ -1727,7 +1730,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				},
 			}
 
-			if err := modifyInstanceAttributeWithStopStart(ctx, conn, input); err != nil {
+			if err := modifyInstanceAttributeWithStopStart(ctx, conn, input, "UserData (base64)"); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) user data base64: %s", d.Id(), err)
 			}
 		}
@@ -1746,15 +1749,17 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if d.HasChange("instance_initiated_shutdown_behavior") {
-		log.Printf("[INFO] Modifying instance %s", d.Id())
-		_, err := conn.ModifyInstanceAttributeWithContext(ctx, &ec2.ModifyInstanceAttributeInput{
+		input := &ec2.ModifyInstanceAttributeInput{
 			InstanceId: aws.String(d.Id()),
 			InstanceInitiatedShutdownBehavior: &ec2.AttributeValue{
 				Value: aws.String(d.Get("instance_initiated_shutdown_behavior").(string)),
 			},
-		})
+		}
+
+		_, err := conn.ModifyInstanceAttributeWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying InstanceInitiatedShutdownBehavior: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) InstanceInitiatedShutdownBehavior attribute: %s", d.Id(), err)
 		}
 	}
 
@@ -1799,6 +1804,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			instanceCreditSpecification := expandInstanceCreditSpecificationRequest(v.([]interface{})[0].(map[string]interface{}))
 			instanceCreditSpecification.InstanceId = aws.String(d.Id())
 			input := &ec2.ModifyInstanceCreditSpecificationInput{
+				ClientToken:                  aws.String(id.UniqueId()),
 				InstanceCreditSpecifications: []*ec2.InstanceCreditSpecificationRequest{instanceCreditSpecification},
 			}
 
@@ -1918,11 +1924,10 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					InstanceId: aws.String(d.Id()),
 				}
 
-				log.Printf("[DEBUG] Modifying EC2 Instance attribute: %s", input)
 				_, err := conn.ModifyInstanceAttributeWithContext(ctx, input)
 
 				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) root block device (%s) DeleteOnTermination attribute: %s", d.Id(), deviceName, err)
+					return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) BlockDeviceMappings (%s) attribute: %s", d.Id(), deviceName, err)
 				}
 
 				if _, err := WaitInstanceRootBlockDeviceDeleteOnTerminationUpdated(ctx, conn, d.Id(), v, d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -1945,20 +1950,21 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("capacity_reservation_specification") && !d.IsNewResource() {
 		if v, ok := d.GetOk("capacity_reservation_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			if v := expandCapacityReservationSpecification(v.([]interface{})[0].(map[string]interface{})); v != nil && (v.CapacityReservationPreference != nil || v.CapacityReservationTarget != nil) {
-				if err := StopInstance(ctx, conn, d.Id(), InstanceStopTimeout); err != nil {
-					return sdkdiag.AppendErrorf(diags, "stopping EC2 Instance (%s): %w", d.Id(), err)
+				if err := stopInstance(ctx, conn, d.Id(), false, InstanceStopTimeout); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
 				}
 
 				if d.HasChange("capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_id") && d.HasChange("instance_type") {
+					instanceType := d.Get("instance_type").(string)
 					input := &ec2.ModifyInstanceAttributeInput{
 						InstanceId: aws.String(d.Id()),
 						InstanceType: &ec2.AttributeValue{
-							Value: aws.String(d.Get("instance_type").(string)),
+							Value: aws.String(instanceType),
 						},
 					}
 
 					if _, err := conn.ModifyInstanceAttributeWithContext(ctx, input); err != nil {
-						return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) attribute: %w", d.Id(), err)
+						return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) InstanceType (%s) attribute: %s", d.Id(), instanceType, err)
 					}
 				}
 
@@ -1979,22 +1985,8 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) capacity reservation attributes update: %s", d.Id(), err)
 				}
 
-				// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433.
-				_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout,
-					func() (interface{}, error) {
-						return conn.StartInstancesWithContext(ctx, &ec2.StartInstancesInput{
-							InstanceIds: aws.StringSlice([]string{d.Id()}),
-						})
-					},
-					errCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value",
-				)
-
-				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "starting EC2 Instance (%s): %w", d.Id(), err)
-				}
-
-				if _, err := WaitInstanceStarted(ctx, conn, d.Id(), InstanceStartTimeout); err != nil {
-					return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) start: %w", d.Id(), err)
+				if err := startInstance(ctx, conn, d.Id(), true, InstanceStartTimeout); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
 				}
 			}
 		}
@@ -2067,12 +2059,14 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func disableInstanceAPIStop(ctx context.Context, conn *ec2.EC2, id string, disableAPIStop bool) error {
-	_, err := conn.ModifyInstanceAttributeWithContext(ctx, &ec2.ModifyInstanceAttributeInput{
+	input := &ec2.ModifyInstanceAttributeInput{
 		DisableApiStop: &ec2.AttributeBooleanValue{
 			Value: aws.Bool(disableAPIStop),
 		},
 		InstanceId: aws.String(id),
-	})
+	}
+
+	_, err := conn.ModifyInstanceAttributeWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "not supported for spot instances") {
 		log.Printf("[WARN] failed to modify EC2 Instance (%s) attribute: %s", id, err)
@@ -2080,19 +2074,21 @@ func disableInstanceAPIStop(ctx context.Context, conn *ec2.EC2, id string, disab
 	}
 
 	if err != nil {
-		return fmt.Errorf("modifying DisableApiStop: %w", err)
+		return fmt.Errorf("modifying EC2 Instance (%s) DisableApiStop attribute: %s", id, err)
 	}
 
 	return nil
 }
 
 func disableInstanceAPITermination(ctx context.Context, conn *ec2.EC2, id string, disableAPITermination bool) error {
-	_, err := conn.ModifyInstanceAttributeWithContext(ctx, &ec2.ModifyInstanceAttributeInput{
+	input := &ec2.ModifyInstanceAttributeInput{
 		DisableApiTermination: &ec2.AttributeBooleanValue{
 			Value: aws.Bool(disableAPITermination),
 		},
 		InstanceId: aws.String(id),
-	})
+	}
+
+	_, err := conn.ModifyInstanceAttributeWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "not supported for spot instances") {
 		log.Printf("[WARN] failed to modify EC2 Instance (%s) attribute: %s", id, err)
@@ -2100,7 +2096,7 @@ func disableInstanceAPITermination(ctx context.Context, conn *ec2.EC2, id string
 	}
 
 	if err != nil {
-		return fmt.Errorf("modifying DisableApiTermination: %w", err)
+		return fmt.Errorf("modifying EC2 Instance (%s) DisableApiTermination attribute: %s", id, err)
 	}
 
 	return nil
@@ -2110,33 +2106,19 @@ func disableInstanceAPITermination(ctx context.Context, conn *ec2.EC2, id string
 // as input by first stopping the EC2 instance before the modification
 // and then starting up the EC2 instance after modification.
 // Reference: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html
-func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.EC2, input *ec2.ModifyInstanceAttributeInput) error {
+func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.EC2, input *ec2.ModifyInstanceAttributeInput, attrName string) error {
 	id := aws.StringValue(input.InstanceId)
 
-	if err := StopInstance(ctx, conn, id, InstanceStopTimeout); err != nil {
+	if err := stopInstance(ctx, conn, id, false, InstanceStopTimeout); err != nil {
 		return err
 	}
 
 	if _, err := conn.ModifyInstanceAttributeWithContext(ctx, input); err != nil {
-		return fmt.Errorf("modifying EC2 Instance (%s) attribute: %w", id, err)
+		return fmt.Errorf("modifying EC2 Instance (%s) %s attribute: %w", id, attrName, err)
 	}
 
-	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433.
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout,
-		func() (interface{}, error) {
-			return conn.StartInstancesWithContext(ctx, &ec2.StartInstancesInput{
-				InstanceIds: aws.StringSlice([]string{id}),
-			})
-		},
-		errCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value",
-	)
-
-	if err != nil {
-		return fmt.Errorf("starting EC2 Instance (%s): %w", id, err)
-	}
-
-	if _, err := WaitInstanceStarted(ctx, conn, id, InstanceStartTimeout); err != nil {
-		return fmt.Errorf("waiting for EC2 Instance (%s) start: %w", id, err)
+	if err := startInstance(ctx, conn, id, true, InstanceStartTimeout); err != nil {
+		return err
 	}
 
 	return nil
@@ -3011,19 +2993,57 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 	return opts, nil
 }
 
-// StopInstance stops an EC2 instance and waits for the instance to stop.
-func StopInstance(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) error {
-	log.Printf("[INFO] Stopping EC2 Instance: %s", id)
+// startInstance starts an EC2 instance and waits for the instance to start.
+func startInstance(ctx context.Context, conn *ec2.EC2, id string, retry bool, timeout time.Duration) error {
+	var err error
+
+	tflog.Info(ctx, "Starting EC2 Instance", map[string]any{
+		"ec2_instance_id": id,
+	})
+	if retry {
+		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433.
+		_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout,
+			func() (interface{}, error) {
+				return conn.StartInstancesWithContext(ctx, &ec2.StartInstancesInput{
+					InstanceIds: aws.StringSlice([]string{id}),
+				})
+			},
+			errCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value",
+		)
+	} else {
+		_, err = conn.StartInstancesWithContext(ctx, &ec2.StartInstancesInput{
+			InstanceIds: aws.StringSlice([]string{id}),
+		})
+	}
+
+	if err != nil {
+		return fmt.Errorf("starting EC2 Instance (%s): %w", id, err)
+	}
+
+	if _, err := waitInstanceStarted(ctx, conn, id, timeout); err != nil {
+		return fmt.Errorf("waiting for EC2 Instance (%s) start: %w", id, err)
+	}
+
+	return nil
+}
+
+// stopInstance stops an EC2 instance and waits for the instance to stop.
+func stopInstance(ctx context.Context, conn *ec2.EC2, id string, force bool, timeout time.Duration) error {
+	tflog.Info(ctx, "Stopping EC2 Instance", map[string]any{
+		"ec2_instance_id": id,
+		"force":           force,
+	})
 	_, err := conn.StopInstancesWithContext(ctx, &ec2.StopInstancesInput{
+		Force:       aws.Bool(force),
 		InstanceIds: aws.StringSlice([]string{id}),
 	})
 
 	if err != nil {
-		return fmt.Errorf("stopping EC2 Instance: %w", err)
+		return fmt.Errorf("stopping EC2 Instance (%s): %w", id, err)
 	}
 
-	if _, err := WaitInstanceStopped(ctx, conn, id, timeout); err != nil {
-		return fmt.Errorf("stopping EC2 Instance: waiting for completion: %w", err)
+	if _, err := waitInstanceStopped(ctx, conn, id, timeout); err != nil {
+		return fmt.Errorf("waiting for EC2 Instance (%s) stop: %w", id, err)
 	}
 
 	return nil
@@ -3044,11 +3064,137 @@ func terminateInstance(ctx context.Context, conn *ec2.EC2, id string, timeout ti
 		return fmt.Errorf("terminating EC2 Instance (%s): %w", id, err)
 	}
 
-	if _, err := WaitInstanceDeleted(ctx, conn, id, timeout); err != nil {
+	if _, err := waitInstanceDeleted(ctx, conn, id, timeout); err != nil {
 		return fmt.Errorf("waiting for EC2 Instance (%s) delete: %w", id, err)
 	}
 
 	return nil
+}
+
+func waitInstanceCreated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{ec2.InstanceStateNamePending},
+		Target:     []string{ec2.InstanceStateNameRunning},
+		Refresh:    StatusInstanceState(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.Instance); ok {
+		if stateReason := output.StateReason; stateReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitInstanceDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			ec2.InstanceStateNamePending,
+			ec2.InstanceStateNameRunning,
+			ec2.InstanceStateNameShuttingDown,
+			ec2.InstanceStateNameStopping,
+			ec2.InstanceStateNameStopped,
+		},
+		Target:     []string{ec2.InstanceStateNameTerminated},
+		Refresh:    StatusInstanceState(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.Instance); ok {
+		if stateReason := output.StateReason; stateReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitInstanceReady(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameStopping},
+		Target:     []string{ec2.InstanceStateNameRunning, ec2.InstanceStateNameStopped},
+		Refresh:    StatusInstanceState(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.Instance); ok {
+		if stateReason := output.StateReason; stateReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitInstanceStarted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameStopped},
+		Target:     []string{ec2.InstanceStateNameRunning},
+		Refresh:    StatusInstanceState(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.Instance); ok {
+		if stateReason := output.StateReason; stateReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitInstanceStopped(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			ec2.InstanceStateNamePending,
+			ec2.InstanceStateNameRunning,
+			ec2.InstanceStateNameShuttingDown,
+			ec2.InstanceStateNameStopping,
+		},
+		Target:     []string{ec2.InstanceStateNameStopped},
+		Refresh:    StatusInstanceState(ctx, conn, id),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.Instance); ok {
+		if stateReason := output.StateReason; stateReason != nil {
+			tfresource.SetLastError(err, errors.New(aws.StringValue(stateReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }
 
 func userDataHashSum(user_data string) string {

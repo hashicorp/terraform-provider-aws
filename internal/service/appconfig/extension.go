@@ -124,6 +124,8 @@ func ResourceExtension() *schema.Resource {
 }
 
 func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	in := appconfig.CreateExtensionInput{
@@ -143,19 +145,21 @@ func resourceExtensionCreate(ctx context.Context, d *schema.ResourceData, meta i
 	out, err := conn.CreateExtensionWithContext(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionCreating, ResExtension, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionCreating, ResExtension, d.Get("name").(string), err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.AppConfig, create.ErrActionCreating, ResExtension, d.Get("name").(string), errors.New("No Extension returned with create request."))
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionCreating, ResExtension, d.Get("name").(string), errors.New("No Extension returned with create request."))
 	}
 
 	d.SetId(aws.StringValue(out.Id))
 
-	return resourceExtensionRead(ctx, d, meta)
+	return append(diags, resourceExtensionRead(ctx, d, meta)...)
 }
 
 func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	out, err := FindExtensionById(ctx, conn, d.Id())
@@ -163,11 +167,11 @@ func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta int
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.AppConfig, create.ErrActionReading, ResExtension, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionReading, ResExtension, d.Id(), err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, ResExtension, d.Id(), err)
 	}
 
 	d.Set("arn", out.Arn)
@@ -177,10 +181,12 @@ func resourceExtensionRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("name", out.Name)
 	d.Set("version", out.VersionNumber)
 
-	return nil
+	return diags
 }
 
 func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 	requestUpdate := false
 
@@ -207,18 +213,20 @@ func resourceExtensionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		out, err := conn.UpdateExtensionWithContext(ctx, in)
 
 		if err != nil {
-			return create.DiagError(names.AppConfig, create.ErrActionWaitingForUpdate, ResExtension, d.Get("name").(string), err)
+			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionWaitingForUpdate, ResExtension, d.Get("name").(string), err)
 		}
 
 		if out == nil {
-			return create.DiagError(names.AppConfig, create.ErrActionWaitingForUpdate, ResExtension, d.Get("name").(string), errors.New("No Extension returned with update request."))
+			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionWaitingForUpdate, ResExtension, d.Get("name").(string), errors.New("No Extension returned with update request."))
 		}
 	}
 
-	return resourceExtensionRead(ctx, d, meta)
+	return append(diags, resourceExtensionRead(ctx, d, meta)...)
 }
 
 func resourceExtensionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	_, err := conn.DeleteExtensionWithContext(ctx, &appconfig.DeleteExtensionInput{
@@ -226,10 +234,10 @@ func resourceExtensionDelete(ctx context.Context, d *schema.ResourceData, meta i
 	})
 
 	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionDeleting, ResExtension, d.Id(), err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionDeleting, ResExtension, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandExtensionActions(actionsListRaw interface{}) []*appconfig.Action {

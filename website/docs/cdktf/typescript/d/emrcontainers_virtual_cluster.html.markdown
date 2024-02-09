@@ -58,7 +58,7 @@ This data source exports the following attributes in addition to the arguments a
             * `namespace` - The namespace where the EMR Containers cluster is running
     * `type` - The type of the container provider
 * `createdAt` - Unix epoch time stamp in seconds for when the cluster was created.
-* `state` - Status of the EKS cluster. One of `running`, `terminating`, `terminated`, `arrested`.
+* `state` - Status of the EKS cluster. One of `RUNNING`, `TERMINATING`, `TERMINATED`, `ARRESTED`.
 * `tags` - Key-value mapping of resource tags.
 
-<!-- cache-key: cdktf-0.18.0 input-b68b876212554fb1c28230029578a838320e08a00b6bc270b81195566fe1902f -->
+<!-- cache-key: cdktf-0.20.1 input-b68b876212554fb1c28230029578a838320e08a00b6bc270b81195566fe1902f -->

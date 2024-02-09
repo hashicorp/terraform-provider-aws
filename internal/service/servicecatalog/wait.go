@@ -73,7 +73,7 @@ const (
 	OrganizationAccessStatusError = "ERROR"
 )
 
-func WaitProductReady(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, productID string, timeout time.Duration) (*servicecatalog.DescribeProductAsAdminOutput, error) {
+func waitProductReady(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, productID string, timeout time.Duration) (*servicecatalog.DescribeProductAsAdminOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{servicecatalog.StatusCreating, StatusNotFound, StatusUnavailable},
 		Target:                    []string{servicecatalog.StatusAvailable, StatusCreated},
@@ -93,7 +93,7 @@ func WaitProductReady(ctx context.Context, conn *servicecatalog.ServiceCatalog, 
 	return nil, err
 }
 
-func WaitProductDeleted(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, productID string, timeout time.Duration) (*servicecatalog.DescribeProductAsAdminOutput, error) {
+func waitProductDeleted(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, productID string, timeout time.Duration) (*servicecatalog.DescribeProductAsAdminOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{servicecatalog.StatusCreating, servicecatalog.StatusAvailable, StatusCreated, StatusUnavailable},
 		Target:  []string{StatusNotFound},
@@ -101,7 +101,11 @@ func WaitProductDeleted(ctx context.Context, conn *servicecatalog.ServiceCatalog
 		Timeout: timeout,
 	}
 
-	_, err := stateConf.WaitForStateContext(ctx)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*servicecatalog.DescribeProductAsAdminOutput); ok {
+		return output, err
+	}
 
 	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
 		return nil, nil
@@ -461,7 +465,7 @@ func WaitLaunchPathsReady(ctx context.Context, conn *servicecatalog.ServiceCatal
 func WaitProvisionedProductReady(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, id, name string, timeout time.Duration) (*servicecatalog.DescribeProvisionedProductOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{servicecatalog.ProvisionedProductStatusUnderChange, servicecatalog.ProvisionedProductStatusPlanInProgress},
-		Target:                    []string{servicecatalog.StatusAvailable},
+		Target:                    []string{servicecatalog.ProvisionedProductStatusAvailable},
 		Refresh:                   StatusProvisionedProduct(ctx, conn, acceptLanguage, id, name),
 		Timeout:                   timeout,
 		ContinuousTargetOccurence: ContinuousTargetOccurrence,
@@ -491,7 +495,7 @@ func WaitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Servi
 
 func WaitProvisionedProductTerminated(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, id, name string, timeout time.Duration) error {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{servicecatalog.StatusAvailable, servicecatalog.ProvisionedProductStatusUnderChange},
+		Pending: []string{servicecatalog.ProvisionedProductStatusAvailable, servicecatalog.ProvisionedProductStatusUnderChange},
 		Target:  []string{},
 		Refresh: StatusProvisionedProduct(ctx, conn, acceptLanguage, id, name),
 		Timeout: timeout,

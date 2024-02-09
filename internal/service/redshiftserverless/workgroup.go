@@ -80,6 +80,10 @@ func ResourceWorkgroup() *schema.Resource {
 								"max_query_temp_blocks_to_disk",
 								"max_join_row_count",
 								"max_nested_loop_join_row_count",
+								// default SSL parameters automatically added by AWS
+								// https://docs.aws.amazon.com/redshift/latest/mgmt/connecting-ssl-support.html
+								"require_ssl",
+								"use_fips_ssl",
 							}, false),
 							Required: true,
 						},
@@ -155,6 +159,11 @@ func ResourceWorkgroup() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"port": {
+				Type:     schema.TypeInt,
+				Computed: true,
+				Optional: true,
+			},
 			"publicly_accessible": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -215,6 +224,10 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.EnhancedVpcRouting = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("port"); ok {
+		input.Port = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("publicly_accessible"); ok {
 		input.PubliclyAccessible = aws.Bool(v.(bool))
 	}
@@ -269,6 +282,7 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 	d.Set("enhanced_vpc_routing", out.EnhancedVpcRouting)
 	d.Set("namespace_name", out.NamespaceName)
+	d.Set("port", flattenEndpoint(out.Endpoint)["port"])
 	d.Set("publicly_accessible", out.PubliclyAccessible)
 	d.Set("security_group_ids", flex.FlattenStringSet(out.SecurityGroupIds))
 	d.Set("subnet_ids", flex.FlattenStringSet(out.SubnetIds))
@@ -310,6 +324,17 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		input := &redshiftserverless.UpdateWorkgroupInput{
 			EnhancedVpcRouting: aws.Bool(d.Get("enhanced_vpc_routing").(bool)),
 			WorkgroupName:      aws.String(d.Id()),
+		}
+
+		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("port") {
+		input := &redshiftserverless.UpdateWorkgroupInput{
+			Port:          aws.Int64(int64(d.Get("port").(int))),
+			WorkgroupName: aws.String(d.Id()),
 		}
 
 		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {

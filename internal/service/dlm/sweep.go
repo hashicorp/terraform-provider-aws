@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package dlm
 
 import (
@@ -15,14 +12,14 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_dlm_lifecycle_policy", &resource.Sweeper{
 		Name: "aws_dlm_lifecycle_policy",
 		F:    sweepLifecyclePolicies,
 	})
-
 }
 
 func sweepLifecyclePolicies(region string) error {
@@ -64,7 +61,7 @@ func sweepLifecyclePolicies(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DLM Lifecycle Policy for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping DLM Lifecycle Policy sweep for %s: %s", region, errs)
 		return nil
 	}

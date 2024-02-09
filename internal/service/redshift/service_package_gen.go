@@ -20,7 +20,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourceDataShareAuthorization,
+			Name:    "Data Share Authorization",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -28,6 +33,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceCluster,
 			TypeName: "aws_redshift_cluster",
+			Name:     "Cluster",
 		},
 		{
 			Factory:  DataSourceClusterCredentials,
@@ -117,6 +123,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePartner,
 			TypeName: "aws_redshift_partner",
+		},
+		{
+			Factory:  ResourceResourcePolicy,
+			TypeName: "aws_redshift_resource_policy",
 		},
 		{
 			Factory:  ResourceScheduledAction,

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -70,6 +71,8 @@ func DataSourceVocabulary() *schema.Resource {
 }
 
 func dataSourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -86,11 +89,11 @@ func dataSourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta 
 		vocabularySummary, err := dataSourceGetVocabularySummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.Errorf("finding Connect Vocabulary Summary by name (%s): %s", name, err)
+			return sdkdiag.AppendErrorf(diags, "finding Connect Vocabulary Summary by name (%s): %s", name, err)
 		}
 
 		if vocabularySummary == nil {
-			return diag.Errorf("finding Connect Vocabulary Summary by name (%s): not found", name)
+			return sdkdiag.AppendErrorf(diags, "finding Connect Vocabulary Summary by name (%s): not found", name)
 		}
 
 		input.VocabularyId = vocabularySummary.Id
@@ -99,11 +102,11 @@ func dataSourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta 
 	resp, err := conn.DescribeVocabularyWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("getting Connect Vocabulary: %s", err)
+		return sdkdiag.AppendErrorf(diags, "getting Connect Vocabulary: %s", err)
 	}
 
 	if resp == nil || resp.Vocabulary == nil {
-		return diag.Errorf("getting Connect Vocabulary: empty response")
+		return sdkdiag.AppendErrorf(diags, "getting Connect Vocabulary: empty response")
 	}
 
 	vocabulary := resp.Vocabulary
@@ -119,12 +122,12 @@ func dataSourceVocabularyRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("vocabulary_id", vocabulary.Id)
 
 	if err := d.Set("tags", KeyValueTags(ctx, vocabulary.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(vocabulary.Id)))
 
-	return nil
+	return diags
 }
 
 func dataSourceGetVocabularySummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.VocabularySummary, error) {

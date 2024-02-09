@@ -70,8 +70,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_cognito_user",
 		},
 		{
-			Factory:  ResourceUserGroup,
+			Factory:  resourceUserGroup,
 			TypeName: "aws_cognito_user_group",
+			Name:     "User Group",
 		},
 		{
 			Factory:  ResourceUserInGroup,

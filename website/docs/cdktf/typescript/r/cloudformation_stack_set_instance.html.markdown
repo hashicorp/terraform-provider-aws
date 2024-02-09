@@ -12,7 +12,7 @@ description: |-
 
 Manages a CloudFormation StackSet Instance. Instances are managed in the account and region of the StackSet after the target account permissions have been configured. Additional information about StackSets can be found in the [AWS CloudFormation User Guide](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/what-is-cfnstacksets.html).
 
-~> **NOTE:** All target accounts must have an IAM Role created that matches the name of the execution role configured in the StackSet (the `executionRoleName` argument in the `awsCloudformationStackSet` resource) in a trust relationship with the administrative account or administration IAM Role. The execution role must have appropriate permissions to manage resources defined in the template along with those required for StackSets to operate. See the [AWS CloudFormation User Guide](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-prereqs.html) for more details.
+~> **NOTE:** All target accounts must have an IAM Role created that matches the name of the execution role configured in the StackSet (the `executionRoleName` argument in the `aws_cloudformation_stack_set` resource) in a trust relationship with the administrative account or administration IAM Role. The execution role must have appropriate permissions to manage resources defined in the template along with those required for StackSets to operate. See the [AWS CloudFormation User Guide](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/stacksets-prereqs.html) for more details.
 
 ~> **NOTE:** To retain the Stack during Terraform resource destroy, ensure `retain_stack = true` has been successfully applied into the Terraform state first. This must be completed _before_ an apply that would destroy the resource.
 
@@ -167,7 +167,7 @@ This resource supports the following arguments:
 * `parameterOverrides` - (Optional) Key-value map of input parameters to override from the StackSet for this Instance.
 * `region` - (Optional) Target AWS Region to create a Stack based on the StackSet. Defaults to current region.
 * `retainStack` - (Optional) During Terraform resource destroy, remove Instance from StackSet while keeping the Stack and its associated resources. Must be enabled in Terraform state _before_ destroy operation to take effect. You cannot reassociate a retained Stack or add an existing, saved Stack to a new StackSet. Defaults to `false`.
-* `callAs` - (Optional) Specifies whether you are acting as an account administrator in the organization's management account or as a delegated administrator in a member account. Valid values: `self` (default), `delegatedAdmin`.
+* `callAs` - (Optional) Specifies whether you are acting as an account administrator in the organization's management account or as a delegated administrator in a member account. Valid values: `SELF` (default), `DELEGATED_ADMIN`.
 * `operationPreferences` - (Optional) Preferences for how AWS CloudFormation performs a stack set operation.
 
 ### `deploymentTargets` Argument Reference
@@ -184,14 +184,14 @@ The `operationPreferences` configuration block supports the following arguments:
 * `failureTolerancePercentage` - (Optional) The percentage of accounts, per Region, for which this stack operation can fail before AWS CloudFormation stops the operation in that Region.
 * `maxConcurrentCount` - (Optional) The maximum number of accounts in which to perform this operation at one time.
 * `maxConcurrentPercentage` - (Optional) The maximum percentage of accounts in which to perform this operation at one time.
-* `regionConcurrencyType` - (Optional) The concurrency type of deploying StackSets operations in Regions, could be in parallel or one Region at a time. Valid values are `sequential` and `parallel`.
+* `regionConcurrencyType` - (Optional) The concurrency type of deploying StackSets operations in Regions, could be in parallel or one Region at a time. Valid values are `SEQUENTIAL` and `PARALLEL`.
 * `regionOrder` - (Optional) The order of the Regions in where you want to perform the stack operation.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - Unique identifier for the resource. If `deploymentTargets` is set, this is a comma-delimited string combining stack set name, organizational unit IDs (`/`-delimited), and region (ie. `mystack,ou123/ou456,usEast1`). Otherwise, this is a comma-delimited string combining stack set name, AWS account ID, and region (ie. `mystack,123456789012,usEast1`).
+* `id` - Unique identifier for the resource. If `deploymentTargets` is set, this is a comma-delimited string combining stack set name, organizational unit IDs (`/`-delimited), and region (ie. `mystack,ou-123/ou-456,us-east-1`). Otherwise, this is a comma-delimited string combining stack set name, AWS account ID, and region (ie. `mystack,123456789012,us-east-1`).
 * `organizationalUnitId` - The organization root ID or organizational unit (OU) ID in which the stack is deployed.
 * `stackId` - Stack identifier.
 * `stackInstanceSummaries` - List of stack instances created from an organizational unit deployment target. This will only be populated when `deploymentTargets` is set. See [`stackInstanceSummaries`](#stack_instance_summaries-attribute-reference).
@@ -206,9 +206,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30M`)
-* `update` - (Default `30M`)
-* `delete` - (Default `30M`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
+* `delete` - (Default `30m`)
 
 ## Import
 
@@ -218,9 +218,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { CloudformationStackSetInstance } from "./.gen/providers/aws/cloudformation-stack-set-instance";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    CloudformationStackSetInstance.generateConfigForImport(
+      this,
+      "example",
+      "example,123456789012,us-east-1"
+    );
   }
 }
 
@@ -232,9 +242,19 @@ Import CloudFormation StackSet Instances that target AWS Organizational Units us
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { CloudformationStackSetInstance } from "./.gen/providers/aws/cloudformation-stack-set-instance";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    CloudformationStackSetInstance.generateConfigForImport(
+      this,
+      "example",
+      "example,ou-sdas-123123123/ou-sdas-789789789,us-east-1"
+    );
   }
 }
 
@@ -246,9 +266,19 @@ Import CloudFormation StackSet Instances when acting a delegated administrator i
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { CloudformationStackSetInstance } from "./.gen/providers/aws/cloudformation-stack-set-instance";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    CloudformationStackSetInstance.generateConfigForImport(
+      this,
+      "example",
+      "example,ou-sdas-123123123/ou-sdas-789789789,us-east-1,DELEGATED_ADMIN"
+    );
   }
 }
 
@@ -272,4 +302,4 @@ Using `terraform import`, import CloudFormation StackSet Instances when acting a
 % terraform import aws_cloudformation_stack_set_instance.example example,ou-sdas-123123123/ou-sdas-789789789,us-east-1,DELEGATED_ADMIN
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1e1b74c9b69f000ae028bff21e6d418d876fa6006347b01a1cc908f1b3a20e44 -->
+<!-- cache-key: cdktf-0.20.1 input-1e1b74c9b69f000ae028bff21e6d418d876fa6006347b01a1cc908f1b3a20e44 -->

@@ -421,7 +421,7 @@ resource "aws_appautoscaling_target" "test" {
 }
 
 func testAccTargetConfig_spotFleetRequest(rName, validUntil string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
@@ -460,7 +460,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
 
     tags = {
       Name = %[1]q
