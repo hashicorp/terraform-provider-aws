@@ -68,17 +68,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmonitor_probe` using the monitor name. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmonitor_probe` using the monitor name and probe id. For example:
 
 ```terraform
 import {
-  to = aws_networkmonitor_monitor.example
-  monitor_name = "example_monitor"
+  to = aws_networkmonitor_probe.example
+  id = "probe-3qm8p693i4fi1h8lqylzkbp42e:monitor-7786087912324693644"
 }
 ```
 
 Using `terraform import`, import `aws_networkmonitor_probe` using the monitor name and probe id. For example:
 
 ```console
-% terraform import aws_networkmonitor_probe.example example_monitor
+% terraform import aws_networkmonitor_probe.example probe-3qm8p693i4fi1h8lqylzkbp42e:monitor-7786087912324693644
 ```

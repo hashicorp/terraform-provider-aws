@@ -55,12 +55,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_networkmonitor_monitor.example
-  monitor_name = "example_monitor"
+  id = "monitor-7786087912324693644"
 }
 ```
 
 Using `terraform import`, import `aws_networkmonitor_monitor` using the monitor name. For example:
 
 ```console
-% terraform import aws_networkmonitor_monitor.example example_monitor
+% terraform import aws_networkmonitor_monitor.example monitor-7786087912324693644
 ```
