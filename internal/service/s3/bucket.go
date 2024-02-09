@@ -1142,27 +1142,6 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("website_endpoint", endpoint)
 	}
 
-	//
-	// Bucket Tags.
-	//
-	tags, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (tftags.KeyValueTags, error) {
-		return bucketListTags(ctx, conn, d.Id())
-	})
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	switch {
-	case err == nil:
-		setTagsOut(ctx, Tags(tags))
-	case tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
-	default:
-		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s): %s", d.Id(), err)
-	}
-
 	return diags
 }
 
