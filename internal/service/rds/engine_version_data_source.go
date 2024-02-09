@@ -314,7 +314,7 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 						continue
 					}
 
-					if prefMT == aws.StringValue(upgradeTarget.EngineVersion) && aws.BoolValue(upgradeTarget.IsMajorVersionUpgrade) == true {
+					if prefMT == aws.StringValue(upgradeTarget.EngineVersion) && aws.BoolValue(upgradeTarget.IsMajorVersionUpgrade) {
 						prefMTs = append(prefMTs, engineVersion)
 						continue majorsLoop
 					}

@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
 // @SDKDataSource("aws_rds_orderable_db_instance")
@@ -331,15 +332,16 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "no RDS Orderable DB Instance Options found matching criteria; try different search")
 	}
 
-	if l := d.Get("supported_engine_modes").([]interface{}); len(l) > 0 {
+	if v, ok := d.GetOk("supported_engine_modes"); ok && len(v.([]interface{})) > 0 {
 		var matches []*rds.OrderableDBInstanceOption
+		search := flex.ExpandStringValueList(v.([]interface{}))
 
-		for _, allClass := range instanceClassResults {
+		for _, ic := range instanceClassResults {
 		searchedModes:
-			for _, pref := range l {
-				for _, mode := range allClass.SupportedEngineModes {
-					if aws.StringValue(mode) == pref {
-						matches = append(matches, allClass)
+			for _, s := range search {
+				for _, mode := range ic.SupportedEngineModes {
+					if aws.StringValue(mode) == s {
+						matches = append(matches, ic)
 						break searchedModes
 					}
 				}
@@ -347,21 +349,22 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 		}
 
 		if len(matches) == 0 {
-			return sdkdiag.AppendErrorf(diags, "no RDS Orderable DB Instance Options found matching supported_engine_modes: %v", l)
+			return sdkdiag.AppendErrorf(diags, "no RDS Orderable DB Instance Options found matching supported_engine_modes: %#v", search)
 		}
 
 		instanceClassResults = matches
 	}
 
-	if l := d.Get("supported_network_types").([]interface{}); len(l) > 0 {
+	if v, ok := d.GetOk("supported_network_types"); ok && len(v.([]interface{})) > 0 {
 		var matches []*rds.OrderableDBInstanceOption
+		search := flex.ExpandStringValueList(v.([]interface{}))
 
-		for _, allClass := range instanceClassResults {
+		for _, ic := range instanceClassResults {
 		searchedNetworks:
-			for _, pref := range l {
-				for _, netType := range allClass.SupportedNetworkTypes {
-					if aws.StringValue(netType) == pref {
-						matches = append(matches, allClass)
+			for _, s := range search {
+				for _, netType := range ic.SupportedNetworkTypes {
+					if aws.StringValue(netType) == s {
+						matches = append(matches, ic)
 						break searchedNetworks
 					}
 				}
@@ -369,7 +372,7 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 		}
 
 		if len(matches) == 0 {
-			return sdkdiag.AppendErrorf(diags, "no RDS Orderable DB Instance Options found matching supported_network_types: %v", l)
+			return sdkdiag.AppendErrorf(diags, "no RDS Orderable DB Instance Options found matching supported_network_types: %#v", search)
 		}
 
 		instanceClassResults = matches
@@ -377,20 +380,21 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 
 	prefSearch := false
 
-	if l := d.Get("preferred_engine_versions").([]interface{}); len(l) > 0 {
+	if v, ok := d.GetOk("preferred_engine_versions"); ok && len(v.([]interface{})) > 0 {
 		var matches []*rds.OrderableDBInstanceOption
+		search := flex.ExpandStringValueList(v.([]interface{}))
 
-		for _, prefVer := range l {
-			for _, allClass := range instanceClassResults {
-				if aws.StringValue(allClass.EngineVersion) == prefVer {
-					matches = append(matches, allClass)
+		for _, s := range search {
+			for _, ic := range instanceClassResults {
+				if aws.StringValue(ic.EngineVersion) == s {
+					matches = append(matches, ic)
 				}
 				// keeping all the instance classes to ensure we can match any preferred instance classes
 			}
 		}
 
 		if len(matches) == 0 {
-			return sdkdiag.AppendErrorf(diags, "no RDS Orderable DB Instance Options found matching preferred_engine_versions: %v", l)
+			return sdkdiag.AppendErrorf(diags, "no RDS Orderable DB Instance Options found matching preferred_engine_versions: %#v", search)
 		}
 
 		prefSearch = true
@@ -399,13 +403,14 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 
 	latestVersion := d.Get("engine_latest_version").(bool)
 
-	if l := d.Get("preferred_instance_classes").([]interface{}); len(l) > 0 {
+	if v, ok := d.GetOk("preferred_instance_classes"); ok && len(v.([]interface{})) > 0 {
 		var matches []*rds.OrderableDBInstanceOption
+		search := flex.ExpandStringValueList(v.([]interface{}))
 
-		for _, prefClass := range l {
-			for _, allClass := range instanceClassResults {
-				if aws.StringValue(allClass.DBInstanceClass) == prefClass {
-					matches = append(matches, allClass)
+		for _, s := range search {
+			for _, ic := range instanceClassResults {
+				if aws.StringValue(ic.DBInstanceClass) == s {
+					matches = append(matches, ic)
 				}
 
 				if !latestVersion && len(matches) > 0 {
@@ -422,7 +427,7 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 		}
 
 		if len(matches) == 0 {
-			return sdkdiag.AppendErrorf(diags, "no RDS Orderable DB Instance Options found matching preferred_instance_classes: %v", l)
+			return sdkdiag.AppendErrorf(diags, "no RDS Orderable DB Instance Options found matching preferred_instance_classes: %#v", search)
 		}
 
 		prefSearch = true
@@ -435,13 +440,6 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 		sortInstanceClassesByVersion(instanceClassResults)
 		found = instanceClassResults[len(instanceClassResults)-1]
 	}
-
-	/*
-		fmt.Printf("instanceClassResults:\n")
-		for _, instanceClassResult := range instanceClassResults {
-			fmt.Printf("class: %s, version: %s\n", aws.StringValue(instanceClassResult.DBInstanceClass), aws.StringValue(instanceClassResult.EngineVersion))
-		}
-	*/
 
 	if found == nil && len(instanceClassResults) > 0 && prefSearch {
 		found = instanceClassResults[0]
