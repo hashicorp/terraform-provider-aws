@@ -6,7 +6,6 @@ package networkfirewall
 import (
 	"context"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -24,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -75,6 +73,29 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 			"description": schema.StringAttribute{
 				Optional: true,
 			},
+			"certificate_authority": schema.ListAttribute{
+				Computed: true,
+				ElementType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"certificate_arn":    types.StringType,
+						"certificate_serial": types.StringType,
+						"status":             types.StringType,
+						"status_message":     types.StringType,
+					},
+				},
+			},
+			"certificates": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[certificatesData](ctx),
+				Computed:   true,
+				ElementType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"certificate_arn":    types.StringType,
+						"certificate_serial": types.StringType,
+						"status":             types.StringType,
+						"status_message":     types.StringType,
+					},
+				},
+			},
 			"id": framework.IDAttribute(),
 			// Map name to TLSInspectionConfigurationName
 			"name": schema.StringAttribute{
@@ -85,9 +106,6 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 			},
 			"last_modified_time": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 			"number_of_associations": schema.Int64Attribute{
 				Computed: true,
@@ -103,49 +121,9 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 			},
 			"update_token": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 		},
 		Blocks: map[string]schema.Block{
-			"certificate_authority": schema.ListNestedBlock{
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"certificate_arn": schema.StringAttribute{
-							Computed: true,
-						},
-						"certificate_serial": schema.StringAttribute{
-							Computed: true,
-						},
-						"status": schema.StringAttribute{
-							Computed: true,
-						},
-						"status_message": schema.StringAttribute{
-							Computed: true,
-						},
-					},
-				},
-			},
-			"certificates": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[certificatesData](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"certificate_arn": schema.StringAttribute{
-							Computed: true,
-						},
-						"certificate_serial": schema.StringAttribute{
-							Computed: true,
-						},
-						"status": schema.StringAttribute{
-							Computed: true,
-						},
-						"status_message": schema.StringAttribute{
-							Computed: true,
-						},
-					},
-				},
-			},
 			"encryption_configuration": schema.ListNestedBlock{
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -314,30 +292,18 @@ func (r *resourceTLSInspectionConfiguration) Create(ctx context.Context, req res
 		)
 		return
 	}
-	if out == nil || out.TLSInspectionConfigurationResponse == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkFirewall, create.ErrActionCreating, ResNameTLSInspectionConfiguration, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
+	// if out == nil || out.TLSInspectionConfigurationResponse == nil {
+	// 	resp.Diagnostics.AddError(
+	// 		create.ProblemStandardMessage(names.NetworkFirewall, create.ErrActionCreating, ResNameTLSInspectionConfiguration, plan.Name.String(), nil),
+	// 		errors.New("empty output").Error(),
+	// 	)
+	// 	return
+	// }
 
 	plan.ARN = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationArn)
 	// Set ID to ARN since ID value is not used for describe, update, delete or list API calls
 	plan.ID = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationArn)
 	plan.UpdateToken = flex.StringToFramework(ctx, out.UpdateToken)
-
-	// Read to get computed attributes not returned from create
-	readComputed, err := findTLSInspectionConfigurationByNameAndARN(ctx, conn, plan.ARN.ValueString())
-
-	fmt.Println("Output from readComputed: ", readComputed)
-
-	// Set computed attributes
-	plan.LastModifiedTime = flex.StringValueToFramework(ctx, readComputed.TLSInspectionConfigurationResponse.LastModifiedTime.Format(time.RFC3339))
-	plan.NumberOfAssociations = flex.Int64ToFramework(ctx, readComputed.TLSInspectionConfigurationResponse.NumberOfAssociations)
-	plan.Status = flex.StringToFramework(ctx, readComputed.TLSInspectionConfigurationResponse.TLSInspectionConfigurationStatus)
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, readComputed.TLSInspectionConfigurationResponse.Certificates, &plan.Certificates)...)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitTLSInspectionConfigurationCreated(ctx, conn, plan.ARN.ValueString(), createTimeout)
@@ -349,35 +315,33 @@ func (r *resourceTLSInspectionConfiguration) Create(ctx context.Context, req res
 		return
 	}
 
+	// Read to get computed attributes not returned from create
+	readComputed, _ := findTLSInspectionConfigurationByNameAndARN(ctx, conn, plan.ARN.ValueString())
+
+	// Set computed attributes
+	plan.LastModifiedTime = flex.StringValueToFramework(ctx, readComputed.TLSInspectionConfigurationResponse.LastModifiedTime.Format(time.RFC3339))
+	plan.NumberOfAssociations = flex.Int64ToFramework(ctx, readComputed.TLSInspectionConfigurationResponse.NumberOfAssociations)
+	plan.Status = flex.StringToFramework(ctx, readComputed.TLSInspectionConfigurationResponse.TLSInspectionConfigurationStatus)
+
+	resp.Diagnostics.Append(flex.Flatten(ctx, readComputed.TLSInspectionConfigurationResponse.Certificates, &plan.Certificates)...)
+
+	certificateAuthority, d := flattenTLSCertificate(ctx, readComputed.TLSInspectionConfigurationResponse.CertificateAuthority)
+	resp.Diagnostics.Append(d...)
+	plan.CertificateAuthority = certificateAuthority
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
 func (r *resourceTLSInspectionConfiguration) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	// TIP: ==== RESOURCE READ ====
-	// Generally, the Read function should do the following things. Make
-	// sure there is a good reason if you don't do one of these.
-	//
-	// 1. Get a client connection to the relevant service
-	// 2. Fetch the state
-	// 3. Get the resource from AWS
-	// 4. Remove resource from state if it is not found
-	// 5. Set the arguments and attributes
-	// 6. Set the state
-
-	// TIP: -- 1. Get a client connection to the relevant service
 	conn := r.Meta().NetworkFirewallConn(ctx)
 
-	// TIP: -- 2. Fetch the state
 	var state resourceTLSInspectionConfigurationData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
-	// type function, or, better yet, using a finder.
 	out, err := findTLSInspectionConfigurationByID(ctx, conn, state.ID.ValueString())
-	// TIP: -- 4. Remove resource from state if it is not found
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
@@ -406,29 +370,19 @@ func (r *resourceTLSInspectionConfiguration) Read(ctx context.Context, req resou
 	encryptionConfiguration, d := flattenTLSEncryptionConfiguration(ctx, out.TLSInspectionConfigurationResponse.EncryptionConfiguration)
 	resp.Diagnostics.Append(d...)
 	state.EncryptionConfiguration = encryptionConfiguration
-	fmt.Printf("diags for encryption config: %v\n", resp.Diagnostics)
 
 	certificateAuthority, d := flattenTLSCertificate(ctx, out.TLSInspectionConfigurationResponse.CertificateAuthority)
 	resp.Diagnostics.Append(d...)
 	state.CertificateAuthority = certificateAuthority
-	fmt.Printf("diags for certificate authority: %v\n", resp.Diagnostics)
-
-	// certificates, d := flattenCertificates(ctx, out.TLSInspectionConfigurationResponse.Certificates)
-	// resp.Diagnostics.Append(d...)
-	// state.Certificates = certificates
-	// fmt.Printf("diags for certificates: %v\n", resp.Diagnostics)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	resp.Diagnostics.Append(flex.Flatten(ctx, out.TLSInspectionConfigurationResponse.Certificates, &state.Certificates)...)
-	fmt.Printf("Attempting to flatten Certificates: %v\n", resp.Diagnostics)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out.TLSInspectionConfiguration, &state.TLSInspectionConfiguration)...)
-	fmt.Printf("Attempting to flatten TLSInspectionConfiguration: %v\n", resp.Diagnostics)
 
 	tlsInspectionConfiguration, d := flattenTLSInspectionConfiguration(ctx, out.TLSInspectionConfiguration)
 	resp.Diagnostics.Append(d...)
 	state.TLSInspectionConfiguration = tlsInspectionConfiguration
-	fmt.Printf("diags for tls: %v\n", resp.Diagnostics)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -450,7 +404,7 @@ func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req res
 		in := &networkfirewall.UpdateTLSInspectionConfigurationInput{
 			TLSInspectionConfigurationArn:  aws.String(plan.ARN.ValueString()),
 			TLSInspectionConfigurationName: aws.String(plan.Name.ValueString()),
-			UpdateToken:                    aws.String(plan.UpdateToken.ValueString()),
+			UpdateToken:                    aws.String(state.UpdateToken.ValueString()),
 		}
 
 		if !plan.Description.IsNull() {
@@ -493,12 +447,27 @@ func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req res
 		}
 
 		plan.ARN = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationArn)
-		plan.ID = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationId)
-
+		// Set ID to ARN since ID value is not used for describe, update, delete or list API calls
+		plan.ID = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationArn)
 		plan.LastModifiedTime = flex.StringValueToFramework(ctx, out.TLSInspectionConfigurationResponse.LastModifiedTime.Format(time.RFC3339))
-		plan.NumberOfAssociations = flex.Int64ToFramework(ctx, out.TLSInspectionConfigurationResponse.NumberOfAssociations)
 		plan.UpdateToken = flex.StringToFramework(ctx, out.UpdateToken)
 		plan.Status = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationStatus)
+
+		encryptionConfiguration, d := flattenTLSEncryptionConfiguration(ctx, out.TLSInspectionConfigurationResponse.EncryptionConfiguration)
+		resp.Diagnostics.Append(d...)
+		plan.EncryptionConfiguration = encryptionConfiguration
+
+		// Update does not certificates and CA, so read to backfill the missing attributes
+		// NOTE: number of associations should be returned according to the API docs, but isn't!
+		readComputed, _ := findTLSInspectionConfigurationByNameAndARN(ctx, conn, plan.ARN.ValueString())
+		plan.NumberOfAssociations = flex.Int64ToFramework(ctx, readComputed.TLSInspectionConfigurationResponse.NumberOfAssociations)
+
+		// Complex types
+		certificateAuthority, d := flattenTLSCertificate(ctx, readComputed.TLSInspectionConfigurationResponse.CertificateAuthority)
+		resp.Diagnostics.Append(d...)
+		plan.CertificateAuthority = certificateAuthority
+
+		resp.Diagnostics.Append(flex.Flatten(ctx, readComputed.TLSInspectionConfigurationResponse.Certificates, &plan.Certificates)...)
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
@@ -570,12 +539,12 @@ const (
 
 func waitTLSInspectionConfigurationCreated(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string, timeout time.Duration) (*networkfirewall.TLSInspectionConfiguration, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{},
+		Pending:                   []string{statusChangePending},
 		Target:                    []string{networkfirewall.ResourceStatusActive},
-		Refresh:                   statusTLSInspectionConfiguration(ctx, conn, arn),
+		Refresh:                   statusTLSInspectionConfigurationCertificates(ctx, conn, arn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
+		ContinuousTargetOccurence: 5,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -586,11 +555,37 @@ func waitTLSInspectionConfigurationCreated(ctx context.Context, conn *networkfir
 	return nil, err
 }
 
+func statusTLSInspectionConfigurationCertificates(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		out, err := findTLSInspectionConfigurationByNameAndARN(ctx, conn, arn)
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		certificates := out.TLSInspectionConfigurationResponse.Certificates
+		certificateAuthority := out.TLSInspectionConfigurationResponse.CertificateAuthority
+
+		// The API does not immediately return data for certificates and certificate authority even when the resource status is "ACTIVE",
+		// which causes unexpected diffs when reading. This sets the status to "PENDING" until either the certificates or the certificate
+		// authority is populated (the API will always return at least one of the two)
+		if aws.ToString(out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationStatus) == networkfirewall.ResourceStatusActive &&
+			(certificates != nil || certificateAuthority != nil) {
+			return out, aws.ToString(out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationStatus), nil
+		} else {
+			return out, statusChangePending, nil
+		}
+	}
+}
+
 func waitTLSInspectionConfigurationUpdated(ctx context.Context, conn *networkfirewall.NetworkFirewall, arn string, timeout time.Duration) (*networkfirewall.TLSInspectionConfiguration, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{networkfirewall.ResourceStatusActive},
-		Refresh:                   statusTLSInspectionConfiguration(ctx, conn, arn),
+		Refresh:                   statusTLSInspectionConfigurationCertificates(ctx, conn, arn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
@@ -789,7 +784,6 @@ func flattenServerCertificates(ctx context.Context, serverCertificateList []*net
 
 	listVal, d := types.ListValue(elemType, elems)
 	diags.Append(d...)
-	fmt.Printf("diags from flattenServerCertificates: %v\n", diags)
 
 	return listVal, diags
 }
@@ -1122,8 +1116,6 @@ func expandScopes(ctx context.Context, tfList []scopeData) []*networkfirewall.Se
 		apiObject = append(apiObject, item)
 	}
 
-	fmt.Printf("diags: %v\n", diags)
-
 	return apiObject
 }
 
@@ -1155,9 +1147,8 @@ func expandSourceDestinations(ctx context.Context, tfList []sourceDestinationDat
 }
 
 type resourceTLSInspectionConfigurationData struct {
-	ARN                     types.String `tfsdk:"arn"`
-	EncryptionConfiguration types.List   `tfsdk:"encryption_configuration"`
-	// Certificates               types.List     `tfsdk:"certificates"`
+	ARN                        types.String                                      `tfsdk:"arn"`
+	EncryptionConfiguration    types.List                                        `tfsdk:"encryption_configuration"`
 	Certificates               fwtypes.ListNestedObjectValueOf[certificatesData] `tfsdk:"certificates"`
 	CertificateAuthority       types.List                                        `tfsdk:"certificate_authority"`
 	Description                types.String                                      `tfsdk:"description"`
