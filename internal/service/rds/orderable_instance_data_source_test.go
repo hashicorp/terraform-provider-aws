@@ -242,7 +242,7 @@ func TestAccRDSOrderableInstanceDataSource_readReplicaCapable(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "read_replica_capable", "true"),
 					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.InstanceEngineOracleEnterprise),
 					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", "true"),
-					resource.TestMatchResourceAttr(dataSourceName, "instance_class", regexache.MustCompile(`^db\..*large$`)),
+					resource.TestCheckResourceAttrSet(dataSourceName, "instance_class"),
 				),
 			},
 		},

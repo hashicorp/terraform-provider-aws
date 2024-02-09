@@ -213,7 +213,9 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	input := &rds.DescribeOrderableDBInstanceOptionsInput{}
+	input := &rds.DescribeOrderableDBInstanceOptionsInput{
+		MaxRecords: aws.Int64(3412),
+	}
 
 	if v, ok := d.GetOk("availability_zone_group"); ok {
 		input.AvailabilityZoneGroup = aws.String(v.(string))
@@ -462,8 +464,6 @@ func dataSourceOrderableInstanceRead(ctx context.Context, d *schema.ResourceData
 	if found == nil {
 		return sdkdiag.AppendErrorf(diags, "no RDS DB Instance Classes match the criteria; try a different search")
 	}
-
-	//fmt.Printf("found: %s, %s\n", aws.StringValue(found.DBInstanceClass), aws.StringValue(found.EngineVersion))
 
 	d.SetId(aws.StringValue(found.DBInstanceClass))
 	d.Set("availability_zone_group", found.AvailabilityZoneGroup)
