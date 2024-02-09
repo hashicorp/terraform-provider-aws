@@ -1,3 +1,4 @@
 ```release-note:enhancement
 resource/aws_ecs_service: Add TLS support for ECS Service Connect
+resource/aws_ecs_service: Add timeout configuration for ECS Service Connect
 ```

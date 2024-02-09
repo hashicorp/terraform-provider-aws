@@ -444,6 +444,25 @@ func ResourceService() *schema.Resource {
 											},
 										},
 									},
+									"timeout": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"idle_timeout_seconds": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntBetween(0, 2147483647),
+												},
+												"per_request_timeout_seconds": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntBetween(0, 2147483647),
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -1475,10 +1494,29 @@ func expandServices(srv []interface{}) []*ecs.ServiceConnectService {
 			config.Tls = expandTls(v)
 		}
 
+		if v, ok := raw["timeout"].([]interface{}); ok && len(v) > 0 {
+			config.Timeout = expandTimeout(v)
+		}
+
 		out = append(out, &config)
 	}
 
 	return out
+}
+
+func expandTimeout(timeout []interface{}) *ecs.TimeoutConfiguration {
+	if len(timeout) == 0 {
+		return nil
+	}
+	raw := timeout[0].(map[string]interface{})
+	timeoutConfig := &ecs.TimeoutConfiguration{}
+	if v, ok := raw["idle_timeout_seconds"].(int); ok {
+		timeoutConfig.IdleTimeoutSeconds = aws.Int64(int64(v))
+	}
+	if v, ok := raw["per_request_timeout_seconds"].(int); ok {
+		timeoutConfig.PerRequestTimeoutSeconds = aws.Int64(int64(v))
+	}
+	return timeoutConfig
 }
 
 func expandTls(tls []interface{}) *ecs.ServiceConnectTlsConfiguration {

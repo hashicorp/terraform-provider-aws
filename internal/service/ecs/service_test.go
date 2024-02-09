@@ -4320,9 +4320,10 @@ resource "aws_ecs_task_definition" "test" {
     "portMappings": [
     {
       "hostPort": 0,
-      "protocol": "tcp",
+      "appProtocol": "http",
       "containerPort": 27017,
-      "name": "tf-test"
+      "name": "tf-test",
+      "protocol": "tcp"
     }
     ]
   }
@@ -4364,6 +4365,10 @@ resource "aws_ecs_service" "test" {
         kms_key = aws_kms_key.test.arn
         role_arn = aws_iam_role.test.arn	
       }
+      timeout {
+        idle_timeout_seconds = 120
+        per_request_timeout_seconds = 60
+	  }
     }
   }
 }
