@@ -843,7 +843,7 @@ func sweepVirtualMFADevice(ctx context.Context, client *conns.AWSClient) ([]swee
 				continue
 			}
 
-			r := ResourceVirtualMFADevice()
+			r := resourceVirtualMFADevice()
 			d := r.Data(nil)
 			d.SetId(serialNum)
 

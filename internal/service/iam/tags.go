@@ -389,6 +389,8 @@ func updateTags(ctx context.Context, conn iamiface.IAMAPI, identifier, resourceT
 		return serverCertificateUpdateTags(ctx, conn, identifier, oldTagsMap, newTagsMap)
 	case "User":
 		return userUpdateTags(ctx, conn, identifier, oldTagsMap, newTagsMap)
+	case "VirtualMFADevice":
+		return virtualMFADeviceUpdateTags(ctx, conn, identifier, oldTagsMap, newTagsMap)
 	}
 
 	return fmt.Errorf("unsupported resource type: %s", resourceType)

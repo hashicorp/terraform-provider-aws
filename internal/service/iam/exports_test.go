@@ -16,6 +16,7 @@ var (
 	ResourceServiceLinkedRole     = resourceServiceLinkedRole
 	ResourceUser                  = resourceUser
 	ResourceUserPolicyAttachment  = resourceUserPolicyAttachment
+	ResourceVirtualMFADevice      = resourceVirtualMFADevice
 
 	FindAttachedGroupPolicies           = findAttachedGroupPolicies
 	FindAttachedGroupPolicyByTwoPartKey = findAttachedGroupPolicyByTwoPartKey
@@ -30,4 +31,5 @@ var (
 	FindSAMLProviderByARN               = findSAMLProviderByARN
 	FindServerCertificateByName         = findServerCertificateByName
 	FindUserByName                      = findUserByName
+	FindVirtualMFADeviceBySerialNumber  = findVirtualMFADeviceBySerialNumber
 )
