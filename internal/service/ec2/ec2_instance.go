@@ -3146,7 +3146,7 @@ func waitInstanceReady(ctx context.Context, conn *ec2.EC2, id string, timeout ti
 	return nil, err
 }
 
-func waitInstanceStarted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) { //nolint:unparam
+func waitInstanceStarted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameStopped},
 		Target:     []string{ec2.InstanceStateNameRunning},
