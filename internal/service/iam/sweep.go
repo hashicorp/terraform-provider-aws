@@ -248,7 +248,7 @@ func sweepInstanceProfile(ctx context.Context, client *conns.AWSClient) ([]sweep
 				continue
 			}
 
-			r := ResourceInstanceProfile()
+			r := resourceInstanceProfile()
 			d := r.Data(nil)
 			d.SetId(name)
 

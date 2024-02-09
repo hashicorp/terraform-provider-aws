@@ -32,8 +32,8 @@ const (
 )
 
 // @SDKResource("aws_iam_instance_profile", name="Instance Profile")
-// @Tags
-func ResourceInstanceProfile() *schema.Resource {
+// @Tags(identifierAttribute="id", resourceType="InstanceProfile")
+func resourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceProfileCreate,
 		ReadWithoutTimeout:   resourceInstanceProfileRead,
@@ -219,21 +219,6 @@ func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := instanceProfileUpdateTags(ctx, conn, d.Id(), o, n)
-
-		// Some partitions (e.g. ISO) may not support tagging.
-		if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-			return append(diags, resourceInstanceProfileRead(ctx, d, meta)...)
-		}
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for IAM Instance Profile (%s): %s", d.Id(), err)
 		}
 	}
 

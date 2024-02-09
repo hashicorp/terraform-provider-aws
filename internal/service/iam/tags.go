@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -361,4 +362,22 @@ func virtualMFADeviceCreateTags(ctx context.Context, conn iamiface.IAMAPI, ident
 	}
 
 	return virtualMFADeviceUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+}
+
+// updateTags updates iam service tags.
+// The identifier is typically the Amazon Resource Name (ARN), although
+// it may also be a different identifier depending on the service.
+func updateTags(ctx context.Context, conn iamiface.IAMAPI, identifier, resourceType string, oldTagsMap, newTagsMap any) error {
+	switch resourceType {
+	case "InstanceProfile":
+		return instanceProfileUpdateTags(ctx, conn, identifier, oldTagsMap, newTagsMap)
+	}
+
+	return fmt.Errorf("unsupported resource type: %s", resourceType)
+}
+
+// UpdateTags updates iam service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
+	return updateTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier, resourceType, oldTags, newTags)
 }

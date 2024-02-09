@@ -128,10 +128,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Group Policy Attachment",
 		},
 		{
-			Factory:  ResourceInstanceProfile,
+			Factory:  resourceInstanceProfile,
 			TypeName: "aws_iam_instance_profile",
 			Name:     "Instance Profile",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "InstanceProfile",
+			},
 		},
 		{
 			Factory:  ResourceOpenIDConnectProvider,

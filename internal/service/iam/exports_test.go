@@ -6,6 +6,7 @@ package iam
 // Exports for use in tests only.
 var (
 	ResourceGroupPolicyAttachment = resourceGroupPolicyAttachment
+	ResourceInstanceProfile       = resourceInstanceProfile
 	ResourcePolicyAttachment      = resourcePolicyAttachment
 	ResourceRolePolicyAttachment  = resourceRolePolicyAttachment
 	ResourceUserPolicyAttachment  = resourceUserPolicyAttachment
