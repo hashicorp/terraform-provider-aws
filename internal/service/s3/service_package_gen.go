@@ -195,7 +195,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourceObjectCopy,
 			TypeName: "aws_s3_object_copy",
 			Name:     "Object Copy",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+				ResourceType:        "ObjectCopy",
+			},
 		},
 	}
 }

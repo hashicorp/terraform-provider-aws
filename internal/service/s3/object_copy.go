@@ -8,7 +8,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 	"net/url"
 	"strings"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -32,7 +30,7 @@ import (
 )
 
 // @SDKResource("aws_s3_object_copy", name="Object Copy")
-// @Tags
+// @Tags(identifierAttribute="arn", resourceType="ObjectCopy")
 func resourceObjectCopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCopyCreate,
@@ -398,12 +396,6 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if tags, err := objectListTags(ctx, conn, bucket, key, optFns...); err == nil {
-		setTagsOut(ctx, Tags(tags))
-	} else if !tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
-		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
-	}
-
 	return diags
 }
 
@@ -455,8 +447,6 @@ func resourceObjectCopyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		"source_customer_key_md5",
 		"storage_class",
 		"tagging_directive",
-		"tags",
-		"tags_all",
 		"website_redirect",
 	}
 	if d.HasChanges(args...) {
@@ -498,7 +488,6 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	var optFns []func(*s3.Options)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 
 	bucket := d.Get("bucket").(string)
 	if isDirectoryBucket(bucket) {
@@ -508,7 +497,6 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 	if arn.IsARN(bucket) && conn.Options().Region == names.GlobalRegionID {
 		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
 	}
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &s3.CopyObjectInput{
 		Bucket:     aws.String(bucket),
@@ -654,6 +642,9 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 		input.TaggingDirective = types.TaggingDirective(v.(string))
 	}
 
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := tftags.New(ctx, getContextTags(ctx))
+	tags = defaultTagsConfig.MergeTags(tags)
 	if len(tags) > 0 {
 		// The tag-set must be encoded as URL Query parameters.
 		input.Tagging = aws.String(tags.IgnoreAWS().URLEncode())
