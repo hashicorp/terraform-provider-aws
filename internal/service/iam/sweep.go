@@ -281,7 +281,7 @@ func sweepOpenIDConnectProvider(ctx context.Context, client *conns.AWSClient) ([
 	for _, oidcProvider := range out.OpenIDConnectProviderList {
 		arn := aws.StringValue(oidcProvider.Arn)
 
-		r := ResourceOpenIDConnectProvider()
+		r := resourceOpenIDConnectProvider()
 		d := r.Data(nil)
 		d.SetId(arn)
 

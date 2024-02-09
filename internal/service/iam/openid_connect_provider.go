@@ -25,8 +25,8 @@ import (
 )
 
 // @SDKResource("aws_iam_openid_connect_provider", name="OIDC Provider")
-// @Tags
-func ResourceOpenIDConnectProvider() *schema.Resource {
+// @Tags(identifierAttribute="id", resourceType="OIDCProvider")
+func resourceOpenIDConnectProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOpenIDConnectProviderCreate,
 		ReadWithoutTimeout:   resourceOpenIDConnectProviderRead,
@@ -157,21 +157,6 @@ func resourceOpenIDConnectProviderUpdate(ctx context.Context, d *schema.Resource
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IAM OIDC Provider (%s) thumbprint: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := openIDConnectProviderUpdateTags(ctx, conn, d.Id(), o, n)
-
-		// Some partitions (e.g. ISO) may not support tagging.
-		if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-			return append(diags, resourceOpenIDConnectProviderRead(ctx, d, meta)...)
-		}
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for IAM OIDC Provider (%s): %s", d.Id(), err)
 		}
 	}
 

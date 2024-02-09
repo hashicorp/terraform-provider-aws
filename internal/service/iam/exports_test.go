@@ -7,6 +7,7 @@ package iam
 var (
 	ResourceGroupPolicyAttachment = resourceGroupPolicyAttachment
 	ResourceInstanceProfile       = resourceInstanceProfile
+	ResourceOpenIDConnectProvider = resourceOpenIDConnectProvider
 	ResourcePolicyAttachment      = resourcePolicyAttachment
 	ResourceRolePolicyAttachment  = resourceRolePolicyAttachment
 	ResourceUserPolicyAttachment  = resourceUserPolicyAttachment

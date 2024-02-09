@@ -371,6 +371,8 @@ func updateTags(ctx context.Context, conn iamiface.IAMAPI, identifier, resourceT
 	switch resourceType {
 	case "InstanceProfile":
 		return instanceProfileUpdateTags(ctx, conn, identifier, oldTagsMap, newTagsMap)
+	case "OIDCProvider":
+		return openIDConnectProviderUpdateTags(ctx, conn, identifier, oldTagsMap, newTagsMap)
 	}
 
 	return fmt.Errorf("unsupported resource type: %s", resourceType)
