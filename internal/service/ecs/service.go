@@ -1491,7 +1491,7 @@ func expandServices(srv []interface{}) []*ecs.ServiceConnectService {
 		}
 
 		if v, ok := raw["tls"].([]interface{}); ok && len(v) > 0 {
-			config.Tls = expandTls(v)
+			config.Tls = expandTLS(v)
 		}
 
 		if v, ok := raw["timeout"].([]interface{}); ok && len(v) > 0 {
@@ -1519,7 +1519,7 @@ func expandTimeout(timeout []interface{}) *ecs.TimeoutConfiguration {
 	return timeoutConfig
 }
 
-func expandTls(tls []interface{}) *ecs.ServiceConnectTlsConfiguration {
+func expandTLS(tls []interface{}) *ecs.ServiceConnectTlsConfiguration {
 	if len(tls) == 0 {
 		return nil
 	}

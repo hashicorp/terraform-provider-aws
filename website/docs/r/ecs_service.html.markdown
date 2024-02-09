@@ -241,7 +241,6 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 * `namespace` - (Optional) The namespace name or ARN of the [`aws_service_discovery_http_namespace`](/docs/providers/aws/r/service_discovery_http_namespace.html) for use with Service Connect.
 * `service` - (Optional) The list of Service Connect service objects. See below.
 
-
 ### log_configuration
 
 `log_configuration` supports the following:
@@ -288,7 +287,6 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 `issuer_cert_authority` supports the following:
 
 * `aws_pca_authority_arn`: The ARN of the [`aws_acmpca_certificate_authority`](/docs/providers/aws/r/acmpca_certificate_authority.html) used to create the TLS Certificates.
-
 
 ### client_alias
 

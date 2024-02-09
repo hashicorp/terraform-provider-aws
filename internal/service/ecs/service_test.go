@@ -4240,7 +4240,7 @@ func testAccServiceConfig_serviceConnectAllAttributes(rName string) string {
 resource "aws_kms_key" "test" {
   description             = %[1]q
   deletion_window_in_days = 7
-  policy = data.aws_iam_policy_document.test.json
+  policy                  = data.aws_iam_policy_document.test.json
 }
 
 
@@ -4248,38 +4248,38 @@ data "aws_iam_policy_document" "test" {
   policy_id = "KMSPolicy"
 
   statement {
-    sid       = "Root User Permissions"
-    effect    = "Allow"
+    sid    = "Root User Permissions"
+    effect = "Allow"
     principals {
-      type        = "AWS"
+      type = "AWS"
       identifiers = [
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
-    actions   = [
-      "kms:*"]
-    resources = [ "*"]
+    actions = [
+    "kms:*"]
+    resources = ["*"]
   }
 
   statement {
-    sid       = "EC2 kms permissions"
-    effect    = "Allow"
+    sid    = "EC2 kms permissions"
+    effect = "Allow"
     principals {
       type        = "AWS"
-      identifiers = [ aws_iam_role.test.arn ]
+      identifiers = [aws_iam_role.test.arn]
     }
-    actions   = [
+    actions = [
       "kms:Encrypt",
       "kms:Decrypt",
       "kms:GenerateDataKey",
-      "kms:GenerateDataKeyPair"]
+    "kms:GenerateDataKeyPair"]
     resources = ["*"]
   }
 }
 
 resource "aws_iam_role" "test" {
-	  name = %[1]q
+  name = %[1]q
 
-  assume_role_policy = <<EOF
+  assume_role_policy  = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -4360,15 +4360,15 @@ resource "aws_ecs_service" "test" {
       port_name             = "tf-test"
       tls {
         issuer_cert_authority {
-		  aws_pca_authority_arn = 	aws_acmpca_certificate_authority.test.arn
+          aws_pca_authority_arn = aws_acmpca_certificate_authority.test.arn
         }
-        kms_key = aws_kms_key.test.arn
-        role_arn = aws_iam_role.test.arn	
+        kms_key  = aws_kms_key.test.arn
+        role_arn = aws_iam_role.test.arn
       }
       timeout {
-        idle_timeout_seconds = 120
+        idle_timeout_seconds        = 120
         per_request_timeout_seconds = 60
-	  }
+      }
     }
   }
 }
@@ -4396,7 +4396,7 @@ resource "aws_acmpca_certificate" "test" {
 resource "aws_acmpca_certificate_authority" "test" {
   permanent_deletion_time_in_days = 7
   type                            = "ROOT"
-  usage_mode = "SHORT_LIVED_CERTIFICATE"
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
   certificate_authority_configuration {
     key_algorithm     = "RSA_4096"
     signing_algorithm = "SHA512WITHRSA"
@@ -4406,7 +4406,7 @@ resource "aws_acmpca_certificate_authority" "test" {
     }
   }
   tags = {
-	AmazonECSManaged = "true"
+       AmazonECSManaged = "true"
   }
 }
 
