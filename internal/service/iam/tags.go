@@ -385,6 +385,8 @@ func updateTags(ctx context.Context, conn iamiface.IAMAPI, identifier, resourceT
 		return roleUpdateTags(ctx, conn, roleName, oldTagsMap, newTagsMap)
 	case "SAMLProvider":
 		return samlProviderUpdateTags(ctx, conn, identifier, oldTagsMap, newTagsMap)
+	case "ServerCertificate":
+		return serverCertificateUpdateTags(ctx, conn, identifier, oldTagsMap, newTagsMap)
 	}
 
 	return fmt.Errorf("unsupported resource type: %s", resourceType)

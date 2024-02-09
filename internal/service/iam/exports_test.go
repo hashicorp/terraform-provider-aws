@@ -12,6 +12,7 @@ var (
 	ResourcePolicyAttachment      = resourcePolicyAttachment
 	ResourceRolePolicyAttachment  = resourceRolePolicyAttachment
 	ResourceSAMLProvider          = resourceSAMLProvider
+	ResourceServerCertificate     = resourceServerCertificate
 	ResourceServiceLinkedRole     = resourceServiceLinkedRole
 	ResourceUserPolicyAttachment  = resourceUserPolicyAttachment
 
@@ -26,4 +27,5 @@ var (
 	FindOpenIDConnectProviderByARN      = findOpenIDConnectProviderByARN
 	FindPolicyByARN                     = findPolicyByARN
 	FindSAMLProviderByARN               = findSAMLProviderByARN
+	FindServerCertificateByName         = findServerCertificateByName
 )
