@@ -162,9 +162,9 @@ func testAccMonitorConfig(rName string, aggregation int) string {
 	return fmt.Sprintf(`
 resource "aws_networkmonitor_monitor" "test" {
   aggregation_period = %[2]d
-  monitor_name = %[1]q
+  monitor_name       = %[1]q
   tags = {
-	tag1 = %[1]q
+    tag1 = %[1]q
   }
 }
 `, rName, aggregation)
@@ -174,10 +174,10 @@ func testAccMonitorConfig_tags(rName string, aggregation int) string {
 	return fmt.Sprintf(`
 resource "aws_networkmonitor_monitor" "test" {
   aggregation_period = %[2]d
-  monitor_name = %[1]q
+  monitor_name       = %[1]q
   tags = {
-	tag1 = %[1]q
-	tag2 = %[1]q
+    tag1 = %[1]q
+    tag2 = %[1]q
   }
 }
 `, rName, aggregation)

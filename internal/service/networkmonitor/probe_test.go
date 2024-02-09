@@ -174,27 +174,27 @@ func testAccProbeConfig_base(rName string) string {
 data "aws_region" "current" {}
 
 resource "aws_vpc" "test" {
-	cidr_block = "10.0.0.0/16"
+  cidr_block = "10.0.0.0/16"
 
-	tags = {
-	  Name = %[1]q
-	}
+  tags = {
+    Name = %[1]q
+  }
 }
-	
-resource "aws_subnet" "test" {
-	vpc_id            = aws_vpc.test.id
-	cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
 
-	tags = {
-	  Name = %[1]q
-	}
+resource "aws_subnet" "test" {
+  vpc_id     = aws_vpc.test.id
+  cidr_block = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_networkmonitor_monitor" "test" {
   aggregation_period = 30
-  monitor_name = %[1]q
+  monitor_name       = %[1]q
   tags = {
-	tag1 = %[1]q
+    tag1 = %[1]q
   }
 }
 `, rName)
@@ -203,17 +203,17 @@ resource "aws_networkmonitor_monitor" "test" {
 func testAccProbeConfig_basic(rName, destination string, port, packetSize int) string {
 	return acctest.ConfigCompose(testAccProbeConfig_base(rName), fmt.Sprintf(`
 resource "aws_networkmonitor_probe" "test" {
-	monitor_name = aws_networkmonitor_monitor.test.monitor_name
-	probe {
-		destination = %[2]q
-		destination_port = %[3]d
-		protocol = "TCP"
-		source_arn = aws_subnet.test.arn
-		packet_size = %[4]d
-	}
-	tags = {
-		tag1 = %[1]q
-	}
+  monitor_name = aws_networkmonitor_monitor.test.monitor_name
+  probe {
+    destination      = %[2]q
+    destination_port = %[3]d
+    protocol         = "TCP"
+    source_arn       = aws_subnet.test.arn
+    packet_size      = %[4]d
+  }
+  tags = {
+    tag1 = %[1]q
+  }
 }
 `, rName, destination, port, packetSize))
 }
@@ -221,18 +221,18 @@ resource "aws_networkmonitor_probe" "test" {
 func testAccProbeConfig_2tags(rName, destination string, port, packetSize int) string {
 	return acctest.ConfigCompose(testAccProbeConfig_base(rName), fmt.Sprintf(`
 resource "aws_networkmonitor_probe" "test" {
-	monitor_name = aws_networkmonitor_monitor.test.monitor_name
-	probe {
-		destination = %[2]q
-		destination_port = %[3]d
-		protocol = "TCP"
-		source_arn = aws_subnet.test.arn
-		packet_size = %[4]d
-	}
-	tags = {
-		tag1 = %[1]q
-		tag2 = %[1]q
-	}
+  monitor_name = aws_networkmonitor_monitor.test.monitor_name
+  probe {
+    destination      = %[2]q
+    destination_port = %[3]d
+    protocol         = "TCP"
+    source_arn       = aws_subnet.test.arn
+    packet_size      = %[4]d
+  }
+  tags = {
+    tag1 = %[1]q
+    tag2 = %[1]q
+  }
 }
 `, rName, destination, port, packetSize))
 }
