@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/networkfirewall/types"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 
 	// "github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -27,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -137,7 +136,7 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 							Computed: true,
 							Default:  stringdefault.StaticString("AWS_OWNED_KMS_KEY"),
 							Validators: []validator.String{
-								enum.FrameworkValidate[awstypes.EncryptionType](),
+								stringvalidator.OneOf(networkfirewall.EncryptionTypeAwsOwnedKmsKey, networkfirewall.EncryptionTypeCustomerKms),
 							},
 						},
 					},
@@ -284,7 +283,7 @@ func (r *resourceTLSInspectionConfiguration) Create(ctx context.Context, req res
 		in.EncryptionConfiguration = expandTLSEncryptionConfiguration(tfList)
 	}
 
-	out, err := conn.CreateTLSInspectionConfiguration(in)
+	out, err := conn.CreateTLSInspectionConfigurationWithContext(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.NetworkFirewall, create.ErrActionCreating, ResNameTLSInspectionConfiguration, plan.Name.String(), err),

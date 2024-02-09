@@ -537,34 +537,34 @@ func testAccCheckTLSInspectionConfigurationExists(ctx context.Context, name stri
 func testAccTLSInspectionConfigurationConfig_combinedIngressEgress(rName, certificateARN, ca string) string {
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_tls_inspection_configuration" "test" {
-  name = %[1]q
+  name        = %[1]q
   description = "test"
   encryption_configuration {
     key_id = "AWS_OWNED_KMS_KEY"
-    type = "AWS_OWNED_KMS_KEY"
+    type   = "AWS_OWNED_KMS_KEY"
   }
   tls_inspection_configuration {
     server_certificate_configurations {
       certificate_authority_arn = %[3]q
       check_certificate_revocation_status {
-          revoked_status_action = "REJECT"
-          unknown_status_action = "PASS"
+        revoked_status_action = "REJECT"
+        unknown_status_action = "PASS"
       }
       server_certificates {
         resource_arn = %[2]q
       }
       scopes {
-        protocols = [ 6 ]
+        protocols = [6]
         destination_ports {
-            from_port = 443
-            to_port = 443
+          from_port = 443
+          to_port   = 443
         }
         destinations {
           address_definition = "0.0.0.0/0"
-        }  
+        }
         source_ports {
           from_port = 0
-          to_port = 65535
+          to_port   = 65535
         }
         sources {
           address_definition = "0.0.0.0/0"
@@ -579,34 +579,34 @@ resource "aws_networkfirewall_tls_inspection_configuration" "test" {
 func testAccTLSInspectionConfigurationConfig_combinedIngressEgressUpdate(rName, certificateARN, ca string) string {
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_tls_inspection_configuration" "test" {
-  name = %[1]q
+  name        = %[1]q
   description = "test"
   encryption_configuration {
     key_id = "AWS_OWNED_KMS_KEY"
-    type = "AWS_OWNED_KMS_KEY"
+    type   = "AWS_OWNED_KMS_KEY"
   }
   tls_inspection_configuration {
     server_certificate_configurations {
       certificate_authority_arn = %[3]q
       check_certificate_revocation_status {
-          revoked_status_action = "PASS"
-          unknown_status_action = "REJECT"
+        revoked_status_action = "PASS"
+        unknown_status_action = "REJECT"
       }
       server_certificates {
         resource_arn = %[2]q
       }
       scopes {
-        protocols = [ 6 ]
+        protocols = [6]
         destination_ports {
-            from_port = 443
-            to_port = 8080
+          from_port = 443
+          to_port   = 8080
         }
         destinations {
           address_definition = "10.0.0.0/8"
-        }  
+        }
         source_ports {
           from_port = 1024
-          to_port = 65534
+          to_port   = 65534
         }
         sources {
           address_definition = "10.0.0.0/8"
@@ -621,11 +621,11 @@ resource "aws_networkfirewall_tls_inspection_configuration" "test" {
 func testAccTLSInspectionConfigurationConfig_ingressBasic(rName, certificateARN string) string {
 	return fmt.Sprintf(`
 resource "aws_networkfirewall_tls_inspection_configuration" "test" {
-  name = %[1]q
+  name        = %[1]q
   description = "test"
   encryption_configuration {
     key_id = "AWS_OWNED_KMS_KEY"
-    type = "AWS_OWNED_KMS_KEY"
+    type   = "AWS_OWNED_KMS_KEY"
   }
   tls_inspection_configuration {
     server_certificate_configurations {
@@ -633,17 +633,17 @@ resource "aws_networkfirewall_tls_inspection_configuration" "test" {
         resource_arn = %[2]q
       }
       scopes {
-        protocols = [ 6 ]
+        protocols = [6]
         destination_ports {
-            from_port = 443
-            to_port = 443
+          from_port = 443
+          to_port   = 443
         }
         destinations {
           address_definition = "0.0.0.0/0"
-        }  
+        }
         source_ports {
           from_port = 0
-          to_port = 65535
+          to_port   = 65535
         }
         sources {
           address_definition = "0.0.0.0/0"
@@ -667,11 +667,11 @@ resource "aws_kms_key" "test" {
 func testAccTLSInspectionConfigurationConfig_ingressWithEncryptionConfiguration(rName, certificateARN string) string {
 	return acctest.ConfigCompose(testAccTLSInspectionConfigurationConfig_encryptionConfiguration(rName), fmt.Sprintf(`
 resource "aws_networkfirewall_tls_inspection_configuration" "test" {
-  name = %[1]q
+  name        = %[1]q
   description = "test"
   encryption_configuration {
     key_id = aws_kms_key.test.arn
-    type = "CUSTOMER_KMS"
+    type   = "CUSTOMER_KMS"
   }
   tls_inspection_configuration {
     server_certificate_configurations {
@@ -679,20 +679,20 @@ resource "aws_networkfirewall_tls_inspection_configuration" "test" {
         resource_arn = %[2]q
       }
       scopes {
-        protocols = [ 6 ]
+        protocols = [6]
         destination_ports {
           from_port = 443
-          to_port = 443
+          to_port   = 443
         }
         destinations {
-        address_definition = "0.0.0.0/0"
-        }  
+          address_definition = "0.0.0.0/0"
+        }
         source_ports {
-        from_port = 0
-        to_port = 65535
+          from_port = 0
+          to_port   = 65535
         }
         sources {
-        address_definition = "0.0.0.0/0"
+          address_definition = "0.0.0.0/0"
         }
       }
     }
@@ -710,11 +710,11 @@ resource "aws_acm_certificate" "test" {
 }
 
 resource "aws_networkfirewall_tls_inspection_configuration" "test" {
-  name = %[1]q
+  name        = %[1]q
   description = "test"
   encryption_configuration {
     key_id = "AWS_OWNED_KMS_KEY"
-    type = "AWS_OWNED_KMS_KEY"
+    type   = "AWS_OWNED_KMS_KEY"
   }
   tls_inspection_configuration {
     server_certificate_configurations {
@@ -724,17 +724,17 @@ resource "aws_networkfirewall_tls_inspection_configuration" "test" {
         unknown_status_action = "PASS"
       }
       scopes {
-        protocols = [ 6 ]
+        protocols = [6]
         destination_ports {
           from_port = 443
-          to_port = 443
+          to_port   = 443
         }
         destinations {
           address_definition = "0.0.0.0/0"
-        }  
+        }
         source_ports {
           from_port = 0
-          to_port = 65535
+          to_port   = 65535
         }
         sources {
           address_definition = "0.0.0.0/0"
