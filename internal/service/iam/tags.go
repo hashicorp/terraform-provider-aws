@@ -377,6 +377,12 @@ func updateTags(ctx context.Context, conn iamiface.IAMAPI, identifier, resourceT
 		return policyUpdateTags(ctx, conn, identifier, oldTagsMap, newTagsMap)
 	case "Role":
 		return roleUpdateTags(ctx, conn, identifier, oldTagsMap, newTagsMap)
+	case "ServiceLinkedRole":
+		_, roleName, _, err := DecodeServiceLinkedRoleID(identifier)
+		if err != nil {
+			return err
+		}
+		return roleUpdateTags(ctx, conn, roleName, oldTagsMap, newTagsMap)
 	}
 
 	return fmt.Errorf("unsupported resource type: %s", resourceType)

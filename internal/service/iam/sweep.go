@@ -569,7 +569,7 @@ func sweepServiceLinkedRoles(ctx context.Context, client *conns.AWSClient) ([]sw
 				continue
 			}
 
-			r := ResourceServiceLinkedRole()
+			r := resourceServiceLinkedRole()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(role.Arn))
 

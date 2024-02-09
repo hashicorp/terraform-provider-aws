@@ -11,6 +11,7 @@ var (
 	ResourcePolicy                = resourcePolicy
 	ResourcePolicyAttachment      = resourcePolicyAttachment
 	ResourceRolePolicyAttachment  = resourceRolePolicyAttachment
+	ResourceServiceLinkedRole     = resourceServiceLinkedRole
 	ResourceUserPolicyAttachment  = resourceUserPolicyAttachment
 
 	FindAttachedGroupPolicies           = findAttachedGroupPolicies

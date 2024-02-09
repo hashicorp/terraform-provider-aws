@@ -7,5 +7,6 @@ package iam
 var (
 	ResourceRole = resourceRole
 
-	FindRoleByName = findRoleByName
+	DeleteServiceLinkedRole = deleteServiceLinkedRole
+	FindRoleByName          = findRoleByName
 )
