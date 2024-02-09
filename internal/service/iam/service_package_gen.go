@@ -146,10 +146,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourcePolicy,
+			Factory:  resourcePolicy,
 			TypeName: "aws_iam_policy",
 			Name:     "Policy",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "Policy",
+			},
 		},
 		{
 			Factory:  resourcePolicyAttachment,

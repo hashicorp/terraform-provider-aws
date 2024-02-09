@@ -121,7 +121,7 @@ func resourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	output, err := FindOpenIDConnectProviderByARN(ctx, conn, d.Id())
+	output, err := findOpenIDConnectProviderByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM OIDC Provider (%s) not found, removing from state", d.Id())
@@ -183,7 +183,7 @@ func resourceOpenIDConnectProviderDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func FindOpenIDConnectProviderByARN(ctx context.Context, conn *iam.IAM, arn string) (*iam.GetOpenIDConnectProviderOutput, error) {
+func findOpenIDConnectProviderByARN(ctx context.Context, conn *iam.IAM, arn string) (*iam.GetOpenIDConnectProviderOutput, error) {
 	input := &iam.GetOpenIDConnectProviderInput{
 		OpenIDConnectProviderArn: aws.String(arn),
 	}

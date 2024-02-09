@@ -118,7 +118,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	d.SetId(aws.StringValue(output.InstanceProfile.InstanceProfileName))
 
 	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return FindInstanceProfileByName(ctx, conn, d.Id())
+		return findInstanceProfileByName(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -154,7 +154,7 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	instanceProfile, err := FindInstanceProfileByName(ctx, conn, d.Id())
+	instanceProfile, err := findInstanceProfileByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Instance Profile (%s) not found, removing from state", d.Id())
@@ -301,7 +301,7 @@ func instanceProfileRemoveRole(ctx context.Context, conn *iam.IAM, profileName, 
 	return nil
 }
 
-func FindInstanceProfileByName(ctx context.Context, conn *iam.IAM, name string) (*iam.InstanceProfile, error) {
+func findInstanceProfileByName(ctx context.Context, conn *iam.IAM, name string) (*iam.InstanceProfile, error) {
 	input := &iam.GetInstanceProfileInput{
 		InstanceProfileName: aws.String(name),
 	}

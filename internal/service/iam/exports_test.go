@@ -8,6 +8,7 @@ var (
 	ResourceGroupPolicyAttachment = resourceGroupPolicyAttachment
 	ResourceInstanceProfile       = resourceInstanceProfile
 	ResourceOpenIDConnectProvider = resourceOpenIDConnectProvider
+	ResourcePolicy                = resourcePolicy
 	ResourcePolicyAttachment      = resourcePolicyAttachment
 	ResourceRolePolicyAttachment  = resourceRolePolicyAttachment
 	ResourceUserPolicyAttachment  = resourceUserPolicyAttachment
@@ -19,5 +20,7 @@ var (
 	FindAttachedUserPolicies            = findAttachedUserPolicies
 	FindAttachedUserPolicyByTwoPartKey  = findAttachedUserPolicyByTwoPartKey
 	FindEntitiesForPolicyByARN          = findEntitiesForPolicyByARN
+	FindInstanceProfileByName           = findInstanceProfileByName
+	FindOpenIDConnectProviderByARN      = findOpenIDConnectProviderByARN
 	FindPolicyByARN                     = findPolicyByARN
 )

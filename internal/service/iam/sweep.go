@@ -374,7 +374,7 @@ func sweepPolicies(region string) error {
 				continue
 			}
 
-			r := ResourcePolicy()
+			r := resourcePolicy()
 			d := r.Data(nil)
 			d.SetId(arn)
 

@@ -34,8 +34,8 @@ const (
 )
 
 // @SDKResource("aws_iam_policy", name="Policy")
-// @Tags
-func ResourcePolicy() *schema.Resource {
+// @Tags(identifierAttribute="id", resourceType="Policy")
+func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
 		ReadWithoutTimeout:   resourcePolicyRead,
@@ -239,21 +239,6 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IAM Policy (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := policyUpdateTags(ctx, conn, d.Id(), o, n)
-
-		// Some partitions (e.g. ISO) may not support tagging.
-		if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-			return append(diags, resourcePolicyRead(ctx, d, meta)...)
-		}
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for IAM Policy (%s): %s", d.Id(), err)
 		}
 	}
 
