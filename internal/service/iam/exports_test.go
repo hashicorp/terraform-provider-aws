@@ -5,6 +5,7 @@ package iam
 
 // Exports for use in tests only.
 var (
+	ResourceAccountPasswordPolicy = resourceAccountPasswordPolicy
 	ResourceGroup                 = resourceGroup
 	ResourceGroupPolicyAttachment = resourceGroupPolicyAttachment
 	ResourceInstanceProfile       = resourceInstanceProfile
@@ -21,6 +22,7 @@ var (
 	ResourceUserSSHKey            = resourceUserSSHKey
 	ResourceVirtualMFADevice      = resourceVirtualMFADevice
 
+	FindAccountPasswordPolicy           = findAccountPasswordPolicy
 	FindAttachedGroupPolicies           = findAttachedGroupPolicies
 	FindAttachedGroupPolicyByTwoPartKey = findAttachedGroupPolicyByTwoPartKey
 	FindAttachedRolePolicies            = findAttachedRolePolicies

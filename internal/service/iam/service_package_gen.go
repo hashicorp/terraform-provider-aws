@@ -107,8 +107,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iam_account_alias",
 		},
 		{
-			Factory:  ResourceAccountPasswordPolicy,
+			Factory:  resourceAccountPasswordPolicy,
 			TypeName: "aws_iam_account_password_policy",
+			Name:     "Account Password Policy",
 		},
 		{
 			Factory:  resourceGroup,
