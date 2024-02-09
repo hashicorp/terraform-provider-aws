@@ -496,7 +496,7 @@ func sweepSAMLProvider(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 	for _, sampProvider := range out.SAMLProviderList {
 		arn := aws.StringValue(sampProvider.Arn)
 
-		r := ResourceSAMLProvider()
+		r := resourceSAMLProvider()
 		d := r.Data(nil)
 		d.SetId(arn)
 

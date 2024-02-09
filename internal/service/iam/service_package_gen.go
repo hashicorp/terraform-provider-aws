@@ -178,10 +178,13 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Role Policy Attachment",
 		},
 		{
-			Factory:  ResourceSAMLProvider,
+			Factory:  resourceSAMLProvider,
 			TypeName: "aws_iam_saml_provider",
 			Name:     "SAML Provider",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "SAMLProvider",
+			},
 		},
 		{
 			Factory:  ResourceSecurityTokenServicePreferences,

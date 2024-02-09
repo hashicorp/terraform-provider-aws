@@ -11,6 +11,7 @@ var (
 	ResourcePolicy                = resourcePolicy
 	ResourcePolicyAttachment      = resourcePolicyAttachment
 	ResourceRolePolicyAttachment  = resourceRolePolicyAttachment
+	ResourceSAMLProvider          = resourceSAMLProvider
 	ResourceServiceLinkedRole     = resourceServiceLinkedRole
 	ResourceUserPolicyAttachment  = resourceUserPolicyAttachment
 
@@ -24,4 +25,5 @@ var (
 	FindInstanceProfileByName           = findInstanceProfileByName
 	FindOpenIDConnectProviderByARN      = findOpenIDConnectProviderByARN
 	FindPolicyByARN                     = findPolicyByARN
+	FindSAMLProviderByARN               = findSAMLProviderByARN
 )
