@@ -245,8 +245,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "User Policy Attachment",
 		},
 		{
-			Factory:  ResourceUserSSHKey,
+			Factory:  resourceUserSSHKey,
 			TypeName: "aws_iam_user_ssh_key",
+			Name:     "User SSH Key",
 		},
 		{
 			Factory:  resourceVirtualMFADevice,
