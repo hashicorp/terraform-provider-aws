@@ -1159,7 +1159,7 @@ func TestAccS3Object_tagsMultipleSlashes(t *testing.T) {
 	})
 }
 
-func TestAccS3Object_Tags_EmptyTag_OnCreate(t *testing.T) {
+func TestAccS3Object_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj s3.GetObjectOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1191,7 +1191,7 @@ func TestAccS3Object_Tags_EmptyTag_OnCreate(t *testing.T) {
 	})
 }
 
-func TestAccS3Object_Tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+func TestAccS3Object_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj s3.GetObjectOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1232,7 +1232,7 @@ func TestAccS3Object_Tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	})
 }
 
-func TestAccS3Object_Tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+func TestAccS3Object_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj s3.GetObjectOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

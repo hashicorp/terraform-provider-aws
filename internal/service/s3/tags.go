@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
@@ -171,11 +170,14 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 	case "Bucket":
 		tags, err = bucketListTags(ctx, meta.(*conns.AWSClient).S3Client(ctx), identifier)
 
+	case "Object":
+		objectARN, err := parseObjectARN(identifier)
+		if err != nil {
+			return err
+		}
+		tags, err = objectListTags(ctx, meta.(*conns.AWSClient).S3Client(ctx), objectARN.Bucket, objectARN.Key)
+
 	default:
-		tflog.Warn(ctx, "ListTags not implemented for resource type", map[string]any{
-			"service_package": p.ServicePackageName(),
-			"resource_name":   resourceType,
-		})
 		return nil
 	}
 
@@ -196,10 +198,22 @@ func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, r
 	switch resourceType {
 	case "Bucket":
 		return bucketUpdateTags(ctx, meta.(*conns.AWSClient).S3Client(ctx), identifier, oldTags, newTags)
+
+	case "Object":
+		objectARN, err := parseObjectARN(identifier)
+		if err != nil {
+			return err
+		}
+		return objectUpdateTags(ctx, meta.(*conns.AWSClient).S3Client(ctx), objectARN.Bucket, objectARN.Key, oldTags, newTags)
+
+	default:
+		return nil
 	}
-	tflog.Warn(ctx, "UpdateTags not implemented for resource type", map[string]any{
-		"service_package": p.ServicePackageName(),
-		"resource_name":   resourceType,
-	})
+}
+
+func getContextTags(ctx context.Context) tftags.KeyValueTags {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		return inContext.TagsIn.UnwrapOrDefault()
+	}
 	return nil
 }

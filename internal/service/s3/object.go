@@ -40,7 +40,7 @@ import (
 )
 
 // @SDKResource("aws_s3_object", name="Object")
-// @Tags
+// @Tags(identifierAttribute="arn", resourceType="Object")
 func resourceObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCreate,
@@ -313,12 +313,6 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	if tags, err := objectListTags(ctx, conn, bucket, key, optFns...); err == nil {
-		setTagsOut(ctx, Tags(tags))
-	} else if !tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
-		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
-	}
-
 	return diags
 }
 
@@ -398,14 +392,6 @@ func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := objectUpdateTags(ctx, conn, bucket, key, o, n, optFns...); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
 	return append(diags, resourceObjectRead(ctx, d, meta)...)
 }
 
@@ -461,7 +447,6 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	var optFns []func(*s3.Options)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 
 	bucket := d.Get("bucket").(string)
 	if isDirectoryBucket(bucket) {
@@ -470,13 +455,6 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
 	if arn.IsARN(bucket) && conn.Options().Region == names.GlobalRegionID {
 		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
-	}
-
-	tags := tftags.New(ctx, d.Get("tags").(map[string]interface{}))
-	if ignoreProviderDefaultTags(ctx, d) {
-		tags = tags.RemoveDefaultConfig(defaultTagsConfig)
-	} else {
-		tags = defaultTagsConfig.MergeTags(tftags.New(ctx, tags))
 	}
 
 	var body io.ReadSeeker
@@ -580,6 +558,14 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk("storage_class"); ok {
 		input.StorageClass = types.StorageClass(v.(string))
+	}
+
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := tftags.New(ctx, getContextTags(ctx))
+	if ignoreProviderDefaultTags(ctx, d) {
+		tags = tags.RemoveDefaultConfig(defaultTagsConfig)
+	} else {
+		tags = defaultTagsConfig.MergeTags(tftags.New(ctx, tags))
 	}
 
 	if len(tags) > 0 {
@@ -801,4 +787,30 @@ func newObjectARN(partition string, bucket, key string) arn.ARN {
 		Service:   "s3",
 		Resource:  fmt.Sprintf("%s/%s", bucket, key),
 	}
+}
+
+type objectARN struct {
+	arn.ARN
+	Bucket string
+	Key    string
+}
+
+func parseObjectARN(s string) (objectARN, error) {
+	arn, err := arn.Parse(s)
+	if err != nil {
+		return objectARN{}, err
+	}
+
+	result := objectARN{
+		ARN: arn,
+	}
+
+	parts := strings.SplitN(arn.Resource, "/", 2)
+	if len(parts) != 2 {
+		return objectARN{}, fmt.Errorf("S3 Object ARN: unexpected resource section: %s", arn.Resource)
+	}
+	result.Bucket = parts[0]
+	result.Key = parts[1]
+
+	return result, nil
 }
