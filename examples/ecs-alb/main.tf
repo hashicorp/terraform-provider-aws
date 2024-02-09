@@ -6,8 +6,9 @@ terraform {
 }
 
 provider "aws" {
-  region = var.aws_region
 }
+
+data "aws_region" "current" {}
 
 ## EC2
 
@@ -56,25 +57,10 @@ resource "aws_autoscaling_group" "app" {
   launch_configuration = aws_launch_configuration.app.name
 }
 
-data "aws_ami" "stable_coreos" {
-  most_recent = true
-
-  filter {
-    name   = "description"
-    values = ["CoreOS Container Linux stable *"]
-  }
-
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  owners = ["595879546273"] # CoreOS
+# For a list of Systems Manager Parameter Store parameters for ECS-optimized AMIs, see:
+# https://docs.aws.amazon.com/AmazonECS/latest/developerguide/retrieve-ecs-optimized_AMI.html
+data "aws_ssm_parameter" "ecs_image_id" {
+  name = "/aws/service/ecs/optimized-ami/amazon-linux-2023/recommended/image_id"
 }
 
 resource "aws_launch_configuration" "app" {
@@ -82,12 +68,11 @@ resource "aws_launch_configuration" "app" {
     aws_security_group.instance_sg.id,
   ]
 
-  key_name             = var.key_name
-  image_id             = data.aws_ami.stable_coreos.id
+  image_id             = data.aws_ssm_parameter.ecs_image_id.value
   instance_type        = var.instance_type
   iam_instance_profile = aws_iam_instance_profile.app.name
   user_data = templatefile("${path.module}/cloud-config.yml", {
-    aws_region         = var.aws_region
+    aws_region         = data.aws_region.current.name
     ecs_cluster_name   = aws_ecs_cluster.main.name
     ecs_log_level      = "info"
     ecs_agent_version  = "latest"
@@ -170,7 +155,7 @@ resource "aws_ecs_task_definition" "ghost" {
   container_definitions = templatefile("${path.module}/task-definition.json", {
     image_url        = "ghost:latest"
     container_name   = "ghost"
-    log_group_region = var.aws_region
+    log_group_region = data.aws_region.current.name
     log_group_name   = aws_cloudwatch_log_group.app.name
   })
 }

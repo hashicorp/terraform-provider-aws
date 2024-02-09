@@ -174,13 +174,11 @@ func main() {
 		}
 
 		if l.SdkId() == "" && !l.Exclude() {
-			log.Printf("in service data, line %d, for service %s, SdkId is required unless Exclude is set", i+lineOffset, l.HumanFriendly())
+			log.Fatalf("in service data, line %d, for service %s, SdkId is required unless Exclude is set", i+lineOffset, l.HumanFriendly())
 		}
 
-		if l.EndpointAPICall() == "" {
-			if l.ClientSDKV2() && len(l.Aliases()) == 0 && l.DeprecatedEnvVar() == "" && l.TfAwsEnvVar() == "" {
-				log.Printf("in service data, line %d, for service %s, EndpointAPICall is required for SDKv2 services without aliases or custom envvars", i+lineOffset, l.HumanFriendly())
-			}
+		if l.EndpointAPICall() == "" && !l.NotImplemented() && !l.Exclude() {
+			log.Fatalf("in service data, line %d, for service %s, EndpointAPICall is required for unless NotImplemented or Exclude is set", i+lineOffset, l.HumanFriendly())
 		}
 
 		rre := l.ResourcePrefixActual()
