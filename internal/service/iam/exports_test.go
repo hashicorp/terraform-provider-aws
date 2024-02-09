@@ -14,6 +14,7 @@ var (
 	ResourceSAMLProvider          = resourceSAMLProvider
 	ResourceServerCertificate     = resourceServerCertificate
 	ResourceServiceLinkedRole     = resourceServiceLinkedRole
+	ResourceUser                  = resourceUser
 	ResourceUserPolicyAttachment  = resourceUserPolicyAttachment
 
 	FindAttachedGroupPolicies           = findAttachedGroupPolicies
@@ -28,4 +29,5 @@ var (
 	FindPolicyByARN                     = findPolicyByARN
 	FindSAMLProviderByARN               = findSAMLProviderByARN
 	FindServerCertificateByName         = findServerCertificateByName
+	FindUserByName                      = findUserByName
 )

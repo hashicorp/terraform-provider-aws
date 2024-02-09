@@ -691,42 +691,42 @@ func sweepUsers(region string) error {
 			}
 		}
 
-		if err := DeleteUserGroupMemberships(ctx, conn, username); err != nil {
+		if err := deleteUserGroupMemberships(ctx, conn, username); err != nil {
 			sweeperErr := fmt.Errorf("error removing IAM User (%s) group memberships: %s", username, err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			continue
 		}
 
-		if err := DeleteUserAccessKeys(ctx, conn, username); err != nil {
+		if err := deleteUserAccessKeys(ctx, conn, username); err != nil {
 			sweeperErr := fmt.Errorf("error removing IAM User (%s) access keys: %s", username, err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			continue
 		}
 
-		if err := DeleteUserSSHKeys(ctx, conn, username); err != nil {
+		if err := deleteUserSSHKeys(ctx, conn, username); err != nil {
 			sweeperErr := fmt.Errorf("error removing IAM User (%s) SSH keys: %s", username, err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			continue
 		}
 
-		if err := DeleteUserVirtualMFADevices(ctx, conn, username); err != nil {
+		if err := deleteUserVirtualMFADevices(ctx, conn, username); err != nil {
 			sweeperErr := fmt.Errorf("error removing IAM User (%s) virtual MFA devices: %s", username, err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			continue
 		}
 
-		if err := DeactivateUserMFADevices(ctx, conn, username); err != nil {
+		if err := deactivateUserMFADevices(ctx, conn, username); err != nil {
 			sweeperErr := fmt.Errorf("error removing IAM User (%s) MFA devices: %s", username, err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			continue
 		}
 
-		if err := DeleteUserLoginProfile(ctx, conn, username); err != nil {
+		if err := deleteUserLoginProfile(ctx, conn, username); err != nil {
 			sweeperErr := fmt.Errorf("error removing IAM User (%s) login profile: %s", username, err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
