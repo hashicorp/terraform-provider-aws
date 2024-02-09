@@ -43,6 +43,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceSlot,
 			Name:    "Slot",
 		},
+		{
+			Factory: newResourceSlotType,
+			Name:    "Slot Type",
+		},
 	}
 }
 

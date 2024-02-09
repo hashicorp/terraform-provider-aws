@@ -244,6 +244,7 @@ func ResourceFunction() *schema.Resource {
 							Optional:         true,
 							Default:          "",
 							ValidateDiagFunc: enum.Validate[types.ApplicationLogLevel](),
+							DiffSuppressFunc: suppressLoggingConfigUnspecifiedLogLevels,
 						},
 						"log_format": {
 							Type:             schema.TypeString,
@@ -261,6 +262,7 @@ func ResourceFunction() *schema.Resource {
 							Optional:         true,
 							Default:          "",
 							ValidateDiagFunc: enum.Validate[types.SystemLogLevel](),
+							DiffSuppressFunc: suppressLoggingConfigUnspecifiedLogLevels,
 						},
 					},
 				},
@@ -1466,6 +1468,17 @@ func flattenLoggingConfig(apiObject *types.LoggingConfig) []map[string]interface
 	}
 
 	return []map[string]interface{}{m}
+}
+
+// Suppress diff if log levels have not been specified, unless log_format has changed
+func suppressLoggingConfigUnspecifiedLogLevels(k, old, new string, d *schema.ResourceData) bool {
+	if d.HasChanges("logging_config.0.log_format") {
+		return false
+	}
+	if old != "" && new == "" {
+		return true
+	}
+	return false
 }
 
 func flattenEphemeralStorage(response *types.EphemeralStorage) []map[string]interface{} {

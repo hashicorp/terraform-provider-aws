@@ -33,6 +33,7 @@ variable "service_labels" {
     "backupgateway",
     "batch",
     "bedrock",
+    "bedrockagent",
     "billingconductor",
     "braket",
     "budgets",

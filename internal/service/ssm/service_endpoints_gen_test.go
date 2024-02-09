@@ -14,6 +14,7 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	ssm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ssm"
+	ssm_sdkv1 "github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -49,6 +50,8 @@ type caseExpectations struct {
 }
 
 type setupFunc func(setup *caseSetup)
+
+type callFunc func(ctx context.Context, t *testing.T, meta *conns.AWSClient) string
 
 const (
 	packageNameConfigEndpoint = "https://packagename-config.endpoint.test/"
@@ -200,13 +203,25 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 		},
 	}
 
-	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-		testcase := testcase
+	t.Run("v1", func(t *testing.T) {
+		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
+			testcase := testcase
 
-		t.Run(name, func(t *testing.T) {
-			testEndpointCase(t, region, testcase)
-		})
-	}
+			t.Run(name, func(t *testing.T) {
+				testEndpointCase(t, region, testcase, callServiceV1)
+			})
+		}
+	})
+
+	t.Run("v2", func(t *testing.T) {
+		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
+			testcase := testcase
+
+			t.Run(name, func(t *testing.T) {
+				testEndpointCase(t, region, testcase, callServiceV2)
+			})
+		}
+	})
 }
 
 func defaultEndpoint(region string) string {
@@ -226,7 +241,7 @@ func defaultEndpoint(region string) string {
 	return ep.URI.String()
 }
 
-func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
+func callServiceV2(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
 	t.Helper()
 
 	var endpoint string
@@ -246,6 +261,20 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) strin
 	} else if !errors.Is(err, errCancelOperation) {
 		t.Fatalf("Unexpected error: %s", err)
 	}
+
+	return endpoint
+}
+
+func callServiceV1(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
+	t.Helper()
+
+	client := meta.SSMConn(ctx)
+
+	req, _ := client.ListDocumentsRequest(&ssm_sdkv1.ListDocumentsInput{})
+
+	req.HTTPRequest.URL.Path = "/"
+
+	endpoint := req.HTTPRequest.URL.String()
 
 	return endpoint
 }
@@ -316,7 +345,7 @@ func expectBaseConfigFileEndpoint() caseExpectations {
 	}
 }
 
-func testEndpointCase(t *testing.T, region string, testcase endpointTestCase) {
+func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, callF callFunc) {
 	t.Helper()
 
 	ctx := context.Background()
@@ -376,7 +405,7 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase) {
 
 	meta := p.Meta().(*conns.AWSClient)
 
-	endpoint := callService(ctx, t, meta)
+	endpoint := callF(ctx, t, meta)
 
 	if endpoint != testcase.expected.endpoint {
 		t.Errorf("expected endpoint %q, got %q", testcase.expected.endpoint, endpoint)
