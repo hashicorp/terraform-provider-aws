@@ -19,7 +19,7 @@ import (
 func testAccRegion_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_account_region.test"
-	region := "ap-southeast-3"
+	region := "ap-southeast-3" //lintignore:AWSAT003
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -65,8 +65,8 @@ func testAccRegionExists(ctx context.Context, n string) resource.TestCheckFunc {
 func testAccRegionConfig_basic(region string, enabled string) string {
 	return fmt.Sprintf(`
 resource "aws_account_region" "test" {
-  region     = %[1]q
-  enabled    = %[2]q
+  region  = %[1]q
+  enabled = %[2]q
 }
 `, region, enabled)
 }

@@ -5,7 +5,6 @@ package account
 
 import (
 	"context"
-	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -40,6 +39,7 @@ func resourceRegion() *schema.Resource {
 			},
 			"region": {
 				Type:     schema.TypeString,
+				Required: true,
 				ForceNew: true,
 			},
 			"enabled": {
@@ -60,16 +60,14 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
-	accountID := meta.(*conns.AWSClient).AccountID
+	accountID := ""
 	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 	}
 
 	region := d.Get("region").(string)
 
-	id := AccountRegionResourceID(accountID, region)
-
-	var err error
+	id := RegionResourceID(accountID, region)
 
 	output, err := FindRegionOptInStatus(ctx, conn, accountID, region)
 
@@ -79,10 +77,13 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if v := d.Get("enabled").(bool); v {
 		if output.RegionOptStatus != accounttypes.RegionOptStatusEnabledByDefault {
-			_, err := conn.EnableRegion(ctx, &account.EnableRegionInput{
+			input := &account.EnableRegionInput{
 				RegionName: aws.String(region),
-				AccountId:  aws.String(accountID),
-			})
+			}
+			if accountID != "" {
+				input.AccountId = aws.String(accountID)
+			}
+			_, err := conn.EnableRegion(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "Enabling account region (%s): %s", id, err)
@@ -93,11 +94,13 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		if output.RegionOptStatus == accounttypes.RegionOptStatusEnabledByDefault {
 			return sdkdiag.AppendErrorf(diags, "cannot disable region (%s) that is enabled by default", id)
 		}
-
-		_, err = conn.DisableRegion(ctx, &account.DisableRegionInput{
+		input := &account.DisableRegionInput{
 			RegionName: aws.String(region),
-			AccountId:  aws.String(accountID),
-		})
+		}
+		if accountID != "" {
+			input.AccountId = aws.String(accountID)
+		}
+		_, err = conn.DisableRegion(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "Disabling account region (%s): %s", id, err)
@@ -116,7 +119,7 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
-	accountID := meta.(*conns.AWSClient).AccountID
+	accountID := ""
 	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 	}
@@ -124,12 +127,6 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 	region := d.Get("region").(string)
 
 	output, err := FindRegionOptInStatus(ctx, conn, accountID, region)
-
-	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] Account Region (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Account Region (%s): %s", d.Id(), err)
@@ -147,11 +144,11 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-const AccountRegionResourceIDSeparator = ","
+const RegionResourceIDSeparator = ","
 
-func AccountRegionResourceID(accountID, region string) string {
+func RegionResourceID(accountID string, region string) string {
 	parts := []string{accountID, region}
-	id := strings.Join(parts, AccountRegionResourceIDSeparator)
+	id := strings.Join(parts, RegionResourceIDSeparator)
 
 	return id
 }
