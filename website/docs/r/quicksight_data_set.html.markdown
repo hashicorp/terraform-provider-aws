@@ -197,7 +197,7 @@ For a `physical_table_map` item to be valid, only one of `custom_sql`, `relation
 * `data_source_arn` - (Required) ARN of the data source.
 * `name` - (Required) Display name for the SQL query result.
 * `sql_query` - (Required) SQL query.
-* `columns` - (Optional) Column schema from the SQL query result set. See [columns](#columns).
+* `columns` - (Required) Column schema from the SQL query result set. See [columns](#columns).
 
 ### columns
 
