@@ -252,6 +252,10 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	// Delete non-default policy versions.
 	versions, err := findPolicyVersionsByARN(ctx, conn, d.Id())
 
+	if tfresource.NotFound(err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Policy (%s) versions: %s", d.Id(), err)
 	}
