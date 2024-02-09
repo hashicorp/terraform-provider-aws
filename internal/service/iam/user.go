@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -223,39 +224,32 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	// IAM Users must be removed from all groups before they can be deleted
+	// IAM Users must be removed from all groups before they can be deleted.
 	if err := deleteUserGroupMemberships(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "removing IAM User (%s) group memberships: %s", d.Id(), err)
+		if !tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+			return sdkdiag.AppendErrorf(diags, "removing IAM User (%s) group memberships: %s", d.Id(), err)
+		}
 	}
 
-	// All access keys, MFA devices and login profile for the user must be removed
+	// All access keys, MFA devices and login profile for the user must be removed.
 	if d.Get("force_destroy").(bool) {
-		if err := deleteUserAccessKeys(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "removing IAM User (%s) access keys: %s", d.Id(), err)
-		}
-
-		if err := deleteUserSSHKeys(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "removing IAM User (%s) SSH keys: %s", d.Id(), err)
-		}
-
-		if err := deleteUserVirtualMFADevices(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "removing IAM User (%s) Virtual MFA devices: %s", d.Id(), err)
-		}
-
-		if err := deactivateUserMFADevices(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "removing IAM User (%s) MFA devices: %s", d.Id(), err)
-		}
-
-		if err := deleteUserLoginProfile(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "removing IAM User (%s) login profile: %s", d.Id(), err)
-		}
-
-		if err := deleteUserSigningCertificates(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "removing IAM User (%s) signing certificate: %s", d.Id(), err)
-		}
-
-		if err := deleteServiceSpecificCredentials(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "removing IAM User (%s) Service Specific Credentials: %s", d.Id(), err)
+		for _, v := range []struct {
+			f      func(context.Context, *iam.IAM, string) error
+			format string
+		}{
+			{deleteUserAccessKeys, "removing IAM User (%s) access keys: %s"},
+			{deleteUserSSHKeys, "removing IAM User (%s) access keys: %s"},
+			{deleteUserVirtualMFADevices, "removing IAM User (%s) Virtual MFA devices: %s"},
+			{deactivateUserMFADevices, "removing IAM User (%s) MFA devices: %s"},
+			{deleteUserLoginProfile, "removing IAM User (%s) login profile: %s"},
+			{deleteUserSigningCertificates, "removing IAM User (%s) signing certificate: %s"},
+			{deleteServiceSpecificCredentials, "removing IAM User (%s) Service Specific Credentials: %s"},
+		} {
+			if err := v.f(ctx, conn, d.Id()); err != nil {
+				if !tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+					return sdkdiag.AppendErrorf(diags, v.format, d.Id(), err)
+				}
+			}
 		}
 	}
 
@@ -299,25 +293,32 @@ func findUserByName(ctx context.Context, conn *iam.IAM, name string) (*iam.User,
 	return output.User, nil
 }
 
-func deleteUserGroupMemberships(ctx context.Context, conn *iam.IAM, username string) error {
-	var groups []string
-	listGroups := &iam.ListGroupsForUserInput{
-		UserName: aws.String(username),
+func deleteUserGroupMemberships(ctx context.Context, conn *iam.IAM, user string) error {
+	input := &iam.ListGroupsForUserInput{
+		UserName: aws.String(user),
 	}
-	pageOfGroups := func(page *iam.ListGroupsForUserOutput, lastPage bool) (shouldContinue bool) {
-		for _, g := range page.Groups {
-			groups = append(groups, *g.GroupName)
+	var groupNames []string
+
+	err := conn.ListGroupsForUserPagesWithContext(ctx, input, func(page *iam.ListGroupsForUserOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
+
+		for _, v := range page.Groups {
+			groupNames = append(groupNames, aws.StringValue(v.GroupName))
+		}
+
 		return !lastPage
-	}
-	err := conn.ListGroupsForUserPagesWithContext(ctx, listGroups, pageOfGroups)
+	})
+
 	if err != nil {
-		return fmt.Errorf("removing user %q from all groups: %s", username, err)
+		return fmt.Errorf("listing IAM User (%s) groups: %w", user, err)
 	}
-	for _, g := range groups {
+
+	for _, groupName := range groupNames {
 		// use iam group membership func to remove user from all groups
-		log.Printf("[DEBUG] Removing IAM User %s from IAM Group %s", username, g)
-		if err := removeUsersFromGroup(ctx, conn, []string{username}, g); err != nil {
+		log.Printf("[DEBUG] Removing IAM User %s from IAM Group %s", user, groupName)
+		if err := removeUsersFromGroup(ctx, conn, tfslices.Of(user), groupName); err != nil {
 			return err
 		}
 	}
