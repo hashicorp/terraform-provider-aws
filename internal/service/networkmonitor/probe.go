@@ -4,10 +4,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkmonitor"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmonitor/types"
@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -63,7 +64,7 @@ func (r *resourceNetworkMonitorProbe) Schema(ctx context.Context, request resour
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexp.MustCompile("[a-zA-Z0-9_-]+"), "Must match [a-zA-Z0-9_-]+"),
+					stringvalidator.RegexMatches(regexache.MustCompile("[a-zA-Z0-9_-]+"), "Must match [a-zA-Z0-9_-]+"),
 					stringvalidator.LengthBetween(1, 255),
 				},
 			},
@@ -113,7 +114,7 @@ func (r *resourceNetworkMonitorProbe) Schema(ctx context.Context, request resour
 						Required: true,
 						Validators: []validator.String{
 							stringvalidator.LengthBetween(20, 2048),
-							stringvalidator.RegexMatches(regexp.MustCompile("arn:.*"), "Must match pattern arn:*"),
+							stringvalidator.RegexMatches(regexache.MustCompile("arn:.*"), "Must match pattern arn:*"),
 						},
 					},
 					"tags": schema.MapAttribute{
@@ -148,7 +149,7 @@ func (r *resourceNetworkMonitorProbe) Create(ctx context.Context, req resource.C
 			&probe,
 			basetypes.ObjectAsOptions{UnhandledNullAsEmpty: false, UnhandledUnknownAsEmpty: false})...)
 
-	probeConfig := expandProbeConfig(ctx, probe, resp.Diagnostics)
+	probeConfig := expandProbeConfig(ctx, probe)
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -386,13 +387,8 @@ func statusProbe(ctx context.Context, conn *networkmonitor.Client, id string) re
 
 func waitProbeReady(ctx context.Context, conn *networkmonitor.Client, id string) (*networkmonitor.GetProbeOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			string(awstypes.ProbeStatePending),
-		},
-		Target: []string{
-			string(awstypes.ProbeStateActive),
-			string(awstypes.ProbeStateInactive),
-		},
+		Pending:    enum.Slice(awstypes.ProbeStatePending),
+		Target:     enum.Slice(awstypes.ProbeStateActive, awstypes.ProbeStateInactive),
 		Refresh:    statusProbe(ctx, conn, id),
 		Timeout:    ProbeTimeout,
 		MinTimeout: 10 * time.Second,
@@ -408,11 +404,7 @@ func waitProbeReady(ctx context.Context, conn *networkmonitor.Client, id string)
 
 func waitProbeDeleted(ctx context.Context, conn *networkmonitor.Client, id string) (*networkmonitor.GetProbeOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			string(awstypes.ProbeStateActive),
-			string(awstypes.ProbeStateInactive),
-			string(awstypes.ProbeStateDeleting),
-		},
+		Pending:    enum.Slice(awstypes.ProbeStateActive, awstypes.ProbeStateInactive, awstypes.ProbeStateInactive),
 		Target:     []string{},
 		Refresh:    statusProbe(ctx, conn, id),
 		Timeout:    ProbeTimeout,
@@ -502,7 +494,6 @@ type probeConfigModel struct {
 }
 
 func flattenProbeConfig(ctx context.Context, object networkmonitor.GetProbeOutput) (types.Object, diag.Diagnostics) {
-
 	var diags diag.Diagnostics
 
 	t := map[string]attr.Value{
@@ -526,8 +517,7 @@ func flattenProbeConfig(ctx context.Context, object networkmonitor.GetProbeOutpu
 	return objVal, diags
 }
 
-func expandProbeConfig(ctx context.Context, object probeConfigModel, diags diag.Diagnostics) awstypes.ProbeInput {
-
+func expandProbeConfig(ctx context.Context, object probeConfigModel) awstypes.ProbeInput {
 	return awstypes.ProbeInput{
 		Destination:     object.Destination.ValueStringPointer(),
 		DestinationPort: aws.Int32(int32(object.DestinationPort.ValueInt64())),

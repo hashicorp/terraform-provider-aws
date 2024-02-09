@@ -3,9 +3,9 @@ package networkmonitor
 import (
 	"context"
 	"errors"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/networkmonitor"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/networkmonitor/types"
@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -73,7 +74,7 @@ func (r *resourceNetworkMonitorMonitor) Schema(ctx context.Context, request reso
 			"monitor_name": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.RegexMatches(regexp.MustCompile("[a-zA-Z0-9_-]+"), "Must match [a-zA-Z0-9_-]+"),
+					stringvalidator.RegexMatches(regexache.MustCompile("[a-zA-Z0-9_-]+"), "Must match [a-zA-Z0-9_-]+"),
 					stringvalidator.LengthBetween(1, 255),
 				},
 			},
@@ -257,7 +258,6 @@ func (r *resourceNetworkMonitorMonitor) Delete(ctx context.Context, req resource
 		)
 		return
 	}
-
 }
 
 func statusMonitor(ctx context.Context, conn *networkmonitor.Client, id string) retry.StateRefreshFunc {
@@ -283,13 +283,8 @@ func statusMonitor(ctx context.Context, conn *networkmonitor.Client, id string) 
 
 func waitMonitorReady(ctx context.Context, conn *networkmonitor.Client, id string) (*networkmonitor.GetMonitorOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			string(awstypes.MonitorStatePending),
-		},
-		Target: []string{
-			string(awstypes.MonitorStateActive),
-			string(awstypes.MonitorStateInactive),
-		},
+		Pending:    enum.Slice(awstypes.MonitorStatePending),
+		Target:     enum.Slice(awstypes.MonitorStateActive, awstypes.MonitorStateInactive),
 		Refresh:    statusMonitor(ctx, conn, id),
 		Timeout:    MonitorTimeout,
 		MinTimeout: 10 * time.Second,
@@ -305,11 +300,7 @@ func waitMonitorReady(ctx context.Context, conn *networkmonitor.Client, id strin
 
 func waitMonitorDeleted(ctx context.Context, conn *networkmonitor.Client, id string) (*networkmonitor.GetMonitorOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			string(awstypes.MonitorStateDeleting),
-			string(awstypes.MonitorStateActive),
-			string(awstypes.MonitorStateInactive),
-		},
+		Pending:    enum.Slice(awstypes.MonitorStateDeleting, awstypes.MonitorStateActive, awstypes.MonitorStateInactive),
 		Target:     []string{},
 		Refresh:    statusMonitor(ctx, conn, id),
 		Timeout:    MonitorTimeout,

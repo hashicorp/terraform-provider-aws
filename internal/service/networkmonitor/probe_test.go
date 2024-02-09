@@ -141,7 +141,6 @@ func testAccCheckProbeDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			return create.Error(names.NetworkMonitor, create.ErrActionCheckingDestroyed, tfnetworkmonitor.ResNameNetworkMonitorMonitor, rs.Primary.ID, errors.New("not destroyed"))
-
 		}
 
 		return nil
