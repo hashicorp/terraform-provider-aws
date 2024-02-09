@@ -2638,6 +2638,14 @@ func TestAccEC2Instance_EBSRootDevice_multipleDynamicEBSBlockDevices(t *testing.
 					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"delete_on_termination": "true",
+						"device_name":           "/dev/sdd",
+						"encrypted":             "false",
+						"iops":                  "100",
+						"volume_size":           "10",
+						"volume_type":           "gp2",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
+						"delete_on_termination": "true",
 						"device_name":           "/dev/sdc",
 						"encrypted":             "false",
 						"iops":                  "100",
@@ -2647,14 +2655,6 @@ func TestAccEC2Instance_EBSRootDevice_multipleDynamicEBSBlockDevices(t *testing.
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
 						"delete_on_termination": "true",
 						"device_name":           "/dev/sdb",
-						"encrypted":             "false",
-						"iops":                  "100",
-						"volume_size":           "10",
-						"volume_type":           "gp2",
-					}),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "ebs_block_device.*", map[string]string{
-						"delete_on_termination": "true",
-						"device_name":           "/dev/sda",
 						"encrypted":             "false",
 						"iops":                  "100",
 						"volume_size":           "10",
@@ -5630,28 +5630,6 @@ func defaultSubnetCount(ctx context.Context, t *testing.T) int {
 	}
 
 	return len(subnets)
-}
-
-// testAccLatestAmazonLinuxPVEBSAMIConfig returns the configuration for a data source that
-// describes the latest Amazon Linux AMI using PV virtualization and an EBS root device.
-// The data source is named 'amzn-ami-minimal-pv-ebs'.
-func testAccLatestAmazonLinuxPVEBSAMIConfig() string {
-	return `
-data "aws_ami" "amzn-ami-minimal-pv-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-pv-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-`
 }
 
 // testAccLatestWindowsServer2016CoreAMIConfig returns the configuration for a data source that
@@ -8654,18 +8632,18 @@ resource "aws_instance" "test" {
 }
 
 func testAccInstanceConfig_dynamicEBSBlockDevices(rName string) string {
-	return acctest.ConfigCompose(testAccLatestAmazonLinuxPVEBSAMIConfig(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami = data.aws_ami.amzn-ami-minimal-pv-ebs.id
-  # tflint-ignore: aws_instance_previous_type
-  instance_type = "m3.medium"
+  ami = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+
+  instance_type = "t2.medium"
 
   tags = {
     Name = %[1]q
   }
 
   dynamic "ebs_block_device" {
-    for_each = ["a", "b", "c"]
+    for_each = ["b", "c", "d"]
     iterator = device
 
     content {
