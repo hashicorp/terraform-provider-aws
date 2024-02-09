@@ -168,7 +168,7 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 
 	if len(instanceProfile.Roles) > 0 {
 		roleName := aws.StringValue(instanceProfile.Roles[0].RoleName)
-		_, err := FindRoleByName(ctx, conn, roleName)
+		_, err := findRoleByName(ctx, conn, roleName)
 
 		if err != nil {
 			if tfresource.NotFound(err) {
