@@ -5,6 +5,7 @@ package iam
 
 // Exports for use in tests only.
 var (
+	ResourceGroup                 = resourceGroup
 	ResourceGroupPolicyAttachment = resourceGroupPolicyAttachment
 	ResourceInstanceProfile       = resourceInstanceProfile
 	ResourceOpenIDConnectProvider = resourceOpenIDConnectProvider
@@ -25,6 +26,7 @@ var (
 	FindAttachedUserPolicies            = findAttachedUserPolicies
 	FindAttachedUserPolicyByTwoPartKey  = findAttachedUserPolicyByTwoPartKey
 	FindEntitiesForPolicyByARN          = findEntitiesForPolicyByARN
+	FindGroupByName                     = findGroupByName
 	FindInstanceProfileByName           = findInstanceProfileByName
 	FindOpenIDConnectProviderByARN      = findOpenIDConnectProviderByARN
 	FindPolicyByARN                     = findPolicyByARN

@@ -111,8 +111,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iam_account_password_policy",
 		},
 		{
-			Factory:  ResourceGroup,
+			Factory:  resourceGroup,
 			TypeName: "aws_iam_group",
+			Name:     "Group",
 		},
 		{
 			Factory:  ResourceGroupMembership,
