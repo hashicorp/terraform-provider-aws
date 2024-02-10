@@ -10,6 +10,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -20,7 +21,7 @@ import (
 // it may also be a different identifier depending on the service.
 func listTagsV2(ctx context.Context, conn *elasticloadbalancingv2.Client, identifier string, optFns ...func(*elasticloadbalancingv2.Options)) (tftags.KeyValueTags, error) {
 	input := &elasticloadbalancingv2.DescribeTagsInput{
-		ResourceArns: []string{identifier},
+		ResourceArns: tfslices.Of(identifier),
 	}
 
 	output, err := conn.DescribeTags(ctx, input, optFns...)
@@ -102,7 +103,7 @@ func updateTagsV2(ctx context.Context, conn *elasticloadbalancingv2.Client, iden
 	removedTags = removedTags.IgnoreSystem(names.ELBV2)
 	if len(removedTags) > 0 {
 		input := &elasticloadbalancingv2.RemoveTagsInput{
-			ResourceArns: []string{identifier},
+			ResourceArns: tfslices.Of(identifier),
 			TagKeys:      removedTags.Keys(),
 		}
 
@@ -117,7 +118,7 @@ func updateTagsV2(ctx context.Context, conn *elasticloadbalancingv2.Client, iden
 	updatedTags = updatedTags.IgnoreSystem(names.ELBV2)
 	if len(updatedTags) > 0 {
 		input := &elasticloadbalancingv2.AddTagsInput{
-			ResourceArns: []string{identifier},
+			ResourceArns: tfslices.Of(identifier),
 			Tags:         tagsV2(updatedTags),
 		}
 

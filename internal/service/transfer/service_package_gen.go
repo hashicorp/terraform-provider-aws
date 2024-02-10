@@ -5,6 +5,8 @@ package transfer
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	transfer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/transfer"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	transfer_sdkv1 "github.com/aws/aws-sdk-go/service/transfer"
@@ -83,8 +85,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_transfer_ssh_key",
 		},
 		{
-			Factory:  ResourceTag,
+			Factory:  resourceTag,
 			TypeName: "aws_transfer_tag",
+			Name:     "Transfer Resource Tag",
 		},
 		{
 			Factory:  ResourceUser,
@@ -114,6 +117,17 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*t
 	sess := config["session"].(*session_sdkv1.Session)
 
 	return transfer_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*transfer_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return transfer_sdkv2.NewFromConfig(cfg, func(o *transfer_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

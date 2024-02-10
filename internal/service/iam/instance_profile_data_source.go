@@ -57,7 +57,7 @@ func dataSourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	name := d.Get("name").(string)
-	instanceProfile, err := FindInstanceProfileByName(ctx, conn, name)
+	instanceProfile, err := findInstanceProfileByName(ctx, conn, name)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Instance Profile (%s): %s", name, err)

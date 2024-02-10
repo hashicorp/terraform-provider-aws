@@ -58,7 +58,7 @@ const (
 )
 
 // @FrameworkResource(name="Role")
-// @Tags(identifierAttribute="id")
+// @Tags(identifierAttribute="id", resourceType="Role")
 func NewResourceRole(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIamRole{}
 	r.SetMigratedFromPluginSDK(true)
@@ -1034,7 +1034,7 @@ func (r resourceIamRole) Update(ctx context.Context, req resource.UpdateRequest,
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func FindRoleByName(ctx context.Context, conn *iam.IAM, name string) (*iam.Role, error) {
+func findRoleByName(ctx context.Context, conn *iam.IAM, name string) (*iam.Role, error) {
 	input := &iam.GetRoleInput{
 		RoleName: aws.String(name),
 	}

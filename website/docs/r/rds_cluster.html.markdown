@@ -104,6 +104,9 @@ resource "aws_rds_cluster" "example" {
 
 -> More information about RDS Serverless v2 Clusters can be found in the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.html).
 
+~> **Note:** Unlike Serverless v1, in Serverless v2 the `storage_encrypted` value is set to `false` by default.
+This is because Serverless v1 uses the `serverless` `engine_mode`, but Serverless v2 uses the `provisioned` `engine_mode`.
+
 To create a Serverless v2 RDS cluster, you must additionally specify the `engine_mode` and `serverlessv2_scaling_configuration` attributes. An `aws_rds_cluster_instance` resource must also be added to the cluster with the `instance_class` attribute specified.
 
 ```terraform
@@ -115,6 +118,7 @@ resource "aws_rds_cluster" "example" {
   database_name      = "test"
   master_username    = "test"
   master_password    = "must_be_eight_characters"
+  storage_encrypted  = true
 
   serverlessv2_scaling_configuration {
     max_capacity = 1.0
