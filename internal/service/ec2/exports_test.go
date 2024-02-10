@@ -9,8 +9,8 @@ var (
 	ResourceSecurityGroupEgressRule  = newResourceSecurityGroupEgressRule
 	ResourceSecurityGroupIngressRule = newResourceSecurityGroupIngressRule
 	ResourceEBSFastSnapshotRestore   = newResourceEBSFastSnapshotRestore
-
-	FindEBSFastSnapshotRestoreByID = findEBSFastSnapshotRestoreByID
+	FindEBSFastSnapshotRestoreByID   = findEBSFastSnapshotRestoreByID
+	ResourcePublicIPv4Pool           = newResourcePublicIPv4Pool
 
 	UpdateTags   = updateTags
 	UpdateTagsV2 = updateTagsV2

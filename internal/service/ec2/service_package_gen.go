@@ -42,6 +42,13 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newResourcePublicIPv4Pool,
+			Name:    "Public IPv4 Pool",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
 			Factory: newResourceSecurityGroupEgressRule,
 			Name:    "Security Group Egress Rule",
 			Tags: &types.ServicePackageResourceTags{
