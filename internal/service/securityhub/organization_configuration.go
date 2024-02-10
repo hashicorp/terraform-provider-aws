@@ -28,7 +28,9 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 		CreateWithoutTimeout: resourceOrganizationConfigurationUpdate,
 		ReadWithoutTimeout:   resourceOrganizationConfigurationRead,
 		UpdateWithoutTimeout: resourceOrganizationConfigurationUpdate,
-		DeleteWithoutTimeout: schema.NoopContext,
+		// on delete reset to a default configuration.
+		// non-default CENTRAL configuration blocks dependent resources from being destroyed.
+		DeleteWithoutTimeout: resourceOrganizationConfigurationUpdate,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
