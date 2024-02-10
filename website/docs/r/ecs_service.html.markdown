@@ -279,14 +279,14 @@ For more information, see [Task Networking](https://docs.aws.amazon.com/AmazonEC
 `tls` supports the following:
 
 * `issuer_cert_authority` - (Required) The details of the certificate authority which will issue the certificate.
-* `kms_key` - (Required) The KMS key used to encrypt the private key in Secrets Manager.
-* `role_arn` - (Required) The ARN of the IAM Role that's associated with the Service Connect TLS.
+* `kms_key` - (Optional) The KMS key used to encrypt the private key in Secrets Manager.
+* `role_arn` -(Optional) The ARN of the IAM Role that's associated with the Service Connect TLS.
 
 ### issuer_cert_authority
 
 `issuer_cert_authority` supports the following:
 
-* `aws_pca_authority_arn`: The ARN of the [`aws_acmpca_certificate_authority`](/docs/providers/aws/r/acmpca_certificate_authority.html) used to create the TLS Certificates.
+* `aws_pca_authority_arn`: (Optional) The ARN of the [`aws_acmpca_certificate_authority`](/docs/providers/aws/r/acmpca_certificate_authority.html) used to create the TLS Certificates.
 
 ### client_alias
 
