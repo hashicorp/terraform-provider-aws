@@ -5,7 +5,9 @@ package securityhub
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
@@ -43,6 +45,25 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[types.AutoEnableStandards](),
 			},
+			"organization_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"configuration_type": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.OrganizationConfigurationConfigurationType](),
+						},
+						"status": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -57,6 +78,10 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 
 	if v, ok := d.GetOk("auto_enable_standards"); ok {
 		input.AutoEnableStandards = types.AutoEnableStandards(v.(string))
+	}
+
+	if v, ok := d.GetOk("organization_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.OrganizationConfiguration = expandOrganizationConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	_, err := conn.UpdateOrganizationConfiguration(ctx, input)
@@ -76,7 +101,7 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	output, err := FindOrganizationConfiguration(ctx, conn)
+	output, err := waitOrganizationConfigurationEnabled(ctx, conn, d.Timeout(schema.TimeoutDefault))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Organization Configuration %s not found, removing from state", d.Id())
@@ -91,28 +116,98 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 	d.Set("auto_enable", output.AutoEnable)
 	d.Set("auto_enable_standards", output.AutoEnableStandards)
 
+	if err := d.Set("organization_configuration", []interface{}{flattenOrganizationConfiguration(output.OrganizationConfiguration)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting organization_configuration: %s", err)
+	} else {
+		d.Set("organization_configuration", nil)
+	}
+
 	return diags
 }
 
-func FindOrganizationConfiguration(ctx context.Context, conn *securityhub.Client) (*securityhub.DescribeOrganizationConfigurationOutput, error) {
-	input := &securityhub.DescribeOrganizationConfigurationInput{}
+func findOrganizationConfiguration(ctx context.Context, conn *securityhub.Client) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &securityhub.DescribeOrganizationConfigurationInput{}
+		output, err := conn.DescribeOrganizationConfiguration(ctx, input)
 
-	output, err := conn.DescribeOrganizationConfiguration(ctx, input)
+		if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
+			return nil, "", &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
 
-	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, "", err
+		}
+
+		if output == nil || output.OrganizationConfiguration == nil {
+			return nil, "", tfresource.NewEmptyResultError(input)
+		}
+
+		switch output.OrganizationConfiguration.Status {
+		case types.OrganizationConfigurationStatusPending:
+			return nil, "", nil
+		case types.OrganizationConfigurationStatusEnabled:
+			return output, string(output.OrganizationConfiguration.Status), nil
+		default:
+			var statusErr error
+			if msg := output.OrganizationConfiguration.StatusMessage; msg != nil && len(*msg) > 0 {
+				statusErr = fmt.Errorf("StatusMessage: %s", *msg)
+			}
+			return nil, "", &retry.UnexpectedStateError{
+				LastError: statusErr,
+				State:     string(output.OrganizationConfiguration.Status),
+				ExpectedState: []string{
+					string(types.OrganizationConfigurationStatusEnabled),
+					string(types.OrganizationConfigurationStatusPending),
+				},
+			}
 		}
 	}
+}
 
-	if err != nil {
-		return nil, err
+func waitOrganizationConfigurationEnabled(ctx context.Context, conn *securityhub.Client, timeout time.Duration) (*securityhub.DescribeOrganizationConfigurationOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:                   enum.Slice(types.OrganizationConfigurationStatusPending),
+		Target:                    enum.Slice(types.OrganizationConfigurationStatusEnabled),
+		Refresh:                   findOrganizationConfiguration(ctx, conn),
+		Timeout:                   timeout,
+		NotFoundChecks:            20,
+		ContinuousTargetOccurence: 2,
 	}
 
-	if output == nil || output.OrganizationConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*securityhub.DescribeOrganizationConfigurationOutput); ok {
+		return out, err
 	}
 
-	return output, nil
+	return nil, err
+}
+
+func expandOrganizationConfiguration(tfMap map[string]interface{}) *types.OrganizationConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.OrganizationConfiguration{}
+
+	if v, ok := tfMap["configuration_type"].(string); ok && len(v) > 0 {
+		apiObject.ConfigurationType = types.OrganizationConfigurationConfigurationType(v)
+	}
+
+	return apiObject
+}
+
+func flattenOrganizationConfiguration(apiObject *types.OrganizationConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"configuration_type": apiObject.ConfigurationType,
+		"status":             apiObject.Status,
+	}
+
+	return tfMap
 }
