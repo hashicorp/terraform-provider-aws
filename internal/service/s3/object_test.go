@@ -2695,11 +2695,8 @@ resource "aws_s3_bucket_versioning" "test" {
 
 resource "aws_s3_object" "object" {
   # Must have bucket versioning enabled first
-  bucket  = aws_s3_bucket_versioning.test.bucket
-//   key     = %[2]q
-//   content = %[3]q
+  bucket = aws_s3_bucket_versioning.test.bucket
   key    = %[2]q
-//   content = "test-content"
 
   tags = {
     %[3]q = %[4]q
@@ -2723,14 +2720,12 @@ resource "aws_s3_bucket_versioning" "test" {
 
 resource "aws_s3_object" "object" {
   # Must have bucket versioning enabled first
-  bucket  = aws_s3_bucket_versioning.test.bucket
-//   key     = %[2]q
-//   content = %[3]q
-key    = %[2]q
+  bucket = aws_s3_bucket_versioning.test.bucket
+  key    = %[2]q
 
   tags = {
     %[3]q = %[4]q
-	%[5]q = %[6]q
+    %[5]q = %[6]q
   }
 }
 `, rName, key, tagKey1, tagValue1, tagKey2, tagValue2)
