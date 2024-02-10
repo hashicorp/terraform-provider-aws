@@ -32,7 +32,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `description` - Description of the pool, if any.
 * `network_border_group` - Name of the location from which the address pool is advertised.
-* pool_address_ranges` - List of Address Ranges in the Pool; each address range record contains:
+* `pool_address_ranges` - List of Address Ranges in the Pool; each address range record contains:
     * `address_count` - Number of addresses in the range.
     * `available_address_count` - Number of available addresses in the range.
     * `first_address` - First address in the range.
