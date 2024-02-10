@@ -876,6 +876,36 @@ func TestAccRDSCluster_missingUserNameCausesError(t *testing.T) {
 	})
 }
 
+func TestAccRDSCluster_domain(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbCluster rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	domain := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_domain(rName, domain),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttrSet(resourceName, "domain"),
+					resource.TestCheckResourceAttrSet(resourceName, "domain_iam_role_name"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRDSCluster_EnabledCloudWatchLogsExports_mySQL(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbCluster1, dbCluster2, dbCluster3 rds.DBCluster
@@ -3226,6 +3256,26 @@ resource "aws_rds_cluster" "restore" {
 `, rName, enabledCloudwatchLogExports))
 }
 
+func testAccClusterConfig_domain(rName, domain string) string {
+	return acctest.ConfigCompose(
+		testAccConfig_ClusterSubnetGroup(rName),
+		testAccConfig_ServiceRole(rName),
+		testAccConfig_DirectoryService(rName, domain),
+		fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier   = %[1]q
+  engine               = %[2]q
+  master_username      = "tfacctest"
+  master_password      = "avoid-plaintext-passwords"
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  skip_final_snapshot  = true
+  domain               = aws_directory_service_directory.directory.id
+  domain_iam_role_name = aws_iam_role.role.name
+}
+`, rName, tfrds.ClusterEngineAuroraPostgreSQL),
+	)
+}
+
 func testAccClusterConfig_enabledCloudWatchLogsExports1(rName, enabledCloudwatchLogExports1 string) string {
 	return fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
@@ -4916,6 +4966,71 @@ resource "aws_db_subnet_group" "test" {
 }
 `, rName),
 	)
+}
+
+func testAccConfig_ServiceRole(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "role" {
+  name = %[1]q
+
+  assume_role_policy = <<EOF
+{
+	"Version": "2012-10-17",
+	"Statement": [
+		{
+		"Action": "sts:AssumeRole",
+		"Principal": {
+			"Service": "rds.${data.aws_partition.current.dns_suffix}"
+		},
+		"Effect": "Allow",
+		"Sid": ""
+		}
+	]
+}
+EOF
+}
+
+resource "aws_iam_role_policy_attachment" "attatch-policy" {
+  role       = aws_iam_role.role.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonRDSDirectoryServiceAccess"
+}
+`, rName)
+}
+
+func testAccConfig_DirectoryService(rName, domain string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group_rule" "test" {
+  type        = "egress"
+  from_port   = 0
+  to_port     = 0
+  protocol    = "-1"
+  cidr_blocks = ["0.0.0.0/0"]
+
+  security_group_id = aws_security_group.test.id
+}
+
+resource "aws_directory_service_directory" "directory" {
+  name     = %[2]q
+  password = "SuperSecretPassw0rd"
+  size     = "Small"
+
+  vpc_settings {
+    vpc_id     = aws_vpc.test.id
+    subnet_ids = aws_subnet.test[*].id
+  }
+}
+
+data "aws_partition" "current" {}
+`, rName, domain)
 }
 
 func testAccClusterConfig_noDeleteAutomatedBackups(rName, preferredBackupWindow string) string {
