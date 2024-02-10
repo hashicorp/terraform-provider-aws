@@ -38,7 +38,7 @@ import (
 )
 
 // @SDKResource("aws_s3_bucket_object", name="Bucket Object")
-// @Tags
+// @Tags(identifierAttribute="arn", resourceType="BucketObject")
 func resourceBucketObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketObjectCreate,
@@ -253,14 +253,6 @@ func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	tags, err := objectListTags(ctx, conn, bucket, key)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
-	}
-
-	setTagsOut(ctx, Tags(tags))
-
 	return diags
 }
 
@@ -332,14 +324,6 @@ func resourceBucketObjectUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := objectUpdateTags(ctx, conn, bucket, key, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
 	return append(diags, resourceBucketObjectRead(ctx, d, meta)...)
 }
 
@@ -387,8 +371,6 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	uploader := manager.NewUploader(conn)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var body io.ReadSeeker
 
@@ -489,6 +471,9 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 		input.StorageClass = types.StorageClass(v.(string))
 	}
 
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := tftags.New(ctx, getContextTags(ctx))
+	tags = defaultTagsConfig.MergeTags(tags)
 	if len(tags) > 0 {
 		// The tag-set must be encoded as URL Query parameters.
 		input.Tagging = aws.String(tags.IgnoreAWS().URLEncode())

@@ -1046,6 +1046,119 @@ func TestAccS3BucketObject_tagsMultipleSlashes(t *testing.T) {
 	})
 }
 
+func TestAccS3BucketObject_tags_EmptyTag_OnCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := "test-key"
+	resourceName := "aws_s3_bucket_object.object"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketObjectConfig_tags1(rName, key, "key1", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "force_destroy"},
+				ImportStateId:           fmt.Sprintf("s3://%s/%s", rName, key),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketObject_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := "test-key"
+	resourceName := "aws_s3_bucket_object.object"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketObjectConfig_tags1(rName, key, "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccBucketObjectConfig_tags2(rName, key, "key1", "value1", "key2", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "force_destroy"},
+				ImportStateId:           fmt.Sprintf("s3://%s/%s", rName, key),
+			},
+		},
+	})
+}
+
+func TestAccS3BucketObject_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	key := "test-key"
+	resourceName := "aws_s3_bucket_object.object"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBucketObjectConfig_tags1(rName, key, "key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccBucketObjectConfig_tags1(rName, key, "key1", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"acl", "force_destroy"},
+				ImportStateId:           fmt.Sprintf("s3://%s/%s", rName, key),
+			},
+		},
+	})
+}
+
 func TestAccS3BucketObject_objectLockLegalHoldStartWithNone(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj1, obj2, obj3 s3.GetObjectOutput
@@ -1762,6 +1875,57 @@ resource "aws_s3_bucket_object" "object" {
   content = %[3]q
 }
 `, rName, key, content)
+}
+
+func testAccBucketObjectConfig_tags1(rName, key, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_object" "object" {
+  # Must have bucket versioning enabled first
+  bucket = aws_s3_bucket_versioning.test.bucket
+  key    = %[2]q
+
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+`, rName, key, tagKey1, tagValue1)
+}
+
+func testAccBucketObjectConfig_tags2(rName, key, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_bucket_object" "object" {
+  # Must have bucket versioning enabled first
+  bucket = aws_s3_bucket_versioning.test.bucket
+  key    = %[2]q
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+`, rName, key, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccBucketObjectConfig_metadata(rName string, metadataKey1, metadataValue1, metadataKey2, metadataValue2 string) string {

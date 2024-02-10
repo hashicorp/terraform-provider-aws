@@ -166,7 +166,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 	case "Bucket":
 		tags, err = bucketListTags(ctx, meta.(*conns.AWSClient).S3Client(ctx), identifier)
 
-	case "Object":
+	case "Object", "ObjectCopy", "BucketObject":
 		objectARN, err := parseObjectARN(identifier)
 		if err != nil {
 			return err
@@ -195,7 +195,7 @@ func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, r
 	case "Bucket":
 		return bucketUpdateTags(ctx, meta.(*conns.AWSClient).S3Client(ctx), identifier, oldTags, newTags)
 
-	case "Object":
+	case "Object", "ObjectCopy", "BucketObject":
 		objectARN, err := parseObjectARN(identifier)
 		if err != nil {
 			return err
