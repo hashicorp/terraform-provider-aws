@@ -4253,7 +4253,7 @@ data "aws_iam_policy_document" "test" {
     principals {
       type = "AWS"
       identifiers = [
-      "arn:aws:iam::${data.aws_caller_identity.current.account_id}:root"]
+      "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
     }
     actions = [
     "kms:*"]
