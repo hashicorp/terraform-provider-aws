@@ -48,7 +48,6 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 			"organization_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -101,7 +100,7 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	output, err := waitOrganizationConfigurationEnabled(ctx, conn, d.Timeout(schema.TimeoutDefault))
+	output, err := WaitOrganizationConfigurationEnabled(ctx, conn, d.Timeout(schema.TimeoutDefault))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Organization Configuration %s not found, removing from state", d.Id())
@@ -118,8 +117,6 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 
 	if err := d.Set("organization_configuration", []interface{}{flattenOrganizationConfiguration(output.OrganizationConfiguration)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting organization_configuration: %s", err)
-	} else {
-		d.Set("organization_configuration", nil)
 	}
 
 	return diags
@@ -148,7 +145,7 @@ func findOrganizationConfiguration(ctx context.Context, conn *securityhub.Client
 		switch output.OrganizationConfiguration.Status {
 		case types.OrganizationConfigurationStatusPending:
 			return nil, "", nil
-		case types.OrganizationConfigurationStatusEnabled:
+		case types.OrganizationConfigurationStatusEnabled, "":
 			return output, string(output.OrganizationConfiguration.Status), nil
 		default:
 			var statusErr error
@@ -167,10 +164,10 @@ func findOrganizationConfiguration(ctx context.Context, conn *securityhub.Client
 	}
 }
 
-func waitOrganizationConfigurationEnabled(ctx context.Context, conn *securityhub.Client, timeout time.Duration) (*securityhub.DescribeOrganizationConfigurationOutput, error) {
+func WaitOrganizationConfigurationEnabled(ctx context.Context, conn *securityhub.Client, timeout time.Duration) (*securityhub.DescribeOrganizationConfigurationOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.OrganizationConfigurationStatusPending),
-		Target:                    enum.Slice(types.OrganizationConfigurationStatusEnabled),
+		Target:                    append(enum.Slice(types.OrganizationConfigurationStatusEnabled), ""),
 		Refresh:                   findOrganizationConfiguration(ctx, conn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
