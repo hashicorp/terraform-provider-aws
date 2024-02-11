@@ -3263,14 +3263,15 @@ func testAccClusterConfig_domain(rName, domain string) string {
 		testAccConfig_DirectoryService(rName, domain),
 		fmt.Sprintf(`
 resource "aws_rds_cluster" "test" {
-  cluster_identifier   = %[1]q
-  engine               = %[2]q
-  master_username      = "tfacctest"
-  master_password      = "avoid-plaintext-passwords"
-  db_subnet_group_name = aws_db_subnet_group.test.name
-  skip_final_snapshot  = true
-  domain               = aws_directory_service_directory.directory.id
-  domain_iam_role_name = aws_iam_role.role.name
+  cluster_identifier      = %[1]q
+  engine                  = %[2]q
+  master_username         = "tfacctest"
+  master_password         = "avoid-plaintext-passwords"
+  db_subnet_group_name    = aws_db_subnet_group.test.name
+  skip_final_snapshot     = true
+  vpc_security_group_ids  = [aws_security_group.test.id] 
+  domain                  = aws_directory_service_directory.directory.id
+  domain_iam_role_name    = aws_iam_role.role.name
 }
 `, rName, tfrds.ClusterEngineAuroraPostgreSQL),
 	)
