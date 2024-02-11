@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	apprunner_types "github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -153,10 +152,6 @@ func (r *resourceStartDeployment) Update(ctx context.Context, req resource.Updat
 
 // Delete does not need to explicitly call resp.State.RemoveResource() as this is automatically handled by the framework.
 func (r *resourceStartDeployment) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-}
-
-func (r *resourceStartDeployment) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func waitStartDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, arn string, timeout time.Duration) (*apprunner_types.OperationSummary, error) {
