@@ -37,7 +37,7 @@ func sweepDomains(region string) error {
 		name := aws.ToString(v.DomainName)
 
 		if deleted := aws.ToBool(v.Deleted); deleted {
-			log.Printf("[INFO] Skipping CloudSearch Domain %s: Deleted=%s", name, deleted)
+			log.Printf("[INFO] Skipping CloudSearch Domain %s: Deleted=%t", name, deleted)
 			continue
 		}
 
