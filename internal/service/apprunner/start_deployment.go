@@ -157,12 +157,12 @@ func (r *resourceStartDeployment) Delete(ctx context.Context, req resource.Delet
 
 func waitStartDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, arn string, timeout time.Duration) (*apprunner_types.OperationSummary, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{},
-		Target:     enum.Slice(apprunner_types.OperationStatusSucceeded),
-		Refresh:    statusStartDeployment(ctx, conn, arn),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
+		Pending:        []string{},
+		Target:         enum.Slice(apprunner_types.OperationStatusSucceeded),
+		Refresh:        statusStartDeployment(ctx, conn, arn),
+		Timeout:        timeout,
+		PollInterval:   1 * time.Minute,
+		NotFoundChecks: 20,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
