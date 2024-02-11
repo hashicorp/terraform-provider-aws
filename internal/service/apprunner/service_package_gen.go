@@ -24,6 +24,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceIndex,
 			Name:    "Default AutoScaling Configuration Version",
 		},
+		{
+			Factory: newResourceStartDeployment,
+			Name:    "Start Deployment",
+		},
 	}
 }
 
