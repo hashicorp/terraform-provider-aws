@@ -50,25 +50,10 @@ const (
 func (r *resourceStartDeployment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"aws_account_id": schema.StringAttribute{
+			"service_arn": schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			"operation_id": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"started_at": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"ended_at": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -100,13 +85,13 @@ func (r *resourceStartDeployment) Create(ctx context.Context, req resource.Creat
 	}
 
 	in := &apprunner.StartDeploymentInput{
-		ServiceArn: aws.String(plan.ServiceARN.ValueString()),
+		ServiceArn: aws.String(plan.ServiceArn.ValueString()),
 	}
 
 	out, err := conn.StartDeployment(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppRunner, create.ErrActionCreating, ResNameStartDeployment, plan.ServiceARN.String(), err),
+			create.ProblemStandardMessage(names.AppRunner, create.ErrActionCreating, ResNameStartDeployment, plan.ServiceArn.String(), err),
 			err.Error(),
 		)
 		return
@@ -114,18 +99,18 @@ func (r *resourceStartDeployment) Create(ctx context.Context, req resource.Creat
 
 	if out == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppRunner, create.ErrActionCreating, ResNameStartDeployment, plan.ServiceARN.String(), nil),
+			create.ProblemStandardMessage(names.AppRunner, create.ErrActionCreating, ResNameStartDeployment, plan.ServiceArn.String(), nil),
 			"no output",
 		)
 		return
 	}
 
-	plan.OperationID = flex.StringToFramework(ctx, out.OperationId)
+	plan.OperationId = flex.StringToFramework(ctx, out.OperationId)
 
-	_, err = waitStartDeploymentSucceeded(ctx, conn, plan.ServiceARN.ValueString())
+	_, err = waitStartDeploymentSucceeded(ctx, conn, plan.ServiceArn.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForCreation, ResNameStartDeployment, plan.ServiceARN.String(), err),
+			create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForCreation, ResNameStartDeployment, plan.ServiceArn.String(), err),
 			err.Error(),
 		)
 		return
@@ -143,22 +128,20 @@ func (r *resourceStartDeployment) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	out, err := findStartDeploymentOperationByServiceARN(ctx, conn, state.ServiceARN.ValueString())
+	out, err := findStartDeploymentOperationByServiceARN(ctx, conn, state.ServiceArn.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppRunner, create.ErrActionReading, ResNameStartDeployment, state.ServiceARN.String(), err),
+			create.ProblemStandardMessage(names.AppRunner, create.ErrActionReading, ResNameStartDeployment, state.ServiceArn.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	state.OperationID = flex.StringToFramework(ctx, out.Id)
-	state.StartedAt = flex.StringToFramework(ctx, out.StartedAt)
-	state.EndedAt = flex.StringToFramework(ctx, out.EndedAt)
+	state.OperationId = flex.StringToFramework(ctx, out.Id)
 	state.Status = flex.StringToFramework(ctx, (*string)(&out.Status))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -250,9 +233,7 @@ func findStartDeploymentOperationByServiceARN(ctx context.Context, conn *apprunn
 }
 
 type resourceStartDeploymentData struct {
-	ServiceARN  types.String `tf:"service_arn"`
-	OperationID types.String `tf:"operation_id"`
-	StartedAt   types.String `tf:"started_at"`
-	EndedAt     types.String `tf:"ended_at"`
-	Status      types.String `tf:"status"`
+	ServiceArn  types.String `tfsdk:"service_arn"`
+	OperationId types.String `tfsdk:"operation_id"`
+	Status      types.String `tfsdk:"status"`
 }
