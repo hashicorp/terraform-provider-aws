@@ -3269,7 +3269,7 @@ resource "aws_rds_cluster" "test" {
   master_password        = "avoid-plaintext-passwords"
   db_subnet_group_name   = aws_db_subnet_group.test.name
   skip_final_snapshot    = true
-  vpc_security_group_ids = [aws_security_group.test.id] 
+  vpc_security_group_ids = [aws_security_group.test.id]
   domain                 = aws_directory_service_directory.directory.id
   domain_iam_role_name   = aws_iam_role.role.name
 }
