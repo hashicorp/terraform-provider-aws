@@ -161,8 +161,8 @@ func waitStartDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, a
 		Target:         enum.Slice(apprunner_types.OperationStatusSucceeded),
 		Refresh:        statusStartDeployment(ctx, conn, arn),
 		Timeout:        timeout,
-		PollInterval:   1 * time.Minute,
-		NotFoundChecks: 20,
+		PollInterval:   30 * time.Second,
+		NotFoundChecks: 30,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -211,7 +211,7 @@ func findStartDeploymentOperationByServiceARN(ctx context.Context, conn *apprunn
 	var operation apprunner_types.OperationSummary
 	var found bool
 	for _, op := range output.OperationSummaryList {
-		if aws.String(*op.TargetArn) == aws.String(arn) {
+		if op.TargetArn == aws.String(arn) {
 			operation = op
 			found = true
 			break
