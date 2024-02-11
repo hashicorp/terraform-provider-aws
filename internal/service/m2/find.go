@@ -62,7 +62,7 @@ func FindDeploymentByID(ctx context.Context, conn *m2.Client, id string) (*awsty
 	return &awstypes.DeploymentSummary{}, nil
 }
 
-func FindAppByID(ctx context.Context, conn *m2.Client, id string) (*awstypes.ApplicationSummary, error) {
+func FindAppByID(ctx context.Context, conn *m2.Client, id string) (*m2.GetApplicationOutput, error) {
 	in := &m2.GetApplicationInput{
 		ApplicationId: aws.String(id),
 	}
@@ -83,5 +83,28 @@ func FindAppByID(ctx context.Context, conn *m2.Client, id string) (*awstypes.App
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return &awstypes.ApplicationSummary{}, nil
+	return out, nil
+}
+
+func findApplicationVersion(ctx context.Context, conn *m2.Client, id string, version int32) (*m2.GetApplicationVersionOutput, error) {
+	in := &m2.GetApplicationVersionInput{
+		ApplicationId:      aws.String(id),
+		ApplicationVersion: aws.Int32(version),
+	}
+	out, err := conn.GetApplicationVersion(ctx, in)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if out == nil || out.ApplicationVersion == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out, nil
 }
