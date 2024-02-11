@@ -28,8 +28,8 @@ import (
 // @FrameworkResource(name="Start Deployment")
 func newResourceStartDeployment(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceStartDeployment{}
-	r.SetDefaultCreateTimeout(5 * time.Minute)
-	r.SetDefaultReadTimeout(5 * time.Minute)
+	r.SetDefaultCreateTimeout(20 * time.Minute)
+	r.SetDefaultReadTimeout(20 * time.Minute)
 
 	return r, nil
 }
@@ -107,7 +107,8 @@ func (r *resourceStartDeployment) Create(ctx context.Context, req resource.Creat
 
 	plan.OperationId = flex.StringToFramework(ctx, out.OperationId)
 
-	_, err = waitStartDeploymentSucceeded(ctx, conn, plan.ServiceArn.ValueString())
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	_, err = waitStartDeploymentSucceeded(ctx, conn, plan.ServiceArn.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForCreation, ResNameStartDeployment, plan.ServiceArn.String(), err),
@@ -158,15 +159,14 @@ func (r *resourceStartDeployment) ImportState(ctx context.Context, req resource.
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func waitStartDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, arn string) (*apprunner_types.OperationSummary, error) {
-	const (
-		timeout = 15 * time.Minute
-	)
+func waitStartDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, arn string, timeout time.Duration) (*apprunner_types.OperationSummary, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{},
-		Target:  []string{string(apprunner_types.OperationStatusSucceeded)},
-		Refresh: statusStartDeployment(ctx, conn, arn),
-		Timeout: timeout,
+		Pending:    []string{},
+		Target:     []string{string(apprunner_types.OperationStatusSucceeded)},
+		Refresh:    statusStartDeployment(ctx, conn, arn),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -233,7 +233,8 @@ func findStartDeploymentOperationByServiceARN(ctx context.Context, conn *apprunn
 }
 
 type resourceStartDeploymentData struct {
-	ServiceArn  types.String `tfsdk:"service_arn"`
-	OperationId types.String `tfsdk:"operation_id"`
-	Status      types.String `tfsdk:"status"`
+	ServiceArn  types.String   `tfsdk:"service_arn"`
+	OperationId types.String   `tfsdk:"operation_id"`
+	Status      types.String   `tfsdk:"status"`
+	Timeouts    timeouts.Value `tfsdk:"timeouts"`
 }
