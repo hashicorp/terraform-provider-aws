@@ -413,6 +413,11 @@ func RegisterSweepers() {
 		Name: "aws_ec2_instance_connect_endpoint",
 		F:    sweepInstanceConnectEndpoints,
 	})
+
+	resource.AddTestSweepers("aws_verifiedaccess_trust_provider", &resource.Sweeper{
+		Name: "aws_verifiedaccess_trust_provider",
+		F:    sweepVerifiedAccessTrustProviders,
+	})
 }
 
 func sweepCapacityReservations(region string) error {
@@ -2870,6 +2875,50 @@ func sweepInstanceConnectEndpoints(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping EC2 Instance Connect Endpoints (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepVerifiedAccessTrustProviders(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.EC2Conn(ctx)
+	input := &ec2.DescribeVerifiedAccessTrustProvidersInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeVerifiedAccessTrustProvidersPagesWithContext(ctx, input, func(page *ec2.DescribeVerifiedAccessTrustProvidersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.VerifiedAccessTrustProviders {
+			r := ResourceVerifiedAccessTrustProvider()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.VerifiedAccessTrustProviderId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Verified Access Trust Provider sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Verified Access Trust Providers (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Verified Access Trust Providers (%s): %w", region, err)
 	}
 
 	return nil
