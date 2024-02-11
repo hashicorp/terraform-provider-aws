@@ -307,6 +307,11 @@ func FlattenResourceId(idParts []string, partCount int, allowEmptyPart bool) (st
 	return strings.Join(idParts, ResourceIdSeparator), nil
 }
 
+// BoolToStringValue converts a bool point to a Go string.
+func BoolToStringValue(v *bool) string {
+	return strconv.FormatBool(aws.BoolValue(v))
+}
+
 // BoolValueToString converts a Go bool value to a string pointer.
 func BoolValueToString(v bool) *string {
 	return aws.String(strconv.FormatBool(v))
