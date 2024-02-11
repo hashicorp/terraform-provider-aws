@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -157,7 +158,7 @@ func (r *resourceStartDeployment) Delete(ctx context.Context, req resource.Delet
 func waitStartDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, arn string, timeout time.Duration) (*apprunner_types.OperationSummary, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{},
-		Target:     []string{string(apprunner_types.OperationStatusSucceeded)},
+		Target:     enum.Slice(apprunner_types.OperationStatusSucceeded),
 		Refresh:    statusStartDeployment(ctx, conn, arn),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
