@@ -111,7 +111,7 @@ func (r *resourceStartDeployment) Create(ctx context.Context, req resource.Creat
 	_, err = waitStartDeploymentSucceeded(ctx, conn, plan.ServiceArn.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForCreation, ResNameStartDeployment, plan.ServiceArn.String(), err),
+			create.ProblemStandardMessage(names.AppRunner, create.ErrActionWaitingForCreation, ResNameStartDeployment, plan.ServiceArn.String(), err),
 			err.Error(),
 		)
 		return
