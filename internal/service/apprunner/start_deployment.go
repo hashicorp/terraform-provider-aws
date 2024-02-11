@@ -7,9 +7,9 @@ import (
 	"context"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner"
 	apprunner_types "github.com/aws/aws-sdk-go-v2/service/apprunner/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apprunner"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -103,7 +103,7 @@ func (r *resourceStartDeployment) Create(ctx context.Context, req resource.Creat
 		ServiceArn: aws.String(plan.ServiceARN.ValueString()),
 	}
 
-	out, err := conn.StartDeploymentWithContext(ctx, in)
+	out, err := conn.StartDeployment(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.AppRunner, create.ErrActionCreating, ResNameStartDeployment, plan.ServiceARN.String(), err),
@@ -122,7 +122,7 @@ func (r *resourceStartDeployment) Create(ctx context.Context, req resource.Creat
 
 	plan.OperationID = flex.StringToFramework(ctx, out.OperationId)
 
-	_, err := waitStartDeploymentSucceeded(ctx, conn, plan.ServiceARN.ValueString())
+	_, err = waitStartDeploymentSucceeded(ctx, conn, plan.ServiceARN.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.QuickSight, create.ErrActionWaitingForCreation, ResNameStartDeployment, plan.ServiceARN.String(), err),
@@ -159,7 +159,7 @@ func (r *resourceStartDeployment) Read(ctx context.Context, req resource.ReadReq
 	state.OperationID = flex.StringToFramework(ctx, out.Id)
 	state.StartedAt = flex.StringToFramework(ctx, out.StartedAt)
 	state.EndedAt = flex.StringToFramework(ctx, out.EndedAt)
-	state.Status = flex.StringToFramework(ctx, out.Status)
+	state.Status = flex.StringToFramework(ctx, (*string)(&out.Status))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -168,7 +168,7 @@ func (r *resourceStartDeployment) ImportState(ctx context.Context, req resource.
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func waitStartDeploymentSucceeded(ctx context.Context, conn *apprunner.AppRunner, arn string) (*apprunner_types.OperationSummary, error) {
+func waitStartDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, arn string) (*apprunner_types.OperationSummary, error) {
 	const (
 		timeout = 15 * time.Minute
 	)
@@ -188,7 +188,7 @@ func waitStartDeploymentSucceeded(ctx context.Context, conn *apprunner.AppRunner
 	return nil, err
 }
 
-func statusStartDeployment(ctx context.Context, conn *apprunner.AppRunner, arn string) retry.StateRefreshFunc {
+func statusStartDeployment(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findStartDeploymentOperationByServiceARN(ctx, conn, arn)
 
@@ -204,12 +204,12 @@ func statusStartDeployment(ctx context.Context, conn *apprunner.AppRunner, arn s
 	}
 }
 
-func findStartDeploymentOperationByServiceARN(ctx context.Context, conn *apprunner.AppRunner, arn string) (*apprunner_types.OperationSummary, error) {
+func findStartDeploymentOperationByServiceARN(ctx context.Context, conn *apprunner.Client, arn string) (*apprunner_types.OperationSummary, error) {
 	input := &apprunner.ListOperationsInput{
 		ServiceArn: aws.String(arn),
 	}
 
-	output, err := conn.ListOperationsWithContext(ctx, input)
+	output, err := conn.ListOperations(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -225,7 +225,7 @@ func findStartDeploymentOperationByServiceARN(ctx context.Context, conn *apprunn
 	var operation apprunner_types.OperationSummary
 	var found bool
 	for _, op := range output.OperationSummaryList {
-		if aws.String(op.TargetArn) == aws.String(arn) {
+		if aws.String(*op.TargetArn) == aws.String(arn) {
 			operation = op
 			found = true
 			break
