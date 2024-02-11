@@ -305,7 +305,7 @@ func testAccDomainExists(ctx context.Context, n string, v *cloudsearch.DomainSta
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn(ctx)
 
-		output, err := tfcloudsearch.FindDomainStatusByName(ctx, conn, rs.Primary.ID)
+		output, err := tfcloudsearch.FindDomainByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -326,7 +326,7 @@ func testAccCheckDomainDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			conn := acctest.Provider.Meta().(*conns.AWSClient).CloudSearchConn(ctx)
 
-			_, err := tfcloudsearch.FindDomainStatusByName(ctx, conn, rs.Primary.ID)
+			_, err := tfcloudsearch.FindDomainByName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

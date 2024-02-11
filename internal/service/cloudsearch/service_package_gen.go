@@ -29,8 +29,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceDomain,
+			Factory:  resourceDomain,
 			TypeName: "aws_cloudsearch_domain",
+			Name:     "Domain",
 		},
 		{
 			Factory:  resourceDomainServiceAccessPolicy,
