@@ -33,8 +33,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_cloudsearch_domain",
 		},
 		{
-			Factory:  ResourceDomainServiceAccessPolicy,
+			Factory:  resourceDomainServiceAccessPolicy,
 			TypeName: "aws_cloudsearch_domain_service_access_policy",
+			Name:     "Domain Service Access Policy",
 		},
 	}
 }
