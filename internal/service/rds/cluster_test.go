@@ -4981,7 +4981,10 @@ resource "aws_iam_role" "role" {
 		{
 		"Action": "sts:AssumeRole",
 		"Principal": {
-			"Service": "rds.${data.aws_partition.current.dns_suffix}"
+			"Service": [
+				"directoryservice.rds.${data.aws_partition.current.dns_suffix}",				
+				"rds.${data.aws_partition.current.dns_suffix}"
+			]
 		},
 		"Effect": "Allow",
 		"Sid": ""
@@ -5023,10 +5026,12 @@ resource "aws_directory_service_directory" "directory" {
   name     = %[2]q
   password = "SuperSecretPassw0rd"
   size     = "Small"
+  type     = "MicrosoftAD"
+  edition  = "Standard"
 
   vpc_settings {
     vpc_id     = aws_vpc.test.id
-    subnet_ids = aws_subnet.test[*].id
+    subnet_ids = [aws_subnet.test[0].id, aws_subnet.test[1].id]
   }
 }
 
