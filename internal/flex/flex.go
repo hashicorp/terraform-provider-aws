@@ -307,7 +307,7 @@ func FlattenResourceId(idParts []string, partCount int, allowEmptyPart bool) (st
 	return strings.Join(idParts, ResourceIdSeparator), nil
 }
 
-// BoolToStringValue converts a bool point to a Go string.
+// BoolToStringValue converts a bool pointer to a Go string value.
 func BoolToStringValue(v *bool) string {
 	return strconv.FormatBool(aws.BoolValue(v))
 }
@@ -323,9 +323,19 @@ func StringToBoolValue(v *string) bool {
 	return aws.StringValue(v) == strconv.FormatBool(true)
 }
 
+// Float64ToStringValue converts a float64 pointer to a Go string value.
+func Float64ToStringValue(v *float64) string {
+	return strconv.FormatFloat(aws.Float64Value(v), 'f', -1, 64)
+}
+
 // IntValueToString converts a Go int value to a string pointer.
 func IntValueToString(v int) *string {
 	return aws.String(strconv.Itoa(v))
+}
+
+// Int64ToStringValue converts an int64 pointer to a Go string value.
+func Int64ToStringValue(v *int64) string {
+	return strconv.FormatInt(aws.Int64Value(v), 10)
 }
 
 // Int64ValueToString converts a Go int64 value to a string pointer.
