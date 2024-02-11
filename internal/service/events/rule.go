@@ -129,11 +129,11 @@ func ResourceRule() *schema.Resource {
 					eventbridge.RuleState_Values(),
 					false,
 				),
+				Default: "ENABLED",
 				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
-					if oldValue != "" && newValue == "" {
-						return true
-					}
-					return false
+					rawConfig := d.GetRawConfig()
+					rawIsEnabled := rawConfig.GetAttr("is_enabled")
+					return rawIsEnabled.IsKnown() && !rawIsEnabled.IsNull()
 				},
 				ConflictsWith: []string{
 					"is_enabled",

@@ -511,7 +511,7 @@ func TestAccEventsRule_isEnabled(t *testing.T) {
 
 func TestAccEventsRule_state(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3 eventbridge.DescribeRuleOutput
+	var v1, v2, v3, v4 eventbridge.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_rule.test"
 
@@ -522,23 +522,9 @@ func TestAccEventsRule_state(t *testing.T) {
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig_state(rName, eventbridge.RuleStateDisabled),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "state", eventbridge.RuleStateDisabled),
-					testAccCheckRuleEnabled(ctx, resourceName, eventbridge.RuleStateDisabled),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccRuleConfig_state(rName, eventbridge.RuleStateEnabled),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, resourceName, &v2),
+					testAccCheckRuleExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "state", eventbridge.RuleStateEnabled),
 					testAccCheckRuleEnabled(ctx, resourceName, eventbridge.RuleStateEnabled),
@@ -550,9 +536,37 @@ func TestAccEventsRule_state(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRuleConfig_state(rName, eventbridge.RuleStateEnabledWithAllCloudtrailManagementEvents),
+				Config: testAccRuleConfig_state(rName, eventbridge.RuleStateDisabled),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &v2),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "state", eventbridge.RuleStateDisabled),
+					testAccCheckRuleEnabled(ctx, resourceName, eventbridge.RuleStateDisabled),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRuleConfig_state_default(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v3),
+					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "state", eventbridge.RuleStateEnabled),
+					testAccCheckRuleEnabled(ctx, resourceName, eventbridge.RuleStateEnabled),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRuleConfig_state_cloudTrail(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &v4),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "state", eventbridge.RuleStateEnabledWithAllCloudtrailManagementEvents),
 					testAccCheckRuleEnabled(ctx, resourceName, eventbridge.RuleStateEnabledWithAllCloudtrailManagementEvents),
@@ -1017,6 +1031,25 @@ resource "aws_cloudwatch_event_rule" "test" {
   state               = %[2]q
 }
 `, rName, state)
+}
+
+func testAccRuleConfig_state_cloudTrail(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_rule" "test" {
+  name          = %[1]q
+  event_pattern = jsonencode({ "detail" : { "count" : [1] } })
+  state         = %[2]q
+}
+`, rName, eventbridge.RuleStateEnabledWithAllCloudtrailManagementEvents)
+}
+
+func testAccRuleConfig_state_default(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudwatch_event_rule" "test" {
+  name                = %[1]q
+  schedule_expression = "rate(1 hour)"
+}
+`, rName)
 }
 
 func testAccRuleConfig_namePrefix(namePrefix string) string {
