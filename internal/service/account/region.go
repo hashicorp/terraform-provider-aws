@@ -90,7 +90,6 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		}
 	} else {
-
 		if output.RegionOptStatus == accounttypes.RegionOptStatusEnabledByDefault {
 			return sdkdiag.AppendErrorf(diags, "cannot disable region (%s) that is enabled by default", id)
 		}

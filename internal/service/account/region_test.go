@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -32,6 +33,35 @@ func TestAccRegion_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccRegionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestMatchResourceAttr(resourceName, "opt_status", regexache.MustCompile(`ENABLED|ENABLING`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRegion_enabledByDefault(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_account_region.test"
+	regionName := "us-east-1" //lintignore:AWSAT003
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccountEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRegionConfig_basic(regionName, "true"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccRegionExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestMatchResourceAttr(resourceName, "opt_status", regexache.MustCompile(`ENABLED_BY_DEFAULT`)),
 				),
 			},
 			{
