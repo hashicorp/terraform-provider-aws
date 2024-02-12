@@ -2120,7 +2120,6 @@ func WaitVPNConnectionRouteDeleted(ctx context.Context, conn *ec2.EC2, vpnConnec
 
 const (
 	vpnGatewayCreatedTimeout = 10 * time.Minute
-	vpnGatewayUpdatedTimeout = 10 * time.Minute
 	vpnGatewayDeletedTimeout = 10 * time.Minute
 )
 
@@ -2149,25 +2148,6 @@ func WaitVPNGatewayDeleted(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 		Target:     []string{},
 		Refresh:    StatusVPNGatewayState(ctx, conn, id),
 		Timeout:    vpnGatewayDeletedTimeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 10 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.VpnGateway); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitVPNGatewayUpdated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.VpnGateway, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{vpnStateModifying},
-		Target:     []string{ec2.VpnStateAvailable},
-		Refresh:    StatusVPNGatewayState(ctx, conn, id),
-		Timeout:    vpnGatewayUpdatedTimeout,
 		Delay:      10 * time.Second,
 		MinTimeout: 10 * time.Second,
 	}
