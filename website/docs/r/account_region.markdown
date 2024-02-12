@@ -35,17 +35,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the account region using a comma seperated `account_id` and `region_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the account region using `region_name` or a comma seperated `account_id` and `region_name`. For example:
 
 ```terraform
 import {
   to = aws_account_region.test
-  id = ",ap-southeast-3"
+  id = "ap-southeast-3"
 }
 ```
 
 Using `terraform import`. For example:
 
 ```console
-% terraform import aws_account_region.test ,ap-southeast-3
+% terraform import aws_account_region.test ap-southeast-3
 ```

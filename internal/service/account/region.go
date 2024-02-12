@@ -5,6 +5,7 @@ package account
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -27,7 +28,7 @@ func resourceRegion() *schema.Resource {
 		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceRegionImport,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -76,7 +77,7 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v := d.Get("enabled").(bool); v {
-		if output.RegionOptStatus != accounttypes.RegionOptStatusEnabledByDefault {
+		if output.RegionOptStatus == accounttypes.RegionOptStatusDisabled {
 			input := &account.EnableRegionInput{
 				RegionName: aws.String(region),
 			}
@@ -146,10 +147,28 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 const RegionResourceIDSeparator = ","
 
 func RegionResourceID(accountID string, region string) string {
-	parts := []string{accountID, region}
-	id := strings.Join(parts, RegionResourceIDSeparator)
+	if accountID != "" {
+		parts := []string{accountID, region}
+		return strings.Join(parts, RegionResourceIDSeparator)
+	} else {
+		return region
+	}
+}
 
-	return id
+func resourceRegionImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	switch parts := strings.Split(d.Id(), RegionResourceIDSeparator); len(parts) {
+	case 1:
+		d.Set("region_name", parts[0])
+		d.SetId(RegionResourceID("", parts[0]))
+	case 2:
+		d.Set("account_id", parts[0])
+		d.Set("region_name", parts[1])
+		d.SetId(RegionResourceID(parts[0], parts[1]))
+	default:
+		return []*schema.ResourceData{}, fmt.Errorf("unexpected format for import ID (%[1]s), use: region_name or account_id%[2]sregion_name", d.Id(), RegionResourceIDSeparator)
+	}
+
+	return []*schema.ResourceData{d}, nil
 }
 
 func FindRegionOptInStatus(ctx context.Context, conn *account.Client, accountID, region string) (*account.GetRegionOptStatusOutput, error) {
