@@ -441,6 +441,7 @@ func ResourceService() *schema.Resource {
 												"role_arn": {
 													Type:     schema.TypeString,
 													Optional: true,
+													ValidateFunc: verify.ValidARN,
 												},
 											},
 										},
