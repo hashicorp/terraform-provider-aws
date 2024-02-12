@@ -146,7 +146,7 @@ func updateInstanceState(ctx context.Context, conn *ec2.EC2, id string, currentS
 	}
 
 	if configuredState == "running" {
-		if err := startInstance(ctx, conn, id, InstanceStartTimeout); err != nil {
+		if err := startInstance(ctx, conn, id, false, InstanceStartTimeout); err != nil {
 			return err
 		}
 	}

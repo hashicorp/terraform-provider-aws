@@ -3262,7 +3262,7 @@ resource "aws_spot_fleet_request" "test" {
 
 func testAccSpotFleetRequestConfig_launchSpecificationInstanceStoreAMI(rName, publicKey, validUntil string) string {
 	return acctest.ConfigCompose(
-		testAccAMIDataSourceConfig_latestAmazonLinuxHVMInstanceStore(),
+		testAccAMIDataSourceConfig_latestUbuntuBionicHVMInstanceStore(),
 		testAccSpotFleetRequestConfig_base(rName, publicKey),
 		fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
@@ -3274,7 +3274,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-instance-store.id
+    ami           = data.aws_ami.ubuntu-bionic-ami-hvm-instance-store.id
     instance_type = "c3.large"
 
     tags = {
