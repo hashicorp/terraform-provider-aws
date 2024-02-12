@@ -488,6 +488,7 @@ func TestAccS3BucketACL_updateGrant(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "access_control_policy.0.grant.*.grantee.0.id", "data.aws_canonical_user_id.current", "id"),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "access_control_policy.0.owner.0.id", "data.aws_canonical_user_id.current", "id"),
+					resource.TestCheckResourceAttr(resourceName, "acl", ""),
 				),
 			},
 			{
@@ -517,6 +518,7 @@ func TestAccS3BucketACL_updateGrant(t *testing.T) {
 					}),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "access_control_policy.0.owner.0.id", "data.aws_canonical_user_id.current", "id"),
+					resource.TestCheckResourceAttr(resourceName, "acl", ""),
 				),
 			},
 			{
@@ -553,6 +555,20 @@ func TestAccS3BucketACL_ACLToGrant(t *testing.T) {
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
+						"grantee.#":      "1",
+						"grantee.0.type": string(types.TypeCanonicalUser),
+						"permission":     string(types.PermissionFullControl),
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
+						"grantee.#":      "1",
+						"grantee.0.type": string(types.TypeCanonicalUser),
+						"permission":     string(types.PermissionWrite),
+					}),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "access_control_policy.0.grant.*.grantee.0.id", "data.aws_canonical_user_id.current", "id"),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "access_control_policy.0.owner.0.id", "data.aws_canonical_user_id.current", "id"),
+					resource.TestCheckResourceAttr(resourceName, "acl", ""),
 				),
 			},
 			{
@@ -589,6 +605,13 @@ func TestAccS3BucketACL_grantToACL(t *testing.T) {
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
+						"grantee.#":      "1",
+						"grantee.0.type": string(types.TypeCanonicalUser),
+						"permission":     string(types.PermissionFullControl),
+					}),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", "1"),
 				),
 			},
 			{
