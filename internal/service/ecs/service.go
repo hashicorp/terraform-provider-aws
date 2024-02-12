@@ -427,8 +427,8 @@ func ResourceService() *schema.Resource {
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"aws_pca_authority_arn": {
-																Type:     schema.TypeString,
-																Optional: true,
+																Type:         schema.TypeString,
+																Optional:     true,
 																ValidateFunc: verify.ValidARN,
 															},
 														},
@@ -439,8 +439,8 @@ func ResourceService() *schema.Resource {
 													Optional: true,
 												},
 												"role_arn": {
-													Type:     schema.TypeString,
-													Optional: true,
+													Type:         schema.TypeString,
+													Optional:     true,
 													ValidateFunc: verify.ValidARN,
 												},
 											},
