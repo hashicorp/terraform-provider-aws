@@ -28,6 +28,7 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 		"Managed scaling is not available",
 		"SSO is not enabled",
 		"Account is not whitelisted to use this feature",
+		"IAM Identity Center is not enabled",
 	)
 }
 

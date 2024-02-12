@@ -187,7 +187,7 @@ func resourceEnvironmentEC2Update(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Cloud9Conn(ctx)
 
-	if d.HasChangesExcept("tags_all", "tags") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := cloud9.UpdateEnvironmentInput{
 			Description:   aws.String(d.Get("description").(string)),
 			EnvironmentId: aws.String(d.Id()),

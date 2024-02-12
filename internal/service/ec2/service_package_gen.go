@@ -636,8 +636,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ec2_subnet_cidr_reservation",
 		},
 		{
-			Factory:  ResourceTag,
+			Factory:  resourceTag,
 			TypeName: "aws_ec2_tag",
+			Name:     "EC2 Resource Tag",
 		},
 		{
 			Factory:  ResourceTrafficMirrorFilter,

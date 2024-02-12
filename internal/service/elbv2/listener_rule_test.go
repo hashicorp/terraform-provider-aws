@@ -185,7 +185,9 @@ func TestAccELBV2ListenerRule_updateForwardBasic(t *testing.T) {
 	var conf awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName = rName[:30]
+	if len(rName) > 30 {
+		rName = rName[:30]
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -845,7 +847,9 @@ func TestAccELBV2ListenerRule_ActionForward_IgnoreFields(t *testing.T) {
 	var conf awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName = rName[:30]
+	if len(rName) > 30 {
+		rName = rName[:30]
+	}
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
@@ -1508,6 +1512,48 @@ func TestAccELBV2ListenerRule_EmptyAction(t *testing.T) {
 			})
 		})
 	}
+}
+
+func TestAccELBV2ListenerRule_redirectWithTargetGroupARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf awstypes.Rule
+	lbName := fmt.Sprintf("testrule-redirect-%s", sdkacctest.RandString(14))
+
+	resourceName := "aws_lb_listener_rule.static"
+	frontEndListenerResourceName := "aws_lb_listener.front_end"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		CheckDestroy: testAccCheckListenerRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.34.0",
+					},
+				},
+				Config: testAccListenerRuleConfig_redirectWithTargetGroupARN(lbName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckListenerRuleExists(ctx, resourceName, &conf),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "elasticloadbalancing", regexache.MustCompile(fmt.Sprintf(`listener-rule/app/%s/.+$`, lbName))),
+					resource.TestCheckResourceAttrPair(resourceName, "listener_arn", frontEndListenerResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.type", "redirect"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.redirect.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.forward.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target_group_arn", ""),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				Config:                   testAccListenerRuleConfig_redirectWithTargetGroupARN(lbName),
+				PlanOnly:                 true,
+				ExpectNonEmptyPlan:       false,
+			},
+		},
+	})
 }
 
 func TestAccELBV2ListenerRule_conditionAttributesCount(t *testing.T) {
@@ -4316,6 +4362,119 @@ resource "aws_security_group" "test" {
   }
 }
 `, rName, action)
+}
+
+func testAccListenerRuleConfig_redirectWithTargetGroupARN(lbName string) string {
+	return fmt.Sprintf(`
+resource "aws_lb_listener_rule" "static" {
+  listener_arn = aws_lb_listener.front_end.arn
+  priority     = 100
+
+  action {
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+
+  condition {
+    path_pattern {
+      values = ["/static/*"]
+    }
+  }
+}
+
+resource "aws_lb_listener" "front_end" {
+  load_balancer_arn = aws_lb.alb_test.id
+  protocol          = "HTTP"
+  port              = "80"
+
+  default_action {
+    type = "redirect"
+
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
+  }
+}
+
+resource "aws_lb" "alb_test" {
+  name            = %[1]q
+  internal        = true
+  security_groups = [aws_security_group.alb_test.id]
+  subnets         = aws_subnet.alb_test[*].id
+
+  idle_timeout               = 30
+  enable_deletion_protection = false
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+variable "subnets" {
+  default = ["10.0.1.0/24", "10.0.2.0/24"]
+  type    = list(string)
+}
+
+data "aws_availability_zones" "available" {
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
+}
+
+resource "aws_vpc" "alb_test" {
+  cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = "terraform-testacc-lb-listener-rule-redirect"
+  }
+}
+
+resource "aws_subnet" "alb_test" {
+  count                   = 2
+  vpc_id                  = aws_vpc.alb_test.id
+  cidr_block              = element(var.subnets, count.index)
+  map_public_ip_on_launch = true
+  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
+
+  tags = {
+    Name = "tf-acc-lb-listener-rule-redirect-${count.index}"
+  }
+}
+
+resource "aws_security_group" "alb_test" {
+  name        = "allow_all_alb_test"
+  description = "Used for ALB Testing"
+  vpc_id      = aws_vpc.alb_test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, lbName)
 }
 
 func testAccListenerRuleConfig_condition_error(condition string) string {
