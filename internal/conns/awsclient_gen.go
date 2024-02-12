@@ -21,6 +21,8 @@ import (
 	chimesdkvoice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
+	cloudfront_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	cloudsearch_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudsearch"
 	cloudtrail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	cloudwatch_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	cloudwatchlogs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
@@ -145,7 +147,6 @@ import (
 	cloudformation_sdkv1 "github.com/aws/aws-sdk-go/service/cloudformation"
 	cloudfront_sdkv1 "github.com/aws/aws-sdk-go/service/cloudfront"
 	cloudhsmv2_sdkv1 "github.com/aws/aws-sdk-go/service/cloudhsmv2"
-	cloudsearch_sdkv1 "github.com/aws/aws-sdk-go/service/cloudsearch"
 	cloudwatchrum_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	cognitoidentity_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentity"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -397,12 +398,16 @@ func (c *AWSClient) CloudFrontConn(ctx context.Context) *cloudfront_sdkv1.CloudF
 	return errs.Must(conn[*cloudfront_sdkv1.CloudFront](ctx, c, names.CloudFront, make(map[string]any)))
 }
 
+func (c *AWSClient) CloudFrontClient(ctx context.Context) *cloudfront_sdkv2.Client {
+	return errs.Must(client[*cloudfront_sdkv2.Client](ctx, c, names.CloudFront, make(map[string]any)))
+}
+
 func (c *AWSClient) CloudHSMV2Conn(ctx context.Context) *cloudhsmv2_sdkv1.CloudHSMV2 {
 	return errs.Must(conn[*cloudhsmv2_sdkv1.CloudHSMV2](ctx, c, names.CloudHSMV2, make(map[string]any)))
 }
 
-func (c *AWSClient) CloudSearchConn(ctx context.Context) *cloudsearch_sdkv1.CloudSearch {
-	return errs.Must(conn[*cloudsearch_sdkv1.CloudSearch](ctx, c, names.CloudSearch, make(map[string]any)))
+func (c *AWSClient) CloudSearchClient(ctx context.Context) *cloudsearch_sdkv2.Client {
+	return errs.Must(client[*cloudsearch_sdkv2.Client](ctx, c, names.CloudSearch, make(map[string]any)))
 }
 
 func (c *AWSClient) CloudTrailClient(ctx context.Context) *cloudtrail_sdkv2.Client {

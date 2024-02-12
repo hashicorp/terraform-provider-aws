@@ -15,11 +15,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func testAccClientVPNAuthorizationRule_basic(t *testing.T) {
+func testAccClientVPNAuthorizationRule_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.AuthorizationRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -27,7 +28,10 @@ func testAccClientVPNAuthorizationRule_basic(t *testing.T) {
 	subnetResourceName := "aws_subnet.test.0"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNAuthorizationRuleDestroy(ctx),
@@ -50,14 +54,17 @@ func testAccClientVPNAuthorizationRule_basic(t *testing.T) {
 	})
 }
 
-func testAccClientVPNAuthorizationRule_disappears(t *testing.T) {
+func testAccClientVPNAuthorizationRule_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.AuthorizationRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_authorization_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNAuthorizationRuleDestroy(ctx),
@@ -74,14 +81,17 @@ func testAccClientVPNAuthorizationRule_disappears(t *testing.T) {
 	})
 }
 
-func testAccClientVPNAuthorizationRule_Disappears_endpoint(t *testing.T) {
+func testAccClientVPNAuthorizationRule_Disappears_endpoint(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.AuthorizationRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_authorization_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNAuthorizationRuleDestroy(ctx),
@@ -98,17 +108,15 @@ func testAccClientVPNAuthorizationRule_Disappears_endpoint(t *testing.T) {
 	})
 }
 
-func testAccClientVPNAuthorizationRule_groups(t *testing.T) {
+func testAccClientVPNAuthorizationRule_groups(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.AuthorizationRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource1Name := "aws_ec2_client_vpn_authorization_rule.test1"
 	resource2Name := "aws_ec2_client_vpn_authorization_rule.test2"
 	subnetResourceName := "aws_subnet.test.0"
-
 	group1Name := "group_one"
 	group2Name := "group_two"
-
 	groups1 := map[string]string{
 		"test1": group1Name,
 	}
@@ -121,7 +129,10 @@ func testAccClientVPNAuthorizationRule_groups(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNAuthorizationRuleDestroy(ctx),
@@ -172,18 +183,15 @@ func testAccClientVPNAuthorizationRule_groups(t *testing.T) {
 	})
 }
 
-func testAccClientVPNAuthorizationRule_subnets(t *testing.T) {
+func testAccClientVPNAuthorizationRule_subnets(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.AuthorizationRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource1Name := "aws_ec2_client_vpn_authorization_rule.test1"
 	resource2Name := "aws_ec2_client_vpn_authorization_rule.test2"
-
 	subnetCount := 2
-
 	subnetIndex1 := 0
 	subnetIndex2 := 1
-
 	case1 := map[string]int{
 		"test1": subnetIndex1,
 		"test2": subnetIndex2,
@@ -193,7 +201,10 @@ func testAccClientVPNAuthorizationRule_subnets(t *testing.T) {
 	}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNAuthorizationRuleDestroy(ctx),
@@ -240,7 +251,6 @@ func testAccCheckClientVPNAuthorizationRuleDestroy(ctx context.Context) resource
 			}
 
 			endpointID, targetNetworkCIDR, accessGroupID, err := tfec2.ClientVPNAuthorizationRuleParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -269,12 +279,7 @@ func testAccCheckClientVPNAuthorizationRuleExists(ctx context.Context, name stri
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Client VPN Authorization Rule ID is set")
-		}
-
 		endpointID, targetNetworkCIDR, accessGroupID, err := tfec2.ClientVPNAuthorizationRuleParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

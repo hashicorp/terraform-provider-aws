@@ -250,12 +250,12 @@ func findDataShareAuthorizationByID(ctx context.Context, conn *redshift.Redshift
 	}
 
 	// Verify a share with the expected consumer identifier is present and the
-	// status is "AUTHORIZED" or "PENDING_AUTHORIZATION"
+	// status is one of "AUTHORIZED" or "ACTIVE".
 	share := out.DataShares[0]
 	for _, assoc := range share.DataShareAssociations {
 		if aws.StringValue(assoc.ConsumerIdentifier) == parts[1] {
 			switch aws.StringValue(assoc.Status) {
-			case redshift.DataShareStatusAuthorized, redshift.DataShareStatusPendingAuthorization:
+			case redshift.DataShareStatusAuthorized, redshift.DataShareStatusActive:
 				return share, nil
 			}
 		}

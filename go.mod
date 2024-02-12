@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.50.14
+	github.com/aws/aws-sdk-go v1.50.15
 	github.com/aws/aws-sdk-go-v2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/config v1.26.6
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.11
@@ -14,7 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.26.7
 	github.com/aws/aws-sdk-go-v2/service/account v1.14.6
 	github.com/aws/aws-sdk-go-v2/service/acm v1.22.7
-	github.com/aws/aws-sdk-go-v2/service/amp v1.22.1
+	github.com/aws/aws-sdk-go-v2/service/amp v1.22.2
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.26.7
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.5.6
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.39.6
@@ -28,6 +28,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.12.6
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.8.6
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.15.7
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.32.6
+	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.20.6
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.32.0
@@ -51,12 +53,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.146.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.24.7
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.38.2
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.38.3
 	github.com/aws/aws-sdk-go-v2/service/eks v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.34.7
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/emr v1.36.1
-	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.15.0
+	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.15.1
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.17.0
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.24.0
@@ -91,7 +93,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.3.6
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.9.7
 	github.com/aws/aws-sdk-go-v2/service/polly v1.36.6
-	github.com/aws/aws-sdk-go-v2/service/pricing v1.24.6
+	github.com/aws/aws-sdk-go-v2/service/pricing v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.1.7
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.19.6
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.14.5

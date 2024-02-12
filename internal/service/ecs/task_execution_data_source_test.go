@@ -37,6 +37,7 @@ func TestAccECSTaskExecutionDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster", clusterName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "task_definition", taskDefinitionName, "arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "client_token", "some_token"),
 					resource.TestCheckResourceAttr(dataSourceName, "desired_count", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "launch_type", "FARGATE"),
 					resource.TestCheckResourceAttr(dataSourceName, "network_configuration.#", "1"),
@@ -186,6 +187,7 @@ data "aws_ecs_task_execution" "test" {
 
   cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
+  client_token    = "some_token"
   desired_count   = 1
   launch_type     = "FARGATE"
 
