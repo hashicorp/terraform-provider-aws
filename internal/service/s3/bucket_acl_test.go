@@ -269,16 +269,18 @@ func TestAccS3BucketACL_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketACLConfig_basic(bucketName, string(types.BucketCannedACLPrivate)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "access_control_policy.0.grant.*", map[string]string{
 						"grantee.#":      "1",
 						"grantee.0.type": string(types.TypeCanonicalUser),
 						"permission":     string(types.PermissionFullControl),
 					}),
+					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.owner.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 				),
 			},
 			{
@@ -303,7 +305,7 @@ func TestAccS3BucketACL_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketACLConfig_basic(bucketName, string(types.BucketCannedACLPrivate)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					// Bucket ACL cannot be destroyed, but we can verify Bucket deletion
 					// will result in a missing Bucket ACL resource
@@ -329,14 +331,14 @@ func TestAccS3BucketACL_migrate_aclNoChange(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_acl(bucketName, string(types.BucketCannedACLPrivate)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "acl", string(types.BucketCannedACLPrivate)),
 				),
 			},
 			{
 				Config: testAccBucketACLConfig_basic(bucketName, string(types.BucketCannedACLPrivate)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
 				),
@@ -359,14 +361,14 @@ func TestAccS3BucketACL_migrate_aclWithChange(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_acl(bucketName, string(types.BucketCannedACLPrivate)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "acl", string(types.BucketCannedACLPrivate)),
 				),
 			},
 			{
 				Config: testAccBucketACLConfig_basic_withDisabledPublicAccessBlock(bucketName, string(types.BucketCannedACLPublicRead)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPublicRead)),
 				),
@@ -389,14 +391,14 @@ func TestAccS3BucketACL_migrate_grantsWithChange(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_acl(bucketName, string(types.BucketCannedACLPrivate)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "acl", string(types.BucketCannedACLPrivate)),
 				),
 			},
 			{
 				Config: testAccBucketACLConfig_migrateGrantsChange(bucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
@@ -435,14 +437,14 @@ func TestAccS3BucketACL_updateACL(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketACLConfig_basic(bucketName, string(types.BucketCannedACLPrivate)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
 				),
 			},
 			{
 				Config: testAccBucketACLConfig_basic_withDisabledPublicAccessBlock(bucketName, string(types.BucketCannedACLPublicRead)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPublicRead)),
 				),
@@ -469,7 +471,7 @@ func TestAccS3BucketACL_updateGrant(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketACLConfig_grants(bucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
@@ -495,7 +497,7 @@ func TestAccS3BucketACL_updateGrant(t *testing.T) {
 			},
 			{
 				Config: testAccBucketACLConfig_grantsUpdate(bucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
@@ -539,7 +541,7 @@ func TestAccS3BucketACL_ACLToGrant(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketACLConfig_basic(bucketName, string(types.BucketCannedACLPrivate)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
@@ -547,7 +549,7 @@ func TestAccS3BucketACL_ACLToGrant(t *testing.T) {
 			},
 			{
 				Config: testAccBucketACLConfig_grants(bucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
@@ -575,7 +577,7 @@ func TestAccS3BucketACL_grantToACL(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketACLConfig_grants(bucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.0.grant.#", "2"),
@@ -583,7 +585,7 @@ func TestAccS3BucketACL_grantToACL(t *testing.T) {
 			},
 			{
 				Config: testAccBucketACLConfig_basic(bucketName, string(types.BucketCannedACLPrivate)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketACLExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
 					resource.TestCheckResourceAttr(resourceName, "access_control_policy.#", "1"),
@@ -643,7 +645,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_ownership_controls" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   rule {
     object_ownership = "BucketOwnerPreferred"
   }
@@ -652,7 +654,7 @@ resource "aws_s3_bucket_ownership_controls" "test" {
 resource "aws_s3_bucket_acl" "test" {
   depends_on = [aws_s3_bucket_ownership_controls.test]
 
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   acl    = %[2]q
 }
 `, rName, acl)
@@ -665,7 +667,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_public_access_block" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
 
   block_public_acls       = false
   block_public_policy     = false
@@ -674,7 +676,7 @@ resource "aws_s3_bucket_public_access_block" "test" {
 }
 
 resource "aws_s3_bucket_ownership_controls" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   rule {
     object_ownership = "BucketOwnerPreferred"
   }
@@ -686,7 +688,7 @@ resource "aws_s3_bucket_acl" "test" {
     aws_s3_bucket_ownership_controls.test,
   ]
 
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   acl    = %[2]q
 }
 `, rName, acl)
@@ -701,7 +703,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_ownership_controls" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   rule {
     object_ownership = "BucketOwnerPreferred"
   }
@@ -710,7 +712,7 @@ resource "aws_s3_bucket_ownership_controls" "test" {
 resource "aws_s3_bucket_acl" "test" {
   depends_on = [aws_s3_bucket_ownership_controls.test]
 
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   access_control_policy {
     grant {
       grantee {
@@ -747,7 +749,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_ownership_controls" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   rule {
     object_ownership = "BucketOwnerPreferred"
   }
@@ -756,7 +758,7 @@ resource "aws_s3_bucket_ownership_controls" "test" {
 resource "aws_s3_bucket_acl" "test" {
   depends_on = [aws_s3_bucket_ownership_controls.test]
 
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   access_control_policy {
     grant {
       grantee {
@@ -793,7 +795,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_bucket_ownership_controls" "test" {
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   rule {
     object_ownership = "BucketOwnerPreferred"
   }
@@ -802,7 +804,7 @@ resource "aws_s3_bucket_ownership_controls" "test" {
 resource "aws_s3_bucket_acl" "test" {
   depends_on = [aws_s3_bucket_ownership_controls.test]
 
-  bucket = aws_s3_bucket.test.id
+  bucket = aws_s3_bucket.test.bucket
   access_control_policy {
     grant {
       grantee {
