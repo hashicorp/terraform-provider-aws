@@ -28,7 +28,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Continuous Deployment Policy",
 		},
 		{
-			Factory: newResourceKeyValueStore,
+			Factory: newKeyValueStoreResource,
 			Name:    "Key Value Store",
 		},
 	}
