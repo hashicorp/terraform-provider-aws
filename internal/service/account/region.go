@@ -37,7 +37,7 @@ func resourceRegion() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
-			"region": {
+			"region_name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -47,7 +47,7 @@ func resourceRegion() *schema.Resource {
 				Default:  true,
 				Optional: true,
 			},
-			"opt_in_status": {
+			"opt_status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -65,7 +65,7 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		accountID = v.(string)
 	}
 
-	region := d.Get("region").(string)
+	region := d.Get("region_name").(string)
 
 	id := RegionResourceID(accountID, region)
 
@@ -124,7 +124,7 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 		accountID = v.(string)
 	}
 
-	region := d.Get("region").(string)
+	region := d.Get("region_name").(string)
 
 	output, err := FindRegionOptInStatus(ctx, conn, accountID, region)
 
@@ -138,7 +138,7 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("enabled", false)
 	}
 
-	d.Set("opt_in_status", string(output.RegionOptStatus))
+	d.Set("opt_status", string(output.RegionOptStatus))
 	d.Set("account_id", d.Get("account_id"))
 
 	return diags

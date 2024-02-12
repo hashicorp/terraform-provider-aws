@@ -16,10 +16,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccRegion_basic(t *testing.T) {
+func TestAccRegion_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_account_region.test"
-	region := "ap-southeast-3" //lintignore:AWSAT003
+	regionName := "ap-southeast-3" //lintignore:AWSAT003
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -28,9 +28,9 @@ func testAccRegion_basic(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegionConfig_basic(region, "true"),
+				Config: testAccRegionConfig_basic(regionName, "true"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckPrimaryContactExists(ctx, resourceName),
+					testAccRegionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 				),
 			},
@@ -56,7 +56,7 @@ func testAccRegionExists(ctx context.Context, n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AccountClient(ctx)
 
-		_, err := tfaccount.FindRegionOptInStatus(ctx, conn, rs.Primary.Attributes["account_id"], rs.Primary.Attributes["region"])
+		_, err := tfaccount.FindRegionOptInStatus(ctx, conn, rs.Primary.Attributes["account_id"], rs.Primary.Attributes["region_name"])
 
 		return err
 	}
@@ -65,8 +65,8 @@ func testAccRegionExists(ctx context.Context, n string) resource.TestCheckFunc {
 func testAccRegionConfig_basic(region string, enabled string) string {
 	return fmt.Sprintf(`
 resource "aws_account_region" "test" {
-  region  = %[1]q
-  enabled = %[2]q
+  region_name  = %[1]q
+  enabled 	   = %[2]q
 }
 `, region, enabled)
 }
