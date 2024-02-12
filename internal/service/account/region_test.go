@@ -95,8 +95,8 @@ func testAccRegionExists(ctx context.Context, n string) resource.TestCheckFunc {
 func testAccRegionConfig_basic(region string, enabled string) string {
 	return fmt.Sprintf(`
 resource "aws_account_region" "test" {
-  region_name  = %[1]q
-  enabled 	   = %[2]q
+  region_name = %[1]q
+  enabled     = %[2]q
 }
 `, region, enabled)
 }
