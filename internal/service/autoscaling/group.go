@@ -447,7 +447,6 @@ func ResourceGroup() *schema.Resource {
 													Type:     schema.TypeString,
 													Optional: true,
 													Computed: true,
-													// Default:  "$Default",
 												},
 											},
 										},
@@ -752,7 +751,6 @@ func ResourceGroup() *schema.Resource {
 																Type:     schema.TypeString,
 																Optional: true,
 																Computed: true,
-																// Default:  "$Default",
 															},
 														},
 													},
@@ -3174,6 +3172,10 @@ func expandLaunchTemplateSpecificationForMixedInstancesPolicy(tfMap map[string]i
 		apiObject.LaunchTemplateName = aws.String(v.(string))
 	}
 
+	if tfMap["version"] == "" {
+		apiObject.Version = aws.String("$Default")
+	}
+
 	if v, ok := tfMap["version"].(string); ok && v != "" {
 		apiObject.Version = aws.String(v)
 	}
@@ -3194,6 +3196,10 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *autoscalin
 		apiObject.LaunchTemplateId = aws.String(v.(string))
 	} else if v, ok := tfMap["name"]; ok && v != "" {
 		apiObject.LaunchTemplateName = aws.String(v.(string))
+	}
+
+	if tfMap["version"] == "" {
+		apiObject.Version = aws.String("$Default")
 	}
 
 	if v, ok := tfMap["version"].(string); ok && v != "" {
