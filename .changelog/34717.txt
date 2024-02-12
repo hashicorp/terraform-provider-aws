@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_eks_pod_identity_association: Retry IAM eventual consistency errors on create and update
+```

@@ -25,8 +25,9 @@ resource "aws_sagemaker_space" "example" {
 
 This resource supports the following arguments:
 
-* `space_name` - (Required) The name of the space.
 * `domain_id` - (Required) The ID of the associated Domain.
+* `space_display_name` - (Optional) The name of the space that appears in the SageMaker Studio UI.
+* `space_name` - (Required) The name of the space.
 * `space_settings` - (Required) A collection of space settings. See [Space Settings](#space-settings) below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
@@ -56,6 +57,7 @@ This resource supports the following arguments:
 * `instance_type` - (Optional) The instance type.
 * `lifecycle_config_arn` - (Optional) The Amazon Resource Name (ARN) of the Lifecycle Configuration attached to the Resource.
 * `sagemaker_image_arn` - (Optional) The Amazon Resource Name (ARN) of the SageMaker image created on the instance.
+* `sagemaker_image_version_alias` - (Optional) The SageMaker Image Version Alias.
 * `sagemaker_image_version_arn` - (Optional) The ARN of the image version created on the instance.
 
 ##### Custom Image
@@ -68,10 +70,11 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The space's Amazon Resource Name (ARN).
 * `arn` - The space's Amazon Resource Name (ARN).
 * `home_efs_file_system_uid` - The ID of the space's profile in the Amazon Elastic File System volume.
+* `id` - The space's Amazon Resource Name (ARN).
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `url` - Returns the URL of the space. If the space is created with Amazon Web Services IAM Identity Center (Successor to Amazon Web Services Single Sign-On) authentication, users can navigate to the URL after appending the respective redirect parameter for the application type to be federated through Amazon Web Services IAM Identity Center.
 
 ## Import
 

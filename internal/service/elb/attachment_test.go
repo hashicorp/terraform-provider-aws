@@ -117,7 +117,7 @@ func testAccAttachmentCheckInstanceCount(conf *elb.LoadBalancerDescription, expe
 
 // add one attachment
 func testAccAttachmentConfig_1() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -139,7 +139,7 @@ resource "aws_elb" "test" {
 }
 
 resource "aws_instance" "foo1" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 }
 
@@ -152,7 +152,7 @@ resource "aws_elb_attachment" "foo1" {
 
 // add a second attachment
 func testAccAttachmentConfig_2() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -174,12 +174,12 @@ resource "aws_elb" "test" {
 }
 
 resource "aws_instance" "foo1" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 }
 
 resource "aws_instance" "foo2" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 }
 
@@ -197,7 +197,7 @@ resource "aws_elb_attachment" "foo2" {
 
 // swap attachments between resources
 func testAccAttachmentConfig_3() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), `
 data "aws_availability_zones" "available" {
   state = "available"
 
@@ -219,12 +219,12 @@ resource "aws_elb" "test" {
 }
 
 resource "aws_instance" "foo1" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 }
 
 resource "aws_instance" "foo2" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 }
 

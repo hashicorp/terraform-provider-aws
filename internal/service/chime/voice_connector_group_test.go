@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/chimesdkvoice"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,11 +16,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfchime "github.com/hashicorp/terraform-provider-aws/internal/service/chime"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccVoiceConnectorGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var voiceConnectorGroup *chimesdkvoice.VoiceConnectorGroup
+	var voiceConnectorGroup *awstypes.VoiceConnectorGroup
 
 	vcgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_group.test"
@@ -30,7 +31,7 @@ func testAccVoiceConnectorGroup_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -54,7 +55,7 @@ func testAccVoiceConnectorGroup_basic(t *testing.T) {
 
 func testAccVoiceConnectorGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var voiceConnectorGroup *chimesdkvoice.VoiceConnectorGroup
+	var voiceConnectorGroup *awstypes.VoiceConnectorGroup
 
 	vcgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_group.test"
@@ -64,7 +65,7 @@ func testAccVoiceConnectorGroup_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -82,7 +83,7 @@ func testAccVoiceConnectorGroup_disappears(t *testing.T) {
 
 func testAccVoiceConnectorGroup_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var voiceConnectorGroup *chimesdkvoice.VoiceConnectorGroup
+	var voiceConnectorGroup *awstypes.VoiceConnectorGroup
 
 	vcgName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_chime_voice_connector_group.test"
@@ -92,7 +93,7 @@ func testAccVoiceConnectorGroup_update(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, chimesdkvoice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceConnectorGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -156,7 +157,7 @@ resource "aws_chime_voice_connector_group" "test" {
 `, name)
 }
 
-func testAccCheckVoiceConnectorGroupExists(ctx context.Context, name string, vc *chimesdkvoice.VoiceConnectorGroup) resource.TestCheckFunc {
+func testAccCheckVoiceConnectorGroupExists(ctx context.Context, name string, vc *awstypes.VoiceConnectorGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -167,9 +168,9 @@ func testAccCheckVoiceConnectorGroupExists(ctx context.Context, name string, vc 
 			return fmt.Errorf("no Chime voice connector group ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
-		resp, err := tfchime.FindVoiceConnectorResourceWithRetry(ctx, false, func() (*chimesdkvoice.VoiceConnectorGroup, error) {
+		resp, err := tfchime.FindVoiceConnectorResourceWithRetry(ctx, false, func() (*awstypes.VoiceConnectorGroup, error) {
 			return tfchime.FindVoiceConnectorGroupByID(ctx, conn, rs.Primary.ID)
 		})
 
@@ -189,9 +190,9 @@ func testAccCheckVoiceConnectorGroupDestroy(ctx context.Context) resource.TestCh
 			if rs.Type != "aws_chime_voice_connector" {
 				continue
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
-			_, err := tfchime.FindVoiceConnectorResourceWithRetry(ctx, false, func() (*chimesdkvoice.VoiceConnectorGroup, error) {
+			_, err := tfchime.FindVoiceConnectorResourceWithRetry(ctx, false, func() (*awstypes.VoiceConnectorGroup, error) {
 				return tfchime.FindVoiceConnectorGroupByID(ctx, conn, rs.Primary.ID)
 			})
 

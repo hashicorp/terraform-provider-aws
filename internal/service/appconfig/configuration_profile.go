@@ -62,6 +62,13 @@ func ResourceConfigurationProfile() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 2048),
 			},
+			"kms_key_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ValidateFunc: validation.Any(
+					verify.ValidARN,
+					validation.StringLenBetween(1, 256)),
+			},
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -127,6 +134,10 @@ func resourceConfigurationProfileCreate(ctx context.Context, d *schema.ResourceD
 		input.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("kms_key_identifier"); ok {
+		input.KmsKeyIdentifier = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("retrieval_role_arn"); ok {
 		input.RetrievalRoleArn = aws.String(v.(string))
 	}
@@ -188,6 +199,7 @@ func resourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("application_id", output.ApplicationId)
 	d.Set("configuration_profile_id", output.Id)
 	d.Set("description", output.Description)
+	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
 	d.Set("location_uri", output.LocationUri)
 	d.Set("name", output.Name)
 	d.Set("retrieval_role_arn", output.RetrievalRoleArn)
@@ -227,6 +239,10 @@ func resourceConfigurationProfileUpdate(ctx context.Context, d *schema.ResourceD
 
 		if d.HasChange("description") {
 			updateInput.Description = aws.String(d.Get("description").(string))
+		}
+
+		if d.HasChange("kms_key_identifier") {
+			updateInput.KmsKeyIdentifier = aws.String(d.Get("kms_key_identifier").(string))
 		}
 
 		if d.HasChange("name") {

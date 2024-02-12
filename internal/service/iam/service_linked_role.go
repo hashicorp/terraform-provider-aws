@@ -30,8 +30,8 @@ import (
 )
 
 // @SDKResource("aws_iam_service_linked_role", name="Service Linked Role")
-// @Tags
-func ResourceServiceLinkedRole() *schema.Resource {
+// @Tags(identifierAttribute="id", resourceType="ServiceLinkedRole")
+func resourceServiceLinkedRole() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceLinkedRoleCreate,
 		ReadWithoutTimeout:   resourceServiceLinkedRoleRead,
@@ -149,7 +149,7 @@ func resourceServiceLinkedRoleRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return FindRoleByName(ctx, conn, roleName)
+		return findRoleByName(ctx, conn, roleName)
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -182,13 +182,12 @@ func resourceServiceLinkedRoleUpdate(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
-
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
 	if d.HasChangesExcept("tags_all", "tags") {
+		_, roleName, _, err := DecodeServiceLinkedRoleID(d.Id())
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
 		input := &iam.UpdateRoleInput{
 			Description: aws.String(d.Get("description").(string)),
 			RoleName:    aws.String(roleName),
@@ -198,21 +197,6 @@ func resourceServiceLinkedRoleUpdate(ctx context.Context, d *schema.ResourceData
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IAM Service Linked Role (%s): %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := roleUpdateTags(ctx, conn, roleName, o, n)
-
-		// Some partitions (e.g. ISO) may not support tagging.
-		if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-			return append(diags, resourceServiceLinkedRoleRead(ctx, d, meta)...)
-		}
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating IAM Service Linked Role (%s): updating tags: %s", d.Id(), err)
 		}
 	}
 
@@ -230,15 +214,14 @@ func resourceServiceLinkedRoleDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[DEBUG] Deleting IAM Service Linked Role: %s", d.Id())
-	if err := DeleteServiceLinkedRole(ctx, conn, roleName); err != nil {
+	if err := deleteServiceLinkedRole(ctx, conn, roleName); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
 }
 
-// DeleteServiceLinkedRole is called from the service/ram package.
-func DeleteServiceLinkedRole(ctx context.Context, conn *iam.IAM, roleName string) error {
+func deleteServiceLinkedRole(ctx context.Context, conn *iam.IAM, roleName string) error {
 	input := &iam.DeleteServiceLinkedRoleInput{
 		RoleName: aws.String(roleName),
 	}

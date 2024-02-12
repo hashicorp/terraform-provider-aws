@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -738,6 +739,8 @@ const (
 )
 
 func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	in := &medialive.CreateChannelInput{
@@ -776,29 +779,31 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	out, err := conn.CreateChannel(ctx, in)
 	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), err)
 	}
 
 	if out == nil || out.Channel == nil {
-		return create.DiagError(names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Channel.Id))
 
 	if _, err := waitChannelCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionWaitingForCreation, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionWaitingForCreation, ResNameChannel, d.Id(), err)
 	}
 
 	if d.Get("start_channel").(bool) {
 		if err := startChannel(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), err)
 		}
 	}
 
-	return resourceChannelRead(ctx, d, meta)
+	return append(diags, resourceChannelRead(ctx, d, meta)...)
 }
 
 func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	out, err := FindChannelByID(ctx, conn, d.Id())
@@ -806,11 +811,11 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MediaLive Channel (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionReading, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionReading, ResNameChannel, d.Id(), err)
 	}
 
 	d.Set("arn", out.Arn)
@@ -821,31 +826,33 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("role_arn", out.RoleArn)
 
 	if err := d.Set("cdi_input_specification", flattenChannelCdiInputSpecification(out.CdiInputSpecification)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 	if err := d.Set("input_attachments", flattenChannelInputAttachments(out.InputAttachments)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 	if err := d.Set("destinations", flattenChannelDestinations(out.Destinations)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 	if err := d.Set("encoder_settings", flattenChannelEncoderSettings(out.EncoderSettings)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 	if err := d.Set("input_specification", flattenChannelInputSpecification(out.InputSpecification)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 	if err := d.Set("maintenance", flattenChannelMaintenance(out.Maintenance)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 	if err := d.Set("vpc", flattenChannelVPC(out.Vpc)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all", "start_channel") {
@@ -892,28 +899,28 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		channel, err := FindChannelByID(ctx, conn, d.Id())
 
 		if err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
 		}
 
 		if channel.State == types.ChannelStateRunning {
 			if err := stopChannel(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id()); err != nil {
-				return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
+				return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
 			}
 		}
 
 		out, err := conn.UpdateChannel(ctx, in)
 		if err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
 		}
 
 		if _, err := waitChannelUpdated(ctx, conn, aws.ToString(out.Channel.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionWaitingForUpdate, ResNameChannel, d.Id(), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionWaitingForUpdate, ResNameChannel, d.Id(), err)
 		}
 	}
 
 	if d.Get("start_channel").(bool) {
 		if err := startChannel(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id()); err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Get("name").(string), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Get("name").(string), err)
 		}
 	}
 
@@ -921,42 +928,48 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		channel, err := FindChannelByID(ctx, conn, d.Id())
 
 		if err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
 		}
 
 		switch d.Get("start_channel").(bool) {
 		case true:
 			if channel.State == types.ChannelStateIdle {
 				if err := startChannel(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id()); err != nil {
-					return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
+					return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
 				}
 			}
 		default:
 			if channel.State == types.ChannelStateRunning {
 				if err := stopChannel(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id()); err != nil {
-					return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
+					return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
 				}
 			}
 		}
 	}
 
-	return resourceChannelRead(ctx, d, meta)
+	return append(diags, resourceChannelRead(ctx, d, meta)...)
 }
 
 func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	log.Printf("[INFO] Deleting MediaLive Channel %s", d.Id())
 
 	channel, err := FindChannelByID(ctx, conn, d.Id())
 
+	if tfresource.NotFound(err) {
+		return diags
+	}
+
 	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
 	}
 
 	if channel.State == types.ChannelStateRunning {
 		if err := stopChannel(ctx, conn, d.Timeout(schema.TimeoutDelete), d.Id()); err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
 		}
 	}
 
@@ -964,20 +977,19 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta int
 		ChannelId: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return nil
-		}
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
 
-		return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
+	if err != nil {
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
 	}
 
 	if _, err := waitChannelDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionWaitingForDeletion, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionWaitingForDeletion, ResNameChannel, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func startChannel(ctx context.Context, conn *medialive.Client, timeout time.Duration, id string) error {
@@ -1120,15 +1132,15 @@ func FindChannelByID(ctx context.Context, conn *medialive.Client, id string) (*m
 		ChannelId: aws.String(id),
 	}
 	out, err := conn.DescribeChannel(ctx, in)
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -1624,7 +1636,7 @@ func expandInputAttachmentAutomaticInputFailoverSettings(tfList []interface{}) *
 	if v, ok := m["error_clear_time_msec"].(int); ok && v != 0 {
 		out.ErrorClearTimeMsec = aws.Int32(int32(v))
 	}
-	if v, ok := m["failover_conditions"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m["failover_condition"].(*schema.Set); ok && v.Len() > 0 {
 		out.FailoverConditions = expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(v.List())
 	}
 	if v, ok := m["input_preference"].(string); ok && v != "" {
@@ -2054,7 +2066,7 @@ func flattenInputAttachmentAutomaticInputFailoverSettings(in *types.AutomaticInp
 	m := map[string]interface{}{
 		"secondary_input_id":    aws.ToString(in.SecondaryInputId),
 		"error_clear_time_msec": int(aws.ToInt32(in.ErrorClearTimeMsec)),
-		"failover_conditions":   flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(in.FailoverConditions),
+		"failover_condition":    flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(in.FailoverConditions),
 		"input_preference":      string(in.InputPreference),
 	}
 

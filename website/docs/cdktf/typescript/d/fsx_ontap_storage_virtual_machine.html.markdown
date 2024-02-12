@@ -118,14 +118,14 @@ The following arguments are supported for `activeDirectoryConfiguration` configu
 
 ### SVM Endpoints
 
-* `iscsi` - An endpoint for connecting using the Internet Small Computer Systems Interface (iSCSI) protocol. See [SVM Endpoint](#svm-endpoint) below.
+* `Iscsi` - An endpoint for connecting using the Internet Small Computer Systems Interface (iSCSI) protocol. See [SVM Endpoint](#svm-endpoint) below.
 * `management` - An endpoint for managing SVMs using the NetApp ONTAP CLI, NetApp ONTAP API, or NetApp CloudManager. See [SVM Endpoint](#svm-endpoint) below.
 * `nfs` - An endpoint for connecting using the Network File System (NFS) protocol. See [SVM Endpoint](#svm-endpoint) below.
 * `smb` - An endpoint for connecting using the Server Message Block (SMB) protocol. See [SVM Endpoint](#svm-endpoint) below.
 
 ### SVM Endpoint
 
-* `dnsName` - The file system's DNS name. You can mount your file system using its DNS name.
-* `ipAddresses` - The SVM endpoint's IP addresses.
+* `DNSName` - The file system's DNS name. You can mount your file system using its DNS name.
+* `IpAddresses` - The SVM endpoint's IP addresses.
 
-<!-- cache-key: cdktf-0.19.0 input-f6cea127fecc9fef03f1751e79c3dcabeee15d54d55425580842b9e868758d48 -->
+<!-- cache-key: cdktf-0.20.1 input-f6cea127fecc9fef03f1751e79c3dcabeee15d54d55425580842b9e868758d48 -->
