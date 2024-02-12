@@ -26,7 +26,7 @@ const clientVPNEndpointDefaultLimit = 5
 var testAccEc2ClientVpnEndpointSemaphore sync.Semaphore
 
 func init() {
-	testAccEc2ClientVpnEndpointSemaphore = sync.InitializeSemaphore("AWS_EC2_CLIENT_VPN_LIMIT", clientVPNEndpointDefaultLimit)
+	testAccEc2ClientVpnEndpointSemaphore = sync.GetSemaphore("ClientVPN", "AWS_EC2_CLIENT_VPN_LIMIT", clientVPNEndpointDefaultLimit)
 }
 
 // This is part of an experimental feature, do not use this as a starting point for tests
