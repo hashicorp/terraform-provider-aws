@@ -13,7 +13,7 @@ import (
 func TestAccVerifiedAccess_serial(t *testing.T) {
 	t.Parallel()
 
-	semaphore := tfsync.GetSemaphore("VerifiedAccess", "AWS_VERIFIED_ACCESS_INSTANCE_LIMIT", 5)
+	semaphore := tfsync.GetSemaphore("VerifiedAccess", "AWS_EC2_VERIFIED_ACCESS_INSTANCE_LIMIT", 5)
 	testCases := map[string]map[string]func(*testing.T, tfsync.Semaphore){
 		"Endpoint": {
 			"basic":            testAccVerifiedAccessEndpoint_basic,
