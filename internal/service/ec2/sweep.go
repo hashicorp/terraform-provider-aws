@@ -417,6 +417,14 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_verifiedaccess_trust_provider", &resource.Sweeper{
 		Name: "aws_verifiedaccess_trust_provider",
 		F:    sweepVerifiedAccessTrustProviders,
+		Dependencies: []string{
+			"aws_verifiedaccess_instance_trust_provider_attachment",
+		},
+	})
+
+	resource.AddTestSweepers("aws_verifiedaccess_instance_trust_provider_attachment", &resource.Sweeper{
+		Name: "aws_verifiedaccess_instance_trust_provider_attachment",
+		F:    sweepVerifiedAccessTrustProviderAttachments,
 	})
 
 	resource.AddTestSweepers("aws_verifiedaccess_instance", &resource.Sweeper{
@@ -2968,6 +2976,56 @@ func sweepVerifiedAccessTrustProviders(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Verified Access Trust Providers (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepVerifiedAccessTrustProviderAttachments(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.EC2Conn(ctx)
+	input := &ec2.DescribeVerifiedAccessInstancesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeVerifiedAccessInstancesPagesWithContext(ctx, input, func(page *ec2.DescribeVerifiedAccessInstancesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.VerifiedAccessInstances {
+			vaiID := aws.StringValue(v.VerifiedAccessInstanceId)
+
+			for _, v := range v.VerifiedAccessTrustProviders {
+				vatpID := aws.StringValue(v.VerifiedAccessTrustProviderId)
+
+				r := ResourceVerifiedAccessInstanceTrustProviderAttachment()
+				d := r.Data(nil)
+				d.SetId(VerifiedAccessInstanceTrustProviderAttachmentCreateResourceID(vaiID, vatpID))
+
+				sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Verified Access Instance Trust Provider Attachment sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Verified Access Instance Trust Provider Attachments (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Verified Access Instance Trust Provider Attachments (%s): %w", region, err)
 	}
 
 	return nil
