@@ -294,6 +294,7 @@ func ResourceTask() *schema.Resource {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringInSlice(datasync.ReportLevel_Values(), false),
+							Default:      datasync.ReportLevelErrorsOnly,
 						},
 					},
 				},
@@ -557,22 +558,40 @@ func flattenTaskReportConfig(options *datasync.TaskReportConfig) []interface{} {
 		"output_type":          aws.StringValue(options.OutputType),
 		"report_level":         aws.StringValue(options.ReportLevel),
 		"s3_destination":       flattenTaskReportConfigS3Destination(options.Destination.S3),
-		"report_overrides":     flattenTaskReportConfigReportOverrides(options.Overrides),
+		"report_overrides":     flattenTaskReportConfigReportOverrides(options.Overrides, options.ReportLevel),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenTaskReportConfigReportOverrides(options *datasync.ReportOverrides) []interface{} {
-	if options == nil {
-		return []interface{}{}
+func flattenTaskReportConfigReportOverrides(options *datasync.ReportOverrides, defaultReportLevel *string) []interface{} {
+	// the API does not return the value of this unless it differs from the parent report_level,
+	// we set it purposefully otherwise changes are flagged
+	m := map[string]interface{}{
+		"deleted_override":     defaultReportLevel,
+		"skipped_override":     defaultReportLevel,
+		"transferred_override": defaultReportLevel,
+		"verified_override":    defaultReportLevel,
 	}
 
-	m := map[string]interface{}{
-		"deleted_override":     aws.StringValue(options.Deleted.ReportLevel),
-		"skipped_override":     aws.StringValue(options.Skipped.ReportLevel),
-		"transferred_override": aws.StringValue(options.Transferred.ReportLevel),
-		"verified_override":    aws.StringValue(options.Verified.ReportLevel),
+	if options == nil {
+		return []interface{}{m}
+	}
+
+	if options.Deleted != nil && options.Deleted.ReportLevel != nil {
+		m["deleted_override"] = aws.StringValue(options.Deleted.ReportLevel)
+	}
+
+	if options.Skipped != nil && options.Skipped.ReportLevel != nil {
+		m["skipped_override"] = aws.StringValue(options.Skipped.ReportLevel)
+	}
+
+	if options.Transferred != nil && options.Transferred.ReportLevel != nil {
+		m["transferred_override"] = aws.StringValue(options.Transferred.ReportLevel)
+	}
+
+	if options.Verified != nil && options.Verified.ReportLevel != nil {
+		m["verified_override"] = aws.StringValue(options.Verified.ReportLevel)
 	}
 
 	return []interface{}{m}
@@ -666,7 +685,7 @@ func expandTaskReportConfig(l []interface{}) *datasync.TaskReportConfig {
 	reportConfig = reportConfig.SetOutputType(m["output_type"].(string))
 	reportConfig = reportConfig.SetReportLevel(m["report_level"].(string))
 	o := m["report_overrides"].([]interface{})
-	reportConfig = reportConfig.SetOverrides(expandTaskReportOverrides(o))
+	reportConfig = reportConfig.SetOverrides(expandTaskReportOverrides(o, m["report_level"].(string)))
 
 	return reportConfig
 }
@@ -685,25 +704,50 @@ func expandTaskReportDestination(l []interface{}) *datasync.ReportDestination {
 	}
 }
 
-func expandTaskReportOverrides(l []interface{}) *datasync.ReportOverrides {
-	if len(l) == 0 || l[0] == nil {
-		return nil
-	}
-	m := l[0].(map[string]interface{})
-	return &datasync.ReportOverrides{
+func expandTaskReportOverrides(l []interface{}, defaultReportLevel string) *datasync.ReportOverrides {
+
+	var overrides = &datasync.ReportOverrides{
 		Deleted: &datasync.ReportOverride{
-			ReportLevel: aws.String(m["deleted_override"].(string)),
+			ReportLevel: aws.String(defaultReportLevel),
 		},
 		Skipped: &datasync.ReportOverride{
-			ReportLevel: aws.String(m["skipped_override"].(string)),
+			ReportLevel: aws.String(defaultReportLevel),
 		},
 		Transferred: &datasync.ReportOverride{
-			ReportLevel: aws.String(m["transferred_override"].(string)),
+			ReportLevel: aws.String(defaultReportLevel),
 		},
 		Verified: &datasync.ReportOverride{
-			ReportLevel: aws.String(m["verified_override"].(string)),
+			ReportLevel: aws.String(defaultReportLevel),
 		},
 	}
+
+	if len(l) == 0 || l[0] == nil {
+		return overrides
+	}
+
+	m := l[0].(map[string]interface{})
+
+	deleteOverride := m["deleted_override"].(string)
+	if deleteOverride != "" {
+		overrides.Deleted.ReportLevel = aws.String(deleteOverride)
+	}
+
+	skippedOverride := m["skipped_override"].(string)
+	if skippedOverride != "" {
+		overrides.Skipped.ReportLevel = aws.String(skippedOverride)
+	}
+
+	transferredOverride := m["transferred_override"].(string)
+	if transferredOverride != "" {
+		overrides.Transferred.ReportLevel = aws.String(transferredOverride)
+	}
+
+	verifiedOverride := m["verified_override"].(string)
+	if verifiedOverride != "" {
+		overrides.Verified.ReportLevel = aws.String(verifiedOverride)
+	}
+
+	return overrides
 }
 
 func expandFilterRules(l []interface{}) []*datasync.FilterRule {
