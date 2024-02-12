@@ -78,7 +78,6 @@ func resourceVPNGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("amazon_side_asn"); ok {
 		v, err := strconv.ParseInt(v.(string), 10, 64)
-
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating EC2 VPN Gateway: %s", err)
 		}
