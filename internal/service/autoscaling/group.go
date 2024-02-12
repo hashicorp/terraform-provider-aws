@@ -301,6 +301,7 @@ func ResourceGroup() *schema.Resource {
 			"launch_configuration": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ExactlyOneOf: []string{"launch_configuration", "launch_template", "mixed_instances_policy"},
 			},
 			"launch_template": {
@@ -327,6 +328,7 @@ func ResourceGroup() *schema.Resource {
 						"version": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
 					},
@@ -444,7 +446,8 @@ func ResourceGroup() *schema.Resource {
 												"version": {
 													Type:     schema.TypeString,
 													Optional: true,
-													Default:  "$Default",
+													Computed: true,
+													// Default:  "$Default",
 												},
 											},
 										},
@@ -748,7 +751,8 @@ func ResourceGroup() *schema.Resource {
 															"version": {
 																Type:     schema.TypeString,
 																Optional: true,
-																Default:  "$Default",
+																Computed: true,
+																// Default:  "$Default",
 															},
 														},
 													},
