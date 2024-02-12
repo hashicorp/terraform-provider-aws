@@ -433,6 +433,14 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_verifiedaccess_group", &resource.Sweeper{
 		Name: "aws_verifiedaccess_group",
 		F:    sweepVerifiedAccessGroups,
+		Dependencies: []string{
+			"aws_verifiedaccess_endpoint",
+		},
+	})
+
+	resource.AddTestSweepers("aws_verifiedaccess_endpoint", &resource.Sweeper{
+		Name: "aws_verifiedaccess_endpoint",
+		F:    sweepVerifiedAccessEndpoints,
 	})
 
 	resource.AddTestSweepers("aws_verifiedaccess_instance", &resource.Sweeper{
@@ -2899,6 +2907,50 @@ func sweepInstanceConnectEndpoints(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping EC2 Instance Connect Endpoints (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepVerifiedAccessEndpoints(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.EC2Conn(ctx)
+	input := &ec2.DescribeVerifiedAccessEndpointsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeVerifiedAccessEndpointsPagesWithContext(ctx, input, func(page *ec2.DescribeVerifiedAccessEndpointsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.VerifiedAccessEndpoints {
+			r := ResourceVerifiedAccessEndpoint()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.VerifiedAccessEndpointId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Verified Access Endpoint sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Verified Access Endpoints (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping Verified Access Endpoints (%s): %w", region, err)
 	}
 
 	return nil
