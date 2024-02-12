@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -1320,11 +1321,14 @@ func TestAccS3Bucket_Replication_multipleDestinationsEmptyFilter(t *testing.T) {
 				),
 			},
 			{
-				Config:                  testAccBucketConfig_replicationMultipleDestinationsEmptyFilter(bucketName),
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+				Config:            testAccBucketConfig_replicationMultipleDestinationsEmptyFilter(bucketName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy",
+					"acl",
+				},
 			},
 		},
 	})
@@ -1391,11 +1395,14 @@ func TestAccS3Bucket_Replication_multipleDestinationsNonEmptyFilter(t *testing.T
 				),
 			},
 			{
-				Config:                  testAccBucketConfig_replicationMultipleDestinationsNonEmptyFilter(bucketName),
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+				Config:            testAccBucketConfig_replicationMultipleDestinationsNonEmptyFilter(bucketName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy",
+					"acl",
+				},
 			},
 		},
 	})
@@ -1452,11 +1459,14 @@ func TestAccS3Bucket_Replication_twoDestination(t *testing.T) {
 				),
 			},
 			{
-				Config:                  testAccBucketConfig_replicationMultipleDestinationsTwoDestination(bucketName),
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+				Config:            testAccBucketConfig_replicationMultipleDestinationsTwoDestination(bucketName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy",
+					"acl",
+				},
 			},
 		},
 	})
@@ -1491,11 +1501,16 @@ func TestAccS3Bucket_Replication_ruleDestinationAccessControlTranslation(t *test
 				),
 			},
 			{
-				Config:                  testAccBucketConfig_replicationAccessControlTranslation(bucketName),
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl", "versioning"},
+				Config:            testAccBucketConfig_replicationAccessControlTranslation(bucketName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy",
+					"acl",
+					"versioning",
+					"replication_configuration.0.rules.0.priority",
+				},
 			},
 			{
 				Config: testAccBucketConfig_replicationSSEKMSEncryptedObjectsAndAccessControlTranslation(bucketName),
@@ -1540,11 +1555,16 @@ func TestAccS3Bucket_Replication_ruleDestinationAddAccessControlTranslation(t *t
 				),
 			},
 			{
-				Config:                  testAccBucketConfig_replicationAccessControlTranslation(bucketName),
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl", "versioning"},
+				Config:            testAccBucketConfig_replicationAccessControlTranslation(bucketName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy",
+					"acl",
+					"versioning",
+					"replication_configuration.0.rules.0.priority",
+				},
 			},
 			{
 				Config: testAccBucketConfig_replicationAccessControlTranslation(bucketName),
@@ -1587,11 +1607,15 @@ func TestAccS3Bucket_Replication_withoutStorageClass(t *testing.T) {
 				),
 			},
 			{
-				Config:                  testAccBucketConfig_replicationNoStorageClass(bucketName),
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+				Config:            testAccBucketConfig_replicationNoStorageClass(bucketName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy",
+					"acl",
+					"replication_configuration.0.rules.0.priority",
+				},
 			},
 		},
 	})
@@ -1649,11 +1673,15 @@ func TestAccS3Bucket_Replication_withoutPrefix(t *testing.T) {
 				),
 			},
 			{
-				Config:                  testAccBucketConfig_replicationNoPrefix(bucketName),
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+				Config:            testAccBucketConfig_replicationNoPrefix(bucketName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy",
+					"acl",
+					"replication_configuration.0.rules.0.priority",
+				},
 			},
 		},
 	})
@@ -1700,11 +1728,15 @@ func TestAccS3Bucket_Replication_schemaV2(t *testing.T) {
 				),
 			},
 			{
-				Config:                  testAccBucketConfig_replicationV2NoTags(bucketName),
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+				Config:            testAccBucketConfig_replicationV2NoTags(bucketName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"force_destroy",
+					"acl",
+					"replication_configuration.0.rules.0.priority",
+				},
 			},
 			{
 				Config: testAccBucketConfig_replicationV2OnlyOneTag(bucketName),
@@ -1770,6 +1802,7 @@ func TestAccS3Bucket_Replication_schemaV2SameRegion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"force_destroy",
 					"acl",
+					"replication_configuration.0.rules.0.priority",
 				},
 			},
 		},
@@ -1848,7 +1881,7 @@ func TestAccS3Bucket_Security_corsUpdate(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix("tf-test-bucket")
 	resourceName := "aws_s3_bucket.test"
 
-	updateBucketCors := func(n string) resource.TestCheckFunc {
+	modifyBucketCors := func(n string) resource.TestCheckFunc {
 		return func(s *terraform.State) error {
 			rs, ok := s.RootModule().Resources[n]
 			if !ok {
@@ -1897,15 +1930,19 @@ func TestAccS3Bucket_Security_corsUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.0.expose_headers.0", "x-amz-server-side-encryption"),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.0.expose_headers.1", "ETag"),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.0.max_age_seconds", "3000"),
-					updateBucketCors(resourceName),
+
+					modifyBucketCors(resourceName),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PostApplyPreRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+					PostApplyPostRefresh: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
 			},
 			{
 				Config: testAccBucketConfig_cors(bucketName),
@@ -1924,6 +1961,18 @@ func TestAccS3Bucket_Security_corsUpdate(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.0.expose_headers.1", "ETag"),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.0.max_age_seconds", "3000"),
 				),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectNonEmptyPlan(),
+						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionUpdate),
+					},
+				},
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy", "acl"},
 			},
 		},
 	})
