@@ -185,7 +185,9 @@ func TestAccELBV2ListenerRule_updateForwardBasic(t *testing.T) {
 	var conf awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName = rName[:30]
+	if len(rName) > 30 {
+		rName = rName[:30]
+	}
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -845,7 +847,9 @@ func TestAccELBV2ListenerRule_ActionForward_IgnoreFields(t *testing.T) {
 	var conf awstypes.Rule
 	resourceName := "aws_lb_listener_rule.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName = rName[:30]
+	if len(rName) > 30 {
+		rName = rName[:30]
+	}
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, "example.com")
 
