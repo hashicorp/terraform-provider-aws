@@ -2944,7 +2944,7 @@ TASK_DEFINITION
     host_path = "/ecs/jenkins-home"
   }
 
-  track_latest= true
+  track_latest = true
 }
 `, rName)
 }
