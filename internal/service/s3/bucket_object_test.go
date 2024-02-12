@@ -73,7 +73,7 @@ func TestAccS3BucketObject_basic(t *testing.T) {
 					testAccCheckBucketObjectExists(ctx, resourceName, &obj),
 					testAccCheckObjectBody(&obj, ""),
 					resource.TestCheckResourceAttr(resourceName, "acl", string(types.BucketCannedACLPrivate)),
-					resource.TestCheckResourceAttr(resourceName, "arn", fmt.Sprintf("arn:aws:s3:::%s/test-key", rName)),
+					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "arn", "s3", fmt.Sprintf("%s/test-key", rName)),
 					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cache_control", ""),

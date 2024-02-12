@@ -40,7 +40,7 @@ func TestAccS3ObjectCopy_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectCopyExists(ctx, resourceName),
 					resource.TestCheckNoResourceAttr(resourceName, "acl"),
-					resource.TestCheckResourceAttr(resourceName, "arn", fmt.Sprintf("arn:aws:s3:::%s/%s", rNameTarget, targetKey)),
+					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "arn", "s3", fmt.Sprintf("%s/%s", rNameTarget, targetKey)),
 					resource.TestCheckResourceAttr(resourceName, "bucket", rNameTarget),
 					resource.TestCheckResourceAttr(resourceName, "bucket_key_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "cache_control", ""),
