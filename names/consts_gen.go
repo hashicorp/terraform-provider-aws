@@ -27,6 +27,7 @@ const (
 	Backup                       = "backup"
 	Batch                        = "batch"
 	Bedrock                      = "bedrock"
+	BedrockAgent                 = "bedrockagent"
 	Budgets                      = "budgets"
 	CE                           = "ce"
 	CUR                          = "cur"

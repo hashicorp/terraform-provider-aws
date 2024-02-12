@@ -50,4 +50,7 @@ import (
 	{{- if .NamesPkg }}
     "github.com/hashicorp/terraform-provider-aws/names"
 	{{- end }}
+	{{- if and .ListTagsOpPaginated .ServiceTagsMap }}
+	"golang.org/x/exp/maps"
+	{{- end }}
 )

@@ -274,7 +274,7 @@ resource "aws_db_instance" "test" {
 
   provider = "awsalternate"
 }
-`, rName, storageEncrypted, postgresPreferredInstanceClasses))
+`, rName, storageEncrypted, mainInstanceClasses))
 }
 
 func testAccInstanceAutomatedBackupsReplicationConfig_basic(rName string) string {

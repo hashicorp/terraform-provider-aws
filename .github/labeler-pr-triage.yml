@@ -161,6 +161,9 @@ service/batch:
 service/bedrock:
   - 'internal/service/bedrock/**/*'
   - 'website/**/bedrock_*'
+service/bedrockagent:
+  - 'internal/service/bedrockagent/**/*'
+  - 'website/**/bedrock_agent_*'
 service/billingconductor:
   - 'internal/service/billingconductor/**/*'
   - 'website/**/billingconductor_*'
