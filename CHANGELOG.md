@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_db_parameter_group` ([#35698](https://github.com/hashicorp/terraform-provider-aws/issues/35698))
+* **New Resource:** `aws_redshift_data_share_consumer_association` ([#35771](https://github.com/hashicorp/terraform-provider-aws/issues/35771))
 
 ENHANCEMENTS:
 
@@ -22,6 +23,7 @@ BUG FIXES:
 * resource/aws_eks_access_policy_association: Retry IAM eventual consistency errors on create ([#35736](https://github.com/hashicorp/terraform-provider-aws/issues/35736))
 * resource/aws_instance: Fix `ReservationCapacityExceeded` errors when updating `instance_type` and `capacity_reservation_specification.capacity_reservation_target.capacity_reservation_id` ([#33412](https://github.com/hashicorp/terraform-provider-aws/issues/33412))
 * resource/aws_medialive_channel: Added `client_cache` to `hls_group_settings`. ([#35738](https://github.com/hashicorp/terraform-provider-aws/issues/35738))
+* resource/aws_redshift_data_share_authorization: Fix read operation to properly handle shares in `ACTIVE` status ([#35771](https://github.com/hashicorp/terraform-provider-aws/issues/35771))
 
 ## 5.36.0 (February  8, 2024)
 
