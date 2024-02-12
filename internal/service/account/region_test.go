@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccRegion_basic(t *testing.T) {
+func TestAccAccountRegion_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_account_region.test"
 	regionName := "ap-southeast-3" //lintignore:AWSAT003
@@ -45,7 +45,7 @@ func TestAccRegion_basic(t *testing.T) {
 	})
 }
 
-func TestAccRegion_enabledByDefault(t *testing.T) {
+func TestAccAccountRegion_enabledByDefault(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_account_region.test"
 	regionName := "us-east-1" //lintignore:AWSAT003
