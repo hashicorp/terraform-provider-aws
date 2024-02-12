@@ -35,8 +35,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the account region.
-For example to import the region for the current account:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the account region using a comma seperated `account_id` and `region_name`. For example:
 
 ```terraform
 import {
@@ -45,23 +44,8 @@ import {
 }
 ```
 
-To import the region for an organization member account:
-
-```terraform
-import {
-  to = aws_account_region.test
-  id = "1234567890,ap-southeast-3"
-}
-```
-
-Using `terraform import`, For example to import the region for the current account:
+Using `terraform import`. For example:
 
 ```console
 % terraform import aws_account_region.test ,ap-southeast-3
-```
-
-To import the region for an organization member account:
-
-```console
-% terraform import aws_account_region.test 1234567890,ap-southeast-3
 ```
