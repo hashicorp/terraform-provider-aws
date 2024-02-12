@@ -39106,6 +39106,16 @@ var awsusgovPartition = partition{
 				}: endpoint{},
 			},
 		},
+		"emr-serverless": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-gov-east-1",
+				}: endpoint{},
+				endpointKey{
+					Region: "us-gov-west-1",
+				}: endpoint{},
+			},
+		},
 		"es": service{
 			Endpoints: serviceEndpoints{
 				endpointKey{
