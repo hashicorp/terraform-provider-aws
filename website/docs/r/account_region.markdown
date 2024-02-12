@@ -14,8 +14,8 @@ Enable (Opt-In) or Disable (Opt-Out) a particular Region for an AWS account.
 
 ```terraform
 resource "aws_account_region" "test" {
-  region_name    = "ap-southeast-3"
-  enabled        = "true"
+  region_name = "ap-southeast-3"
+  enabled     = "true"
 }
 ```
 
@@ -35,7 +35,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the account region using `region_name` or a comma seperated `account_id` and `region_name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the account region using `region_name` or a comma separated `account_id` and `region_name`. For example:
 
 ```terraform
 import {
