@@ -568,7 +568,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	trackedTaskDefinition := d.Get("arn").(string)
-	if v, ok := d.GetOk("track_latest"); ok && v.(bool) {
+	if _, ok := d.GetOk("track_latest"); ok {
 		trackedTaskDefinition = d.Get("family").(string)
 	}
 
