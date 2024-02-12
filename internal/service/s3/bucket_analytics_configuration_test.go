@@ -384,7 +384,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_empty(t *tes
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketAnalyticsConfigurationConfig_emptyStorageClassAnalysis(rName, rName),
-				ExpectError: regexache.MustCompile(`running pre-apply refresh`),
+				ExpectError: regexache.MustCompile(`Insufficient data_export blocks`),
 			},
 		},
 	})
