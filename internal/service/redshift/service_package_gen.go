@@ -25,6 +25,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceDataShareAuthorization,
 			Name:    "Data Share Authorization",
 		},
+		{
+			Factory: newResourceDataShareConsumerAssociation,
+			Name:    "Data Share Consumer Association",
+		},
 	}
 }
 
