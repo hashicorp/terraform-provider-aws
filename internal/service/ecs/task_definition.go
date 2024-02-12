@@ -276,6 +276,11 @@ func ResourceTaskDefinition() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"track_latest": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 			"volume": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -562,9 +567,14 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
+	trackedTaskDefinition := d.Get("arn").(string)
+	if _, ok := d.GetOk("track_latest"); ok {
+		trackedTaskDefinition = d.Get("family").(string)
+	}
+
 	input := ecs.DescribeTaskDefinitionInput{
-		TaskDefinition: aws.String(d.Get("arn").(string)),
-		Include:        []*string{aws.String(ecs.TaskDefinitionFieldTags)},
+		Include:        aws.StringSlice([]string{ecs.TaskDefinitionFieldTags}),
+		TaskDefinition: aws.String(trackedTaskDefinition),
 	}
 
 	out, err := conn.DescribeTaskDefinitionWithContext(ctx, &input)
@@ -597,6 +607,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("arn_without_revision", StripRevision(aws.StringValue(taskDefinition.TaskDefinitionArn)))
 	d.Set("family", taskDefinition.Family)
 	d.Set("revision", taskDefinition.Revision)
+	d.Set("track_latest", d.Get("track_latest"))
 
 	// Sort the lists of environment variables as they come in, so we won't get spurious reorderings in plans
 	// (diff is suppressed if the environment variables haven't changed, but they still show in the plan if
