@@ -113,7 +113,8 @@ func resourceVerifiedAccessInstanceTrustProviderAttachmentDelete(ctx context.Con
 		VerifiedAccessTrustProviderId: aws.String(vatpID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessTrustProviderIdNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessTrustProviderIdNotFound) ||
+		tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "is not attached to instance") {
 		return diags
 	}
 
