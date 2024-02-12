@@ -12,13 +12,12 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -32,9 +31,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_s3_object_copy", name="Object")
+// @SDKResource("aws_s3_object_copy", name="Object Copy")
 // @Tags
-func ResourceObjectCopy() *schema.Resource {
+func resourceObjectCopy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCopyCreate,
 		ReadWithoutTimeout:   resourceObjectCopyRead,
@@ -63,6 +62,27 @@ func ResourceObjectCopy() *schema.Resource {
 			"cache_control": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
+			},
+			"checksum_algorithm": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[types.ChecksumAlgorithm](),
+			},
+			"checksum_crc32": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_crc32c": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_sha1": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"checksum_sha256": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"content_disposition": {
@@ -313,10 +333,18 @@ func resourceObjectCopyCreate(ctx context.Context, d *schema.ResourceData, meta 
 func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	var optFns []func(*s3.Options)
 
 	bucket := d.Get("bucket").(string)
-	key := d.Get("key").(string)
-	output, err := FindObjectByThreePartKey(ctx, conn, bucket, key, "")
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+	// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
+	if arn.IsARN(bucket) && conn.Options().Region == names.GlobalRegionID {
+		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+	}
+	key := sdkv1CompatibleCleanKey(d.Get("key").(string))
+	output, err := findObjectByBucketAndKey(ctx, conn, bucket, key, "", d.Get("checksum_algorithm").(string), optFns...)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Object (%s) not found, removing from state", d.Id())
@@ -330,6 +358,10 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
 	d.Set("cache_control", output.CacheControl)
+	d.Set("checksum_crc32", output.ChecksumCRC32)
+	d.Set("checksum_crc32c", output.ChecksumCRC32C)
+	d.Set("checksum_sha1", output.ChecksumSHA1)
+	d.Set("checksum_sha256", output.ChecksumSHA256)
 	d.Set("content_disposition", output.ContentDisposition)
 	d.Set("content_encoding", output.ContentEncoding)
 	d.Set("content_language", output.ContentLanguage)
@@ -355,17 +387,15 @@ func resourceObjectCopyRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("version_id", output.VersionId)
 	d.Set("website_redirect", output.WebsiteRedirectLocation)
 
-	if err := resourceObjectSetKMS(ctx, d, meta, output.SSEKMSKeyId); err != nil {
+	if err := setObjectKMSKeyID(ctx, meta, d, aws.ToString(output.SSEKMSKeyId)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	tags, err := ObjectListTags(ctx, conn, bucket, key)
-
-	if err != nil {
+	if tags, err := objectListTags(ctx, conn, bucket, key, optFns...); err == nil {
+		setTagsOut(ctx, Tags(tags))
+	} else if !tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
-
-	setTagsOut(ctx, Tags(tags))
 
 	return diags
 }
@@ -390,6 +420,7 @@ func resourceObjectCopyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		"bucket",
 		"bucket_key_enabled",
 		"cache_control",
+		"checksum_algorithm",
 		"content_disposition",
 		"content_encoding",
 		"content_language",
@@ -430,20 +461,24 @@ func resourceObjectCopyUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceObjectCopyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).S3Conn(ctx)
+	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	var optFns []func(*s3.Options)
 
 	bucket := d.Get("bucket").(string)
-	key := d.Get("key").(string)
-	// We are effectively ignoring all leading '/'s in the key name and
-	// treating multiple '/'s as a single '/' as aws.Config.DisableRestProtocolURICleaning is false
-	key = strings.TrimLeft(key, "/")
-	key = regexache.MustCompile(`/+`).ReplaceAllString(key, "/")
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+	// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
+	if arn.IsARN(bucket) && conn.Options().Region == names.GlobalRegionID {
+		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+	}
+	key := sdkv1CompatibleCleanKey(d.Get("key").(string))
 
 	var err error
 	if _, ok := d.GetOk("version_id"); ok {
-		_, err = DeleteAllObjectVersions(ctx, conn, bucket, key, d.Get("force_destroy").(bool), false)
+		_, err = deleteAllObjectVersions(ctx, conn, bucket, key, d.Get("force_destroy").(bool), false, optFns...)
 	} else {
-		err = deleteObjectVersion(ctx, conn, bucket, key, "", false)
+		err = deleteObjectVersion(ctx, conn, bucket, key, "", false, optFns...)
 	}
 
 	if err != nil {
@@ -455,13 +490,23 @@ func resourceObjectCopyDelete(ctx context.Context, d *schema.ResourceData, meta 
 func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	var optFns []func(*s3.Options)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+
+	bucket := d.Get("bucket").(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
+	// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
+	if arn.IsARN(bucket) && conn.Options().Region == names.GlobalRegionID {
+		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
+	}
 	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	input := &s3.CopyObjectInput{
-		Bucket:     aws.String(d.Get("bucket").(string)),
+		Bucket:     aws.String(bucket),
 		CopySource: aws.String(url.QueryEscape(d.Get("source").(string))),
-		Key:        aws.String(d.Get("key").(string)),
+		Key:        aws.String(sdkv1CompatibleCleanKey(d.Get("key").(string))),
 	}
 
 	if v, ok := d.GetOk("acl"); ok {
@@ -469,11 +514,15 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("bucket_key_enabled"); ok {
-		input.BucketKeyEnabled = v.(bool)
+		input.BucketKeyEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("cache_control"); ok {
 		input.CacheControl = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("checksum_algorithm"); ok {
+		input.ChecksumAlgorithm = types.ChecksumAlgorithm(v.(string))
 	}
 
 	if v, ok := d.GetOk("content_disposition"); ok {
@@ -607,10 +656,10 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 		input.WebsiteRedirectLocation = aws.String(v.(string))
 	}
 
-	output, err := conn.CopyObject(ctx, input)
+	output, err := conn.CopyObject(ctx, input, optFns...)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "copying S3 object (bucket: %s; key: %s; source: %s): %s", aws.ToString(input.Bucket), aws.ToString(input.Key), aws.ToString(input.CopySource), err)
+		return sdkdiag.AppendErrorf(diags, "copying %s to S3 Bucket (%s) Object (%s): %s", aws.ToString(input.CopySource), aws.ToString(input.Bucket), aws.ToString(input.Key), err)
 	}
 
 	if d.IsNewResource() {
@@ -623,35 +672,6 @@ func resourceObjectCopyDoCopy(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("source_version_id", output.CopySourceVersionId)
 
 	return append(diags, resourceObjectCopyRead(ctx, d, meta)...)
-}
-
-func FindObjectByThreePartKey(ctx context.Context, conn *s3.Client, bucket, key, etag string) (*s3.HeadObjectOutput, error) {
-	input := &s3.HeadObjectInput{
-		Bucket: aws.String(bucket),
-		Key:    aws.String(key),
-	}
-	if etag != "" {
-		input.IfMatch = aws.String(etag)
-	}
-
-	output, err := conn.HeadObject(ctx, input)
-
-	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotFound) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
 }
 
 type s3Grants struct {

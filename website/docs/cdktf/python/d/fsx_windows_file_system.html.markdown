@@ -51,6 +51,7 @@ This data source exports the following attributes in addition to the arguments a
 * `copy_tags_to_backups` - A boolean flag indicating whether tags on the file system should be copied to backups.
 * `daily_automatic_backup_start_time` - The preferred time (in `HH:MM` format) to take daily automatic backups, in the UTC time zone.
 * `deployment_type` - The file system deployment type.
+* `disk_iops_configuration` - The SSD IOPS configuration for the file system.
 * `dns_name` - DNS name for the file system (e.g. `fs-12345678.corp.example.com`).
 * `id` - Identifier of the file system (e.g. `fs-12345678`).
 * `kms_key_id` - ARN for the KMS Key to encrypt the file system at rest.
@@ -65,4 +66,4 @@ This data source exports the following attributes in addition to the arguments a
 * `vpc_id` - The ID of the primary virtual private cloud (VPC) for the file system.
 * `weekly_maintenance_start_time` - The preferred start time (in `d:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
 
-<!-- cache-key: cdktf-0.18.0 input-820662e75fd24fa089fa5893b0ab8fdfd132c8d06789555bf0a7d80709c55611 -->
+<!-- cache-key: cdktf-0.20.1 input-7198016fdc5b76faa665d2e4a51c953549b6306de9af8ea688a7e3e2494a16d6 -->

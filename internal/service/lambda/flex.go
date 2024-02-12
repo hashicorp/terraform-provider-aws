@@ -45,6 +45,7 @@ func flattenVPCConfigResponse(s *types.VpcConfigResponse) []map[string]interface
 		return nil
 	}
 
+	settings["ipv6_allowed_for_dual_stack"] = aws.BoolValue(s.Ipv6AllowedForDualStack)
 	settings["subnet_ids"] = flex.FlattenStringValueSet(s.SubnetIds)
 	settings["security_group_ids"] = flex.FlattenStringValueSet(s.SecurityGroupIds)
 	if s.VpcId != nil {

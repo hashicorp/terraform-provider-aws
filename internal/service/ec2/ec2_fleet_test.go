@@ -3274,9 +3274,9 @@ func testAccPreCheckFleet(ctx context.Context, t *testing.T) {
 }
 
 func testAccFleetConfig_BaseLaunchTemplate(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t3.micro"
   name          = %[1]q
 }
@@ -3302,7 +3302,7 @@ resource "aws_ec2_fleet" "test" {
 }
 
 func testAccFleetConfig_multipleNetworkInterfaces(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
 
@@ -3345,7 +3345,7 @@ resource "aws_network_interface" "test" {
 
 resource "aws_launch_template" "test" {
   name     = %[1]q
-  image_id = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
 
   instance_market_options {
     spot_options {
@@ -3425,15 +3425,15 @@ resource "aws_ec2_fleet" "test" {
 }
 
 func testAccFleetConfig_launchTemplateID(rName, launchTemplateResourceName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_launch_template" "test1" {
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t3.micro"
   name          = "%[1]s1"
 }
 
 resource "aws_launch_template" "test2" {
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t3.micro"
   name          = "%[1]s2"
 }
@@ -3459,15 +3459,15 @@ resource "aws_ec2_fleet" "test" {
 }
 
 func testAccFleetConfig_launchTemplateName(rName, launchTemplateResourceName string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_launch_template" "test1" {
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t3.micro"
   name          = "%[1]s1"
 }
 
 resource "aws_launch_template" "test2" {
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t3.micro"
   name          = "%[1]s2"
 }
@@ -3493,9 +3493,9 @@ resource "aws_ec2_fleet" "test" {
 }
 
 func testAccFleetConfig_launchTemplateVersion(rName, instanceType string) string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = %[2]q
   name          = %[1]q
 }

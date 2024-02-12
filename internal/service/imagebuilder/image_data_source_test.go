@@ -33,6 +33,7 @@ func TestAccImageBuilderImageDataSource_ARN_aws(t *testing.T) { // nosemgrep:ci.
 					resource.TestCheckNoResourceAttr(dataSourceName, "distribution_configuration_arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "enhanced_image_metadata_enabled", "false"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "image_recipe_arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "image_scanning_configuration.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "image_tests_configuration.#", "0"),
 					resource.TestCheckNoResourceAttr(dataSourceName, "infrastructure_configuration_arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "name", "Amazon Linux 2 x86"),
@@ -69,6 +70,7 @@ func TestAccImageBuilderImageDataSource_ARN_self(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "distribution_configuration_arn", resourceName, "distribution_configuration_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "enhanced_image_metadata_enabled", resourceName, "enhanced_image_metadata_enabled"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "image_recipe_arn", resourceName, "image_recipe_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "image_scanning_configuration.#", resourceName, "image_scanning_configuration.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "image_tests_configuration.#", resourceName, "image_tests_configuration.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "infrastructure_configuration_arn", resourceName, "infrastructure_configuration_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
@@ -100,6 +102,7 @@ func TestAccImageBuilderImageDataSource_ARN_containerRecipe(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "container_recipe_arn", resourceName, "container_recipe_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "image_scanning_configuration.#", resourceName, "image_scanning_configuration.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "output_resources.#", resourceName, "output_resources.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "output_resources.0.containers.#", resourceName, "output_resources.0.containers.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "output_resources.0.containers.0.image_uris.#", resourceName, "output_resources.0.containers.0.image_uris.#"),
@@ -362,6 +365,15 @@ resource "aws_imagebuilder_infrastructure_configuration" "test" {
 resource "aws_imagebuilder_image" "test" {
   container_recipe_arn             = aws_imagebuilder_container_recipe.test.arn
   infrastructure_configuration_arn = aws_imagebuilder_infrastructure_configuration.test.arn
+
+  image_scanning_configuration {
+    image_scanning_enabled = true
+
+    ecr_configuration {
+      repository_name = aws_ecr_repository.test.name
+      container_tags  = ["foo", "bar"]
+    }
+  }
 }
 
 data "aws_imagebuilder_image" "test" {

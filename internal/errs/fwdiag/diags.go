@@ -6,6 +6,7 @@ package fwdiag
 import (
 	"errors"
 	"fmt"
+	"strings"
 
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 )
@@ -24,10 +25,17 @@ func DiagnosticsError(diags diag.Diagnostics) error {
 // DiagnosticString formats a Diagnostic
 // If there is no `Detail`, only prints summary, otherwise prints both
 func DiagnosticString(d diag.Diagnostic) string {
-	if d.Detail() == "" {
-		return d.Summary()
+	var buf strings.Builder
+
+	fmt.Fprint(&buf, d.Summary())
+	if d.Detail() != "" {
+		fmt.Fprintf(&buf, "\n\n%s", d.Detail())
 	}
-	return fmt.Sprintf("%s\n\n%s", d.Summary(), d.Detail())
+	if withPath, ok := d.(diag.DiagnosticWithPath); ok {
+		fmt.Fprintf(&buf, "\n%s", withPath.Path().String())
+	}
+
+	return buf.String()
 }
 
 func NewResourceNotFoundWarningDiagnostic(err error) diag.Diagnostic {

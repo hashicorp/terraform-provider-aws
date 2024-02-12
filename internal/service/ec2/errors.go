@@ -100,6 +100,10 @@ const (
 	errCodeInvalidTransitGatewayPolicyTableIdNotFound        = "InvalidTransitGatewayPolicyTableId.NotFound"
 	errCodeInvalidTransitGatewayIDNotFound                   = "InvalidTransitGatewayID.NotFound"
 	errCodeInvalidTransitGatewayMulticastDomainIdNotFound    = "InvalidTransitGatewayMulticastDomainId.NotFound"
+	errCodeInvalidVerifiedAccessEndpointIdNotFound           = "InvalidVerifiedAccessEndpointId.NotFound"
+	errCodeInvalidVerifiedAccessGroupIdNotFound              = "InvalidVerifiedAccessGroupId.NotFound"
+	errCodeInvalidVerifiedAccessInstanceIdNotFound           = "InvalidVerifiedAccessInstanceId.NotFound"
+	errCodeInvalidVerifiedAccessTrustProviderIdNotFound      = "InvalidVerifiedAccessTrustProviderId.NotFound"
 	errCodeInvalidVolumeNotFound                             = "InvalidVolume.NotFound"
 	errCodeInvalidVPCCIDRBlockAssociationIDNotFound          = "InvalidVpcCidrBlockAssociationID.NotFound"
 	errCodeInvalidVPCEndpointIdNotFound                      = "InvalidVpcEndpointId.NotFound"
@@ -141,7 +145,7 @@ func CancelSpotFleetRequestsError(apiObjects []*ec2.CancelSpotFleetRequestsError
 	return errors.Join(errs...)
 }
 
-func DeleteFleetError(apiObject *ec2.DeleteFleetErrorItem) error {
+func deleteFleetError(apiObject *ec2.DeleteFleetErrorItem) error {
 	if apiObject == nil || apiObject.Error == nil {
 		return nil
 	}
@@ -149,11 +153,11 @@ func DeleteFleetError(apiObject *ec2.DeleteFleetErrorItem) error {
 	return awserr.New(aws.StringValue(apiObject.Error.Code), aws.StringValue(apiObject.Error.Message), nil)
 }
 
-func DeleteFleetsError(apiObjects []*ec2.DeleteFleetErrorItem) error {
+func deleteFleetsError(apiObjects []*ec2.DeleteFleetErrorItem) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
-		if err := DeleteFleetError(apiObject); err != nil {
+		if err := deleteFleetError(apiObject); err != nil {
 			errs = append(errs, fmt.Errorf("%s: %w", aws.StringValue(apiObject.FleetId), err))
 		}
 	}

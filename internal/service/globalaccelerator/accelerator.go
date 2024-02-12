@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -134,6 +135,8 @@ func ResourceAccelerator() *schema.Resource {
 }
 
 func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	name := d.Get("name").(string)
@@ -155,13 +158,13 @@ func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta
 	output, err := conn.CreateAcceleratorWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Global Accelerator Accelerator (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Global Accelerator Accelerator (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.Accelerator.AcceleratorArn))
 
 	if _, err := waitAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Global Accelerator Accelerator (%s) deployment: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deployment: %s", d.Id(), err)
 	}
 
 	if v, ok := d.GetOk("attributes"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -171,18 +174,20 @@ func resourceAcceleratorCreate(ctx context.Context, d *schema.ResourceData, meta
 		_, err := conn.UpdateAcceleratorAttributesWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Global Accelerator Accelerator (%s) attributes: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Accelerator (%s) attributes: %s", d.Id(), err)
 		}
 
 		if _, err := waitAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return diag.Errorf("waiting for Global Accelerator Accelerator (%s) deployment: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deployment: %s", d.Id(), err)
 		}
 	}
 
-	return resourceAcceleratorRead(ctx, d, meta)
+	return append(diags, resourceAcceleratorRead(ctx, d, meta)...)
 }
 
 func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	accelerator, err := FindAcceleratorByARN(ctx, conn, d.Id())
@@ -190,11 +195,11 @@ func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Global Accelerator Accelerator (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Global Accelerator Accelerator (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Accelerator (%s): %s", d.Id(), err)
 	}
 
 	d.Set("dns_name", accelerator.DnsName)
@@ -203,24 +208,26 @@ func resourceAcceleratorRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("hosted_zone_id", meta.(*conns.AWSClient).GlobalAcceleratorHostedZoneID())
 	d.Set("ip_address_type", accelerator.IpAddressType)
 	if err := d.Set("ip_sets", flattenIPSets(accelerator.IpSets)); err != nil {
-		return diag.Errorf("setting ip_sets: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting ip_sets: %s", err)
 	}
 	d.Set("name", accelerator.Name)
 
 	acceleratorAttributes, err := FindAcceleratorAttributesByARN(ctx, conn, d.Id())
 
 	if err != nil {
-		return diag.Errorf("reading Global Accelerator Accelerator (%s) attributes: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Accelerator (%s) attributes: %s", d.Id(), err)
 	}
 
 	if err := d.Set("attributes", []interface{}{flattenAcceleratorAttributes(acceleratorAttributes)}); err != nil {
-		return diag.Errorf("setting attributes: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting attributes: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceAcceleratorUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	if d.HasChanges("name", "ip_address_type", "enabled") {
@@ -237,11 +244,11 @@ func resourceAcceleratorUpdate(ctx context.Context, d *schema.ResourceData, meta
 		_, err := conn.UpdateAcceleratorWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Global Accelerator Accelerator (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Accelerator (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Global Accelerator Accelerator (%s) deployment: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deployment: %s", d.Id(), err)
 		}
 	}
 
@@ -261,31 +268,33 @@ func resourceAcceleratorUpdate(ctx context.Context, d *schema.ResourceData, meta
 					_, err := conn.UpdateAcceleratorAttributesWithContext(ctx, oInput)
 
 					if err != nil {
-						return diag.Errorf("updating Global Accelerator Accelerator (%s) attributes: %s", d.Id(), err)
+						return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Accelerator (%s) attributes: %s", d.Id(), err)
 					}
 
 					if _, err := waitAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-						return diag.Errorf("waiting for Global Accelerator Accelerator (%s) deployment: %s", d.Id(), err)
+						return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deployment: %s", d.Id(), err)
 					}
 				}
 
 				_, err := conn.UpdateAcceleratorAttributesWithContext(ctx, nInput)
 
 				if err != nil {
-					return diag.Errorf("updating Global Accelerator Accelerator (%s) attributes: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Accelerator (%s) attributes: %s", d.Id(), err)
 				}
 
 				if _, err := waitAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-					return diag.Errorf("waiting for Global Accelerator Accelerator (%s) deployment: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deployment: %s", d.Id(), err)
 				}
 			}
 		}
 	}
 
-	return resourceAcceleratorRead(ctx, d, meta)
+	return append(diags, resourceAcceleratorRead(ctx, d, meta)...)
 }
 
 func resourceAcceleratorDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
 	input := &globalaccelerator.UpdateAcceleratorInput{
@@ -296,15 +305,15 @@ func resourceAcceleratorDelete(ctx context.Context, d *schema.ResourceData, meta
 	_, err := conn.UpdateAcceleratorWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("disabling Global Accelerator Accelerator (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "disabling Global Accelerator Accelerator (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitAcceleratorDeployed(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return diag.Errorf("waiting for Global Accelerator Accelerator (%s) deployment: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Global Accelerator Accelerator (%s) deployment: %s", d.Id(), err)
 	}
 
 	log.Printf("[DEBUG] Deleting Global Accelerator Accelerator: %s", d.Id())
@@ -313,14 +322,14 @@ func resourceAcceleratorDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAcceleratorNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Global Accelerator Accelerator (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Global Accelerator Accelerator (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindAcceleratorByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.Accelerator, error) {

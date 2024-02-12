@@ -43,7 +43,9 @@ func ResourceRecord() *schema.Resource {
 				parts := ParseRecordID(d.Id())
 				// We check that we have parsed the id into the correct number of segments.
 				// We need at least 3 segments!
-				if parts[0] == "" || parts[1] == "" || parts[2] == "" {
+				// However, parts[1] can be the empty string if it is the root domain of the zone,
+				// and isn't using a FQDN. See https://github.com/hashicorp/terraform-provider-aws/issues/4792
+				if parts[0] == "" || parts[2] == "" {
 					return nil, fmt.Errorf("unexpected format of ID (%q), expected ZONEID_RECORDNAME_TYPE_SET-IDENTIFIER (e.g. Z4KAPRWWNC7JR_dev.example.com_NS_dev), where SET-IDENTIFIER is optional", d.Id())
 				}
 

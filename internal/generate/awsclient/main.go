@@ -11,7 +11,7 @@ import (
 	"sort"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 type ServiceDatum struct {
@@ -28,54 +28,38 @@ type TemplateData struct {
 
 func main() {
 	const (
-		filename      = `awsclient_gen.go`
-		namesDataFile = "../../names/names_data.csv"
+		filename = `awsclient_gen.go`
 	)
 	g := common.NewGenerator()
 
 	g.Infof("Generating internal/conns/%s", filename)
 
-	data, err := common.ReadAllCSVData(namesDataFile)
+	data, err := data.ReadAllServiceData()
 
 	if err != nil {
-		g.Fatalf("error reading %s: %s", namesDataFile, err)
+		g.Fatalf("error reading service data: %s", err)
 	}
 
 	td := TemplateData{}
 
-	for i, l := range data {
-		if i < 1 { // skip header
+	for _, l := range data {
+		if l.Exclude() {
 			continue
 		}
 
-		if l[names.ColExclude] != "" {
-			continue
-		}
-
-		if l[names.ColNotImplemented] != "" {
-			continue
-		}
-
-		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
+		if l.NotImplemented() && !l.EndpointOnly() {
 			continue
 		}
 
 		s := ServiceDatum{
-			ProviderNameUpper: l[names.ColProviderNameUpper],
-			GoV1Package:       l[names.ColGoV1Package],
-			GoV2Package:       l[names.ColGoV2Package],
+			ProviderNameUpper: l.ProviderNameUpper(),
+			GoV1Package:       l.GoV1Package(),
+			GoV2Package:       l.GoV2Package(),
 		}
 
-		if l[names.ColClientSDKV1] != "" {
-			s.SDKVersion = "1"
-			s.GoV1ClientTypeName = l[names.ColGoV1ClientTypeName]
-		}
-		if l[names.ColClientSDKV2] != "" {
-			if l[names.ColClientSDKV1] != "" {
-				s.SDKVersion = "1,2"
-			} else {
-				s.SDKVersion = "2"
-			}
+		s.SDKVersion = l.SDKVersion()
+		if l.ClientSDKV1() {
+			s.GoV1ClientTypeName = l.GoV1ClientTypeName()
 		}
 
 		td.Services = append(td.Services, s)

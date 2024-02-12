@@ -40,6 +40,65 @@ func testAccConfigRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.owner", "AWS"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_identifier", "S3_BUCKET_VERSIONING_ENABLED"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "evaluation_mode.*", map[string]string{
+						"mode": "DETECTIVE",
+					}),
+				),
+			},
+		},
+	})
+}
+
+func testAccConfigRule_evaluationMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cr configservice.ConfigRule
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_config_config_rule.test"
+
+	evaluationMode1 := `
+  evaluation_mode {
+    mode = "DETECTIVE"
+  }
+`
+
+	evaluationMode2 := `
+  evaluation_mode {
+    mode = "DETECTIVE"
+  }
+
+  evaluation_mode {
+    mode = "PROACTIVE"
+  }
+`
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigRuleConfig_evaluationMode(rName, evaluationMode1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
+					testAccCheckConfigRuleName(resourceName, rName, &cr),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "evaluation_mode.*", map[string]string{
+						"mode": "DETECTIVE",
+					}),
+				),
+			},
+			{
+				Config: testAccConfigRuleConfig_evaluationMode(rName, evaluationMode2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
+					testAccCheckConfigRuleName(resourceName, rName, &cr),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "evaluation_mode.*", map[string]string{
+						"mode": "DETECTIVE",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "evaluation_mode.*", map[string]string{
+						"mode": "PROACTIVE",
+					}),
 				),
 			},
 		},
@@ -709,4 +768,21 @@ resource "aws_config_config_rule" "test" {
   depends_on = [aws_config_configuration_recorder.test]
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccConfigRuleConfig_evaluationMode(rName, evaluationMode string) string {
+	return testAccConfigRuleConfig_base(rName) + fmt.Sprintf(`
+resource "aws_config_config_rule" "test" {
+  name = %[1]q
+
+  source {
+    owner             = "AWS"
+    source_identifier = "EIP_ATTACHED"
+  }
+
+%[2]s
+
+  depends_on = [aws_config_configuration_recorder.test]
+}
+`, rName, evaluationMode)
 }

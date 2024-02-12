@@ -13,22 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusKinesisStreamingDestination(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		result, err := FindKinesisDataStreamDestination(ctx, conn, streamArn, tableName)
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if result == nil {
-			return nil, "", nil
-		}
-
-		return result, aws.StringValue(result.DestinationStatus), nil
-	}
-}
-
 func statusTable(ctx context.Context, conn *dynamodb.DynamoDB, tableName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		table, err := FindTableByName(ctx, conn, tableName)
@@ -46,6 +30,25 @@ func statusTable(ctx context.Context, conn *dynamodb.DynamoDB, tableName string)
 		}
 
 		return table, aws.StringValue(table.TableStatus), nil
+	}
+}
+
+func statusImport(ctx context.Context, conn *dynamodb.DynamoDB, importArn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		describeImportInput := &dynamodb.DescribeImportInput{
+			ImportArn: &importArn,
+		}
+		output, err := conn.DescribeImportWithContext(ctx, describeImportInput)
+
+		if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.ImportTableDescription.ImportStatus), nil
 	}
 }
 

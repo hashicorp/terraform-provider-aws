@@ -18,7 +18,12 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	accounttypes "github.com/aws/aws-sdk-go-v2/service/account/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/service/inspector2"
+	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
+	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
+	ssoadmintypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -27,7 +32,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/outposts"
-	"github.com/aws/aws-sdk-go/service/ssoadmin"
+	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -40,14 +45,17 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	tfaccount "github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/jmespath/go-jmespath"
 	"github.com/mitchellh/mapstructure"
 )
@@ -379,6 +387,13 @@ func CheckResourceAttrNameGenerated(resourceName string, attributeName string) r
 	return CheckResourceAttrNameWithSuffixGenerated(resourceName, attributeName, "")
 }
 
+// CheckResourceAttrNameGeneratedWithPrefix verifies that the state attribute value matches name automatically generated with prefix
+func CheckResourceAttrNameGeneratedWithPrefix(resourceName string, attributeName string, prefix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return resource.TestMatchResourceAttr(resourceName, attributeName, resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(prefix, ""))(s)
+	}
+}
+
 // CheckResourceAttrNameWithSuffixGenerated verifies that the state attribute value matches name with suffix automatically generated without prefix
 func CheckResourceAttrNameWithSuffixGenerated(resourceName string, attributeName string, suffix string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -670,6 +685,8 @@ func CheckResourceAttrJMES(name, key, jmesPath, value string) resource.TestCheck
 			v = x
 		case float64:
 			v = strconv.FormatFloat(x, 'f', -1, 64)
+		case bool:
+			v = fmt.Sprint(x)
 		default:
 			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T)`, name, key, jmesPath, result)
 		}
@@ -716,6 +733,8 @@ func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySec
 			value = x
 		case float64:
 			value = strconv.FormatFloat(x, 'f', -1, 64)
+		case bool:
+			value = fmt.Sprint(x)
 		default:
 			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T)`, nameFirst, keyFirst, jmesPath, result)
 		}
@@ -731,6 +750,36 @@ func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySec
 
 		return nil
 	}
+}
+
+// CheckResourceAttrContains ensures the Terraform state value contains the specified substr.
+func CheckResourceAttrContains(name, key, substr string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(name, key, func(value string) error {
+		if strings.Contains(value, substr) {
+			return nil
+		}
+		return fmt.Errorf("%s: Attribute '%s' expected contains %#v, got %#v", name, key, substr, value)
+	})
+}
+
+// CheckResourceAttrHasPrefix ensures the Terraform state value has the specified prefix.
+func CheckResourceAttrHasPrefix(name, key, prefix string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(name, key, func(value string) error {
+		if strings.HasPrefix(value, prefix) {
+			return nil
+		}
+		return fmt.Errorf("%s: Attribute '%s' expected prefix %#v, got %#v", name, key, prefix, value)
+	})
+}
+
+// CheckResourceAttrHasSuffix ensures the Terraform state value has the specified suffix.
+func CheckResourceAttrHasSuffix(name, key, suffix string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(name, key, func(value string) error {
+		if strings.HasSuffix(value, suffix) {
+			return nil
+		}
+		return fmt.Errorf("%s: Attribute '%s' expected suffix %#v, got %#v", name, key, suffix, value)
+	})
 }
 
 // Copied and inlined from the SDK testing code
@@ -782,7 +831,7 @@ func PartitionDNSSuffix() string {
 
 func PartitionReverseDNSPrefix() string {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), Region()); ok {
-		return conns.ReverseDNS(partition.DNSSuffix())
+		return names.ReverseDNS(partition.DNSSuffix())
 	}
 
 	return "com.amazonaws"
@@ -911,6 +960,20 @@ func PreCheckPartitionNot(t *testing.T, partitions ...string) {
 	}
 }
 
+func PreCheckInspector2(ctx context.Context, t *testing.T) {
+	conn := Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
+
+	_, err := conn.ListDelegatedAdminAccounts(ctx, &inspector2.ListDelegatedAdminAccountsInput{})
+
+	if errs.IsA[*inspector2types.AccessDeniedException](err) {
+		t.Skipf("Amazon Inspector not available: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("listing Inspector2 delegated administrators: %s", err)
+	}
+}
+
 func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx))
 
@@ -944,7 +1007,7 @@ func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 		t.Fatalf("describing AWS Organization: %s", err)
 	}
 
-	callerIdentity, err := tfsts.FindCallerIdentity(ctx, Provider.Meta().(*conns.AWSClient).STSConn(ctx))
+	callerIdentity, err := tfsts.FindCallerIdentity(ctx, Provider.Meta().(*conns.AWSClient).STSClient(ctx))
 
 	if err != nil {
 		t.Fatalf("getting current identity: %s", err)
@@ -962,7 +1025,7 @@ func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
 		t.Fatalf("describing AWS Organization: %s", err)
 	}
 
-	callerIdentity, err := tfsts.FindCallerIdentity(ctx, Provider.Meta().(*conns.AWSClient).STSConn(ctx))
+	callerIdentity, err := tfsts.FindCallerIdentity(ctx, Provider.Meta().(*conns.AWSClient).STSClient(ctx))
 
 	if err != nil {
 		t.Fatalf("getting current identity: %s", err)
@@ -973,31 +1036,40 @@ func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
 	}
 }
 
-func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
-	input := &ssoadmin.ListInstancesInput{}
-	var instances []*ssoadmin.InstanceMetadata
+func PreCheckRegionOptIn(ctx context.Context, t *testing.T, region string) {
+	output, err := tfaccount.FindRegionOptInStatus(ctx, Provider.Meta().(*conns.AWSClient).AccountClient(ctx), "", region)
 
-	err := conn.ListInstancesPagesWithContext(ctx, input, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	if err != nil {
+		t.Fatalf("reading Region (%s) opt-in status: %s", region, err)
+	}
+
+	if status := output.RegionOptStatus; status != accounttypes.RegionOptStatusEnabled && status != accounttypes.RegionOptStatusEnabledByDefault {
+		t.Skipf("Region (%s) opt-in status: %s", region, status)
+	}
+}
+
+func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
+	conn := Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
+	input := &ssoadmin.ListInstancesInput{}
+	var instances []ssoadmintypes.InstanceMetadata
+
+	paginator := ssoadmin.NewListInstancesPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if PreCheckSkipError(err) {
+			t.Skipf("skipping tests: %s", err)
+		}
+		if err != nil {
+			t.Fatalf("listing SSO Instances: %s", err)
 		}
 
-		instances = append(instances, page.Instances...)
-
-		return !lastPage
-	})
-
-	if PreCheckSkipError(err) {
-		t.Skipf("skipping tests: %s", err)
+		if page != nil {
+			instances = append(instances, page.Instances...)
+		}
 	}
 
 	if len(instances) == 0 {
 		t.Skip("skipping tests; no SSO Instances found.")
-	}
-
-	if err != nil {
-		t.Fatalf("listing SSO Instances: %s", err)
 	}
 }
 
@@ -1100,6 +1172,30 @@ func PreCheckOutpostsOutposts(ctx context.Context, t *testing.T) {
 	// Ensure there is at least one Outpost
 	if output == nil || len(output.Outposts) == 0 {
 		t.Skip("skipping since no Outposts found")
+	}
+}
+
+func PreCheckWAFV2CloudFrontScope(ctx context.Context, t *testing.T) {
+	switch Partition() {
+	case endpoints.AwsPartitionID:
+		PreCheckRegion(t, endpoints.UsEast1RegionID)
+	case endpoints.AwsCnPartitionID:
+		PreCheckRegion(t, endpoints.CnNorthwest1RegionID)
+	}
+
+	conn := Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
+	input := &wafv2.ListWebACLsInput{
+		Scope: aws.String(wafv2.ScopeCloudfront),
+	}
+
+	_, err := conn.ListWebACLsWithContext(ctx, input)
+
+	if PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
@@ -2010,28 +2106,6 @@ data "aws_ec2_instance_type_offering" "%[1]s" {
 `, name, strings.Join(preferredInstanceTypes, "\", \""))
 }
 
-// ConfigLatestAmazonLinuxHVMEBSAMI returns the configuration for a data source that
-// describes the latest Amazon Linux AMI using HVM virtualization and an EBS root device.
-// The data source is named 'amzn-ami-minimal-hvm-ebs'.
-func ConfigLatestAmazonLinuxHVMEBSAMI() string {
-	return `
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-`
-}
-
 func configLatestAmazonLinux2HVMEBSAMI(architecture string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "amzn2-ami-minimal-hvm-ebs-%[1]s" {
@@ -2075,7 +2149,7 @@ func ConfigLambdaBase(policyName, roleName, sgName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
-  name = "%s"
+  name = %[1]q
   role = aws_iam_role.iam_for_lambda.id
 
   policy = <<EOF
@@ -2096,7 +2170,9 @@ resource "aws_iam_role_policy" "iam_policy_for_lambda" {
       "Action": [
         "ec2:CreateNetworkInterface",
         "ec2:DescribeNetworkInterfaces",
-        "ec2:DeleteNetworkInterface"
+        "ec2:DeleteNetworkInterface",
+        "ec2:AssignPrivateIpAddresses",
+        "ec2:UnassignPrivateIpAddresses"
       ],
       "Resource": [
         "*"
@@ -2126,7 +2202,7 @@ EOF
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name = "%s"
+  name = %[2]q
 
   assume_role_policy = <<EOF
 {
@@ -2146,7 +2222,8 @@ EOF
 }
 
 resource "aws_vpc" "vpc_for_lambda" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block                       = "10.0.0.0/16"
+  assign_generated_ipv6_cidr_block = true
 
   tags = {
     Name = "terraform-testacc-lambda-function"
@@ -2154,9 +2231,11 @@ resource "aws_vpc" "vpc_for_lambda" {
 }
 
 resource "aws_subnet" "subnet_for_lambda" {
-  vpc_id            = aws_vpc.vpc_for_lambda.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id                          = aws_vpc.vpc_for_lambda.id
+  cidr_block                      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 1)
+  availability_zone               = data.aws_availability_zones.available.names[1]
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 1)
+  assign_ipv6_address_on_creation = true
 
   tags = {
     Name = "tf-acc-lambda-function-1"
@@ -2166,9 +2245,11 @@ resource "aws_subnet" "subnet_for_lambda" {
 # This is defined here, rather than only in test cases where it's needed is to
 # prevent a timeout issue when fully removing Lambda Filesystems
 resource "aws_subnet" "subnet_for_lambda_az2" {
-  vpc_id            = aws_vpc.vpc_for_lambda.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
+  vpc_id                          = aws_vpc.vpc_for_lambda.id
+  cidr_block                      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 2)
+  availability_zone               = data.aws_availability_zones.available.names[1]
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 2)
+  assign_ipv6_address_on_creation = true
 
   tags = {
     Name = "tf-acc-lambda-function-2"
@@ -2176,7 +2257,7 @@ resource "aws_subnet" "subnet_for_lambda_az2" {
 }
 
 resource "aws_security_group" "sg_for_lambda" {
-  name        = "%s"
+  name        = %[3]q
   description = "Allow all inbound traffic for lambda test"
   vpc_id      = aws_vpc.vpc_for_lambda.id
 
@@ -2192,6 +2273,10 @@ resource "aws_security_group" "sg_for_lambda" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[3]q
   }
 }
 `, policyName, roleName, sgName))
@@ -2380,6 +2465,16 @@ func CheckResourceAttrIsJSONString(n, key string) resource.TestCheckFunc {
 
 		return nil
 	})
+}
+
+// SkipIfEnvVarNotSet skips the current test if the specified environment variable is not set.
+// The variable's value is returned.
+func SkipIfEnvVarNotSet(t *testing.T, key string) string {
+	v := os.Getenv(key)
+	if v == "" {
+		t.Skipf("Environment variable %s is not set, skipping test", key)
+	}
+	return v
 }
 
 // RunSerialTests1Level runs test cases in parallel, optionally sleeping between each.

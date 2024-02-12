@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -268,35 +267,6 @@ func FindTableItem(ctx context.Context, conn *dynamodb.DynamoDB, tableName strin
 	}
 
 	return out, nil
-}
-
-func BuildExpressionAttributeNames(attrs map[string]*dynamodb.AttributeValue) map[string]*string {
-	names := map[string]*string{}
-
-	for key := range attrs {
-		names["#a_"+cleanKeyName(key)] = aws.String(key)
-	}
-
-	log.Printf("[DEBUG] ExpressionAttributeNames: %+v", names)
-	return names
-}
-
-func cleanKeyName(key string) string {
-	reg, err := regexp.Compile("[A-Za-z^]+") // suspect regexp
-	if err != nil {
-		log.Printf("[ERROR] clean keyname errored %v", err)
-	}
-	return reg.ReplaceAllString(key, "")
-}
-
-func BuildProjectionExpression(attrs map[string]*dynamodb.AttributeValue) *string {
-	keys := []string{}
-
-	for key := range attrs {
-		keys = append(keys, cleanKeyName(key))
-	}
-	log.Printf("[DEBUG] ProjectionExpressions: %+v", strings.Join(keys, ", #a_"))
-	return aws.String("#a_" + strings.Join(keys, ", #a_"))
 }
 
 func buildTableItemID(tableName string, hashKey string, rangeKey string, attrs map[string]*dynamodb.AttributeValue) string {

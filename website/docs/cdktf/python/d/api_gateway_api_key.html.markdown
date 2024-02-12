@@ -45,8 +45,9 @@ This data source exports the following attributes in addition to the arguments a
 * `value` - Set to the value of the API Key.
 * `created_date` - Date and time when the API Key was created.
 * `last_updated_date` - Date and time when the API Key was last updated.
+* `customer_id` - Amazon Web Services Marketplace customer identifier, when integrating with the Amazon Web Services SaaS Marketplace.
 * `description` - Description of the API Key.
 * `enabled` - Whether the API Key is enabled.
 * `tags` - Map of tags for the resource.
 
-<!-- cache-key: cdktf-0.18.0 input-17297a64af50979746acd59feb4bc637e441edcf9aac1743e07b3d713dd934c5 -->
+<!-- cache-key: cdktf-0.20.1 input-a00d9aabc0922f53098450b1d3c7279484b52526cb4756e4cbbf4ebf71cc4ed2 -->

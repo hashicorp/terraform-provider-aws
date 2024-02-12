@@ -78,6 +78,28 @@ func TestAccAppConfigConfigurationProfile_disappears(t *testing.T) {
 	})
 }
 
+func TestAccAppConfigConfigurationProfile_kmsKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appconfig_configuration_profile.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, appconfig.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConfigurationProfileDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationProfileConfig_kms(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationProfileExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "kms_key_identifier", "alias/"+rName),
+				),
+			},
+		},
+	})
+}
+
 func TestAccAppConfigConfigurationProfile_Validators_json(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -399,6 +421,29 @@ func testAccCheckConfigurationProfileExists(ctx context.Context, resourceName st
 
 		return nil
 	}
+}
+
+func testAccConfigurationProfileConfig_kms(rName string) string {
+	return acctest.ConfigCompose(
+		testAccApplicationConfig_name(rName),
+		fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+
+resource "aws_kms_alias" "test" {
+  name          = "alias/%[1]s"
+  target_key_id = aws_kms_key.test.key_id
+}
+
+resource "aws_appconfig_configuration_profile" "test" {
+  application_id     = aws_appconfig_application.test.id
+  name               = %[1]q
+  kms_key_identifier = aws_kms_alias.test.name
+  location_uri       = "hosted"
+}
+`, rName))
 }
 
 func testAccConfigurationProfileConfig_name(rName string) string {

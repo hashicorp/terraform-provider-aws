@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -77,7 +78,7 @@ func ResourceSchema() *schema.Resource {
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringInSlice(schemas.Type_Values(), true),
+				ValidateFunc: validation.StringInSlice(type_Values(), true),
 			},
 
 			"version": {
@@ -233,4 +234,9 @@ func resourceSchemaDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	return diags
+}
+
+func type_Values() []string {
+	// For some reason AWS SDK for Go v1 does not define a TypeJSONSchemaDraft4 constant.
+	return tfslices.AppendUnique(schemas.Type_Values(), "JSONSchemaDraft4")
 }

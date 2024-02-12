@@ -807,16 +807,16 @@ resource "aws_lb_listener" "test" {
 }
 
 func testAccIntegrationConfig_basic(rName string) string {
-	return testAccIntegrationConfig_apiWebSocket(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_apiWebSocket(rName), `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
   integration_type = "MOCK"
 }
-`
+`)
 }
 
 func testAccIntegrationConfig_dataMappingHTTP(rName string) string {
-	return testAccIntegrationConfig_apiHTTP(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_apiHTTP(rName), `
 resource "aws_apigatewayv2_integration" "test" {
   api_id = aws_apigatewayv2_api.test.id
 
@@ -846,11 +846,11 @@ resource "aws_apigatewayv2_integration" "test" {
     }
   }
 }
-`
+`)
 }
 
 func testAccIntegrationConfig_dataMappingHTTPUpdated(rName string) string {
-	return testAccIntegrationConfig_apiHTTP(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_apiHTTP(rName), `
 resource "aws_apigatewayv2_integration" "test" {
   api_id = aws_apigatewayv2_api.test.id
 
@@ -872,11 +872,11 @@ resource "aws_apigatewayv2_integration" "test" {
     }
   }
 }
-`
+`)
 }
 
 func testAccIntegrationConfig_typeHTTP(rName string) string {
-	return testAccIntegrationConfig_apiWebSocket(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_apiWebSocket(rName), `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
   integration_type = "HTTP"
@@ -898,11 +898,11 @@ resource "aws_apigatewayv2_integration" "test" {
     "application/json" = ""
   }
 }
-`
+`)
 }
 
 func testAccIntegrationConfig_typeHTTPUpdated(rName string) string {
-	return testAccIntegrationConfig_apiWebSocket(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_apiWebSocket(rName), `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
   integration_type = "HTTP"
@@ -926,7 +926,7 @@ resource "aws_apigatewayv2_integration" "test" {
     "application/xml"  = "#set($percent=$number/100)"
   }
 }
-`
+`)
 }
 
 func testAccIntegrationConfig_lambdaWebSocket(rName string) string {
