@@ -56,8 +56,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_db_parameter_group",
 		},
 		{
-			Factory:  DataSourceProxy,
+			Factory:  dataSourceProxy,
 			TypeName: "aws_db_proxy",
+			Name:     "DB Proxy",
 		},
 		{
 			Factory:  DataSourceSnapshot,
@@ -147,7 +148,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceProxy,
+			Factory:  resourceProxy,
 			TypeName: "aws_db_proxy",
 			Name:     "DB Proxy",
 			Tags: &types.ServicePackageResourceTags{

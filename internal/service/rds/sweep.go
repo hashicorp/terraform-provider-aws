@@ -527,7 +527,7 @@ func sweepProxies(region string) error {
 		}
 
 		for _, v := range page.DBProxies {
-			r := ResourceProxy()
+			r := resourceProxy()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.DBProxyName))
 

@@ -27,7 +27,7 @@ import (
 
 // @SDKResource("aws_db_proxy", name="DB Proxy")
 // @Tags(identifierAttribute="arn")
-func ResourceProxy() *schema.Resource {
+func resourceProxy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProxyCreate,
 		ReadWithoutTimeout:   resourceProxyRead,

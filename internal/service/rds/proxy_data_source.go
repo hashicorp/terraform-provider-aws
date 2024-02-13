@@ -13,8 +13,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_db_proxy")
-func DataSourceProxy() *schema.Resource {
+// @SDKDataSource("aws_db_proxy", name="DB Proxy")
+func dataSourceProxy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceProxyRead,
 
