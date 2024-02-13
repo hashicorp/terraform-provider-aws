@@ -699,7 +699,7 @@ func TestAccS3Bucket_Tags_withSystemTags(t *testing.T) {
 					ClientRequestToken: aws.String(requestToken),
 				}
 
-				log.Printf("[DEBUG] Deleting CloudFormation stack: %s", req)
+				log.Printf("[DEBUG] Deleting CloudFormation stack: %s", stackID)
 				if _, err := conn.DeleteStackWithContext(ctx, req); err != nil {
 					return fmt.Errorf("error deleting CloudFormation stack: %w", err)
 				}
