@@ -114,7 +114,7 @@ func dataSourceProxyRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.SetId(name)
 	d.Set("arn", dbProxy.DBProxyArn)
-	d.Set("auth", flattenProxyAuths(dbProxy.Auth))
+	d.Set("auth", flattenUserAuthConfigInfos(dbProxy.Auth))
 	d.Set("debug_logging", dbProxy.DebugLogging)
 	d.Set("endpoint", dbProxy.Endpoint)
 	d.Set("engine_family", dbProxy.EngineFamily)

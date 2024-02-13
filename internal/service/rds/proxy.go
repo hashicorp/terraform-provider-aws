@@ -146,7 +146,7 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	input := rds.CreateDBProxyInput{
-		Auth:         expandProxyAuth(d.Get("auth").([]interface{})),
+		Auth:         expandUserAuthConfigs(d.Get("auth").([]interface{})),
 		DBProxyName:  aws.String(d.Get("name").(string)),
 		EngineFamily: aws.String(d.Get("engine_family").(string)),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
@@ -201,7 +201,7 @@ func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set("arn", dbProxy.DBProxyArn)
-	d.Set("auth", flattenProxyAuths(dbProxy.Auth))
+	d.Set("auth", flattenUserAuthConfigInfos(dbProxy.Auth))
 	d.Set("name", dbProxy.DBProxyName)
 	d.Set("debug_logging", dbProxy.DebugLogging)
 	d.Set("engine_family", dbProxy.EngineFamily)
@@ -222,7 +222,7 @@ func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	if d.HasChangesExcept("tags", "tags_all") {
 		oName, nName := d.GetChange("name")
 		input := &rds.ModifyDBProxyInput{
-			Auth:           expandProxyAuth(d.Get("auth").([]interface{})),
+			Auth:           expandUserAuthConfigs(d.Get("auth").([]interface{})),
 			DBProxyName:    aws.String(oName.(string)),
 			DebugLogging:   aws.Bool(d.Get("debug_logging").(bool)),
 			NewDBProxyName: aws.String(nName.(string)),
@@ -407,69 +407,70 @@ func waitDBProxyUpdated(ctx context.Context, conn *rds.RDS, name string, timeout
 	return nil, err
 }
 
-func expandProxyAuth(l []interface{}) []*rds.UserAuthConfig {
-	if len(l) == 0 {
+func expandUserAuthConfigs(tfList []interface{}) []*rds.UserAuthConfig {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	userAuthConfigs := make([]*rds.UserAuthConfig, 0, len(l))
+	apiObjects := make([]*rds.UserAuthConfig, 0, len(tfList))
 
-	for _, mRaw := range l {
-		m, ok := mRaw.(map[string]interface{})
-
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
 			continue
 		}
 
-		userAuthConfig := &rds.UserAuthConfig{}
+		apiObject := &rds.UserAuthConfig{}
 
-		if v, ok := m["auth_scheme"].(string); ok && v != "" {
-			userAuthConfig.AuthScheme = aws.String(v)
+		if v, ok := tfMap["auth_scheme"].(string); ok && v != "" {
+			apiObject.AuthScheme = aws.String(v)
 		}
 
-		if v, ok := m["client_password_auth_type"].(string); ok && v != "" {
-			userAuthConfig.ClientPasswordAuthType = aws.String(v)
+		if v, ok := tfMap["client_password_auth_type"].(string); ok && v != "" {
+			apiObject.ClientPasswordAuthType = aws.String(v)
 		}
 
-		if v, ok := m["description"].(string); ok && v != "" {
-			userAuthConfig.Description = aws.String(v)
+		if v, ok := tfMap["description"].(string); ok && v != "" {
+			apiObject.Description = aws.String(v)
 		}
 
-		if v, ok := m["iam_auth"].(string); ok && v != "" {
-			userAuthConfig.IAMAuth = aws.String(v)
+		if v, ok := tfMap["iam_auth"].(string); ok && v != "" {
+			apiObject.IAMAuth = aws.String(v)
 		}
 
-		if v, ok := m["secret_arn"].(string); ok && v != "" {
-			userAuthConfig.SecretArn = aws.String(v)
+		if v, ok := tfMap["secret_arn"].(string); ok && v != "" {
+			apiObject.SecretArn = aws.String(v)
 		}
 
-		if v, ok := m["username"].(string); ok && v != "" {
-			userAuthConfig.UserName = aws.String(v)
+		if v, ok := tfMap["username"].(string); ok && v != "" {
+			apiObject.UserName = aws.String(v)
 		}
 
-		userAuthConfigs = append(userAuthConfigs, userAuthConfig)
+		apiObjects = append(apiObjects, apiObject)
 	}
 
-	return userAuthConfigs
+	return apiObjects
 }
 
-func flattenProxyAuth(userAuthConfig *rds.UserAuthConfigInfo) map[string]interface{} {
-	m := make(map[string]interface{})
+func flattenUserAuthConfigInfo(apiObject *rds.UserAuthConfigInfo) map[string]interface{} {
+	tfMap := make(map[string]interface{})
 
-	m["auth_scheme"] = aws.StringValue(userAuthConfig.AuthScheme)
-	m["client_password_auth_type"] = aws.StringValue(userAuthConfig.ClientPasswordAuthType)
-	m["description"] = aws.StringValue(userAuthConfig.Description)
-	m["iam_auth"] = aws.StringValue(userAuthConfig.IAMAuth)
-	m["secret_arn"] = aws.StringValue(userAuthConfig.SecretArn)
-	m["username"] = aws.StringValue(userAuthConfig.UserName)
+	tfMap["auth_scheme"] = aws.StringValue(apiObject.AuthScheme)
+	tfMap["client_password_auth_type"] = aws.StringValue(apiObject.ClientPasswordAuthType)
+	tfMap["description"] = aws.StringValue(apiObject.Description)
+	tfMap["iam_auth"] = aws.StringValue(apiObject.IAMAuth)
+	tfMap["secret_arn"] = aws.StringValue(apiObject.SecretArn)
+	tfMap["username"] = aws.StringValue(apiObject.UserName)
 
-	return m
+	return tfMap
 }
 
-func flattenProxyAuths(userAuthConfigs []*rds.UserAuthConfigInfo) []interface{} {
-	s := []interface{}{}
-	for _, v := range userAuthConfigs {
-		s = append(s, flattenProxyAuth(v))
+func flattenUserAuthConfigInfos(apiObjects []*rds.UserAuthConfigInfo) []interface{} {
+	tfList := []interface{}{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, flattenUserAuthConfigInfo(apiObject))
 	}
-	return s
+
+	return tfList
 }
