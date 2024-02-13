@@ -68,22 +68,6 @@ func statusDBClusterRole(ctx context.Context, conn *rds.RDS, dbClusterID, roleAR
 	}
 }
 
-func statusDBProxy(ctx context.Context, conn *rds.RDS, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindDBProxyByName(ctx, conn, name)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Status), nil
-	}
-}
-
 func statusReservedInstance(ctx context.Context, conn *rds.RDS, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindReservedDBInstanceByID(ctx, conn, id)

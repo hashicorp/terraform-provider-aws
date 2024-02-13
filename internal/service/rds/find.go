@@ -90,44 +90,6 @@ func FindDBClusterRoleByDBClusterIDAndRoleARN(ctx context.Context, conn *rds.RDS
 	return nil, &retry.NotFoundError{}
 }
 
-func FindDBProxyByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DBProxy, error) {
-	input := &rds.DescribeDBProxiesInput{
-		DBProxyName: aws.String(name),
-	}
-
-	output, err := conn.DescribeDBProxiesWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.DBProxies) == 0 || output.DBProxies[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.DBProxies); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	dbProxy := output.DBProxies[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(dbProxy.DBProxyName) != name {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return dbProxy, nil
-}
-
 func FindDBSubnetGroupByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DBSubnetGroup, error) {
 	input := &rds.DescribeDBSubnetGroupsInput{
 		DBSubnetGroupName: aws.String(name),

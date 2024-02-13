@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -31,6 +32,7 @@ func ResourceProxy() *schema.Resource {
 		ReadWithoutTimeout:   resourceProxyRead,
 		UpdateWithoutTimeout: resourceProxyUpdate,
 		DeleteWithoutTimeout: resourceProxyDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -274,6 +276,111 @@ func resourceProxyDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return diags
+}
+
+func FindDBProxyByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DBProxy, error) {
+	input := &rds.DescribeDBProxiesInput{
+		DBProxyName: aws.String(name),
+	}
+
+	output, err := conn.DescribeDBProxiesWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.DBProxies) == 0 || output.DBProxies[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.DBProxies); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	dbProxy := output.DBProxies[0]
+
+	// Eventual consistency check.
+	if aws.StringValue(dbProxy.DBProxyName) != name {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return dbProxy, nil
+}
+
+func statusDBProxy(ctx context.Context, conn *rds.RDS, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindDBProxyByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitDBProxyCreated(ctx context.Context, conn *rds.RDS, name string, timeout time.Duration) (*rds.DBProxy, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{rds.DBProxyStatusCreating},
+		Target:  []string{rds.DBProxyStatusAvailable},
+		Refresh: statusDBProxy(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*rds.DBProxy); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDBProxyDeleted(ctx context.Context, conn *rds.RDS, name string, timeout time.Duration) (*rds.DBProxy, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{rds.DBProxyStatusDeleting},
+		Target:  []string{},
+		Refresh: statusDBProxy(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*rds.DBProxy); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDBProxyUpdated(ctx context.Context, conn *rds.RDS, name string, timeout time.Duration) (*rds.DBProxy, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{rds.DBProxyStatusModifying},
+		Target:  []string{rds.DBProxyStatusAvailable},
+		Refresh: statusDBProxy(ctx, conn, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*rds.DBProxy); ok {
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandProxyAuth(l []interface{}) []*rds.UserAuthConfig {
