@@ -17,6 +17,7 @@ var (
 	WaitDBInstanceAvailable          = waitDBInstanceAvailableSDKv2
 	WaitDBInstanceDeleted            = waitDBInstanceDeleted
 
+	ErrCodeInvalidAction               = errCodeInvalidAction
 	ErrCodeInvalidParameterCombination = errCodeInvalidParameterCombination
 	ErrCodeInvalidParameterValue       = errCodeInvalidParameterValue
 )
