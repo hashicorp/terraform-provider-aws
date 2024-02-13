@@ -9,6 +9,7 @@ package s3
 import (
 	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -101,6 +102,10 @@ func objectListTags(ctx context.Context, conn *s3.Client, bucket, key string, op
 	output, err := conn.GetObjectTagging(ctx, input, optFns...)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchTagSet) {
+		return tftags.New(ctx, nil), nil
+	}
+
+	if tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
 		return tftags.New(ctx, nil), nil
 	}
 
