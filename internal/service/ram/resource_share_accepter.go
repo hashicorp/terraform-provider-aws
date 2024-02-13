@@ -118,6 +118,14 @@ func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.Resource
 	)
 
 	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for RAM resource share invitation accepted (%s) state: %s", d.Id(), err)
+	}
+
+	_, err = tfresource.RetryWhenNotFound(ctx, FindResourceShareTimeout, func() (interface{}, error) {
+		return findResourceShareOwnerOtherAccountsByARN(ctx, conn, d.Id())
+	})
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for RAM resource share (%s) state: %s", d.Id(), err)
 	}
 
