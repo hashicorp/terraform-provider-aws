@@ -5,22 +5,16 @@ package rds
 
 // Exports for use in tests only.
 var (
-	FindDBInstanceByID = findDBInstanceByIDSDKv1
-
-	ListTags = listTags
-
-	NewBlueGreenOrchestrator = newBlueGreenOrchestrator
-
+	FindDBInstanceByID               = findDBInstanceByIDSDKv1
+	FindDBProxyByName                = findDBProxyByName
+	ListTags                         = listTags
+	NewBlueGreenOrchestrator         = newBlueGreenOrchestrator
+	ParseDBInstanceARN               = parseDBInstanceARN
 	WaitBlueGreenDeploymentDeleted   = waitBlueGreenDeploymentDeleted
 	WaitBlueGreenDeploymentAvailable = waitBlueGreenDeploymentAvailable
+	WaitDBInstanceAvailable          = waitDBInstanceAvailableSDKv2
+	WaitDBInstanceDeleted            = waitDBInstanceDeleted
 
-	ParseDBInstanceARN = parseDBInstanceARN
-
-	WaitDBInstanceAvailable = waitDBInstanceAvailableSDKv2
-	WaitDBInstanceDeleted   = waitDBInstanceDeleted
-)
-
-const (
 	ErrCodeInvalidParameterCombination = errCodeInvalidParameterCombination
 	ErrCodeInvalidParameterValue       = errCodeInvalidParameterValue
 )

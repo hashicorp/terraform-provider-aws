@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -187,7 +188,7 @@ func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	dbProxy, err := FindDBProxyByName(ctx, conn, d.Id())
+	dbProxy, err := findDBProxyByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RDS DB Proxy %s not found, removing from state", d.Id())
@@ -278,12 +279,52 @@ func resourceProxyDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func FindDBProxyByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DBProxy, error) {
+func findDBProxyByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DBProxy, error) {
 	input := &rds.DescribeDBProxiesInput{
 		DBProxyName: aws.String(name),
 	}
+	output, err := findDBProxy(ctx, conn, input, tfslices.PredicateTrue[*rds.DBProxy]())
 
-	output, err := conn.DescribeDBProxiesWithContext(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.DBProxyName) != name {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findDBProxy(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBProxiesInput, filter tfslices.Predicate[*rds.DBProxy]) (*rds.DBProxy, error) {
+	output, err := findDBProxies(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findDBProxies(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBProxiesInput, filter tfslices.Predicate[*rds.DBProxy]) ([]*rds.DBProxy, error) {
+	var output []*rds.DBProxy
+
+	err := conn.DescribeDBProxiesPagesWithContext(ctx, input, func(page *rds.DescribeDBProxiesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBProxies {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
 		return nil, &retry.NotFoundError{
@@ -296,29 +337,12 @@ func FindDBProxyByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DB
 		return nil, err
 	}
 
-	if output == nil || len(output.DBProxies) == 0 || output.DBProxies[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.DBProxies); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	dbProxy := output.DBProxies[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(dbProxy.DBProxyName) != name {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return dbProxy, nil
+	return output, nil
 }
 
 func statusDBProxy(ctx context.Context, conn *rds.RDS, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDBProxyByName(ctx, conn, name)
+		output, err := findDBProxyByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

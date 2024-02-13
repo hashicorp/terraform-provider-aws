@@ -17,6 +17,7 @@ import (
 func DataSourceProxy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceProxyRead,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -105,7 +106,8 @@ func dataSourceProxyRead(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
 	name := d.Get("name").(string)
-	dbProxy, err := FindDBProxyByName(ctx, conn, name)
+	dbProxy, err := findDBProxyByName(ctx, conn, name)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Proxy (%s): %s", name, err)
 	}
