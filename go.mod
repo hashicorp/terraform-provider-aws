@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.50.15
+	github.com/aws/aws-sdk-go v1.50.16
 	github.com/aws/aws-sdk-go-v2 v1.24.1
 	github.com/aws/aws-sdk-go-v2/config v1.26.6
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.14.11
@@ -31,7 +31,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.32.6
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.20.6
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.36.0
-	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.32.2
+	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.33.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.23.6
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.28.0
@@ -104,7 +104,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.19.7
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.19.7
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.6.8
-	github.com/aws/aws-sdk-go-v2/service/route53domains v1.20.6
+	github.com/aws/aws-sdk-go-v2/service/route53domains v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.48.1
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.42.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.6.6
