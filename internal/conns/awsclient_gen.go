@@ -40,6 +40,7 @@ import (
 	computeoptimizer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	connectcases_sdkv2 "github.com/aws/aws-sdk-go-v2/service/connectcases"
 	controltower_sdkv2 "github.com/aws/aws-sdk-go-v2/service/controltower"
+	costoptimizationhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	customerprofiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/customerprofiles"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
@@ -484,6 +485,10 @@ func (c *AWSClient) ConnectCasesClient(ctx context.Context) *connectcases_sdkv2.
 
 func (c *AWSClient) ControlTowerClient(ctx context.Context) *controltower_sdkv2.Client {
 	return errs.Must(client[*controltower_sdkv2.Client](ctx, c, names.ControlTower, make(map[string]any)))
+}
+
+func (c *AWSClient) CostOptimizationHubClient(ctx context.Context) *costoptimizationhub_sdkv2.Client {
+	return errs.Must(client[*costoptimizationhub_sdkv2.Client](ctx, c, names.CostOptimizationHub, make(map[string]any)))
 }
 
 func (c *AWSClient) CustomerProfilesClient(ctx context.Context) *customerprofiles_sdkv2.Client {
