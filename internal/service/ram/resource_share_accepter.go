@@ -211,6 +211,9 @@ func resourceResourceShareAccepterDelete(ctx context.Context, d *schema.Resource
 	}
 
 	if err != nil && !tfawserr.ErrCodeEquals(err, ram.ErrCodeOperationNotPermittedException) {
+		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
+			return diags
+		}
 		return sdkdiag.AppendErrorf(diags, "leaving RAM resource share: %s", err)
 	}
 
