@@ -301,7 +301,6 @@ func ResourceGroup() *schema.Resource {
 			"launch_configuration": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
 				ExactlyOneOf: []string{"launch_configuration", "launch_template", "mixed_instances_policy"},
 			},
 			"launch_template": {
