@@ -697,7 +697,6 @@ func expandTaskReportDestination(l []interface{}) *datasync.ReportDestination {
 }
 
 func expandTaskReportOverrides(l []interface{}) *datasync.ReportOverrides {
-
 	var overrides = &datasync.ReportOverrides{}
 
 	if len(l) == 0 || l[0] == nil {
