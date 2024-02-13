@@ -19,6 +19,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_autoscaling_group: Fix version to computed for inconsistent final plan issue ([#35774](https://github.com/hashicorp/terraform-provider-aws/issues/35774))
 * resource/aws_ecs_account_setting_default: Remove plan-time validation of `value` ([#33393](https://github.com/hashicorp/terraform-provider-aws/issues/33393))
 * resource/aws_eks_access_policy_association: Retry IAM eventual consistency errors on create ([#35736](https://github.com/hashicorp/terraform-provider-aws/issues/35736))
 * resource/aws_instance: Fix `ReservationCapacityExceeded` errors when updating `instance_type` and `capacity_reservation_specification.capacity_reservation_target.capacity_reservation_id` ([#33412](https://github.com/hashicorp/terraform-provider-aws/issues/33412))
