@@ -8,14 +8,15 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rds"
+	"github.com/aws/aws-sdk-go-v2/service/rds/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -55,24 +56,24 @@ func resourceProxy() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"auth_scheme": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(rds.AuthScheme_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.AuthScheme](),
 						},
 						"client_password_auth_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice(rds.ClientPasswordAuthType_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ValidateDiagFunc: enum.Validate[types.ClientPasswordAuthType](),
 						},
 						"description": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
 						"iam_auth": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(rds.IAMAuthMode_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.IAMAuthMode](),
 						},
 						"secret_arn": {
 							Type:         schema.TypeString,
@@ -95,10 +96,10 @@ func resourceProxy() *schema.Resource {
 				Computed: true,
 			},
 			"engine_family": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(rds.EngineFamily_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.EngineFamily](),
 			},
 			"idle_client_timeout": {
 				Type:     schema.TypeInt,
@@ -126,14 +127,12 @@ func resourceProxy() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 			"vpc_subnet_ids": {
 				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 			},
 		},
 
@@ -143,15 +142,16 @@ func resourceProxy() *schema.Resource {
 
 func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
-	input := rds.CreateDBProxyInput{
+	name := d.Get("name").(string)
+	input := &rds.CreateDBProxyInput{
 		Auth:         expandUserAuthConfigs(d.Get("auth").([]interface{})),
-		DBProxyName:  aws.String(d.Get("name").(string)),
-		EngineFamily: aws.String(d.Get("engine_family").(string)),
+		DBProxyName:  aws.String(name),
+		EngineFamily: types.EngineFamily(d.Get("engine_family").(string)),
 		RoleArn:      aws.String(d.Get("role_arn").(string)),
-		Tags:         getTagsIn(ctx),
-		VpcSubnetIds: flex.ExpandStringSet(d.Get("vpc_subnet_ids").(*schema.Set)),
+		Tags:         getTagsInV2(ctx),
+		VpcSubnetIds: flex.ExpandStringValueSet(d.Get("vpc_subnet_ids").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("debug_logging"); ok {
@@ -159,23 +159,24 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("idle_client_timeout"); ok {
-		input.IdleClientTimeout = aws.Int64(int64(v.(int)))
+		input.IdleClientTimeout = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("require_tls"); ok {
 		input.RequireTLS = aws.Bool(v.(bool))
 	}
 
-	if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
-		input.VpcSecurityGroupIds = flex.ExpandStringSet(v)
+	if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+		input.VpcSecurityGroupIds = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
-	output, err := conn.CreateDBProxyWithContext(ctx, &input)
+	output, err := conn.CreateDBProxy(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating RDS DB Proxy: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating RDS DB Proxy (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.DBProxy.DBProxyName))
+	d.SetId(aws.ToString(output.DBProxy.DBProxyName))
 
 	if _, err := waitDBProxyCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Proxy (%s) create: %s", d.Id(), err)
@@ -186,7 +187,7 @@ func resourceProxyCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	dbProxy, err := findDBProxyByName(ctx, conn, d.Id())
 
@@ -208,8 +209,8 @@ func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("idle_client_timeout", dbProxy.IdleClientTimeout)
 	d.Set("require_tls", dbProxy.RequireTLS)
 	d.Set("role_arn", dbProxy.RoleArn)
-	d.Set("vpc_subnet_ids", flex.FlattenStringSet(dbProxy.VpcSubnetIds))
-	d.Set("vpc_security_group_ids", flex.FlattenStringSet(dbProxy.VpcSecurityGroupIds))
+	d.Set("vpc_subnet_ids", dbProxy.VpcSubnetIds)
+	d.Set("vpc_security_group_ids", dbProxy.VpcSecurityGroupIds)
 	d.Set("endpoint", dbProxy.Endpoint)
 
 	return diags
@@ -217,7 +218,7 @@ func resourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		oName, nName := d.GetChange("name")
@@ -231,14 +232,15 @@ func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 
 		if v, ok := d.GetOk("idle_client_timeout"); ok {
-			input.IdleClientTimeout = aws.Int64(int64(v.(int)))
+			input.IdleClientTimeout = aws.Int32(int32(v.(int)))
 		}
 
-		if v := d.Get("vpc_security_group_ids").(*schema.Set); v.Len() > 0 {
-			input.SecurityGroups = flex.ExpandStringSet(v)
+		if v, ok := d.GetOk("vpc_security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
+			input.SecurityGroups = flex.ExpandStringValueSet(v.(*schema.Set))
 		}
 
-		_, err := conn.ModifyDBProxyWithContext(ctx, input)
+		_, err := conn.ModifyDBProxy(ctx, input)
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating RDS DB Proxy (%s): %s", d.Id(), err)
 		}
@@ -257,14 +259,14 @@ func resourceProxyUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceProxyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting RDS DB Proxy: %s", d.Id())
-	_, err := conn.DeleteDBProxyWithContext(ctx, &rds.DeleteDBProxyInput{
+	_, err := conn.DeleteDBProxy(ctx, &rds.DeleteDBProxyInput{
 		DBProxyName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
+	if errs.IsA[*types.DBProxyNotFoundFault](err) {
 		return diags
 	}
 
@@ -279,18 +281,18 @@ func resourceProxyDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func findDBProxyByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DBProxy, error) {
+func findDBProxyByName(ctx context.Context, conn *rds.Client, name string) (*types.DBProxy, error) {
 	input := &rds.DescribeDBProxiesInput{
 		DBProxyName: aws.String(name),
 	}
-	output, err := findDBProxy(ctx, conn, input, tfslices.PredicateTrue[*rds.DBProxy]())
+	output, err := findDBProxy(ctx, conn, input, tfslices.PredicateTrue[*types.DBProxy]())
 
 	if err != nil {
 		return nil, err
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.DBProxyName) != name {
+	if aws.ToString(output.DBProxyName) != name {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
@@ -299,48 +301,45 @@ func findDBProxyByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DB
 	return output, nil
 }
 
-func findDBProxy(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBProxiesInput, filter tfslices.Predicate[*rds.DBProxy]) (*rds.DBProxy, error) {
+func findDBProxy(ctx context.Context, conn *rds.Client, input *rds.DescribeDBProxiesInput, filter tfslices.Predicate[*types.DBProxy]) (*types.DBProxy, error) {
 	output, err := findDBProxies(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findDBProxies(ctx context.Context, conn *rds.RDS, input *rds.DescribeDBProxiesInput, filter tfslices.Predicate[*rds.DBProxy]) ([]*rds.DBProxy, error) {
-	var output []*rds.DBProxy
+func findDBProxies(ctx context.Context, conn *rds.Client, input *rds.DescribeDBProxiesInput, filter tfslices.Predicate[*types.DBProxy]) ([]types.DBProxy, error) {
+	var output []types.DBProxy
 
-	err := conn.DescribeDBProxiesPagesWithContext(ctx, input, func(page *rds.DescribeDBProxiesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := rds.NewDescribeDBProxiesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, v := range page.DBProxies {
-			if v != nil && filter(v) {
-				output = append(output, v)
+		if errs.IsA[*types.DBProxyNotFoundFault](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.DBProxies {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
 }
 
-func statusDBProxy(ctx context.Context, conn *rds.RDS, name string) retry.StateRefreshFunc {
+func statusDBProxy(ctx context.Context, conn *rds.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findDBProxyByName(ctx, conn, name)
 
@@ -352,30 +351,30 @@ func statusDBProxy(ctx context.Context, conn *rds.RDS, name string) retry.StateR
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func waitDBProxyCreated(ctx context.Context, conn *rds.RDS, name string, timeout time.Duration) (*rds.DBProxy, error) {
+func waitDBProxyCreated(ctx context.Context, conn *rds.Client, name string, timeout time.Duration) (*types.DBProxy, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{rds.DBProxyStatusCreating},
-		Target:  []string{rds.DBProxyStatusAvailable},
+		Pending: enum.Slice(types.DBProxyStatusCreating),
+		Target:  enum.Slice(types.DBProxyStatusAvailable),
 		Refresh: statusDBProxy(ctx, conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*rds.DBProxy); ok {
+	if output, ok := outputRaw.(*types.DBProxy); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitDBProxyDeleted(ctx context.Context, conn *rds.RDS, name string, timeout time.Duration) (*rds.DBProxy, error) {
+func waitDBProxyDeleted(ctx context.Context, conn *rds.Client, name string, timeout time.Duration) (*types.DBProxy, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{rds.DBProxyStatusDeleting},
+		Pending: enum.Slice(types.DBProxyStatusDeleting),
 		Target:  []string{},
 		Refresh: statusDBProxy(ctx, conn, name),
 		Timeout: timeout,
@@ -383,36 +382,36 @@ func waitDBProxyDeleted(ctx context.Context, conn *rds.RDS, name string, timeout
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*rds.DBProxy); ok {
+	if output, ok := outputRaw.(*types.DBProxy); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitDBProxyUpdated(ctx context.Context, conn *rds.RDS, name string, timeout time.Duration) (*rds.DBProxy, error) {
+func waitDBProxyUpdated(ctx context.Context, conn *rds.Client, name string, timeout time.Duration) (*types.DBProxy, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{rds.DBProxyStatusModifying},
-		Target:  []string{rds.DBProxyStatusAvailable},
+		Pending: enum.Slice(types.DBProxyStatusModifying),
+		Target:  enum.Slice(types.DBProxyStatusAvailable),
 		Refresh: statusDBProxy(ctx, conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*rds.DBProxy); ok {
+	if output, ok := outputRaw.(*types.DBProxy); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func expandUserAuthConfigs(tfList []interface{}) []*rds.UserAuthConfig {
+func expandUserAuthConfigs(tfList []interface{}) []types.UserAuthConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	apiObjects := make([]*rds.UserAuthConfig, 0, len(tfList))
+	apiObjects := make([]types.UserAuthConfig, 0, len(tfList))
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -420,14 +419,14 @@ func expandUserAuthConfigs(tfList []interface{}) []*rds.UserAuthConfig {
 			continue
 		}
 
-		apiObject := &rds.UserAuthConfig{}
+		apiObject := types.UserAuthConfig{}
 
 		if v, ok := tfMap["auth_scheme"].(string); ok && v != "" {
-			apiObject.AuthScheme = aws.String(v)
+			apiObject.AuthScheme = types.AuthScheme(v)
 		}
 
 		if v, ok := tfMap["client_password_auth_type"].(string); ok && v != "" {
-			apiObject.ClientPasswordAuthType = aws.String(v)
+			apiObject.ClientPasswordAuthType = types.ClientPasswordAuthType(v)
 		}
 
 		if v, ok := tfMap["description"].(string); ok && v != "" {
@@ -435,7 +434,7 @@ func expandUserAuthConfigs(tfList []interface{}) []*rds.UserAuthConfig {
 		}
 
 		if v, ok := tfMap["iam_auth"].(string); ok && v != "" {
-			apiObject.IAMAuth = aws.String(v)
+			apiObject.IAMAuth = types.IAMAuthMode(v)
 		}
 
 		if v, ok := tfMap["secret_arn"].(string); ok && v != "" {
@@ -452,20 +451,29 @@ func expandUserAuthConfigs(tfList []interface{}) []*rds.UserAuthConfig {
 	return apiObjects
 }
 
-func flattenUserAuthConfigInfo(apiObject *rds.UserAuthConfigInfo) map[string]interface{} {
-	tfMap := make(map[string]interface{})
+func flattenUserAuthConfigInfo(apiObject types.UserAuthConfigInfo) map[string]interface{} {
+	tfMap := map[string]interface{}{
+		"auth_scheme":               apiObject.AuthScheme,
+		"client_password_auth_type": apiObject.ClientPasswordAuthType,
+		"iam_auth":                  apiObject.IAMAuth,
+	}
 
-	tfMap["auth_scheme"] = aws.StringValue(apiObject.AuthScheme)
-	tfMap["client_password_auth_type"] = aws.StringValue(apiObject.ClientPasswordAuthType)
-	tfMap["description"] = aws.StringValue(apiObject.Description)
-	tfMap["iam_auth"] = aws.StringValue(apiObject.IAMAuth)
-	tfMap["secret_arn"] = aws.StringValue(apiObject.SecretArn)
-	tfMap["username"] = aws.StringValue(apiObject.UserName)
+	if v := apiObject.Description; v != nil {
+		tfMap["description"] = aws.ToString(v)
+	}
+
+	if v := apiObject.SecretArn; v != nil {
+		tfMap["secret_arn"] = aws.ToString(v)
+	}
+
+	if v := apiObject.UserName; v != nil {
+		tfMap["username"] = aws.ToString(v)
+	}
 
 	return tfMap
 }
 
-func flattenUserAuthConfigInfos(apiObjects []*rds.UserAuthConfigInfo) []interface{} {
+func flattenUserAuthConfigInfos(apiObjects []types.UserAuthConfigInfo) []interface{} {
 	tfList := []interface{}{}
 
 	for _, apiObject := range apiObjects {
