@@ -5,7 +5,6 @@ package cloudfront
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"time"
 
@@ -22,11 +21,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
@@ -85,8 +82,6 @@ func (r *keyValueStoreResource) Schema(ctx context.Context, request resource.Sch
 		Blocks: map[string]schema.Block{
 			names.AttrTimeouts: timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Update: true,
-				Delete: true,
 			}),
 		},
 	}
@@ -180,49 +175,40 @@ func (r *keyValueStoreResource) Read(ctx context.Context, request resource.ReadR
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *keyValueStoreResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().CloudFrontClient(ctx)
-
-	var plan, state keyValueStoreResourceModel
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *keyValueStoreResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new keyValueStoreResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.Comment.Equal(state.Comment) {
+	conn := r.Meta().CloudFrontClient(ctx)
 
-		in := &cloudfront.UpdateKeyValueStoreInput{
-			Name:    aws.String(plan.Name.ValueString()),
-			Comment: aws.String(plan.Comment.ValueString()),
-			IfMatch: aws.String(plan.ETag.ValueString()),
-		}
-
-		out, err := conn.UpdateKeyValueStore(ctx, in)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CloudFront, create.ErrActionUpdating, ResNameKeyValueStore, plan.ID.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil || out.KeyValueStore == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.CloudFront, create.ErrActionUpdating, ResNameKeyValueStore, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
-
-		plan.ARN = flex.StringToFramework(ctx, out.KeyValueStore.ARN)
-		plan.ID = flex.StringToFramework(ctx, out.KeyValueStore.Name)
-		plan.Comment = flex.StringToFramework(ctx, out.KeyValueStore.Comment)
-		plan.Name = flex.StringToFramework(ctx, out.KeyValueStore.Name)
-		plan.LastModifiedTime = flex.StringToFramework(ctx, aws.String(fmt.Sprintf("%s", out.KeyValueStore.LastModifiedTime)))
-		plan.ETag = flex.StringToFramework(ctx, out.ETag)
+	input := &cloudfront.UpdateKeyValueStoreInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	input.IfMatch = fwflex.StringFromFramework(ctx, new.ETag)
+
+	output, err := conn.UpdateKeyValueStore(ctx, input)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("updating CloudFront Key Value Store (%s)", new.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.KeyValueStore, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	new.ETag = fwflex.StringToFramework(ctx, output.ETag)
+	new.setID() // API response has a field named 'Id' which isn't the resource's ID.
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
 func (r *keyValueStoreResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -234,20 +220,12 @@ func (r *keyValueStoreResource) Delete(ctx context.Context, request resource.Del
 
 	conn := r.Meta().CloudFrontClient(ctx)
 
-	output, err := findKeyValueStoreByName(ctx, conn, data.ID.ValueString())
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront Key Value Store (%s)", data.ID.ValueString()), err.Error())
-
-		return
-	}
-
 	input := &cloudfront.DeleteKeyValueStoreInput{
-		IfMatch: output.ETag,
-		Name:    aws.String(data.ID.ValueString()),
+		IfMatch: fwflex.StringFromFramework(ctx, data.ETag),
+		Name:    fwflex.StringFromFramework(ctx, data.ID),
 	}
 
-	_, err = conn.DeleteKeyValueStore(ctx, input)
+	_, err := conn.DeleteKeyValueStore(ctx, input)
 
 	if errs.IsA[*awstypes.EntityNotFound](err) {
 		return
