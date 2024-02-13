@@ -32,7 +32,7 @@ func TestAccS3BucketCORSConfiguration_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketCORSConfigurationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "1"),
@@ -48,6 +48,9 @@ func TestAccS3BucketCORSConfiguration_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cors_rule.0.max_age_seconds",
+				},
 			},
 		},
 	})
@@ -66,7 +69,7 @@ func TestAccS3BucketCORSConfiguration_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketCORSConfigurationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketCorsConfiguration(), resourceName),
 				),
@@ -90,7 +93,7 @@ func TestAccS3BucketCORSConfiguration_update(t *testing.T) {
 
 			{
 				Config: testAccBucketCORSConfigurationConfig_completeSingleRule(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "1"),
@@ -106,7 +109,7 @@ func TestAccS3BucketCORSConfiguration_update(t *testing.T) {
 			},
 			{
 				Config: testAccBucketCORSConfigurationConfig_multipleRules(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "2"),
@@ -125,10 +128,14 @@ func TestAccS3BucketCORSConfiguration_update(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cors_rule.0.max_age_seconds",
+					"cors_rule.1.max_age_seconds",
+				},
 			},
 			{
 				Config: testAccBucketCORSConfigurationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cors_rule.*", map[string]string{
@@ -136,6 +143,14 @@ func TestAccS3BucketCORSConfiguration_update(t *testing.T) {
 						"allowed_origins.#": "1",
 					}),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cors_rule.0.max_age_seconds",
+				},
 			},
 		},
 	})
@@ -154,7 +169,7 @@ func TestAccS3BucketCORSConfiguration_SingleRule(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketCORSConfigurationConfig_completeSingleRule(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "1"),
@@ -196,7 +211,7 @@ func TestAccS3BucketCORSConfiguration_MultipleRules(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketCORSConfigurationConfig_multipleRules(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "2"),
@@ -222,6 +237,10 @@ func TestAccS3BucketCORSConfiguration_MultipleRules(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cors_rule.0.max_age_seconds",
+					"cors_rule.1.max_age_seconds",
+				},
 			},
 		},
 	})
@@ -241,7 +260,7 @@ func TestAccS3BucketCORSConfiguration_migrate_corsRuleNoChange(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_cors(bucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.#", "1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.allowed_headers.#", "1"),
@@ -253,7 +272,7 @@ func TestAccS3BucketCORSConfiguration_migrate_corsRuleNoChange(t *testing.T) {
 			},
 			{
 				Config: testAccBucketCORSConfigurationConfig_migrateRuleNoChange(bucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "1"),
@@ -284,7 +303,7 @@ func TestAccS3BucketCORSConfiguration_migrate_corsRuleWithChange(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketConfig_cors(bucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketExists(ctx, bucketResourceName),
 					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.#", "1"),
 					resource.TestCheckResourceAttr(bucketResourceName, "cors_rule.0.allowed_headers.#", "1"),
@@ -296,7 +315,7 @@ func TestAccS3BucketCORSConfiguration_migrate_corsRuleWithChange(t *testing.T) {
 			},
 			{
 				Config: testAccBucketCORSConfigurationConfig_migrateRuleChange(bucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketCORSConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", bucketResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "1"),
