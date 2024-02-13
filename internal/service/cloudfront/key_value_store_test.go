@@ -97,7 +97,7 @@ func TestAccCloudFrontKeyValueStore_comment(t *testing.T) {
 		CheckDestroy:             testAccCheckKeyValueStoreDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCloudFrontKeyValueStoreConfig_comment(rName, comment1),
+				Config: testAccKeyValueStoreConfig_comment(rName, comment1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
 					resource.TestCheckResourceAttr(resourceName, "comment", comment1),
@@ -110,7 +110,7 @@ func TestAccCloudFrontKeyValueStore_comment(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"last_modified_time"},
 			},
 			{
-				Config: testAccCloudFrontKeyValueStoreConfig_comment(rName, comment2),
+				Config: testAccKeyValueStoreConfig_comment(rName, comment2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
 					resource.TestCheckResourceAttr(resourceName, "comment", comment2),
@@ -175,7 +175,7 @@ resource "aws_cloudfront_key_value_store" "test" {
 `, rName)
 }
 
-func testAccCloudFrontKeyValueStoreConfig_comment(rName string, comment string) string {
+func testAccKeyValueStoreConfig_comment(rName string, comment string) string {
 	return fmt.Sprintf(`
 resource "aws_cloudfront_key_value_store" "test" {
   name    = %[1]q
