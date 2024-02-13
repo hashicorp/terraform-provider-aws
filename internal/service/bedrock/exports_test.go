@@ -5,5 +5,10 @@ package bedrock
 
 // Exports for use in tests only.
 var (
+	ResourceCustomModel                         = newCustomModelResource
 	ResourceModelInvocationLoggingConfiguration = newResourceModelInvocationLoggingConfiguration
+
+	FindCustomModelByID                = findCustomModelByID
+	FindModelCustomizationJobByID      = findModelCustomizationJobByID
+	WaitModelCustomizationJobCompleted = waitModelCustomizationJobCompleted
 )

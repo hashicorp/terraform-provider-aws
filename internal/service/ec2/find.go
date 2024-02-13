@@ -7246,7 +7246,7 @@ func FindVerifiedAccessInstanceTrustProviderAttachmentExists(ctx context.Context
 	}
 
 	return &retry.NotFoundError{
-		LastError: fmt.Errorf("Verified Access Instance (%s) Trust Provider (%s) Association not found", vaiID, vatpID),
+		LastError: fmt.Errorf("Verified Access Instance (%s) Trust Provider (%s) Attachment not found", vaiID, vatpID),
 	}
 }
 

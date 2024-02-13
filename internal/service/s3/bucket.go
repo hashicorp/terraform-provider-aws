@@ -50,7 +50,7 @@ const (
 
 // @SDKResource("aws_s3_bucket", name="Bucket")
 // @Tags
-func ResourceBucket() *schema.Resource {
+func resourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,
 		ReadWithoutTimeout:   resourceBucketRead,
@@ -1142,7 +1142,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	// Bucket Tags.
 	//
 	tags, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (tftags.KeyValueTags, error) {
-		return BucketListTags(ctx, conn, d.Id())
+		return bucketListTags(ctx, conn, d.Id())
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
@@ -1565,7 +1565,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		// Retry due to S3 eventual consistency.
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
-			terr := BucketUpdateTags(ctx, conn, d.Id(), o, n)
+			terr := bucketUpdateTags(ctx, conn, d.Id(), o, n)
 			return nil, terr
 		}, errCodeNoSuchBucket)
 
@@ -1642,6 +1642,39 @@ func findBucket(ctx context.Context, conn *s3.Client, bucket string, optFns ...f
 	}
 
 	return err
+}
+
+func findBucketRegion(ctx context.Context, awsClient *conns.AWSClient, bucket string, optFns ...func(*s3.Options)) (string, error) {
+	optFns = append(slices.Clone(optFns),
+		func(o *s3.Options) {
+			// By default, GetBucketRegion forces virtual host addressing, which
+			// is not compatible with many non-AWS implementations. Instead, pass
+			// the provider s3_force_path_style configuration, which defaults to
+			// false, but allows override.
+			o.UsePathStyle = awsClient.S3UsePathStyle()
+		},
+		func(o *s3.Options) {
+			// By default, GetBucketRegion uses anonymous credentials when doing
+			// a HEAD request to get the bucket region. This breaks in aws-cn regions
+			// when the account doesn't have an ICP license to host public content.
+			// Use the current credentials when getting the bucket region.
+			o.Credentials = awsClient.CredentialsProvider()
+		})
+
+	region, err := manager.GetBucketRegion(ctx, awsClient.S3Client(ctx), bucket, optFns...)
+
+	if errs.IsA[manager.BucketNotFound](err) {
+		return "", &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: bucket,
+		}
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	return region, nil
 }
 
 func retryWhenNoSuchBucketError[T any](ctx context.Context, timeout time.Duration, f func() (T, error)) (T, error) {

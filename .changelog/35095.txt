@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_codecommit_repository: Add `kms_key_id` argument
+```
+
+```release-note:enhancement
+data-source/aws_codecommit_repository: Add `kms_key_id` attribute
+```
+
+```release-note:enhancement
+resource/aws_codecommit_trigger: Add plan-time validation of `trigger.destination_arn` and `trigger.events`
+```

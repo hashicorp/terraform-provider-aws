@@ -195,7 +195,7 @@ func sweepBuckets(region string) error {
 	for _, bucket := range buckets {
 		name := aws.ToString(bucket.Name)
 
-		r := ResourceBucket()
+		r := resourceBucket()
 		d := r.Data(nil)
 		d.SetId(name)
 
@@ -237,6 +237,7 @@ func bucketNameFilter(bucket types.Bucket) bool {
 		"tftest.applicationversion",
 		"terraform-remote-s3-test",
 		"aws-security-data-lake-", // Orphaned by aws_securitylake_data_lake.
+		"resource-test-terraform",
 	}
 	for _, prefix := range prefixes {
 		if strings.HasPrefix(name, prefix) {

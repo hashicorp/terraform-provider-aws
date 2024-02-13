@@ -39,6 +39,11 @@ func testAccLicenseAssociation_freeTrial(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "workspace_id", workspaceResourceName, "id"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
