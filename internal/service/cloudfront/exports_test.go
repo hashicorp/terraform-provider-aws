@@ -8,5 +8,6 @@ var (
 	ResourceContinuousDeploymentPolicy = newResourceContinuousDeploymentPolicy
 	ResourceKeyValueStore              = newKeyValueStoreResource
 
-	FindPublicKeyByID = findPublicKeyByID
+	FindKeyValueStoreByName = findKeyValueStoreByName
+	FindPublicKeyByID       = findPublicKeyByID
 )
