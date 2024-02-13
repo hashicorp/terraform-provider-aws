@@ -39,17 +39,16 @@ func TestAccCloudFrontKeyValueStore_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyValueStoreExists(ctx, resourceName, &keyvaluestore),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "comment", ""),
+					resource.TestCheckNoResourceAttr(resourceName, "comment"),
 					resource.TestCheckResourceAttrSet(resourceName, "etag"),
 					resource.TestCheckResourceAttrSet(resourceName, "last_modified_time"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"last_modified_time"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -104,10 +103,9 @@ func TestAccCloudFrontKeyValueStore_comment(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"last_modified_time"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 			{
 				Config: testAccKeyValueStoreConfig_comment(rName, comment2),

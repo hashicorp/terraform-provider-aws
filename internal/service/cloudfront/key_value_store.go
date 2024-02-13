@@ -103,7 +103,7 @@ func (r *keyValueStoreResource) Create(ctx context.Context, request resource.Cre
 	}
 
 	name := aws.ToString(input.Name)
-	outputCKVS, err := conn.CreateKeyValueStore(ctx, input)
+	_, err := conn.CreateKeyValueStore(ctx, input)
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating CloudFront Key Value Store (%s)", name), err.Error())
@@ -128,10 +128,10 @@ func (r *keyValueStoreResource) Create(ctx context.Context, request resource.Cre
 		return
 	}
 
-	data.ETag = fwflex.StringToFramework(ctx, outputCKVS.ETag)
+	data.ETag = fwflex.StringToFramework(ctx, outputDKVS.ETag)
 	data.setID() // API response has a field named 'Id' which isn't the resource's ID.
 
-	response.Diagnostics.Append(response.State.Set(ctx, data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *keyValueStoreResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
@@ -176,7 +176,11 @@ func (r *keyValueStoreResource) Read(ctx context.Context, request resource.ReadR
 }
 
 func (r *keyValueStoreResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var new keyValueStoreResourceModel
+	var old, new keyValueStoreResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -190,7 +194,7 @@ func (r *keyValueStoreResource) Update(ctx context.Context, request resource.Upd
 		return
 	}
 
-	input.IfMatch = fwflex.StringFromFramework(ctx, new.ETag)
+	input.IfMatch = fwflex.StringFromFramework(ctx, old.ETag)
 
 	output, err := conn.UpdateKeyValueStore(ctx, input)
 
