@@ -33,10 +33,11 @@ func TestAccECRPullThroughCacheRule_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPullThroughCacheRuleConfig_basic(repositoryPrefix),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckPullThroughCacheRuleExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "credential_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "ecr_repository_prefix", repositoryPrefix),
-					testAccCheckPullThroughCacheRuleRegistryID(resourceName),
+					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "upstream_registry_url", upstreamRegistryUrl),
 				),
 			},
@@ -49,7 +50,7 @@ func TestAccECRPullThroughCacheRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccECRPullThroughCacheRule_credentialArn(t *testing.T) {
+func TestAccECRPullThroughCacheRule_credentialARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
 	upstreamRegistryUrl := "registry-1.docker.io"
@@ -62,13 +63,13 @@ func TestAccECRPullThroughCacheRule_credentialArn(t *testing.T) {
 		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPullThroughCacheRuleConfig_credentialArn(repositoryPrefix, "docker-hub"),
+				Config: testAccPullThroughCacheRuleConfig_credentialARN(repositoryPrefix, "docker-hub"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPullThroughCacheRuleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "ecr_repository_prefix", repositoryPrefix),
-					testAccCheckPullThroughCacheRuleRegistryID(resourceName),
-					resource.TestCheckResourceAttr(resourceName, "upstream_registry_url", upstreamRegistryUrl),
 					resource.TestCheckResourceAttrSet(resourceName, "credential_arn"),
+					resource.TestCheckResourceAttr(resourceName, "ecr_repository_prefix", repositoryPrefix),
+					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
+					resource.TestCheckResourceAttr(resourceName, "upstream_registry_url", upstreamRegistryUrl),
 				),
 			},
 			{
@@ -145,7 +146,7 @@ func TestAccECRPullThroughCacheRule_repositoryPrefixWithSlash(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPullThroughCacheRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "ecr_repository_prefix", repositoryPrefix),
-					testAccCheckPullThroughCacheRuleRegistryID(resourceName),
+					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
 					resource.TestCheckResourceAttr(resourceName, "upstream_registry_url", "public.ecr.aws"),
 				),
 			},
@@ -162,7 +163,7 @@ func testAccCheckPullThroughCacheRuleDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			_, err := tfecr.FindPullThroughCacheRuleByRepositoryPrefix(ctx, conn, rs.Primary.Attributes["ecr_repository_prefix"])
+			_, err := tfecr.FindPullThroughCacheRuleByRepositoryPrefix(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -186,22 +187,11 @@ func testAccCheckPullThroughCacheRuleExists(ctx context.Context, n string) resou
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ECR Pull Through Cache Rule ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
 
 		_, err := tfecr.FindPullThroughCacheRuleByRepositoryPrefix(ctx, conn, rs.Primary.ID)
 
 		return err
-	}
-}
-
-func testAccCheckPullThroughCacheRuleRegistryID(resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		attributeValue := acctest.AccountID()
-		return resource.TestCheckResourceAttr(resourceName, "registry_id", attributeValue)(s)
 	}
 }
 
@@ -213,7 +203,8 @@ resource "aws_ecr_pull_through_cache_rule" "test" {
 }
 `, repositoryPrefix)
 }
-func testAccPullThroughCacheRuleConfig_credentialArn(repositoryPrefix string, credentialArn string) string {
+
+func testAccPullThroughCacheRuleConfig_credentialARN(repositoryPrefix, credentialARN string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
   name                    = "ecr-pullthroughcache/%[2]s"
@@ -231,7 +222,7 @@ resource "aws_ecr_pull_through_cache_rule" "test" {
   depends_on            = [aws_secretsmanager_secret.test]
   credential_arn        = aws_secretsmanager_secret.test.arn
 }
-`, repositoryPrefix, credentialArn)
+`, repositoryPrefix, credentialARN)
 }
 
 func testAccPullThroughCacheRuleConfig_failWhenAlreadyExist(repositoryPrefix string) string {
