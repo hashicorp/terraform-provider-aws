@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -1235,13 +1236,13 @@ resource "aws_secretsmanager_secret_version" "test" {
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %[1]q
-  engine_mode                     = "serverless"
-  database_name                   = "mydb"
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.aurora5.6"
-  skip_final_snapshot             = true
+  cluster_identifier  = %[1]q
+  engine              = %[2]q
+  engine_mode         = "serverless"
+  database_name       = "mydb"
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
+  skip_final_snapshot = true
 
   scaling_configuration {
     min_capacity = 1
@@ -1287,7 +1288,7 @@ resource "aws_appsync_graphql_api" "test" {
   authentication_type = "API_KEY"
   name                = %[1]q
 }
-`, rName)
+`, rName, tfrds.ClusterEngineAuroraMySQL)
 }
 
 func testAccDataSourceConfig_typeRelationalDatabase(rName string) string {
