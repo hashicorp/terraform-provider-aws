@@ -231,7 +231,7 @@ func statusDefaultDBProxyTargetGroup(ctx context.Context, conn *rds.Client, dbPr
 	}
 }
 
-func waitDefaultDBProxyTargetGroupAvailable(ctx context.Context, conn *rds.Client, dbProxyName string, timeout time.Duration) (*types.DBProxyTargetGroup, error) { //nolint:unparam
+func waitDefaultDBProxyTargetGroupAvailable(ctx context.Context, conn *rds.Client, dbProxyName string, timeout time.Duration) (*types.DBProxyTargetGroup, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.DBProxyStatusModifying),
 		Target:  enum.Slice(types.DBProxyStatusAvailable),
