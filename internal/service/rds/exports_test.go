@@ -10,18 +10,19 @@ var (
 	ResourceProxyEndpoint           = resourceProxyEndpoint
 	ResourceProxyTarget             = resourceProxyTarget
 
-	FindDBInstanceByID               = findDBInstanceByIDSDKv1
-	FindDBProxyByName                = findDBProxyByName
-	FindDBProxyEndpointByTwoPartKey  = findDBProxyEndpointByTwoPartKey
-	FindDBProxyTargetByFourPartKey   = findDBProxyTargetByFourPartKey
-	ListTags                         = listTags
-	NewBlueGreenOrchestrator         = newBlueGreenOrchestrator
-	ParseDBInstanceARN               = parseDBInstanceARN
-	ProxyTargetParseResourceID       = proxyTargetParseResourceID
-	WaitBlueGreenDeploymentDeleted   = waitBlueGreenDeploymentDeleted
-	WaitBlueGreenDeploymentAvailable = waitBlueGreenDeploymentAvailable
-	WaitDBInstanceAvailable          = waitDBInstanceAvailableSDKv2
-	WaitDBInstanceDeleted            = waitDBInstanceDeleted
+	FindDBInstanceByID                         = findDBInstanceByIDSDKv1
+	FindDBProxyByName                          = findDBProxyByName
+	FindDBProxyEndpointByTwoPartKey            = findDBProxyEndpointByTwoPartKey
+	FindDBProxyTargetByFourPartKey             = findDBProxyTargetByFourPartKey
+	FindDefaultDBProxyTargetGroupByDBProxyName = findDefaultDBProxyTargetGroupByDBProxyName
+	ListTags                                   = listTags
+	NewBlueGreenOrchestrator                   = newBlueGreenOrchestrator
+	ParseDBInstanceARN                         = parseDBInstanceARN
+	ProxyTargetParseResourceID                 = proxyTargetParseResourceID
+	WaitBlueGreenDeploymentDeleted             = waitBlueGreenDeploymentDeleted
+	WaitBlueGreenDeploymentAvailable           = waitBlueGreenDeploymentAvailable
+	WaitDBInstanceAvailable                    = waitDBInstanceAvailableSDKv2
+	WaitDBInstanceDeleted                      = waitDBInstanceDeleted
 
 	ErrCodeInvalidAction               = errCodeInvalidAction
 	ErrCodeInvalidParameterCombination = errCodeInvalidParameterCombination
