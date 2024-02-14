@@ -259,25 +259,6 @@ func waitProvisionedModelThroughputCreated(ctx context.Context, conn *bedrock.Cl
 	return nil, err
 }
 
-func waitProvisionedModelThroughputUpdated(ctx context.Context, conn *bedrock.Client, id string, timeout time.Duration) (*bedrock.GetProvisionedModelThroughputOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.ProvisionedModelStatusUpdating),
-		Target:  enum.Slice(awstypes.ProvisionedModelStatusInService),
-		Refresh: statusProvisionedModelThroughput(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*bedrock.GetProvisionedModelThroughputOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.FailureMessage)))
-
-		return output, err
-	}
-
-	return nil, err
-}
-
 type provisionedModelThroughputResourceModel struct {
 	CommitmentDuration   fwtypes.StringEnum[awstypes.CommitmentDuration] `tfsdk:"commitment_duration"`
 	ID                   types.String                                    `tfsdk:"id"`
