@@ -170,7 +170,8 @@ func TestAccSageMakerEndpointConfiguration_ProductionVariants_routing(t *testing
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "production_variants.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "production_variants.0.routing_config.routing_strategy", "RANDOM"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.routing_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "production_variants.0.routing_config.0.routing_strategy", "RANDOM"),
 				),
 			},
 			{
@@ -1232,8 +1233,10 @@ resource "aws_sagemaker_endpoint_configuration" "test" {
   name = %[1]q
 
   production_variants {
-    variant_name = "variant-1"
-    model_name   = aws_sagemaker_model.test.name
+    variant_name           = "variant-1"
+    model_name             = aws_sagemaker_model.test.name
+    initial_instance_count = 2
+    instance_type          = "ml.t2.medium"
 
     routing_config {
       routing_strategy = "RANDOM"
