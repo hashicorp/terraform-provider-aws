@@ -335,7 +335,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ForceNew:     true,
-										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(LEAST_OUTSTANDING_REQUESTS|RANDOM)`), ""),
+										ValidateFunc: validation.StringInSlice(sagemaker.RoutingStrategy_Values(), false),
 									},
 								},
 							},
