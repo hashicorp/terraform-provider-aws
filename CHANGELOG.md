@@ -1,19 +1,26 @@
 ## 5.37.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_bedrock_provisioned_model_throughput: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#35689](https://github.com/hashicorp/terraform-provider-aws/issues/35689))
+
 FEATURES:
 
 * **New Data Source:** `aws_db_parameter_group` ([#35698](https://github.com/hashicorp/terraform-provider-aws/issues/35698))
+* **New Resource:** `aws_bedrock_provisioned_model_throughput` ([#35689](https://github.com/hashicorp/terraform-provider-aws/issues/35689))
 * **New Resource:** `aws_cloudfront_key_value_store` ([#35663](https://github.com/hashicorp/terraform-provider-aws/issues/35663))
 * **New Resource:** `aws_redshift_data_share_consumer_association` ([#35771](https://github.com/hashicorp/terraform-provider-aws/issues/35771))
 
 ENHANCEMENTS:
 
+* data-source/aws_ecr_pull_through_cache_rule: Add `credential_arn` attribute ([#34475](https://github.com/hashicorp/terraform-provider-aws/issues/34475))
 * data-source/aws_ecs_task_execution: Add `client_token` argument ([#34402](https://github.com/hashicorp/terraform-provider-aws/issues/34402))
 * data-source/aws_neptune_cluster_instance: Add `skip_final_snapshot` argument ([#35698](https://github.com/hashicorp/terraform-provider-aws/issues/35698))
 * data-source/aws_rds_engine_version: Improve search functionality and options by adding `latest`, `preferred_major_targets`, and `preferred_upgrade_targets`. Add `version_actual` attribute ([#35698](https://github.com/hashicorp/terraform-provider-aws/issues/35698))
 * data-source/aws_rds_orderable_db_instance: Improve search functionality and options by adding `engine_latest_version` and `supports_clusters` arguments and converting `read_replica_capable`, `supported_engine_modes`, `supported_network_types`, and `supports_multi_az` to arguments for use as search criteria ([#35698](https://github.com/hashicorp/terraform-provider-aws/issues/35698))
 * resource/aws_appsync_graphql_api: Add `introspection_config`, `query_depth_limit`, and `resolver_count_limit` arguments ([#35631](https://github.com/hashicorp/terraform-provider-aws/issues/35631))
 * resource/aws_codeartifact_domain: Add `s3_bucket_arn` attribute ([#35760](https://github.com/hashicorp/terraform-provider-aws/issues/35760))
+* resource/aws_ecr_pull_through_cache_rule: Add `credential_arn` argument ([#34475](https://github.com/hashicorp/terraform-provider-aws/issues/34475))
 * resource/aws_ecs_service: Add `service_connect_configuration.service.timeout` and `service_connect_configuration.service.tls` configuration blocks ([#35684](https://github.com/hashicorp/terraform-provider-aws/issues/35684))
 * resource/aws_ecs_task_definition: Add `track_latest` argument ([#30154](https://github.com/hashicorp/terraform-provider-aws/issues/30154))
 * resource/aws_glue_catalog_database: Add `federated_database` argument ([#35799](https://github.com/hashicorp/terraform-provider-aws/issues/35799))
@@ -26,6 +33,8 @@ BUG FIXES:
 
 * resource/aws_apigateway_domain_name: Properly send changes to `ownership_verification_certificate_arn` on update ([#35777](https://github.com/hashicorp/terraform-provider-aws/issues/35777))
 * resource/aws_autoscaling_group: Fix version to computed for inconsistent final plan issue ([#35774](https://github.com/hashicorp/terraform-provider-aws/issues/35774))
+* resource/aws_datasync_task: Fix crash when reading empty `report_override` values ([#35778](https://github.com/hashicorp/terraform-provider-aws/issues/35778))
+* resource/aws_datasync_task: Prevent ValidationErrors when empty values are sent with `report_override` arguments ([#35778](https://github.com/hashicorp/terraform-provider-aws/issues/35778))
 * resource/aws_ecs_account_setting_default: Remove plan-time validation of `value` ([#33393](https://github.com/hashicorp/terraform-provider-aws/issues/33393))
 * resource/aws_ecs_task_definition: Fix perpetual `container_definitions` diffs when `Secrets` are ordered differently ([#35792](https://github.com/hashicorp/terraform-provider-aws/issues/35792))
 * resource/aws_eks_access_policy_association: Retry IAM eventual consistency errors on create ([#35736](https://github.com/hashicorp/terraform-provider-aws/issues/35736))
