@@ -20,6 +20,8 @@ import (
 )
 
 func TestAccBedrockProvisionedModelThroughput_basic(t *testing.T) {
+	acctest.Skip(t, "Bedrock Provisioned Model Throughput has a minimum 1 month commitment and costs > $10K/month")
+
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_provisioned_model_throughput.test"
