@@ -134,7 +134,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.27.6
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/xray v1.23.7
-	github.com/aws/smithy-go v1.19.0
+	github.com/aws/smithy-go v1.20.0
 	github.com/beevik/etree v1.3.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/gertd/go-pluralize v0.2.1
