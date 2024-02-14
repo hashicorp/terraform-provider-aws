@@ -34,7 +34,7 @@ func TestAccXRaySamplingRule_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSamplingRuleConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "priority", "5"),
@@ -76,7 +76,7 @@ func TestAccXRaySamplingRule_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSamplingRuleConfig_update(rName, sdkacctest.RandIntRange(0, 9999), sdkacctest.RandIntRange(0, 2147483647)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
 					resource.TestCheckResourceAttrSet(resourceName, "priority"),
@@ -94,7 +94,7 @@ func TestAccXRaySamplingRule_update(t *testing.T) {
 			},
 			{ // Update attributes
 				Config: testAccSamplingRuleConfig_update(rName, updatedPriority, updatedReservoirSize),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "xray", fmt.Sprintf("sampling-rule/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "priority", fmt.Sprintf("%d", updatedPriority)),
@@ -133,7 +133,7 @@ func TestAccXRaySamplingRule_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSamplingRuleConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -146,7 +146,7 @@ func TestAccXRaySamplingRule_tags(t *testing.T) {
 			},
 			{
 				Config: testAccSamplingRuleConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -155,7 +155,7 @@ func TestAccXRaySamplingRule_tags(t *testing.T) {
 			},
 			{
 				Config: testAccSamplingRuleConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -179,7 +179,7 @@ func TestAccXRaySamplingRule_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSamplingRuleConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfxray.ResourceSamplingRule(), resourceName),
 				),

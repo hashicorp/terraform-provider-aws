@@ -34,7 +34,7 @@ func TestAccXRayGroup_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_basic(rName, "responsetime > 5"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "xray", regexache.MustCompile(`group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "group_name", rName),
@@ -49,7 +49,7 @@ func TestAccXRayGroup_basic(t *testing.T) {
 			},
 			{
 				Config: testAccGroupConfig_basic(rName, "responsetime > 10"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "xray", regexache.MustCompile(`group/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "group_name", rName),
@@ -75,7 +75,7 @@ func TestAccXRayGroup_insights(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_basicInsights(rName, "responsetime > 5", true, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "insights_configuration.*", map[string]string{
@@ -91,7 +91,7 @@ func TestAccXRayGroup_insights(t *testing.T) {
 			},
 			{
 				Config: testAccGroupConfig_basicInsights(rName, "responsetime > 10", false, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "insights_configuration.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "insights_configuration.*", map[string]string{
@@ -118,7 +118,7 @@ func TestAccXRayGroup_tags(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_basicTags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
@@ -131,7 +131,7 @@ func TestAccXRayGroup_tags(t *testing.T) {
 			},
 			{
 				Config: testAccGroupConfig_basicTags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
@@ -140,7 +140,7 @@ func TestAccXRayGroup_tags(t *testing.T) {
 			},
 			{
 				Config: testAccGroupConfig_basicTags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2")),
@@ -163,7 +163,7 @@ func TestAccXRayGroup_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccGroupConfig_basic(rName, "responsetime > 5"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfxray.ResourceGroup(), resourceName),
 				),
