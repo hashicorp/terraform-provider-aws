@@ -105,6 +105,14 @@ func (r *resourceDRTAccessRoleARNAssociation) Create(ctx context.Context, req re
 		return conn.AssociateDRTRoleWithContext(ctx, in)
 	}, "InvalidParameterException", "role does not have a valid DRT managed policy")
 
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.Shield, create.ErrActionCreating, ResNameDRTAccessRoleARNAssociation, plan.RoleARN.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
 	out := outputRaw.(*shield.AssociateDRTRoleOutput)
 
 	if out == nil {
