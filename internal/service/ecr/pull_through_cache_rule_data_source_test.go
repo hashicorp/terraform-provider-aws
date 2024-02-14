@@ -66,7 +66,7 @@ func TestAccECRPullThroughCacheRuleDataSource_credential(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPullThroughCacheRuleDataSourceConfig_credentialArn(),
+				Config: testAccPullThroughCacheRuleDataSourceConfig_credentialARN(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSource, "upstream_registry_url", upstreamRegistryUrl),
 					acctest.CheckResourceAttrAccountID(dataSource, "registry_id"),
@@ -103,7 +103,7 @@ data "aws_ecr_pull_through_cache_rule" "test" {
 `, repositoryPrefix)
 }
 
-func testAccPullThroughCacheRuleDataSourceConfig_credentialArn() string {
+func testAccPullThroughCacheRuleDataSourceConfig_credentialARN() string {
 	return `
 resource "aws_secretsmanager_secret" "test" {
   name                    = "ecr-pullthroughcache/docker-hub"
