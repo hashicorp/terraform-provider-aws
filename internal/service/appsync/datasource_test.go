@@ -1236,14 +1236,13 @@ resource "aws_secretsmanager_secret_version" "test" {
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %[1]q
-  engine                          = %[2]q
-  engine_mode                     = "serverless"
-  database_name                   = "mydb"
-  master_username                 = "foo"
-  master_password                 = "mustbeeightcharaters"
-  db_cluster_parameter_group_name = "default.aurora5.6"
-  skip_final_snapshot             = true
+  cluster_identifier  = %[1]q
+  engine              = %[2]q
+  engine_mode         = "serverless"
+  database_name       = "mydb"
+  master_username     = "foo"
+  master_password     = "mustbeeightcharaters"
+  skip_final_snapshot = true
 
   scaling_configuration {
     min_capacity = 1
