@@ -414,12 +414,6 @@ func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuab
 	case basetypes.StringTypable:
 		diags.Append(expander.mapOfString(ctx, v, vTo)...)
 		return diags
-
-	case basetypes.ObjectTypable:
-		if vFrom, ok := vFrom.(fwtypes.ObjectMapValue); ok {
-			diags.Append(expander.objectMap(ctx, vFrom, vTo)...)
-			return diags
-		}
 	}
 
 	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
@@ -713,79 +707,6 @@ func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, vFrom fwt
 		}
 
 		// Set value (or pointer) in the target map.
-		if vTo.Type().Elem().Kind() == reflect.Struct {
-			m.SetMapIndex(key, target.Elem())
-		} else {
-			m.SetMapIndex(key, target)
-		}
-	}
-
-	vTo.Set(m)
-
-	return diags
-}
-
-// objectMap copies a Plugin Framework ObjectMapValue value to a compatible AWS API value.
-func (expander autoExpander) objectMap(ctx context.Context, vFrom fwtypes.ObjectMapValue, vTo reflect.Value) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	switch tTo := vTo.Type(); vTo.Kind() {
-	case reflect.Map:
-		switch tElem := tTo.Elem(); tElem.Kind() {
-		case reflect.Ptr:
-			diags.Append(expander.mappedObjectToStruct(ctx, vFrom, tElem, vTo)...)
-			return diags
-
-		case reflect.Struct:
-			diags.Append(expander.mappedObjectToStruct(ctx, vFrom, tElem, vTo)...)
-			return diags
-		}
-
-	case reflect.Ptr:
-		switch tElem := tTo.Elem(); tElem.Kind() {
-		case reflect.Struct:
-			diags.Append(expander.mappedObjectToStruct(ctx, vFrom, tElem, vTo)...)
-			return diags
-		}
-	}
-
-	diags.AddError("Incompatible types", fmt.Sprintf("objectMap[%s] cannot be expanded to %s", vFrom.Type(ctx).(attr.TypeWithElementType).ElementType(), vTo.Kind()))
-	return diags
-}
-
-// mappedObjectToStruct copies a Plugin Framework ObjectMapValue to a compatible AWS API (*)struct value.
-func (expander autoExpander) mappedObjectToStruct(ctx context.Context, vFrom fwtypes.ObjectMapValue, tStruct reflect.Type, vTo reflect.Value) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	// Get the mapped Objects as a map
-	from, d := vFrom.ToObjectMap(ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-
-	if tStruct.Kind() == reflect.Ptr {
-		tStruct = tStruct.Elem()
-	}
-
-	f := reflect.ValueOf(from)
-	m := reflect.MakeMap(vTo.Type())
-
-	for _, key := range f.MapKeys() {
-		// Create a new target map and populate it
-		target := reflect.New(tStruct)
-
-		fromInterface := f.MapIndex(key).Interface()
-		if f.MapIndex(key).Kind() == reflect.Ptr {
-			fromInterface = f.MapIndex(key).Elem().Interface()
-		}
-
-		diags.Append(autoFlexConvertStruct(ctx, fromInterface, target.Interface(), expander)...)
-		if diags.HasError() {
-			return diags
-		}
-
-		// Set value (or pointer) in the target slice.
 		if vTo.Type().Elem().Kind() == reflect.Struct {
 			m.SetMapIndex(key, target.Elem())
 		} else {

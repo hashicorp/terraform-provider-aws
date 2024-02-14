@@ -510,12 +510,13 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 			switch tTo := tTo.(type) {
 			case basetypes.SetTypable:
 				//
-				// map[string]struct -> fwtypes.ListNestedObjectOf[Object]
+				// map[string]struct -> fwtypes.SetNestedObjectOf[Object]
 				//
 				if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
 					diags.Append(flattener.structMapToObjectList(ctx, vFrom, tTo, vTo)...)
 					return diags
 				}
+
 			case basetypes.ListTypable:
 				//
 				// map[string]struct -> fwtypes.ListNestedObjectOf[Object]
@@ -524,15 +525,8 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 					diags.Append(flattener.structMapToObjectList(ctx, vFrom, tTo, vTo)...)
 					return diags
 				}
-			case basetypes.MapTypable:
-				//
-				// map[string]struct -> fwtypes.ObjectMapOf[Object]
-				//
-				if tTo, ok := tTo.(fwtypes.ObjectMapType); ok {
-					diags.Append(flattener.structMapToObjectMap(ctx, vFrom, tTo, vTo)...)
-					return diags
-				}
 			}
+
 		case reflect.String:
 			switch tTo := tTo.(type) {
 			case basetypes.MapTypable:
@@ -574,18 +568,11 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 		case reflect.Ptr:
 			switch tMapElem.Elem().Kind() {
 			case reflect.Struct:
-				//
-				// map[string]*struct -> fwtypes.ObjectMapOf[Object]
-				//
-				if tTo, ok := tTo.(fwtypes.ObjectMapType); ok {
-					diags.Append(flattener.structMapToObjectMap(ctx, vFrom, tTo, vTo)...)
-					return diags
-				}
-
 				if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
 					diags.Append(flattener.structMapToObjectList(ctx, vFrom, tTo, vTo)...)
 					return diags
 				}
+
 			case reflect.String:
 				switch tTo := tTo.(type) {
 				case basetypes.ListTypable:
@@ -596,6 +583,7 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 						diags.Append(flattener.structMapToObjectList(ctx, vFrom, tTo, vTo)...)
 						return diags
 					}
+
 				case basetypes.MapTypable:
 					//
 					// map[string]*string -> types.Map(OfString).
@@ -640,63 +628,6 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 		"to":   tTo,
 	})
 
-	return diags
-}
-
-func (flattener autoFlattener) structMapToObjectMap(ctx context.Context, vFrom reflect.Value, tTo fwtypes.ObjectMapType, vTo reflect.Value) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if vFrom.IsNil() {
-		val, d := tTo.NullValue(ctx)
-		diags.Append(d...)
-		if diags.HasError() {
-			return diags
-		}
-
-		vTo.Set(reflect.ValueOf(val))
-		return diags
-	}
-
-	to, d := tTo.New(ctx)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-
-	t := reflect.ValueOf(to)
-
-	tStruct := t.Type().Elem()
-	if tStruct.Kind() == reflect.Ptr {
-		tStruct = tStruct.Elem()
-	}
-
-	for _, key := range vFrom.MapKeys() {
-		target := reflect.New(tStruct)
-
-		fromInterface := vFrom.MapIndex(key).Interface()
-		if vFrom.MapIndex(key).Kind() == reflect.Ptr {
-			fromInterface = vFrom.MapIndex(key).Elem().Interface()
-		}
-
-		diags.Append(autoFlexConvertStruct(ctx, fromInterface, target.Interface(), flattener)...)
-		if diags.HasError() {
-			return diags
-		}
-
-		if t.Type().Elem().Kind() == reflect.Struct {
-			t.SetMapIndex(key, target.Elem())
-		} else {
-			t.SetMapIndex(key, target)
-		}
-	}
-
-	val, d := tTo.ValueFromRawMap(ctx, to)
-	diags.Append(d...)
-	if diags.HasError() {
-		return diags
-	}
-
-	vTo.Set(reflect.ValueOf(val))
 	return diags
 }
 

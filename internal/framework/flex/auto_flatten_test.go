@@ -591,84 +591,6 @@ func TestFlattenGeneric(t *testing.T) {
 			},
 		},
 		{
-			TestName: "object map",
-			Source: &TestFlexAWS14{
-				FieldInner: map[string]TestFlexAWS01{
-					"x": {
-						Field1: "a",
-					},
-				},
-			},
-			Target: &TestFlexTF12{},
-			WantTarget: &TestFlexTF12{
-				FieldInner: fwtypes.NewObjectMapValueMapOf[TestFlexTF01](ctx, map[string]TestFlexTF01{
-					"x": {
-						Field1: types.StringValue("a"),
-					}},
-				),
-			},
-		},
-		{
-			TestName: "object map ptr source",
-			Source: &TestFlexAWS15{
-				FieldInner: map[string]*TestFlexAWS01{
-					"x": {
-						Field1: "a",
-					},
-				},
-			},
-			Target: &TestFlexTF12{},
-			WantTarget: &TestFlexTF12{
-				FieldInner: fwtypes.NewObjectMapValueMapOf[TestFlexTF01](ctx,
-					map[string]TestFlexTF01{
-						"x": {
-							Field1: types.StringValue("a"),
-						},
-					},
-				),
-			},
-		},
-		{
-			TestName: "object map ptr target",
-			Source: &TestFlexAWS14{
-				FieldInner: map[string]TestFlexAWS01{
-					"x": {
-						Field1: "a",
-					},
-				},
-			},
-			Target: &TestFlexTF13{},
-			WantTarget: &TestFlexTF13{
-				FieldInner: fwtypes.NewObjectMapValuePtrMapOf[TestFlexTF01](ctx,
-					map[string]*TestFlexTF01{
-						"x": {
-							Field1: types.StringValue("a"),
-						},
-					},
-				),
-			},
-		},
-		{
-			TestName: "object map ptr source and target",
-			Source: &TestFlexAWS15{
-				FieldInner: map[string]*TestFlexAWS01{
-					"x": {
-						Field1: "a",
-					},
-				},
-			},
-			Target: &TestFlexTF13{},
-			WantTarget: &TestFlexTF13{
-				FieldInner: fwtypes.NewObjectMapValuePtrMapOf[TestFlexTF01](ctx,
-					map[string]*TestFlexTF01{
-						"x": {
-							Field1: types.StringValue("a"),
-						},
-					},
-				),
-			},
-		},
-		{
 			TestName: "nested string map",
 			Source: &TestFlexAWS16{
 				FieldOuter: TestFlexAWS13{
@@ -683,30 +605,6 @@ func TestFlattenGeneric(t *testing.T) {
 					FieldInner: fwtypes.NewMapValueOfMust[basetypes.StringValue](ctx, map[string]attr.Value{
 						"x": types.StringValue("y"),
 					}),
-				}),
-			},
-		},
-		{
-			TestName: "nested object map",
-			Source: &TestFlexAWS17{
-				FieldOuter: TestFlexAWS14{
-					FieldInner: map[string]TestFlexAWS01{
-						"x": {
-							Field1: "a",
-						},
-					},
-				},
-			},
-			Target: &TestFlexTF15{},
-			WantTarget: &TestFlexTF15{
-				FieldOuter: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF12{
-					FieldInner: fwtypes.NewObjectMapValueMapOf[TestFlexTF01](ctx,
-						map[string]TestFlexTF01{
-							"x": {
-								Field1: types.StringValue("a"),
-							},
-						},
-					),
 				}),
 			},
 		},
@@ -812,52 +710,6 @@ func TestFlattenGeneric(t *testing.T) {
 						Attr1:       types.StringValue("a"),
 						Attr2:       types.StringValue("b"),
 					},
-				}),
-			},
-		},
-		{
-			TestName: "complex nesting",
-			Source: &TestFlexComplexNestAWS01{
-				DialogAction: &TestFlexComplexNestAWS02{
-					Type:                TestEnumList,
-					SlotToElicit:        aws.String("x"),
-					SuppressNextMessage: aws.Bool(true),
-				},
-				Intent: &TestFlexComplexNestAWS03{
-					Name: aws.String("x"),
-					Slots: map[string]TestFlexComplexNestAWS04{
-						"x": {
-							Shape: TestEnumList,
-							Value: &TestFlexComplexNestAWS05{
-								InterpretedValue: aws.String("y"),
-							},
-						},
-					},
-				},
-				SessionAttributes: map[string]string{
-					"x": "y",
-				},
-			},
-			Target: &TestFlexComplexNestTF01{},
-			WantTarget: &TestFlexComplexNestTF01{
-				DialogAction: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF02{
-					Type:                fwtypes.StringEnumValue(TestEnumList),
-					SlotToElicit:        types.StringValue("x"),
-					SuppressNextMessage: types.BoolValue(true),
-				}),
-				Intent: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF03{
-					Name: types.StringValue("x"),
-					Slots: fwtypes.NewObjectMapValueMapOf[TestFlexComplexNestTF04](ctx, map[string]TestFlexComplexNestTF04{
-						"x": {
-							Shape: fwtypes.StringEnumValue(TestEnumList),
-							Value: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF05{
-								InterpretedValue: types.StringValue("y"),
-							}),
-						},
-					}),
-				}),
-				SessionAttributes: fwtypes.NewMapValueOfMust[basetypes.StringValue](ctx, map[string]attr.Value{
-					"x": basetypes.NewStringValue("y"),
 				}),
 			},
 		},
