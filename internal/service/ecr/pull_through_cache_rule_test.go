@@ -22,7 +22,6 @@ import (
 func TestAccECRPullThroughCacheRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
-	upstreamRegistryUrl := "public.ecr.aws"
 	resourceName := "aws_ecr_pull_through_cache_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -38,7 +37,7 @@ func TestAccECRPullThroughCacheRule_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "credential_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "ecr_repository_prefix", repositoryPrefix),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
-					resource.TestCheckResourceAttr(resourceName, "upstream_registry_url", upstreamRegistryUrl),
+					resource.TestCheckResourceAttr(resourceName, "upstream_registry_url", "public.ecr.aws"),
 				),
 			},
 			{
@@ -53,7 +52,6 @@ func TestAccECRPullThroughCacheRule_basic(t *testing.T) {
 func TestAccECRPullThroughCacheRule_credentialARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	repositoryPrefix := "tf-test-" + sdkacctest.RandString(8)
-	upstreamRegistryUrl := "registry-1.docker.io"
 	resourceName := "aws_ecr_pull_through_cache_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -63,13 +61,13 @@ func TestAccECRPullThroughCacheRule_credentialARN(t *testing.T) {
 		CheckDestroy:             testAccCheckPullThroughCacheRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPullThroughCacheRuleConfig_credentialARN(repositoryPrefix, "docker-hub"),
+				Config: testAccPullThroughCacheRuleConfig_credentialARN(repositoryPrefix),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPullThroughCacheRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "credential_arn"),
 					resource.TestCheckResourceAttr(resourceName, "ecr_repository_prefix", repositoryPrefix),
 					acctest.CheckResourceAttrAccountID(resourceName, "registry_id"),
-					resource.TestCheckResourceAttr(resourceName, "upstream_registry_url", upstreamRegistryUrl),
+					resource.TestCheckResourceAttr(resourceName, "upstream_registry_url", "registry-1.docker.io"),
 				),
 			},
 			{
@@ -204,10 +202,10 @@ resource "aws_ecr_pull_through_cache_rule" "test" {
 `, repositoryPrefix)
 }
 
-func testAccPullThroughCacheRuleConfig_credentialARN(repositoryPrefix, credentialARN string) string {
+func testAccPullThroughCacheRuleConfig_credentialARN(repositoryPrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_secretsmanager_secret" "test" {
-  name                    = "ecr-pullthroughcache/%[2]s"
+  name                    = "ecr-pullthroughcache/%[1]s"
   recovery_window_in_days = 0
 }
 
@@ -219,10 +217,9 @@ resource "aws_secretsmanager_secret_version" "test" {
 resource "aws_ecr_pull_through_cache_rule" "test" {
   ecr_repository_prefix = %[1]q
   upstream_registry_url = "registry-1.docker.io"
-  depends_on            = [aws_secretsmanager_secret.test]
   credential_arn        = aws_secretsmanager_secret.test.arn
 }
-`, repositoryPrefix, credentialARN)
+`, repositoryPrefix)
 }
 
 func testAccPullThroughCacheRuleConfig_failWhenAlreadyExist(repositoryPrefix string) string {
