@@ -12,9 +12,11 @@ var (
 	FindDBInstanceByID               = findDBInstanceByIDSDKv1
 	FindDBProxyByName                = findDBProxyByName
 	FindDBProxyEndpointByTwoPartKey  = findDBProxyEndpointByTwoPartKey
+	FindDBProxyTargetByFourPartKey   = findDBProxyTargetByFourPartKey
 	ListTags                         = listTags
 	NewBlueGreenOrchestrator         = newBlueGreenOrchestrator
 	ParseDBInstanceARN               = parseDBInstanceARN
+	ProxyTargetParseResourceID       = proxyTargetParseResourceID
 	WaitBlueGreenDeploymentDeleted   = waitBlueGreenDeploymentDeleted
 	WaitBlueGreenDeploymentAvailable = waitBlueGreenDeploymentAvailable
 	WaitDBInstanceAvailable          = waitDBInstanceAvailableSDKv2
