@@ -38,37 +38,6 @@ func FindDBProxyTarget(ctx context.Context, conn *rds.RDS, dbProxyName, targetGr
 	return dbProxyTarget, err
 }
 
-func FindDBProxyEndpoint(ctx context.Context, conn *rds.RDS, id string) (*rds.DBProxyEndpoint, error) {
-	dbProxyName, dbProxyEndpointName, err := ProxyEndpointParseID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	input := &rds.DescribeDBProxyEndpointsInput{
-		DBProxyName:         aws.String(dbProxyName),
-		DBProxyEndpointName: aws.String(dbProxyEndpointName),
-	}
-	var dbProxyEndpoint *rds.DBProxyEndpoint
-
-	err = conn.DescribeDBProxyEndpointsPagesWithContext(ctx, input, func(page *rds.DescribeDBProxyEndpointsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, endpoint := range page.DBProxyEndpoints {
-			if aws.StringValue(endpoint.DBProxyEndpointName) == dbProxyEndpointName &&
-				aws.StringValue(endpoint.DBProxyName) == dbProxyName {
-				dbProxyEndpoint = endpoint
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	return dbProxyEndpoint, err
-}
-
 func FindDBClusterRoleByDBClusterIDAndRoleARN(ctx context.Context, conn *rds.RDS, dbClusterID, roleARN string) (*rds.DBClusterRole, error) {
 	dbCluster, err := FindDBClusterByID(ctx, conn, dbClusterID)
 	if err != nil {

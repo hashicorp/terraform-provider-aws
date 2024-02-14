@@ -5,10 +5,12 @@ package rds
 
 // Exports for use in tests only.
 var (
-	ResourceProxy = resourceProxy
+	ResourceProxy         = resourceProxy
+	ResourceProxyEndpoint = resourceProxyEndpoint
 
 	FindDBInstanceByID               = findDBInstanceByIDSDKv1
 	FindDBProxyByName                = findDBProxyByName
+	FindDBProxyEndpointByTwoPartKey  = findDBProxyEndpointByTwoPartKey
 	ListTags                         = listTags
 	NewBlueGreenOrchestrator         = newBlueGreenOrchestrator
 	ParseDBInstanceARN               = parseDBInstanceARN

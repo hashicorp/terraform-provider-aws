@@ -69,45 +69,6 @@ func waitEventSubscriptionUpdated(ctx context.Context, conn *rds.RDS, id string,
 	return nil, err
 }
 
-// waitDBProxyEndpointAvailable waits for a DBProxyEndpoint to return Available
-func waitDBProxyEndpointAvailable(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBProxyEndpoint, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			rds.DBProxyEndpointStatusCreating,
-			rds.DBProxyEndpointStatusModifying,
-		},
-		Target:  []string{rds.DBProxyEndpointStatusAvailable},
-		Refresh: statusDBProxyEndpoint(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*rds.DBProxyEndpoint); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-// waitDBProxyEndpointDeleted waits for a DBProxyEndpoint to return Deleted
-func waitDBProxyEndpointDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.DBProxyEndpoint, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{rds.DBProxyEndpointStatusDeleting},
-		Target:  []string{},
-		Refresh: statusDBProxyEndpoint(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*rds.DBProxyEndpoint); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
 func waitDBClusterRoleAssociationCreated(ctx context.Context, conn *rds.RDS, dbClusterID, roleARN string, timeout time.Duration) (*rds.DBClusterRole, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{ClusterRoleStatusPending},

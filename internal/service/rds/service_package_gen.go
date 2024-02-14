@@ -160,7 +160,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_db_proxy_default_target_group",
 		},
 		{
-			Factory:  ResourceProxyEndpoint,
+			Factory:  resourceProxyEndpoint,
 			TypeName: "aws_db_proxy_endpoint",
 			Name:     "DB Proxy Endpoint",
 			Tags: &types.ServicePackageResourceTags{
