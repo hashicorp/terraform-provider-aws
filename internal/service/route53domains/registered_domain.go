@@ -5,11 +5,9 @@ package route53domains
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"log"
 	"reflect"
-	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -17,16 +15,17 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/route53domains"
 	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"golang.org/x/exp/slices"
 )
 
 // @SDKResource("aws_route53domains_registered_domain", name="Registered Domain")
@@ -131,7 +130,11 @@ func ResourceRegisteredDomain() *schema.Resource {
 		CreateWithoutTimeout: resourceRegisteredDomainCreate,
 		ReadWithoutTimeout:   resourceRegisteredDomainRead,
 		UpdateWithoutTimeout: resourceRegisteredDomainUpdate,
-		DeleteWithoutTimeout: resourceRegisteredDomainDelete,
+		DeleteWithoutTimeout: schema.NoopContext,
+
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(30 * time.Minute),
@@ -248,13 +251,14 @@ func ResourceRegisteredDomain() *schema.Resource {
 }
 
 func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53DomainsClient(ctx)
 
 	domainName := d.Get("domain_name").(string)
 	domainDetail, err := findDomainDetailByName(ctx, conn, domainName)
 
 	if err != nil {
-		return diag.Errorf("reading Route 53 Domains Domain (%s): %s", domainName, err)
+		return sdkdiag.AppendErrorf(diags, "reading Route 53 Domains Domain (%s): %s", domainName, err)
 	}
 
 	d.SetId(aws.ToString(domainDetail.DomainName))
@@ -281,19 +285,19 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 
 	if adminContact != nil || registrantContact != nil || techContact != nil {
 		if err := modifyDomainContact(ctx, conn, d.Id(), adminContact, registrantContact, techContact, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	if adminPrivacy, registrantPrivacy, techPrivacy := d.Get("admin_privacy").(bool), d.Get("registrant_privacy").(bool), d.Get("tech_privacy").(bool); adminPrivacy != aws.ToBool(domainDetail.AdminPrivacy) || registrantPrivacy != aws.ToBool(domainDetail.RegistrantPrivacy) || techPrivacy != aws.ToBool(domainDetail.TechPrivacy) {
 		if err := modifyDomainContactPrivacy(ctx, conn, d.Id(), adminPrivacy, registrantPrivacy, techPrivacy, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	if v := d.Get("auto_renew").(bool); v != aws.ToBool(domainDetail.AutoRenew) {
 		if err := modifyDomainAutoRenew(ctx, conn, d.Id(), v); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -302,21 +306,21 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 
 		if !reflect.DeepEqual(nameservers, domainDetail.Nameservers) {
 			if err := modifyDomainNameservers(ctx, conn, d.Id(), nameservers, d.Timeout(schema.TimeoutCreate)); err != nil {
-				return diag.FromErr(err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
 
 	if v := d.Get("transfer_lock").(bool); v != hasDomainTransferLock(domainDetail.StatusList) {
 		if err := modifyDomainTransferLock(ctx, conn, d.Id(), v, d.Timeout(schema.TimeoutCreate)); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	tags, err := listTags(ctx, conn, d.Id())
 
 	if err != nil {
-		return diag.Errorf("listing tags for Route 53 Domains Domain (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Route 53 Domains Domain (%s): %s", d.Id(), err)
 	}
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -325,14 +329,15 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 
 	if !oldTags.Equal(newTags) {
 		if err := updateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
-			return diag.Errorf("updating Route 53 Domains Domain (%s) tags: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Route 53 Domains Domain (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceRegisteredDomainRead(ctx, d, meta)
+	return append(diags, resourceRegisteredDomainRead(ctx, d, meta)...)
 }
 
 func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53DomainsClient(ctx)
 
 	domainDetail, err := findDomainDetailByName(ctx, conn, d.Id())
@@ -344,14 +349,14 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Route 53 Domains Domain (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Route 53 Domains Domain (%s): %s", d.Id(), err)
 	}
 
 	d.Set("abuse_contact_email", domainDetail.AbuseContactEmail)
 	d.Set("abuse_contact_phone", domainDetail.AbuseContactPhone)
 	if domainDetail.AdminContact != nil {
 		if err := d.Set("admin_contact", []interface{}{flattenContactDetail(domainDetail.AdminContact)}); err != nil {
-			return diag.Errorf("setting admin_contact: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting admin_contact: %s", err)
 		}
 	} else {
 		d.Set("admin_contact", nil)
@@ -370,11 +375,11 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 		d.Set("expiration_date", nil)
 	}
 	if err := d.Set("name_server", flattenNameservers(domainDetail.Nameservers)); err != nil {
-		return diag.Errorf("setting name_servers: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting name_servers: %s", err)
 	}
 	if domainDetail.RegistrantContact != nil {
 		if err := d.Set("registrant_contact", []interface{}{flattenContactDetail(domainDetail.RegistrantContact)}); err != nil {
-			return diag.Errorf("setting registrant_contact: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting registrant_contact: %s", err)
 		}
 	} else {
 		d.Set("registrant_contact", nil)
@@ -387,7 +392,7 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("status_list", statusList)
 	if domainDetail.TechContact != nil {
 		if err := d.Set("tech_contact", []interface{}{flattenContactDetail(domainDetail.TechContact)}); err != nil {
-			return diag.Errorf("setting tech_contact: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting tech_contact: %s", err)
 		}
 	} else {
 		d.Set("tech_contact", nil)
@@ -401,10 +406,11 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.Set("whois_server", domainDetail.WhoIsServer)
 
-	return nil
+	return diags
 }
 
 func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53DomainsClient(ctx)
 
 	if d.HasChanges("admin_contact", "registrant_contact", "tech_contact") {
@@ -429,59 +435,44 @@ func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if err := modifyDomainContact(ctx, conn, d.Id(), adminContact, registrantContact, techContact, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	if d.HasChanges("admin_privacy", "registrant_privacy", "tech_privacy") {
 		if err := modifyDomainContactPrivacy(ctx, conn, d.Id(), d.Get("admin_privacy").(bool), d.Get("registrant_privacy").(bool), d.Get("tech_privacy").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	if d.HasChange("auto_renew") {
 		if err := modifyDomainAutoRenew(ctx, conn, d.Id(), d.Get("auto_renew").(bool)); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	if d.HasChange("name_server") {
 		if v, ok := d.GetOk("name_server"); ok && len(v.([]interface{})) > 0 {
 			if err := modifyDomainNameservers(ctx, conn, d.Id(), expandNameservers(v.([]interface{})), d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return diag.FromErr(err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
 
 	if d.HasChange("transfer_lock") {
 		if err := modifyDomainTransferLock(ctx, conn, d.Id(), d.Get("transfer_lock").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return resourceRegisteredDomainRead(ctx, d, meta)
+	return append(diags, resourceRegisteredDomainRead(ctx, d, meta)...)
 }
-
-func resourceRegisteredDomainDelete(_ context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return diag.Diagnostics{
-		diag.Diagnostic{
-			Severity: diag.Warning,
-			Summary:  fmt.Sprintf("Route 53 Domains Registered Domain (%s) not deleted, removing from state", d.Id()),
-		},
-	}
-}
-
-const (
-	eppStatusClientTransferProhibited = "clientTransferProhibited"
-)
 
 func hasDomainTransferLock(statusList []string) bool {
-	for _, v := range statusList {
-		if v == eppStatusClientTransferProhibited {
-			return true
-		}
-	}
-	return false
+	const (
+		eppStatusClientTransferProhibited = "clientTransferProhibited"
+	)
+	return slices.Contains(statusList, eppStatusClientTransferProhibited)
 }
 
 func modifyDomainAutoRenew(ctx context.Context, conn *route53domains.Client, domainName string, autoRenew bool) error {
@@ -490,7 +481,6 @@ func modifyDomainAutoRenew(ctx context.Context, conn *route53domains.Client, dom
 			DomainName: aws.String(domainName),
 		}
 
-		log.Printf("[DEBUG] Enabling Route 53 Domains Domain auto-renew: %#v", input)
 		_, err := conn.EnableDomainAutoRenew(ctx, input)
 
 		if err != nil {
@@ -501,7 +491,6 @@ func modifyDomainAutoRenew(ctx context.Context, conn *route53domains.Client, dom
 			DomainName: aws.String(domainName),
 		}
 
-		log.Printf("[DEBUG] Disabling Route 53 Domains Domain auto-renew: %#v", input)
 		_, err := conn.DisableDomainAutoRenew(ctx, input)
 
 		if err != nil {
@@ -520,7 +509,6 @@ func modifyDomainContact(ctx context.Context, conn *route53domains.Client, domai
 		TechContact:       techContact,
 	}
 
-	log.Printf("[DEBUG] Updating Route 53 Domains Domain contacts: %#v", input)
 	output, err := conn.UpdateDomainContact(ctx, input)
 
 	if err != nil {
@@ -542,7 +530,6 @@ func modifyDomainContactPrivacy(ctx context.Context, conn *route53domains.Client
 		TechPrivacy:       aws.Bool(techPrivacy),
 	}
 
-	log.Printf("[DEBUG] Updating Route 53 Domains Domain contact privacy: %#v", input)
 	output, err := conn.UpdateDomainContactPrivacy(ctx, input)
 
 	if err != nil {
@@ -562,7 +549,6 @@ func modifyDomainNameservers(ctx context.Context, conn *route53domains.Client, d
 		Nameservers: nameservers,
 	}
 
-	log.Printf("[DEBUG] Updating Route 53 Domains Domain name servers: %#v", input)
 	output, err := conn.UpdateDomainNameservers(ctx, input)
 
 	if err != nil {
@@ -582,7 +568,6 @@ func modifyDomainTransferLock(ctx context.Context, conn *route53domains.Client, 
 			DomainName: aws.String(domainName),
 		}
 
-		log.Printf("[DEBUG] Enabling Route 53 Domains Domain transfer lock: %#v", input)
 		output, err := conn.EnableDomainTransferLock(ctx, input)
 
 		if err != nil {
@@ -597,7 +582,6 @@ func modifyDomainTransferLock(ctx context.Context, conn *route53domains.Client, 
 			DomainName: aws.String(domainName),
 		}
 
-		log.Printf("[DEBUG] Disabling Route 53 Domains Domain transfer lock: %#v", input)
 		output, err := conn.DisableDomainTransferLock(ctx, input)
 
 		if err != nil {
@@ -610,99 +594,6 @@ func modifyDomainTransferLock(ctx context.Context, conn *route53domains.Client, 
 	}
 
 	return nil
-}
-
-func findDomainDetailByName(ctx context.Context, conn *route53domains.Client, name string) (*route53domains.GetDomainDetailOutput, error) {
-	input := &route53domains.GetDomainDetailInput{
-		DomainName: aws.String(name),
-	}
-
-	output, err := conn.GetDomainDetail(ctx, input)
-
-	if err != nil {
-		var invalidInput *types.InvalidInput
-
-		if errors.As(err, &invalidInput) && strings.Contains(invalidInput.ErrorMessage(), "not found") {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
-func findOperationDetailByID(ctx context.Context, conn *route53domains.Client, id string) (*route53domains.GetOperationDetailOutput, error) {
-	input := &route53domains.GetOperationDetailInput{
-		OperationId: aws.String(id),
-	}
-
-	output, err := conn.GetOperationDetail(ctx, input)
-
-	if err != nil {
-		var invalidInput *types.InvalidInput
-
-		if errors.As(err, &invalidInput) && strings.Contains(invalidInput.ErrorMessage(), "not found") {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		return nil, err
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
-func statusOperation(ctx context.Context, conn *route53domains.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := findOperationDetailByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, string(output.Status), nil
-	}
-}
-
-func waitOperationSucceeded(ctx context.Context, conn *route53domains.Client, id string, timeout time.Duration) (*route53domains.GetOperationDetailOutput, error) { //nolint:unparam
-	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.OperationStatusSubmitted, types.OperationStatusInProgress),
-		Target:  enum.Slice(types.OperationStatusSuccessful),
-		Timeout: timeout,
-		Refresh: statusOperation(ctx, conn, id),
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*route53domains.GetOperationDetailOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString(output.Message)))
-
-		return output, err
-	}
-
-	return nil, err
 }
 
 func flattenContactDetail(apiObject *types.ContactDetail) map[string]interface{} {

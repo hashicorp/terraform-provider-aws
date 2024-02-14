@@ -43,9 +43,9 @@ func ResourceKxDataview() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
-			Delete: schema.DefaultTimeout(30 * time.Minute),
+			Create: schema.DefaultTimeout(4 * time.Hour),
+			Update: schema.DefaultTimeout(4 * time.Hour),
+			Delete: schema.DefaultTimeout(4 * time.Hour),
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {

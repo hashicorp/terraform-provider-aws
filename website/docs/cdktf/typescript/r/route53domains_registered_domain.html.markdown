@@ -14,7 +14,7 @@ Provides a resource to manage a domain that has been [registered](https://docs.a
 
 **This is an advanced resource** and has special caveats to be aware of when using it. Please read this document in its entirety before using this resource.
 
-The `awsRoute53DomainsRegisteredDomain` resource behaves differently from normal resources in that if a domain has been registered, Terraform does not _register_ this domain, but instead "adopts" it into management. `terraform destroy` does not delete the domain but does remove the resource from Terraform state.
+The `aws_route53domains_registered_domain` resource behaves differently from normal resources in that if a domain has been registered, Terraform does not _register_ this domain, but instead "adopts" it into management. `terraform destroy` does not delete the domain but does remove the resource from Terraform state.
 
 ## Example Usage
 
@@ -62,7 +62,7 @@ This argument supports the following arguments:
 * `nameServer` - (Optional) The list of nameservers for the domain.
 * `registrantContact` - (Optional) Details about the domain registrant.
 * `registrantPrivacy` - (Optional) Whether domain registrant contact information is concealed from WHOIS queries. Default: `true`.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `techContact` - (Optional) Details about the domain technical contact.
 * `techPrivacy` - (Optional) Whether domain technical contact information is concealed from WHOIS queries. Default: `true`.
 * `transferLock` - (Optional) Whether the domain is locked for transfer. Default: `true`.
@@ -102,7 +102,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `registrarUrl` - Web address of the registrar.
 * `reseller` - Reseller of the domain.
 * `statusList` - List of [domain name status codes](https://www.icann.org/resources/pages/epp-status-codes-2014-06-16-en).
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `updatedDate` - The last updated date of the domain as found in the response to a WHOIS query.
 * `whoisServer` - The fully qualified name of the WHOIS server that can answer the WHOIS query for the domain.
 
@@ -113,4 +113,4 @@ This resource exports the following attributes in addition to the arguments abov
 - `create` - (Default `30m`)
 - `update` - (Default `30m`)
 
-<!-- cache-key: cdktf-0.19.0 input-98a8952abfb9875700e225d9486f8339896363be535628d57f8d8ab898718bdc -->
+<!-- cache-key: cdktf-0.20.1 input-98a8952abfb9875700e225d9486f8339896363be535628d57f8d8ab898718bdc -->

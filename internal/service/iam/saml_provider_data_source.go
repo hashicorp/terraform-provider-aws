@@ -55,7 +55,7 @@ func dataSourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, met
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	arn := d.Get("arn").(string)
-	output, err := FindSAMLProviderByARN(ctx, conn, arn)
+	output, err := findSAMLProviderByARN(ctx, conn, arn)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM SAML Provider (%s): %s", arn, err)

@@ -182,6 +182,7 @@ func removeUsersFromGroup(ctx context.Context, conn *iam.IAM, users []string, gr
 			return err
 		}
 	}
+
 	return nil
 }
 

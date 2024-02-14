@@ -101,4 +101,4 @@ This data source exports the following attributes in addition to the arguments a
 * `website_endpoint` - Website endpoint, if the bucket is configured with a website. If not, this will be an empty string.
 * `website_domain` - Domain of the website endpoint, if the bucket is configured with a website. If not, this will be an empty string. This is used to create Route 53 alias records.
 
-<!-- cache-key: cdktf-0.19.0 input-1b3882cef2e383d7b94a441272b1a5c90afe56f7bd4eade88c86484fd024b52a -->
+<!-- cache-key: cdktf-0.20.1 input-1b3882cef2e383d7b94a441272b1a5c90afe56f7bd4eade88c86484fd024b52a -->

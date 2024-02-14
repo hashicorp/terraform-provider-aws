@@ -256,6 +256,13 @@ func testAccServer_securityPolicy(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-2023-05"),
 				),
 			},
+			{
+				Config: testAccServerConfig_securityPolicy(rName, "TransferSecurityPolicy-PQ-SSH-Experimental-2023-04"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServerExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSecurityPolicy-PQ-SSH-Experimental-2023-04"),
+				),
+			},
 		},
 	})
 }
@@ -651,7 +658,7 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{"force_destroy", "endpoint_details.0.security_group_ids"},
 			},
 		},
 	})
@@ -689,7 +696,7 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC_addressAllocationIDs(t *t
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{"force_destroy", "endpoint_details.0.security_group_ids"},
 			},
 		},
 	})

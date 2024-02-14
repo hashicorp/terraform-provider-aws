@@ -28,8 +28,8 @@ import (
 
 const BucketACLSeparator = ","
 
-// @SDKResource("aws_s3_bucket_acl")
-func ResourceBucketACL() *schema.Resource {
+// @SDKResource("aws_s3_bucket_acl", name="Bucket ACL")
+func resourceBucketACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketACLCreate,
 		ReadWithoutTimeout:   resourceBucketACLRead,
@@ -42,11 +42,11 @@ func ResourceBucketACL() *schema.Resource {
 
 		Schema: map[string]*schema.Schema{
 			"access_control_policy": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				Computed:      true,
-				MaxItems:      1,
-				ConflictsWith: []string{"acl"},
+				Type:         schema.TypeList,
+				Optional:     true,
+				Computed:     true,
+				MaxItems:     1,
+				ExactlyOneOf: []string{"access_control_policy", "acl"},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"grant": {
@@ -114,10 +114,10 @@ func ResourceBucketACL() *schema.Resource {
 				},
 			},
 			"acl": {
-				Type:          schema.TypeString,
-				Optional:      true,
-				ConflictsWith: []string{"access_control_policy"},
-				ValidateFunc:  validation.StringInSlice(bucketCannedACL_Values(), false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ExactlyOneOf: []string{"access_control_policy", "acl"},
+				ValidateFunc: validation.StringInSlice(bucketCannedACL_Values(), false),
 			},
 			"bucket": {
 				Type:         schema.TypeString,
@@ -131,6 +131,17 @@ func ResourceBucketACL() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
 			},
+		},
+
+		CustomizeDiff: func(ctx context.Context, d *schema.ResourceDiff, meta any) error {
+			if d.HasChange("acl") {
+				_, n := d.GetChange("acl")
+				if n.(string) != "" {
+					return d.SetNewComputed("access_control_policy")
+				}
+			}
+
+			return nil
 		},
 	}
 }

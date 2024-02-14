@@ -28,6 +28,14 @@ resource "aws_finspace_kx_dataview" "example" {
     volume_name = aws_finspace_kx_volume.example.name
     db_paths    = ["/*"]
   }
+
+  # Depending on the type of cache and size of the Kx Volume, create/update timeouts 
+  # may need to be increased up to a potential maximum of 24 hours and the delete timeout to 12 hours.
+  timeouts {
+    create = "24h"
+    update = "24h"
+    delete = "12h"
+  }
 }
 ```
 
@@ -70,9 +78,9 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `30m`)
-* `update` - (Default `30m`)
-* `delete` - (Default `30m`)
+* `create` - (Default `4h`)
+* `update` - (Default `4h`)
+* `delete` - (Default `4h`)
 
 ## Import
 

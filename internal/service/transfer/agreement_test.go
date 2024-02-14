@@ -214,16 +214,16 @@ func testAccAgreementConfig_base(rName string) string {
 resource "aws_iam_role" "test" {
   name               = %[1]q
   assume_role_policy = <<EOF
-  {
-	"Version": "2012-10-17",
-	"Statement": [{
-	  "Effect": "Allow",
-	  "Principal": {
-		"Service": "transfer.amazonaws.com"
-	  },
-	  "Action": "sts:AssumeRole"
-	}]
-  }
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "transfer.amazonaws.com"
+    },
+    "Action": "sts:AssumeRole"
+  }]
+ }
 EOF
 }
 
@@ -233,17 +233,15 @@ resource "aws_iam_role_policy" "test" {
 
   policy = <<POLICY
 {
-	 "Version":"2012-10-17",
-	 "Statement":[
-		{
-		   "Sid":"AllowFullAccesstoS3",
-		   "Effect":"Allow",
-		   "Action":[
-			  "s3:*"
-		   ],
-		   "Resource":"*"
-		}
-	 ]
+  "Version":"2012-10-17",
+  "Statement":[{
+    "Sid":"AllowFullAccesstoS3",
+    "Effect":"Allow",
+    "Action":[
+      "s3:*"
+    ],
+    "Resource":"*"
+  }]
 }
 POLICY
 }

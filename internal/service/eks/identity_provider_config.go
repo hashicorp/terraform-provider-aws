@@ -214,7 +214,7 @@ func resourceIdentityProviderConfigDelete(ctx context.Context, d *schema.Resourc
 		ClusterName: aws.String(clusterName),
 		IdentityProviderConfig: &types.IdentityProviderConfig{
 			Name: aws.String(configName),
-			Type: aws.String(IdentityProviderConfigTypeOIDC),
+			Type: aws.String(identityProviderConfigTypeOIDC),
 		},
 	})
 
@@ -242,7 +242,7 @@ func findOIDCIdentityProviderConfigByTwoPartKey(ctx context.Context, conn *eks.C
 		ClusterName: aws.String(clusterName),
 		IdentityProviderConfig: &types.IdentityProviderConfig{
 			Name: aws.String(configName),
-			Type: aws.String(IdentityProviderConfigTypeOIDC),
+			Type: aws.String(identityProviderConfigTypeOIDC),
 		},
 	}
 
