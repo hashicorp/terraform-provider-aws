@@ -168,8 +168,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceProxyTarget,
+			Factory:  resourceProxyTarget,
 			TypeName: "aws_db_proxy_target",
+			Name:     "DB Proxy Target",
 		},
 		{
 			Factory:  ResourceSnapshot,

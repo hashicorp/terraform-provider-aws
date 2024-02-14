@@ -13,31 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindDBProxyTarget(ctx context.Context, conn *rds.RDS, dbProxyName, targetGroupName, targetType, rdsResourceId string) (*rds.DBProxyTarget, error) {
-	input := &rds.DescribeDBProxyTargetsInput{
-		DBProxyName:     aws.String(dbProxyName),
-		TargetGroupName: aws.String(targetGroupName),
-	}
-	var dbProxyTarget *rds.DBProxyTarget
-
-	err := conn.DescribeDBProxyTargetsPagesWithContext(ctx, input, func(page *rds.DescribeDBProxyTargetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, target := range page.Targets {
-			if aws.StringValue(target.Type) == targetType && aws.StringValue(target.RdsResourceId) == rdsResourceId {
-				dbProxyTarget = target
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	return dbProxyTarget, err
-}
-
 func FindDBClusterRoleByDBClusterIDAndRoleARN(ctx context.Context, conn *rds.RDS, dbClusterID, roleARN string) (*rds.DBClusterRole, error) {
 	dbCluster, err := FindDBClusterByID(ctx, conn, dbClusterID)
 	if err != nil {

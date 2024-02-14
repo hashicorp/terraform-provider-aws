@@ -7,6 +7,7 @@ package rds
 var (
 	ResourceProxy         = resourceProxy
 	ResourceProxyEndpoint = resourceProxyEndpoint
+	ResourceProxyTarget   = resourceProxyTarget
 
 	FindDBInstanceByID               = findDBInstanceByIDSDKv1
 	FindDBProxyByName                = findDBProxyByName
