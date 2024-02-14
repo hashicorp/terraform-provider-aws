@@ -5,9 +5,10 @@ package rds
 
 // Exports for use in tests only.
 var (
-	ResourceProxy         = resourceProxy
-	ResourceProxyEndpoint = resourceProxyEndpoint
-	ResourceProxyTarget   = resourceProxyTarget
+	ResourceProxy                   = resourceProxy
+	ResourceProxyDefaultTargetGroup = resourceProxyDefaultTargetGroup
+	ResourceProxyEndpoint           = resourceProxyEndpoint
+	ResourceProxyTarget             = resourceProxyTarget
 
 	FindDBInstanceByID               = findDBInstanceByIDSDKv1
 	FindDBProxyByName                = findDBProxyByName
