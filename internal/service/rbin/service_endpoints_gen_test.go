@@ -19,6 +19,7 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -95,7 +96,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 				withPackageNameEndpointInConfig,
 				withAliasName0EndpointInConfig,
 			},
-			expected: expectPackageNameConfigEndpoint(),
+			expected: conflictsWith(expectPackageNameConfigEndpoint()),
 		},
 
 		"package name endpoint config overrides aws service envvar": {
@@ -330,6 +331,15 @@ func withAliasName0EndpointInConfig(setup *caseSetup) {
 	}
 	endpoints := setup.config["endpoints"].([]any)[0].(map[string]any)
 	endpoints[aliasName0] = aliasName0ConfigEndpoint
+}
+
+func conflictsWith(e caseExpectations) caseExpectations {
+	e.diags = append(e.diags, provider.ConflictingEndpointsWarningDiag(
+		cty.GetAttrPath("endpoints").IndexInt(0),
+		packageName,
+		aliasName0,
+	))
+	return e
 }
 
 func withAwsEnvVar(setup *caseSetup) {

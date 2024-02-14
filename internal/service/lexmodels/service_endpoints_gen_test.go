@@ -18,6 +18,7 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -98,7 +99,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 				withPackageNameEndpointInConfig,
 				withAliasName0EndpointInConfig,
 			},
-			expected: expectPackageNameConfigEndpoint(),
+			expected: conflictsWith(expectPackageNameConfigEndpoint()),
 		},
 
 		"package name endpoint config overrides alias name 1 config": {
@@ -106,7 +107,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 				withPackageNameEndpointInConfig,
 				withAliasName1EndpointInConfig,
 			},
-			expected: expectPackageNameConfigEndpoint(),
+			expected: conflictsWith(expectPackageNameConfigEndpoint()),
 		},
 
 		"package name endpoint config overrides alias name 2 config": {
@@ -114,7 +115,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 				withPackageNameEndpointInConfig,
 				withAliasName2EndpointInConfig,
 			},
-			expected: expectPackageNameConfigEndpoint(),
+			expected: conflictsWith(expectPackageNameConfigEndpoint()),
 		},
 
 		"package name endpoint config overrides aws service envvar": {
@@ -163,7 +164,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 				withAliasName0EndpointInConfig,
 				withAliasName1EndpointInConfig,
 			},
-			expected: expectAliasName0ConfigEndpoint(),
+			expected: conflictsWith(expectAliasName0ConfigEndpoint()),
 		},
 
 		"alias name 0 endpoint config overrides alias name 2 config": {
@@ -171,7 +172,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 				withAliasName0EndpointInConfig,
 				withAliasName2EndpointInConfig,
 			},
-			expected: expectAliasName0ConfigEndpoint(),
+			expected: conflictsWith(expectAliasName0ConfigEndpoint()),
 		},
 
 		"alias name 0 endpoint config overrides aws service envvar": {
@@ -220,7 +221,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 				withAliasName1EndpointInConfig,
 				withAliasName2EndpointInConfig,
 			},
-			expected: expectAliasName1ConfigEndpoint(),
+			expected: conflictsWith(expectAliasName1ConfigEndpoint()),
 		},
 
 		"alias name 1 endpoint config overrides aws service envvar": {
@@ -463,6 +464,17 @@ func withAliasName2EndpointInConfig(setup *caseSetup) {
 	}
 	endpoints := setup.config["endpoints"].([]any)[0].(map[string]any)
 	endpoints[aliasName2] = aliasName2ConfigEndpoint
+}
+
+func conflictsWith(e caseExpectations) caseExpectations {
+	e.diags = append(e.diags, provider.ConflictingEndpointsWarningDiag(
+		cty.GetAttrPath("endpoints").IndexInt(0),
+		packageName,
+		aliasName0,
+		aliasName1,
+		aliasName2,
+	))
+	return e
 }
 
 func withAwsEnvVar(setup *caseSetup) {

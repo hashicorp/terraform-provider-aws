@@ -179,13 +179,9 @@ func testAccCheckGroupExists(ctx context.Context, n string, v *iam.Group) resour
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No IAM Group ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
-		output, err := tfiam.FindGroupByName(ctx, conn, rs.Primary.ID)
+		output, err := tfiam.FindGroupByName(ctx, conn, rs.Primary.Attributes["name"])
 
 		if err != nil {
 			return err

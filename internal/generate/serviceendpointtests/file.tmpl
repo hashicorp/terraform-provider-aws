@@ -38,6 +38,9 @@ import (
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
+	{{- if gt (len .Aliases) 0 }}
+    "github.com/hashicorp/go-cty/cty"
+	{{- end }}
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -129,7 +132,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 				withPackageNameEndpointInConfig,
 				withAliasName{{ $i }}EndpointInConfig,
 			},
-			expected: expectPackageNameConfigEndpoint(),
+			expected: conflictsWith(expectPackageNameConfigEndpoint()),
 		},
 {{ end }}
 
@@ -205,7 +208,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 				withAliasName{{ $i }}EndpointInConfig,
 				withAliasName{{ $j }}EndpointInConfig,
 		},
-			expected: expectAliasName{{ $i }}ConfigEndpoint(),
+			expected: conflictsWith(expectAliasName{{ $i }}ConfigEndpoint()),
 		},
 {{ end }}
 
@@ -589,6 +592,19 @@ func withAliasName{{ $i }}EndpointInConfig(setup *caseSetup) {
 	}
 	endpoints := setup.config["endpoints"].([]any)[0].(map[string]any)
 	endpoints[aliasName{{ $i }}] = aliasName{{ $i }}ConfigEndpoint
+}
+{{ end }}
+
+{{ if gt (len .Aliases) 0 }}
+func conflictsWith(e caseExpectations) caseExpectations {
+	e.diags = append(e.diags, provider.ConflictingEndpointsWarningDiag(
+		cty.GetAttrPath("endpoints").IndexInt(0),
+		packageName,
+		{{ range $i, $alias := .Aliases -}}
+		aliasName{{ $i }},
+		{{ end }}
+	))
+	return e
 }
 {{ end }}
 
