@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.50.17
+	github.com/aws/aws-sdk-go v1.50.18
 	github.com/aws/aws-sdk-go-v2 v1.25.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.0
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.0
@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.30.0
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.14.0
-	github.com/aws/aws-sdk-go-v2/service/controltower v1.11.0
+	github.com/aws/aws-sdk-go-v2/service/controltower v1.12.0
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.7.0
@@ -82,7 +82,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.26.0
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.51.0
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.45.0
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.45.1
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.19.0
@@ -93,8 +93,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.4.0
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/polly v1.37.0
-	github.com/aws/aws-sdk-go-v2/service/pricing v1.26.0
-	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.2.0
+	github.com/aws/aws-sdk-go-v2/service/pricing v1.26.1
+	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.3.0
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/rds v1.70.0
