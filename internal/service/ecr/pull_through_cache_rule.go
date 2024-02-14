@@ -65,7 +65,6 @@ func resourcePullThroughCacheRule() *schema.Resource {
 
 func resourcePullThroughCacheRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.ecr-in-func-name
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	repositoryPrefix := d.Get("ecr_repository_prefix").(string)
@@ -91,7 +90,6 @@ func resourcePullThroughCacheRuleCreate(ctx context.Context, d *schema.ResourceD
 
 func resourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	rule, err := findPullThroughCacheRuleByRepositoryPrefix(ctx, conn, d.Id())
@@ -115,6 +113,7 @@ func resourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourcePullThroughCacheRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	repositoryPrefix := d.Get("ecr_repository_prefix").(string)
@@ -126,17 +125,16 @@ func resourcePullThroughCacheRuleUpdate(ctx context.Context, d *schema.ResourceD
 	_, err := conn.UpdatePullThroughCacheRuleWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating ECR Pull Through Cache Rule (%s): %s", repositoryPrefix, err)
+		return sdkdiag.AppendErrorf(diags, "updating ECR Pull Through Cache Rule (%s): %s", repositoryPrefix, err)
 	}
 
 	d.SetId(repositoryPrefix)
 
-	return resourcePullThroughCacheRuleRead(ctx, d, meta)
+	return append(diags, resourcePullThroughCacheRuleRead(ctx, d, meta)...)
 }
 
 func resourcePullThroughCacheRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	log.Printf("[DEBUG] Deleting ECR Pull Through Cache Rule: %s", d.Id())
