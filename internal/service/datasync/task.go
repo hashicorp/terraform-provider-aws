@@ -628,7 +628,7 @@ func expandOptions(l []interface{}) *datasync.Options {
 
 func expandTaskSchedule(l []interface{}) *datasync.TaskSchedule {
 	if len(l) == 0 || l[0] == nil {
-		return nil
+		return &datasync.TaskSchedule{ScheduleExpression: aws.String("")} // explicitly set empty object if schedule is nil
 	}
 
 	m := l[0].(map[string]interface{})

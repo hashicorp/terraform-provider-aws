@@ -14,11 +14,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -1820,6 +1822,86 @@ func TestAccS3Object_DirectoryBucket_DefaultTags_providerOnly(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/32385.
+func TestAccS3Object_prefix(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_prefix(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj),
+					resource.TestCheckResourceAttr(resourceName, "content_type", "application/x-directory"),
+					resource.TestCheckResourceAttr(resourceName, "key", "pfx/"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateId:           fmt.Sprintf("s3://%s/pfx/", rName),
+			},
+		},
+	})
+}
+
+// S3 bucket is created in the alternate Region.
+func TestAccS3Object_crossRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccObjectConfig_crossRegion(rName),
+				ExpectError: regexache.MustCompile(`PermanentRedirect`),
+			},
+		},
+	})
+}
+
+// https://github.com/hashicorp/terraform-provider-aws/issues/35325.
+func TestAccS3Object_optInRegion(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	optInRegion := names.APEast1RegionID // Hong Kong.
+	providers := make(map[string]*schema.Provider)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegionNot(t, optInRegion)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			acctest.PreCheckRegionOptIn(ctx, t, optInRegion)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccObjectConfig_optInRegion(rName, optInRegion),
+				ExpectError: regexache.MustCompile(`IllegalLocationConstraintException`),
+			},
+		},
+	})
+}
+
 func testAccCheckObjectVersionIDDiffers(first, second *s3.GetObjectOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if aws.ToString(first.VersionId) == aws.ToString(second.VersionId) {
@@ -2781,4 +2863,50 @@ resource "aws_s3_object" "object" {
   }
 }
 `)
+}
+
+func testAccObjectConfig_prefix(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "object" {
+  bucket       = aws_s3_bucket.test.bucket
+  key          = "pfx/"
+  content_type = "application/x-directory"
+}
+`, rName)
+}
+
+func testAccObjectConfig_crossRegion(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  provider = awsalternate
+
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "object" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "test-key"
+}
+`, rName))
+}
+
+func testAccObjectConfig_optInRegion(rName, region string) string {
+	return acctest.ConfigCompose(acctest.ConfigNamedRegionalProvider(acctest.ProviderNameAlternate, region), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  provider = awsalternate
+
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "object" {
+  bucket = aws_s3_bucket.test.bucket
+  key    = "test-key"
+}
+`, rName))
 }

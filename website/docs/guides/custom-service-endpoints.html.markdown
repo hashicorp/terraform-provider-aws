@@ -95,6 +95,7 @@ provider "aws" {
   <li><code>backup</code></li>
   <li><code>batch</code></li>
   <li><code>bedrock</code></li>
+  <li><code>bedrockagent</code></li>
   <li><code>budgets</code></li>
   <li><code>ce</code> (or <code>costexplorer</code>)</li>
   <li><code>chime</code></li>
@@ -195,6 +196,7 @@ provider "aws" {
   <li><code>kms</code></li>
   <li><code>lakeformation</code></li>
   <li><code>lambda</code></li>
+  <li><code>launchwizard</code></li>
   <li><code>lexmodels</code> (or <code>lexmodelbuilding</code> or <code>lexmodelbuildingservice</code> or <code>lex</code>)</li>
   <li><code>lexv2models</code> (or <code>lexmodelsv2</code>)</li>
   <li><code>licensemanager</code></li>
@@ -202,6 +204,7 @@ provider "aws" {
   <li><code>location</code> (or <code>locationservice</code>)</li>
   <li><code>logs</code> (or <code>cloudwatchlog</code> or <code>cloudwatchlogs</code>)</li>
   <li><code>lookoutmetrics</code></li>
+  <li><code>m2</code></li>
   <li><code>macie2</code></li>
   <li><code>mediaconnect</code></li>
   <li><code>mediaconvert</code></li>
@@ -227,6 +230,7 @@ provider "aws" {
   <li><code>pipes</code></li>
   <li><code>polly</code></li>
   <li><code>pricing</code></li>
+  <li><code>qbusiness</code></li>
   <li><code>qldb</code></li>
   <li><code>quicksight</code></li>
   <li><code>ram</code></li>
@@ -235,6 +239,7 @@ provider "aws" {
   <li><code>redshift</code></li>
   <li><code>redshiftdata</code> (or <code>redshiftdataapiservice</code>)</li>
   <li><code>redshiftserverless</code></li>
+  <li><code>rekognition</code></li>
   <li><code>resourceexplorer2</code></li>
   <li><code>resourcegroups</code></li>
   <li><code>resourcegroupstaggingapi</code> (or <code>resourcegroupstagging</code>)</li>
@@ -270,6 +275,7 @@ provider "aws" {
   <li><code>ssm</code></li>
   <li><code>ssmcontacts</code></li>
   <li><code>ssmincidents</code></li>
+  <li><code>ssmsap</code></li>
   <li><code>sso</code></li>
   <li><code>ssoadmin</code></li>
   <li><code>storagegateway</code></li>

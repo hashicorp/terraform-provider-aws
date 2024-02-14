@@ -129,7 +129,7 @@ func {{ .KeyValueTagsFunc }}(ctx context.Context, tags any{{ if .TagTypeIDElem }
 		{{- end }}
 
 		return tftags.New(ctx, m)
-	case []*{{ .AWSService }}.{{ .TagType2 }}:
+	case []awstypes.{{ .TagType2 }}:
 		{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}
 		m := make(map[string]*tftags.TagData, len(tags))
 

@@ -635,6 +635,7 @@ func TestAccMediaLiveChannel_hls(t *testing.T) {
 						"name": "test-video-name",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "encoder_settings.0.output_groups.0.outputs.0.output_settings.0.hls_output_settings.0.h265_packaging_type", "HVC1"),
+					resource.TestCheckResourceAttr(resourceName, "encoder_settings.0.output_groups.0.output_group_settings.0.hls_group_settings.0.client_cache", "ENABLED"),
 				),
 			},
 		},
@@ -1774,6 +1775,7 @@ resource "aws_medialive_channel" "test" {
           destination {
             destination_ref_id = %[1]q
           }
+          client_cache = "ENABLED"
         }
       }
 

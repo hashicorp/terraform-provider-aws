@@ -248,7 +248,7 @@ func sweepInstanceProfile(ctx context.Context, client *conns.AWSClient) ([]sweep
 				continue
 			}
 
-			r := ResourceInstanceProfile()
+			r := resourceInstanceProfile()
 			d := r.Data(nil)
 			d.SetId(name)
 
@@ -281,7 +281,7 @@ func sweepOpenIDConnectProvider(ctx context.Context, client *conns.AWSClient) ([
 	for _, oidcProvider := range out.OpenIDConnectProviderList {
 		arn := aws.StringValue(oidcProvider.Arn)
 
-		r := ResourceOpenIDConnectProvider()
+		r := resourceOpenIDConnectProvider()
 		d := r.Data(nil)
 		d.SetId(arn)
 
@@ -374,7 +374,7 @@ func sweepPolicies(region string) error {
 				continue
 			}
 
-			r := ResourcePolicy()
+			r := resourcePolicy()
 			d := r.Data(nil)
 			d.SetId(arn)
 
@@ -466,7 +466,7 @@ func sweepRoles(region string) error {
 	for _, roleName := range roles {
 		log.Printf("[DEBUG] Deleting IAM Role (%s)", roleName)
 
-		err := DeleteRole(ctx, conn, roleName, true, true, true)
+		err := deleteRole(ctx, conn, roleName, true, true, true)
 
 		if tfawserr.ErrCodeContains(err, "AccessDenied") {
 			log.Printf("[WARN] Skipping IAM Role (%s): %s", roleName, err)
@@ -496,7 +496,7 @@ func sweepSAMLProvider(ctx context.Context, client *conns.AWSClient) ([]sweep.Sw
 	for _, sampProvider := range out.SAMLProviderList {
 		arn := aws.StringValue(sampProvider.Arn)
 
-		r := ResourceSAMLProvider()
+		r := resourceSAMLProvider()
 		d := r.Data(nil)
 		d.SetId(arn)
 
@@ -552,7 +552,7 @@ func sweepServiceLinkedRoles(ctx context.Context, client *conns.AWSClient) ([]sw
 	// include generic service role names created by:
 	// TestAccIAMServiceLinkedRole_basic
 	// TestAccIAMServiceLinkedRole_CustomSuffix_diffSuppressFunc
-	customSuffixRegex := regexache.MustCompile(`_?(tf-acc-test-\d+|ServiceRoleFor(ApplicationAutoScaling_CustomResource|ElasticBeanstalk))$`)
+	customSuffixRegex := regexache.MustCompile(`_?(tf-acc-test-\d+|ServiceRoleForApplicationAutoScaling_CustomResource)$`)
 	err := conn.ListRolesPagesWithContext(ctx, input, func(page *iam.ListRolesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
@@ -569,7 +569,7 @@ func sweepServiceLinkedRoles(ctx context.Context, client *conns.AWSClient) ([]sw
 				continue
 			}
 
-			r := ResourceServiceLinkedRole()
+			r := resourceServiceLinkedRole()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(role.Arn))
 
@@ -691,42 +691,42 @@ func sweepUsers(region string) error {
 			}
 		}
 
-		if err := DeleteUserGroupMemberships(ctx, conn, username); err != nil {
+		if err := deleteUserGroupMemberships(ctx, conn, username); err != nil {
 			sweeperErr := fmt.Errorf("error removing IAM User (%s) group memberships: %s", username, err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			continue
 		}
 
-		if err := DeleteUserAccessKeys(ctx, conn, username); err != nil {
+		if err := deleteUserAccessKeys(ctx, conn, username); err != nil {
 			sweeperErr := fmt.Errorf("error removing IAM User (%s) access keys: %s", username, err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			continue
 		}
 
-		if err := DeleteUserSSHKeys(ctx, conn, username); err != nil {
+		if err := deleteUserSSHKeys(ctx, conn, username); err != nil {
 			sweeperErr := fmt.Errorf("error removing IAM User (%s) SSH keys: %s", username, err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			continue
 		}
 
-		if err := DeleteUserVirtualMFADevices(ctx, conn, username); err != nil {
+		if err := deleteUserVirtualMFADevices(ctx, conn, username); err != nil {
 			sweeperErr := fmt.Errorf("error removing IAM User (%s) virtual MFA devices: %s", username, err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			continue
 		}
 
-		if err := DeactivateUserMFADevices(ctx, conn, username); err != nil {
+		if err := deactivateUserMFADevices(ctx, conn, username); err != nil {
 			sweeperErr := fmt.Errorf("error removing IAM User (%s) MFA devices: %s", username, err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 			continue
 		}
 
-		if err := DeleteUserLoginProfile(ctx, conn, username); err != nil {
+		if err := deleteUserLoginProfile(ctx, conn, username); err != nil {
 			sweeperErr := fmt.Errorf("error removing IAM User (%s) login profile: %s", username, err)
 			log.Printf("[ERROR] %s", sweeperErr)
 			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
@@ -843,7 +843,7 @@ func sweepVirtualMFADevice(ctx context.Context, client *conns.AWSClient) ([]swee
 				continue
 			}
 
-			r := ResourceVirtualMFADevice()
+			r := resourceVirtualMFADevice()
 			d := r.Data(nil)
 			d.SetId(serialNum)
 
