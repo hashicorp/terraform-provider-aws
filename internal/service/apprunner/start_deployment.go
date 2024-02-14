@@ -143,7 +143,7 @@ func (r *resourceStartDeployment) Read(ctx context.Context, req resource.ReadReq
 	}
 
 	state.OperationId = flex.StringToFramework(ctx, out.Id)
-	state.Status = flex.StringToFramework(ctx, (*string)(&out.Status))
+	state.Status = flex.StringValueToFramework(ctx, string(out.Status))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -211,7 +211,7 @@ func findStartDeploymentOperationByServiceARN(ctx context.Context, conn *apprunn
 	var operation apprunner_types.OperationSummary
 	var found bool
 	for _, op := range output.OperationSummaryList {
-		if op.TargetArn == aws.String(arn) {
+		if aws.ToString(op.TargetArn) == arn {
 			operation = op
 			found = true
 			break
