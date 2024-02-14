@@ -4,7 +4,9 @@
 package rds
 
 import (
+	"bytes"
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -15,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -85,6 +88,19 @@ func resourceProxy() *schema.Resource {
 							Optional: true,
 						},
 					},
+				},
+				Set: func(v interface{}) int {
+					var buf bytes.Buffer
+
+					m := v.(map[string]interface{})
+					// Don't include "client_password_auth_type" as it's Computed.
+					for _, key := range tfslices.Of("auth_scheme", "description", "iam_auth", "secret_arn", "username") {
+						if v, ok := m[key].(string); ok && v != "" {
+							buf.WriteString(fmt.Sprintf("%s-", v))
+						}
+					}
+
+					return create.StringHashcode(buf.String())
 				},
 			},
 			"debug_logging": {
