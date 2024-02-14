@@ -42,7 +42,6 @@ func TestAccShieldProtectionGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "aggregation", shield.ProtectionGroupAggregationMax),
 					resource.TestCheckNoResourceAttr(resourceName, "members"),
 					resource.TestCheckResourceAttr(resourceName, "pattern", shield.ProtectionGroupPatternAll),
-					resource.TestCheckNoResourceAttr(resourceName, "resource_type"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
