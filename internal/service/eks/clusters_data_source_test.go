@@ -34,7 +34,7 @@ func TestAccEKSClustersDataSource_basic(t *testing.T) {
 }
 
 func testAccClustersDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_required(rName), `
+	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), `
 data "aws_eks_clusters" "test" {
   depends_on = [aws_eks_cluster.test]
 }

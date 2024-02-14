@@ -35,7 +35,7 @@ resource "aws_ssoadmin_application_assignment" "example" {
 
 The following arguments are required:
 
-* `application_arn` - (Required) ARN of the application provider.
+* `application_arn` - (Required) ARN of the application.
 * `principal_id` - (Required) An identifier for an object in IAM Identity Center, such as a user or group.
 * `principal_type` - (Required) Entity type for which the assignment will be created. Valid values are `USER` or `GROUP`.
 

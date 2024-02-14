@@ -86,13 +86,13 @@ func sweepAddons(region string) error {
 				page, err := pages.NextPage(ctx)
 
 				if awsv2.SkipSweepError(err) {
-					continue
+					break
 				}
 
 				// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
 				// ¯\_(ツ)_/¯
 				if errs.IsA[*types.ResourceNotFoundException](err) {
-					continue
+					break
 				}
 
 				if err != nil {
@@ -197,13 +197,13 @@ func sweepFargateProfiles(region string) error {
 				page, err := pages.NextPage(ctx)
 
 				if awsv2.SkipSweepError(err) {
-					continue
+					break
 				}
 
 				// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
 				// ¯\_(ツ)_/¯
 				if errs.IsA[*types.ResourceNotFoundException](err) {
-					continue
+					break
 				}
 
 				if err != nil {
@@ -267,13 +267,13 @@ func sweepIdentityProvidersConfig(region string) error {
 				page, err := pages.NextPage(ctx)
 
 				if awsv2.SkipSweepError(err) {
-					continue
+					break
 				}
 
 				// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
 				// ¯\_(ツ)_/¯
 				if errs.IsA[*types.ResourceNotFoundException](err) {
-					continue
+					break
 				}
 
 				if err != nil {
@@ -337,13 +337,13 @@ func sweepNodeGroups(region string) error {
 				page, err := pages.NextPage(ctx)
 
 				if awsv2.SkipSweepError(err) {
-					continue
+					break
 				}
 
 				// There are EKS clusters that are listed (and are in the AWS Console) but can't be found.
 				// ¯\_(ツ)_/¯
 				if errs.IsA[*types.ResourceNotFoundException](err) {
-					continue
+					break
 				}
 
 				if err != nil {

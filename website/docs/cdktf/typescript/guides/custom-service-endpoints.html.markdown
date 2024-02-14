@@ -202,6 +202,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>glue</code></li>
   <li><code>grafana</code> (or <code>managedgrafana</code> or <code>amg</code>)</li>
   <li><code>greengrass</code></li>
+  <li><code>groundstation</code></li>
   <li><code>guardduty</code></li>
   <li><code>healthlake</code></li>
   <li><code>iam</code></li>
@@ -226,12 +227,15 @@ class MyConvertedCode extends TerraformStack {
   <li><code>kms</code></li>
   <li><code>lakeformation</code></li>
   <li><code>lambda</code></li>
+  <li><code>launchwizard</code></li>
   <li><code>lexmodels</code> (or <code>lexmodelbuilding</code> or <code>lexmodelbuildingservice</code> or <code>lex</code>)</li>
   <li><code>lexv2models</code> (or <code>lexmodelsv2</code>)</li>
   <li><code>licensemanager</code></li>
   <li><code>lightsail</code></li>
   <li><code>location</code> (or <code>locationservice</code>)</li>
   <li><code>logs</code> (or <code>cloudwatchlog</code> or <code>cloudwatchlogs</code>)</li>
+  <li><code>lookoutmetrics</code></li>
+  <li><code>m2</code></li>
   <li><code>macie2</code></li>
   <li><code>mediaconnect</code></li>
   <li><code>mediaconvert</code></li>
@@ -252,9 +256,12 @@ class MyConvertedCode extends TerraformStack {
   <li><code>organizations</code></li>
   <li><code>osis</code> (or <code>opensearchingestion</code>)</li>
   <li><code>outposts</code></li>
+  <li><code>pcaconnectorad</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pipes</code></li>
+  <li><code>polly</code></li>
   <li><code>pricing</code></li>
+  <li><code>qbusiness</code></li>
   <li><code>qldb</code></li>
   <li><code>quicksight</code></li>
   <li><code>ram</code></li>
@@ -284,6 +291,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>securitylake</code></li>
   <li><code>serverlessrepo</code> (or <code>serverlessapprepo</code> or <code>serverlessapplicationrepository</code>)</li>
   <li><code>servicecatalog</code></li>
+  <li><code>servicecatalogappregistry</code> (or <code>appregistry</code>)</li>
   <li><code>servicediscovery</code></li>
   <li><code>servicequotas</code></li>
   <li><code>ses</code></li>
@@ -297,6 +305,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>ssm</code></li>
   <li><code>ssmcontacts</code></li>
   <li><code>ssmincidents</code></li>
+  <li><code>ssmsap</code></li>
   <li><code>sso</code></li>
   <li><code>ssoadmin</code></li>
   <li><code>storagegateway</code></li>
@@ -311,6 +320,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>waf</code></li>
   <li><code>wafregional</code></li>
   <li><code>wafv2</code></li>
+  <li><code>wellarchitected</code></li>
   <li><code>worklink</code></li>
   <li><code>workspaces</code></li>
   <li><code>xray</code></li>
@@ -321,10 +331,10 @@ class MyConvertedCode extends TerraformStack {
 As a convenience, for compatibility with the [Terraform S3 Backend](https://www.terraform.io/language/settings/backends/s3),
 the following service endpoints can be configured using environment variables:
 
-* DynamoDB: `tfAwsDynamodbEndpoint` (or **Deprecated** `AWS_DYNAMODB_ENDPOINT`)
-* IAM: `tfAwsIamEndpoint` (or **Deprecated** `AWS_IAM_ENDPOINT`)
-* S3: `tfAwsS3Endpoint` (or **Deprecated** `AWS_S3_ENDPOINT`)
-* STS: `tfAwsStsEndpoint` (or **Deprecated** `AWS_STS_ENDPOINT`)
+* DynamoDB: `TF_AWS_DYNAMODB_ENDPOINT` (or **Deprecated** `AWS_DYNAMODB_ENDPOINT`)
+* IAM: `TF_AWS_IAM_ENDPOINT` (or **Deprecated** `AWS_IAM_ENDPOINT`)
+* S3: `TF_AWS_S3_ENDPOINT` (or **Deprecated** `AWS_S3_ENDPOINT`)
+* STS: `TF_AWS_STS_ENDPOINT` (or **Deprecated** `AWS_STS_ENDPOINT`)
 
 ## Connecting to Local AWS Compatible Solutions
 
@@ -421,4 +431,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-b2b6c6c9d15a70961ae7496610c00d3015e62cc972020a5ff6ea81639e655cd8 -->
+<!-- cache-key: cdktf-0.20.1 input-87c0080be30af700eaee1b06aff7d221a7ac06c3e91a88868e87ef9546706e7a -->

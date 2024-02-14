@@ -9,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbackup "github.com/hashicorp/terraform-provider-aws/internal/service/backup"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccBackupPlan_basic(t *testing.T) {
@@ -252,6 +252,21 @@ func TestAccBackupPlan_withLifecycle(t *testing.T) {
 						"lifecycle.#":                    "1",
 						"lifecycle.0.cold_storage_after": "30",
 						"lifecycle.0.delete_after":       "180",
+					}),
+				),
+			},
+			{
+				Config: testAccPlanConfig_optInToArchiveForSupportedResources(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPlanExists(ctx, resourceName, &plan),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"rule_name":                      rName,
+						"lifecycle.#":                    "1",
+						"lifecycle.0.cold_storage_after": "30",
+						"lifecycle.0.delete_after":       "180",
+						"lifecycle.0.opt_in_to_archive_for_supported_resources": "true",
 					}),
 				),
 			},
@@ -667,43 +682,39 @@ func testAccCheckPlanDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := &backup.GetBackupPlanInput{
-				BackupPlanId: aws.String(rs.Primary.ID),
+			_, err := tfbackup.FindPlanByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			resp, err := conn.GetBackupPlanWithContext(ctx, input)
-
-			if err == nil {
-				if *resp.BackupPlanId == rs.Primary.ID {
-					return fmt.Errorf("Plane '%s' was not deleted properly", rs.Primary.ID)
-				}
+			if err != nil {
+				return err
 			}
+
+			return fmt.Errorf("Backup Plan %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckPlanExists(ctx context.Context, name string, plan *backup.GetBackupPlanOutput) resource.TestCheckFunc {
+func testAccCheckPlanExists(ctx context.Context, n string, v *backup.GetBackupPlanOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BackupConn(ctx)
 
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		output, err := conn.GetBackupPlanWithContext(ctx, &backup.GetBackupPlanInput{
-			BackupPlanId: aws.String(rs.Primary.ID),
-		})
+		output, err := tfbackup.FindPlanByID(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*plan = *output
+		*v = *output
 
 		return nil
 	}
@@ -722,6 +733,29 @@ resource "aws_backup_plan" "test" {
     rule_name         = %[1]q
     target_vault_name = aws_backup_vault.test.name
     schedule          = "cron(0 12 * * ? *)"
+  }
+}
+`, rName)
+}
+
+func testAccPlanConfig_optInToArchiveForSupportedResources(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_backup_vault" "test" {
+  name = %[1]q
+}
+
+resource "aws_backup_plan" "test" {
+  name = %[1]q
+
+  rule {
+    rule_name         = %[1]q
+    target_vault_name = aws_backup_vault.test.name
+    schedule          = "cron(0 10 ? * 6L *)"
+    lifecycle {
+      cold_storage_after                        = 30
+      delete_after                              = 180
+      opt_in_to_archive_for_supported_resources = true
+    }
   }
 }
 `, rName)

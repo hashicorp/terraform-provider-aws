@@ -69,6 +69,11 @@ func TestAccLambdaFunction_basic(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("function:%s", funcName)),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.0.size", "512"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.application_log_level", ""),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.log_format", "Text"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.log_group", fmt.Sprintf("/aws/lambda/%s", funcName)),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.system_log_level", ""),
 					resource.TestCheckResourceAttr(resourceName, "package_type", string(types.PackageTypeZip)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "qualified_arn", "lambda", fmt.Sprintf("function:%s:%s", funcName, tflambda.FunctionVersionLatest)),
 					resource.TestCheckResourceAttr(resourceName, "reserved_concurrent_executions", "-1"),
@@ -1229,6 +1234,69 @@ func TestAccLambdaFunction_ephemeralStorage(t *testing.T) {
 					testAccCheckFunctionExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "ephemeral_storage.0.size", "2048"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunction_loggingConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf lambda.GetFunctionOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lambda_function.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
+
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_loggingConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.application_log_level", ""),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.log_format", "Text"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.log_group", fmt.Sprintf("/aws/lambda/%s_custom", rName)),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.system_log_level", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"filename", "publish"},
+			},
+			{
+				Config: testAccFunctionConfig_updateLoggingConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.application_log_level", "TRACE"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.log_format", "JSON"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.system_log_level", "DEBUG"),
+				),
+			},
+			{
+				Config: testAccFunctionConfig_updateLoggingConfigLevelsUnspecified(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.application_log_level", "TRACE"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.system_log_level", "DEBUG"),
+				),
+			},
+			{
+				Config: testAccFunctionConfig_loggingConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.application_log_level", ""),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.log_format", "Text"),
+					resource.TestCheckResourceAttr(resourceName, "logging_config.0.system_log_level", ""),
 				),
 			},
 		},
@@ -3346,6 +3414,63 @@ resource "aws_lambda_function" "test" {
 
   ephemeral_storage {
     size = 2048
+  }
+}
+`, rName))
+}
+
+func testAccFunctionConfig_loggingConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs16.x"
+
+  logging_config {
+    log_format = "Text"
+    log_group  = %[2]q
+  }
+}
+`, rName, fmt.Sprintf("/aws/lambda/%s_custom", rName)))
+}
+
+func testAccFunctionConfig_updateLoggingConfig(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs16.x"
+
+  logging_config {
+    application_log_level = "TRACE"
+    log_format            = "JSON"
+    system_log_level      = "DEBUG"
+  }
+}
+`, rName))
+}
+
+func testAccFunctionConfig_updateLoggingConfigLevelsUnspecified(rName string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLambdaBase(rName, rName, rName),
+		fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "exports.example"
+  runtime       = "nodejs16.x"
+
+  logging_config {
+    log_format = "JSON"
   }
 }
 `, rName))

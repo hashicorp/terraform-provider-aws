@@ -326,10 +326,6 @@ func testAccCheckVPNGatewayExists(ctx context.Context, n string, v *ec2.VpnGatew
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 VPN Gateway ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		output, err := tfec2.FindVPNGatewayByID(ctx, conn, rs.Primary.ID)

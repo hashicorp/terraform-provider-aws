@@ -10,9 +10,10 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 )
 
-func testAccClientVPNEndpointDataSource_basic(t *testing.T) {
+func testAccClientVPNEndpointDataSource_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
@@ -21,7 +22,10 @@ func testAccClientVPNEndpointDataSource_basic(t *testing.T) {
 	datasource3Name := "data.aws_ec2_client_vpn_endpoint.by_tags"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),

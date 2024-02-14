@@ -818,7 +818,7 @@ resource "aws_db_option_group" "test" {
   engine_name              = data.aws_rds_engine_version.default.engine
   major_engine_version     = regex("^\\d+\\.\\d+", data.aws_rds_engine_version.default.version)
 }
-`, mySQLPreferredInstanceClasses, rName)
+`, mainInstanceClasses, rName)
 }
 
 func testAccOptionGroupConfig_optionSettings(rName string) string {

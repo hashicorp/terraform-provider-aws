@@ -28,10 +28,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	AttrObjectPath = "object_path"
-)
-
 // @SDKResource("aws_appflow_flow", name="Flow")
 // @Tags(identifierAttribute="id")
 func resourceFlow() *schema.Resource {
@@ -56,7 +52,7 @@ func resourceFlow() *schema.Resource {
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[\w!@#\-.?,\s]*`), "must contain only alphanumeric, underscore (_), exclamation point (!), at sign (@), number sign (#), hyphen (-), period (.), question mark (?), comma (,), and whitespace characters"),
 			},
 			"destination_flow_config": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Required: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -331,6 +327,7 @@ func resourceFlow() *schema.Resource {
 									"s3": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
@@ -342,24 +339,33 @@ func resourceFlow() *schema.Resource {
 												"bucket_prefix": {
 													Type:         schema.TypeString,
 													Optional:     true,
+													Computed:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
 												"s3_output_format_config": {
 													Type:     schema.TypeList,
 													Optional: true,
+													Computed: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"aggregation_config": {
 																Type:     schema.TypeList,
 																Optional: true,
+																Computed: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
 																		"aggregation_type": {
 																			Type:             schema.TypeString,
 																			Optional:         true,
+																			Computed:         true,
 																			ValidateDiagFunc: enum.Validate[types.AggregationType](),
+																		},
+																		"target_file_size": {
+																			Type:     schema.TypeInt,
+																			Optional: true,
+																			Computed: true,
 																		},
 																	},
 																},
@@ -372,6 +378,7 @@ func resourceFlow() *schema.Resource {
 															"prefix_config": {
 																Type:     schema.TypeList,
 																Optional: true,
+																Computed: true,
 																MaxItems: 1,
 																Elem: &schema.Resource{
 																	Schema: map[string]*schema.Schema{
@@ -391,6 +398,7 @@ func resourceFlow() *schema.Resource {
 															"preserve_source_data_typing": {
 																Type:     schema.TypeBool,
 																Optional: true,
+																Computed: true,
 															},
 														},
 													},
@@ -485,7 +493,7 @@ func resourceFlow() *schema.Resource {
 														ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(0, 128)),
 													},
 												},
-												AttrObjectPath: {
+												"object_path": {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -686,6 +694,10 @@ func resourceFlow() *schema.Resource {
 					},
 				},
 			},
+			"flow_status": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"kms_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -853,17 +865,20 @@ func resourceFlow() *schema.Resource {
 									"s3": {
 										Type:     schema.TypeList,
 										Optional: true,
+										Computed: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"bucket_name": {
 													Type:         schema.TypeString,
 													Required:     true,
+													ForceNew:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(3, 63)),
 												},
 												"bucket_prefix": {
 													Type:         schema.TypeString,
-													Optional:     true,
+													Required:     true,
+													ForceNew:     true,
 													ValidateFunc: validation.StringLenBetween(0, 512),
 												},
 												"s3_input_format_config": {
@@ -911,7 +926,7 @@ func resourceFlow() *schema.Resource {
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
-												AttrObjectPath: {
+												"object_path": {
 													Type:         schema.TypeString,
 													Required:     true,
 													ValidateFunc: validation.All(validation.StringMatch(regexache.MustCompile(`\S+`), "must not contain any whitespace characters"), validation.StringLenBetween(1, 512)),
@@ -1232,7 +1247,7 @@ func resourceFlowCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	name := d.Get(names.AttrName).(string)
 	input := &appflow.CreateFlowInput{
 		FlowName:                  aws.String(name),
-		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").(*schema.Set).List()),
+		DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").([]interface{})),
 		SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config").([]interface{})[0].(map[string]interface{})),
 		Tags:                      getTagsIn(ctx),
 		Tasks:                     expandTasks(d.Get("task").(*schema.Set).List()),
@@ -1286,6 +1301,7 @@ func resourceFlowRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if err := d.Set("destination_flow_config", flattenDestinationFlowConfigs(output.DestinationFlowConfigList)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting destination_flow_config: %s", err)
 	}
+	d.Set("flow_status", output.FlowStatus)
 	d.Set("kms_arn", output.KmsArn)
 	d.Set(names.AttrName, output.FlowName)
 	if output.SourceFlowConfig != nil {
@@ -1318,7 +1334,7 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &appflow.UpdateFlowInput{
-			DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").(*schema.Set).List()),
+			DestinationFlowConfigList: expandDestinationFlowConfigs(d.Get("destination_flow_config").([]interface{})),
 			FlowName:                  aws.String(d.Get(names.AttrName).(string)),
 			SourceFlowConfig:          expandSourceFlowConfig(d.Get("source_flow_config").([]interface{})[0].(map[string]interface{})),
 			Tasks:                     expandTasks(d.Get("task").(*schema.Set).List()),
@@ -1497,6 +1513,10 @@ func expandAggregationConfig(tfMap map[string]interface{}) *types.AggregationCon
 
 	if v, ok := tfMap["aggregation_type"].(string); ok && v != "" {
 		a.AggregationType = types.AggregationType(v)
+	}
+
+	if v, ok := tfMap["target_file_size"].(int); ok && v != 0 {
+		a.TargetFileSize = aws.Int64(int64(v))
 	}
 
 	return a
@@ -1856,7 +1876,7 @@ func expandSAPODataDestinationProperties(tfMap map[string]interface{}) *types.SA
 		a.IdFieldNames = flex.ExpandStringValueList(v)
 	}
 
-	if v, ok := tfMap[AttrObjectPath].(string); ok && v != "" {
+	if v, ok := tfMap["object_path"].(string); ok && v != "" {
 		a.ObjectPath = aws.String(v)
 	}
 
@@ -2270,7 +2290,7 @@ func expandSAPODataSourceProperties(tfMap map[string]interface{}) *types.SAPODat
 
 	a := &types.SAPODataSourceProperties{}
 
-	if v, ok := tfMap[AttrObjectPath].(string); ok && v != "" {
+	if v, ok := tfMap["object_path"].(string); ok && v != "" {
 		a.ObjectPath = aws.String(v)
 	}
 
@@ -2629,6 +2649,7 @@ func flattenAggregationConfig(aggregationConfig *types.AggregationConfig) map[st
 	m := map[string]interface{}{}
 
 	m["aggregation_type"] = aggregationConfig.AggregationType
+	m["target_file_size"] = aggregationConfig.TargetFileSize
 
 	return m
 }
@@ -2941,7 +2962,7 @@ func flattenSAPODataDestinationProperties(SAPODataDestinationProperties *types.S
 	}
 
 	if v := SAPODataDestinationProperties.ObjectPath; v != nil {
-		m[AttrObjectPath] = aws.ToString(v)
+		m["object_path"] = aws.ToString(v)
 	}
 
 	if v := SAPODataDestinationProperties.SuccessResponseHandlingConfig; v != nil {
@@ -3340,7 +3361,7 @@ func flattenSAPODataSourceProperties(sapoDataSourceProperties *types.SAPODataSou
 	m := map[string]interface{}{}
 
 	if v := sapoDataSourceProperties.ObjectPath; v != nil {
-		m[AttrObjectPath] = aws.ToString(v)
+		m["object_path"] = aws.ToString(v)
 	}
 
 	return m

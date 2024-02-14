@@ -23,8 +23,8 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// @SDKDataSource("aws_s3_bucket_object")
-func DataSourceBucketObject() *schema.Resource {
+// @SDKDataSource("aws_s3_bucket_object", name="Bucket Object")
+func dataSourceBucketObject() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBucketObjectRead,
 
@@ -228,7 +228,7 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 		d.Set("body", buf.String())
 	}
 
-	tags, err := ObjectListTags(ctx, conn, bucket, key)
+	tags, err := objectListTags(ctx, conn, bucket, key)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)

@@ -12,19 +12,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // listTags lists workspaces service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn *workspaces.Client, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn *workspaces.Client, identifier string, optFns ...func(*workspaces.Options)) (tftags.KeyValueTags, error) {
 	input := &workspaces.DescribeTagsInput{
 		ResourceId: aws.String(identifier),
 	}
 
-	output, err := conn.DescribeTags(ctx, input)
+	output, err := conn.DescribeTags(ctx, input, optFns...)
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
@@ -43,7 +43,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(tags)
+		inContext.TagsOut = option.Some(tags)
 	}
 
 	return nil
@@ -93,14 +93,14 @@ func getTagsIn(ctx context.Context) []awstypes.Tag {
 // setTagsOut sets workspaces service tags in Context.
 func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
 }
 
 // updateTags updates workspaces service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn *workspaces.Client, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *workspaces.Client, identifier string, oldTagsMap, newTagsMap any, optFns ...func(*workspaces.Options)) error {
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -114,7 +114,7 @@ func updateTags(ctx context.Context, conn *workspaces.Client, identifier string,
 			TagKeys:    removedTags.Keys(),
 		}
 
-		_, err := conn.DeleteTags(ctx, input)
+		_, err := conn.DeleteTags(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("untagging resource (%s): %w", identifier, err)
@@ -129,7 +129,7 @@ func updateTags(ctx context.Context, conn *workspaces.Client, identifier string,
 			Tags:       Tags(updatedTags),
 		}
 
-		_, err := conn.CreateTags(ctx, input)
+		_, err := conn.CreateTags(ctx, input, optFns...)
 
 		if err != nil {
 			return fmt.Errorf("tagging resource (%s): %w", identifier, err)

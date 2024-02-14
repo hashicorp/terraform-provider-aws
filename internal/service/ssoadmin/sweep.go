@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
 
@@ -23,7 +24,10 @@ func RegisterSweepers() {
 		Name: "aws_ssoadmin_account_assignment",
 		F:    sweepAccountAssignments,
 	})
-
+	resource.AddTestSweepers("aws_ssoadmin_application", &resource.Sweeper{
+		Name: "aws_ssoadmin_application",
+		F:    sweepApplications,
+	})
 	resource.AddTestSweepers("aws_ssoadmin_permission_set", &resource.Sweeper{
 		Name: "aws_ssoadmin_permission_set",
 		F:    sweepPermissionSets,
@@ -121,6 +125,66 @@ func sweepAccountAssignments(region string) error {
 
 	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping SSO Account Assignments: %w", err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepApplications(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.SSOAdminClient(ctx)
+
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
+
+	accessDenied := regexache.MustCompile(`AccessDeniedException: .+ is not authorized to perform:`)
+
+	// Need to Read the SSO Instance first; assumes the first instance returned
+	// is where the permission sets exist as AWS SSO currently supports only 1 instance
+	ds := DataSourceInstances()
+	dsData := ds.Data(nil)
+
+	if err := sdk.ReadResource(ctx, ds, dsData, client); err != nil {
+		if accessDenied.MatchString(err.Error()) {
+			log.Printf("[WARN] Skipping SSO Application sweep for %s: %s", region, err)
+			return nil
+		}
+		return err
+	}
+
+	if v, ok := dsData.GetOk("arns"); ok && len(v.([]interface{})) > 0 {
+		instanceArn := v.([]interface{})[0].(string)
+
+		input := &ssoadmin.ListApplicationsInput{
+			InstanceArn: aws.String(instanceArn),
+		}
+
+		paginator := ssoadmin.NewListApplicationsPaginator(conn, input)
+		for paginator.HasMorePages() {
+			page, err := paginator.NextPage(ctx)
+			if awsv2.SkipSweepError(err) {
+				log.Printf("[WARN] Skipping SSO Applications sweep for %s: %s", region, err)
+				return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+			}
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving SSO Applications: %w", err))
+			}
+
+			for _, application := range page.Applications {
+				applicationARN := aws.ToString(application.ApplicationArn)
+				log.Printf("[INFO] Deleting SSO Application: %s", applicationARN)
+
+				sweepResources = append(sweepResources, framework.NewSweepResource(newResourceApplication, client, framework.NewAttribute("application_arn", applicationARN)))
+			}
+		}
+	}
+
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping SSO Applications: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()

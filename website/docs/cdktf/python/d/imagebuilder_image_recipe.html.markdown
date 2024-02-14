@@ -70,4 +70,4 @@ This data source exports the following attributes in addition to the arguments a
 * `version` - Version of the image recipe.
 * `working_directory` - Working directory used during build and test workflows.
 
-<!-- cache-key: cdktf-0.19.0 input-03811fbdc954ff54a22086b82658d8b2b187a94c5c0090a064a40b03c615a004 -->
+<!-- cache-key: cdktf-0.20.1 input-03811fbdc954ff54a22086b82658d8b2b187a94c5c0090a064a40b03c615a004 -->

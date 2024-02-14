@@ -1667,41 +1667,6 @@ const (
 	vpcDeletedTimeout = 5 * time.Minute
 )
 
-func WaitVPCCreated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Vpc, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{ec2.VpcStatePending},
-		Target:  []string{ec2.VpcStateAvailable},
-		Refresh: StatusVPCState(ctx, conn, id),
-		Timeout: vpcCreatedTimeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.Vpc); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func WaitVPCAttributeUpdated(ctx context.Context, conn *ec2.EC2, vpcID string, attribute string, expectedValue bool) (*ec2.Vpc, error) {
-	stateConf := &retry.StateChangeConf{
-		Target:     []string{strconv.FormatBool(expectedValue)},
-		Refresh:    StatusVPCAttributeValue(ctx, conn, vpcID, attribute),
-		Timeout:    ec2PropagationTimeout,
-		Delay:      10 * time.Second,
-		MinTimeout: 3 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*ec2.Vpc); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
 func WaitVPCCIDRBlockAssociationCreated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.VpcCidrBlockState, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{ec2.VpcCidrBlockStateCodeAssociating, ec2.VpcCidrBlockStateCodeDisassociated, ec2.VpcCidrBlockStateCodeFailing},
@@ -2147,6 +2112,49 @@ func WaitVPNConnectionRouteDeleted(ctx context.Context, conn *ec2.EC2, vpnConnec
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*ec2.VpnStaticRoute); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+const (
+	vpnGatewayCreatedTimeout = 10 * time.Minute
+	vpnGatewayDeletedTimeout = 10 * time.Minute
+)
+
+func WaitVPNGatewayCreated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.VpnGateway, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{ec2.VpnStatePending},
+		Target:     []string{ec2.VpnStateAvailable},
+		Refresh:    StatusVPNGatewayState(ctx, conn, id),
+		Timeout:    vpnGatewayCreatedTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.VpnGateway); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVPNGatewayDeleted(ctx context.Context, conn *ec2.EC2, id string) (*ec2.VpnGateway, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{ec2.VpnStateDeleting},
+		Target:     []string{},
+		Refresh:    StatusVPNGatewayState(ctx, conn, id),
+		Timeout:    vpnGatewayDeletedTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.VpnGateway); ok {
 		return output, err
 	}
 

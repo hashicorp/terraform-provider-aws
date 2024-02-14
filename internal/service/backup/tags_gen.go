@@ -12,8 +12,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"golang.org/x/exp/maps"
 )
 
 // listTags lists backup service tags.
@@ -23,14 +24,23 @@ func listTags(ctx context.Context, conn backupiface.BackupAPI, identifier string
 	input := &backup.ListTagsInput{
 		ResourceArn: aws.String(identifier),
 	}
+	output := make(map[string]*string)
 
-	output, err := conn.ListTagsWithContext(ctx, input)
+	err := conn.ListTagsPagesWithContext(ctx, input, func(page *backup.ListTagsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		maps.Copy(output, page.Tags)
+
+		return !lastPage
+	})
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.Tags), nil
+	return KeyValueTags(ctx, output), nil
 }
 
 // ListTags lists backup service tags and set them in Context.
@@ -43,7 +53,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	}
 
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(tags)
+		inContext.TagsOut = option.Some(tags)
 	}
 
 	return nil
@@ -76,7 +86,7 @@ func getTagsIn(ctx context.Context) map[string]*string {
 // setTagsOut sets backup service tags in Context.
 func setTagsOut(ctx context.Context, tags map[string]*string) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
 	}
 }
 
