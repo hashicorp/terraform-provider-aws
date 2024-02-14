@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_db_proxy: Change `auth` from `TypeList` to `TypeSet` as order is not significant
+```
