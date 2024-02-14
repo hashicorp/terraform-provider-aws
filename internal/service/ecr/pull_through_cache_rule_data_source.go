@@ -15,11 +15,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_ecr_pull_through_cache_rule")
-func DataSourcePullThroughCacheRule() *schema.Resource {
+// @SDKDataSource("aws_ecr_pull_through_cache_rule", name="Pull Through Cache Rule")
+func dataSourcePullThroughCacheRule() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePullThroughCacheRuleRead,
+
 		Schema: map[string]*schema.Schema{
+			"credential_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"ecr_repository_prefix": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -39,10 +44,6 @@ func DataSourcePullThroughCacheRule() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"credential_arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 		},
 	}
 }
@@ -53,7 +54,6 @@ func dataSourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	repositoryPrefix := d.Get("ecr_repository_prefix").(string)
-
 	rule, err := FindPullThroughCacheRuleByRepositoryPrefix(ctx, conn, repositoryPrefix)
 
 	if err != nil {
@@ -61,10 +61,10 @@ func dataSourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	d.SetId(aws.StringValue(rule.EcrRepositoryPrefix))
+	d.Set("credential_arn", rule.CredentialArn)
 	d.Set("ecr_repository_prefix", rule.EcrRepositoryPrefix)
 	d.Set("registry_id", rule.RegistryId)
 	d.Set("upstream_registry_url", rule.UpstreamRegistryUrl)
-	d.Set("credential_arn", rule.CredentialArn)
 
 	return diags
 }
