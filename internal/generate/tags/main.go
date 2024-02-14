@@ -116,34 +116,34 @@ func newTemplateBody(version int, kvtValues bool) *TemplateBody {
 	switch version {
 	case sdkV1:
 		return &TemplateBody{
-			"\n" + v1.GetTagBody,
-			v1.HeaderBody,
-			"\n" + v1.ListTagsBody,
-			"\n" + v1.ServiceTagsMapBody,
-			"\n" + v1.ServiceTagsSliceBody,
-			"\n" + v1.UpdateTagsBody,
-			"\n" + v1.WaitTagsPropagatedBody,
+			getTag:             "\n" + v1.GetTagBody,
+			header:             v1.HeaderBody,
+			listTags:           "\n" + v1.ListTagsBody,
+			serviceTagsMap:     "\n" + v1.ServiceTagsMapBody,
+			serviceTagsSlice:   "\n" + v1.ServiceTagsSliceBody,
+			updateTags:         "\n" + v1.UpdateTagsBody,
+			waitTagsPropagated: "\n" + v1.WaitTagsPropagatedBody,
 		}
 	case sdkV2:
 		if kvtValues {
 			return &TemplateBody{
-				"\n" + v2.GetTagBody,
-				v2.HeaderBody,
-				"\n" + v2.ListTagsBody,
-				"\n" + v2.ServiceTagsValueMapBody,
-				"\n" + v2.ServiceTagsSliceBody,
-				"\n" + v2.UpdateTagsBody,
-				"\n" + v2.WaitTagsPropagatedBody,
+				getTag:             "\n" + v2.GetTagBody,
+				header:             v2.HeaderBody,
+				listTags:           "\n" + v2.ListTagsBody,
+				serviceTagsMap:     "\n" + v2.ServiceTagsValueMapBody,
+				serviceTagsSlice:   "\n" + v2.ServiceTagsSliceBody,
+				updateTags:         "\n" + v2.UpdateTagsBody,
+				waitTagsPropagated: "\n" + v2.WaitTagsPropagatedBody,
 			}
 		}
 		return &TemplateBody{
-			"\n" + v2.GetTagBody,
-			v2.HeaderBody,
-			"\n" + v2.ListTagsBody,
-			"\n" + v2.ServiceTagsMapBody,
-			"\n" + v2.ServiceTagsSliceBody,
-			"\n" + v2.UpdateTagsBody,
-			"\n" + v2.WaitTagsPropagatedBody,
+			getTag:             "\n" + v2.GetTagBody,
+			header:             v2.HeaderBody,
+			listTags:           "\n" + v2.ListTagsBody,
+			serviceTagsMap:     "\n" + v2.ServiceTagsMapBody,
+			serviceTagsSlice:   "\n" + v2.ServiceTagsSliceBody,
+			updateTags:         "\n" + v2.UpdateTagsBody,
+			waitTagsPropagated: "\n" + v2.WaitTagsPropagatedBody,
 		}
 	default:
 		return nil
@@ -172,6 +172,7 @@ type TemplateData struct {
 	ParentNotFoundErrCode      string
 	ParentNotFoundErrMsg       string
 	RetryCreateOnNotFound      string
+	ServiceTagsMap             bool
 	SetTagsOutFunc             string
 	TagInCustomVal             string
 	TagInIDElem                string
@@ -219,6 +220,7 @@ type TemplateData struct {
 	SkipTypesImp      bool
 	TfLogPkg          bool
 	TfResourcePkg     bool
+	TfSlicesPkg       bool
 	TimePkg           bool
 
 	IsDefaultListTags   bool
@@ -311,7 +313,12 @@ func main() {
 		SkipTypesImp:      *skipTypesImp,
 		TfLogPkg:          *updateTags,
 		TfResourcePkg:     (*getTag || *waitForPropagation),
-		TimePkg:           *waitForPropagation,
+		TfSlicesPkg: (*listTagsInFiltIDName != "" ||
+			*listTagsInIDNeedSlice != "" ||
+			*listTagsInIDNeedValueSlice != "" ||
+			*tagInIDNeedSlice != "" ||
+			*tagInIDNeedValueSlice != ""),
+		TimePkg: *waitForPropagation,
 
 		CreateTagsFunc:             createTagsFunc,
 		GetTagFunc:                 *getTagFunc,
@@ -327,6 +334,7 @@ func main() {
 		ListTagsOutTagsElem:        *listTagsOutTagsElem,
 		ParentNotFoundErrCode:      *parentNotFoundErrCode,
 		ParentNotFoundErrMsg:       *parentNotFoundErrMsg,
+		ServiceTagsMap:             *serviceTagsMap,
 		SetTagsOutFunc:             *setTagsOutFunc,
 		TagInCustomVal:             *tagInCustomVal,
 		TagInIDElem:                *tagInIDElem,

@@ -40,8 +40,8 @@ const (
 )
 
 // @SDKResource("aws_iam_role", name="Role")
-// @Tags
-func ResourceRole() *schema.Resource {
+// @Tags(identifierAttribute="id", resourceType="Role")
+func resourceRole() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoleCreate,
 		ReadWithoutTimeout:   resourceRoleRead,
@@ -176,11 +176,6 @@ func ResourceRole() *schema.Resource {
 	}
 }
 
-func resourceRoleImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	d.Set("force_detach_policies", false)
-	return []*schema.ResourceData{d}, nil
-}
-
 func resourceRoleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
@@ -263,7 +258,7 @@ func resourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return FindRoleByName(ctx, conn, d.Id())
+		return findRoleByName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -476,21 +471,6 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := roleUpdateTags(ctx, conn, d.Id(), o, n)
-
-		// Some partitions (e.g. ISO) may not support tagging.
-		if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-			return append(diags, resourceRoleRead(ctx, d, meta)...)
-		}
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for IAM Role (%s): %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceRoleRead(ctx, d, meta)...)
 }
 
@@ -508,7 +488,7 @@ func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		hasManaged = true
 	}
 
-	err := DeleteRole(ctx, conn, d.Id(), d.Get("force_detach_policies").(bool), hasInline, hasManaged)
+	err := deleteRole(ctx, conn, d.Id(), d.Get("force_detach_policies").(bool), hasInline, hasManaged)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting IAM Role (%s): %s", d.Id(), err)
@@ -517,7 +497,12 @@ func resourceRoleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func DeleteRole(ctx context.Context, conn *iam.IAM, roleName string, forceDetach, hasInline, hasManaged bool) error {
+func resourceRoleImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	d.Set("force_detach_policies", false)
+	return []*schema.ResourceData{d}, nil
+}
+
+func deleteRole(ctx context.Context, conn *iam.IAM, roleName string, forceDetach, hasInline, hasManaged bool) error {
 	if err := deleteRoleInstanceProfiles(ctx, conn, roleName); err != nil {
 		return err
 	}
@@ -620,7 +605,7 @@ func retryCreateRole(ctx context.Context, conn *iam.IAM, input *iam.CreateRoleIn
 	return output, err
 }
 
-func FindRoleByName(ctx context.Context, conn *iam.IAM, name string) (*iam.Role, error) {
+func findRoleByName(ctx context.Context, conn *iam.IAM, name string) (*iam.Role, error) {
 	input := &iam.GetRoleInput{
 		RoleName: aws.String(name),
 	}

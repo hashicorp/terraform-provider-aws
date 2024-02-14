@@ -160,7 +160,8 @@ func resourceDeliveryStream() *schema.Resource {
 										"parameters": {
 											// See AWS::KinesisFirehose::DeliveryStream CloudFormation resource schema.
 											// uniqueItems is true and insertionOrder is true.
-											Type:     schema.TypeList,
+											// However, IRL the order of the processors is not important.
+											Type:     schema.TypeSet,
 											Optional: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
@@ -2133,7 +2134,7 @@ func expandProcessor(processingConfigurationProcessor map[string]interface{}) *t
 	if processorType != "" {
 		processor = &types.Processor{
 			Type:       types.ProcessorType(processorType),
-			Parameters: expandProcessorParameters(processingConfigurationProcessor["parameters"].([]interface{})),
+			Parameters: expandProcessorParameters(processingConfigurationProcessor["parameters"].(*schema.Set).List()),
 		}
 	}
 	return processor

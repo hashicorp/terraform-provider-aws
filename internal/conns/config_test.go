@@ -26,7 +26,7 @@ type proxyCase struct {
 	expectedProxy string
 }
 
-func TestProxyConfig(t *testing.T) { //nolint:paralleltest // uses t.Setenv
+func TestProxyConfig(t *testing.T) {
 	cases := map[string]struct {
 		config               map[string]any
 		environmentVariables map[string]string
@@ -438,7 +438,7 @@ func TestProxyConfig(t *testing.T) { //nolint:paralleltest // uses t.Setenv
 		},
 	}
 
-	for name, tc := range cases { //nolint:paralleltest // uses t.Setenv
+	for name, tc := range cases {
 		tc := tc
 		t.Run(name, func(t *testing.T) {
 			ctx := context.Background()

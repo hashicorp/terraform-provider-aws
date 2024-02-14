@@ -72,6 +72,10 @@ func resourceDomain() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"s3_bucket_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -135,6 +139,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("encryption_key", domain.EncryptionKey)
 	d.Set("owner", domain.Owner)
 	d.Set("repository_count", domain.RepositoryCount)
+	d.Set("s3_bucket_arn", domain.S3BucketArn)
 
 	return diags
 }

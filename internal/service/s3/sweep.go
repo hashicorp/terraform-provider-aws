@@ -237,6 +237,7 @@ func bucketNameFilter(bucket types.Bucket) bool {
 		"tftest.applicationversion",
 		"terraform-remote-s3-test",
 		"aws-security-data-lake-", // Orphaned by aws_securitylake_data_lake.
+		"resource-test-terraform",
 	}
 	for _, prefix := range prefixes {
 		if strings.HasPrefix(name, prefix) {
