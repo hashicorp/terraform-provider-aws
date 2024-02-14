@@ -54,7 +54,7 @@ func dataSourcePullThroughCacheRuleRead(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).ECRConn(ctx)
 
 	repositoryPrefix := d.Get("ecr_repository_prefix").(string)
-	rule, err := FindPullThroughCacheRuleByRepositoryPrefix(ctx, conn, repositoryPrefix)
+	rule, err := findPullThroughCacheRuleByRepositoryPrefix(ctx, conn, repositoryPrefix)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECR Pull Through Cache Rule (%s): %s", repositoryPrefix, err)
