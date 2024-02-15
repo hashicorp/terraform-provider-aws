@@ -930,7 +930,7 @@ resource "aws_db_proxy" "test" {
     auth_scheme               = "SECRETS"
     client_password_auth_type = "MYSQL_NATIVE_PASSWORD"
     description               = "user with read/write access to the database."
-    iam_auth                  = "REQUIRED"
+    iam_auth                  = "DISABLED"
     secret_arn                = aws_secretsmanager_secret.test.arn
   }
 
@@ -938,7 +938,7 @@ resource "aws_db_proxy" "test" {
     auth_scheme               = "SECRETS"
     client_password_auth_type = "MYSQL_NATIVE_PASSWORD"
     description               = "user with read only access to the database."
-    iam_auth                  = "REQUIRED"
+    iam_auth                  = "DISABLED"
     secret_arn                = aws_secretsmanager_secret.test2.arn
   }
 }
