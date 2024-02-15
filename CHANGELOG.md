@@ -2,6 +2,7 @@
 
 NOTES:
 
+* provider: Updates to Go 1.21 (used by Terraform starting with v1.6.0), which, for Windows, requires at least Windows 10 or Windows Server 2016--support for previous versions has been discontinued--and, for macOS, requires macOS 10.15 Catalina or later--support for previous versions has been discontinued. ([#35832](https://github.com/hashicorp/terraform-provider-aws/issues/35832))
 * resource/aws_bedrock_provisioned_model_throughput: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#35689](https://github.com/hashicorp/terraform-provider-aws/issues/35689))
 
 FEATURES:
@@ -26,6 +27,7 @@ ENHANCEMENTS:
 * resource/aws_glue_catalog_database: Add `federated_database` argument ([#35799](https://github.com/hashicorp/terraform-provider-aws/issues/35799))
 * resource/aws_glue_trigger: Add configurable `timeouts` ([#35542](https://github.com/hashicorp/terraform-provider-aws/issues/35542))
 * resource/aws_rds_cluster: Add `domain` and `domain_iam_role_name` arguments to support [Kerberos authentication](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RDS_Fea_Regions_DB-eng.Feature.KerberosAuthentication.html) ([#35753](https://github.com/hashicorp/terraform-provider-aws/issues/35753))
+* resource/aws_route53_record: Add `geoproximity_routing_policy` configuration block to support [geoproximity routing](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy-geoproximity.html) ([#35565](https://github.com/hashicorp/terraform-provider-aws/issues/35565))
 * resource/aws_route53_resolver_rule: Add `target_ip.protocol` argument ([#35744](https://github.com/hashicorp/terraform-provider-aws/issues/35744))
 * resource/aws_sagemaker_endpoint_configuration: Add `routing_config` argument. Enables the specification of a `routing_strategy`. ([#34777](https://github.com/hashicorp/terraform-provider-aws/issues/34777))
 * resource/aws_sagemaker_space: Add `ownership_settings`, `space_sharing_settings`, `space_settings.app_type`, `space_settings.code_editor_app_settings`, `space_settings.custom_file_system`, `space_settings.jupyter_lab_app_settings`, and `space_settings.space_storage_settings` arguments ([#35116](https://github.com/hashicorp/terraform-provider-aws/issues/35116))
