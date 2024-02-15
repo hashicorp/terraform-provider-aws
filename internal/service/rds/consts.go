@@ -116,10 +116,10 @@ const (
 )
 
 const (
-	EventSubscriptionStatusActive    = "active"
-	EventSubscriptionStatusCreating  = "creating"
-	EventSubscriptionStatusDeleting  = "deleting"
-	EventSubscriptionStatusModifying = "modifying"
+	eventSubscriptionStatusActive    = "active"
+	eventSubscriptionStatusCreating  = "creating"
+	eventSubscriptionStatusDeleting  = "deleting"
+	eventSubscriptionStatusModifying = "modifying"
 )
 
 const (

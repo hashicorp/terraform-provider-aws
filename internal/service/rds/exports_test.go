@@ -5,6 +5,7 @@ package rds
 
 // Exports for use in tests only.
 var (
+	ResourceEventSubscription       = resourceEventSubscription
 	ResourceProxy                   = resourceProxy
 	ResourceProxyDefaultTargetGroup = resourceProxyDefaultTargetGroup
 	ResourceProxyEndpoint           = resourceProxyEndpoint
@@ -17,6 +18,7 @@ var (
 	FindDBProxyTargetByFourPartKey             = findDBProxyTargetByFourPartKey
 	FindDBSubnetGroupByName                    = findDBSubnetGroupByName
 	FindDefaultDBProxyTargetGroupByDBProxyName = findDefaultDBProxyTargetGroupByDBProxyName
+	FindEventSubscriptionByID                  = findEventSubscriptionByID
 	ListTags                                   = listTags
 	NewBlueGreenOrchestrator                   = newBlueGreenOrchestrator
 	ParseDBInstanceARN                         = parseDBInstanceARN

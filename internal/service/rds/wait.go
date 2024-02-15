@@ -11,64 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-func waitEventSubscriptionCreated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{EventSubscriptionStatusCreating},
-		Target:     []string{EventSubscriptionStatusActive},
-		Refresh:    statusEventSubscription(ctx, conn, id),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*rds.EventSubscription); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitEventSubscriptionDeleted(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{EventSubscriptionStatusDeleting},
-		Target:     []string{},
-		Refresh:    statusEventSubscription(ctx, conn, id),
-		Timeout:    timeout,
-		MinTimeout: 10 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*rds.EventSubscription); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitEventSubscriptionUpdated(ctx context.Context, conn *rds.RDS, id string, timeout time.Duration) (*rds.EventSubscription, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{EventSubscriptionStatusModifying},
-		Target:                    []string{EventSubscriptionStatusActive},
-		Refresh:                   statusEventSubscription(ctx, conn, id),
-		Timeout:                   timeout,
-		MinTimeout:                10 * time.Second,
-		Delay:                     30 * time.Second,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*rds.EventSubscription); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
 func waitDBClusterRoleAssociationCreated(ctx context.Context, conn *rds.RDS, dbClusterID, roleARN string, timeout time.Duration) (*rds.DBClusterRole, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{ClusterRoleStatusPending},
