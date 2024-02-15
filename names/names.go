@@ -88,6 +88,7 @@ const (
 	PollyEndpointID                      = "polly"
 	PricingEndpointID                    = "pricing"
 	QLDBEndpointID                       = "qldb"
+	RDSEndpointID                        = "rds"
 	RedshiftDataEndpointID               = "redshift-data"
 	RekognitionEndpointID                = "rekognition"
 	ResourceExplorer2EndpointID          = "resource-explorer-2"
