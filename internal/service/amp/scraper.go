@@ -72,6 +72,9 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 			names.AttrID:  framework.IDAttribute(),
 			"role_arn": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"scrape_configuration": schema.StringAttribute{
 				Required: true,
