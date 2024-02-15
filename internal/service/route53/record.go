@@ -187,7 +187,7 @@ func ResourceRecord() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"awsregion": {
+						"aws_region": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -212,7 +212,7 @@ func ResourceRecord() *schema.Resource {
 							},
 							Optional: true,
 						},
-						"localzonegroup": {
+						"local_zone_group": {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
@@ -466,10 +466,10 @@ func resourceRecordRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if record.GeoProximityLocation != nil {
 		v := []map[string]interface{}{{
-			"awsregion":      aws.StringValue(record.GeoProximityLocation.AWSRegion),
-			"bias":           aws.Int64Value((record.GeoProximityLocation.Bias)),
-			"coordinates":    flattenCoordinate(record.GeoProximityLocation.Coordinates),
-			"localzonegroup": aws.StringValue(record.GeoProximityLocation.LocalZoneGroup),
+			"aws_region":       aws.StringValue(record.GeoProximityLocation.AWSRegion),
+			"bias":             aws.Int64Value((record.GeoProximityLocation.Bias)),
+			"coordinates":      flattenCoordinate(record.GeoProximityLocation.Coordinates),
+			"local_zone_group": aws.StringValue(record.GeoProximityLocation.LocalZoneGroup),
 		}}
 		if err := d.Set("geoproximity_routing_policy", v); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting geoproximity_routing_policy: %s", err)
@@ -588,10 +588,10 @@ func resourceRecordUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			if len(o) == 1 {
 				if v, ok := o[0].(map[string]interface{}); ok {
 					oldRec.GeoProximityLocation = &route53.GeoProximityLocation{
-						AWSRegion:      nilString(v["awsregion"].(string)),
+						AWSRegion:      nilString(v["aws_region"].(string)),
 						Bias:           aws.Int64(int64(v["bias"].(int))),
 						Coordinates:    ExpandCoordinatesValue(v["coordinates"].(*schema.Set).List()),
-						LocalZoneGroup: nilString(v["localzonegroup"].(string)),
+						LocalZoneGroup: nilString(v["local_zone_group"].(string)),
 					}
 				}
 			}
@@ -937,10 +937,10 @@ func expandResourceRecordSet(d *schema.ResourceData, zoneName string) *route53.R
 		geoproximity := geoproximityvalues[0].(map[string]interface{})
 
 		rec.GeoProximityLocation = &route53.GeoProximityLocation{
-			AWSRegion:      nilString(geoproximity["awsregion"].(string)),
+			AWSRegion:      nilString(geoproximity["aws_region"].(string)),
 			Bias:           aws.Int64(int64(geoproximity["bias"].(int))),
 			Coordinates:    ExpandCoordinatesValue(geoproximity["coordinates"].(*schema.Set).List()),
-			LocalZoneGroup: nilString(geoproximity["localzonegroup"].(string)),
+			LocalZoneGroup: nilString(geoproximity["local_zone_group"].(string)),
 		}
 	}
 

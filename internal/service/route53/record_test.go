@@ -2236,8 +2236,8 @@ resource "aws_route53_record" "awsregion" {
   ttl     = "5"
 
   geoproximity_routing_policy {
-    awsregion = %[1]q
-    bias      = 40
+    aws_region = %[1]q
+    bias       = 40
   }
   records        = ["dev.domain.test"]
   set_identifier = "awsregion"
@@ -2250,7 +2250,7 @@ resource "aws_route53_record" "localzonegroup" {
   ttl     = "5"
 
   geoproximity_routing_policy {
-    localzonegroup = %[2]q
+    local_zone_group = %[2]q
   }
   records        = ["dev.domain.test"]
   set_identifier = "localzonegroup"
@@ -2949,7 +2949,7 @@ resource "aws_route53_record" "set_identifier_rename_geoproximity" {
   ttl     = "5"
 
   geoproximity_routing_policy {
-    awsregion = %[1]q
+    aws_region = %[1]q
   }
 
   records        = ["dev.example.com"]
@@ -2971,7 +2971,7 @@ resource "aws_route53_record" "set_identifier_rename_geoproximity" {
   ttl     = "5"
 
   geoproximity_routing_policy {
-    localzonegroup = %[1]q
+    local_zone_group = %[1]q
   }
 
   records        = ["dev.example.com"]
