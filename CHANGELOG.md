@@ -34,9 +34,11 @@ BUG FIXES:
 
 * provider: Fix `failed to get rate limit token, retry quota exceeded` errors ([#35817](https://github.com/hashicorp/terraform-provider-aws/issues/35817))
 * resource/aws_apigateway_domain_name: Properly send changes to `ownership_verification_certificate_arn` on update ([#35777](https://github.com/hashicorp/terraform-provider-aws/issues/35777))
+* resource/aws_apigatewayv2_route: Fix `BadRequestException: Unable to update route. Authorizer type is invalid or null` errors when updating `authorizer_id` ([#35821](https://github.com/hashicorp/terraform-provider-aws/issues/35821))
 * resource/aws_autoscaling_group: Fix version to computed for inconsistent final plan issue ([#35774](https://github.com/hashicorp/terraform-provider-aws/issues/35774))
 * resource/aws_datasync_task: Fix crash when reading empty `report_override` values ([#35778](https://github.com/hashicorp/terraform-provider-aws/issues/35778))
 * resource/aws_datasync_task: Prevent ValidationErrors when empty values are sent with `report_override` arguments ([#35778](https://github.com/hashicorp/terraform-provider-aws/issues/35778))
+* resource/aws_db_proxy: Change `auth` from `TypeList` to `TypeSet` as order is not significant ([#35819](https://github.com/hashicorp/terraform-provider-aws/issues/35819))
 * resource/aws_ecs_account_setting_default: Remove plan-time validation of `value` ([#33393](https://github.com/hashicorp/terraform-provider-aws/issues/33393))
 * resource/aws_ecs_task_definition: Fix perpetual `container_definitions` diffs when `Secrets` are ordered differently ([#35792](https://github.com/hashicorp/terraform-provider-aws/issues/35792))
 * resource/aws_eks_access_policy_association: Retry IAM eventual consistency errors on create ([#35736](https://github.com/hashicorp/terraform-provider-aws/issues/35736))
