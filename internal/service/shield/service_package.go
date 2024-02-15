@@ -16,7 +16,7 @@ const (
 )
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*shield_sdkv2.Client, error) {
+func (p *servicePackage) NewClient(_ context.Context, config map[string]any) (*shield_sdkv2.Client, error) {
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	// Force "global" services to correct Regions.
