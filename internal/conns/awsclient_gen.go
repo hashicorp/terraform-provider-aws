@@ -22,6 +22,7 @@ import (
 	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
 	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudfront_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	cloudfrontkeyvaluestore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore"
 	cloudsearch_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudsearch"
 	cloudtrail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	cloudwatch_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatch"
@@ -401,6 +402,10 @@ func (c *AWSClient) CloudFrontConn(ctx context.Context) *cloudfront_sdkv1.CloudF
 
 func (c *AWSClient) CloudFrontClient(ctx context.Context) *cloudfront_sdkv2.Client {
 	return errs.Must(client[*cloudfront_sdkv2.Client](ctx, c, names.CloudFront, make(map[string]any)))
+}
+
+func (c *AWSClient) CloudFrontKeyValueStoreClient(ctx context.Context) *cloudfrontkeyvaluestore_sdkv2.Client {
+	return errs.Must(client[*cloudfrontkeyvaluestore_sdkv2.Client](ctx, c, names.CloudFrontKeyValueStore, make(map[string]any)))
 }
 
 func (c *AWSClient) CloudHSMV2Conn(ctx context.Context) *cloudhsmv2_sdkv1.CloudHSMV2 {
