@@ -15,8 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -55,14 +53,7 @@ func (r *resourceDRTAccessLogBucketAssociation) Metadata(_ context.Context, req 
 func (r *resourceDRTAccessLogBucketAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{ // required by hashicorps terraform plugin testing framework
-				DeprecationMessage:  "id is only for framework compatibility and not used by the provider",
-				MarkdownDescription: "The ID of the directory.",
-				Computed:            true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			"id": framework.IDAttribute(),
 			"log_bucket": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
