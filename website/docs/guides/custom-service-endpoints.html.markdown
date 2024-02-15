@@ -128,6 +128,7 @@ provider "aws" {
   <li><code>connect</code></li>
   <li><code>connectcases</code></li>
   <li><code>controltower</code></li>
+  <li><code>costoptimizationhub</code></li>
   <li><code>cur</code> (or <code>costandusagereportservice</code>)</li>
   <li><code>customerprofiles</code></li>
   <li><code>dataexchange</code></li>

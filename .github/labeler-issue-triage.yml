@@ -181,6 +181,8 @@ service/connectparticipant:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connectparticipant_'
 service/controltower:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_controltower_'
+service/costoptimizationhub:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_costoptimizationhub_'
 service/cur:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cur_'
 service/customerprofiles:
