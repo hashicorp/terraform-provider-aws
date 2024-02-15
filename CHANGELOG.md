@@ -27,6 +27,7 @@ ENHANCEMENTS:
 * resource/aws_glue_trigger: Add configurable `timeouts` ([#35542](https://github.com/hashicorp/terraform-provider-aws/issues/35542))
 * resource/aws_rds_cluster: Add `domain` and `domain_iam_role_name` arguments to support [Kerberos authentication](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RDS_Fea_Regions_DB-eng.Feature.KerberosAuthentication.html) ([#35753](https://github.com/hashicorp/terraform-provider-aws/issues/35753))
 * resource/aws_route53_resolver_rule: Add `target_ip.protocol` argument ([#35744](https://github.com/hashicorp/terraform-provider-aws/issues/35744))
+* resource/aws_sagemaker_endpoint_configuration: Add `routing_config` argument. Enables the specification of a `routing_strategy`. ([#34777](https://github.com/hashicorp/terraform-provider-aws/issues/34777))
 * resource/aws_sagemaker_space: Add `ownership_settings`, `space_sharing_settings`, `space_settings.app_type`, `space_settings.code_editor_app_settings`, `space_settings.custom_file_system`, `space_settings.jupyter_lab_app_settings`, and `space_settings.space_storage_settings` arguments ([#35116](https://github.com/hashicorp/terraform-provider-aws/issues/35116))
 
 BUG FIXES:
