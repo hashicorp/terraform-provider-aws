@@ -4,13 +4,13 @@
 package batch
 
 const (
-	JobDefinitionStatusInactive string = "INACTIVE"
-	JobDefinitionStatusActive   string = "ACTIVE"
+	jobDefinitionStatusActive   string = "ACTIVE"
+	jobDefinitionStatusInactive string = "INACTIVE"
 )
 
-func JobDefinitionStatus_Values() []string {
+func jobDefinitionStatus_Values() []string {
 	return []string{
-		JobDefinitionStatusInactive,
-		JobDefinitionStatusActive,
+		jobDefinitionStatusInactive,
+		jobDefinitionStatusActive,
 	}
 }

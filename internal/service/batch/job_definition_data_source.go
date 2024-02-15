@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/batch"
-	batchtypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
@@ -31,63 +31,92 @@ import (
 )
 
 // @FrameworkDataSource(name="Job Definition")
-func newDataSourceJobDefinition(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceJobDefinition{}, nil
+func newJobDefinitionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &jobDefinitionDataSource{}, nil
 }
 
 const (
 	DSNameJobDefinition = "Job Definition Data Source"
 )
 
-func (r *resourceJobQueue) ConfigValidators(_ context.Context) []resource.ConfigValidator {
-	return []resource.ConfigValidator{
-		resourcevalidator.ExactlyOneOf(
-			path.MatchRoot("arn"),
-			path.MatchRoot("name"),
-		),
-	}
-}
-
-type dataSourceJobDefinition struct {
+type jobDefinitionDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceJobDefinition) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_batch_job_definition"
+func (d *jobDefinitionDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	response.TypeName = "aws_batch_job_definition"
 }
 
-func (d *dataSourceJobDefinition) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *jobDefinitionDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": schema.StringAttribute{
+			names.AttrARN: schema.StringAttribute{
 				Optional:   true,
 				CustomType: fwtypes.ARNType,
 			},
 			"arn_prefix": schema.StringAttribute{
-				Optional:   true,
-				CustomType: fwtypes.ARNType,
+				Computed: true,
 			},
 			"container_orchestration_type": schema.StringAttribute{
 				Computed: true,
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
+			"eks_properties": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[jobDefinitionEKSPropertiesModel](ctx),
+				Computed:   true,
+				ElementType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"pod_properties": fwtypes.NewListNestedObjectTypeOf[jobDefinitionEKSPodPropertiesModel](ctx),
+					},
+				},
+			},
+			names.AttrID: framework.IDAttribute(),
+			names.AttrName: schema.StringAttribute{
 				Optional: true,
 			},
-			names.AttrTags: tftags.TagsAttributeComputedOnly(),
+			"node_properties": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[jobDefinitionNodePropertiesModel](ctx),
+				Computed:   true,
+				ElementType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"main_node":             types.Int64Type,
+						"node_range_properties": fwtypes.NewListNestedObjectTypeOf[jobDefinitionNodeRangePropertyModel](ctx),
+						"num_nodes":             types.Int64Type,
+					},
+				},
+			},
+			"retry_strategy": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[jobDefinitionRetryStrategyModel](ctx),
+				Computed:   true,
+				ElementType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"attempts":         types.Int64Type,
+						"evaluate_on_exit": fwtypes.NewListNestedObjectTypeOf[jobDefinitionEvaluateOnExitModel](ctx),
+					},
+				},
+			},
 			"revision": schema.Int64Attribute{
 				Optional: true,
+			},
+			"scheduling_priority": schema.Int64Attribute{
+				Computed: true,
 			},
 			"status": schema.StringAttribute{
 				Optional: true,
 				// Default: JobDefinitionStatusActive,
 				// https://github.com/hashicorp/terraform-plugin-framework/issues/751#issuecomment-1799757575
 				Validators: []validator.String{
-					stringvalidator.OneOf(JobDefinitionStatus_Values()...),
+					stringvalidator.OneOf(jobDefinitionStatus_Values()...),
 				},
 			},
-			"scheduling_priority": schema.Int64Attribute{
-				Computed: true,
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
+			"timeout": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[jobDefinitionJobTimeoutModel](ctx),
+				Computed:   true,
+				ElementType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"attempt_duration_seconds": types.Int64Type,
+					},
+				},
 			},
 			"type": schema.StringAttribute{
 				Computed: true,
@@ -544,33 +573,26 @@ func (d *dataSourceJobDefinition) Schema(ctx context.Context, req datasource.Sch
 					},
 				},
 			},
-			"timeout": schema.SingleNestedBlock{
-				Attributes: map[string]schema.Attribute{
-					"attempt_duration_seconds": schema.Int64Attribute{
-						Computed: true,
-					},
-				},
-			},
 		},
 	}
 }
 
-func (d *dataSourceJobDefinition) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
+func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	conn := d.Meta().BatchClient(ctx)
 
 	var data dataSourceJobDefinitionData
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	jd := batchtypes.JobDefinition{}
+	jd := awstypes.JobDefinition{}
 
 	if !data.ARN.IsNull() {
 		out, err := FindJobDefinitionV2ByARN(ctx, conn, aws.StringValue(flex.StringFromFramework(ctx, data.ARN)))
 
 		if err != nil {
-			resp.Diagnostics.AddError(
+			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.Batch, create.ErrActionReading, DSNameJobDefinition, data.Name.String(), err),
 				err.Error(),
 			)
@@ -586,7 +608,7 @@ func (d *dataSourceJobDefinition) Read(ctx context.Context, req datasource.ReadR
 		}
 
 		if data.Status.IsNull() {
-			active := JobDefinitionStatusActive
+			active := jobDefinitionStatusActive
 			input.Status = &active
 		} else {
 			input.Status = flex.StringFromFramework(ctx, data.Status)
@@ -595,7 +617,7 @@ func (d *dataSourceJobDefinition) Read(ctx context.Context, req datasource.ReadR
 		jds, err := ListJobDefinitionsV2ByNameWithStatus(ctx, conn, input)
 
 		if err != nil {
-			resp.Diagnostics.AddError(
+			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.Batch, create.ErrActionReading, DSNameJobDefinition, data.Name.String(), err),
 				err.Error(),
 			)
@@ -609,7 +631,7 @@ func (d *dataSourceJobDefinition) Read(ctx context.Context, req datasource.ReadR
 			}
 
 			if jd.JobDefinitionArn == nil {
-				resp.Diagnostics.AddError(
+				response.Diagnostics.AddError(
 					create.ProblemStandardMessage(names.Batch, create.ErrActionReading, DSNameJobDefinition, data.Name.String(), fmt.Errorf("job definition revision %d not found", data.Revision.ValueInt64())),
 					fmt.Sprintf("job definition revision %d not found with name %s", data.Revision.ValueInt64(), data.Name.String()),
 				)
@@ -647,25 +669,34 @@ func (d *dataSourceJobDefinition) Read(ctx context.Context, req datasource.ReadR
 		data.Timeout = types.ObjectNull(timeoutAttr)
 	}
 
-	resp.Diagnostics.Append(frameworkFlattenNodeProperties(ctx, jd.NodeProperties, &data)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(frameworkFlattenNodeProperties(ctx, jd.NodeProperties, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(frameworkFlattenEKSproperties(ctx, jd.EksProperties, &data)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(frameworkFlattenEKSproperties(ctx, jd.EksProperties, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(frameworkFlattenRetryStrategy(ctx, jd.RetryStrategy, &data)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(frameworkFlattenRetryStrategy(ctx, jd.RetryStrategy, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func frameworkFlattenEKSproperties(ctx context.Context, apiObject *batchtypes.EksProperties, data *dataSourceJobDefinitionData) (diags diag.Diagnostics) {
+func (r *jobDefinitionDataSource) ConfigValidators(context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.ExactlyOneOf(
+			path.MatchRoot(names.AttrARN),
+			path.MatchRoot(names.AttrName),
+		),
+	}
+}
+
+func frameworkFlattenEKSproperties(ctx context.Context, apiObject *awstypes.EksProperties, data *dataSourceJobDefinitionData) (diags diag.Diagnostics) {
 	if apiObject == nil {
 		data.EksProperties = types.ObjectNull(eksPropertiesAttr)
 		return diags
@@ -716,7 +747,7 @@ func frameworkFlattenEKSproperties(ctx context.Context, apiObject *batchtypes.Ek
 	return diags
 }
 
-func frameworkFlattenEKSContainer(ctx context.Context, apiObject []batchtypes.EksContainer) (containers []attr.Value) {
+func frameworkFlattenEKSContainer(ctx context.Context, apiObject []awstypes.EksContainer) (containers []attr.Value) {
 	for _, c := range apiObject {
 		props := map[string]attr.Value{
 			"image":             flex.StringToFramework(ctx, c.Image),
@@ -762,7 +793,7 @@ func frameworkFlattenEKSContainer(ctx context.Context, apiObject []batchtypes.Ek
 	return containers
 }
 
-func frameworkFlattenNodeProperties(ctx context.Context, props *batchtypes.NodeProperties, data *dataSourceJobDefinitionData) (diags diag.Diagnostics) {
+func frameworkFlattenNodeProperties(ctx context.Context, props *awstypes.NodeProperties, data *dataSourceJobDefinitionData) (diags diag.Diagnostics) {
 	att := fwtypes.AttributeTypesMust[frameworkNodeProperties](ctx)
 	if props == nil {
 		data.EksProperties = types.ObjectNull(att)
@@ -794,7 +825,7 @@ func frameworkFlattenNodeProperties(ctx context.Context, props *batchtypes.NodeP
 	return
 }
 
-func frameworkFlattenEKSVolume(ctx context.Context, apiObject []batchtypes.EksVolume) (volumes []attr.Value) {
+func frameworkFlattenEKSVolume(ctx context.Context, apiObject []awstypes.EksVolume) (volumes []attr.Value) {
 	for _, v := range apiObject {
 		volume := map[string]attr.Value{
 			"name": flex.StringToFramework(ctx, v.Name),
@@ -827,7 +858,7 @@ func frameworkFlattenEKSVolume(ctx context.Context, apiObject []batchtypes.EksVo
 	return volumes
 }
 
-func frameworkFlattenEKSContainerVolumeMount(ctx context.Context, apiObject []batchtypes.EksContainerVolumeMount) (volumeMounts []attr.Value) {
+func frameworkFlattenEKSContainerVolumeMount(ctx context.Context, apiObject []awstypes.EksContainerVolumeMount) (volumeMounts []attr.Value) {
 	for _, v := range apiObject {
 		volumeMounts = append(volumeMounts, types.ObjectValueMust(eksContainerVolumeMountAttr, map[string]attr.Value{
 			"mount_path": flex.StringToFramework(ctx, v.MountPath),
@@ -838,7 +869,7 @@ func frameworkFlattenEKSContainerVolumeMount(ctx context.Context, apiObject []ba
 	return
 }
 
-func frameworkFlattenEKSContainerEnv(ctx context.Context, apiObject []batchtypes.EksContainerEnvironmentVariable) (env []attr.Value) {
+func frameworkFlattenEKSContainerEnv(ctx context.Context, apiObject []awstypes.EksContainerEnvironmentVariable) (env []attr.Value) {
 	for _, v := range apiObject {
 		env = append(env, types.ObjectValueMust(eksContainerEnvironmentVariableAttr, map[string]attr.Value{
 			"name":  flex.StringToFramework(ctx, v.Name),
@@ -848,7 +879,7 @@ func frameworkFlattenEKSContainerEnv(ctx context.Context, apiObject []batchtypes
 	return
 }
 
-func frameworkFlattenContainerProperties(ctx context.Context, c *batchtypes.ContainerProperties) map[string]attr.Value {
+func frameworkFlattenContainerProperties(ctx context.Context, c *awstypes.ContainerProperties) map[string]attr.Value {
 	containerProps := map[string]attr.Value{
 		"command":                  flex.FlattenFrameworkStringList(ctx, aws.StringSlice(c.Command)),
 		"execution_role_arn":       flex.StringToFramework(ctx, c.ExecutionRoleArn),
@@ -1025,7 +1056,7 @@ func frameworkFlattenContainerProperties(ctx context.Context, c *batchtypes.Cont
 	return containerProps
 }
 
-func frameworkFlattenContainerLinuxParameters(ctx context.Context, lp *batchtypes.LinuxParameters) map[string]attr.Value {
+func frameworkFlattenContainerLinuxParameters(ctx context.Context, lp *awstypes.LinuxParameters) map[string]attr.Value {
 	linuxProps := map[string]attr.Value{
 		"init_process_enabled": flex.BoolToFramework(ctx, lp.InitProcessEnabled),
 		"max_swap":             flex.Int32ToFramework(ctx, lp.MaxSwap),
@@ -1046,7 +1077,7 @@ func frameworkFlattenContainerLinuxParameters(ctx context.Context, lp *batchtype
 	return linuxProps
 }
 
-func frameworkFlattenContainerDevices(ctx context.Context, devices []batchtypes.Device) (data []attr.Value) {
+func frameworkFlattenContainerDevices(ctx context.Context, devices []awstypes.Device) (data []attr.Value) {
 	for _, dev := range devices {
 		var perms []string
 		for _, perm := range dev.Permissions {
@@ -1061,7 +1092,7 @@ func frameworkFlattenContainerDevices(ctx context.Context, devices []batchtypes.
 	return
 }
 
-func flattenContainerTmpfs(ctx context.Context, tmpfs []batchtypes.Tmpfs) (data []attr.Value) {
+func flattenContainerTmpfs(ctx context.Context, tmpfs []awstypes.Tmpfs) (data []attr.Value) {
 	for _, tmp := range tmpfs {
 		data = append(data, types.ObjectValueMust(tmpfsAttr, map[string]attr.Value{
 			"container_path": flex.StringToFramework(ctx, tmp.ContainerPath),
@@ -1072,7 +1103,7 @@ func flattenContainerTmpfs(ctx context.Context, tmpfs []batchtypes.Tmpfs) (data 
 	return
 }
 
-func frameworkFlattenRetryStrategy(ctx context.Context, jd *batchtypes.RetryStrategy, data *dataSourceJobDefinitionData) (diags diag.Diagnostics) {
+func frameworkFlattenRetryStrategy(ctx context.Context, jd *awstypes.RetryStrategy, data *dataSourceJobDefinitionData) (diags diag.Diagnostics) {
 	att := fwtypes.AttributeTypesMust[retryStrategy](ctx)
 	att["evaluate_on_exit"] = types.ListType{ElemType: types.ObjectType{AttrTypes: evaluateOnExitAttr}}
 	if jd == nil {
@@ -1347,4 +1378,222 @@ var authorizationConfigAttr = map[string]attr.Type{
 
 var hostAttr = map[string]attr.Type{
 	"source_path": types.StringType,
+}
+
+type jobDefinitionEKSPropertiesModel struct {
+	PodProperties fwtypes.ListNestedObjectValueOf[jobDefinitionEKSPodPropertiesModel] `tfsdk:"pod_properties"`
+}
+
+type jobDefinitionEKSPodPropertiesModel struct {
+	Containers         fwtypes.ListNestedObjectValueOf[jobDefinitionEKSContainerModel] `tfsdk:"containers"`
+	DNSPolicy          types.String                                                    `tfsdk:"dns_policy"`
+	HostNetwork        types.Bool                                                      `tfsdk:"host_network"`
+	Metadata           fwtypes.ListNestedObjectValueOf[jobDefinitionEKSMetadataModel]  `tfsdk:"metadata"`
+	ServiceAccountName types.Bool                                                      `tfsdk:"service_account_name"`
+	Volumes            fwtypes.ListNestedObjectValueOf[jobDefinitionEKSVolumeModel]    `tfsdk:"volumes"`
+}
+
+type jobDefinitionEKSContainerModel struct {
+	Args            fwtypes.ListValueOf[types.String]                                                   `tfsdk:"args"`
+	Command         fwtypes.ListValueOf[types.String]                                                   `tfsdk:"command"`
+	Env             fwtypes.ListNestedObjectValueOf[jobDefinitionEKSContainerEnvironmentVariableModel]  `tfsdk:"env"`
+	Image           types.String                                                                        `tfsdk:"image"`
+	ImagePullPolicy types.String                                                                        `tfsdk:"image_pull_policy"`
+	Name            types.String                                                                        `tfsdk:"name"`
+	Resources       fwtypes.ListNestedObjectValueOf[jobDefinitionEKSContainerResourceRequirementsModel] `tfsdk:"resources"`
+	SecurityContext fwtypes.ListNestedObjectValueOf[jobDefinitionEKSContainerSecurityContextModel]      `tfsdk:"security_context"`
+	VolumeMounts    fwtypes.ListNestedObjectValueOf[jobDefinitionEKSContainerVolumeMountModel]          `tfsdk:"volume_mounts"`
+}
+
+type jobDefinitionEKSContainerEnvironmentVariableModel struct {
+	Name  types.String `tfsdk:"name"`
+	Value types.String `tfsdk:"value"`
+}
+
+type jobDefinitionEKSContainerResourceRequirementsModel struct {
+	Limits   fwtypes.MapValueOf[types.String] `tfsdk:"limits"`
+	Requests fwtypes.MapValueOf[types.String] `tfsdk:"limits"`
+}
+
+type jobDefinitionEKSContainerSecurityContextModel struct {
+	Privileged             types.Bool  `tfsdk:"privileged"`
+	ReadOnlyRootFilesystem types.Bool  `tfsdk:"read_only_root_file_system"`
+	RunAsGroup             types.Int64 `tfsdk:"run_as_group"`
+	RunAsNonRoot           types.Bool  `tfsdk:"run_as_non_root"`
+	RunAsUser              types.Int64 `tfsdk:"run_as_user"`
+}
+
+type jobDefinitionEKSContainerVolumeMountModel struct {
+	MountPath types.String `tfsdk:"mount_path"`
+	Name      types.String `tfsdk:"name"`
+	ReadOnly  types.Bool   `tfsdk:"read_only"`
+}
+
+type jobDefinitionEKSMetadataModel struct {
+	Labels fwtypes.MapValueOf[types.String] `tfsdk:"labels"`
+}
+
+type jobDefinitionEKSVolumeModel struct {
+	EmptyDir fwtypes.ListNestedObjectValueOf[jobDefinitionEKSEmptyDirModel] `tfsdk:"empty_dir"`
+	Name     types.String                                                   `tfsdk:"name"`
+	HostPath fwtypes.ListNestedObjectValueOf[jobDefinitionEKSHostPathModel] `tfsdk:"host_path"`
+	Secret   fwtypes.ListNestedObjectValueOf[jobDefinitionEKSSecretModel]   `tfsdk:"secret"`
+}
+
+type jobDefinitionEKSEmptyDirModel struct {
+	Medium    types.String `tfsdk:"medium"`
+	SizeLimit types.String `tfsdk:"size_limit"`
+}
+
+type jobDefinitionEKSHostPathModel struct {
+	Path types.String `tfsdk:"path"`
+}
+
+type jobDefinitionEKSSecretModel struct {
+	Optional   types.Bool   `tfsdk:"optional"`
+	SecretName types.String `tfsdk:"secret_name"`
+}
+
+type jobDefinitionNodePropertiesModel struct {
+	MainNode            types.Int64                                                          `tfsdk:"main_node"`
+	NodeRangeProperties fwtypes.ListNestedObjectValueOf[jobDefinitionNodeRangePropertyModel] `tfsdk:"node_range_properties"`
+	NumNodes            types.Int64                                                          `tfsdk:"num_nodes"`
+}
+
+type jobDefinitionNodeRangePropertyModel struct {
+	Container   fwtypes.ListNestedObjectValueOf[jobDefinitionContainerPropertiesModel] `tfsdk:"container"`
+	TargetNodes types.String                                                           `tfsdk:"target_nodes"`
+}
+
+type jobDefinitionContainerPropertiesModel struct {
+	Command                      fwtypes.ListValueOf[types.String]                                               `tfsdk:"command"`
+	Environment                  fwtypes.ListNestedObjectValueOf[jobDefinitionKeyValuePairModel]                 `tfsdk:"environment"`
+	EphemeralStorage             fwtypes.ListNestedObjectValueOf[jobDefinitionEphemeralStorageModel]             `tfsdk:"ephemeral_storage"`
+	ExecutionRoleARN             types.String                                                                    `tfsdk:"execution_role_arn"`
+	FargatePlatformConfiguration fwtypes.ListNestedObjectValueOf[jobDefinitionFargatePlatformConfigurationModel] `tfsdk:"fargate_platform_configuration"`
+	Image                        types.String                                                                    `tfsdk:"image"`
+	InstanceType                 types.String                                                                    `tfsdk:"instance_type"`
+	JobRoleARN                   types.String                                                                    `tfsdk:"job_role_arn"`
+	LinuxParameters              fwtypes.ListNestedObjectValueOf[jobDefinitionLinuxParametersModel]              `tfsdk:"linux_parameters"`
+	LogConfiguration             fwtypes.ListNestedObjectValueOf[jobDefinitionLogConfigurationModel]             `tfsdk:"log_configuration"`
+	MountPoints                  fwtypes.ListNestedObjectValueOf[jobDefinitionMountPointModel]                   `tfsdk:"mount_points"`
+	NetworkConfiguration         fwtypes.ListNestedObjectValueOf[jobDefinitionNetworkConfigurationModel]         `tfsdk:"network_configuration"`
+	Privileged                   types.Bool                                                                      `tfsdk:"privileged"`
+	ReadonlyRootFilesystem       types.Bool                                                                      `tfsdk:"readonly_root_filesystem"`
+	ResourceRequirements         fwtypes.ListNestedObjectValueOf[jobDefinitionResourceRequirementModel]          `tfsdk:"resource_requirements"`
+	RuntimePlatform              fwtypes.ListNestedObjectValueOf[jobDefinitionRuntimePlatformModel]              `tfsdk:"runtime_platform"`
+	Secrets                      fwtypes.ListNestedObjectValueOf[jobDefinitionSecretModel]                       `tfsdk:"secrets"`
+	Ulimits                      fwtypes.ListNestedObjectValueOf[jobDefinitionUlimitModel]                       `tfsdk:"ulimits"`
+	User                         types.String                                                                    `tfsdk:"user"`
+	Volumes                      fwtypes.ListNestedObjectValueOf[jobDefinitionVolumeModel]                       `tfsdk:"volumes"`
+}
+
+type jobDefinitionKeyValuePairModel struct {
+	Name  types.String `tfsdk:"name"`
+	Value types.String `tfsdk:"value"`
+}
+
+type jobDefinitionEphemeralStorageModel struct {
+	SizeInGiB types.Int64 `tfsdk:"size_in_gib"`
+}
+
+type jobDefinitionFargatePlatformConfigurationModel struct {
+	PlatformVersion types.String `tfsdk:"platform_version"`
+}
+
+type jobDefinitionLinuxParametersModel struct {
+	Devices            fwtypes.ListNestedObjectValueOf[jobDefinitionDeviceModel] `tfsdk:"devices"`
+	InitProcessEnabled types.Bool                                                `tfsdk:"init_process_enabled"`
+	MaxSwap            types.Int64                                               `tfsdk:"max_swap"`
+	SharedMemorySize   types.Int64                                               `tfsdk:"shared_memory_size"`
+	Swappiness         types.Int64                                               `tfsdk:"swappiness"`
+	Tmpfs              fwtypes.ListNestedObjectValueOf[jobDefinitionTmpfsModel]  `tfsdk:"tmpfs"`
+}
+
+type jobDefinitionDeviceModel struct {
+	ContainerPath types.String                      `tfsdk:"container_path"`
+	HostPath      types.String                      `tfsdk:"host_path"`
+	Permissions   fwtypes.ListValueOf[types.String] `tfsdk:"permissions"`
+}
+
+type jobDefinitionTmpfsModel struct {
+	ContainerPath types.String                      `tfsdk:"container_path"`
+	MountOptions  fwtypes.ListValueOf[types.String] `tfsdk:"mount_options"`
+	Size          types.Int64                       `tfsdk:"size"`
+}
+
+type jobDefinitionLogConfigurationModel struct {
+	LogDriver     types.String                                              `tfsdk:"log_driver"`
+	Options       fwtypes.MapValueOf[types.String]                          `tfsdk:"options"`
+	SecretOptions fwtypes.ListNestedObjectValueOf[jobDefinitionSecretModel] `tfsdk:"secret_options"`
+}
+
+type jobDefinitionSecretModel struct {
+	Name      types.String `tfsdk:"name"`
+	ValueFrom types.String `tfsdk:"value_from"`
+}
+
+type jobDefinitionMountPointModel struct {
+	ContainerPath types.String `tfsdk:"container_path"`
+	ReadOnly      types.Bool   `tfsdk:"read_only"`
+	SourceVolume  types.String `tfsdk:"source_volume"`
+}
+
+type jobDefinitionNetworkConfigurationModel struct {
+	AssignPublicIP types.Bool `tfsdk:"assign_public_ip"`
+}
+
+type jobDefinitionResourceRequirementModel struct {
+	Type  types.String `tfsdk:"type"`
+	Value types.String `tfsdk:"value"`
+}
+
+type jobDefinitionRuntimePlatformModel struct {
+	CPUArchitecture       types.String `tfsdk:"cpu_architecture"`
+	OperatingSystemFamily types.String `tfsdk:"operating_system_family"`
+}
+
+type jobDefinitionUlimitModel struct {
+	HardLimit types.Int64  `tfsdk:"hard_limit"`
+	Name      types.String `tfsdk:"name"`
+	SoftLimit types.Int64  `tfsdk:"soft_limit"`
+}
+
+type jobDefinitionVolumeModel struct {
+	EFSVolumeConfiguration fwtypes.ListNestedObjectValueOf[jobDefinitionEFSVolumeConfigurationModel] `tfsdk:"efs_volume_configuration"`
+	Host                   fwtypes.ListNestedObjectValueOf[jobDefinitionHostModel]                   `tfsdk:"host"`
+	Name                   types.String                                                              `tfsdk:"name"`
+}
+
+type jobDefinitionEFSVolumeConfigurationModel struct {
+	AuthorizationConfig   fwtypes.ListNestedObjectValueOf[jobDefinitionEFSAuthorizationConfigModel] `tfsdk:"authorization_config"`
+	FileSystemID          types.String                                                              `tfsdk:"file_system_id"`
+	RootDirectory         types.String                                                              `tfsdk:"root_directory"`
+	TransitEncryption     types.String                                                              `tfsdk:"transit_encryption"`
+	TransitEncryptionPort types.Int64                                                               `tfsdk:"transit_encryption_port"`
+}
+
+type jobDefinitionEFSAuthorizationConfigModel struct {
+	AccessPointID types.String `tfsdk:"access_point_id"`
+	IAM           types.String `tfsdk:"iam"`
+}
+
+type jobDefinitionHostModel struct {
+	SourcePath types.String `tfsdk:"source_path"`
+}
+
+type jobDefinitionRetryStrategyModel struct {
+	Attempts       types.Int64                                                       `tfsdk:"attempts"`
+	EvaluateOnExit fwtypes.ListNestedObjectValueOf[jobDefinitionEvaluateOnExitModel] `tfsdk:"evaluate_on_exit"`
+}
+
+type jobDefinitionEvaluateOnExitModel struct {
+	Action         types.String `tfsdk:"action"`
+	OnExitCode     types.String `tfsdk:"on_exit_code"`
+	OnReason       types.String `tfsdk:"on_reason"`
+	OnStatusReason types.String `tfsdk:"on_status_reason"`
+}
+
+type jobDefinitionJobTimeoutModel struct {
+	AttemptDurationSeconds types.Int64 `tfsdk:"attempt_duration_seconds"`
 }
