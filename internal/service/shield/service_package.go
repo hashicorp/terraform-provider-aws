@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	awsPartitionID  = "aws" //nosempgrep:aws-in-const-name
+	partitionID     = "aws"
 	usEast1RegionID = "us-east-1"
 )
 
@@ -20,7 +20,7 @@ func (p *servicePackage) NewClient(_ context.Context, config map[string]any) (*s
 	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
 	// Force "global" services to correct Regions.
-	if config["partition"].(string) == awsPartitionID {
+	if config["partition"].(string) == partitionID {
 		cfg.Region = usEast1RegionID
 	}
 
