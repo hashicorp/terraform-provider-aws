@@ -109,6 +109,7 @@ import (
 	servicecatalogappregistry_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry"
 	servicequotas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	sesv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sesv2"
+	shield_sdkv2 "github.com/aws/aws-sdk-go-v2/service/shield"
 	signer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/signer"
 	sns_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sns"
 	sqs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sqs"
@@ -1138,6 +1139,10 @@ func (c *AWSClient) ServiceQuotasClient(ctx context.Context) *servicequotas_sdkv
 
 func (c *AWSClient) ShieldConn(ctx context.Context) *shield_sdkv1.Shield {
 	return errs.Must(conn[*shield_sdkv1.Shield](ctx, c, names.Shield, make(map[string]any)))
+}
+
+func (c *AWSClient) ShieldClient(ctx context.Context) *shield_sdkv2.Client {
+	return errs.Must(client[*shield_sdkv2.Client](ctx, c, names.Shield, make(map[string]any)))
 }
 
 func (c *AWSClient) SignerClient(ctx context.Context) *signer_sdkv2.Client {
