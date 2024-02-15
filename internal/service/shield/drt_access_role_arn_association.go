@@ -43,6 +43,10 @@ const (
 	ResNameDRTAccessRoleARNAssociation = "DRT Access Role ARN Association"
 )
 
+const (
+	propagationTimeout = 2 * time.Minute
+)
+
 type resourceDRTAccessRoleARNAssociation struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
@@ -97,7 +101,10 @@ func (r *resourceDRTAccessRoleARNAssociation) Create(ctx context.Context, req re
 		RoleArn: aws.String(plan.RoleARN.ValueString()),
 	}
 
-	out, err := conn.AssociateDRTRoleWithContext(ctx, in)
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.AssociateDRTRoleWithContext(ctx, in)
+	}, "InvalidParameterException", "role does not have a valid DRT managed policy")
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Shield, create.ErrActionCreating, ResNameDRTAccessRoleARNAssociation, plan.RoleARN.String(), err),
@@ -105,6 +112,9 @@ func (r *resourceDRTAccessRoleARNAssociation) Create(ctx context.Context, req re
 		)
 		return
 	}
+
+	out := outputRaw.(*shield.AssociateDRTRoleOutput)
+
 	if out == nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Shield, create.ErrActionCreating, ResNameDRTAccessRoleARNAssociation, plan.RoleARN.String(), nil),
