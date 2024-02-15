@@ -47,6 +47,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.12.0
+	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.3.0
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.7.0
