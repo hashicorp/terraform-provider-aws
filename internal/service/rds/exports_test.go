@@ -9,11 +9,13 @@ var (
 	ResourceProxyDefaultTargetGroup = resourceProxyDefaultTargetGroup
 	ResourceProxyEndpoint           = resourceProxyEndpoint
 	ResourceProxyTarget             = resourceProxyTarget
+	ResourceSubnetGroup             = resourceSubnetGroup
 
 	FindDBInstanceByID                         = findDBInstanceByIDSDKv1
 	FindDBProxyByName                          = findDBProxyByName
 	FindDBProxyEndpointByTwoPartKey            = findDBProxyEndpointByTwoPartKey
 	FindDBProxyTargetByFourPartKey             = findDBProxyTargetByFourPartKey
+	FindDBSubnetGroupByName                    = findDBSubnetGroupByName
 	FindDefaultDBProxyTargetGroupByDBProxyName = findDefaultDBProxyTargetGroupByDBProxyName
 	ListTags                                   = listTags
 	NewBlueGreenOrchestrator                   = newBlueGreenOrchestrator

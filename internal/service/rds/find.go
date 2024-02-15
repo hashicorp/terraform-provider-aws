@@ -34,44 +34,6 @@ func FindDBClusterRoleByDBClusterIDAndRoleARN(ctx context.Context, conn *rds.RDS
 	return nil, &retry.NotFoundError{}
 }
 
-func FindDBSubnetGroupByName(ctx context.Context, conn *rds.RDS, name string) (*rds.DBSubnetGroup, error) {
-	input := &rds.DescribeDBSubnetGroupsInput{
-		DBSubnetGroupName: aws.String(name),
-	}
-
-	output, err := conn.DescribeDBSubnetGroupsWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBSubnetGroupNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.DBSubnetGroups) == 0 || output.DBSubnetGroups[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.DBSubnetGroups); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	dbSubnetGroup := output.DBSubnetGroups[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(dbSubnetGroup.DBSubnetGroupName) != name {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return dbSubnetGroup, nil
-}
-
 func FindEventSubscriptionByID(ctx context.Context, conn *rds.RDS, id string) (*rds.EventSubscription, error) {
 	input := &rds.DescribeEventSubscriptionsInput{
 		SubscriptionName: aws.String(id),

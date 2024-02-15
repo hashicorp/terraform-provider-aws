@@ -4,9 +4,7 @@
 package rds
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -17,11 +15,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -89,19 +87,7 @@ func resourceProxy() *schema.Resource {
 						},
 					},
 				},
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-
-					m := v.(map[string]interface{})
-					// Don't include "client_password_auth_type" as it's Computed.
-					for _, key := range tfslices.Of("auth_scheme", "description", "iam_auth", "secret_arn", "username") {
-						if v, ok := m[key].(string); ok && v != "" {
-							buf.WriteString(fmt.Sprintf("%s-", v))
-						}
-					}
-
-					return create.StringHashcode(buf.String())
-				},
+				Set: sdkv2.SimpleSchemaSetFunc("auth_scheme", "description", "iam_auth", "secret_arn", "username"),
 			},
 			"debug_logging": {
 				Type:     schema.TypeBool,
