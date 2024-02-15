@@ -5,8 +5,6 @@ package sqs
 
 import (
 	"context"
-	"log"
-
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/sqs"
 	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
@@ -18,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"log"
 )
 
 type queueAttributeHandler struct {
@@ -43,7 +42,9 @@ func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceDa
 		QueueUrl:   aws.String(url),
 	}
 
-	_, err = conn.SetQueueAttributes(ctx, input)
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.SetQueueAttributes(ctx, input)
+	}, errCodeInvalidAttributeValue, "Invalid value for the parameter Policy")
 
 	if err != nil {
 		return diag.Errorf("setting SQS Queue (%s) attribute (%s): %s", url, h.AttributeName, err)
