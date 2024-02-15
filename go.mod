@@ -21,7 +21,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/athena v1.39.0
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.31.0
-	github.com/aws/aws-sdk-go-v2/service/batch v1.30.5
+	github.com/aws/aws-sdk-go-v2/service/batch v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.6.0
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.3.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.21.0
