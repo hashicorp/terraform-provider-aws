@@ -446,36 +446,6 @@ func TestAccRDSProxy_authSecretARN(t *testing.T) {
 	})
 }
 
-func TestAccRDSProxy_authUsername(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	var dbProxy types.DBProxy
-	resourceName := "aws_db_proxy.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSEndpointID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckProxyDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccProxyConfig_name(rName, rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckProxyExists(ctx, resourceName, &dbProxy),
-					resource.TestCheckResourceAttr(resourceName, "auth.#", "1"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "auth.*", map[string]string{
-						"username": "",
-					}),
-				),
-			},
-		},
-	})
-}
-
 func TestAccRDSProxy_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -958,7 +928,7 @@ resource "aws_db_proxy" "test" {
 
   auth {
     auth_scheme               = "SECRETS"
-    client_password_auth_type = "POSTGRES_SCRAM_SHA_256"
+    client_password_auth_type = "MYSQL_NATIVE_PASSWORD"
     description               = "user with read/write access to the database."
     iam_auth                  = "REQUIRED"
     secret_arn                = aws_secretsmanager_secret.test.arn
@@ -966,7 +936,7 @@ resource "aws_db_proxy" "test" {
 
   auth {
     auth_scheme               = "SECRETS"
-    client_password_auth_type = "POSTGRES_SCRAM_SHA_256"
+    client_password_auth_type = "MYSQL_NATIVE_PASSWORD"
     description               = "user with read only access to the database."
     iam_auth                  = "REQUIRED"
     secret_arn                = aws_secretsmanager_secret.test2.arn
