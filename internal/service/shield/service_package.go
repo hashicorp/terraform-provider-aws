@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	awsPartitionID  = "aws"
+	awsPartitionID  = "aws" //nosempgrep:aws-in-const-name
 	usEast1RegionID = "us-east-1"
 )
 
