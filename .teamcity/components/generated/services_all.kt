@@ -58,6 +58,7 @@ val services = mapOf(
     "connect" to ServiceSpec("Connect"),
     "connectcases" to ServiceSpec("Connect Cases"),
     "controltower" to ServiceSpec("Control Tower"),
+    "costoptimizationhub" to ServiceSpec("Cost Optimization Hub"),
     "cur" to ServiceSpec("Cost and Usage Report", regionOverride = "us-east-1"),
     "customerprofiles" to ServiceSpec("Connect Customer Profiles"),
     "dataexchange" to ServiceSpec("Data Exchange"),

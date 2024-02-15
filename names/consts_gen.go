@@ -60,6 +60,7 @@ const (
 	Connect                      = "connect"
 	ConnectCases                 = "connectcases"
 	ControlTower                 = "controltower"
+	CostOptimizationHub          = "costoptimizationhub"
 	CustomerProfiles             = "customerprofiles"
 	DAX                          = "dax"
 	DLM                          = "dlm"
