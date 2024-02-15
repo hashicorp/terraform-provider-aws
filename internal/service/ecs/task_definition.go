@@ -84,6 +84,7 @@ func ResourceTaskDefinition() *schema.Resource {
 					// but they still show in the plan if some other property changes).
 					orderedCDs, _ := expandContainerDefinitions(v.(string))
 					containerDefinitions(orderedCDs).OrderEnvironmentVariables()
+					containerDefinitions(orderedCDs).OrderSecrets()
 					unnormalizedJson, _ := flattenContainerDefinitions(orderedCDs)
 					json, _ := structure.NormalizeJsonString(unnormalizedJson)
 					return json
@@ -613,6 +614,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	// (diff is suppressed if the environment variables haven't changed, but they still show in the plan if
 	// some other property changes).
 	containerDefinitions(taskDefinition.ContainerDefinitions).OrderEnvironmentVariables()
+	containerDefinitions(taskDefinition.ContainerDefinitions).OrderSecrets()
 
 	defs, err := flattenContainerDefinitions(taskDefinition.ContainerDefinitions)
 	if err != nil {
