@@ -47,6 +47,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.9.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.16.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.33.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.3.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.21.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.37.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.34.0 // indirect
