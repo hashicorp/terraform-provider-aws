@@ -386,6 +386,7 @@ func Endpoints() []Endpoint {
 type ServiceNameUpper struct {
 	ProviderPackage   string
 	ProviderNameUpper string
+	SdkID             string
 }
 
 func ServiceNamesUpper() []ServiceNameUpper {
@@ -395,6 +396,7 @@ func ServiceNamesUpper() []ServiceNameUpper {
 		sn := ServiceNameUpper{
 			ProviderPackage:   k,
 			ProviderNameUpper: v.ProviderNameUpper,
+			SdkID:             v.SdkId,
 		}
 		serviceNames = append(serviceNames, sn)
 	}
