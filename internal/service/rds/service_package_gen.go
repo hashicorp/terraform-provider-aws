@@ -67,8 +67,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceSubnetGroup,
+			Factory:  dataSourceSubnetGroup,
 			TypeName: "aws_db_subnet_group",
+			Name:     "DB Subnet Group",
 		},
 		{
 			Factory:  DataSourceCertificate,
