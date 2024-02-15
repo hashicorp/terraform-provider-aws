@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_appsync_resolver")
+// @SDKResource("aws_appsync_resolver", name="Resolver)
 func ResourceResolver() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResolverCreate,
@@ -390,6 +390,10 @@ func resourceResolverDelete(ctx context.Context, d *schema.ResourceData, meta in
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.DeleteResolverWithContext(ctx, input)
 	}, appsync.ErrCodeConcurrentModificationException)
+
+	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting AppSync Resolver (%s): %s", d.Id(), err)

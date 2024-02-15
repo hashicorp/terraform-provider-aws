@@ -177,20 +177,8 @@ type TestFlexTF11 struct {
 	FieldInner fwtypes.MapValueOf[basetypes.StringValue] `tfsdk:"field_inner"`
 }
 
-type TestFlexTF12 struct {
-	FieldInner fwtypes.ObjectMapValueOf[TestFlexTF01] `tfsdk:"field_inner"`
-}
-
-type TestFlexTF13 struct {
-	FieldInner fwtypes.ObjectMapValueOf[*TestFlexTF01] `tfsdk:"field_inner"`
-}
-
 type TestFlexTF14 struct {
 	FieldOuter fwtypes.ListNestedObjectValueOf[TestFlexTF11] `tfsdk:"field_outer"`
-}
-
-type TestFlexTF15 struct {
-	FieldOuter fwtypes.ListNestedObjectValueOf[TestFlexTF12] `tfsdk:"field_outer"`
 }
 
 type TestFlexAWS13 struct {
@@ -228,11 +216,6 @@ func (TestEnum) Values() []TestEnum {
 	}
 }
 
-type TestFlexComplexNestTF01 struct { // ie, DialogState
-	DialogAction      fwtypes.ListNestedObjectValueOf[TestFlexComplexNestTF02] `tfsdk:"dialog_action"`
-	Intent            fwtypes.ListNestedObjectValueOf[TestFlexComplexNestTF03] `tfsdk:"intent"`
-	SessionAttributes fwtypes.MapValueOf[basetypes.StringValue]                `tfsdk:"session_attributes"`
-}
 type TestFlexComplexNestAWS01 struct { // ie, DialogState
 	DialogAction      *TestFlexComplexNestAWS02
 	Intent            *TestFlexComplexNestAWS03
@@ -250,10 +233,6 @@ type TestFlexComplexNestAWS02 struct { // ie, DialogAction
 	SuppressNextMessage *bool
 }
 
-type TestFlexComplexNestTF03 struct { // ie, IntentOverride
-	Name  types.String                                      `tfsdk:"name"`
-	Slots fwtypes.ObjectMapValueOf[TestFlexComplexNestTF04] `tfsdk:"slots"`
-}
 type TestFlexComplexNestAWS03 struct { // ie, IntentOverride
 	Name  *string
 	Slots map[string]TestFlexComplexNestAWS04

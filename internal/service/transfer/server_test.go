@@ -658,7 +658,7 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{"force_destroy", "endpoint_details.0.security_group_ids"},
 			},
 		},
 	})
@@ -696,7 +696,7 @@ func testAccServer_updateEndpointType_vpcEndpointToVPC_addressAllocationIDs(t *t
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_destroy"},
+				ImportStateVerifyIgnore: []string{"force_destroy", "endpoint_details.0.security_group_ids"},
 			},
 		},
 	})

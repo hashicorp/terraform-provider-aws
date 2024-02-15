@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	accounttypes "github.com/aws/aws-sdk-go-v2/service/account/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
@@ -46,7 +47,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	tfaccount "github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
@@ -683,6 +686,8 @@ func CheckResourceAttrJMES(name, key, jmesPath, value string) resource.TestCheck
 			v = x
 		case float64:
 			v = strconv.FormatFloat(x, 'f', -1, 64)
+		case bool:
+			v = fmt.Sprint(x)
 		default:
 			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T)`, name, key, jmesPath, result)
 		}
@@ -729,6 +734,8 @@ func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySec
 			value = x
 		case float64:
 			value = strconv.FormatFloat(x, 'f', -1, 64)
+		case bool:
+			value = fmt.Sprint(x)
 		default:
 			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T)`, nameFirst, keyFirst, jmesPath, result)
 		}
@@ -1027,6 +1034,18 @@ func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
 
 	if aws.StringValue(organization.MasterAccountId) == aws.StringValue(callerIdentity.Account) {
 		t.Skip("this AWS account must not be the management account of an AWS Organization")
+	}
+}
+
+func PreCheckRegionOptIn(ctx context.Context, t *testing.T, region string) {
+	output, err := tfaccount.FindRegionOptInStatus(ctx, Provider.Meta().(*conns.AWSClient).AccountClient(ctx), "", region)
+
+	if err != nil {
+		t.Fatalf("reading Region (%s) opt-in status: %s", region, err)
+	}
+
+	if status := output.RegionOptStatus; status != accounttypes.RegionOptStatusEnabled && status != accounttypes.RegionOptStatusEnabledByDefault {
+		t.Skipf("Region (%s) opt-in status: %s", region, status)
 	}
 }
 
@@ -2460,7 +2479,7 @@ func SkipIfEnvVarNotSet(t *testing.T, key string) string {
 }
 
 // RunSerialTests1Level runs test cases in parallel, optionally sleeping between each.
-func RunSerialTests1Level(t *testing.T, testCases map[string]func(t *testing.T), d time.Duration) {
+func RunSerialTests1Level(t *testing.T, testCases map[string]func(*testing.T), d time.Duration) {
 	t.Helper()
 
 	for name, tc := range testCases {
@@ -2473,7 +2492,7 @@ func RunSerialTests1Level(t *testing.T, testCases map[string]func(t *testing.T),
 }
 
 // RunSerialTests2Levels runs test cases in parallel, optionally sleeping between each.
-func RunSerialTests2Levels(t *testing.T, testCases map[string]map[string]func(t *testing.T), d time.Duration) {
+func RunSerialTests2Levels(t *testing.T, testCases map[string]map[string]func(*testing.T), d time.Duration) {
 	t.Helper()
 
 	for group, m := range testCases {
@@ -2481,6 +2500,26 @@ func RunSerialTests2Levels(t *testing.T, testCases map[string]map[string]func(t 
 		t.Run(group, func(t *testing.T) {
 			RunSerialTests1Level(t, m, d)
 		})
+	}
+}
+
+// RunLimitedConcurrencyTests2Levels runs test cases with concurrency limited via `semaphore`.
+func RunLimitedConcurrencyTests2Levels(t *testing.T, semaphore tfsync.Semaphore, testCases map[string]map[string]func(*testing.T, tfsync.Semaphore)) {
+	t.Helper()
+
+	for group, m := range testCases {
+		m := m
+		for name, tc := range m {
+			tc := tc
+			t.Run(fmt.Sprintf("%s_%s", group, name), func(t *testing.T) {
+				t.Cleanup(func() {
+					if os.Getenv(resource.EnvTfAcc) != "" {
+						semaphore.Notify()
+					}
+				})
+				tc(t, semaphore)
+			})
+		}
 	}
 }
 

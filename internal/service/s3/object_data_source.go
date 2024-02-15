@@ -26,8 +26,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_s3_object")
-func DataSourceObject() *schema.Resource {
+// @SDKDataSource("aws_s3_object", name="Object")
+func dataSourceObject() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceObjectRead,
 
@@ -261,7 +261,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("body", string(buf.Bytes()))
 	}
 
-	if tags, err := ObjectListTags(ctx, conn, bucket, key, optFns...); err == nil {
+	if tags, err := objectListTags(ctx, conn, bucket, key, optFns...); err == nil {
 		if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}

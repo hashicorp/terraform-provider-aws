@@ -27,10 +27,12 @@ func TestAccEKSClusterDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccClusterDataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrPair(resourceName, "access_config.#", dataSourceResourceName, "access_config.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceResourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceResourceName, "certificate_authority.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "certificate_authority.0.data", dataSourceResourceName, "certificate_authority.0.data"),
+					resource.TestCheckNoResourceAttr(dataSourceResourceName, "cluster_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_at", dataSourceResourceName, "created_at"),
 					resource.TestCheckResourceAttr(dataSourceResourceName, "enabled_cluster_log_types.#", "2"),
 					resource.TestCheckTypeSetElemAttr(dataSourceResourceName, "enabled_cluster_log_types.*", "api"),
@@ -43,6 +45,7 @@ func TestAccEKSClusterDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_network_config.0.ip_family", dataSourceResourceName, "kubernetes_network_config.0.ip_family"),
 					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_network_config.0.service_ipv4_cidr", dataSourceResourceName, "kubernetes_network_config.0.service_ipv4_cidr"),
 					resource.TestCheckResourceAttrPair(resourceName, "kubernetes_network_config.0.service_ipv6_cidr", dataSourceResourceName, "kubernetes_network_config.0.service_ipv6_cidr"),
+					resource.TestCheckResourceAttrPair(resourceName, "outpost_config.#", dataSourceResourceName, "outpost_config.#"),
 					resource.TestMatchResourceAttr(dataSourceResourceName, "platform_version", regexache.MustCompile(`^eks\.\d+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", dataSourceResourceName, "role_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceResourceName, "status"),
