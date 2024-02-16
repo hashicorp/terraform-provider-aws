@@ -19,7 +19,7 @@ jobs:
     steps:
       - if: github.event_name == 'workflow_run'
         name: Download Artifact from Release workflow
-        uses: dawidd6/action-download-artifact@e7466d1a7587ed14867642c2ca74b5bcc1e19a2d # v3.0.0
+        uses: dawidd6/action-download-artifact@f6b0bace624032e30a85a8fd9c1a7f8f611f5737 # v3.1.0
         with:
           workflow: release.yml
           name: release-tag
