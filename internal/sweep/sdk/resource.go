@@ -5,7 +5,6 @@ package sdk
 
 import (
 	"context"
-	"maps"
 	"math/rand"
 	"strings"
 	"time"
@@ -17,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/maps"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
