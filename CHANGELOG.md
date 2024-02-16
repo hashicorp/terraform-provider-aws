@@ -1,4 +1,9 @@
 ## 5.38.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_prometheus_scraper: Fixes invalid result after apply error. ([#35844](https://github.com/hashicorp/terraform-provider-aws/issues/35844))
+
 ## 5.37.0 (February 15, 2024)
 
 NOTES:
