@@ -110,14 +110,6 @@ var (
 // PreCheck(t) must be called before using this provider instance.
 var Provider *schema.Provider
 
-// testAccProviderConfigure ensures Provider is only configured once
-//
-// The PreCheck(t) function is invoked for every test and this prevents
-// extraneous reconfiguration to the same values each time. However, this does
-// not prevent reconfiguration that may happen should the address of
-// Provider be errantly reused in ProviderFactories.
-var testAccProviderConfigure sync.Once
-
 func init() {
 	var err error
 	Provider, err = provider.New(context.Background())
@@ -250,7 +242,7 @@ func ProtoV5FactoriesMultipleRegions(ctx context.Context, t *testing.T, n int) m
 func PreCheck(ctx context.Context, t *testing.T) {
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
-	testAccProviderConfigure.Do(func() {
+	sync.OnceFunc(func() {
 		envvar.FailIfAllEmpty(t, []string{envvar.Profile, envvar.AccessKeyId, envvar.ContainerCredentialsFullURI}, "credentials for running acceptance testing")
 
 		if os.Getenv(envvar.AccessKeyId) != "" {
@@ -271,7 +263,7 @@ func PreCheck(ctx context.Context, t *testing.T) {
 		if err := sdkdiag.DiagnosticsError(diags); err != nil {
 			t.Fatalf("configuring provider: %s", err)
 		}
-	})
+	})()
 }
 
 // ProviderAccountID returns the account ID of an AWS provider
