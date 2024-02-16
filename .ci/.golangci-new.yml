@@ -2,7 +2,7 @@ linters:
   disable-all: true
   enable:
     - nosprintfhostport
-    # - perfsprint
+    - perfsprint
     - usestdlibvars
     - thelper
 
