@@ -38,6 +38,7 @@ const (
 	ChimeSDKVoiceEndpointID              = "voice-chime"
 	ChimeSDKMediaPipelinesEndpointID     = "media-pipelines-chime"
 	CleanRoomsEndpointID                 = "cleanrooms"
+	Cloud9EndpointID                     = "cloud9"
 	CloudSearchEndpointID                = "cloudsearch"
 	CloudTrailEndpointID                 = "cloudtrail"
 	CloudWatchEndpointID                 = "monitoring"

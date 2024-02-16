@@ -5,6 +5,7 @@ package lexmodels_test
 import (
 	"context"
 	"fmt"
+	"maps"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -25,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
-	"golang.org/x/exp/maps"
 )
 
 type endpointTestCase struct {

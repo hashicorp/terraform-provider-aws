@@ -5,6 +5,7 @@ package provider
 
 import (
 	"context"
+	"maps"
 	"os"
 	"testing"
 
@@ -18,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"golang.org/x/exp/maps"
 )
 
 // TestSharedConfigFileParsing prevents regression in shared config file parsing

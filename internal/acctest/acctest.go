@@ -91,6 +91,8 @@ const accountIDRegexp = `(aws|aws-managed|\d{12})`
 //
 // Reference: https://github.com/dominikh/go-tools/issues/633#issuecomment-606560616
 func Skip(t *testing.T, message string) {
+	t.Helper()
+
 	t.Skip(message)
 }
 
@@ -146,6 +148,8 @@ func protoV5ProviderFactoriesInit(ctx context.Context, providerNames ...string) 
 }
 
 func protoV5ProviderFactoriesNamedInit(ctx context.Context, t *testing.T, providers map[string]*schema.Provider, providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
+	t.Helper()
+
 	factories := make(map[string]func() (tfprotov5.ProviderServer, error), len(providerNames))
 
 	for _, name := range providerNames {
@@ -166,6 +170,8 @@ func protoV5ProviderFactoriesNamedInit(ctx context.Context, t *testing.T, provid
 }
 
 func protoV5ProviderFactoriesPlusProvidersInit(ctx context.Context, t *testing.T, providers *[]*schema.Provider, providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
+	t.Helper()
+
 	factories := make(map[string]func() (tfprotov5.ProviderServer, error), len(providerNames))
 
 	for _, name := range providerNames {

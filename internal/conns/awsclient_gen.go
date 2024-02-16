@@ -20,6 +20,7 @@ import (
 	chimesdkmediapipelines_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines"
 	chimesdkvoice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/chimesdkvoice"
 	cleanrooms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cleanrooms"
+	cloud9_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloud9"
 	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudfront_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	cloudfrontkeyvaluestore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore"
@@ -94,6 +95,7 @@ import (
 	rbin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	redshiftdata_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshiftdata"
+	redshiftserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	rekognition_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rekognition"
 	resourceexplorer2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	resourcegroups_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourcegroups"
@@ -146,7 +148,6 @@ import (
 	backup_sdkv1 "github.com/aws/aws-sdk-go/service/backup"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
 	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
-	cloud9_sdkv1 "github.com/aws/aws-sdk-go/service/cloud9"
 	cloudformation_sdkv1 "github.com/aws/aws-sdk-go/service/cloudformation"
 	cloudfront_sdkv1 "github.com/aws/aws-sdk-go/service/cloudfront"
 	cloudhsmv2_sdkv1 "github.com/aws/aws-sdk-go/service/cloudhsmv2"
@@ -384,8 +385,8 @@ func (c *AWSClient) CleanRoomsClient(ctx context.Context) *cleanrooms_sdkv2.Clie
 	return errs.Must(client[*cleanrooms_sdkv2.Client](ctx, c, names.CleanRooms, make(map[string]any)))
 }
 
-func (c *AWSClient) Cloud9Conn(ctx context.Context) *cloud9_sdkv1.Cloud9 {
-	return errs.Must(conn[*cloud9_sdkv1.Cloud9](ctx, c, names.Cloud9, make(map[string]any)))
+func (c *AWSClient) Cloud9Client(ctx context.Context) *cloud9_sdkv2.Client {
+	return errs.Must(client[*cloud9_sdkv2.Client](ctx, c, names.Cloud9, make(map[string]any)))
 }
 
 func (c *AWSClient) CloudControlClient(ctx context.Context) *cloudcontrol_sdkv2.Client {
@@ -982,6 +983,10 @@ func (c *AWSClient) RedshiftDataClient(ctx context.Context) *redshiftdata_sdkv2.
 
 func (c *AWSClient) RedshiftServerlessConn(ctx context.Context) *redshiftserverless_sdkv1.RedshiftServerless {
 	return errs.Must(conn[*redshiftserverless_sdkv1.RedshiftServerless](ctx, c, names.RedshiftServerless, make(map[string]any)))
+}
+
+func (c *AWSClient) RedshiftServerlessClient(ctx context.Context) *redshiftserverless_sdkv2.Client {
+	return errs.Must(client[*redshiftserverless_sdkv2.Client](ctx, c, names.RedshiftServerless, make(map[string]any)))
 }
 
 func (c *AWSClient) RekognitionClient(ctx context.Context) *rekognition_sdkv2.Client {

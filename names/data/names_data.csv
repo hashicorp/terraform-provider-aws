@@ -59,7 +59,7 @@ cloudcontrol,cloudcontrol,cloudcontrolapi,cloudcontrol,,cloudcontrol,,cloudcontr
 ,,,,,,,,,,,,,,,,,Cloud Digital Interface SDK,AWS,x,,,,,,,,,No SDK support
 clouddirectory,clouddirectory,clouddirectory,clouddirectory,,clouddirectory,,,CloudDirectory,CloudDirectory,,1,,,aws_clouddirectory_,,clouddirectory_,Cloud Directory,Amazon,,x,,,,,CloudDirectory,,,
 servicediscovery,servicediscovery,servicediscovery,servicediscovery,,servicediscovery,,,ServiceDiscovery,ServiceDiscovery,,1,,aws_service_discovery_,aws_servicediscovery_,,service_discovery_,Cloud Map,AWS,,,,,,,ServiceDiscovery,ListNamespaces,,
-cloud9,cloud9,cloud9,cloud9,,cloud9,,,Cloud9,Cloud9,,1,,,aws_cloud9_,,cloud9_,Cloud9,AWS,,,,,,,Cloud9,ListEnvironments,,
+cloud9,cloud9,cloud9,cloud9,,cloud9,,,Cloud9,Cloud9,,,2,,aws_cloud9_,,cloud9_,Cloud9,AWS,,,,,,,Cloud9,ListEnvironments,,
 cloudformation,cloudformation,cloudformation,cloudformation,,cloudformation,,,CloudFormation,CloudFormation,,1,,,aws_cloudformation_,,cloudformation_,CloudFormation,AWS,,,,,,,CloudFormation,ListStackInstances,,
 cloudfront,cloudfront,cloudfront,cloudfront,,cloudfront,,,CloudFront,CloudFront,,1,2,,aws_cloudfront_,,cloudfront_,CloudFront,Amazon,,,,,,,CloudFront,ListDistributions,,
 cloudfront-keyvaluestore,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,,CloudFrontKeyValueStore,CloudFrontKeyValueStore,,,2,,aws_cloudfrontkeyvaluestore_,,cloudfront_keyvaluestore_,CloudFront KeyValueStore,Amazon,,,,,,,CloudFront KeyValueStore,ListKeys,"KvsARN: aws_sdkv2.String(""arn:aws:cloudfront::111122223333:key-value-store/MaxAge"")",
@@ -297,7 +297,7 @@ rbin,rbin,recyclebin,rbin,,rbin,,recyclebin,RBin,RecycleBin,,,2,,aws_rbin_,,rbin
 ,,,,,,,,,,,,,,,,,Red Hat OpenShift Service on AWS (ROSA),AWS,x,,,,,,,,,No SDK support
 redshift,redshift,redshift,redshift,,redshift,,,Redshift,Redshift,,1,,,aws_redshift_,,redshift_,Redshift,Amazon,,,,,,,Redshift,DescribeClusters,,
 redshift-data,redshiftdata,redshiftdataapiservice,redshiftdata,,redshiftdata,,redshiftdataapiservice,RedshiftData,RedshiftDataAPIService,,,2,,aws_redshiftdata_,,redshiftdata_,Redshift Data,Amazon,,,,,,,Redshift Data,ListDatabases,"Database: aws_sdkv2.String(""test"")",
-redshift-serverless,redshiftserverless,redshiftserverless,redshiftserverless,,redshiftserverless,,,RedshiftServerless,RedshiftServerless,,1,,,aws_redshiftserverless_,,redshiftserverless_,Redshift Serverless,Amazon,,,,,,,Redshift Serverless,ListNamespaces,,
+redshift-serverless,redshiftserverless,redshiftserverless,redshiftserverless,,redshiftserverless,,,RedshiftServerless,RedshiftServerless,,1,2,,aws_redshiftserverless_,,redshiftserverless_,Redshift Serverless,Amazon,,,,,,,Redshift Serverless,ListNamespaces,,
 rekognition,rekognition,rekognition,rekognition,,rekognition,,,Rekognition,Rekognition,,,2,,aws_rekognition_,,rekognition_,Rekognition,Amazon,,,,,,,Rekognition,ListCollections,,
 resiliencehub,resiliencehub,resiliencehub,resiliencehub,,resiliencehub,,,ResilienceHub,ResilienceHub,,1,,,aws_resiliencehub_,,resiliencehub_,Resilience Hub,AWS,,x,,,,,resiliencehub,,,
 resource-explorer-2,resourceexplorer2,resourceexplorer2,resourceexplorer2,,resourceexplorer2,,,ResourceExplorer2,ResourceExplorer2,,,2,,aws_resourceexplorer2_,,resourceexplorer2_,Resource Explorer,AWS,,,,,,,Resource Explorer 2,ListIndexes,,
