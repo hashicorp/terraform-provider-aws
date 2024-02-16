@@ -2,8 +2,6 @@ module github.com/hashicorp/terraform-provider-aws/tools
 
 go 1.21.1
 
-toolchain go1.21.5
-
 require (
 	github.com/YakDriver/tfproviderdocs v0.11.0
 	github.com/client9/misspell v0.3.4
