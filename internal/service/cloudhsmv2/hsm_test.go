@@ -27,7 +27,7 @@ func testAccHSM_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudHSMv2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudHSMV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHSMDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -60,7 +60,7 @@ func testAccHSM_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudHSMv2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudHSMV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -83,7 +83,7 @@ func testAccHSM_AvailabilityZone(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudHSMv2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudHSMV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHSMDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -110,7 +110,7 @@ func testAccHSM_IPAddress(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudHSMv2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudHSMV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckHSMDestroy(ctx),
 		Steps: []resource.TestStep{
