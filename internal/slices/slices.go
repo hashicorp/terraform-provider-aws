@@ -5,11 +5,6 @@ package slices
 
 import "slices"
 
-// Of returns a slice from varargs.
-func Of[E any](vs ...E) []E {
-	return vs
-}
-
 // Reverse returns a reversed copy of the slice `s`.
 func Reverse[S ~[]E, E any](s S) S {
 	n := len(s)
