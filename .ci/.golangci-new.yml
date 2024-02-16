@@ -1,0 +1,10 @@
+linters:
+  disable-all: true
+  enable:
+    - nosprintfhostport
+    # - perfsprint
+    - usestdlibvars
+    - thelper
+
+run:
+  timeout: 75m
