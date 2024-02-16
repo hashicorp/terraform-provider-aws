@@ -27,7 +27,7 @@ func TestAccServiceQuotasServiceQuota_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
-			preCheckServiceQuotaSet(ctx, setQuotaServiceCode, setQuotaQuotaCode, t)
+			testAccPreCheckServiceQuotaSet(ctx, t, setQuotaServiceCode, setQuotaQuotaCode)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -67,7 +67,7 @@ func TestAccServiceQuotasServiceQuota_basic_Unset(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
-			preCheckServiceQuotaUnset(ctx, unsetQuotaServiceCode, unsetQuotaQuotaCode, t)
+			testAccPreCheckServiceQuotaUnset(ctx, t, unsetQuotaServiceCode, unsetQuotaQuotaCode)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
