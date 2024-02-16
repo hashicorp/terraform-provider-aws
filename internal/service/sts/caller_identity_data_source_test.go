@@ -31,7 +31,7 @@ func TestAccSTSCallerIdentityDataSource_basic(t *testing.T) {
 	})
 }
 
-func TestAccSTSCallerIdentityDataSource_stsRegion(t *testing.T) {
+func TestAccSTSCallerIdentityDataSource_alternateRegion(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	defaultRegion := os.Getenv(envvar.DefaultRegion)
@@ -50,7 +50,7 @@ func TestAccSTSCallerIdentityDataSource_stsRegion(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCallerIdentityConfig_stsRegion(defaultRegion, alternateRegion),
+				Config: testAccCallerIdentityConfig_alternateRegion(defaultRegion, alternateRegion),
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckCallerIdentityAccountID("data.aws_caller_identity.current"),
 				),
@@ -63,7 +63,7 @@ const testAccCallerIdentityConfig_basic = `
 data "aws_caller_identity" "current" {}
 `
 
-func testAccCallerIdentityConfig_stsRegion(defaultRegion, alternateRegion string) string {
+func testAccCallerIdentityConfig_alternateRegion(defaultRegion, alternateRegion string) string {
 	return fmt.Sprintf(`
 provider "aws" {
   region = %[1]q
