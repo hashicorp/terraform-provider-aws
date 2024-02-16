@@ -116,6 +116,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.25.0
+	github.com/aws/aws-sdk-go-v2/service/shield v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/signer v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/sns v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.30.0

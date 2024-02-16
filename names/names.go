@@ -104,6 +104,7 @@ const (
 	S3ControlEndpointID                  = "s3-control"
 	SecurityHubEndpointID                = "securityhub"
 	SESV2EndpointID                      = "sesv2"
+	ShieldEndpointID                     = "shield"
 	SNSEndpointID                        = "sns"
 	SQSEndpointID                        = "sqs"
 	SSMEndpointID                        = "ssm"
