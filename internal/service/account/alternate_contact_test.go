@@ -30,7 +30,7 @@ func testAccAlternateContact_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AccountEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccountServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAlternateContactDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -76,7 +76,7 @@ func testAccAlternateContact_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AccountEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccountServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAlternateContactDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -108,7 +108,7 @@ func testAccAlternateContact_accountID(t *testing.T) { // nosemgrep:ci.account-i
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AccountEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccountServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckAlternateContactDestroy(ctx),
 		Steps: []resource.TestStep{
