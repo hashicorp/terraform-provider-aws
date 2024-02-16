@@ -488,7 +488,7 @@ func TestProxyConfig(t *testing.T) {
 			proxyF := transport.Proxy
 
 			for _, url := range tc.urls {
-				req, _ := http.NewRequest("GET", url.url, nil)
+				req, _ := http.NewRequest(http.MethodGet, url.url, nil)
 				pUrl, err := proxyF(req)
 				if err != nil {
 					t.Fatalf("unexpected error: %s", err)
