@@ -6,6 +6,7 @@ package glue_test
 import (
 	"context"
 	"fmt"
+	"net"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/glue"
@@ -108,11 +109,9 @@ func TestAccGlueConnection_tags(t *testing.T) {
 func TestAccGlueConnection_mongoDB(t *testing.T) {
 	ctx := acctest.Context(t)
 	var connection glue.Connection
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_connection.test"
-
-	connectionUrl := fmt.Sprintf("mongodb://%s:27017/testdatabase", acctest.RandomDomainName())
+	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(), "27017") + "/testdatabase"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -121,11 +120,11 @@ func TestAccGlueConnection_mongoDB(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectionConfig_mongoDB(rName, connectionUrl),
+				Config: testAccConnectionConfig_mongoDB(rName, connectionURL),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConnectionExists(ctx, resourceName, &connection),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.%", "3"),
-					resource.TestCheckResourceAttr(resourceName, "connection_properties.CONNECTION_URL", connectionUrl),
+					resource.TestCheckResourceAttr(resourceName, "connection_properties.CONNECTION_URL", connectionURL),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.USERNAME", "testusername"),
 					resource.TestCheckResourceAttr(resourceName, "connection_properties.PASSWORD", "testpassword"),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "MONGODB"),

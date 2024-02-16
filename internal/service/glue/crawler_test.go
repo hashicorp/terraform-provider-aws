@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"strconv"
 	"testing"
 
@@ -332,7 +333,6 @@ func TestAccGlueCrawler_JDBCTarget_multiple(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
-
 	jdbcConnectionUrl := fmt.Sprintf("jdbc:mysql://%s/testdatabase", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -394,8 +394,7 @@ func TestAccGlueCrawler_mongoDBTarget(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
-
-	connectionUrl := fmt.Sprintf("mongodb://%s:27017/testdatabase", acctest.RandomDomainName())
+	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(), "27017") + "/testdatabase"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -404,7 +403,7 @@ func TestAccGlueCrawler_mongoDBTarget(t *testing.T) {
 		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCrawlerConfig_mongoDBTarget(rName, connectionUrl, "database-name/%"),
+				Config: testAccCrawlerConfig_mongoDBTarget(rName, connectionURL, "database-name/%"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
@@ -419,7 +418,7 @@ func TestAccGlueCrawler_mongoDBTarget(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCrawlerConfig_mongoDBTarget(rName, connectionUrl, "database-name/table-name"),
+				Config: testAccCrawlerConfig_mongoDBTarget(rName, connectionURL, "database-name/table-name"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
@@ -437,8 +436,7 @@ func TestAccGlueCrawler_MongoDBTargetScan_all(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
-
-	connectionUrl := fmt.Sprintf("mongodb://%s:27017/testdatabase", acctest.RandomDomainName())
+	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(), "27017") + "/testdatabase"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -447,7 +445,7 @@ func TestAccGlueCrawler_MongoDBTargetScan_all(t *testing.T) {
 		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCrawlerConfig_mongoDBTargetScanAll(rName, connectionUrl, false),
+				Config: testAccCrawlerConfig_mongoDBTargetScanAll(rName, connectionURL, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
@@ -462,7 +460,7 @@ func TestAccGlueCrawler_MongoDBTargetScan_all(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCrawlerConfig_mongoDBTargetScanAll(rName, connectionUrl, true),
+				Config: testAccCrawlerConfig_mongoDBTargetScanAll(rName, connectionURL, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
@@ -472,7 +470,7 @@ func TestAccGlueCrawler_MongoDBTargetScan_all(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCrawlerConfig_mongoDBTargetScanAll(rName, connectionUrl, false),
+				Config: testAccCrawlerConfig_mongoDBTargetScanAll(rName, connectionURL, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "mongodb_target.#", "1"),
