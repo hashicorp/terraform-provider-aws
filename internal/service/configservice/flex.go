@@ -306,7 +306,7 @@ func flattenRecordingMode(g *configservice.RecordingMode) []map[string]interface
 	m := make(map[string]interface{}, 1)
 
 	if g.RecordingFrequency != nil {
-		m["recording_frequency"] = *g.RecordingFrequency
+		m["recording_frequency"] = aws.StringValue(g.RecordingFrequency)
 	}
 
 	if g.RecordingModeOverrides != nil && len(g.RecordingModeOverrides) > 0 {
