@@ -29,7 +29,7 @@ func TestAccServiceQuotasServiceQuota_basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			testAccPreCheckServiceQuotaSet(ctx, t, setQuotaServiceCode, setQuotaQuotaCode)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -69,7 +69,7 @@ func TestAccServiceQuotasServiceQuota_basic_Unset(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			testAccPreCheckServiceQuotaUnset(ctx, t, unsetQuotaServiceCode, unsetQuotaQuotaCode)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -109,7 +109,7 @@ func TestAccServiceQuotasServiceQuota_basic_hasUsageMetric(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			testAccPreCheckServiceQuotaHasUsageMetric(ctx, t, hasUsageMetricServiceCode, hasUsageMetricQuotaCode)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -166,7 +166,7 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnCreate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -211,7 +211,7 @@ func TestAccServiceQuotasServiceQuota_Value_increaseOnUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -241,7 +241,7 @@ func TestAccServiceQuotasServiceQuota_permissionError(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); acctest.PreCheckAssumeRoleARN(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{

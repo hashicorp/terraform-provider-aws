@@ -18,7 +18,7 @@ func TestAccSTSCallerIdentityDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.STSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.STSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
