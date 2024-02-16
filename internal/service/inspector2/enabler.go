@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"maps"
 	"sort"
 	"strings"
 	"time"
@@ -31,7 +32,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/mapstructure"
-	"golang.org/x/exp/maps"
 	"golang.org/x/exp/slices"
 )
 

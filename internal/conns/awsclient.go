@@ -6,6 +6,7 @@ package conns
 import (
 	"context"
 	"fmt"
+	"maps"
 	"net/http"
 	"os"
 	"sync"
@@ -20,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"golang.org/x/exp/maps"
 )
 
 type AWSClient struct {

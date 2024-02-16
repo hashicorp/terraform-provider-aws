@@ -5,6 +5,7 @@ package sdk
 
 import (
 	"context"
+	"maps"
 	"math/rand"
 	"strings"
 	"time"
@@ -17,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"golang.org/x/exp/maps"
 )
 
 type sweepResource struct {

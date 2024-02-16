@@ -6,6 +6,7 @@ package rds
 import (
 	"context"
 	"log"
+	"maps"
 	"time"
 
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
@@ -25,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"golang.org/x/exp/maps"
 )
 
 // @SDKResource("aws_rds_cluster_parameter_group", name="Cluster Parameter Group")
