@@ -35,7 +35,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -2338,7 +2337,7 @@ func flattenBucketLifecycleRules(ctx context.Context, rules []types.LifecycleRul
 			case *types.LifecycleRuleFilterMemberPrefix:
 				m["prefix"] = v.Value
 			case *types.LifecycleRuleFilterMemberTag:
-				m["tags"] = keyValueTags(ctx, tfslices.Of(v.Value)).IgnoreAWS().Map()
+				m["tags"] = keyValueTags(ctx, []types.Tag{v.Value}).IgnoreAWS().Map()
 			}
 		}
 
@@ -2771,7 +2770,7 @@ func flattenBucketReplicationRuleFilter(ctx context.Context, filter types.Replic
 	case *types.ReplicationRuleFilterMemberPrefix:
 		m["prefix"] = v.Value
 	case *types.ReplicationRuleFilterMemberTag:
-		m["tags"] = keyValueTags(ctx, tfslices.Of(v.Value)).IgnoreAWS().Map()
+		m["tags"] = keyValueTags(ctx, []types.Tag{v.Value}).IgnoreAWS().Map()
 	}
 
 	return []interface{}{m}

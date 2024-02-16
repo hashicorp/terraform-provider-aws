@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -543,7 +542,7 @@ func defineIndexFields(ctx context.Context, conn *cloudsearch.Client, domainName
 
 func findDomainByName(ctx context.Context, conn *cloudsearch.Client, name string) (*types.DomainStatus, error) {
 	input := &cloudsearch.DescribeDomainsInput{
-		DomainNames: tfslices.Of(name),
+		DomainNames: []string{name},
 	}
 
 	output, err := conn.DescribeDomains(ctx, input)

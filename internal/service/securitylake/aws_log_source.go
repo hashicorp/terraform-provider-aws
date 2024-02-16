@@ -209,7 +209,7 @@ func (r *awsLogSourceResource) Delete(ctx context.Context, request resource.Dele
 			return
 		}
 
-		input.Sources = tfslices.Of(*logSource)
+		input.Sources = []awstypes.AwsLogSourceConfiguration{*logSource}
 	}
 
 	_, err := conn.DeleteAwsLogSource(ctx, input)
