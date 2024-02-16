@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -276,7 +275,7 @@ func findEnvironments(ctx context.Context, conn *cloud9.Client, input *cloud9.De
 
 func findEnvironmentByID(ctx context.Context, conn *cloud9.Client, id string) (*types.Environment, error) {
 	input := &cloud9.DescribeEnvironmentsInput{
-		EnvironmentIds: tfslices.Of(id),
+		EnvironmentIds: []string{id},
 	}
 
 	output, err := findEnvironment(ctx, conn, input)
