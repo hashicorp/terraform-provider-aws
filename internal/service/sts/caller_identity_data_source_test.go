@@ -64,6 +64,7 @@ data "aws_caller_identity" "current" {}
 `
 
 func testAccCallerIdentityConfig_alternateRegion(defaultRegion, alternateRegion string) string {
+	//lintignore:AT004
 	return fmt.Sprintf(`
 provider "aws" {
   region = %[1]q
