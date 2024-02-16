@@ -29,7 +29,7 @@ func TestAccObservabilityAccessManagerSinksDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ObservabilityAccessManagerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{

@@ -39,7 +39,7 @@ func TestAccObservabilityAccessManagerSinkPolicy_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ObservabilityAccessManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSinkPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -98,7 +98,7 @@ func TestAccObservabilityAccessManagerSinkPolicy_update(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ObservabilityAccessManagerEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSinkPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
