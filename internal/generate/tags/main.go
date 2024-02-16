@@ -313,12 +313,7 @@ func main() {
 		SkipTypesImp:      *skipTypesImp,
 		TfLogPkg:          *updateTags,
 		TfResourcePkg:     (*getTag || *waitForPropagation),
-		TfSlicesPkg: (*listTagsInFiltIDName != "" ||
-			*listTagsInIDNeedSlice != "" ||
-			*listTagsInIDNeedValueSlice != "" ||
-			*tagInIDNeedSlice != "" ||
-			*tagInIDNeedValueSlice != ""),
-		TimePkg: *waitForPropagation,
+		TimePkg:           *waitForPropagation,
 
 		CreateTagsFunc:             createTagsFunc,
 		GetTagFunc:                 *getTagFunc,

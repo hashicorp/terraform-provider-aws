@@ -4,6 +4,7 @@ package provider
 
 import (
 	"context"
+	"slices"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
@@ -233,7 +234,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/xray"
-	"golang.org/x/exp/slices"
 )
 
 func servicePackages(ctx context.Context) []conns.ServicePackage {

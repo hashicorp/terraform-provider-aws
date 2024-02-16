@@ -107,11 +107,11 @@ func resourceProxyTargetCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("db_cluster_identifier"); ok {
-		input.DBClusterIdentifiers = tfslices.Of(v.(string))
+		input.DBClusterIdentifiers = []string{v.(string)}
 	}
 
 	if v, ok := d.GetOk("db_instance_identifier"); ok {
-		input.DBInstanceIdentifiers = tfslices.Of(v.(string))
+		input.DBInstanceIdentifiers = []string{v.(string)}
 	}
 
 	const (
@@ -188,9 +188,9 @@ func resourceProxyTargetDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	switch targetType {
 	case string(types.TargetTypeRdsInstance):
-		input.DBInstanceIdentifiers = tfslices.Of(rdsResourceID)
+		input.DBInstanceIdentifiers = []string{rdsResourceID}
 	default:
-		input.DBClusterIdentifiers = tfslices.Of(rdsResourceID)
+		input.DBClusterIdentifiers = []string{rdsResourceID}
 	}
 
 	log.Printf("[DEBUG] Deleting RDS DB Proxy Target: %s", d.Id())

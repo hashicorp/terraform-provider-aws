@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"regexp"
+	"slices"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -21,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"golang.org/x/exp/slices"
 )
 
 func TestAccELBV2Listener_Application_basic(t *testing.T) {
