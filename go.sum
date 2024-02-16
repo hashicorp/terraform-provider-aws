@@ -76,6 +76,8 @@ github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.13.0 h1:quXlZRv+3zNbbaL+Dd
 github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.13.0/go.mod h1:wkIRu2StHZ5icdPk0rtHM6zPjqe4+Ll0Q1iEKvQjjFg=
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.9.0 h1:Zbh7cIfkL/lOK4w9+ULTJKeN08esS0vC28U4mGmvkEI=
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.9.0/go.mod h1:7njFwVPAH3AKw1+zFRY4LSaJZ/6Q7d0Dhm2k8CXXG/8=
+github.com/aws/aws-sdk-go-v2/service/cloud9 v1.23.1 h1:0hWvVC3hsScipWpnnKdyWqijdX7LLh8KT3DRy+aKYOQ=
+github.com/aws/aws-sdk-go-v2/service/cloud9 v1.23.1/go.mod h1:DdWNqme/f3Tt1E7WFoXgwCW8KtGO7j10dpMLbgbupDo=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.16.0 h1:PKdQRdAdEWBZ92iXvYsqkFgjTzdC8No840IbkB4Qklc=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.16.0/go.mod h1:krbDa/4uw3YgW1KXqkmjWYD1PFhjEJcChqvmG9cXxAY=
 github.com/aws/aws-sdk-go-v2/service/cloudfront v1.33.0 h1:uzqDRaVsR8NxZgcSifzdT84QelxED4jY/tFUb0p2VwI=
@@ -266,6 +268,8 @@ github.com/aws/aws-sdk-go-v2/service/servicequotas v1.20.0 h1:kLSBfjG97Vx/pMaOz8
 github.com/aws/aws-sdk-go-v2/service/servicequotas v1.20.0/go.mod h1:qyFFLkY1mrTC8HV/GMtO5InUd6xGLtGoZulZVRl3o+o=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.25.0 h1:g83UKhVWJjUBebWg8HpvDGDAtLgAcSGT0it2Tqf4CSU=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.25.0/go.mod h1:XB8oFCr7ZjacT1xw6A6Z7FsgX4gW8thwHw7L0ilmGQo=
+github.com/aws/aws-sdk-go-v2/service/shield v1.24.0 h1:DasZw37v6ciRecoPkslCl8rHmoPfzfwpnR48pxWJaGg=
+github.com/aws/aws-sdk-go-v2/service/shield v1.24.0/go.mod h1:sq11Jfbf0XW0SoJ4esedM4kCsBPmjzakxfpvG1Z+pgs=
 github.com/aws/aws-sdk-go-v2/service/signer v1.20.0 h1:qF7oMpwsttmjJ4GPrRmidn+heJr373qp2DP6tU+x/PY=
 github.com/aws/aws-sdk-go-v2/service/signer v1.20.0/go.mod h1:4OCqIXgppd45tQiOCT5kQdYL1hBT8cwQ6pSXPM+04rU=
 github.com/aws/aws-sdk-go-v2/service/sns v1.27.0 h1:Qa8B9/cgLWNt5zNogF81CuT+Nh+XkzW+hkfO784u1bs=
