@@ -29,7 +29,7 @@ func TestAccMQConfiguration_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -78,7 +78,7 @@ func TestAccMQConfiguration_withActiveMQData(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -114,7 +114,7 @@ func TestAccMQConfiguration_withActiveMQLdapData(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -151,7 +151,7 @@ func TestAccMQConfiguration_withRabbitMQData(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -188,7 +188,7 @@ func TestAccMQConfiguration_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MQEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
