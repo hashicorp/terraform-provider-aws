@@ -13,22 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusKinesisStreamingDestination(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		result, err := FindKinesisDataStreamDestination(ctx, conn, streamArn, tableName)
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		if result == nil {
-			return nil, "", nil
-		}
-
-		return result, aws.StringValue(result.DestinationStatus), nil
-	}
-}
-
 func statusTable(ctx context.Context, conn *dynamodb.DynamoDB, tableName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		table, err := FindTableByName(ctx, conn, tableName)

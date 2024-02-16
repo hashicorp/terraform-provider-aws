@@ -5,12 +5,13 @@ package rekognition
 
 import (
 	"context"
-	"errors"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/rekognition"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/rekognition/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -32,12 +33,14 @@ import (
 // @Tags(identifierAttribute="arn")
 func newResourceCollection(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceCollection{}
+	r.SetDefaultCreateTimeout(2 * time.Minute)
 
 	return r, nil
 }
 
 type resourceCollection struct {
 	framework.ResourceWithConfigure
+	framework.WithTimeouts
 	framework.WithImportByID
 }
 
@@ -52,7 +55,7 @@ func (r *resourceCollection) Metadata(_ context.Context, req resource.MetadataRe
 func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	collectionRegex := regexache.MustCompile(`^[a-zA-Z0-9_.\-]+$`)
 
-	resp.Schema = schema.Schema{
+	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
 			"collection_id": schema.StringAttribute{
@@ -77,6 +80,15 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 	}
+
+	if s.Blocks == nil {
+		s.Blocks = make(map[string]schema.Block)
+	}
+	s.Blocks["timeouts"] = timeouts.Block(ctx, timeouts.Opts{
+		Create: true,
+	})
+
+	resp.Schema = s
 }
 
 func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -94,7 +106,7 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 		Tags:         getTagsIn(ctx),
 	}
 
-	out, err := conn.CreateCollection(ctx, in)
+	_, err := conn.CreateCollection(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Rekognition, create.ErrActionCreating, ResNameCollection, plan.CollectionID.ValueString(), err),
@@ -103,15 +115,11 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	if out == nil || out.CollectionArn == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.Rekognition, create.ErrActionCreating, ResNameCollection, plan.CollectionID.ValueString(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 
-	output, err := findCollectionByID(ctx, conn, plan.CollectionID.ValueString())
+	out, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (interface{}, error) {
+		return findCollectionByID(ctx, conn, plan.CollectionID.ValueString())
+	})
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -120,6 +128,8 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 		)
 		return
 	}
+
+	output := out.(*rekognition.DescribeCollectionOutput)
 
 	state := plan
 	state.ID = plan.CollectionID
@@ -230,10 +240,11 @@ func findCollectionByID(ctx context.Context, conn *rekognition.Client, id string
 }
 
 type resourceCollectionData struct {
-	ARN              types.String `tfsdk:"arn"`
-	CollectionID     types.String `tfsdk:"collection_id"`
-	FaceModelVersion types.String `tfsdk:"face_model_version"`
-	ID               types.String `tfsdk:"id"`
-	Tags             types.Map    `tfsdk:"tags"`
-	TagsAll          types.Map    `tfsdk:"tags_all"`
+	ARN              types.String   `tfsdk:"arn"`
+	CollectionID     types.String   `tfsdk:"collection_id"`
+	FaceModelVersion types.String   `tfsdk:"face_model_version"`
+	ID               types.String   `tfsdk:"id"`
+	Tags             types.Map      `tfsdk:"tags"`
+	TagsAll          types.Map      `tfsdk:"tags_all"`
+	Timeouts         timeouts.Value `tfsdk:"timeouts"`
 }

@@ -1333,7 +1333,7 @@ func TestAccAutoScalingGroup_LaunchTemplate_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "launch_template.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.id", "aws_launch_template.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_template.0.name", "aws_launch_template.test", "name"),
-					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", ""),
+					resource.TestCheckResourceAttr(resourceName, "launch_template.0.version", "1"),
 				),
 			},
 		},

@@ -116,7 +116,7 @@ func TestAccEC2AMIDataSource_windowsInstance(t *testing.T) {
 
 func TestAccEC2AMIDataSource_instanceStore(t *testing.T) {
 	ctx := acctest.Context(t)
-	datasourceName := "data.aws_ami.amzn-ami-minimal-hvm-instance-store"
+	datasourceName := "data.aws_ami.ubuntu-bionic-ami-hvm-instance-store"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -124,7 +124,7 @@ func TestAccEC2AMIDataSource_instanceStore(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMIDataSourceConfig_latestAmazonLinuxHVMInstanceStore(),
+				Config: testAccAMIDataSourceConfig_latestUbuntuBionicHVMInstanceStore(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "architecture", "x86_64"),
 					resource.TestCheckResourceAttr(datasourceName, "block_device_mappings.#", "0"),
@@ -133,10 +133,10 @@ func TestAccEC2AMIDataSource_instanceStore(t *testing.T) {
 					resource.TestCheckResourceAttr(datasourceName, "ena_support", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "hypervisor", "xen"),
 					resource.TestMatchResourceAttr(datasourceName, "image_id", regexache.MustCompile("^ami-")),
-					resource.TestMatchResourceAttr(datasourceName, "image_location", regexache.MustCompile("amzn-ami-minimal-hvm")),
+					resource.TestMatchResourceAttr(datasourceName, "image_location", regexache.MustCompile(`ubuntu-images-.*-release/.*/.*/hvm/instance-store`)),
 					resource.TestCheckResourceAttr(datasourceName, "image_type", "machine"),
 					resource.TestCheckResourceAttr(datasourceName, "most_recent", "true"),
-					resource.TestMatchResourceAttr(datasourceName, "name", regexache.MustCompile("amzn-ami-minimal-hvm")),
+					resource.TestMatchResourceAttr(datasourceName, "name", regexache.MustCompile(`ubuntu/images/hvm-instance/.*`)),
 					acctest.MatchResourceAttrAccountID(datasourceName, "owner_id"),
 					resource.TestCheckResourceAttr(datasourceName, "platform_details", "Linux/UNIX"),
 					resource.TestCheckResourceAttr(datasourceName, "product_codes.#", "0"),
@@ -208,17 +208,17 @@ func TestAccEC2AMIDataSource_gp3BlockDevice(t *testing.T) {
 	})
 }
 
-// testAccAMIDataSourceConfig_latestAmazonLinuxHVMInstanceStore returns the configuration for a data source that
-// describes the latest Amazon Linux AMI using HVM virtualization and an instance store root device.
-// The data source is named 'amzn-ami-minimal-hvm-instance-store'.
-func testAccAMIDataSourceConfig_latestAmazonLinuxHVMInstanceStore() string {
+// testAccAMIDataSourceConfig_latestUbuntuBionicHVMInstanceStore returns the configuration for a data source that
+// describes the latest Ubuntu 18.04 AMI using HVM virtualization and an instance store root device.
+// The data source is named 'ubuntu-bionic-ami-hvm-instance-store'.
+func testAccAMIDataSourceConfig_latestUbuntuBionicHVMInstanceStore() string {
 	return `
-data "aws_ami" "amzn-ami-minimal-hvm-instance-store" {
+data "aws_ami" "ubuntu-bionic-ami-hvm-instance-store" {
   most_recent = true
 
   filter {
     name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
+    values = ["ubuntu/images/hvm-instance/ubuntu-bionic-18.04-amd64-server-*"]
   }
 
   filter {

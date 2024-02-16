@@ -352,6 +352,14 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 			}
 		}
 
+		if d.HasChange("ownership_verification_certificate_arn") {
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:    aws.String(apigateway.OpReplace),
+				Path:  aws.String("/ownershipVerificationCertificateArn"),
+				Value: aws.String(d.Get("ownership_verification_certificate_arn").(string)),
+			})
+		}
+
 		if d.HasChange("regional_certificate_arn") {
 			operations = append(operations, &apigateway.PatchOperation{
 				Op:    aws.String(apigateway.OpReplace),

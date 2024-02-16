@@ -20,10 +20,10 @@ type listNestedObjectTypeOf[T any] struct {
 }
 
 var (
-	_ basetypes.ListTypable  = (*listNestedObjectTypeOf[struct{}])(nil)
-	_ NestedObjectType       = (*listNestedObjectTypeOf[struct{}])(nil)
-	_ basetypes.ListValuable = (*ListNestedObjectValueOf[struct{}])(nil)
-	_ NestedObjectValue      = (*ListNestedObjectValueOf[struct{}])(nil)
+	_ basetypes.ListTypable       = (*listNestedObjectTypeOf[struct{}])(nil)
+	_ NestedObjectCollectionType  = (*listNestedObjectTypeOf[struct{}])(nil)
+	_ basetypes.ListValuable      = (*ListNestedObjectValueOf[struct{}])(nil)
+	_ NestedObjectCollectionValue = (*ListNestedObjectValueOf[struct{}])(nil)
 )
 
 func NewListNestedObjectTypeOf[T any](ctx context.Context) listNestedObjectTypeOf[T] {
@@ -95,7 +95,7 @@ func (t listNestedObjectTypeOf[T]) ValueType(ctx context.Context) attr.Value {
 }
 
 func (t listNestedObjectTypeOf[T]) NewObjectPtr(ctx context.Context) (any, diag.Diagnostics) {
-	return nestedObjectTypeNewObjectPtr[T](ctx)
+	return objectTypeNewObjectPtr[T](ctx)
 }
 
 func (t listNestedObjectTypeOf[T]) NewObjectSlice(ctx context.Context, len, cap int) (any, diag.Diagnostics) {
@@ -128,12 +128,6 @@ func (t listNestedObjectTypeOf[T]) ValueFromObjectSlice(ctx context.Context, sli
 
 	diags.Append(diag.NewErrorDiagnostic("Invalid slice value", fmt.Sprintf("incorrect type: want %T, got %T", (*[]T)(nil), slice)))
 	return nil, diags
-}
-
-func nestedObjectTypeNewObjectPtr[T any](_ context.Context) (*T, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	return new(T), diags
 }
 
 func nestedObjectTypeNewObjectSlice[T any](_ context.Context, len, cap int) ([]*T, diag.Diagnostics) { //nolint:unparam
@@ -187,7 +181,7 @@ func nestedObjectValueObjectPtr[T any](ctx context.Context, val valueWithElement
 	case 0:
 		return nil, diags
 	case 1:
-		ptr, d := nestedObjectValueObjectPtrFromElement[T](ctx, elements[0])
+		ptr, d := objectValueObjectPtr[T](ctx, elements[0])
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
@@ -206,7 +200,7 @@ func nestedObjectValueObjectSlice[T any](ctx context.Context, val valueWithEleme
 	n := len(elements)
 	slice := make([]*T, n)
 	for i := 0; i < n; i++ {
-		ptr, d := nestedObjectValueObjectPtrFromElement[T](ctx, elements[i])
+		ptr, d := objectValueObjectPtr[T](ctx, elements[i])
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
@@ -216,18 +210,6 @@ func nestedObjectValueObjectSlice[T any](ctx context.Context, val valueWithEleme
 	}
 
 	return slice, diags
-}
-
-func nestedObjectValueObjectPtrFromElement[T any](ctx context.Context, val attr.Value) (*T, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	ptr := new(T)
-	diags.Append(val.(ObjectValueOf[T]).ObjectValue.As(ctx, ptr, basetypes.ObjectAsOptions{})...)
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	return ptr, diags
 }
 
 func NewListNestedObjectValueOfNull[T any](ctx context.Context) ListNestedObjectValueOf[T] {
