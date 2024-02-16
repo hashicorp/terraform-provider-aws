@@ -178,24 +178,26 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.Schem
 								Attributes: map[string]schema.Attribute{
 									"type": schema.StringAttribute{
 										Required: true,
+										Validators: []validator.String{
+											enum.FrameworkValidate[awstypes.LifecyclePolicyDetailActionType](),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
 									"include_resources": schema.ListNestedBlock{
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
-											listvalidator.IsRequired(),
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"amis": schema.StringAttribute{
-													Required: true,
+												"amis": schema.BoolAttribute{
+													Optional: true,
 												},
-												"containers": schema.StringAttribute{
-													Required: true,
+												"containers": schema.BoolAttribute{
+													Optional: true,
 												},
-												"snapshots": schema.StringAttribute{
-													Required: true,
+												"snapshots": schema.BoolAttribute{
+													Optional: true,
 												},
 											},
 										},
@@ -212,15 +214,21 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.Schem
 								Attributes: map[string]schema.Attribute{
 									"type": schema.StringAttribute{
 										Required: true,
+										Validators: []validator.String{
+											enum.FrameworkValidate[awstypes.LifecyclePolicyDetailFilterType](),
+										},
 									},
-									"value": schema.StringAttribute{
+									"value": schema.Int64Attribute{
 										Required: true,
 									},
-									"retain_at_least": schema.StringAttribute{
-										Required: true,
+									"retain_at_least": schema.Int64Attribute{
+										Optional: true,
 									},
 									"unit": schema.StringAttribute{
-										Required: true,
+										Optional: true,
+										Validators: []validator.String{
+											enum.FrameworkValidate[awstypes.LifecyclePolicyTimeUnit](),
+										},
 									},
 								},
 							},
@@ -228,47 +236,51 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.Schem
 						"exclusion_rules": schema.ListNestedBlock{
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
-								listvalidator.IsRequired(),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"tag_map": schema.StringAttribute{
-										Required: true,
+									"tag_map": schema.MapAttribute{
+										ElementType: types.StringType,
+										Optional:    true,
 									},
 								},
 								Blocks: map[string]schema.Block{
 									"amis": schema.ListNestedBlock{
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
-											listvalidator.IsRequired(),
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
-												"is_public": schema.StringAttribute{
-													Required: true,
+												"is_public": schema.BoolAttribute{
+													Optional: true,
 												},
-												"regions": schema.StringAttribute{
-													Required: true,
+												"regions": schema.ListAttribute{
+													ElementType: types.StringType,
+													Optional:    true,
 												},
-												"shared_accounts": schema.StringAttribute{
-													Required: true,
+												"shared_accounts": schema.ListAttribute{
+													ElementType: types.StringType,
+													Optional:    true,
 												},
-												"tag_map": schema.StringAttribute{
-													Required: true,
+												"tag_map": schema.MapAttribute{
+													ElementType: types.StringType,
+													Optional:    true,
 												},
 											},
 											Blocks: map[string]schema.Block{
 												"last_launched": schema.ListNestedBlock{
 													Validators: []validator.List{
 														listvalidator.SizeAtMost(1),
-														listvalidator.IsRequired(),
 													},
 													NestedObject: schema.NestedBlockObject{
 														Attributes: map[string]schema.Attribute{
 															"unit": schema.StringAttribute{
 																Required: true,
+																Validators: []validator.String{
+																	enum.FrameworkValidate[awstypes.LifecyclePolicyTimeUnit](),
+																},
 															},
-															"value": schema.StringAttribute{
+															"value": schema.Int64Attribute{
 																Required: true,
 															},
 														},
@@ -289,15 +301,16 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.Schem
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"tag_map": schema.StringAttribute{
-							Required: true,
+						"tag_map": schema.MapAttribute{
+							ElementType: types.StringType,
+							Optional:    true,
 						},
 					},
 					Blocks: map[string]schema.Block{
 						"recipes": schema.ListNestedBlock{
 							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(50),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
