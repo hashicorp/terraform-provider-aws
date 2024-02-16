@@ -3,7 +3,7 @@
 
 package slices
 
-import "golang.org/x/exp/slices"
+import "slices"
 
 // Of returns a slice from varargs.
 func Of[E any](vs ...E) []E {

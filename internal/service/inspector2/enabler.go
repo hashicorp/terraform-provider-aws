@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -32,7 +33,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/mapstructure"
-	"golang.org/x/exp/slices"
 )
 
 // @SDKResource("aws_inspector2_enabler")
