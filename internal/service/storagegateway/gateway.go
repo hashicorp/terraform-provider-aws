@@ -298,7 +298,7 @@ func resourceGatewayCreate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		log.Printf("[DEBUG] Creating HTTP request: %s", requestURL)
-		request, err := http.NewRequest("GET", requestURL, nil)
+		request, err := http.NewRequest(http.MethodGet, requestURL, nil)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating HTTP request: %s", err)
 		}
