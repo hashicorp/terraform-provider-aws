@@ -8,6 +8,7 @@ import (
 	"errors"
 	{{- end }}
 	"fmt"
+	"maps"
 	{{- if and (ne .GoV1Package "") (eq .GoV2Package "") }}
 	"net/url"
 	{{- end }}
@@ -47,7 +48,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
-	"golang.org/x/exp/maps"
 )
 
 type endpointTestCase struct {
