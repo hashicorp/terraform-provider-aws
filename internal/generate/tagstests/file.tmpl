@@ -13,6 +13,13 @@
 	{{- end }}
 {{ end }}
 
+{{ define "TestCaseSetup" -}}
+	PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+	ErrorCheck:               acctest.ErrorCheck(t, names.{{ .ProviderNameUpper }}ServiceID),
+	ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+	CheckDestroy:             testAccCheck{{ .Name }}Destroy(ctx),
+{{- end }}
+
 {{ define "Import" }}
 {
 	ResourceName:      resourceName,
@@ -46,10 +53,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags(t *testing.T) {
 	{{- template "Init" . }}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .ProviderNameUpper }}ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{{ .Name }}Destroy(ctx),
+		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", "value1"),
@@ -95,10 +99,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_null(t *testing.T) {
 	{{- template "Init" . }}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .ProviderNameUpper }}ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{{ .Name }}Destroy(ctx),
+		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Name }}Config_tagsNull(rName),
@@ -121,10 +122,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_AddOnUpdate(t *testing.T) {
 	{{- template "Init" . }}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .ProviderNameUpper }}ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{{ .Name }}Destroy(ctx),
+		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Name }}Config_tags0(rName),
@@ -150,10 +148,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnCreate(t *testin
 	{{- template "Init" . }}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .ProviderNameUpper }}ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{{ .Name }}Destroy(ctx),
+		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", ""),
@@ -180,10 +175,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnUpdate_Add(t *te
 	{{- template "Init" . }}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .ProviderNameUpper }}ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{{ .Name }}Destroy(ctx),
+		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", "value1"),
@@ -220,10 +212,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnUpdate_Replace(t
 	{{- template "Init" . }}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .ProviderNameUpper }}ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{{ .Name }}Destroy(ctx),
+		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", "value1"),
@@ -250,10 +239,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_providerOnly(t 
 	{{- template "Init" . }}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .ProviderNameUpper }}ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{{ .Name }}Destroy(ctx),
+		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -315,10 +301,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nonOverlapping(
 	{{- template "Init" . }}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .ProviderNameUpper }}ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{{ .Name }}Destroy(ctx),
+		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -372,10 +355,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_overlapping(t *
 	{{- template "Init" . }}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .ProviderNameUpper }}ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{{ .Name }}Destroy(ctx),
+		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -429,10 +409,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_updateToProvide
 	{{- template "Init" . }}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .ProviderNameUpper }}ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{{ .Name }}Destroy(ctx),
+		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", "value1"),
@@ -465,10 +442,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_updateToResourc
 	{{- template "Init" . }}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .ProviderNameUpper }}ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{{ .Name }}Destroy(ctx),
+		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -501,10 +475,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_emptyResourceTa
 	{{- template "Init" . }}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .ProviderNameUpper }}ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{{ .Name }}Destroy(ctx),
+		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
@@ -528,10 +499,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nullResourceTag
 	{{- template "Init" . }}
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .ProviderNameUpper }}ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheck{{ .Name }}Destroy(ctx),
+		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
