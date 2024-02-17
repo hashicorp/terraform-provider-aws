@@ -104,51 +104,6 @@ func TestAccXRayGroup_insights(t *testing.T) {
 	})
 }
 
-func TestAccXRayGroup_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v types.Group
-	resourceName := "aws_xray_group.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckGroupDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccGroupConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccGroupConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckGroupExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2")),
-			},
-		},
-	})
-}
-
 func TestAccXRayGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Group
@@ -233,6 +188,15 @@ resource "aws_xray_group" "test" {
 `, rName, expression)
 }
 
+func testAccGroupConfig_tags0(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_xray_group" "test" {
+  group_name        = %[1]q
+  filter_expression = "responsetime > 5"
+}
+`, rName)
+}
+
 func testAccGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_xray_group" "test" {
@@ -258,6 +222,19 @@ resource "aws_xray_group" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccGroupConfig_tagsNull(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_xray_group" "test" {
+  group_name        = %[1]q
+  filter_expression = "responsetime > 5"
+
+  tags = {
+	"key" = null
+  }
+}
+`, rName)
 }
 
 func testAccGroupConfig_basicInsights(rName, expression string, insightsEnabled bool, notificationsEnabled bool) string {

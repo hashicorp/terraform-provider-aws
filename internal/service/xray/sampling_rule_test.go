@@ -118,52 +118,6 @@ func TestAccXRaySamplingRule_update(t *testing.T) {
 	})
 }
 
-func TestAccXRaySamplingRule_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v types.SamplingRule
-	resourceName := "aws_xray_sampling_rule.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSamplingRuleDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccSamplingRuleConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccSamplingRuleConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccSamplingRuleConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccXRaySamplingRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.SamplingRule
@@ -279,6 +233,28 @@ resource "aws_xray_sampling_rule" "test" {
 `, rName, priority, reservoirSize)
 }
 
+func testAccSamplingRuleConfig_tags0(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_xray_sampling_rule" "test" {
+  rule_name      = %[1]q
+  priority       = 5
+  reservoir_size = 10
+  url_path       = "*"
+  host           = "*"
+  http_method    = "GET"
+  service_type   = "*"
+  service_name   = "*"
+  fixed_rate     = 0.3
+  resource_arn   = "*"
+  version        = 1
+
+  attributes = {
+    Hello = "World"
+  }
+}
+`, rName)
+}
+
 func testAccSamplingRuleConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_xray_sampling_rule" "test" {
@@ -330,4 +306,30 @@ resource "aws_xray_sampling_rule" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccSamplingRuleConfig_tagsNull(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_xray_sampling_rule" "test" {
+  rule_name      = %[1]q
+  priority       = 5
+  reservoir_size = 10
+  url_path       = "*"
+  host           = "*"
+  http_method    = "GET"
+  service_type   = "*"
+  service_name   = "*"
+  fixed_rate     = 0.3
+  resource_arn   = "*"
+  version        = 1
+
+  attributes = {
+    Hello = "World"
+  }
+
+  tags = {
+	"key" = null
+  }
+}
+`, rName)
 }
