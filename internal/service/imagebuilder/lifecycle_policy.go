@@ -365,8 +365,15 @@ func (r *resourceLifecyclePolicy) Read(ctx context.Context, req resource.ReadReq
 	state.Description = flex.StringToFramework(ctx, out.Description)
 	state.ExecutionRole = flex.StringToFramework(ctx, out.ExecutionRole)
 	state.Name = flex.StringToFramework(ctx, out.Name)
-	//PolicyDetails + flatteners
-	//resourceSelection + flatteners
+
+	policyDetails, d := flattenPolicyDetails(ctx, out.PolicyDetails)
+	resp.Diagnostics.Append(d...)
+	state.PolicyDetails = policyDetails
+
+	resourceSelection, d := flattenResourceSelection(ctx, out.ResourceSelection)
+	resp.Diagnostics.Append(d...)
+	state.ResourceSelection = resourceSelection
+
 	state.ResourceType = flex.StringValueToFramework(ctx, out.ResourceType)
 	state.Status = flex.StringValueToFramework(ctx, out.Status)
 
@@ -780,6 +787,278 @@ func expandResourceSelectionRecipes(tfList []resourceRecipesData) []awstypes.Lif
 
 	}
 	return apiResult
+}
+
+func flattenPolicyDetails(ctx context.Context, apiObject []awstypes.LifecyclePolicyDetail) (types.Set, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: resourceActionAttrTypes}
+
+	if apiObject == nil {
+		return types.SetNull(elemType), diags
+	}
+
+	result := []attr.Value{}
+
+	for _, policyDetail := range apiObject {
+		action, d := flattenDetailAction(ctx, policyDetail.Action)
+		diags.Append(d...)
+
+		filter, d := flattenDetailFilter(ctx, policyDetail.Filter)
+		diags.Append(d...)
+
+		exclusionRules, d := flattenDetailExclusionRules(ctx, policyDetail.ExclusionRules)
+		diags.Append(d...)
+
+		obj := map[string]attr.Value{
+			"action":          action,
+			"filter":          filter,
+			"exclusion_rules": exclusionRules,
+		}
+
+		objVal, d := types.ObjectValue(resourcePolicyDetailAttrTypes, obj)
+		diags.Append(d...)
+
+		result = append(result, objVal)
+	}
+
+	setVal, d := types.SetValue(elemType, result)
+	diags.Append(d...)
+
+	return setVal, diags
+}
+
+func flattenDetailAction(ctx context.Context, apiObject *awstypes.LifecyclePolicyDetailAction) (types.List, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: resourceActionAttrTypes}
+
+	if apiObject == nil {
+		return types.ListNull(elemType), diags
+	}
+
+	obj := map[string]attr.Value{
+		"type": flex.StringValueToFramework(ctx, apiObject.Type),
+	}
+
+	if apiObject.IncludeResources != nil {
+		includeResources, d := flattenIncludeResources(ctx, apiObject.IncludeResources)
+		diags.Append(d...)
+
+		obj["include_resources"] = includeResources
+	}
+
+	objVal, d := types.ObjectValue(resourceActionAttrTypes, obj)
+	diags.Append(d...)
+
+	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+	diags.Append(d...)
+
+	return listVal, diags
+
+}
+
+func flattenIncludeResources(ctx context.Context, apiObject *awstypes.LifecyclePolicyDetailActionIncludeResources) (types.List, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: resourceIncludeResourcesAttrTypes}
+
+	if apiObject == nil {
+		return types.ListNull(elemType), diags
+	}
+
+	obj := map[string]attr.Value{
+		"amis":       flex.BoolToFramework(ctx, &apiObject.Amis),
+		"containers": flex.BoolToFramework(ctx, &apiObject.Containers),
+		"snapshots":  flex.BoolToFramework(ctx, &apiObject.Snapshots),
+	}
+
+	objVal, d := types.ObjectValue(resourceIncludeResourcesAttrTypes, obj)
+	diags.Append(d...)
+
+	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+	diags.Append(d...)
+
+	return listVal, diags
+
+}
+
+func flattenDetailFilter(ctx context.Context, apiObject *awstypes.LifecyclePolicyDetailFilter) (types.List, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: resourceFilterAttrTypes}
+
+	if apiObject == nil {
+		return types.ListNull(elemType), diags
+	}
+
+	obj := map[string]attr.Value{
+		"type":            flex.StringValueToFramework(ctx, apiObject.Type),
+		"value":           flex.Int32ToFramework(ctx, apiObject.Value),
+		"retain_at_least": flex.Int32ToFramework(ctx, apiObject.RetainAtLeast),
+		"unit":            flex.StringValueToFramework(ctx, apiObject.Unit),
+	}
+
+	objVal, d := types.ObjectValue(resourceFilterAttrTypes, obj)
+	diags.Append(d...)
+
+	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+	diags.Append(d...)
+
+	return listVal, diags
+
+}
+
+func flattenDetailExclusionRules(ctx context.Context, apiObject *awstypes.LifecyclePolicyDetailExclusionRules) (types.List, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: resourceExclusionRulesAttrTypes}
+
+	if apiObject == nil {
+		return types.ListNull(elemType), diags
+	}
+
+	obj := map[string]attr.Value{}
+
+	if apiObject.Amis != nil {
+		amis, d := flattenExclusionRulesAmis(ctx, apiObject.Amis)
+		diags.Append(d...)
+
+		obj["amis"] = amis
+	}
+
+	if apiObject.TagMap != nil {
+		obj["tag_map"] = flex.FlattenFrameworkStringValueMap(ctx, apiObject.TagMap)
+	}
+
+	objVal, d := types.ObjectValue(resourceExclusionRulesAttrTypes, obj)
+	diags.Append(d...)
+
+	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+	diags.Append(d...)
+
+	return listVal, diags
+
+}
+
+func flattenExclusionRulesAmis(ctx context.Context, apiObject *awstypes.LifecyclePolicyDetailExclusionRulesAmis) (types.List, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: resourceAmisAttrTypes}
+
+	if apiObject == nil {
+		return types.ListNull(elemType), diags
+	}
+
+	obj := map[string]attr.Value{
+		"is_public": flex.BoolToFramework(ctx, &apiObject.IsPublic),
+	}
+
+	if apiObject.LastLaunched != nil {
+		lastLaunched, d := flattenExclusionRulesAmisLastLaunched(ctx, apiObject.LastLaunched)
+		diags.Append(d...)
+
+		obj["last_launched"] = lastLaunched
+	}
+
+	if apiObject.Regions != nil {
+		obj["regions"] = flex.FlattenFrameworkStringValueList(ctx, apiObject.Regions)
+	}
+
+	if apiObject.SharedAccounts != nil {
+		obj["shared_accounts"] = flex.FlattenFrameworkStringValueList(ctx, apiObject.SharedAccounts)
+	}
+
+	if apiObject.TagMap != nil {
+		obj["tag_map"] = flex.FlattenFrameworkStringValueMap(ctx, apiObject.TagMap)
+	}
+
+	objVal, d := types.ObjectValue(resourceAmisAttrTypes, obj)
+	diags.Append(d...)
+
+	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+	diags.Append(d...)
+
+	return listVal, diags
+
+}
+
+func flattenExclusionRulesAmisLastLaunched(ctx context.Context, apiObject *awstypes.LifecyclePolicyDetailExclusionRulesAmisLastLaunched) (types.List, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: resourceLastLaunchedAttrTypes}
+
+	if apiObject == nil {
+		return types.ListNull(elemType), diags
+	}
+
+	obj := map[string]attr.Value{
+		"unit":  flex.StringValueToFramework(ctx, apiObject.Unit),
+		"value": flex.Int32ToFramework(ctx, apiObject.Value),
+	}
+
+	objVal, d := types.ObjectValue(resourceLastLaunchedAttrTypes, obj)
+	diags.Append(d...)
+
+	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+	diags.Append(d...)
+
+	return listVal, diags
+
+}
+
+func flattenResourceSelection(ctx context.Context, apiObject *awstypes.LifecyclePolicyResourceSelection) (types.List, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: resourceResourceSelectionAttrTypes}
+
+	if apiObject == nil {
+		return types.ListNull(elemType), diags
+	}
+
+	obj := map[string]attr.Value{}
+
+	if apiObject.Recipes != nil {
+		recipes, d := flattenResourceSelectionRecipes(ctx, apiObject.Recipes)
+		diags.Append(d...)
+
+		obj["recipes"] = recipes
+	}
+
+	if apiObject.TagMap != nil {
+		obj["tag_map"] = flex.FlattenFrameworkStringValueMap(ctx, apiObject.TagMap)
+	}
+
+	objVal, d := types.ObjectValue(resourceResourceSelectionAttrTypes, obj)
+	diags.Append(d...)
+
+	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+	diags.Append(d...)
+
+	return listVal, diags
+
+}
+
+func flattenResourceSelectionRecipes(ctx context.Context, apiObject []awstypes.LifecyclePolicyResourceSelectionRecipe) (types.Set, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: resourceRecipeAttrTypes}
+
+	if apiObject == nil {
+		return types.SetNull(elemType), diags
+	}
+
+	result := []attr.Value{}
+
+	for _, recipe := range apiObject {
+
+		obj := map[string]attr.Value{
+			"name":             flex.StringToFramework(ctx, recipe.Name),
+			"semantic_version": flex.StringToFramework(ctx, recipe.SemanticVersion),
+		}
+
+		objVal, d := types.ObjectValue(resourceRecipeAttrTypes, obj)
+		diags.Append(d...)
+
+		result = append(result, objVal)
+	}
+
+	listVal, d := types.SetValue(elemType, result)
+	diags.Append(d...)
+
+	return listVal, diags
+
 }
 
 type resourceLifecyclePolicyData struct {
