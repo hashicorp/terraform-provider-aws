@@ -12,6 +12,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -804,4 +805,56 @@ type resourceAMIsData struct {
 type resourceLastLaunchedData struct {
 	Unit  types.String `tfsdk:"unit"`
 	Value types.Int64  `tfsdk:"value"`
+}
+
+var resourcePolicyDetailAttrTypes = map[string]attr.Type{
+	"action":          types.ListType{ElemType: types.ObjectType{AttrTypes: resourceActionAttrTypes}},
+	"filter":          types.ListType{ElemType: types.ObjectType{AttrTypes: resourceFilterAttrTypes}},
+	"exclusion_rules": types.ListType{ElemType: types.ObjectType{AttrTypes: resourceExclusionRulesAttrTypes}},
+}
+
+var resourceActionAttrTypes = map[string]attr.Type{
+	"type":              types.StringType,
+	"include_resources": types.ListType{ElemType: types.ObjectType{AttrTypes: resourceIncludeResourcesAttrTypes}},
+}
+
+var resourceIncludeResourcesAttrTypes = map[string]attr.Type{
+	"amis":       types.BoolType,
+	"containers": types.BoolType,
+	"snapshots":  types.BoolType,
+}
+
+var resourceFilterAttrTypes = map[string]attr.Type{
+	"type":            types.StringType,
+	"value":           types.Int64Type,
+	"retain_at_least": types.Int64Type,
+	"unit":            types.StringType,
+}
+
+var resourceExclusionRulesAttrTypes = map[string]attr.Type{
+	"amis":    types.ListType{ElemType: types.ObjectType{AttrTypes: resourceAmisAttrTypes}},
+	"tag_map": types.MapType{ElemType: types.StringType},
+}
+
+var resourceAmisAttrTypes = map[string]attr.Type{
+	"is_public":       types.BoolType,
+	"last_launched":   types.ListType{ElemType: types.ObjectType{AttrTypes: resourceLastLaunchedAttrTypes}},
+	"regions":         types.ListType{ElemType: types.StringType},
+	"shared_accounts": types.ListType{ElemType: types.StringType},
+	"tag_map":         types.MapType{ElemType: types.StringType},
+}
+
+var resourceLastLaunchedAttrTypes = map[string]attr.Type{
+	"unit":  types.StringType,
+	"value": types.Int64Type,
+}
+
+var resourceResourceSelectionAttrTypes = map[string]attr.Type{
+	"recipes": types.SetType{ElemType: types.ObjectType{AttrTypes: resourceRecipeAttrTypes}},
+	"tag_map": types.MapType{ElemType: types.StringType},
+}
+
+var resourceRecipeAttrTypes = map[string]attr.Type{
+	"name":             types.StringType,
+	"semantic_version": types.StringType,
 }
