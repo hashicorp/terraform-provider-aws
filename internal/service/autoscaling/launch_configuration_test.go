@@ -927,7 +927,7 @@ resource "aws_launch_configuration" "test" {
 
 // testAccLatestAmazonLinuxPVInstanceStoreAMIConfig returns the configuration for a data source that
 // describes the latest Amazon Linux AMI using PV virtualization and an instance store root device.
-// The data source is named 'amzn-ami-minimal-pv-ebs'.
+// The data source is named 'amzn-ami-minimal-pv-instance-store'.
 func testAccLatestAmazonLinuxPVInstanceStoreAMIConfig() string {
 	return `
 data "aws_ami" "amzn-ami-minimal-pv-instance-store" {

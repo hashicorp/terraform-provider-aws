@@ -15,11 +15,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func testAccClientVPNNetworkAssociation_basic(t *testing.T) {
+func testAccClientVPNNetworkAssociation_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var assoc ec2.TargetNetwork
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -29,7 +30,10 @@ func testAccClientVPNNetworkAssociation_basic(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNNetworkAssociationDestroy(ctx),
@@ -55,7 +59,7 @@ func testAccClientVPNNetworkAssociation_basic(t *testing.T) {
 	})
 }
 
-func testAccClientVPNNetworkAssociation_multipleSubnets(t *testing.T) {
+func testAccClientVPNNetworkAssociation_multipleSubnets(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var assoc ec2.TargetNetwork
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -65,7 +69,10 @@ func testAccClientVPNNetworkAssociation_multipleSubnets(t *testing.T) {
 	vpcResourceName := "aws_vpc.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNNetworkAssociationDestroy(ctx),
@@ -87,14 +94,17 @@ func testAccClientVPNNetworkAssociation_multipleSubnets(t *testing.T) {
 	})
 }
 
-func testAccClientVPNNetworkAssociation_disappears(t *testing.T) {
+func testAccClientVPNNetworkAssociation_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var assoc ec2.TargetNetwork
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_network_association.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNNetworkAssociationDestroy(ctx),
@@ -142,10 +152,6 @@ func testAccCheckClientVPNNetworkAssociationExists(ctx context.Context, name str
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
 			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Client VPN Network Association ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)

@@ -47,6 +47,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
 	tfaccount "github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
@@ -90,6 +91,8 @@ const accountIDRegexp = `(aws|aws-managed|\d{12})`
 //
 // Reference: https://github.com/dominikh/go-tools/issues/633#issuecomment-606560616
 func Skip(t *testing.T, message string) {
+	t.Helper()
+
 	t.Skip(message)
 }
 
@@ -145,6 +148,8 @@ func protoV5ProviderFactoriesInit(ctx context.Context, providerNames ...string) 
 }
 
 func protoV5ProviderFactoriesNamedInit(ctx context.Context, t *testing.T, providers map[string]*schema.Provider, providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
+	t.Helper()
+
 	factories := make(map[string]func() (tfprotov5.ProviderServer, error), len(providerNames))
 
 	for _, name := range providerNames {
@@ -165,6 +170,8 @@ func protoV5ProviderFactoriesNamedInit(ctx context.Context, t *testing.T, provid
 }
 
 func protoV5ProviderFactoriesPlusProvidersInit(ctx context.Context, t *testing.T, providers *[]*schema.Provider, providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
+	t.Helper()
+
 	factories := make(map[string]func() (tfprotov5.ProviderServer, error), len(providerNames))
 
 	for _, name := range providerNames {
@@ -2478,7 +2485,7 @@ func SkipIfEnvVarNotSet(t *testing.T, key string) string {
 }
 
 // RunSerialTests1Level runs test cases in parallel, optionally sleeping between each.
-func RunSerialTests1Level(t *testing.T, testCases map[string]func(t *testing.T), d time.Duration) {
+func RunSerialTests1Level(t *testing.T, testCases map[string]func(*testing.T), d time.Duration) {
 	t.Helper()
 
 	for name, tc := range testCases {
@@ -2491,7 +2498,7 @@ func RunSerialTests1Level(t *testing.T, testCases map[string]func(t *testing.T),
 }
 
 // RunSerialTests2Levels runs test cases in parallel, optionally sleeping between each.
-func RunSerialTests2Levels(t *testing.T, testCases map[string]map[string]func(t *testing.T), d time.Duration) {
+func RunSerialTests2Levels(t *testing.T, testCases map[string]map[string]func(*testing.T), d time.Duration) {
 	t.Helper()
 
 	for group, m := range testCases {
@@ -2499,6 +2506,26 @@ func RunSerialTests2Levels(t *testing.T, testCases map[string]map[string]func(t 
 		t.Run(group, func(t *testing.T) {
 			RunSerialTests1Level(t, m, d)
 		})
+	}
+}
+
+// RunLimitedConcurrencyTests2Levels runs test cases with concurrency limited via `semaphore`.
+func RunLimitedConcurrencyTests2Levels(t *testing.T, semaphore tfsync.Semaphore, testCases map[string]map[string]func(*testing.T, tfsync.Semaphore)) {
+	t.Helper()
+
+	for group, m := range testCases {
+		m := m
+		for name, tc := range m {
+			tc := tc
+			t.Run(fmt.Sprintf("%s_%s", group, name), func(t *testing.T) {
+				t.Cleanup(func() {
+					if os.Getenv(resource.EnvTfAcc) != "" {
+						semaphore.Notify()
+					}
+				})
+				tc(t, semaphore)
+			})
+		}
 	}
 }
 

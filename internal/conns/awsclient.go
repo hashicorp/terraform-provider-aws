@@ -6,6 +6,7 @@ package conns
 import (
 	"context"
 	"fmt"
+	"maps"
 	"net/http"
 	"os"
 	"sync"
@@ -16,26 +17,23 @@ import (
 	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
-	mediaconvert_sdkv1 "github.com/aws/aws-sdk-go/service/mediaconvert"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"golang.org/x/exp/maps"
 )
 
 type AWSClient struct {
-	AccountID               string
-	DefaultTagsConfig       *tftags.DefaultConfig
-	DNSSuffix               string
-	IgnoreTagsConfig        *tftags.IgnoreConfig
-	MediaConvertAccountConn *mediaconvert_sdkv1.MediaConvert
-	Partition               string
-	Region                  string
-	ReverseDNSPrefix        string
-	ServicePackages         map[string]ServicePackage
-	Session                 *session_sdkv1.Session
-	TerraformVersion        string
+	AccountID         string
+	DefaultTagsConfig *tftags.DefaultConfig
+	DNSSuffix         string
+	IgnoreTagsConfig  *tftags.IgnoreConfig
+	Partition         string
+	Region            string
+	ReverseDNSPrefix  string
+	ServicePackages   map[string]ServicePackage
+	Session           *session_sdkv1.Session
+	TerraformVersion  string
 
 	awsConfig                 *aws_sdkv2.Config
 	clients                   map[string]any

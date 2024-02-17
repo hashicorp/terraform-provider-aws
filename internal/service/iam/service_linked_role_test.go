@@ -83,8 +83,8 @@ func TestDecodeServiceLinkedRoleID(t *testing.T) {
 func TestAccIAMServiceLinkedRole_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_iam_service_linked_role.test"
-	awsServiceName := "elasticbeanstalk.amazonaws.com"
-	name := "AWSServiceRoleForElasticBeanstalk"
+	awsServiceName := "inspector.amazonaws.com"
+	name := "AWSServiceRoleForAmazonInspector"
 	path := fmt.Sprintf("/aws-service-role/%s/", awsServiceName)
 	arnResource := fmt.Sprintf("role%s%s", path, name)
 

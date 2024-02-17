@@ -169,7 +169,7 @@ func resourceProjectUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SageMakerConn(ctx)
 
-	if d.HasChangesExcept("tags_all", "tags") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &sagemaker.UpdateProjectInput{
 			ProjectName: aws.String(d.Id()),
 		}

@@ -34,9 +34,11 @@ func ResourceNotebookInstance() *schema.Resource {
 		ReadWithoutTimeout:   resourceNotebookInstanceRead,
 		UpdateWithoutTimeout: resourceNotebookInstanceUpdate,
 		DeleteWithoutTimeout: resourceNotebookInstanceDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIfChange("volume_size", func(_ context.Context, old, new, meta interface{}) bool {
 				return new.(int) < old.(int)
@@ -380,9 +382,10 @@ func resourceNotebookInstanceDelete(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "reading SageMaker Notebook Instance (%s): %s", d.Id(), err)
 	}
 
-	if status := aws.StringValue(notebook.NotebookInstanceStatus); status != sagemaker.NotebookInstanceStatusFailed && status != sagemaker.NotebookInstanceStatusStopped {
+	switch status := aws.StringValue(notebook.NotebookInstanceStatus); status {
+	case sagemaker.NotebookInstanceStatusInService:
 		if err := StopNotebookInstance(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "deleting SageMaker Notebook Instance (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "stopping SageMaker Notebook Instance (%s): %s", d.Id(), err)
 		}
 	}
 

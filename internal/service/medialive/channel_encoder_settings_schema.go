@@ -3697,6 +3697,9 @@ func expandHLSGroupSettings(tfList []interface{}) *types.HlsGroupSettings {
 	if v, ok := m["caption_language_setting"].(string); ok && v != "" {
 		out.CaptionLanguageSetting = types.HlsCaptionLanguageSetting(v)
 	}
+	if v, ok := m["client_cache"].(string); ok && v != "" {
+		out.ClientCache = types.HlsClientCache(v)
+	}
 	if v, ok := m["codec_specification"].(string); ok && v != "" {
 		out.CodecSpecification = types.HlsCodecSpecification(v)
 	}
