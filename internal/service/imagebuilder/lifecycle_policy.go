@@ -6,13 +6,14 @@ package imagebuilder
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/aws/aws-sdk-go/service/opensearchserverless"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -24,77 +25,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
+// @FrameworkResource(name="Lifecycle Policy")
 func newResourceLifecyclePolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceLifecyclePolicy{}, nil
-}
-
-type resourceLifecyclePolicyData struct {
-	ID                types.String                  `tfsdk:"id"`
-	Arn               types.String                  `tfsdk:"arn"`
-	Description       types.String                  `tfsdk:"description"`
-	Name              types.String                  `tfsdk:"name"`
-	ExecutionRole     types.String                  `tfsdk:"execution_role"`
-	ResourceType      types.String                  `tfsdk:"resource_type"`
-	Status            types.String                  `tfsdk:"status"`
-	PolicyDetails     resourcePolicyDetailsData     `tfsdk:"policy_details"`
-	ResourceSelection resourceResourceSelectionData `tfsdk:"resource_selection"`
-}
-
-type resourcePolicyDetailsData struct {
-	Action         resourceActionData         `tfsdk:"action"`
-	Filter         resourceFilterData         `tfsdk:"filter"`
-	ExclusionRules resourceExclusionRulesData `tfsdk:"exclusion_rules"`
-}
-
-type resourceResourceSelectionData struct {
-	TagMap  types.String        `tfsdk:"tag_map"`
-	Recipes resourceRecipesData `tfsdk:"recipes"`
-}
-
-type resourceRecipesData struct {
-	Name            types.String `tfsdk:"name"`
-	SemanticVersion types.String `tfsdk:"semantic_version"`
-}
-
-type resourceActionData struct {
-	Type             types.String                 `tfsdk:"type"`
-	IncludeResources resourceIncludeResourcesData `tfsdk:"include_resources"`
-}
-
-type resourceIncludeResourcesData struct {
-	Amis       types.String `tfsdk:"amis"`
-	Containers types.String `tfsdk:"containers"`
-	Snapshots  types.String `tfsdk:"snapshots"`
-}
-
-type resourceFilterData struct {
-	Type          types.String `tfsdk:"type"`
-	Value         types.String `tfsdk:"value"`
-	RetainAtLeast types.String `tfsdk:"retain_at_least"`
-	Unit          types.String `tfsdk:"unit"`
-}
-
-type resourceExclusionRulesData struct {
-	AMIs   resourceAMIsData `tfsdk:"ami"`
-	TagMap types.String     `tfsdk:"tag_map"`
-}
-
-type resourceAMIsData struct {
-	IsPublic       types.String             `tfsdk:"is_public"`
-	Regions        types.String             `tfsdk:"regions"`
-	SharedAccounts types.String             `tfsdk:"shared_accounts"`
-	TagMap         types.String             `tfsdk:"tag_map"`
-	LastLaunched   resourceLastLaunchedData `tfsdk:"last_launched"`
-}
-
-type resourceLastLaunchedData struct {
-	Unit  types.String `tfsdk:"unit"`
-	Value types.String `tfsdk:"value"`
 }
 
 const (
@@ -112,20 +50,7 @@ func (r *resourceLifecyclePolicy) Metadata(_ context.Context, request resource.M
 func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"arn": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			"arn": framework.ARNAttributeComputedOnly(),
 			"description": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
@@ -133,11 +58,11 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.Schem
 				},
 			},
 			"execution_role": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
+				Required: true,
+			},
+			"id": framework.IDAttribute(),
+			"name": schema.StringAttribute{
+				Required: true,
 			},
 			"resource_type": schema.StringAttribute{
 				Optional: true,
@@ -163,9 +88,10 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.Schem
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"policy_details": schema.ListNestedBlock{
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
+			"policy_details": schema.SetNestedBlock{
+				Validators: []validator.Set{
+					setvalidator.SizeAtLeast(1),
+					setvalidator.SizeAtMost(3),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
@@ -307,10 +233,10 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.Schem
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"recipes": schema.ListNestedBlock{
-							Validators: []validator.List{
-								listvalidator.SizeAtLeast(1),
-								listvalidator.SizeAtMost(50),
+						"recipes": schema.SetNestedBlock{
+							Validators: []validator.Set{
+								setvalidator.SizeAtLeast(1),
+								setvalidator.SizeAtMost(50),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -334,7 +260,6 @@ func (r *resourceLifecyclePolicy) Create(ctx context.Context, req resource.Creat
 	var plan resourceLifecyclePolicyData
 
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-
 	if resp.Diagnostics.HasError() {
 		return
 	}
@@ -342,25 +267,68 @@ func (r *resourceLifecyclePolicy) Create(ctx context.Context, req resource.Creat
 	conn := r.Meta().ImageBuilderClient(ctx)
 
 	in := &imagebuilder.CreateLifecyclePolicyInput{
-		ClientToken: aws.String(id.UniqueId()),
-		Name:        aws.String(plan.Name.ValueString()),
+		ClientToken:   aws.String(id.UniqueId()),
+		ExecutionRole: aws.String(plan.ExecutionRole.ValueString()),
+		Name:          aws.String(plan.Name.ValueString()),
+		ResourceType:  awstypes.LifecyclePolicyResourceType(plan.ResourceType.ValueString()),
+		Status:        awstypes.LifecyclePolicyStatus(plan.Status.ValueString()),
+		//Tags:          getTagsIn(ctx),
 	}
 
 	if !plan.Description.IsNull() {
 		in.Description = aws.String(plan.Description.ValueString())
 	}
 
+	if !plan.PolicyDetails.IsNull() {
+		var tfList []resourcePolicyDetailsData
+		resp.Diagnostics.Append(plan.PolicyDetails.ElementsAs(ctx, &tfList, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		policyDetails, d := expandPolicyDetails(ctx, tfList)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		in.PolicyDetails = policyDetails
+	}
+
+	if !plan.ResourceSelection.IsNull() {
+		var tfList []resourceResourceSelectionData
+		resp.Diagnostics.Append(plan.ResourceSelection.ElementsAs(ctx, &tfList, false)...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		resourceSelection, d := expandResourceSelection(ctx, tfList)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		in.ResourceSelection = resourceSelection
+	}
+
 	out, err := conn.CreateLifecyclePolicy(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ImageBuilder, create.ErrActionCreating, ResNameLifecyclePolicy, plan.Name.String(), nil),
+			create.ProblemStandardMessage(names.ImageBuilder, create.ErrActionCreating, ResNameLifecyclePolicy, plan.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
+	if out == nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ImageBuilder, create.ErrActionCreating, ResNameLifecyclePolicy, plan.Name.String(), nil),
+			errors.New("empty output").Error(),
+		)
+		return
+	}
 
-	state := plan
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	plan.ID = flex.StringToFramework(ctx, out.LifecyclePolicyArn)
+	plan.ARN = flex.StringToFrameworkARN(ctx, out.LifecyclePolicyArn)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
 func (r *resourceLifecyclePolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -396,31 +364,70 @@ func (r *resourceLifecyclePolicy) Update(ctx context.Context, req resource.Updat
 	}
 
 	if !plan.Description.Equal(state.Description) ||
-		!plan.Policy.Equal(state.Policy) {
-		input := &opensearchserverless.UpdateAccessPolicyInput{
-			ClientToken:   aws.String(id.UniqueId()),
-			Name:          flex.StringFromFramework(ctx, plan.Name),
-			PolicyVersion: flex.StringFromFramework(ctx, state.PolicyVersion),
-			Type:          awstypes.AccessPolicyType(plan.Type.ValueString()),
+		!plan.ExecutionRole.Equal(state.ExecutionRole) ||
+		!plan.PolicyDetails.Equal(state.PolicyDetails) ||
+		!plan.ResourceSelection.Equal(state.ResourceSelection) ||
+		!plan.ResourceType.Equal(state.ResourceType) ||
+		!plan.Status.Equal(state.Status) {
+
+		in := &imagebuilder.UpdateLifecyclePolicyInput{
+			ExecutionRole: aws.String(plan.ExecutionRole.ValueString()),
+			ResourceType:  awstypes.LifecyclePolicyResourceType(plan.ResourceType.ValueString()),
+			Status:        awstypes.LifecyclePolicyStatus(plan.Status.ValueString()),
 		}
 
 		if !plan.Description.Equal(state.Description) {
-			input.Description = aws.String(plan.Description.ValueString())
+			in.Description = aws.String(plan.Description.ValueString())
 		}
 
-		if !plan.Policy.Equal(state.Policy) {
-			input.Policy = aws.String(plan.Policy.ValueString())
+		if !plan.PolicyDetails.Equal(state.PolicyDetails) {
+			var tfList []resourcePolicyDetailsData
+			resp.Diagnostics.Append(plan.PolicyDetails.ElementsAs(ctx, &tfList, false)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+
+			policyDetails, d := expandPolicyDetails(ctx, tfList)
+			resp.Diagnostics.Append(d...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			in.PolicyDetails = policyDetails
 		}
 
-		out, err := conn.UpdateAccessPolicy(ctx, input)
+		if !plan.ResourceSelection.Equal(state.ResourceSelection) {
+			var tfList []resourceResourceSelectionData
+			resp.Diagnostics.Append(plan.ResourceSelection.ElementsAs(ctx, &tfList, false)...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
 
+			resourceSelection, d := expandResourceSelection(ctx, tfList)
+			resp.Diagnostics.Append(d...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			in.ResourceSelection = resourceSelection
+		}
+
+		out, err := conn.UpdateLifecyclePolicy(ctx, in)
 		if err != nil {
-			resp.Diagnostics.AddError(fmt.Sprintf("updating Security Policy (%s)", plan.Name.ValueString()), err.Error())
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ImageBuilder, create.ErrActionUpdating, ResNameLifecyclePolicy, plan.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+		if out == nil {
+			resp.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.ImageBuilder, create.ErrActionUpdating, ResNameLifecyclePolicy, plan.ID.String(), nil),
+				errors.New("empty output").Error(),
+			)
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceLifecyclePolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -445,4 +452,353 @@ func (r *resourceLifecyclePolicy) Delete(ctx context.Context, req resource.Delet
 			err.Error(),
 		)
 	}
+}
+
+func (r *resourceLifecyclePolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+}
+
+func (r *resourceLifecyclePolicy) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, req, resp)
+}
+
+func expandPolicyDetails(ctx context.Context, tfList []resourcePolicyDetailsData) ([]awstypes.LifecyclePolicyDetail, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if len(tfList) == 0 {
+		return nil, diags
+	}
+
+	apiResult := []awstypes.LifecyclePolicyDetail{}
+
+	for _, policyDetail := range tfList {
+		apiObject := awstypes.LifecyclePolicyDetail{}
+
+		if !policyDetail.Action.IsNull() {
+			var tfList []resourceActionData
+			diags.Append(policyDetail.Action.ElementsAs(ctx, &tfList, false)...)
+			if diags.HasError() {
+				return nil, diags
+			}
+
+			action, d := expandPolicyDetailAction(ctx, tfList)
+			diags.Append(d...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			apiObject.Action = action
+		}
+
+		if !policyDetail.Filter.IsNull() {
+			var tfList []resourceFilterData
+			diags.Append(policyDetail.Filter.ElementsAs(ctx, &tfList, false)...)
+			if diags.HasError() {
+				return nil, diags
+			}
+
+			filter, d := expandPolicyDetailFilter(ctx, tfList)
+			diags.Append(d...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			apiObject.Filter = filter
+		}
+
+		if !policyDetail.ExclusionRules.IsNull() {
+			var tfList []resourceExclusionRulesData
+			diags.Append(policyDetail.ExclusionRules.ElementsAs(ctx, &tfList, false)...)
+			if diags.HasError() {
+				return nil, diags
+			}
+
+			exclusionRules, d := expandPolicyDetailExclusionRules(ctx, tfList)
+			diags.Append(d...)
+			if diags.HasError() {
+				return nil, diags
+			}
+			apiObject.ExclusionRules = exclusionRules
+		}
+
+		apiResult = append(apiResult, apiObject)
+	}
+
+	return apiResult, diags
+}
+
+func expandPolicyDetailAction(ctx context.Context, tfList []resourceActionData) (*awstypes.LifecyclePolicyDetailAction, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if len(tfList) == 0 {
+		return nil, diags
+	}
+
+	tfObj := tfList[0]
+
+	apiObject := awstypes.LifecyclePolicyDetailAction{}
+
+	if !tfObj.IncludeResources.IsNull() {
+		var tfList []resourceIncludeResourcesData
+		diags.Append(tfObj.IncludeResources.ElementsAs(ctx, &tfList, false)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		apiObject.IncludeResources = expandPolicyDetailActionIncludeResources(tfList)
+	}
+
+	if !tfObj.Type.IsNull() {
+		apiObject.Type = awstypes.LifecyclePolicyDetailActionType(tfObj.Type.ValueString())
+	}
+
+	return &apiObject, diags
+}
+
+func expandPolicyDetailActionIncludeResources(tfList []resourceIncludeResourcesData) *awstypes.LifecyclePolicyDetailActionIncludeResources {
+	tfObj := tfList[0]
+
+	apiObject := awstypes.LifecyclePolicyDetailActionIncludeResources{}
+
+	if !tfObj.Amis.IsNull() {
+		apiObject.Amis = aws.ToBool(tfObj.Amis.ValueBoolPointer())
+	}
+
+	if !tfObj.Containers.IsNull() {
+		apiObject.Containers = aws.ToBool(tfObj.Containers.ValueBoolPointer())
+	}
+
+	if !tfObj.Snapshots.IsNull() {
+		apiObject.Snapshots = aws.ToBool(tfObj.Snapshots.ValueBoolPointer())
+	}
+
+	return &apiObject
+}
+
+func expandPolicyDetailFilter(ctx context.Context, tfList []resourceFilterData) (*awstypes.LifecyclePolicyDetailFilter, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if len(tfList) == 0 {
+		return nil, diags
+	}
+
+	tfObj := tfList[0]
+
+	apiObject := awstypes.LifecyclePolicyDetailFilter{}
+
+	if !tfObj.Type.IsNull() {
+		apiObject.Type = awstypes.LifecyclePolicyDetailFilterType(tfObj.Type.ValueString())
+	}
+
+	if !tfObj.Value.IsNull() {
+		apiObject.Value = aws.Int32(int32(tfObj.Value.ValueInt64()))
+	}
+
+	if !tfObj.RetainAtLeast.IsNull() {
+		apiObject.RetainAtLeast = aws.Int32(int32(tfObj.RetainAtLeast.ValueInt64()))
+	}
+
+	if !tfObj.Unit.IsNull() {
+		apiObject.Unit = awstypes.LifecyclePolicyTimeUnit(tfObj.Type.ValueString())
+	}
+
+	return &apiObject, diags
+}
+
+func expandPolicyDetailExclusionRules(ctx context.Context, tfList []resourceExclusionRulesData) (*awstypes.LifecyclePolicyDetailExclusionRules, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if len(tfList) == 0 {
+		return nil, diags
+	}
+
+	tfObj := tfList[0]
+
+	apiObject := awstypes.LifecyclePolicyDetailExclusionRules{}
+
+	if !tfObj.AMIs.IsNull() {
+		var tfList []resourceAMIsData
+		diags.Append(tfObj.AMIs.ElementsAs(ctx, &tfList, false)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		Amis, d := expandPolicyDetailExclusionRulesAmis(ctx, tfList)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		apiObject.Amis = Amis
+	}
+
+	if !tfObj.TagMap.IsNull() {
+		apiObject.TagMap = flex.ExpandFrameworkStringValueMap(ctx, tfObj.TagMap)
+	}
+
+	return &apiObject, diags
+}
+
+func expandPolicyDetailExclusionRulesAmis(ctx context.Context, tfList []resourceAMIsData) (*awstypes.LifecyclePolicyDetailExclusionRulesAmis, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if len(tfList) == 0 {
+		return nil, diags
+	}
+
+	tfObj := tfList[0]
+
+	apiObject := awstypes.LifecyclePolicyDetailExclusionRulesAmis{}
+
+	if !tfObj.IsPublic.IsNull() {
+		apiObject.IsPublic = aws.ToBool(tfObj.IsPublic.ValueBoolPointer())
+	}
+
+	if !tfObj.LastLaunched.IsNull() {
+		var tfList []resourceLastLaunchedData
+		diags.Append(tfObj.LastLaunched.ElementsAs(ctx, &tfList, false)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		apiObject.LastLaunched = expandPolicyDetailExclusionRulesAmisLastLaunched(tfList)
+	}
+
+	if !tfObj.Regions.IsNull() {
+		apiObject.Regions = flex.ExpandFrameworkStringValueList(ctx, tfObj.LastLaunched)
+	}
+
+	if !tfObj.SharedAccounts.IsNull() {
+		apiObject.Regions = flex.ExpandFrameworkStringValueList(ctx, tfObj.SharedAccounts)
+	}
+
+	if !tfObj.TagMap.IsNull() {
+		apiObject.TagMap = flex.ExpandFrameworkStringValueMap(ctx, tfObj.TagMap)
+	}
+
+	return &apiObject, diags
+}
+
+func expandPolicyDetailExclusionRulesAmisLastLaunched(tfList []resourceLastLaunchedData) *awstypes.LifecyclePolicyDetailExclusionRulesAmisLastLaunched {
+	tfObj := tfList[0]
+
+	apiObject := awstypes.LifecyclePolicyDetailExclusionRulesAmisLastLaunched{}
+
+	if !tfObj.Unit.IsNull() {
+		apiObject.Unit = awstypes.LifecyclePolicyTimeUnit(tfObj.Unit.ValueString())
+	}
+
+	if !tfObj.Value.IsNull() {
+		apiObject.Value = aws.Int32(int32(tfObj.Value.ValueInt64()))
+	}
+
+	return &apiObject
+}
+
+func expandResourceSelection(ctx context.Context, tfList []resourceResourceSelectionData) (*awstypes.LifecyclePolicyResourceSelection, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if len(tfList) == 0 {
+		return nil, diags
+	}
+
+	tfObj := tfList[0]
+
+	apiObject := awstypes.LifecyclePolicyResourceSelection{}
+
+	if !tfObj.Recipes.IsNull() {
+		var tfList []resourceRecipesData
+		diags.Append(tfObj.Recipes.ElementsAs(ctx, &tfList, false)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		apiObject.Recipes = expandResourceSelectionRecipes(tfList)
+	}
+
+	if !tfObj.TagMap.IsNull() {
+		apiObject.TagMap = flex.ExpandFrameworkStringValueMap(ctx, tfObj.TagMap)
+	}
+
+	return &apiObject, diags
+}
+
+func expandResourceSelectionRecipes(tfList []resourceRecipesData) []awstypes.LifecyclePolicyResourceSelectionRecipe {
+	apiResult := []awstypes.LifecyclePolicyResourceSelectionRecipe{}
+
+	for _, tfObj := range tfList {
+		apiObject := awstypes.LifecyclePolicyResourceSelectionRecipe{}
+
+		if !tfObj.Name.IsNull() {
+			apiObject.SemanticVersion = aws.String(tfObj.Name.ValueString())
+		}
+		if !tfObj.SemanticVersion.IsNull() {
+			apiObject.SemanticVersion = aws.String(tfObj.SemanticVersion.ValueString())
+		}
+
+		apiResult = append(apiResult, apiObject)
+
+	}
+	return apiResult
+}
+
+type resourceLifecyclePolicyData struct {
+	ID                types.String `tfsdk:"id"`
+	ARN               fwtypes.ARN  `tfsdk:"arn"`
+	Description       types.String `tfsdk:"description"`
+	Name              types.String `tfsdk:"name"`
+	ExecutionRole     types.String `tfsdk:"execution_role"`
+	ResourceType      types.String `tfsdk:"resource_type"`
+	Status            types.String `tfsdk:"status"`
+	PolicyDetails     types.Set    `tfsdk:"policy_details"`
+	ResourceSelection types.List   `tfsdk:"resource_selection"`
+}
+
+type resourcePolicyDetailsData struct {
+	Action         types.List `tfsdk:"action"`
+	Filter         types.List `tfsdk:"filter"`
+	ExclusionRules types.List `tfsdk:"exclusion_rules"`
+}
+
+type resourceResourceSelectionData struct {
+	TagMap  types.Map `tfsdk:"tag_map"`
+	Recipes types.Set `tfsdk:"recipes"`
+}
+
+type resourceRecipesData struct {
+	Name            types.String `tfsdk:"name"`
+	SemanticVersion types.String `tfsdk:"semantic_version"`
+}
+
+type resourceActionData struct {
+	Type             types.String `tfsdk:"type"`
+	IncludeResources types.List   `tfsdk:"include_resources"`
+}
+
+type resourceIncludeResourcesData struct {
+	Amis       types.Bool `tfsdk:"amis"`
+	Containers types.Bool `tfsdk:"containers"`
+	Snapshots  types.Bool `tfsdk:"snapshots"`
+}
+
+type resourceFilterData struct {
+	Type          types.String `tfsdk:"type"`
+	Value         types.Int64  `tfsdk:"value"`
+	RetainAtLeast types.Int64  `tfsdk:"retain_at_least"`
+	Unit          types.String `tfsdk:"unit"`
+}
+
+type resourceExclusionRulesData struct {
+	AMIs   types.List `tfsdk:"ami"`
+	TagMap types.Map  `tfsdk:"tag_map"`
+}
+
+type resourceAMIsData struct {
+	IsPublic       types.Bool `tfsdk:"is_public"`
+	LastLaunched   types.List `tfsdk:"last_launched"`
+	Regions        types.List `tfsdk:"regions"`
+	SharedAccounts types.List `tfsdk:"shared_accounts"`
+	TagMap         types.Map  `tfsdk:"tag_map"`
+}
+
+type resourceLastLaunchedData struct {
+	Unit  types.String `tfsdk:"unit"`
+	Value types.Int64  `tfsdk:"value"`
 }
