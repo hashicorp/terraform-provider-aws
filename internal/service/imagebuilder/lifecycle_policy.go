@@ -63,6 +63,9 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.Schem
 			"id": framework.IDAttribute(),
 			"name": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"resource_type": schema.StringAttribute{
 				Optional: true,
