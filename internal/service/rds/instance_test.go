@@ -4231,6 +4231,14 @@ func TestAccRDSInstance_PerformanceInsights_retentionPeriod(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "performance_insights_retention_period", "155"),
 				),
 			},
+			{
+				Config: testAccInstanceConfig_performanceInsightsRetentionPeriod(rName, 5),
+				ExpectError: regexache.MustCompile(`expected [\w]+ to be one of \[7 731\], got 5`),	
+			},
+			{
+				Config: testAccInstanceConfig_performanceInsightsRetentionPeriod(rName, 45),
+				ExpectError: regexache.MustCompile(`expected 45 to be divisible by 31, got [\w]+`),	
+			},
 		},
 	})
 }
