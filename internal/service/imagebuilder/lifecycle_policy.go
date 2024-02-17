@@ -22,12 +22,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -344,9 +347,11 @@ func (r *resourceLifecyclePolicy) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	out, err := conn.GetLifecyclePolicy(ctx, &imagebuilder.GetLifecyclePolicyInput{
-		LifecyclePolicyArn: aws.String(state.ID.ValueString()),
-	})
+	out, err := findLifecyclePolicyByARN(ctx, conn, state.ID.String())
+
+	if tfresource.NotFound(err) {
+		resp.State.RemoveResource(ctx)
+	}
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ImageBuilder, create.ErrActionReading, ResNameLifecyclePolicy, state.Name.String(), nil),
@@ -354,6 +359,17 @@ func (r *resourceLifecyclePolicy) Read(ctx context.Context, req resource.ReadReq
 		)
 		return
 	}
+
+	state.ARN = flex.StringToFrameworkARN(ctx, out.Arn)
+	state.ID = flex.StringToFramework(ctx, out.Arn)
+	state.Description = flex.StringToFramework(ctx, out.Description)
+	state.ExecutionRole = flex.StringToFramework(ctx, out.ExecutionRole)
+	state.Name = flex.StringToFramework(ctx, out.Name)
+	//PolicyDetails + flatteners
+	//resourceSelection + flatteners
+	state.ResourceType = flex.StringValueToFramework(ctx, out.ResourceType)
+	state.Status = flex.StringValueToFramework(ctx, out.Status)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -464,6 +480,29 @@ func (r *resourceLifecyclePolicy) ImportState(ctx context.Context, req resource.
 
 func (r *resourceLifecyclePolicy) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, req, resp)
+}
+
+func findLifecyclePolicyByARN(ctx context.Context, conn *imagebuilder.Client, arn string) (*awstypes.LifecyclePolicy, error) {
+	in := &imagebuilder.GetLifecyclePolicyInput{
+		LifecyclePolicyArn: aws.String(arn),
+	}
+
+	out, err := conn.GetLifecyclePolicy(ctx, in)
+	if err != nil {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: in,
+			}
+		}
+		return nil, err
+	}
+
+	if out == nil {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
+	return out.LifecyclePolicy, nil
 }
 
 func expandPolicyDetails(ctx context.Context, tfList []resourcePolicyDetailsData) ([]awstypes.LifecyclePolicyDetail, diag.Diagnostics) {
