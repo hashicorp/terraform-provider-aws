@@ -482,7 +482,7 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ValidateFunc: validation.Any(
-					validation.IntInSlice([]int{7,731}),
+					validation.IntInSlice([]int{7, 731}),
 					validation.IntDivisibleBy(31),
 				),
 			},
