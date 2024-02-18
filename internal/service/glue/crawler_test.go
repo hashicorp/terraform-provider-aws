@@ -636,8 +636,7 @@ func TestAccGlueCrawler_icebergTarget(t *testing.T) {
 	var crawler glue.Crawler
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_glue_crawler.test"
-
-	connectionUrl := fmt.Sprintf("mongodb://%s:27017/testdatabase", acctest.RandomDomainName())
+	connectionURL := "mongodb://" + net.JoinHostPort(acctest.RandomDomainName(), "27017") + "/testdatabase"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -646,7 +645,7 @@ func TestAccGlueCrawler_icebergTarget(t *testing.T) {
 		CheckDestroy:             testAccCheckCrawlerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCrawlerConfig_icebergTarget(rName, connectionUrl, "s3://table1", 1),
+				Config: testAccCrawlerConfig_icebergTarget(rName, connectionURL, "s3://table1", 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_target.#", "1"),
@@ -662,7 +661,7 @@ func TestAccGlueCrawler_icebergTarget(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCrawlerConfig_icebergTarget(rName, connectionUrl, "s3://table2", 2),
+				Config: testAccCrawlerConfig_icebergTarget(rName, connectionURL, "s3://table2", 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCrawlerExists(ctx, resourceName, &crawler),
 					resource.TestCheckResourceAttr(resourceName, "iceberg_target.#", "1"),
