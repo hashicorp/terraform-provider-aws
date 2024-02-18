@@ -6,12 +6,12 @@ package batch
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/batch"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -27,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -34,10 +35,6 @@ import (
 func newJobDefinitionDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &jobDefinitionDataSource{}, nil
 }
-
-const (
-	DSNameJobDefinition = "Job Definition Data Source"
-)
 
 type jobDefinitionDataSource struct {
 	framework.DataSourceWithConfigure
@@ -102,8 +99,6 @@ func (d *jobDefinitionDataSource) Schema(ctx context.Context, request datasource
 			},
 			"status": schema.StringAttribute{
 				Optional: true,
-				// Default: JobDefinitionStatusActive,
-				// https://github.com/hashicorp/terraform-plugin-framework/issues/751#issuecomment-1799757575
 				Validators: []validator.String{
 					stringvalidator.OneOf(jobDefinitionStatus_Values()...),
 				},
@@ -122,505 +117,66 @@ func (d *jobDefinitionDataSource) Schema(ctx context.Context, request datasource
 				Computed: true,
 			},
 		},
-		Blocks: map[string]schema.Block{
-			"eks_properties": schema.SingleNestedBlock{
-				Blocks: map[string]schema.Block{
-					"pod_properties": schema.SingleNestedBlock{
-						Attributes: map[string]schema.Attribute{
-							"dns_policy": schema.StringAttribute{
-								Computed: true,
-							},
-							"host_network": schema.BoolAttribute{
-								Computed: true,
-							},
-							"service_account_name": schema.StringAttribute{
-								Computed: true,
-							},
-						},
-						Blocks: map[string]schema.Block{
-							"containers": schema.ListNestedBlock{
-								NestedObject: schema.NestedBlockObject{
-									Attributes: map[string]schema.Attribute{
-										"args": schema.ListAttribute{
-											Computed:    true,
-											ElementType: types.StringType,
-										},
-										"commands": schema.ListAttribute{
-											Computed:    true,
-											ElementType: types.StringType,
-										},
-										"image": schema.StringAttribute{
-											Computed: true,
-										},
-										"image_pull_policy": schema.StringAttribute{
-											Computed: true,
-										},
-										"name": schema.StringAttribute{
-											Computed: true,
-										},
-									},
-									Blocks: map[string]schema.Block{
-										"env": schema.ListNestedBlock{
-											NestedObject: schema.NestedBlockObject{
-												Attributes: map[string]schema.Attribute{
-													"name": schema.StringAttribute{
-														Computed: true,
-													},
-													"value": schema.StringAttribute{
-														Computed: true,
-													},
-												},
-											},
-										},
-										"resources": schema.SingleNestedBlock{
-											Attributes: map[string]schema.Attribute{
-												"limits": schema.MapAttribute{
-													Computed:    true,
-													ElementType: types.StringType,
-												},
-												"requests": schema.MapAttribute{
-													Computed:    true,
-													ElementType: types.StringType,
-												},
-											},
-										},
-										"security_context": schema.SingleNestedBlock{
-											Attributes: map[string]schema.Attribute{
-												"privileged": schema.BoolAttribute{
-													Computed: true,
-												},
-												"run_as_user": schema.Int64Attribute{
-													Computed: true,
-												},
-												"run_as_group": schema.Int64Attribute{
-													Computed: true,
-												},
-												"run_as_non_root": schema.BoolAttribute{
-													Computed: true,
-												},
-												"read_only_root_filesystem": schema.BoolAttribute{
-													Computed: true,
-												},
-											},
-										},
-										"volume_mounts": schema.ListNestedBlock{
-											NestedObject: schema.NestedBlockObject{
-												Attributes: map[string]schema.Attribute{
-													"mount_path": schema.StringAttribute{
-														Computed: true,
-													},
-													"name": schema.StringAttribute{
-														Computed: true,
-													},
-													"read_only": schema.BoolAttribute{
-														Computed: true,
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-							"metadata": schema.SingleNestedBlock{
-								Attributes: map[string]schema.Attribute{
-									"labels": schema.MapAttribute{
-										Computed:    true,
-										ElementType: types.StringType,
-									},
-								},
-							},
-							"volumes": schema.ListNestedBlock{
-								NestedObject: schema.NestedBlockObject{
-									Attributes: map[string]schema.Attribute{
-										"name": schema.StringAttribute{
-											Computed: true,
-										},
-									},
-									Blocks: map[string]schema.Block{
-										"empty_dir": schema.SingleNestedBlock{
-											Attributes: map[string]schema.Attribute{
-												"medium": schema.StringAttribute{
-													Computed: true,
-												},
-												"size_limit": schema.Int64Attribute{
-													Computed: true,
-												},
-											},
-										},
-										"host_path": schema.SingleNestedBlock{
-											Attributes: map[string]schema.Attribute{
-												"path": schema.StringAttribute{
-													Computed: true,
-												},
-											},
-										},
-										"secret": schema.SingleNestedBlock{
-											Attributes: map[string]schema.Attribute{
-												"secret_name": schema.StringAttribute{
-													Computed: true,
-												},
-												"optional": schema.BoolAttribute{
-													Computed: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"node_properties": schema.SingleNestedBlock{
-				Attributes: map[string]schema.Attribute{
-					"main_node": schema.Int64Attribute{
-						Computed: true,
-					},
-					"num_nodes": schema.Int64Attribute{
-						Computed: true,
-					},
-				},
-				Blocks: map[string]schema.Block{
-					"node_range_properties": schema.ListNestedBlock{
-						NestedObject: schema.NestedBlockObject{
-							Attributes: map[string]schema.Attribute{
-								"target_nodes": schema.StringAttribute{
-									Computed: true,
-								},
-							},
-							Blocks: map[string]schema.Block{
-								"container": schema.SingleNestedBlock{
-									Attributes: map[string]schema.Attribute{
-										"command": schema.ListAttribute{
-											Computed:    true,
-											ElementType: types.StringType,
-										},
-										"execution_role_arn": schema.StringAttribute{
-											Computed: true,
-										},
-										"image": schema.StringAttribute{
-											Computed: true,
-										},
-										"instance_type": schema.StringAttribute{
-											Computed: true,
-										},
-										"job_role_arn": schema.StringAttribute{
-											Computed: true,
-										},
-										"privileged": schema.BoolAttribute{
-											Computed: true,
-										},
-										"readonly_root_filesystem": schema.BoolAttribute{
-											Computed: true,
-										},
-										"user": schema.StringAttribute{
-											Computed: true,
-										},
-									},
-									Blocks: map[string]schema.Block{
-										"environment": schema.ListNestedBlock{
-											NestedObject: schema.NestedBlockObject{
-												Attributes: map[string]schema.Attribute{
-													"name": schema.StringAttribute{
-														Computed: true,
-													},
-													"value": schema.StringAttribute{
-														Computed: true,
-													},
-												},
-											},
-										},
-										"ephemeral_storage": schema.SingleNestedBlock{
-											Attributes: map[string]schema.Attribute{
-												"size_in_gib": schema.Int64Attribute{
-													Computed: true,
-												},
-											},
-										},
-										"fargate_platform_configuration": schema.SingleNestedBlock{
-											Attributes: map[string]schema.Attribute{
-												"platform_version": schema.StringAttribute{
-													Computed: true,
-												},
-											},
-										},
-										"linux_parameters": schema.SingleNestedBlock{
-											Attributes: map[string]schema.Attribute{
-												"init_process_enabled": schema.BoolAttribute{
-													Computed: true,
-												},
-												"max_swap": schema.Int64Attribute{
-													Computed: true,
-												},
-												"shared_memory_size": schema.Int64Attribute{
-													Computed: true,
-												},
-												"swappiness": schema.Int64Attribute{
-													Computed: true,
-												},
-											},
-											Blocks: map[string]schema.Block{
-												"devices": schema.ListNestedBlock{
-													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															"host_path": schema.StringAttribute{
-																Computed: true,
-															},
-															"container_path": schema.StringAttribute{
-																Computed: true,
-															},
-															"permissions": schema.ListAttribute{
-																Computed:    true,
-																ElementType: types.StringType,
-															},
-														},
-													},
-												},
-												"tmpfs": schema.ListNestedBlock{
-													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															"container_path": schema.StringAttribute{
-																Computed: true,
-															},
-															"size": schema.Int64Attribute{
-																Computed: true,
-															},
-															"mount_options": schema.ListAttribute{
-																Computed:    true,
-																ElementType: types.StringType,
-															},
-														},
-													},
-												},
-											},
-										},
-										"log_configuration": schema.SingleNestedBlock{
-											Attributes: map[string]schema.Attribute{
-												"options": schema.MapAttribute{
-													Computed:    true,
-													ElementType: types.StringType,
-												},
-												"log_driver": schema.StringAttribute{
-													Computed: true,
-												},
-											},
-											Blocks: map[string]schema.Block{
-												"secret_options": schema.ListNestedBlock{
-													NestedObject: schema.NestedBlockObject{
-														Attributes: map[string]schema.Attribute{
-															"name": schema.StringAttribute{
-																Computed: true,
-															},
-															"value_from": schema.StringAttribute{
-																Computed: true,
-															},
-														},
-													},
-												},
-											},
-										},
-										"mount_points": schema.ListNestedBlock{
-											NestedObject: schema.NestedBlockObject{
-												Attributes: map[string]schema.Attribute{
-													"container_path": schema.StringAttribute{
-														Computed: true,
-													},
-													"read_only": schema.BoolAttribute{
-														Computed: true,
-													},
-													"source_volume": schema.StringAttribute{
-														Computed: true,
-													},
-												},
-											},
-										},
-										"network_configuration": schema.SingleNestedBlock{
-											Attributes: map[string]schema.Attribute{
-												"assign_public_ip": schema.StringAttribute{
-													Computed: true,
-												},
-											},
-										},
-										"resource_requirements": schema.ListNestedBlock{
-											NestedObject: schema.NestedBlockObject{
-												Attributes: map[string]schema.Attribute{
-													"type": schema.StringAttribute{
-														Computed: true,
-													},
-													"value": schema.StringAttribute{
-														Computed: true,
-													},
-												},
-											},
-										},
-										"runtime_platform": schema.SingleNestedBlock{
-											Attributes: map[string]schema.Attribute{
-												"cpu_architecture": schema.StringAttribute{
-													Computed: true,
-												},
-												"operating_system_family": schema.StringAttribute{
-													Computed: true,
-												},
-											},
-										},
-										"secrets": schema.ListNestedBlock{
-											NestedObject: schema.NestedBlockObject{
-												Attributes: map[string]schema.Attribute{
-													"name": schema.StringAttribute{
-														Computed: true,
-													},
-													"value_from": schema.StringAttribute{
-														Computed: true,
-													},
-												},
-											},
-										},
-										"ulimits": schema.ListNestedBlock{
-											NestedObject: schema.NestedBlockObject{
-												Attributes: map[string]schema.Attribute{
-													"hard_limit": schema.Int64Attribute{
-														Computed: true,
-													},
-													"name": schema.StringAttribute{
-														Computed: true,
-													},
-													"soft_limit": schema.Int64Attribute{
-														Computed: true,
-													},
-												},
-											},
-										},
-										"volumes": schema.ListNestedBlock{
-											NestedObject: schema.NestedBlockObject{
-												Attributes: map[string]schema.Attribute{
-													"name": schema.StringAttribute{
-														Computed: true,
-													},
-												},
-												Blocks: map[string]schema.Block{
-													"host": schema.SingleNestedBlock{
-														Attributes: map[string]schema.Attribute{
-															"source_path": schema.StringAttribute{
-																Computed: true,
-															},
-														},
-													},
-													"efs_volume_configuration": schema.SingleNestedBlock{
-														Attributes: map[string]schema.Attribute{
-															"file_system_id": schema.StringAttribute{
-																Computed: true,
-															},
-															"root_directory": schema.StringAttribute{
-																Computed: true,
-															},
-															"transit_encryption": schema.StringAttribute{
-																Computed: true,
-															},
-															"transit_encryption_port": schema.Int64Attribute{
-																Computed: true,
-															},
-														},
-														Blocks: map[string]schema.Block{
-															"authorization_config": schema.SingleNestedBlock{
-																Attributes: map[string]schema.Attribute{
-																	"access_point_id": schema.StringAttribute{
-																		Computed: true,
-																	},
-																	"iam": schema.StringAttribute{
-																		Computed: true,
-																	},
-																},
-															},
-														},
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
-			"retry_strategy": schema.SingleNestedBlock{
-				Attributes: map[string]schema.Attribute{
-					"attempts": schema.Int64Attribute{
-						Optional: true,
-						Validators: []validator.Int64{
-							int64validator.Between(1, 10),
-						},
-					},
-				},
-				Blocks: map[string]schema.Block{
-					"evaluate_on_exit": schema.ListNestedBlock{
-						NestedObject: schema.NestedBlockObject{
-							Attributes: map[string]schema.Attribute{
-								"action": schema.StringAttribute{
-									Computed: true,
-								},
-								"on_exit_code": schema.StringAttribute{
-									Computed: true,
-								},
-								"on_reason": schema.StringAttribute{
-									Computed: true,
-								},
-								"on_status_reason": schema.StringAttribute{
-									Computed: true,
-								},
-							},
-						},
-					},
-				},
-			},
-		},
 	}
 }
 
 func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	conn := d.Meta().BatchClient(ctx)
-
-	var data dataSourceJobDefinitionData
+	var data jobDefinitionDataSourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	jd := awstypes.JobDefinition{}
+	conn := d.Meta().BatchClient(ctx)
 
-	if !data.ARN.IsNull() {
-		out, err := FindJobDefinitionV2ByARN(ctx, conn, aws.StringValue(flex.StringFromFramework(ctx, data.ARN)))
+	var jd *awstypes.JobDefinition
+
+	if !data.JobDefinitionARN.IsNull() {
+		arn := data.JobDefinitionARN.ValueString()
+		input := &batch.DescribeJobDefinitionsInput{
+			JobDefinitions: []string{arn},
+		}
+
+		output, err := findJobDefinitionV2(ctx, conn, input)
 
 		if err != nil {
-			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Batch, create.ErrActionReading, DSNameJobDefinition, data.Name.String(), err),
-				err.Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("reading Batch Job Definition (%s)", arn), err.Error())
+
 			return
 		}
-		// nosemgrep:ci.semgrep.aws.prefer-pointer-conversion-assignment
-		jd = *out
-	}
 
-	if !data.Name.IsNull() {
+		jd = output
+	} else if !data.JobDefinitionName.IsNull() {
+		name := data.JobDefinitionName.ValueString()
+		status := jobDefinitionStatusActive
+		if !data.Status.IsNull() {
+			status = data.Status.ValueString()
+		}
 		input := &batch.DescribeJobDefinitionsInput{
-			JobDefinitionName: flex.StringFromFramework(ctx, data.Name),
+			JobDefinitionName: aws.String(name),
+			Status:            aws.String(status),
 		}
 
-		if data.Status.IsNull() {
-			active := jobDefinitionStatusActive
-			input.Status = &active
-		} else {
-			input.Status = flex.StringFromFramework(ctx, data.Status)
-		}
+		output, err := findJobDefinitionsV2(ctx, conn, input)
 
-		jds, err := ListJobDefinitionsV2ByNameWithStatus(ctx, conn, input)
+		if len(output) == 0 {
+			err = tfresource.NewEmptyResultError(input)
+		}
 
 		if err != nil {
-			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.Batch, create.ErrActionReading, DSNameJobDefinition, data.Name.String(), err),
-				err.Error(),
-			)
+			response.Diagnostics.AddError(fmt.Sprintf("reading Batch Job Definitions (%s/%s)", name, status), err.Error())
+
+			return
+		}
+
+		if data.Revision.IsNull() {
+			slices.SortFunc(output, func(a, b awstypes.JobDefinition) int {
+				return int(aws.ToInt32(a.Revision) - aws.ToInt32(b.Revision))
+			})
+
+			jd = &output[len(output)-1]
+		} else {
+
 		}
 
 		if !data.Revision.IsNull() {
@@ -696,7 +252,34 @@ func (r *jobDefinitionDataSource) ConfigValidators(context.Context) []resource.C
 	}
 }
 
-func frameworkFlattenEKSproperties(ctx context.Context, apiObject *awstypes.EksProperties, data *dataSourceJobDefinitionData) (diags diag.Diagnostics) {
+func findJobDefinitionV2(ctx context.Context, conn *batch.Client, input *batch.DescribeJobDefinitionsInput) (*awstypes.JobDefinition, error) {
+	output, err := findJobDefinitionsV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findJobDefinitionsV2(ctx context.Context, conn *batch.Client, input *batch.DescribeJobDefinitionsInput) ([]awstypes.JobDefinition, error) {
+	var output []awstypes.JobDefinition
+
+	pages := batch.NewDescribeJobDefinitionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.JobDefinitions...)
+	}
+
+	return output, nil
+}
+
+func frameworkFlattenEKSproperties(ctx context.Context, apiObject *awstypes.EksProperties, data *jobDefinitionDataSourceModel) (diags diag.Diagnostics) {
 	if apiObject == nil {
 		data.EksProperties = types.ObjectNull(eksPropertiesAttr)
 		return diags
@@ -793,7 +376,7 @@ func frameworkFlattenEKSContainer(ctx context.Context, apiObject []awstypes.EksC
 	return containers
 }
 
-func frameworkFlattenNodeProperties(ctx context.Context, props *awstypes.NodeProperties, data *dataSourceJobDefinitionData) (diags diag.Diagnostics) {
+func frameworkFlattenNodeProperties(ctx context.Context, props *awstypes.NodeProperties, data *jobDefinitionDataSourceModel) (diags diag.Diagnostics) {
 	att := fwtypes.AttributeTypesMust[frameworkNodeProperties](ctx)
 	if props == nil {
 		data.EksProperties = types.ObjectNull(att)
@@ -1103,7 +686,7 @@ func flattenContainerTmpfs(ctx context.Context, tmpfs []awstypes.Tmpfs) (data []
 	return
 }
 
-func frameworkFlattenRetryStrategy(ctx context.Context, jd *awstypes.RetryStrategy, data *dataSourceJobDefinitionData) (diags diag.Diagnostics) {
+func frameworkFlattenRetryStrategy(ctx context.Context, jd *awstypes.RetryStrategy, data *jobDefinitionDataSourceModel) (diags diag.Diagnostics) {
 	att := fwtypes.AttributeTypesMust[retryStrategy](ctx)
 	att["evaluate_on_exit"] = types.ListType{ElemType: types.ObjectType{AttrTypes: evaluateOnExitAttr}}
 	if jd == nil {
@@ -1144,23 +727,6 @@ func frameworkFlattenRetryStrategy(ctx context.Context, jd *awstypes.RetryStrate
 		})
 	}
 	return diags
-}
-
-type dataSourceJobDefinitionData struct {
-	ARN                        fwtypes.ARN  `tfsdk:"arn"`
-	ARNPrefix                  fwtypes.ARN  `tfsdk:"arn_prefix"`
-	ID                         types.String `tfsdk:"id"`
-	Name                       types.String `tfsdk:"name"`
-	Revision                   types.Int64  `tfsdk:"revision"`
-	Status                     types.String `tfsdk:"status"`
-	Tags                       types.Map    `tfsdk:"tags"`
-	Type                       types.String `tfsdk:"type"`
-	ContainerOrchestrationType types.String `tfsdk:"container_orchestration_type"`
-	SchedulingPriority         types.Int64  `tfsdk:"scheduling_priority"`
-	RetryStrategy              types.Object `tfsdk:"retry_strategy"`
-	Timeout                    types.Object `tfsdk:"timeout"`
-	NodeProperties             types.Object `tfsdk:"node_properties"`
-	EksProperties              types.Object `tfsdk:"eks_properties"`
 }
 
 type retryStrategy struct {
@@ -1378,6 +944,23 @@ var authorizationConfigAttr = map[string]attr.Type{
 
 var hostAttr = map[string]attr.Type{
 	"source_path": types.StringType,
+}
+
+type jobDefinitionDataSourceModel struct {
+	ARNPrefix                  fwtypes.ARN                                                       `tfsdk:"arn_prefix"`
+	ContainerOrchestrationType types.String                                                      `tfsdk:"container_orchestration_type"`
+	EKSProperties              fwtypes.ListNestedObjectValueOf[jobDefinitionEKSPropertiesModel]  `tfsdk:"eks_properties"`
+	ID                         types.String                                                      `tfsdk:"id"`
+	JobDefinitionARN           fwtypes.ARN                                                       `tfsdk:"arn"`
+	JobDefinitionName          types.String                                                      `tfsdk:"name"`
+	NodeProperties             fwtypes.ListNestedObjectValueOf[jobDefinitionNodePropertiesModel] `tfsdk:"node_properties"`
+	RetryStrategy              fwtypes.ListNestedObjectValueOf[jobDefinitionRetryStrategyModel]  `tfsdk:"retry_strategy"`
+	Revision                   types.Int64                                                       `tfsdk:"revision"`
+	SchedulingPriority         types.Int64                                                       `tfsdk:"scheduling_priority"`
+	Status                     types.String                                                      `tfsdk:"status"`
+	Tags                       types.Map                                                         `tfsdk:"tags"`
+	Timeout                    fwtypes.ListNestedObjectValueOf[jobDefinitionJobTimeoutModel]     `tfsdk:"timeout"`
+	Type                       types.String                                                      `tfsdk:"type"`
 }
 
 type jobDefinitionEKSPropertiesModel struct {
