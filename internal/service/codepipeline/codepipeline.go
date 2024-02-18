@@ -85,7 +85,6 @@ func resourcePipeline() *schema.Resource {
 						"region": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Computed: true,
 						},
 						"type": {
 							Type:             schema.TypeString,
