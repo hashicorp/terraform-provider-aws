@@ -45,6 +45,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.14.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.13.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.9.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.23.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.16.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.33.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.3.0 // indirect
@@ -125,6 +126,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.15.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rds v1.70.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.24.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.16.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.37.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.9.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.20.0 // indirect
@@ -140,6 +142,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.25.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.20.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.25.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/shield v1.24.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/signer v1.20.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sns v1.27.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.30.0 // indirect
