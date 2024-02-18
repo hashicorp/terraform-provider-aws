@@ -79,6 +79,8 @@ var (
 
 // ProviderMeta returns the current provider's state (AKA "meta" or "conns.AWSClient").
 func ProviderMeta(t *testing.T) *conns.AWSClient {
+	t.Helper()
+
 	providerMetas.Lock()
 	meta, ok := providerMetas[t.Name()]
 	defer providerMetas.Unlock()
@@ -107,6 +109,8 @@ func vcrMode() (recorder.Mode, error) {
 
 // vcrEnabledProtoV5ProviderFactories returns ProtoV5ProviderFactories ready for use with VCR.
 func vcrEnabledProtoV5ProviderFactories(t *testing.T, input map[string]func() (tfprotov5.ProviderServer, error)) map[string]func() (tfprotov5.ProviderServer, error) {
+	t.Helper()
+
 	output := make(map[string]func() (tfprotov5.ProviderServer, error), len(input))
 
 	for name := range input {
@@ -290,6 +294,8 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 // In RECORDING mode, generates a new seed and saves it to a file, using the seed for the source.
 // In REPLAYING mode, reads a seed from a file and creates a source from it.
 func vcrRandomnessSource(t *testing.T) (*randomnessSource, error) {
+	t.Helper()
+
 	testName := t.Name()
 
 	randomnessSources.Lock()
@@ -378,6 +384,8 @@ func writeSeedToFile(seed int64, fileName string) error {
 
 // closeVCRRecorder closes the VCR recorder, saving the cassette and randomness seed.
 func closeVCRRecorder(t *testing.T) {
+	t.Helper()
+
 	// Don't close the recorder if we're running because of a panic.
 	if p := recover(); p != nil {
 		panic(p)
@@ -420,6 +428,8 @@ func closeVCRRecorder(t *testing.T) {
 
 // ParallelTest wraps resource.ParallelTest, initializing VCR if enabled.
 func ParallelTest(t *testing.T, c resource.TestCase) {
+	t.Helper()
+
 	if isVCREnabled() {
 		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(t, c.ProtoV5ProviderFactories)
 		defer closeVCRRecorder(t)
@@ -430,6 +440,8 @@ func ParallelTest(t *testing.T, c resource.TestCase) {
 
 // Test wraps resource.Test, initializing VCR if enabled.
 func Test(t *testing.T, c resource.TestCase) {
+	t.Helper()
+
 	if isVCREnabled() {
 		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(t, c.ProtoV5ProviderFactories)
 		defer closeVCRRecorder(t)
@@ -440,6 +452,8 @@ func Test(t *testing.T, c resource.TestCase) {
 
 // RandInt is a VCR-friendly replacement for acctest.RandInt.
 func RandInt(t *testing.T) int {
+	t.Helper()
+
 	if !isVCREnabled() {
 		return sdkacctest.RandInt()
 	}
@@ -455,5 +469,7 @@ func RandInt(t *testing.T) int {
 
 // RandomWithPrefix is a VCR-friendly replacement for acctest.RandomWithPrefix.
 func RandomWithPrefix(t *testing.T, prefix string) string {
+	t.Helper()
+
 	return fmt.Sprintf("%s-%d", prefix, RandInt(t))
 }
