@@ -5,7 +5,6 @@ package apigatewayv2
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -135,7 +134,7 @@ func dataSourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "apigateway",
 		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("/apis/%s", d.Id()),
+		Resource:  "/apis/" + d.Id(),
 	}.String()
 	d.Set("arn", apiArn)
 	if err := d.Set("cors_configuration", flattenCORSConfiguration(api.CorsConfiguration)); err != nil {
