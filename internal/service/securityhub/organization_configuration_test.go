@@ -7,13 +7,13 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/securityhub"
+	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -25,12 +25,12 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationManagementAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
+		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_basic(true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccOrganizationConfigurationExists(ctx, resourceName),
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_standards", "DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "organization_configuration.#", "0"),
@@ -44,7 +44,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 			{
 				Config: testAccOrganizationConfigurationConfig_basic(false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccOrganizationConfigurationExists(ctx, resourceName),
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "false"),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_standards", "DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "organization_configuration.#", "0"),
@@ -62,12 +62,12 @@ func testAccOrganizationConfiguration_autoEnableStandards(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationManagementAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
+		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_autoEnableStandards("DEFAULT"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccOrganizationConfigurationExists(ctx, resourceName),
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_standards", "DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "organization_configuration.#", "0"),
@@ -81,7 +81,7 @@ func testAccOrganizationConfiguration_autoEnableStandards(t *testing.T) {
 			{
 				Config: testAccOrganizationConfigurationConfig_autoEnableStandards("NONE"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccOrganizationConfigurationExists(ctx, resourceName),
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_standards", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "organization_configuration.#", "0"),
@@ -91,11 +91,7 @@ func testAccOrganizationConfiguration_autoEnableStandards(t *testing.T) {
 	})
 }
 
-// CENTRAL configuration must be done from a *member* delegated admin account:
-// "Central configuration couldn't be enabled because the organization management account is designated as the delegated Security Hub administrator account."
-// "Designate a different account as the delegated administrator, and retry."
-// The primary provider is expected to be a member account and the alternate provider a management account.
-func TestAccOrganizationConfiguration_centralConfiguration(t *testing.T) {
+func testAccOrganizationConfiguration_centralConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_organization_configuration.test"
 	resource.Test(t, resource.TestCase{
@@ -107,17 +103,16 @@ func TestAccOrganizationConfiguration_centralConfiguration(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             acctest.CheckDestroyNoop,
+		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_centralConfiguration(false, "NONE", "CENTRAL"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccOrganizationConfigurationExists(ctx, resourceName),
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "false"),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_standards", "NONE"),
 					resource.TestCheckResourceAttr(resourceName, "organization_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "organization_configuration.0.configuration_type", "CENTRAL"),
-					resource.TestCheckResourceAttr(resourceName, "organization_configuration.0.status", "ENABLED"),
 				),
 			},
 			{
@@ -128,19 +123,18 @@ func TestAccOrganizationConfiguration_centralConfiguration(t *testing.T) {
 			{
 				Config: testAccOrganizationConfigurationConfig_centralConfiguration(true, "DEFAULT", "LOCAL"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccOrganizationConfigurationExists(ctx, resourceName),
+					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable", "true"),
 					resource.TestCheckResourceAttr(resourceName, "auto_enable_standards", "DEFAULT"),
 					resource.TestCheckResourceAttr(resourceName, "organization_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "organization_configuration.0.configuration_type", "LOCAL"),
-					resource.TestCheckResourceAttr(resourceName, "organization_configuration.0.status", "ENABLED"),
 				),
 			},
 		},
 	})
 }
 
-func testAccOrganizationConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckOrganizationConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -149,9 +143,31 @@ func testAccOrganizationConfigurationExists(ctx context.Context, n string) resou
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 
-		_, err := tfsecurityhub.WaitOrganizationConfigurationEnabled(ctx, conn, 2*time.Minute)
-
+		_, err := conn.DescribeOrganizationConfiguration(ctx, &securityhub.DescribeOrganizationConfigurationInput{})
 		return err
+	}
+}
+
+func testAccCheckOrganizationConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_securityhub_organization_configuration" {
+				continue
+			}
+
+			out, err := conn.DescribeOrganizationConfiguration(ctx, &securityhub.DescribeOrganizationConfigurationInput{})
+			if err != nil {
+				return err
+			}
+
+			if out != nil && out.OrganizationConfiguration != nil && out.OrganizationConfiguration.ConfigurationType == types.OrganizationConfigurationConfigurationTypeCentral {
+				return fmt.Errorf("Security Hub Organization Configuration (%s) still exists", rs.Primary.ID)
+			}
+		}
+
+		return nil
 	}
 }
 
@@ -191,15 +207,8 @@ resource "aws_securityhub_organization_configuration" "test" {
 func testAccOrganizationConfigurationConfig_centralConfiguration(autoEnable bool, autoEnableStandards, configType string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateAccountProvider(),
+		testAccMemberAccountDelegatedAdminConfig_base,
 		fmt.Sprintf(`
-data "aws_caller_identity" "member" {}
-
-resource "aws_securityhub_organization_admin_account" "test" {
-  admin_account_id = data.aws_caller_identity.member.account_id
-
-  provider = awsalternate
-}
-
 resource "aws_securityhub_finding_aggregator" "test" {
   linking_mode = "ALL_REGIONS"
 

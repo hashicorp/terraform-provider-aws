@@ -28,9 +28,7 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 		CreateWithoutTimeout: resourceOrganizationConfigurationUpdate,
 		ReadWithoutTimeout:   resourceOrganizationConfigurationRead,
 		UpdateWithoutTimeout: resourceOrganizationConfigurationUpdate,
-		// on delete reset to a default configuration.
-		// non-default CENTRAL configuration blocks dependent resources from being destroyed.
-		DeleteWithoutTimeout: resourceOrganizationConfigurationUpdate,
+		DeleteWithoutTimeout: resourceOrganizationConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -57,10 +55,6 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 							Type:             schema.TypeString,
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.OrganizationConfigurationConfigurationType](),
-						},
-						"status": {
-							Type:     schema.TypeString,
-							Computed: true,
 						},
 					},
 				},
@@ -98,11 +92,41 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 	return append(diags, resourceOrganizationConfigurationRead(ctx, d, meta)...)
 }
 
+// resourceOrganizationConfigurationDelete destroys the organizations configuration resource by updating it to a disabled configuration.
+// If orgnanization configuration is of type central, then dependent resources (i.e finding_aggregator, delegated_admin) cannot be removed from AWS.
+// Updating the organization configuration on destroy is necessary to allow dependent resources to be able to be cleaned up.
+func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
+
+	input := &securityhub.UpdateOrganizationConfigurationInput{
+		AutoEnable:          aws.Bool(false),
+		AutoEnableStandards: types.AutoEnableStandardsNone,
+		OrganizationConfiguration: &types.OrganizationConfiguration{
+			ConfigurationType: types.OrganizationConfigurationConfigurationTypeLocal,
+		},
+	}
+	_, err := conn.UpdateOrganizationConfiguration(ctx, input)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Security Hub Organization Configuration (%s): %s", d.Id(), err)
+	}
+
+	_, err = waitOrganizationConfigurationEnabled(ctx, conn, organizationsConfigurationStatusTimeout)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Security Hub Organization Configuration (%s): %s", d.Id(), err)
+	}
+
+	d.SetId("")
+	return diags
+}
+
+const organizationsConfigurationStatusTimeout = 300 * time.Second
+
 func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	output, err := WaitOrganizationConfigurationEnabled(ctx, conn, d.Timeout(schema.TimeoutDefault))
+	output, err := waitOrganizationConfigurationEnabled(ctx, conn, organizationsConfigurationStatusTimeout)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Organization Configuration %s not found, removing from state", d.Id())
@@ -166,7 +190,7 @@ func findOrganizationConfiguration(ctx context.Context, conn *securityhub.Client
 	}
 }
 
-func WaitOrganizationConfigurationEnabled(ctx context.Context, conn *securityhub.Client, timeout time.Duration) (*securityhub.DescribeOrganizationConfigurationOutput, error) {
+func waitOrganizationConfigurationEnabled(ctx context.Context, conn *securityhub.Client, timeout time.Duration) (*securityhub.DescribeOrganizationConfigurationOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.OrganizationConfigurationStatusPending),
 		Target:                    append(enum.Slice(types.OrganizationConfigurationStatusEnabled), ""),
@@ -205,7 +229,6 @@ func flattenOrganizationConfiguration(apiObject *types.OrganizationConfiguration
 
 	tfMap := map[string]interface{}{
 		"configuration_type": apiObject.ConfigurationType,
-		"status":             apiObject.Status,
 	}
 
 	return tfMap

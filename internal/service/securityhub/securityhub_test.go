@@ -53,9 +53,8 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"MultiRegion": testAccOrganizationAdminAccount_MultiRegion,
 		},
 		"OrganizationConfiguration": {
-			"basic":                testAccOrganizationConfiguration_basic,
-			"AutoEnableStandards":  testAccOrganizationConfiguration_autoEnableStandards,
-			"CentralConfiguration": TestAccOrganizationConfiguration_centralConfiguration,
+			"basic":               testAccOrganizationConfiguration_basic,
+			"AutoEnableStandards": testAccOrganizationConfiguration_autoEnableStandards,
 		},
 		"ProductSubscription": {
 			"basic": testAccProductSubscription_basic,
@@ -77,3 +76,30 @@ func TestAccSecurityHub_serial(t *testing.T) {
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
+
+// TestAccSecurityHub_centralConfiguration is a multi-account test stuite for central configuration features.
+// Central configuration can only be enabled from a *member* delegated admin account.
+// The primary provider is expected to be an organizations member account and the alternate provider is expected to be the organizations management account.
+func TestAccSecurityHub_centralConfiguration(t *testing.T) {
+	t.Parallel()
+	testCases := map[string]map[string]func(t *testing.T){
+		"OrganizationConfiguration": {
+			"CentralConfiguration": testAccOrganizationConfiguration_centralConfiguration,
+		},
+	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
+}
+
+const testAccMemberAccountDelegatedAdminConfig_base = `
+resource "aws_securityhub_account" "test" {}
+
+data "aws_caller_identity" "member" {}
+
+resource "aws_securityhub_organization_admin_account" "test" {
+  provider = awsalternate
+
+  admin_account_id = data.aws_caller_identity.member.account_id
+
+  depends_on = [aws_securityhub_account.test]
+}
+`
