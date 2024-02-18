@@ -107,7 +107,7 @@ func TestAccServiceQuotasServiceQuota_basic_hasUsageMetric(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
-			preCheckServiceQuotaHasUsageMetric(ctx, hasUsageMetricServiceCode, hasUsageMetricQuotaCode, t)
+			testAccPreCheckServiceQuotaHasUsageMetric(ctx, t, hasUsageMetricServiceCode, hasUsageMetricQuotaCode)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
