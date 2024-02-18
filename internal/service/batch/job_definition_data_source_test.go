@@ -4,25 +4,18 @@
 package batch_test
 
 import (
-	"context"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/service/batch/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBatchJobDefinitionDataSource_basicName(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var jd types.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_batch_job_definition.test"
 	resourceName := "aws_batch_job_definition.test"
@@ -40,7 +33,6 @@ func TestAccBatchJobDefinitionDataSource_basicName(t *testing.T) {
 			{
 				Config: testAccJobDefinitionDataSourceConfig_basicName(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobDefinitionV2Exists(ctx, dataSourceName, &jd),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "revision", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "retry_strategy.attempts", "10"),
@@ -51,7 +43,6 @@ func TestAccBatchJobDefinitionDataSource_basicName(t *testing.T) {
 				// specify revision
 				Config: testAccJobDefinitionDataSourceConfig_basicNameRevision(rName, "2", 2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobDefinitionV2Exists(ctx, dataSourceName, &jd),
 					resource.TestCheckResourceAttr(dataSourceName, "revision", "2"),
 				),
 			},
@@ -61,8 +52,6 @@ func TestAccBatchJobDefinitionDataSource_basicName(t *testing.T) {
 
 func TestAccBatchJobDefinitionDataSource_basicARN(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var jd types.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_batch_job_definition.test"
 
@@ -79,7 +68,6 @@ func TestAccBatchJobDefinitionDataSource_basicARN(t *testing.T) {
 			{
 				Config: testAccJobDefinitionDataSourceConfig_basicARN(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobDefinitionV2Exists(ctx, dataSourceName, &jd),
 					resource.TestCheckResourceAttr(dataSourceName, "revision", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "retry_strategy.attempts", "10"),
 					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
@@ -89,7 +77,6 @@ func TestAccBatchJobDefinitionDataSource_basicARN(t *testing.T) {
 			{
 				Config: testAccJobDefinitionDataSourceConfig_basicARN(rName, "2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobDefinitionV2Exists(ctx, dataSourceName, &jd),
 					resource.TestCheckResourceAttr(dataSourceName, "revision", "2"),
 				),
 			},
@@ -99,8 +86,6 @@ func TestAccBatchJobDefinitionDataSource_basicARN(t *testing.T) {
 
 func TestAccBatchJobDefinitionDataSource_basicARN_NodeProperties(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var jd types.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_batch_job_definition.test"
 
@@ -117,7 +102,6 @@ func TestAccBatchJobDefinitionDataSource_basicARN_NodeProperties(t *testing.T) {
 			{
 				Config: testAccJobDefinitionDataSourceConfig_basicARNNode(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobDefinitionV2Exists(ctx, dataSourceName, &jd),
 					resource.TestCheckResourceAttr(dataSourceName, "node_properties.main_node", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "node_properties.node_range_properties.#", "2"),
 					resource.TestCheckResourceAttr(dataSourceName, "node_properties.node_range_properties.0.container.image", "busybox"),
@@ -129,8 +113,6 @@ func TestAccBatchJobDefinitionDataSource_basicARN_NodeProperties(t *testing.T) {
 
 func TestAccBatchJobDefinitionDataSource_basicARN_EKSProperties(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	var jd types.JobDefinition
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_batch_job_definition.test"
 
@@ -147,7 +129,6 @@ func TestAccBatchJobDefinitionDataSource_basicARN_EKSProperties(t *testing.T) {
 			{
 				Config: testAccJobDefinitionDataSourceConfig_basicARNEKS(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobDefinitionV2Exists(ctx, dataSourceName, &jd),
 					resource.TestCheckResourceAttr(dataSourceName, "type", "container"),
 					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.pod_properties.containers.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.pod_properties.containers.0.image", "public.ecr.aws/amazonlinux/amazonlinux:1"),
@@ -155,31 +136,6 @@ func TestAccBatchJobDefinitionDataSource_basicARN_EKSProperties(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckJobDefinitionV2Exists(ctx context.Context, n string, jd *types.JobDefinition) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Batch Job Queue ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).BatchClient(ctx)
-
-		jobDefinition, err := tfbatch.FindJobDefinitionV2ByARN(ctx, conn, rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		*jd = *jobDefinition
-
-		return nil
-	}
 }
 
 func testAccJobDefinitionDataSourceConfig_basicARN(rName string, increment string) string {
