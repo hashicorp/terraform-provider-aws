@@ -615,6 +615,7 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.codepipeline_role", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexache.MustCompile(fmt.Sprintf("test-pipeline-%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "execution_mode", string(types.ExecutionModeSuperseded)),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_type", string(types.PipelineTypeV1)),
 					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.name", "Source"),
@@ -660,6 +661,7 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 				Config: testAccCodePipelineConfig_pipelinetypeUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &p),
+					resource.TestCheckResourceAttr(resourceName, "execution_mode", string(types.ExecutionModeQueued)),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_type", string(types.PipelineTypeV2)),
 					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.name", "Source"),
@@ -704,6 +706,7 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.codepipeline_role", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexache.MustCompile(fmt.Sprintf("test-pipeline-%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "execution_mode", string(types.ExecutionModeSuperseded)),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_type", string(types.PipelineTypeV1)),
 					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.name", "Source"),
@@ -1186,6 +1189,8 @@ resource "aws_codepipeline" "test" {
       }
     }
   }
+
+  execution_mode = "QUEUED"
 
   pipeline_type = "V2"
 
