@@ -34,7 +34,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceCluster,
+			Factory:  resourceCluster,
 			TypeName: "aws_cloudhsm_v2_cluster",
 			Name:     "Cluster",
 			Tags: &types.ServicePackageResourceTags{
