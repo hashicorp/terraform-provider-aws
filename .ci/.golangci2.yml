@@ -133,17 +133,21 @@ linters:
     - nakedret
     - nilerr
     - nolintlint
+    - nosprintfhostport
     - paralleltest
+    # - perfsprint
     - predeclared
     - revive
     - staticcheck
     - stylecheck
     - tenv
+    # - thelper
     - tparallel
     - typecheck
     - unconvert
     - unparam
     - unused
+    - usestdlibvars
     - vet
     - vetshadow
     - whitespace
