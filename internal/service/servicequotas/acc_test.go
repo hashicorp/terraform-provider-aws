@@ -82,7 +82,7 @@ func testAccPreCheckServiceQuotaUnset(ctx context.Context, t *testing.T, service
 	}
 }
 
-func preCheckServiceQuotaHasUsageMetric(ctx context.Context, serviceCode, quotaCode string, t *testing.T) {
+func testAccPreCheckServiceQuotaHasUsageMetric(ctx context.Context, t *testing.T, serviceCode, quotaCode string) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceQuotasClient(ctx)
 
 	input := &servicequotas.GetAWSDefaultServiceQuotaInput{
