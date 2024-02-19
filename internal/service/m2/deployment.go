@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"strings"
 	"time"
 
@@ -104,7 +105,11 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	in := plan.createDeploymentInput(ctx)
+	in, diags := plan.createDeploymentInput(ctx)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	out, err := conn.CreateDeployment(ctx, in)
 	if err != nil {
@@ -147,7 +152,8 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 		}
 	}
 
-	plan.refreshFromOutput(ctx, deployment)
+	outDiags := plan.refreshFromOutput(ctx, deployment)
+	resp.Diagnostics.Append(outDiags...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -172,7 +178,11 @@ func (r *resourceDeployment) Read(ctx context.Context, req resource.ReadRequest,
 		)
 		return
 	}
-	state.refreshFromOutput(ctx, out)
+	diags := state.refreshFromOutput(ctx, out)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
 	applicationId, _, err := DeploymentParseResourceId(state.ID.ValueString())
 	if err != nil {
@@ -226,7 +236,11 @@ func (r *resourceDeployment) Update(ctx context.Context, req resource.UpdateRequ
 		}
 
 		// Create the updated deployment
-		in := plan.createDeploymentInput(ctx)
+		in, diags := plan.createDeploymentInput(ctx)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 
 		out, err := conn.CreateDeployment(ctx, in)
 		if err != nil {
@@ -255,7 +269,11 @@ func (r *resourceDeployment) Update(ctx context.Context, req resource.UpdateRequ
 			)
 			return
 		}
-		plan.refreshFromOutput(ctx, deployment)
+		outDiags := plan.refreshFromOutput(ctx, deployment)
+		resp.Diagnostics.Append(outDiags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	// Start the application if plan says to
@@ -344,24 +362,24 @@ func (r *resourceDeployment) ModifyPlan(ctx context.Context, req resource.Modify
 	}
 }
 
-func (r *resourceDeploymentData) refreshFromOutput(ctx context.Context, out *m2.GetDeploymentOutput) {
+func (r *resourceDeploymentData) refreshFromOutput(ctx context.Context, out *m2.GetDeploymentOutput) diag.Diagnostics {
+	diags := diag.Diagnostics{}
+
+	diags.Append(flex.Flatten(ctx, out, r)...)
 	combinedId := DeploymentId(*out.ApplicationId, *out.DeploymentId)
 	r.ID = flex.StringValueToFramework(ctx, combinedId)
-	r.ApplicationId = flex.StringToFramework(ctx, out.ApplicationId)
-	r.ApplicationVersion = flex.Int32ToFramework(ctx, out.ApplicationVersion)
-	r.EnvironmentId = flex.StringToFramework(ctx, out.EnvironmentId)
+	return diags
 }
 
 func (r *resourceDeploymentData) refreshFromApplicationOutput(app *m2.GetApplicationOutput) {
 	r.Start = types.BoolValue(app.Status == awstypes.ApplicationLifecycleRunning)
 }
 
-func (r *resourceDeploymentData) createDeploymentInput(ctx context.Context) *m2.CreateDeploymentInput {
-	in := &m2.CreateDeploymentInput{
-		ApplicationId:      r.ApplicationId.ValueStringPointer(),
-		ApplicationVersion: flex.Int32FromFramework(ctx, r.ApplicationVersion),
-		EnvironmentId:      r.EnvironmentId.ValueStringPointer(),
-	}
+func (r *resourceDeploymentData) createDeploymentInput(ctx context.Context) (*m2.CreateDeploymentInput, diag.Diagnostics) {
+	diags := diag.Diagnostics{}
+
+	in := m2.CreateDeploymentInput{}
+	diags.Append(flex.Expand(ctx, r, &in)...)
 
 	var clientToken string
 	if r.ClientToken.IsNull() || r.ClientToken.IsUnknown() {
@@ -372,7 +390,7 @@ func (r *resourceDeploymentData) createDeploymentInput(ctx context.Context) *m2.
 
 	in.ClientToken = aws.String(clientToken)
 
-	return in
+	return &in, diags
 }
 
 func waitDeploymentCreated(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetDeploymentOutput, error) {
