@@ -175,7 +175,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("hsm_type", cluster.HsmType)
 	d.Set("security_group_id", cluster.SecurityGroup)
 	d.Set("source_backup_identifier", cluster.SourceBackupId)
-	d.Set("subnet_ids", tfmaps.Keys(cluster.SubnetMapping))
+	d.Set("subnet_ids", tfmaps.Values(cluster.SubnetMapping))
 	d.Set("vpc_id", cluster.VpcId)
 
 	setTagsOut(ctx, cluster.TagList)
