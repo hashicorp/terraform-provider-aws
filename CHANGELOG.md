@@ -1,5 +1,9 @@
 ## 5.38.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_batch_job_definition` ([#34663](https://github.com/hashicorp/terraform-provider-aws/issues/34663))
+
 ENHANCEMENTS:
 
 * data-source/aws_ec2_instance_type: Add `maximum_network_cards` attribute ([#35840](https://github.com/hashicorp/terraform-provider-aws/issues/35840))
