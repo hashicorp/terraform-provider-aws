@@ -8,12 +8,13 @@ import (
 	"errors"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/service/networkfirewall"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-
-	// "github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -71,6 +72,12 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 			"arn": framework.ARNAttributeComputedOnly(),
 			"description": schema.StringAttribute{
 				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 512),
+					stringvalidator.RegexMatches(
+						regexache.MustCompile(`^.*$`), "Must provide a valid ARN",
+					),
+				},
 			},
 			"certificate_authority": schema.ListAttribute{
 				Computed: true,
@@ -101,6 +108,10 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+				},
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 128),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9-]+$`), "Must contain only alphanumeric characters and dash '-'"),
 				},
 			},
 			"last_modified_time": schema.StringAttribute{
@@ -143,13 +154,23 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 				},
 			},
 			"tls_inspection_configuration": schema.ListNestedBlock{
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"server_certificate_configurations": schema.ListNestedBlock{
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"certificate_authority_arn": schema.StringAttribute{
 										Optional: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 256),
+											stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws.*`), "Must provide a valid ARN"),
+										},
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -170,12 +191,18 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 											Attributes: map[string]schema.Attribute{
 												"resource_arn": schema.StringAttribute{
 													Optional: true,
-													// TODO: Add string validation with regex
+													Validators: []validator.String{
+														stringvalidator.LengthBetween(1, 256),
+														stringvalidator.RegexMatches(regexache.MustCompile(`^arn:aws.*`), "Must provide a valid ARN"),
+													},
 												},
 											},
 										},
 									},
 									"scopes": schema.ListNestedBlock{
+										Validators: []validator.List{
+											listvalidator.SizeAtLeast(1),
+										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"protocols": schema.ListAttribute{
@@ -189,9 +216,15 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 														Attributes: map[string]schema.Attribute{
 															"from_port": schema.Int64Attribute{
 																Required: true,
+																Validators: []validator.Int64{
+																	int64validator.Between(0, 65535),
+																},
 															},
 															"to_port": schema.Int64Attribute{
 																Required: true,
+																Validators: []validator.Int64{
+																	int64validator.Between(0, 65535),
+																},
 															},
 														},
 													},
@@ -201,6 +234,10 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 														Attributes: map[string]schema.Attribute{
 															"address_definition": schema.StringAttribute{
 																Required: true,
+																Validators: []validator.String{
+																	stringvalidator.LengthBetween(1, 255),
+																	stringvalidator.RegexMatches(regexache.MustCompile(`^([a-fA-F\d:\.]+($|/\d{1,3}))$`), "Must contain IP address or a block of IP addresses in Classless Inter-Domain Routing (CIDR) notation"),
+																},
 															},
 														},
 													},
@@ -210,9 +247,15 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 														Attributes: map[string]schema.Attribute{
 															"from_port": schema.Int64Attribute{
 																Required: true,
+																Validators: []validator.Int64{
+																	int64validator.Between(0, 65535),
+																},
 															},
 															"to_port": schema.Int64Attribute{
 																Required: true,
+																Validators: []validator.Int64{
+																	int64validator.Between(0, 65535),
+																},
 															},
 														},
 													},
@@ -222,6 +265,10 @@ func (r *resourceTLSInspectionConfiguration) Schema(ctx context.Context, req res
 														Attributes: map[string]schema.Attribute{
 															"address_definition": schema.StringAttribute{
 																Required: true,
+																Validators: []validator.String{
+																	stringvalidator.LengthBetween(1, 255),
+																	stringvalidator.RegexMatches(regexache.MustCompile(`^([a-fA-F\d:\.]+($|/\d{1,3}))$`), "Must contain IP address or a block of IP addresses in Classless Inter-Domain Routing (CIDR) notation"),
+																},
 															},
 														},
 													},
