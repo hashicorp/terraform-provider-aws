@@ -36,7 +36,6 @@ func TestAccBatchJobDefinitionDataSource_basicName(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "revision", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "retry_strategy.attempts", "10"),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
 				),
 			},
 			{
@@ -144,8 +143,6 @@ func testAccJobDefinitionDataSourceConfig_basicARN(rName string, increment strin
 		`
 data "aws_batch_job_definition" "test" {
   arn = aws_batch_job_definition.test.arn
-
-  depends_on = [aws_batch_job_definition.test]
 }
 `)
 }
@@ -169,8 +166,6 @@ func testAccJobDefinitionDataSourceConfig_basicNameRevision(rName string, increm
 data "aws_batch_job_definition" "test" {
   name     = %[1]q
   revision = %[2]d
-
-  depends_on = [aws_batch_job_definition.test]
 }
 `, rName, revision))
 }
@@ -197,18 +192,15 @@ func testAccJobDefinitionDataSourceConfig_basicARNNode(rName string) string {
 	return acctest.ConfigCompose(
 		testAccJobDefinitionConfig_NodeProperties(rName), `
 data "aws_batch_job_definition" "test" {
-  arn        = aws_batch_job_definition.test.arn
-  depends_on = [aws_batch_job_definition.test]
-}`,
-	)
+  arn = aws_batch_job_definition.test.arn
+}`)
 }
 
 func testAccJobDefinitionDataSourceConfig_basicARNEKS(rName string) string {
 	return acctest.ConfigCompose(
 		testAccJobDefinitionConfig_EKSProperties_basic(rName), `
 data "aws_batch_job_definition" "test" {
-  arn        = aws_batch_job_definition.test.arn
-  depends_on = [aws_batch_job_definition.test]
-}`,
-	)
+  arn = aws_batch_job_definition.test.arn
+}
+`)
 }

@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"slices"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/batch"
@@ -194,9 +195,9 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 		return
 	}
 
-	// Tags?
-	// arnPrefix := strings.TrimSuffix(aws.StringValue(jd.JobDefinitionArn), fmt.Sprintf(":%d", aws.Int32Value(jd.Revision)))
-	// data.ARNPrefix = flex.StringToFrameworkARN(ctx, aws.String(arnPrefix))
+	arnPrefix := strings.TrimSuffix(aws.ToString(jd.JobDefinitionArn), fmt.Sprintf(":%d", aws.ToInt32(jd.Revision)))
+	data.ARNPrefix = types.StringValue(arnPrefix)
+	data.Tags = fwflex.FlattenFrameworkStringValueMap(ctx, jd.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -238,7 +239,7 @@ func findJobDefinitionsV2(ctx context.Context, conn *batch.Client, input *batch.
 }
 
 type jobDefinitionDataSourceModel struct {
-	ARNPrefix                  fwtypes.ARN                                                       `tfsdk:"arn_prefix"`
+	ARNPrefix                  types.String                                                      `tfsdk:"arn_prefix"`
 	ContainerOrchestrationType types.String                                                      `tfsdk:"container_orchestration_type"`
 	EKSProperties              fwtypes.ListNestedObjectValueOf[jobDefinitionEKSPropertiesModel]  `tfsdk:"eks_properties"`
 	ID                         types.String                                                      `tfsdk:"id"`
