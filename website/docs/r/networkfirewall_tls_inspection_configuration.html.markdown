@@ -268,13 +268,13 @@ The `scopes` block supports the following arguments:
 
 * `destinations` - (Optional) Set of configuration blocks describing the destination IP address and address ranges to inspect for, in CIDR notation. If not specified, this matches with any destination address. See [Destination](#destination) below for details.
 
-* `destination_ports` - (Optional) Set of configuration blocks describing the destination ports to inspect for. If not specified, this matches with any destination port. See [Destination Port](#destination-port) below for details.
+* `destination_ports` - (Optional) Set of configuration blocks describing the destination ports to inspect for. If not specified, this matches with any destination port. See [Destination Ports](#destination-ports) below for details.
 
 * `protocols` - (Optional) Set of protocols to inspect for, specified using the protocol's assigned internet protocol number (IANA). Network Firewall currently supports TCP only. Valid values: `6`
 
 * `sources` - (Optional) Set of configuration blocks describing the source IP address and address ranges to inspect for, in CIDR notation. If not specified, this matches with any source address. See [Source](#source) below for details.
 
-* `source_ports` - (Optional) Set of configuration blocks describing the source ports to inspect for. If not specified, this matches with any source port. See [Source Port](#source-port) below for details.
+* `source_ports` - (Optional) Set of configuration blocks describing the source ports to inspect for. If not specified, this matches with any source port. See [Source Ports](#source-ports) below for details.
 
 ### Destination
 
@@ -282,7 +282,7 @@ The `destination` block supports the following argument:
 
 * `address_definition` - (Required)  An IP address or a block of IP addresses in CIDR notation. AWS Network Firewall supports all address ranges for IPv4.
 
-### Destination Port
+### Destination Ports
 
 The `destination_ports` block supports the following arguments:
 
