@@ -33,6 +33,10 @@ func DataSourceSubnetGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
 			"subnet_ids": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -67,6 +71,7 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("description", group.CacheSubnetGroupDescription)
 	d.Set("subnet_ids", flex.FlattenStringSet(subnetIds))
 	d.Set("name", group.CacheSubnetGroupName)
+	d.Set("vpc_id", group.VpcId)
 
 	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 
