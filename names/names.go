@@ -33,6 +33,7 @@ const (
 	AppRunnerEndpointID                  = "apprunner"
 	AthenaEndpointID                     = "athena"
 	AuditManagerEndpointID               = "auditmanager"
+	BatchEndpointID                      = "batch"
 	BedrockEndpointID                    = "bedrock"
 	BudgetsEndpointID                    = "budgets"
 	ChimeSDKVoiceEndpointID              = "voice-chime"

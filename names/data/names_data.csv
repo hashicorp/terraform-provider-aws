@@ -34,7 +34,7 @@ autoscaling-plans,autoscalingplans,autoscalingplans,autoscalingplans,,autoscalin
 ,,,,,,,,,,,,,,,,,Backint Agent for SAP HANA,AWS,x,,,,,,,,,No SDK support
 backup,backup,backup,backup,,backup,,,Backup,Backup,,1,,,aws_backup_,,backup_,Backup,AWS,,,,,,,Backup,ListBackupPlans,,
 backup-gateway,backupgateway,backupgateway,backupgateway,,backupgateway,,,BackupGateway,BackupGateway,,1,,,aws_backupgateway_,,backupgateway_,Backup Gateway,AWS,,x,,,,,Backup Gateway,,,
-batch,batch,batch,batch,,batch,,,Batch,Batch,,1,,,aws_batch_,,batch_,Batch,AWS,,,,,,,Batch,ListJobs,,
+batch,batch,batch,batch,,batch,,,Batch,Batch,,1,2,,aws_batch_,,batch_,Batch,AWS,,,,,,,Batch,ListJobs,,
 bedrock,bedrock,bedrock,bedrock,,bedrock,,,Bedrock,Bedrock,,,2,,aws_bedrock_,,bedrock_,Amazon Bedrock,Amazon,,,,,,,Bedrock,ListFoundationModels,,
 bedrock-agent,bedrockagent,bedrockagent,bedrockagent,,bedrockagent,,,BedrockAgent,BedrockAgent,,,2,,aws_bedrockagent_,,bedrock_agent_,Agents for Amazon Bedrock,Amazon,,,,,,,Bedrock Agent,ListAgents,,
 billingconductor,billingconductor,billingconductor,,,billingconductor,,,BillingConductor,BillingConductor,,1,,,aws_billingconductor_,,billingconductor_,Billing Conductor,AWS,,x,,,,,billingconductor,,,
@@ -297,7 +297,7 @@ rbin,rbin,recyclebin,rbin,,rbin,,recyclebin,RBin,RecycleBin,,,2,,aws_rbin_,,rbin
 ,,,,,,,,,,,,,,,,,Red Hat OpenShift Service on AWS (ROSA),AWS,x,,,,,,,,,No SDK support
 redshift,redshift,redshift,redshift,,redshift,,,Redshift,Redshift,,1,,,aws_redshift_,,redshift_,Redshift,Amazon,,,,,,,Redshift,DescribeClusters,,
 redshift-data,redshiftdata,redshiftdataapiservice,redshiftdata,,redshiftdata,,redshiftdataapiservice,RedshiftData,RedshiftDataAPIService,,,2,,aws_redshiftdata_,,redshiftdata_,Redshift Data,Amazon,,,,,,,Redshift Data,ListDatabases,"Database: aws_sdkv2.String(""test"")",
-redshift-serverless,redshiftserverless,redshiftserverless,redshiftserverless,,redshiftserverless,,,RedshiftServerless,RedshiftServerless,,1,,,aws_redshiftserverless_,,redshiftserverless_,Redshift Serverless,Amazon,,,,,,,Redshift Serverless,ListNamespaces,,
+redshift-serverless,redshiftserverless,redshiftserverless,redshiftserverless,,redshiftserverless,,,RedshiftServerless,RedshiftServerless,,1,2,,aws_redshiftserverless_,,redshiftserverless_,Redshift Serverless,Amazon,,,,,,,Redshift Serverless,ListNamespaces,,
 rekognition,rekognition,rekognition,rekognition,,rekognition,,,Rekognition,Rekognition,,,2,,aws_rekognition_,,rekognition_,Rekognition,Amazon,,,,,,,Rekognition,ListCollections,,
 resiliencehub,resiliencehub,resiliencehub,resiliencehub,,resiliencehub,,,ResilienceHub,ResilienceHub,,1,,,aws_resiliencehub_,,resiliencehub_,Resilience Hub,AWS,,x,,,,,resiliencehub,,,
 resource-explorer-2,resourceexplorer2,resourceexplorer2,resourceexplorer2,,resourceexplorer2,,,ResourceExplorer2,ResourceExplorer2,,,2,,aws_resourceexplorer2_,,resourceexplorer2_,Resource Explorer,AWS,,,,,,,Resource Explorer 2,ListIndexes,,

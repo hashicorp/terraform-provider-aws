@@ -407,7 +407,7 @@ func flattenRuleSource(source *configservice.Source) []interface{} {
 	}
 
 	if len(source.SourceDetails) > 0 {
-		m["source_detail"] = schema.NewSet(ruleSourceDetailsHash, flattenRuleSourceDetails(source.SourceDetails))
+		m["source_detail"] = flattenRuleSourceDetails(source.SourceDetails)
 	}
 
 	result = append(result, m)

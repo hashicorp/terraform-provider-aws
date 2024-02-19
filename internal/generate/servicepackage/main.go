@@ -13,6 +13,7 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 
@@ -20,7 +21,6 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
-	"golang.org/x/exp/slices"
 )
 
 func main() {

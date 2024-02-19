@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -26,13 +27,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/mapstructure"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 )
 
 // @SDKResource("aws_inspector2_enabler")
@@ -176,7 +176,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 			disableAccountIDs = append(disableAccountIDs, acctID)
 			in := &inspector2.DisableInput{
 				AccountIds:    []string{acctID},
-				ResourceTypes: maps.Keys(resourceStatuses),
+				ResourceTypes: tfmaps.Keys(resourceStatuses),
 			}
 
 			_, err := conn.Disable(ctx, in)
@@ -222,7 +222,7 @@ func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	accountStatuses := maps.Values(s)
+	accountStatuses := tfmaps.Values(s)
 	accountStatus := accountStatuses[0]
 	var resourceTypes []types.ResourceScanType
 	for k, a := range accountStatus.ResourceStatuses {
@@ -462,20 +462,20 @@ func statusEnablerAccountAndResourceTypes(ctx context.Context, conn *inspector2.
 			return nil, "", err
 		}
 
-		if tfslices.All(maps.Values(st), accountStatusEquals(types.StatusDisabled)) {
+		if tfslices.All(tfmaps.Values(st), accountStatusEquals(types.StatusDisabled)) {
 			return nil, "", nil
 		}
 
-		if tfslices.Any(maps.Values(st), func(v AccountResourceStatus) bool {
+		if tfslices.Any(tfmaps.Values(st), func(v AccountResourceStatus) bool {
 			if slices.Contains(pendingStates, v.Status) {
 				return true
 			}
-			if tfslices.Any(maps.Values(v.ResourceStatuses), func(v types.Status) bool {
+			if tfslices.Any(tfmaps.Values(v.ResourceStatuses), func(v types.Status) bool {
 				return slices.Contains(pendingStates, v)
 			}) {
 				return true
 			}
-			if v.Status == types.StatusEnabled && tfslices.All(maps.Values(v.ResourceStatuses), tfslices.PredicateEquals(types.StatusDisabled)) {
+			if v.Status == types.StatusEnabled && tfslices.All(tfmaps.Values(v.ResourceStatuses), tfslices.PredicateEquals(types.StatusDisabled)) {
 				return true
 			}
 			return false
@@ -499,7 +499,7 @@ func statusEnablerAccount(ctx context.Context, conn *inspector2.Client, accountI
 			return nil, "", err
 		}
 
-		if tfslices.All(maps.Values(st), accountStatusEquals(types.StatusDisabled)) {
+		if tfslices.All(tfmaps.Values(st), accountStatusEquals(types.StatusDisabled)) {
 			return nil, "", nil
 		}
 

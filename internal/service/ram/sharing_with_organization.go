@@ -6,6 +6,7 @@ package ram
 import (
 	"context"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
@@ -16,7 +17,6 @@ import (
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"golang.org/x/exp/slices"
 )
 
 // @SDKResource("aws_ram_sharing_with_organization")

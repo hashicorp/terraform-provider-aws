@@ -14,6 +14,7 @@ import (
 	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	batch_sdkv2 "github.com/aws/aws-sdk-go-v2/service/batch"
 	bedrock_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrock"
 	bedrockagent_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	budgets_sdkv2 "github.com/aws/aws-sdk-go-v2/service/budgets"
@@ -95,6 +96,7 @@ import (
 	rbin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	redshiftdata_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshiftdata"
+	redshiftserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	rekognition_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rekognition"
 	resourceexplorer2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	resourcegroups_sdkv2 "github.com/aws/aws-sdk-go-v2/service/resourcegroups"
@@ -346,6 +348,10 @@ func (c *AWSClient) BackupConn(ctx context.Context) *backup_sdkv1.Backup {
 
 func (c *AWSClient) BatchConn(ctx context.Context) *batch_sdkv1.Batch {
 	return errs.Must(conn[*batch_sdkv1.Batch](ctx, c, names.Batch, make(map[string]any)))
+}
+
+func (c *AWSClient) BatchClient(ctx context.Context) *batch_sdkv2.Client {
+	return errs.Must(client[*batch_sdkv2.Client](ctx, c, names.Batch, make(map[string]any)))
 }
 
 func (c *AWSClient) BedrockClient(ctx context.Context) *bedrock_sdkv2.Client {
@@ -982,6 +988,10 @@ func (c *AWSClient) RedshiftDataClient(ctx context.Context) *redshiftdata_sdkv2.
 
 func (c *AWSClient) RedshiftServerlessConn(ctx context.Context) *redshiftserverless_sdkv1.RedshiftServerless {
 	return errs.Must(conn[*redshiftserverless_sdkv1.RedshiftServerless](ctx, c, names.RedshiftServerless, make(map[string]any)))
+}
+
+func (c *AWSClient) RedshiftServerlessClient(ctx context.Context) *redshiftserverless_sdkv2.Client {
+	return errs.Must(client[*redshiftserverless_sdkv2.Client](ctx, c, names.RedshiftServerless, make(map[string]any)))
 }
 
 func (c *AWSClient) RekognitionClient(ctx context.Context) *rekognition_sdkv2.Client {

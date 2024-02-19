@@ -64,6 +64,8 @@ github.com/aws/aws-sdk-go-v2/service/athena v1.39.0 h1:oVrFdlLcYETrVftzF0Q/Dr0tf
 github.com/aws/aws-sdk-go-v2/service/athena v1.39.0/go.mod h1:PPlSmhFoI4r5BGLB+6YDUHSU3E77brazZXLcj2DeQZQ=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.31.0 h1:wW06a5cOpVYJ1NrjmcKpk54xqUYK2PbL0ttOcXKyBrQ=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.31.0/go.mod h1:KPniIDEIjjhk8v1hkQeBeUcSPS0i/MAGXt80hUr6Cbc=
+github.com/aws/aws-sdk-go-v2/service/batch v1.32.0 h1:KIV3V/Edj0N7dG38u6wjq6zytO6prVjDewT88KzXlVE=
+github.com/aws/aws-sdk-go-v2/service/batch v1.32.0/go.mod h1:75qh07u8lNpPtIoUlKWN5RCDga/yN6PDJyPVFLlVaMU=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.6.0 h1:Eah+mRIMPbq3KdgLpUT44nCJi7cECjy5U2fgFO0jiiQ=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.6.0/go.mod h1:orxULvnjYi9X3Na7eGy27KD6uOE8vDvyJCNJejmU92E=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.3.0 h1:pAaehMb08sPnGBvPnm0paurEj6EtjCEwxaw8WZN51LA=
@@ -238,6 +240,8 @@ github.com/aws/aws-sdk-go-v2/service/rds v1.70.0 h1:tbzoDyZewwHeEFwDyYvP16k7ZBH9
 github.com/aws/aws-sdk-go-v2/service/rds v1.70.0/go.mod h1:3GxUcfiSRQS+iGNMGtAvtkma/PMuyU4VCUZF5iID3uA=
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.24.0 h1:tl3V5P0TFmd7CPhM7dyxo3/h21zkVwa39rIUHa+Ng0g=
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.24.0/go.mod h1:GwaHpX9H55SJAAdPOlNlcV7SkpArLGmEgS2sjD0lWKg=
+github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.16.1 h1:b0Km79g8A5p+Wtq7dc7JK32IgUuZzuLz2mVOKhKavTc=
+github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.16.1/go.mod h1:yzgokjB0GCNAdjs1mpC8QCP9pbgus4vFadV2F9/TDMU=
 github.com/aws/aws-sdk-go-v2/service/rekognition v1.37.0 h1:6zidW7hE/kfRjSbf1EXASLbWb5aWKGyHCsy3Gxu1IcE=
 github.com/aws/aws-sdk-go-v2/service/rekognition v1.37.0/go.mod h1:5sIYscrz0i/hfv9Ws7t8A6V8RX2AYQ22sBK1+9chCPU=
 github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.9.0 h1:bOcdbXGN8tDF0jhXzlcJR1QSGGzCgiQBInwHRiF+ADQ=
