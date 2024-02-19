@@ -202,7 +202,7 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *jobDefinitionDataSource) ConfigValidators(context.Context) []resource.ConfigValidator {
+func (d *jobDefinitionDataSource) ConfigValidators(context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourcevalidator.ExactlyOneOf(
 			path.MatchRoot(names.AttrARN),
