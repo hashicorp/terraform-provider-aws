@@ -43,8 +43,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceHSM,
+			Factory:  resourceHSM,
 			TypeName: "aws_cloudhsm_v2_hsm",
+			Name:     "HSM",
 		},
 	}
 }
