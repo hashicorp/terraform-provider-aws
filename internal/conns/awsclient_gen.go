@@ -196,7 +196,6 @@ import (
 	greengrass_sdkv1 "github.com/aws/aws-sdk-go/service/greengrass"
 	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
 	iam_sdkv1 "github.com/aws/aws-sdk-go/service/iam"
-	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
 	inspector_sdkv1 "github.com/aws/aws-sdk-go/service/inspector"
 	iot_sdkv1 "github.com/aws/aws-sdk-go/service/iot"
 	iotanalytics_sdkv1 "github.com/aws/aws-sdk-go/service/iotanalytics"
@@ -734,10 +733,6 @@ func (c *AWSClient) IVSChatClient(ctx context.Context) *ivschat_sdkv2.Client {
 
 func (c *AWSClient) IdentityStoreClient(ctx context.Context) *identitystore_sdkv2.Client {
 	return errs.Must(client[*identitystore_sdkv2.Client](ctx, c, names.IdentityStore, make(map[string]any)))
-}
-
-func (c *AWSClient) ImageBuilderConn(ctx context.Context) *imagebuilder_sdkv1.Imagebuilder {
-	return errs.Must(conn[*imagebuilder_sdkv1.Imagebuilder](ctx, c, names.ImageBuilder, make(map[string]any)))
 }
 
 func (c *AWSClient) ImageBuilderClient(ctx context.Context) *imagebuilder_sdkv2.Client {

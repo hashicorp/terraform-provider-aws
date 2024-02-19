@@ -48,6 +48,8 @@ const (
 	EvidentlyEndpointID                  = "evidently"
 	IdentityStoreEndpointID              = "identitystore"
 	Inspector2EndpointID                 = "inspector2"
+	ImageBuilderEndpointID               = "imagebuilder"
+	InternetMonitorEndpointID            = "internetmonitor"
 	IVSChatEndpointID                    = "ivschat"
 	KendraEndpointID                     = "kendra"
 	LexV2ModelsEndpointID                = "models-v2-lex"
