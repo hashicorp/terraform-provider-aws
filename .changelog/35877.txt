@@ -1,0 +1,7 @@
+```release-note:note
+resource/aws_transfer_server: The new default value for `security_policy_name` is `TransferSecurityPolicy-2024-01`.
+```
+
+```release-note:enhancement
+resource/aws_transfer_server: Add support for 2 new `security_policy_name`: `TransferSecurityPolicy-2024-01` and `TransferSecurityPolicy-FIPS-2024-01`.
+```

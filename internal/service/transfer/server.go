@@ -224,7 +224,7 @@ func ResourceServer() *schema.Resource {
 			"security_policy_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      SecurityPolicyName2018_11,
+				Default:      SecurityPolicyName2024_01,
 				ValidateFunc: validation.StringInSlice(SecurityPolicyName_Values(), false),
 			},
 			"structured_log_destinations": {

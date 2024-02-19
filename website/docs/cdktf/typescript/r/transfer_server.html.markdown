@@ -254,7 +254,17 @@ This resource supports the following arguments:
 * `postAuthenticationLoginBanner`- (Optional) Specify a string to display when users connect to a server. This string is displayed after the user authenticates. The SFTP protocol does not support post-authentication display banners.
 * `preAuthenticationLoginBanner`- (Optional) Specify a string to display when users connect to a server. This string is displayed before the user authenticates.
 * `protocolDetails`- (Optional) The protocol settings that are configured for your server.
-* `securityPolicyName` - (Optional) Specifies the name of the security policy that is attached to the server. Possible values are `TransferSecurityPolicy-2018-11`, `TransferSecurityPolicy-2020-06`, `TransferSecurityPolicy-FIPS-2020-06`, `TransferSecurityPolicy-FIPS-2023-05`, `TransferSecurityPolicy-2022-03`, `TransferSecurityPolicy-2023-05`, `TransferSecurityPolicy-PQ-SSH-Experimental-2023-04` and `TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04`. Default value is: `TransferSecurityPolicy-2018-11`.
+* `securityPolicyName` - (Optional) Specifies the name of the security policy that is attached to the server. Default value is: `TransferSecurityPolicy-2024-01`. The available values are:
+    * `TransferSecurityPolicy-2024-01`
+    * `TransferSecurityPolicy-2023-05`
+    * `TransferSecurityPolicy-2022-03`
+    * `TransferSecurityPolicy-2020-06`
+    * `TransferSecurityPolicy-2018-11`
+    * `TransferSecurityPolicy-FIPS-2024-01`
+    * `TransferSecurityPolicy-FIPS-2023-05`
+    * `TransferSecurityPolicy-FIPS-2020-06`
+    * `TransferSecurityPolicy-PQ-SSH-Experimental-2023-04`
+    * `TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04`
 * `structuredLogDestinations` - (Optional) A set of ARNs of destinations that will receive structured logs from the transfer server such as CloudWatch Log Group ARNs. If provided this enables the transfer server to emit structured logs to the specified locations.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `workflowDetails` - (Optional) Specifies the workflow details. See Workflow Details below.
