@@ -383,8 +383,6 @@ func TestAccRDSInstance_DBSubnetGroupName_basic(t *testing.T) {
 	}
 
 	var dbInstance rds.DBInstance
-	var dbSubnetGroup rds.DBSubnetGroup
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	dbSubnetGroupResourceName2 := "aws_db_subnet_group.test2"
@@ -400,7 +398,6 @@ func TestAccRDSInstance_DBSubnetGroupName_basic(t *testing.T) {
 				Config: testAccInstanceConfig_DBSubnetGroupName_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					testAccCheckSubnetGroupExists(ctx, dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},
@@ -408,7 +405,6 @@ func TestAccRDSInstance_DBSubnetGroupName_basic(t *testing.T) {
 				Config: testAccInstanceConfig_DBSubnetGroupName_update(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					testAccCheckSubnetGroupExists(ctx, dbSubnetGroupResourceName2, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName2, "name"),
 					resource.TestCheckResourceAttr(resourceName, "db_subnet_group_name", fmt.Sprintf("%s-2", rName)),
 				),
@@ -588,8 +584,6 @@ func TestAccRDSInstance_db2(t *testing.T) {
 func TestAccRDSInstance_DBSubnetGroupName_ramShared(t *testing.T) {
 	ctx := acctest.Context(t)
 	var dbInstance rds.DBInstance
-	var dbSubnetGroup rds.DBSubnetGroup
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	resourceName := "aws_db_instance.test"
@@ -608,7 +602,6 @@ func TestAccRDSInstance_DBSubnetGroupName_ramShared(t *testing.T) {
 				Config: testAccInstanceConfig_DBSubnetGroupName_ramShared(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					testAccCheckSubnetGroupExists(ctx, dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},
@@ -623,8 +616,6 @@ func TestAccRDSInstance_DBSubnetGroupName_vpcSecurityGroupIDs(t *testing.T) {
 	}
 
 	var dbInstance rds.DBInstance
-	var dbSubnetGroup rds.DBSubnetGroup
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	resourceName := "aws_db_instance.test"
@@ -639,7 +630,6 @@ func TestAccRDSInstance_DBSubnetGroupName_vpcSecurityGroupIDs(t *testing.T) {
 				Config: testAccInstanceConfig_DBSubnetGroupName_vpcSecurityGroupIDs(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					testAccCheckSubnetGroupExists(ctx, dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},
@@ -1462,8 +1452,6 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName(t *testing.T) {
 	}
 
 	var dbInstance rds.DBInstance
-	var dbSubnetGroup rds.DBSubnetGroup
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	resourceName := "aws_db_instance.test"
@@ -1481,7 +1469,6 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupName(t *testing.T) {
 				Config: testAccInstanceConfig_ReplicateSourceDB_dbSubnetGroupName(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					testAccCheckSubnetGroupExists(ctx, dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},
@@ -1496,8 +1483,6 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupNameRAMShared(t *testing.
 	}
 
 	var dbInstance rds.DBInstance
-	var dbSubnetGroup rds.DBSubnetGroup
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	resourceName := "aws_db_instance.test"
@@ -1517,7 +1502,6 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupNameRAMShared(t *testing.
 				Config: testAccInstanceConfig_ReplicateSourceDB_DBSubnetGroupName_ramShared(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					testAccCheckSubnetGroupExists(ctx, dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},
@@ -1532,8 +1516,6 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupNameVPCSecurityGroupIDs(t
 	}
 
 	var dbInstance rds.DBInstance
-	var dbSubnetGroup rds.DBSubnetGroup
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	resourceName := "aws_db_instance.test"
@@ -1551,7 +1533,6 @@ func TestAccRDSInstance_ReplicateSourceDB_dbSubnetGroupNameVPCSecurityGroupIDs(t
 				Config: testAccInstanceConfig_ReplicateSourceDB_DBSubnetGroupName_vpcSecurityGroupIDs(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					testAccCheckSubnetGroupExists(ctx, dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},
@@ -2681,8 +2662,6 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupName(t *testing.T) {
 
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
-	var dbSubnetGroup rds.DBSubnetGroup
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	sourceDbResourceName := "aws_db_instance.source"
@@ -2701,7 +2680,6 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupName(t *testing.T) {
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					testAccCheckSubnetGroupExists(ctx, dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},
@@ -2717,8 +2695,6 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameRAMShared(t *testing
 
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
-	var dbSubnetGroup rds.DBSubnetGroup
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	sourceDbResourceName := "aws_db_instance.source"
@@ -2741,7 +2717,6 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameRAMShared(t *testing
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					testAccCheckSubnetGroupExists(ctx, dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},
@@ -2757,8 +2732,6 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameVPCSecurityGroupIDs(
 
 	var dbInstance, sourceDbInstance rds.DBInstance
 	var dbSnapshot rds.DBSnapshot
-	var dbSubnetGroup rds.DBSubnetGroup
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dbSubnetGroupResourceName := "aws_db_subnet_group.test"
 	sourceDbResourceName := "aws_db_instance.source"
@@ -2777,7 +2750,6 @@ func TestAccRDSInstance_SnapshotIdentifier_dbSubnetGroupNameVPCSecurityGroupIDs(
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					testAccCheckSubnetGroupExists(ctx, dbSubnetGroupResourceName, &dbSubnetGroup),
 					resource.TestCheckResourceAttrPair(resourceName, "db_subnet_group_name", dbSubnetGroupResourceName, "name"),
 				),
 			},

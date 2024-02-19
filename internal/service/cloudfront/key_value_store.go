@@ -21,12 +21,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -285,8 +285,8 @@ func statusKeyValueStore(ctx context.Context, conn *cloudfront.Client, name stri
 
 func waitKeyValueStoreCreated(ctx context.Context, conn *cloudfront.Client, name string, timeout time.Duration) (*cloudfront.DescribeKeyValueStoreOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: tfslices.Of("PROVISIONING"),
-		Target:  tfslices.Of("READY"),
+		Pending: enum.Slice("PROVISIONING"),
+		Target:  enum.Slice("READY"),
 		Refresh: statusKeyValueStore(ctx, conn, name),
 		Timeout: timeout,
 	}

@@ -1,7 +1,21 @@
-## 5.37.0 (Unreleased)
+## 5.38.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* data-source/aws_ec2_instance_type: Add `maximum_network_cards` attribute ([#35840](https://github.com/hashicorp/terraform-provider-aws/issues/35840))
+* resource/aws_redshiftserverless_workgroup: Add `max_capacity` argument ([#35720](https://github.com/hashicorp/terraform-provider-aws/issues/35720))
+
+BUG FIXES:
+
+* data-source/aws_caller_identity: Fix authentication signature error when alternate `sts_region` is specified ([#35860](https://github.com/hashicorp/terraform-provider-aws/issues/35860))
+* resource/aws_prometheus_scraper: Fixes invalid result after apply error. ([#35844](https://github.com/hashicorp/terraform-provider-aws/issues/35844))
+* resource/aws_sqs_queue_policy: Retry IAM eventual consistency errors ([#35861](https://github.com/hashicorp/terraform-provider-aws/issues/35861))
+
+## 5.37.0 (February 15, 2024)
 
 NOTES:
 
+* provider: Updates to Go 1.21 (used by Terraform starting with v1.6.0), which, for Windows, requires at least Windows 10 or Windows Server 2016--support for previous versions has been discontinued--and, for macOS, requires macOS 10.15 Catalina or later--support for previous versions has been discontinued. ([#35832](https://github.com/hashicorp/terraform-provider-aws/issues/35832))
 * resource/aws_bedrock_provisioned_model_throughput: Because we cannot easily test this functionality, it is best effort and we ask for community help in testing ([#35689](https://github.com/hashicorp/terraform-provider-aws/issues/35689))
 
 FEATURES:
@@ -26,6 +40,7 @@ ENHANCEMENTS:
 * resource/aws_glue_catalog_database: Add `federated_database` argument ([#35799](https://github.com/hashicorp/terraform-provider-aws/issues/35799))
 * resource/aws_glue_trigger: Add configurable `timeouts` ([#35542](https://github.com/hashicorp/terraform-provider-aws/issues/35542))
 * resource/aws_rds_cluster: Add `domain` and `domain_iam_role_name` arguments to support [Kerberos authentication](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Concepts.RDS_Fea_Regions_DB-eng.Feature.KerberosAuthentication.html) ([#35753](https://github.com/hashicorp/terraform-provider-aws/issues/35753))
+* resource/aws_route53_record: Add `geoproximity_routing_policy` configuration block to support [geoproximity routing](https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/routing-policy-geoproximity.html) ([#35565](https://github.com/hashicorp/terraform-provider-aws/issues/35565))
 * resource/aws_route53_resolver_rule: Add `target_ip.protocol` argument ([#35744](https://github.com/hashicorp/terraform-provider-aws/issues/35744))
 * resource/aws_sagemaker_endpoint_configuration: Add `routing_config` argument. Enables the specification of a `routing_strategy`. ([#34777](https://github.com/hashicorp/terraform-provider-aws/issues/34777))
 * resource/aws_sagemaker_space: Add `ownership_settings`, `space_sharing_settings`, `space_settings.app_type`, `space_settings.code_editor_app_settings`, `space_settings.custom_file_system`, `space_settings.jupyter_lab_app_settings`, and `space_settings.space_storage_settings` arguments ([#35116](https://github.com/hashicorp/terraform-provider-aws/issues/35116))
@@ -34,9 +49,11 @@ BUG FIXES:
 
 * provider: Fix `failed to get rate limit token, retry quota exceeded` errors ([#35817](https://github.com/hashicorp/terraform-provider-aws/issues/35817))
 * resource/aws_apigateway_domain_name: Properly send changes to `ownership_verification_certificate_arn` on update ([#35777](https://github.com/hashicorp/terraform-provider-aws/issues/35777))
+* resource/aws_apigatewayv2_route: Fix `BadRequestException: Unable to update route. Authorizer type is invalid or null` errors when updating `authorizer_id` ([#35821](https://github.com/hashicorp/terraform-provider-aws/issues/35821))
 * resource/aws_autoscaling_group: Fix version to computed for inconsistent final plan issue ([#35774](https://github.com/hashicorp/terraform-provider-aws/issues/35774))
 * resource/aws_datasync_task: Fix crash when reading empty `report_override` values ([#35778](https://github.com/hashicorp/terraform-provider-aws/issues/35778))
 * resource/aws_datasync_task: Prevent ValidationErrors when empty values are sent with `report_override` arguments ([#35778](https://github.com/hashicorp/terraform-provider-aws/issues/35778))
+* resource/aws_db_proxy: Change `auth` from `TypeList` to `TypeSet` as order is not significant ([#35819](https://github.com/hashicorp/terraform-provider-aws/issues/35819))
 * resource/aws_ecs_account_setting_default: Remove plan-time validation of `value` ([#33393](https://github.com/hashicorp/terraform-provider-aws/issues/33393))
 * resource/aws_ecs_task_definition: Fix perpetual `container_definitions` diffs when `Secrets` are ordered differently ([#35792](https://github.com/hashicorp/terraform-provider-aws/issues/35792))
 * resource/aws_eks_access_policy_association: Retry IAM eventual consistency errors on create ([#35736](https://github.com/hashicorp/terraform-provider-aws/issues/35736))

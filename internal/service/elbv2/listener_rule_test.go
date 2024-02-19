@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"slices"
 	"strconv"
 	"testing"
 
@@ -22,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
-	"golang.org/x/exp/slices"
 )
 
 func TestLBListenerARNFromRuleARN(t *testing.T) {

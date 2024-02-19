@@ -1,6 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws
 
-go 1.20
+go 1.21
 
 require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
@@ -28,8 +28,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.14.0
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.9.0
+	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.16.0
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.33.0
+	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.3.0
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.21.0
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.34.0
@@ -101,6 +103,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/rds v1.70.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.24.0
+	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.16.1
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.9.0
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.20.0
@@ -116,6 +119,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.25.0
+	github.com/aws/aws-sdk-go-v2/service/shield v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/signer v1.20.0
 	github.com/aws/aws-sdk-go-v2/service/sns v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.30.0
@@ -171,7 +175,6 @@ require (
 	github.com/pquerna/otp v1.4.0
 	github.com/shopspring/decimal v1.3.1
 	golang.org/x/crypto v0.19.0
-	golang.org/x/exp v0.0.0-20231006140011-7918f672742d
 	golang.org/x/tools v0.14.0
 	gopkg.in/dnaeon/go-vcr.v3 v3.1.2
 	gopkg.in/yaml.v2 v2.4.0
@@ -242,6 +245,7 @@ require (
 	go.opentelemetry.io/otel v1.23.1 // indirect
 	go.opentelemetry.io/otel/metric v1.23.1 // indirect
 	go.opentelemetry.io/otel/trace v1.23.1 // indirect
+	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect

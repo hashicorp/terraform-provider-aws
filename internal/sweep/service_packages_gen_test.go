@@ -4,6 +4,7 @@ package sweep_test
 
 import (
 	"context"
+	"slices"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
@@ -42,6 +43,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudfrontkeyvaluestore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudsearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
@@ -232,7 +234,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/xray"
-	"golang.org/x/exp/slices"
 )
 
 func servicePackages(ctx context.Context) []conns.ServicePackage {
@@ -273,6 +274,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		cloudcontrol.ServicePackage(ctx),
 		cloudformation.ServicePackage(ctx),
 		cloudfront.ServicePackage(ctx),
+		cloudfrontkeyvaluestore.ServicePackage(ctx),
 		cloudhsmv2.ServicePackage(ctx),
 		cloudsearch.ServicePackage(ctx),
 		cloudtrail.ServicePackage(ctx),

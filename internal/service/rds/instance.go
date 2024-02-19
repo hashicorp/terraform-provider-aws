@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -35,7 +36,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"golang.org/x/exp/slices"
 )
 
 // NOTE ON "ID", "IDENTIFIER":

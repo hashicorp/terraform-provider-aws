@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -318,7 +317,7 @@ func deleteUserGroupMemberships(ctx context.Context, conn *iam.IAM, user string)
 	for _, groupName := range groupNames {
 		// use iam group membership func to remove user from all groups
 		log.Printf("[DEBUG] Removing IAM User %s from IAM Group %s", user, groupName)
-		if err := removeUsersFromGroup(ctx, conn, tfslices.Of(user), groupName); err != nil {
+		if err := removeUsersFromGroup(ctx, conn, []string{user}, groupName); err != nil {
 			return err
 		}
 	}

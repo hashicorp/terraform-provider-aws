@@ -154,6 +154,11 @@ func ResourceWorkgroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"max_capacity": {
+				Type:     schema.TypeInt,
+				Optional: true,
+				Computed: true,
+			},
 			"namespace_name": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -224,6 +229,10 @@ func resourceWorkgroupCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.EnhancedVpcRouting = aws.Bool(v.(bool))
 	}
 
+	if v, ok := d.GetOk("max_capacity"); ok {
+		input.MaxCapacity = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("port"); ok {
 		input.Port = aws.Int64(int64(v.(int)))
 	}
@@ -281,6 +290,7 @@ func resourceWorkgroupRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 	}
 	d.Set("enhanced_vpc_routing", out.EnhancedVpcRouting)
+	d.Set("max_capacity", out.MaxCapacity)
 	d.Set("namespace_name", out.NamespaceName)
 	d.Set("port", flattenEndpoint(out.Endpoint)["port"])
 	d.Set("publicly_accessible", out.PubliclyAccessible)
@@ -324,6 +334,17 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		input := &redshiftserverless.UpdateWorkgroupInput{
 			EnhancedVpcRouting: aws.Bool(d.Get("enhanced_vpc_routing").(bool)),
 			WorkgroupName:      aws.String(d.Id()),
+		}
+
+		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("max_capacity") {
+		input := &redshiftserverless.UpdateWorkgroupInput{
+			MaxCapacity:   aws.Int64(int64(d.Get("max_capacity").(int))),
+			WorkgroupName: aws.String(d.Id()),
 		}
 
 		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
