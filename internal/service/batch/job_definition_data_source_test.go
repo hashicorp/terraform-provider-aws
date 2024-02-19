@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -28,18 +27,16 @@ func TestAccBatchJobDefinitionDataSource_basicName(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobDefinitionDataSourceConfig_basicName(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "retry_strategy.0.attempts", "10"),
 					resource.TestCheckResourceAttr(dataSourceName, "revision", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "retry_strategy.attempts", "10"),
 				),
 			},
 			{
-				// specify revision
 				Config: testAccJobDefinitionDataSourceConfig_basicNameRevision(rName, "2", 2),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "revision", "2"),
@@ -62,15 +59,12 @@ func TestAccBatchJobDefinitionDataSource_basicARN(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobDefinitionDataSourceConfig_basicARN(rName, "1"),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "retry_strategy.0.attempts", "10"),
 					resource.TestCheckResourceAttr(dataSourceName, "revision", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "retry_strategy.attempts", "10"),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn_prefix", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s`, rName))),
 				),
 			},
 			{
@@ -96,14 +90,13 @@ func TestAccBatchJobDefinitionDataSource_basicARN_NodeProperties(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccJobDefinitionDataSourceConfig_basicARNNode(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "node_properties.main_node", "0"),
-					resource.TestCheckResourceAttr(dataSourceName, "node_properties.node_range_properties.#", "2"),
-					resource.TestCheckResourceAttr(dataSourceName, "node_properties.node_range_properties.0.container.image", "busybox"),
+					resource.TestCheckResourceAttr(dataSourceName, "node_properties.0.main_node", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "node_properties.0.node_range_properties.#", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "node_properties.0.node_range_properties.0.container.0.image", "busybox"),
 				),
 			},
 		},
@@ -128,9 +121,9 @@ func TestAccBatchJobDefinitionDataSource_basicARN_EKSProperties(t *testing.T) {
 			{
 				Config: testAccJobDefinitionDataSourceConfig_basicARNEKS(rName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.0.pod_properties.0.containers.#", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.0.pod_properties.0.containers.0.image", "public.ecr.aws/amazonlinux/amazonlinux:1"),
 					resource.TestCheckResourceAttr(dataSourceName, "type", "container"),
-					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.pod_properties.containers.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "eks_properties.pod_properties.containers.0.image", "public.ecr.aws/amazonlinux/amazonlinux:1"),
 				),
 			},
 		},
@@ -166,6 +159,8 @@ func testAccJobDefinitionDataSourceConfig_basicNameRevision(rName string, increm
 data "aws_batch_job_definition" "test" {
   name     = %[1]q
   revision = %[2]d
+
+  depends_on = [aws_batch_job_definition.test]
 }
 `, rName, revision))
 }

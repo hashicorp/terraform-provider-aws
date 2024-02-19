@@ -181,7 +181,7 @@ func (d *jobDefinitionDataSource) Read(ctx context.Context, request datasource.R
 			})
 
 			if i == -1 {
-				response.Diagnostics.AddError(fmt.Sprintf("reading Batch Job Definition (%s/%s) reviosn (%d)", name, status, revision), tfresource.NewEmptyResultError(input).Error())
+				response.Diagnostics.AddError(fmt.Sprintf("reading Batch Job Definition (%s/%s) revision (%d)", name, status, revision), tfresource.NewEmptyResultError(input).Error())
 
 				return
 			}
@@ -287,7 +287,7 @@ type jobDefinitionEKSContainerEnvironmentVariableModel struct {
 
 type jobDefinitionEKSContainerResourceRequirementsModel struct {
 	Limits   fwtypes.MapValueOf[types.String] `tfsdk:"limits"`
-	Requests fwtypes.MapValueOf[types.String] `tfsdk:"limits"`
+	Requests fwtypes.MapValueOf[types.String] `tfsdk:"requests"`
 }
 
 type jobDefinitionEKSContainerSecurityContextModel struct {
@@ -310,8 +310,8 @@ type jobDefinitionEKSMetadataModel struct {
 
 type jobDefinitionEKSVolumeModel struct {
 	EmptyDir fwtypes.ListNestedObjectValueOf[jobDefinitionEKSEmptyDirModel] `tfsdk:"empty_dir"`
-	Name     types.String                                                   `tfsdk:"name"`
 	HostPath fwtypes.ListNestedObjectValueOf[jobDefinitionEKSHostPathModel] `tfsdk:"host_path"`
+	Name     types.String                                                   `tfsdk:"name"`
 	Secret   fwtypes.ListNestedObjectValueOf[jobDefinitionEKSSecretModel]   `tfsdk:"secret"`
 }
 
