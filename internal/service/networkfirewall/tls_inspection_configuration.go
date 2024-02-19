@@ -41,11 +41,6 @@ import (
 func newResourceTLSInspectionConfiguration(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceTLSInspectionConfiguration{}
 
-	// TIP: ==== CONFIGURABLE TIMEOUTS ====
-	// Users can configure timeout lengths but you need to use the times they
-	// provide. Access the timeout they configure (or the defaults) using,
-	// e.g., r.CreateTimeout(ctx, plan.Timeouts) (see below). The times here are
-	// the defaults if they don't configure timeouts.
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -338,13 +333,6 @@ func (r *resourceTLSInspectionConfiguration) Create(ctx context.Context, req res
 		)
 		return
 	}
-	// if out == nil || out.TLSInspectionConfigurationResponse == nil {
-	// 	resp.Diagnostics.AddError(
-	// 		create.ProblemStandardMessage(names.NetworkFirewall, create.ErrActionCreating, ResNameTLSInspectionConfiguration, plan.Name.String(), nil),
-	// 		errors.New("empty output").Error(),
-	// 	)
-	// 	return
-	// }
 
 	plan.ARN = flex.StringToFramework(ctx, out.TLSInspectionConfigurationResponse.TLSInspectionConfigurationArn)
 	// Set ID to ARN since ID value is not used for describe, update, delete or list API calls
@@ -421,10 +409,7 @@ func (r *resourceTLSInspectionConfiguration) Read(ctx context.Context, req resou
 	resp.Diagnostics.Append(d...)
 	state.CertificateAuthority = certificateAuthority
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	resp.Diagnostics.Append(flex.Flatten(ctx, out.TLSInspectionConfigurationResponse.Certificates, &state.Certificates)...)
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, out.TLSInspectionConfiguration, &state.TLSInspectionConfiguration)...)
 
 	tlsInspectionConfiguration, d := flattenTLSInspectionConfiguration(ctx, out.TLSInspectionConfiguration)
 	resp.Diagnostics.Append(d...)
@@ -834,29 +819,29 @@ func flattenServerCertificates(ctx context.Context, serverCertificateList []*net
 	return listVal, diags
 }
 
-func flattenCertificates(ctx context.Context, certificateList []*networkfirewall.TlsCertificateData) (types.List, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: certificatesAttrTypes}
+// func flattenCertificates(ctx context.Context, certificateList []*networkfirewall.TlsCertificateData) (types.List, diag.Diagnostics) {
+// 	var diags diag.Diagnostics
+// 	elemType := types.ObjectType{AttrTypes: certificatesAttrTypes}
 
-	if len(certificateList) == 0 {
-		return types.ListNull(elemType), diags
-	}
+// 	if len(certificateList) == 0 {
+// 		return types.ListNull(elemType), diags
+// 	}
 
-	elems := []attr.Value{}
-	for _, certificate := range certificateList {
-		if certificate == nil {
-			continue
-		}
-		flattenedCertificate, d := flattenTLSCertificate(ctx, certificate)
-		diags.Append(d...)
-		elems = append(elems, flattenedCertificate)
-	}
+// 	elems := []attr.Value{}
+// 	for _, certificate := range certificateList {
+// 		if certificate == nil {
+// 			continue
+// 		}
+// 		flattenedCertificate, d := flattenTLSCertificate(ctx, certificate)
+// 		diags.Append(d...)
+// 		elems = append(elems, flattenedCertificate)
+// 	}
 
-	listVal, d := types.ListValue(elemType, elems)
-	diags.Append(d...)
+// 	listVal, d := types.ListValue(elemType, elems)
+// 	diags.Append(d...)
 
-	return listVal, diags
-}
+// 	return listVal, diags
+// }
 
 func flattenTLSCertificate(ctx context.Context, certificate *networkfirewall.TlsCertificateData) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
@@ -900,7 +885,7 @@ func flattenScopes(ctx context.Context, scopes []*networkfirewall.ServerCertific
 		diags.Append(d...)
 		destinations, d := flattenSourceDestinations(ctx, scope.Destinations)
 		diags.Append(d...)
-		protocols, d := flattenProtocols(ctx, scope.Protocols)
+		protocols, d := flattenProtocols(scope.Protocols)
 		diags.Append(d...)
 		sourcePorts, d := flattenPortRange(ctx, scope.SourcePorts)
 		diags.Append(d...)
@@ -927,7 +912,7 @@ func flattenScopes(ctx context.Context, scopes []*networkfirewall.ServerCertific
 
 }
 
-func flattenProtocols(ctx context.Context, list []*int64) (types.List, diag.Diagnostics) {
+func flattenProtocols(list []*int64) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.Int64Type
 
@@ -1082,7 +1067,7 @@ func expandServerCertificateConfigurations(ctx context.Context, tfList []serverC
 		if !item.CheckCertificateRevocationsStatus.IsNull() {
 			var certificateRevocationStatus []checkCertificateRevocationStatusData
 			diags.Append(item.CheckCertificateRevocationsStatus.ElementsAs(ctx, &certificateRevocationStatus, false)...)
-			conf.CheckCertificateRevocationStatus = expandCheckCertificateRevocationStatus(ctx, certificateRevocationStatus)
+			conf.CheckCertificateRevocationStatus = expandCheckCertificateRevocationStatus(certificateRevocationStatus)
 		}
 		if !item.Scope.IsNull() {
 			var scopesList []scopeData
@@ -1102,7 +1087,7 @@ func expandServerCertificateConfigurations(ctx context.Context, tfList []serverC
 	return apiObject
 }
 
-func expandCheckCertificateRevocationStatus(ctx context.Context, tfList []checkCertificateRevocationStatusData) *networkfirewall.CheckCertificateRevocationStatusActions {
+func expandCheckCertificateRevocationStatus(tfList []checkCertificateRevocationStatusData) *networkfirewall.CheckCertificateRevocationStatusActions {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -1142,22 +1127,22 @@ func expandScopes(ctx context.Context, tfList []scopeData) []*networkfirewall.Se
 		if !tfObj.DestinationPorts.IsNull() {
 			var destinationPorts []portRangeData
 			diags.Append(tfObj.DestinationPorts.ElementsAs(ctx, &destinationPorts, false)...)
-			item.DestinationPorts = expandPortRange(ctx, destinationPorts)
+			item.DestinationPorts = expandPortRange(destinationPorts)
 		}
 		if !tfObj.Destinations.IsNull() {
 			var destinations []sourceDestinationData
 			diags.Append(tfObj.Destinations.ElementsAs(ctx, &destinations, false)...)
-			item.Destinations = expandSourceDestinations(ctx, destinations)
+			item.Destinations = expandSourceDestinations(destinations)
 		}
 		if !tfObj.SourcePorts.IsNull() {
 			var sourcePorts []portRangeData
 			diags.Append(tfObj.SourcePorts.ElementsAs(ctx, &sourcePorts, false)...)
-			item.SourcePorts = expandPortRange(ctx, sourcePorts)
+			item.SourcePorts = expandPortRange(sourcePorts)
 		}
 		if !tfObj.Sources.IsNull() {
 			var sources []sourceDestinationData
 			diags.Append(tfObj.Sources.ElementsAs(ctx, &sources, false)...)
-			item.Sources = expandSourceDestinations(ctx, sources)
+			item.Sources = expandSourceDestinations(sources)
 		}
 		apiObject = append(apiObject, item)
 	}
@@ -1165,7 +1150,7 @@ func expandScopes(ctx context.Context, tfList []scopeData) []*networkfirewall.Se
 	return apiObject
 }
 
-func expandPortRange(ctx context.Context, tfList []portRangeData) []*networkfirewall.PortRange {
+func expandPortRange(tfList []portRangeData) []*networkfirewall.PortRange {
 	var apiObject []*networkfirewall.PortRange
 
 	for _, tfObj := range tfList {
@@ -1179,7 +1164,7 @@ func expandPortRange(ctx context.Context, tfList []portRangeData) []*networkfire
 	return apiObject
 }
 
-func expandSourceDestinations(ctx context.Context, tfList []sourceDestinationData) []*networkfirewall.Address {
+func expandSourceDestinations(tfList []sourceDestinationData) []*networkfirewall.Address {
 	var apiObject []*networkfirewall.Address
 
 	for _, tfObj := range tfList {
