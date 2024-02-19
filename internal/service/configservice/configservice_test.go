@@ -24,7 +24,7 @@ func TestAccConfigService_serial(t *testing.T) {
 		},
 		"ConfigurationRecorder": {
 			"basic":       testAccConfigurationRecorder_basic,
-			"allParams":   TestAccConfigurationRecorder_allParams,
+			"allParams":   testAccConfigurationRecorder_allParams,
 			"importBasic": testAccConfigurationRecorder_importBasic,
 		},
 		"ConformancePack": {
