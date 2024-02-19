@@ -82,7 +82,7 @@ func dataSourceClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 	clusterID := d.Get("cluster_id").(string)
 	input := &cloudhsmv2.DescribeClustersInput{
 		Filters: map[string][]string{
-			"clusterIds": []string{clusterID},
+			"clusterIds": {clusterID},
 		},
 		MaxResults: aws.Int32(1),
 	}

@@ -218,7 +218,7 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 func findClusterByID(ctx context.Context, conn *cloudhsmv2.Client, id string) (*types.Cluster, error) {
 	input := &cloudhsmv2.DescribeClustersInput{
 		Filters: map[string][]string{
-			"clusterIds": []string{id},
+			"clusterIds": {id},
 		},
 	}
 
