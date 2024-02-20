@@ -29,7 +29,7 @@ func TestAccVerifiedPermissionsPolicyStoreDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 			testAccPolicyStoresPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyStoreDestroy(ctx),
 		Steps: []resource.TestStep{

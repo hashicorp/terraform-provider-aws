@@ -36,7 +36,7 @@ func TestAccRekognitionProject_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
 			testAccProjectPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProjectDestroy(ctx, feature, rProjectId),
 		Steps: []resource.TestStep{
@@ -73,7 +73,7 @@ func TestAccRekognitionProject_ContentModeration(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
 			testAccProjectPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -115,7 +115,7 @@ func TestAccRekognitionProject_CustomLabels(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
 			testAccProjectPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProjectDestroy(ctx, feature, rProjectId),
 		Steps: []resource.TestStep{
@@ -152,7 +152,7 @@ func TestAccRekognitionProject_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
 			testAccProjectPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProjectDestroy(ctx, feature, rProjectId),
 		Steps: []resource.TestStep{
