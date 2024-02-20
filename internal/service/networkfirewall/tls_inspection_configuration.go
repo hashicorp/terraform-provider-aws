@@ -988,6 +988,7 @@ func flattenTLSEncryptionConfiguration(ctx context.Context, encryptionConfigurat
 
 	return listVal, diags
 }
+
 // TODO: add note explaining why not using existing expandEncryptionConfiguration()
 func expandTLSEncryptionConfiguration(tfList []encryptionConfigurationData) *networkfirewall.EncryptionConfiguration {
 	if len(tfList) == 0 {
