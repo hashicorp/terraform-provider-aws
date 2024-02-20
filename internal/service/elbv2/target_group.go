@@ -991,7 +991,6 @@ func resourceTargetGroupCustomizeDiff(_ context.Context, diff *schema.ResourceDi
 	healthCheck := make(map[string]any)
 	if healthChecks := diff.Get("health_check").([]interface{}); len(healthChecks) == 1 {
 		healthCheck = healthChecks[0].(map[string]interface{})
-
 	}
 
 	healtCheckPath := cty.GetAttrPath("health_check").IndexInt(0)
