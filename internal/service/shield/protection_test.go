@@ -9,16 +9,19 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/shield"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/aws/aws-sdk-go/service/shield"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccShieldProtection_globalAccelerator(t *testing.T) {
@@ -29,10 +32,10 @@ func TestAccShieldProtection_globalAccelerator(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -61,10 +64,10 @@ func TestAccShieldProtection_elasticIPAddress(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,10 +96,10 @@ func TestAccShieldProtection_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -120,10 +123,10 @@ func TestAccShieldProtection_alb(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -152,10 +155,10 @@ func TestAccShieldProtection_elb(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -184,11 +187,11 @@ func TestAccShieldProtection_cloudFront(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
 			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -217,11 +220,11 @@ func TestAccShieldProtection_CloudFront_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
 			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -270,10 +273,10 @@ func TestAccShieldProtection_route53(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, shield.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.ShieldEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, shield.EndpointsID, "route53"),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ShieldEndpointID, "route53"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProtectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -294,7 +297,7 @@ func TestAccShieldProtection_route53(t *testing.T) {
 
 func testAccCheckProtectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_shield_protection" {
@@ -305,9 +308,9 @@ func testAccCheckProtectionDestroy(ctx context.Context) resource.TestCheckFunc {
 				ProtectionId: aws.String(rs.Primary.ID),
 			}
 
-			resp, err := conn.DescribeProtectionWithContext(ctx, input)
+			resp, err := conn.DescribeProtection(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 
@@ -315,7 +318,7 @@ func testAccCheckProtectionDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			if resp != nil && resp.Protection != nil && aws.StringValue(resp.Protection.Id) == rs.Primary.ID {
+			if resp != nil && resp.Protection != nil && aws.ToString(resp.Protection.Id) == rs.Primary.ID {
 				return fmt.Errorf("The Shield protection with ID %v still exists", rs.Primary.ID)
 			}
 		}
@@ -331,26 +334,28 @@ func testAccCheckProtectionExists(ctx context.Context, name string) resource.Tes
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
 
 		input := &shield.DescribeProtectionInput{
 			ProtectionId: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.DescribeProtectionWithContext(ctx, input)
+		_, err := conn.DescribeProtection(ctx, input)
 
 		return err
 	}
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
 
 	input := &shield.ListProtectionsInput{}
 
-	_, err := conn.ListProtectionsWithContext(ctx, input)
+	errResourceNotFoundException := &awstypes.ResourceNotFoundException{}
 
-	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, shield.ErrCodeResourceNotFoundException, "subscription does not exist") {
+	_, err := conn.ListProtections(ctx, input)
+
+	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, errResourceNotFoundException.ErrorCode(), "subscription does not exist") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
 

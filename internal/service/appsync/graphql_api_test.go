@@ -49,6 +49,9 @@ func testAccGraphQLAPI_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "additional_authentication_provider.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "xray_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "visibility", "GLOBAL"),
+					resource.TestCheckResourceAttr(resourceName, "introspection_config", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "query_depth_limit", "0"),
+					resource.TestCheckResourceAttr(resourceName, "resolver_count_limit", "0"),
 				),
 			},
 			{
@@ -1208,6 +1211,90 @@ func testAccGraphQLAPI_visibility(t *testing.T) {
 	})
 }
 
+func testAccGraphQLAPI_introspectionConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	var api1 appsync.GraphqlApi
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appsync_graphql_api.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGraphQLAPIConfig_introspectionConfig(rName, "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
+					resource.TestCheckResourceAttr(resourceName, "introspection_config", "DISABLED"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccGraphQLAPI_queryDepthLimit(t *testing.T) {
+	ctx := acctest.Context(t)
+	var api1 appsync.GraphqlApi
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appsync_graphql_api.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGraphQLAPIConfig_queryDepthLimit(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
+					resource.TestCheckResourceAttr(resourceName, "query_depth_limit", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccGraphQLAPI_resolverCountLimit(t *testing.T) {
+	ctx := acctest.Context(t)
+	var api1 appsync.GraphqlApi
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_appsync_graphql_api.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, appsync.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGraphQLAPIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGraphQLAPIConfig_resolverCountLimit(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckGraphQLAPIExists(ctx, resourceName, &api1),
+					resource.TestCheckResourceAttr(resourceName, "resolver_count_limit", "2"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckGraphQLAPIDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
@@ -1706,4 +1793,34 @@ resource "aws_appsync_graphql_api" "test" {
   xray_enabled        = %[2]t
 }
 `, rName, xrayEnabled)
+}
+
+func testAccGraphQLAPIConfig_introspectionConfig(rName, introspectionConfig string) string {
+	return fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type  = "API_KEY"
+  name                 = %[1]q
+  introspection_config = %[2]q
+}
+`, rName, introspectionConfig)
+}
+
+func testAccGraphQLAPIConfig_queryDepthLimit(rName string, queryDepthLimit int) string {
+	return fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type = "API_KEY"
+  name                = %[1]q
+  query_depth_limit   = %[2]d
+}
+`, rName, queryDepthLimit)
+}
+
+func testAccGraphQLAPIConfig_resolverCountLimit(rName string, resolverCountLimit int) string {
+	return fmt.Sprintf(`
+resource "aws_appsync_graphql_api" "test" {
+  authentication_type  = "API_KEY"
+  name                 = %[1]q
+  resolver_count_limit = %[2]d
+}
+`, rName, resolverCountLimit)
 }

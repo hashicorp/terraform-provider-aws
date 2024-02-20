@@ -6,7 +6,6 @@ package apigatewayv2
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
 	"time"
 
@@ -175,7 +174,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "apigateway",
 		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("/domainnames/%s", d.Id()),
+		Resource:  "/domainnames/" + d.Id(),
 	}.String()
 	d.Set("arn", arn)
 	d.Set("domain_name", output.DomainName)

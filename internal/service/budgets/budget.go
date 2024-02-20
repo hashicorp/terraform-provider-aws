@@ -5,6 +5,7 @@ package budgets
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -365,7 +366,7 @@ func resourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta interf
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "budgets",
 		AccountID: accountID,
-		Resource:  fmt.Sprintf("budget/%s", budgetName),
+		Resource:  "budget/" + budgetName,
 	}
 	d.Set("arn", arn.String())
 	d.Set("budget_type", budget.BudgetType)
@@ -651,7 +652,7 @@ func createBudgetNotifications(ctx context.Context, conn *budgets.Client, notifi
 		subscribers := subscribers[i]
 
 		if len(subscribers) == 0 {
-			return fmt.Errorf("Budget notification must have at least one subscriber")
+			return errors.New("Budget notification must have at least one subscriber")
 		}
 
 		_, err := conn.CreateNotification(ctx, &budgets.CreateNotificationInput{

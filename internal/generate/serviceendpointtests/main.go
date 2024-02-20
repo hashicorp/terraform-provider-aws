@@ -33,7 +33,8 @@ func main() {
 		packageName := l.ProviderPackage()
 
 		switch packageName {
-		case "codecatalyst", // Bearer auth token needs special handling
+		case "cloudfrontkeyvaluestore", // Endpoint includes account ID
+			"codecatalyst",    // Bearer auth token needs special handling
 			"s3control",       // Resolver modifies URL
 			"timestreamwrite": // Uses endpoint discovery
 			continue

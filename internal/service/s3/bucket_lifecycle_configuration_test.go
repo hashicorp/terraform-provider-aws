@@ -34,7 +34,7 @@ func TestAccS3BucketLifecycleConfiguration_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
@@ -70,7 +70,7 @@ func TestAccS3BucketLifecycleConfiguration_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketLifecycleConfiguration(), resourceName),
 				),
@@ -96,7 +96,7 @@ func TestAccS3BucketLifecycleConfiguration_filterWithPrefix(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_basicUpdate(rName, date, "logs/"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      "1",
@@ -115,7 +115,7 @@ func TestAccS3BucketLifecycleConfiguration_filterWithPrefix(t *testing.T) {
 			},
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_basicUpdate(rName, dateUpdated, "tmp/"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      "1",
@@ -151,7 +151,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeGreaterThan(t *testi
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThan(rName, date, 100),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":                      "1",
@@ -187,7 +187,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeGreaterThanZero(t *t
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThan(rName, date, 0),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":                      "1",
@@ -223,7 +223,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeLessThan(t *testing.
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeLessThan(rName, date, 500),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":                   "1",
@@ -259,7 +259,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRange(t *testing.T) 
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeRange(rName, date, 500, 64000),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      "1",
@@ -297,7 +297,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRangeAndPrefix(t *te
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeRangeAndPrefix(rName, date, 500, 64000),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#":      "1",
@@ -316,6 +316,9 @@ func TestAccS3BucketLifecycleConfiguration_Filter_ObjectSizeRangeAndPrefix(t *te
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"rule.0.transition.0.days",
+				},
 			},
 		},
 	})
@@ -334,13 +337,13 @@ func TestAccS3BucketLifecycleConfiguration_disableRule(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_basicStatus(rName, tfs3.LifecycleRuleStatusEnabled),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
 			},
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_basicStatus(rName, tfs3.LifecycleRuleStatusDisabled),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"status": tfs3.LifecycleRuleStatusDisabled,
@@ -354,7 +357,7 @@ func TestAccS3BucketLifecycleConfiguration_disableRule(t *testing.T) {
 			},
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_basicStatus(rName, tfs3.LifecycleRuleStatusEnabled),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"status": tfs3.LifecycleRuleStatusEnabled,
@@ -380,7 +383,7 @@ func TestAccS3BucketLifecycleConfiguration_multipleRules(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_multipleRules(rName, expirationDate),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -435,7 +438,7 @@ func TestAccS3BucketLifecycleConfiguration_multipleRules_noFilterOrPrefix(t *tes
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_multipleRulesNoFilterOrPrefix(rName, tfs3.LifecycleRuleStatusEnabled),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", "1"),
@@ -466,7 +469,7 @@ func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionExpiration(t *testin
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_nonCurrentVersionExpiration(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"noncurrent_version_expiration.#":                 "1",
@@ -496,7 +499,7 @@ func TestAccS3BucketLifecycleConfiguration_nonCurrentVersionTransition(t *testin
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_nonCurrentVersionTransition(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"noncurrent_version_transition.#": "2",
@@ -534,7 +537,7 @@ func TestAccS3BucketLifecycleConfiguration_prefix(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_basicPrefix(rName, "path1/"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
@@ -570,7 +573,7 @@ func TestAccS3BucketLifecycleConfiguration_Filter_Tag(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_filterTag(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -607,7 +610,7 @@ func TestAccS3BucketLifecycleConfiguration_RuleExpiration_expireMarkerOnly(t *te
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationExpiredDeleteMarker(rName, true),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#": "1",
@@ -622,7 +625,7 @@ func TestAccS3BucketLifecycleConfiguration_RuleExpiration_expireMarkerOnly(t *te
 			},
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationExpiredDeleteMarker(rName, false),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#": "1",
@@ -653,7 +656,7 @@ func TestAccS3BucketLifecycleConfiguration_RuleExpiration_emptyBlock(t *testing.
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleExpirationEmptyBlock(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"expiration.#": "1",
@@ -683,7 +686,7 @@ func TestAccS3BucketLifecycleConfiguration_ruleAbortIncompleteMultipartUpload(t 
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleAbortIncompleteMultipartUpload(rName, 7),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"abort_incomplete_multipart_upload.#":                       "1",
@@ -698,7 +701,7 @@ func TestAccS3BucketLifecycleConfiguration_ruleAbortIncompleteMultipartUpload(t 
 			},
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_ruleAbortIncompleteMultipartUpload(rName, 5),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
 						"abort_incomplete_multipart_upload.#":                       "1",
@@ -734,7 +737,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_standardIa(t *testing.
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, string(types.TransitionStorageClassStandardIa)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
 			},
@@ -742,6 +745,9 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_standardIa(t *testing.
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"rule.0.transition.0.days",
+				},
 			},
 		},
 	})
@@ -766,7 +772,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_intelligentTiering(t *
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, string(types.StorageClassIntelligentTiering)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
 			},
@@ -774,6 +780,9 @@ func TestAccS3BucketLifecycleConfiguration_TransitionDate_intelligentTiering(t *
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"rule.0.transition.0.days",
+				},
 			},
 		},
 	})
@@ -793,7 +802,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionStorageClassOnly_intelligen
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_transitionStorageClassOnly(rName, string(types.StorageClassIntelligentTiering)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.0.transition.*", map[string]string{
 						"days":          "0",
@@ -806,6 +815,9 @@ func TestAccS3BucketLifecycleConfiguration_TransitionStorageClassOnly_intelligen
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"rule.0.transition.0.days",
+				},
 			},
 		},
 	})
@@ -825,7 +837,7 @@ func TestAccS3BucketLifecycleConfiguration_TransitionZeroDays_intelligentTiering
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, string(types.StorageClassIntelligentTiering)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
 			},
@@ -854,13 +866,13 @@ func TestAccS3BucketLifecycleConfiguration_TransitionUpdateBetweenDaysAndDate_in
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, string(types.StorageClassIntelligentTiering)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
 			},
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_dateTransition(rName, date, string(types.StorageClassIntelligentTiering)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
 			},
@@ -868,12 +880,20 @@ func TestAccS3BucketLifecycleConfiguration_TransitionUpdateBetweenDaysAndDate_in
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"rule.0.transition.0.days",
+				},
 			},
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_zeroDaysTransition(rName, string(types.StorageClassIntelligentTiering)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -893,7 +913,7 @@ func TestAccS3BucketLifecycleConfiguration_EmptyFilter_NonCurrentVersions(t *tes
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_emptyFilterNonCurrentVersions(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 				),
 			},
@@ -1006,7 +1026,7 @@ func TestAccS3BucketLifecycleConfiguration_Update_filterWithAndToFilterWithPrefi
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_filterObjectSizeGreaterThanAndPrefix(rName, "prefix1"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", "1"),
@@ -1017,7 +1037,7 @@ func TestAccS3BucketLifecycleConfiguration_Update_filterWithAndToFilterWithPrefi
 			},
 			{
 				Config: testAccBucketLifecycleConfigurationConfig_filterPrefix(rName, "prefix2"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketLifecycleConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "rule.0.filter.#", "1"),
