@@ -304,6 +304,77 @@ func TestAccRoute53ResolverRule_forward(t *testing.T) {
 	})
 }
 
+func TestAccRoute53ResolverRule_forwardMultiProtocol(t *testing.T) {
+	ctx := acctest.Context(t)
+	var rule route53resolver.ResolverRule
+	resourceName := "aws_route53_resolver_rule.test"
+	epResourceName := "aws_route53_resolver_endpoint.test.0"
+	domainName := acctest.RandomDomainName()
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRuleConfig_forward(rName, domainName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
+					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", epResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
+						"ip":       "192.0.2.6",
+						"port":     "53",
+						"protocol": "Do53",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRuleConfig_forwardMultiProtocol(rName, domainName, "DoH"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
+					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", epResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
+						"ip":       "192.0.2.6",
+						"port":     "53",
+						"protocol": "DoH",
+					}),
+				),
+			},
+			{
+				Config: testAccRuleConfig_forwardMultiProtocol(rName, domainName, "Do53"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRuleExists(ctx, resourceName, &rule),
+					resource.TestCheckResourceAttr(resourceName, "domain_name", domainName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "rule_type", "FORWARD"),
+					resource.TestCheckResourceAttrPair(resourceName, "resolver_endpoint_id", epResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "target_ip.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "target_ip.*", map[string]string{
+						"ip":       "192.0.2.6",
+						"port":     "53",
+						"protocol": "Do53",
+					}),
+				),
+			},
+		},
+	})
+}
+
 func TestAccRoute53ResolverRule_forwardEndpointRecreate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rule1, rule2 route53resolver.ResolverRule
@@ -485,6 +556,23 @@ resource "aws_route53_resolver_rule" "test" {
 `, rName, domainName))
 }
 
+func testAccRuleConfig_forwardMultiProtocol(rName, domainName, protocol string) string {
+	return acctest.ConfigCompose(testAccRuleConfig_resolverEndpointMultiProtocolBase(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_rule" "test" {
+  domain_name = %[2]q
+  rule_type   = "FORWARD"
+  name        = %[1]q
+
+  resolver_endpoint_id = aws_route53_resolver_endpoint.test[0].id
+
+  target_ip {
+    ip       = "192.0.2.6"
+    protocol = %[3]q
+  }
+}
+`, rName, domainName, protocol))
+}
+
 func testAccRuleConfig_forwardTargetIPChanged(rName, domainName string) string {
 	return acctest.ConfigCompose(testAccRuleConfig_resolverEndpointBase(rName), fmt.Sprintf(`
 resource "aws_route53_resolver_rule" "test" {
@@ -618,6 +706,29 @@ resource "aws_route53_resolver_endpoint" "test" {
   ip_address {
     subnet_id = aws_subnet.test[count.index].id
   }
+}
+`, rName))
+}
+
+func testAccRuleConfig_resolverEndpointMultiProtocolBase(rName string) string {
+	return acctest.ConfigCompose(testAccRuleConfig_vpcBase(rName), fmt.Sprintf(`
+resource "aws_route53_resolver_endpoint" "test" {
+  count = 2
+
+  direction = "OUTBOUND"
+  name      = "%[1]s-${count.index}"
+
+  security_group_ids = [aws_security_group.test[0].id]
+
+  ip_address {
+    subnet_id = aws_subnet.test[2].id
+  }
+
+  ip_address {
+    subnet_id = aws_subnet.test[count.index].id
+  }
+
+  protocols = ["Do53", "DoH"]
 }
 `, rName))
 }

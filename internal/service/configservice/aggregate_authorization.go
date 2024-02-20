@@ -87,7 +87,7 @@ func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceD
 
 	accountId, region, err := AggregateAuthorizationParseID(d.Id())
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), err)
 	}
 
 	d.Set("account_id", accountId)
@@ -101,7 +101,7 @@ func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	if err != nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), err)
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), err)
 	}
 
 	var aggregationAuthorization *configservice.AggregationAuthorization
@@ -119,7 +119,7 @@ func resourceAggregateAuthorizationRead(ctx context.Context, d *schema.ResourceD
 	}
 
 	if d.IsNewResource() && aggregationAuthorization == nil {
-		return create.DiagError(names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), errors.New("not found after creation"))
+		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionReading, ResNameAggregateAuthorization, d.Id(), errors.New("not found after creation"))
 	}
 
 	d.Set("arn", aggregationAuthorization.AggregationAuthorizationArn)
@@ -177,11 +177,14 @@ func DescribeAggregateAuthorizations(ctx context.Context, conn *configservice.Co
 }
 
 func AggregateAuthorizationParseID(id string) (string, string, error) {
-	idParts := strings.Split(id, ":")
-	if len(idParts) != 2 {
-		return "", "", fmt.Errorf("Please make sure the ID is in the form account_id:region (i.e. 123456789012:us-east-1") // lintignore:AWSAT003
+	const (
+		resourceIDSeparator = ":"
+	)
+	parts := strings.Split(id, resourceIDSeparator)
+
+	if len(parts) != 2 {
+		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected account_id%[2]sregion", id, resourceIDSeparator)
 	}
-	accountId := idParts[0]
-	region := idParts[1]
-	return accountId, region, nil
+
+	return parts[0], parts[1], nil
 }

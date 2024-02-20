@@ -98,6 +98,12 @@ func ResourceRule() *schema.Resource {
 							Default:      53,
 							ValidateFunc: validation.IntBetween(1, 65535),
 						},
+						"protocol": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      route53resolver.ProtocolDo53,
+							ValidateFunc: validation.StringInSlice(route53resolver.Protocol_Values(), false),
+						},
 					},
 				},
 			},
@@ -368,6 +374,9 @@ func expandRuleTargetIPs(vTargetIps *schema.Set) []*route53resolver.TargetAddres
 		if vPort, ok := mTargetIp["port"].(int); ok {
 			targetAddress.Port = aws.Int64(int64(vPort))
 		}
+		if vProtocol, ok := mTargetIp["protocol"].(string); ok && vProtocol != "" {
+			targetAddress.Protocol = aws.String(vProtocol)
+		}
 
 		targetAddresses = append(targetAddresses, targetAddress)
 	}
@@ -384,8 +393,9 @@ func flattenRuleTargetIPs(targetAddresses []*route53resolver.TargetAddress) []in
 
 	for _, targetAddress := range targetAddresses {
 		mTargetIp := map[string]interface{}{
-			"ip":   aws.StringValue(targetAddress.Ip),
-			"port": int(aws.Int64Value(targetAddress.Port)),
+			"ip":       aws.StringValue(targetAddress.Ip),
+			"port":     int(aws.Int64Value(targetAddress.Port)),
+			"protocol": aws.StringValue(targetAddress.Protocol),
 		}
 
 		vTargetIps = append(vTargetIps, mTargetIp)

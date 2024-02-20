@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -103,6 +104,8 @@ func ResourceThesaurus() *schema.Resource {
 }
 
 func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	input := &kendra.CreateThesaurusInput{
@@ -134,11 +137,11 @@ func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta i
 	)
 
 	if err != nil {
-		return diag.Errorf("creating Amazon Kendra Thesaurus (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra Thesaurus (%s): %s", d.Get("name").(string), err)
 	}
 
 	if outputRaw == nil {
-		return diag.Errorf("creating Amazon Kendra Thesaurus (%s): empty output", d.Get("name").(string))
+		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra Thesaurus (%s): empty output", d.Get("name").(string))
 	}
 
 	output := outputRaw.(*kendra.CreateThesaurusOutput)
@@ -149,18 +152,20 @@ func resourceThesaurusCreate(ctx context.Context, d *schema.ResourceData, meta i
 	d.SetId(fmt.Sprintf("%s/%s", id, indexId))
 
 	if _, err := waitThesaurusCreated(ctx, conn, id, indexId, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Amazon Kendra Thesaurus (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Amazon Kendra Thesaurus (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceThesaurusRead(ctx, d, meta)
+	return append(diags, resourceThesaurusRead(ctx, d, meta)...)
 }
 
 func resourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id, indexId, err := ThesaurusParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	out, err := FindThesaurusByID(ctx, conn, id, indexId)
@@ -168,11 +173,11 @@ func resourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta int
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kendra Thesaurus (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Kendra Thesaurus (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Kendra Thesaurus (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -192,19 +197,21 @@ func resourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("thesaurus_id", out.Id)
 
 	if err := d.Set("source_s3_path", flattenSourceS3Path(out.SourceS3Path)); err != nil {
-		return diag.Errorf("setting complex argument: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting complex argument: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceThesaurusUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		id, indexId, err := ThesaurusParseResourceID(d.Id())
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input := &kendra.UpdateThesaurusInput{
@@ -246,25 +253,27 @@ func resourceThesaurusUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		)
 
 		if err != nil {
-			return diag.Errorf("updating Kendra Thesaurus(%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Kendra Thesaurus(%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitThesaurusUpdated(ctx, conn, id, indexId, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Kendra Thesaurus (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Kendra Thesaurus (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceThesaurusRead(ctx, d, meta)
+	return append(diags, resourceThesaurusRead(ctx, d, meta)...)
 }
 
 func resourceThesaurusDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	log.Printf("[INFO] Deleting Kendra Thesaurus %s", d.Id())
 
 	id, indexId, err := ThesaurusParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = conn.DeleteThesaurus(ctx, &kendra.DeleteThesaurusInput{
@@ -274,18 +283,18 @@ func resourceThesaurusDelete(ctx context.Context, d *schema.ResourceData, meta i
 
 	var resourceNotFoundException *types.ResourceNotFoundException
 	if errors.As(err, &resourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Kendra Thesaurus (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Kendra Thesaurus (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitThesaurusDeleted(ctx, conn, id, indexId, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Kendra Thesaurus (%s) to be deleted: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Kendra Thesaurus (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func statusThesaurus(ctx context.Context, conn *kendra.Client, id, indexId string) retry.StateRefreshFunc {

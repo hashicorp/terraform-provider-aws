@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
@@ -73,6 +74,8 @@ func dataSourceCertificate() *schema.Resource {
 }
 
 func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ACMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -97,7 +100,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		page, err := pages.NextPage(ctx)
 
 		if err != nil {
-			return diag.Errorf("reading ACM Certificates: %s", err)
+			return sdkdiag.AppendErrorf(diags, "reading ACM Certificates: %s", err)
 		}
 
 		for _, v := range page.CertificateSummaryList {
@@ -108,14 +111,14 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if len(arns) == 0 {
-		return diag.Errorf("no ACM Certificate matching domain (%s)", domain)
+		return sdkdiag.AppendErrorf(diags, "no ACM Certificate matching domain (%s)", domain)
 	}
 
 	filterMostRecent := d.Get("most_recent").(bool)
 	certificateTypes := flex.ExpandStringyValueList[types.CertificateType](d.Get("types").([]interface{}))
 
 	if !filterMostRecent && len(certificateTypes) == 0 && len(arns) > 1 {
-		return diag.Errorf("multiple ACM Certificates matching domain (%s)", domain)
+		return sdkdiag.AppendErrorf(diags, "multiple ACM Certificates matching domain (%s)", domain)
 	}
 
 	var matchedCertificate *types.CertificateDetail
@@ -128,7 +131,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		certificate, err := findCertificate(ctx, conn, input)
 
 		if err != nil {
-			return diag.Errorf("reading ACM Certificate (%s): %s", arn, err)
+			return sdkdiag.AppendErrorf(diags, "reading ACM Certificate (%s): %s", arn, err)
 		}
 
 		if len(certificateTypes) > 0 {
@@ -147,13 +150,13 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 						matchedCertificate, err = mostRecentCertificate(certificate, matchedCertificate)
 
 						if err != nil {
-							return diag.FromErr(err)
+							return sdkdiag.AppendFromErr(diags, err)
 						}
 
 						break
 					}
 					// Now we have multiple candidate certificates and we only allow one certificate.
-					return diag.Errorf("multiple ACM Certificates matching domain (%s)", domain)
+					return sdkdiag.AppendErrorf(diags, "multiple ACM Certificates matching domain (%s)", domain)
 				}
 			}
 
@@ -173,18 +176,18 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 			matchedCertificate, err = mostRecentCertificate(certificate, matchedCertificate)
 
 			if err != nil {
-				return diag.FromErr(err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 
 			continue
 		}
 
 		// Now we have multiple candidate certificates and we only allow one certificate.
-		return diag.Errorf("multiple ACM Certificates matching domain (%s)", domain)
+		return sdkdiag.AppendErrorf(diags, "multiple ACM Certificates matching domain (%s)", domain)
 	}
 
 	if matchedCertificate == nil {
-		return diag.Errorf("no ACM Certificate matching domain (%s)", domain)
+		return sdkdiag.AppendErrorf(diags, "no ACM Certificate matching domain (%s)", domain)
 	}
 
 	// Get the certificate data if the status is issued
@@ -199,7 +202,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		output, err = conn.GetCertificate(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("reading ACM Certificate (%s): %s", arn, err)
+			return sdkdiag.AppendErrorf(diags, "reading ACM Certificate (%s): %s", arn, err)
 		}
 	}
 	if output != nil {
@@ -217,14 +220,14 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 	tags, err := listTags(ctx, conn, aws.ToString(matchedCertificate.CertificateArn))
 
 	if err != nil {
-		return diag.Errorf("listing tags for ACM Certificate (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for ACM Certificate (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func mostRecentCertificate(i, j *types.CertificateDetail) (*types.CertificateDetail, error) {

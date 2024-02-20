@@ -8,11 +8,9 @@ import (
 	"fmt"
 	"time"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/ec2/ec2iface"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -20,7 +18,7 @@ import (
 
 const eventualConsistencyTimeout = 5 * time.Minute
 
-// createTags creates ec2 service tags for new resources.
+// createTags creates EC2 service tags for new resources.
 func createTags(ctx context.Context, conn ec2iface.EC2API, identifier string, tags []*ec2.Tag) error {
 	if len(tags) == 0 {
 		return nil
@@ -28,17 +26,9 @@ func createTags(ctx context.Context, conn ec2iface.EC2API, identifier string, ta
 
 	newTagsMap := KeyValueTags(ctx, tags)
 
-	_, err := tfresource.RetryWhen(ctx, eventualConsistencyTimeout,
-		func() (interface{}, error) {
-			return nil, updateTags(ctx, conn, identifier, nil, newTagsMap)
-		},
-		func(err error) (bool, error) {
-			if tfawserr.ErrCodeContains(err, ".NotFound") {
-				return true, err
-			}
-
-			return false, err
-		})
+	_, err := tfresource.RetryWhenAWSErrCodeContains(ctx, eventualConsistencyTimeout, func() (interface{}, error) {
+		return nil, updateTags(ctx, conn, identifier, nil, newTagsMap)
+	}, ".NotFound")
 
 	if err != nil {
 		return fmt.Errorf("tagging resource (%s): %w", identifier, err)
@@ -73,23 +63,6 @@ func getTagSpecificationsIn(ctx context.Context, resourceType string) []*ec2.Tag
 	return []*ec2.TagSpecification{
 		{
 			ResourceType: aws.String(resourceType),
-			Tags:         tags,
-		},
-	}
-}
-
-// getTagSpecificationsInV2 returns AWS SDK for Go v2 EC2 service tags from Context.
-// nil is returned if there are no input tags.
-func getTagSpecificationsInV2(ctx context.Context, resourceType awstypes.ResourceType) []awstypes.TagSpecification {
-	tags := getTagsInV2(ctx)
-
-	if len(tags) == 0 {
-		return nil
-	}
-
-	return []awstypes.TagSpecification{
-		{
-			ResourceType: resourceType,
 			Tags:         tags,
 		},
 	}

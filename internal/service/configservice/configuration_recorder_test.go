@@ -92,6 +92,12 @@ func testAccConfigurationRecorder_allParams(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "recording_group.0.all_supported", "false"),
 					resource.TestCheckResourceAttr(resourceName, "recording_group.0.include_global_resource_types", "false"),
 					resource.TestCheckResourceAttr(resourceName, "recording_group.0.resource_types.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "recording_mode.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_frequency", "DAILY"),
+					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_override.0.recording_frequency", "CONTINUOUS"),
+					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_override.0.resource_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_override.0.resource_types.0", "AWS::EC2::Instance"),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", fmt.Sprintf("role/%s", rName)),
 				),
 			},
@@ -141,7 +147,6 @@ func testAccCheckConfigurationRecorderExists(ctx context.Context, n string, v *c
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
 
 		output, err := tfconfig.FindConfigurationRecorderByName(ctx, conn, rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
@@ -251,6 +256,15 @@ resource "aws_config_configuration_recorder" "test" {
     all_supported                 = false
     include_global_resource_types = false
     resource_types                = ["AWS::EC2::Instance", "AWS::CloudTrail::Trail"]
+  }
+
+  recording_mode {
+    recording_frequency = "DAILY"
+
+    recording_mode_override {
+      resource_types      = ["AWS::EC2::Instance"]
+      recording_frequency = "CONTINUOUS"
+    }
   }
 }
 

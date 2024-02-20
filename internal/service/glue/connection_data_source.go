@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -88,21 +89,23 @@ func DataSourceConnection() *schema.Resource {
 }
 
 func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("id").(string)
 	catalogID, connectionName, err := DecodeConnectionID(id)
 	if err != nil {
-		return diag.Errorf("decoding Glue Connection %s: %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "decoding Glue Connection %s: %s", id, err)
 	}
 
 	connection, err := FindConnectionByName(ctx, conn, connectionName, catalogID)
 	if err != nil {
 		if tfresource.NotFound(err) {
-			return diag.Errorf("Glue Connection (%s) not found", id)
+			return sdkdiag.AppendErrorf(diags, "Glue Connection (%s) not found", id)
 		}
-		return diag.Errorf("reading Glue Connection (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "reading Glue Connection (%s): %s", id, err)
 	}
 
 	d.SetId(id)
@@ -121,27 +124,27 @@ func dataSourceConnectionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("arn", connectionArn)
 
 	if err := d.Set("connection_properties", aws.StringValueMap(connection.ConnectionProperties)); err != nil {
-		return diag.Errorf("setting connection_properties: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting connection_properties: %s", err)
 	}
 
 	if err := d.Set("physical_connection_requirements", flattenPhysicalConnectionRequirements(connection.PhysicalConnectionRequirements)); err != nil {
-		return diag.Errorf("setting physical_connection_requirements: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting physical_connection_requirements: %s", err)
 	}
 
 	if err := d.Set("match_criteria", flex.FlattenStringList(connection.MatchCriteria)); err != nil {
-		return diag.Errorf("setting match_criteria: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting match_criteria: %s", err)
 	}
 
 	tags, err := listTags(ctx, conn, connectionArn)
 
 	if err != nil {
-		return diag.Errorf("listing tags for Glue Connection (%s): %s", connectionArn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Glue Connection (%s): %s", connectionArn, err)
 	}
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

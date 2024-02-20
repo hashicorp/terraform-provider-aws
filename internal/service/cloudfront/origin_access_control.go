@@ -73,6 +73,8 @@ const (
 )
 
 func resourceOriginAccessControlCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	in := &cloudfront.CreateOriginAccessControlInput{
@@ -87,19 +89,21 @@ func resourceOriginAccessControlCreate(ctx context.Context, d *schema.ResourceDa
 
 	out, err := conn.CreateOriginAccessControlWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.CloudFront, create.ErrActionCreating, ResNameOriginAccessControl, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionCreating, ResNameOriginAccessControl, d.Get("name").(string), err)
 	}
 
 	if out == nil || out.OriginAccessControl == nil {
-		return create.DiagError(names.CloudFront, create.ErrActionCreating, ResNameOriginAccessControl, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionCreating, ResNameOriginAccessControl, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.StringValue(out.OriginAccessControl.Id))
 
-	return resourceOriginAccessControlRead(ctx, d, meta)
+	return append(diags, resourceOriginAccessControlRead(ctx, d, meta)...)
 }
 
 func resourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	out, err := findOriginAccessControlByID(ctx, conn, d.Id())
@@ -107,15 +111,15 @@ func resourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudFront Origin Access Control (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.CloudFront, create.ErrActionReading, ResNameOriginAccessControl, d.Id(), err)
+		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionReading, ResNameOriginAccessControl, d.Id(), err)
 	}
 
 	if out.OriginAccessControl == nil || out.OriginAccessControl.OriginAccessControlConfig == nil {
-		return create.DiagError(names.CloudFront, create.ErrActionReading, ResNameOriginAccessControl, d.Id(), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionReading, ResNameOriginAccessControl, d.Id(), errors.New("empty output"))
 	}
 
 	config := out.OriginAccessControl.OriginAccessControlConfig
@@ -127,10 +131,12 @@ func resourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData
 	d.Set("signing_behavior", config.SigningBehavior)
 	d.Set("signing_protocol", config.SigningProtocol)
 
-	return nil
+	return diags
 }
 
 func resourceOriginAccessControlUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	in := &cloudfront.UpdateOriginAccessControlInput{
@@ -148,13 +154,15 @@ func resourceOriginAccessControlUpdate(ctx context.Context, d *schema.ResourceDa
 	log.Printf("[DEBUG] Updating CloudFront Origin Access Control (%s): %#v", d.Id(), in)
 	_, err := conn.UpdateOriginAccessControlWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.CloudFront, create.ErrActionUpdating, ResNameOriginAccessControl, d.Id(), err)
+		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionUpdating, ResNameOriginAccessControl, d.Id(), err)
 	}
 
-	return resourceOriginAccessControlRead(ctx, d, meta)
+	return append(diags, resourceOriginAccessControlRead(ctx, d, meta)...)
 }
 
 func resourceOriginAccessControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	log.Printf("[INFO] Deleting CloudFront Origin Access Control %s", d.Id())
@@ -165,14 +173,14 @@ func resourceOriginAccessControlDelete(ctx context.Context, d *schema.ResourceDa
 	})
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchOriginAccessControl) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.CloudFront, create.ErrActionDeleting, ResNameOriginAccessControl, d.Id(), err)
+		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionDeleting, ResNameOriginAccessControl, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findOriginAccessControlByID(ctx context.Context, conn *cloudfront.CloudFront, id string) (*cloudfront.GetOriginAccessControlOutput, error) {

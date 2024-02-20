@@ -60,4 +60,4 @@ This data source exports the following attributes in addition to the arguments a
 * `version` - Version of the bot. For a new bot, the version is always `$LATEST`.
 * `voice_id` - Amazon Polly voice ID that the Amazon Lex Bot uses for voice interactions with the user.
 
-<!-- cache-key: cdktf-0.19.0 input-5ef089ea17f3e167b9e877fe3394478af9b492a4da2e1d52a05076e5bbbba4a7 -->
+<!-- cache-key: cdktf-0.20.1 input-5ef089ea17f3e167b9e877fe3394478af9b492a4da2e1d52a05076e5bbbba4a7 -->

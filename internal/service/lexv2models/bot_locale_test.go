@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
+	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -27,6 +28,7 @@ func TestAccLexV2ModelsBotLocale_basic(t *testing.T) {
 	var botlocale lexmodelsv2.DescribeBotLocaleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lexv2models_bot_locale.test"
+	botResourceName := "aws_lexv2models_bot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -42,9 +44,9 @@ func TestAccLexV2ModelsBotLocale_basic(t *testing.T) {
 				Config: testAccBotLocaleConfig_basic(rName, "en_US", 0.7),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBotLocaleExists(ctx, resourceName, &botlocale),
-					resource.TestCheckResourceAttrSet(resourceName, "bot_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "locale_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "bot_version"),
+					resource.TestCheckResourceAttrPair(resourceName, "bot_id", botResourceName, "id"),
+					resource.TestCheckResourceAttr(resourceName, "bot_version", "DRAFT"),
+					resource.TestCheckResourceAttr(resourceName, "locale_id", "en_US"),
 					resource.TestCheckResourceAttr(resourceName, "n_lu_intent_confidence_threshold", "0.7"),
 				),
 			},
@@ -59,9 +61,6 @@ func TestAccLexV2ModelsBotLocale_basic(t *testing.T) {
 
 func TestAccLexV2ModelsBotLocale_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var botlocale lexmodelsv2.DescribeBotLocaleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -84,6 +83,44 @@ func TestAccLexV2ModelsBotLocale_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflexv2models.ResourceBotLocale, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccLexV2ModelsBotLocale_voiceSettings(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	var botlocale lexmodelsv2.DescribeBotLocaleOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lexv2models_bot_locale.test"
+	// https://docs.aws.amazon.com/polly/latest/dg/voicelist.html
+	voiceID := "Kendra"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBotLocaleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBotLocaleConfig_voiceSettings(rName, voiceID, string(types.VoiceEngineStandard)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBotLocaleExists(ctx, resourceName, &botlocale),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "voice_settings.*", map[string]string{
+						"voice_id": voiceID,
+						"engine":   string(types.VoiceEngineStandard),
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -137,25 +174,48 @@ func testAccCheckBotLocaleExists(ctx context.Context, name string, botlocale *le
 	}
 }
 
-func testAccBotLocaleConfig_basic(rName, localeid string, thres float64) string {
+func testAccBotLocaleConfigBase(rName string) string {
 	return acctest.ConfigCompose(
 		testAccBotBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_lexv2models_bot" "test" {
   name                        = %[1]q
   idle_session_ttl_in_seconds = 60
-  role_arn                    = aws_iam_role.test_role.arn
+  role_arn                    = aws_iam_role.test.arn
 
   data_privacy {
     child_directed = "true"
   }
+}`, rName))
 }
 
+func testAccBotLocaleConfig_basic(rName, localeID string, thres float64) string {
+	return acctest.ConfigCompose(
+		testAccBotLocaleConfigBase(rName),
+		fmt.Sprintf(`
 resource "aws_lexv2models_bot_locale" "test" {
-  locale_id                        = %[2]q
+  locale_id                        = %[1]q
   bot_id                           = aws_lexv2models_bot.test.id
   bot_version                      = "DRAFT"
-  n_lu_intent_confidence_threshold = %[3]g
+  n_lu_intent_confidence_threshold = %[2]g
 }
-`, rName, localeid, thres))
+`, localeID, thres))
+}
+
+func testAccBotLocaleConfig_voiceSettings(rName, voiceID, engine string) string {
+	return acctest.ConfigCompose(
+		testAccBotLocaleConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_lexv2models_bot_locale" "test" {
+  locale_id                        = "en_US"
+  bot_id                           = aws_lexv2models_bot.test.id
+  bot_version                      = "DRAFT"
+  n_lu_intent_confidence_threshold = 0.7
+
+  voice_settings {
+    voice_id = %[1]q
+    engine   = %[2]q
+  }
+}
+`, voiceID, engine))
 }

@@ -80,6 +80,8 @@ func ResourceDomainEntry() *schema.Resource {
 }
 
 func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	name := d.Get("name").(string)
 	req := &lightsail.CreateDomainEntryInput{
@@ -96,7 +98,7 @@ func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 	resp, err := conn.CreateDomainEntry(ctx, req)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeCreateDomain), ResNameDomainEntry, name, err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeCreateDomain), ResNameDomainEntry, name, err)
 	}
 
 	diag := expandOperations(ctx, conn, []types.Operation{*resp.Operation}, types.OperationTypeCreateDomain, ResNameDomainEntry, name)
@@ -116,15 +118,17 @@ func resourceDomainEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 	id, err := flex.FlattenResourceId(idParts, DomainEntryIdPartsCount, true)
 
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionFlatteningResourceId, ResNameDomainEntry, d.Get("domain_name").(string), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionFlatteningResourceId, ResNameDomainEntry, d.Get("domain_name").(string), err)
 	}
 
 	d.SetId(id)
 
-	return resourceDomainEntryRead(ctx, d, meta)
+	return append(diags, resourceDomainEntryRead(ctx, d, meta)...)
 }
 
 func resourceDomainEntryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	entry, err := FindDomainEntryById(ctx, conn, d.Id())
@@ -132,17 +136,17 @@ func resourceDomainEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResNameDomainEntry, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResNameDomainEntry, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResNameDomainEntry, d.Id(), err)
 	}
 
 	domainName, err := expandDomainNameFromId(d.Id())
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionExpandingResourceId, ResNameDomainEntry, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionExpandingResourceId, ResNameDomainEntry, d.Id(), err)
 	}
 
 	name := flattenDomainEntryName(aws.ToString(entry.Name), domainName)
@@ -161,7 +165,7 @@ func resourceDomainEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 		id, err := flex.FlattenResourceId(idParts, DomainEntryIdPartsCount, true)
 
 		if err != nil {
-			return create.DiagError(names.DynamoDB, create.ErrActionFlatteningResourceId, ResNameDomainEntry, d.Get("domain_name").(string), err)
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionFlatteningResourceId, ResNameDomainEntry, d.Get("domain_name").(string), err)
 		}
 
 		d.SetId(id)
@@ -172,22 +176,24 @@ func resourceDomainEntryRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("is_alias", entry.IsAlias)
 	d.Set("target", entry.Target)
 
-	return nil
+	return diags
 }
 
 func resourceDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	domainName, err := expandDomainNameFromId(d.Id())
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionExpandingResourceId, ResNameDomainEntry, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionExpandingResourceId, ResNameDomainEntry, d.Id(), err)
 	}
 
 	domainEntry, err := expandDomainEntry(d.Id())
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionExpandingResourceId, ResNameDomainEntry, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionExpandingResourceId, ResNameDomainEntry, d.Id(), err)
 	}
 
 	resp, err := conn.DeleteDomainEntry(ctx, &lightsail.DeleteDomainEntryInput{
@@ -196,11 +202,11 @@ func resourceDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if err != nil && errs.IsA[*types.NotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionDeleting, ResNameDomainEntry, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionDeleting, ResNameDomainEntry, d.Id(), err)
 	}
 
 	diag := expandOperations(ctx, conn, []types.Operation{*resp.Operation}, types.OperationTypeDeleteDomain, ResNameDomainEntry, d.Id())
@@ -209,7 +215,7 @@ func resourceDomainEntryDelete(ctx context.Context, d *schema.ResourceData, meta
 		return diag
 	}
 
-	return nil
+	return diags
 }
 
 func expandDomainEntry(id string) (*types.DomainEntry, error) {

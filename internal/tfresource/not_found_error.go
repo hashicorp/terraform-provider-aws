@@ -114,3 +114,10 @@ func AssertSingleValueResult[T any](a []T) (*T, error) {
 	}
 	return &a[0], nil
 }
+
+func AssertFirstValueResult[T any](a []T) (*T, error) {
+	if l := len(a); l == 0 {
+		return nil, NewEmptyResultError(nil)
+	}
+	return &a[0], nil
+}

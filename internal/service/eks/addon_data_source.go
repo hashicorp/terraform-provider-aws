@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -60,6 +61,8 @@ func dataSourceAddon() *schema.Resource {
 }
 
 func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -70,7 +73,7 @@ func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta inter
 	addon, err := findAddonByTwoPartKey(ctx, conn, clusterName, addonName)
 
 	if err != nil {
-		return diag.Errorf("reading EKS Add-On (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "reading EKS Add-On (%s): %s", id, err)
 	}
 
 	d.SetId(id)
@@ -82,8 +85,8 @@ func dataSourceAddonRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("service_account_role_arn", addon.ServiceAccountRoleArn)
 
 	if err := d.Set("tags", KeyValueTags(ctx, addon.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -147,7 +147,7 @@ func Register(name string, f SweeperFn, dependencies ...string) {
 		Name: name,
 		F: func(region string) error {
 			ctx := Context(region)
-			ctx = tflog.SetField(ctx, "sweeper_name", name)
+			ctx = logWithResourceType(ctx, name)
 
 			client, err := SharedRegionalSweepClient(ctx, region)
 			if err != nil {
