@@ -33,13 +33,13 @@ import (
 )
 
 const (
-	MonitorTimeout               = time.Minute * 10
-	ResNameNetworkMonitorMonitor = "CloudWatch Network Monitor Monitor"
+	MonitorTimeout = time.Minute * 10
+	ResNameMonitor = "CloudWatch Network Monitor Monitor"
 )
 
 // @FrameworkResource(name="CloudWatch Network Monitor Monitor")
 // @Tags(identifierAttribute="arn")
-func newResourceNetworkMonitorMonitor(context.Context) (resource.ResourceWithConfigure, error) {
+func newResourceMonitor(context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceNetworkMonitorMonitor{}, nil
 }
 
@@ -111,7 +111,7 @@ func (r *resourceNetworkMonitorMonitor) Create(ctx context.Context, req resource
 	_, err := conn.CreateMonitor(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionCreating, ResNameNetworkMonitorMonitor, plan.MonitorName.String(), nil),
+			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionCreating, ResNameMonitor, plan.MonitorName.String(), nil),
 			err.Error(),
 		)
 		return
@@ -120,7 +120,7 @@ func (r *resourceNetworkMonitorMonitor) Create(ctx context.Context, req resource
 	out, err := waitMonitorReady(ctx, conn, plan.MonitorName.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionWaitingForCreation, ResNameNetworkMonitorMonitor, plan.MonitorName.ValueString(), nil),
+			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionWaitingForCreation, ResNameMonitor, plan.MonitorName.ValueString(), nil),
 			err.Error(),
 		)
 	}
@@ -159,7 +159,7 @@ func (r *resourceNetworkMonitorMonitor) Read(ctx context.Context, req resource.R
 		}
 
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionReading, ResNameNetworkMonitorMonitor, state.ID.String(), err),
+			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionReading, ResNameMonitor, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -199,7 +199,7 @@ func (r *resourceNetworkMonitorMonitor) Update(ctx context.Context, req resource
 		_, err := conn.UpdateMonitor(ctx, &input)
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionUpdating, ResNameNetworkMonitorMonitor, state.ID.String(), nil),
+				create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionUpdating, ResNameMonitor, state.ID.String(), nil),
 				err.Error(),
 			)
 			return
@@ -208,13 +208,13 @@ func (r *resourceNetworkMonitorMonitor) Update(ctx context.Context, req resource
 		_, err = waitMonitorReady(ctx, conn, plan.MonitorName.ValueString())
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionCreating, ResNameNetworkMonitorMonitor, plan.MonitorName.ValueString(), nil),
+				create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionCreating, ResNameMonitor, plan.MonitorName.ValueString(), nil),
 				err.Error(),
 			)
 		}
 		if err != nil {
 			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionWaitingForUpdate, ResNameNetworkMonitorMonitor, state.ID.String(), nil),
+				create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionWaitingForUpdate, ResNameMonitor, state.ID.String(), nil),
 				err.Error(),
 			)
 			return
@@ -246,7 +246,7 @@ func (r *resourceNetworkMonitorMonitor) Delete(ctx context.Context, req resource
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionDeleting, ResNameNetworkMonitorMonitor, state.ID.String(), nil),
+			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionDeleting, ResNameMonitor, state.ID.String(), nil),
 			err.Error(),
 		)
 		return
@@ -255,7 +255,7 @@ func (r *resourceNetworkMonitorMonitor) Delete(ctx context.Context, req resource
 	_, err = waitMonitorDeleted(ctx, conn, state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionWaitingForDeletion, ResNameNetworkMonitorMonitor, state.ID.String(), nil),
+			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionWaitingForDeletion, ResNameMonitor, state.ID.String(), nil),
 			err.Error(),
 		)
 		return

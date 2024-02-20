@@ -37,13 +37,13 @@ import (
 )
 
 const (
-	ProbeTimeout               = time.Minute * 10
-	ResNameNetworkMonitorProbe = "CloudWatch Network Monitor Probe"
+	ProbeTimeout = time.Minute * 15
+	ResNameProbe = "CloudWatch Network Monitor Probe"
 )
 
 // @FrameworkResource(name="CloudWatch Network Monitor Probe")
 // @Tags(identifierAttribute="arn")
-func newResourceNetworkMonitorProbe(context.Context) (resource.ResourceWithConfigure, error) {
+func newResourceProbe(context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceNetworkMonitorProbe{}, nil
 }
 
@@ -165,7 +165,7 @@ func (r *resourceNetworkMonitorProbe) Create(ctx context.Context, req resource.C
 	out, err := conn.CreateProbe(ctx, &input)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionCreating, ResNameNetworkMonitorProbe, state.MonitorName.String(), nil),
+			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionCreating, ResNameProbe, state.MonitorName.String(), nil),
 			err.Error(),
 		)
 		return
@@ -176,7 +176,7 @@ func (r *resourceNetworkMonitorProbe) Create(ctx context.Context, req resource.C
 	outWait, err := waitProbeReady(ctx, conn, probeID)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionWaitingForCreation, ResNameNetworkMonitorProbe, probeID, nil),
+			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionWaitingForCreation, ResNameProbe, probeID, nil),
 			err.Error(),
 		)
 	}
@@ -212,7 +212,7 @@ func (r *resourceNetworkMonitorProbe) Read(ctx context.Context, req resource.Rea
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionReading, ResNameNetworkMonitorProbe, state.ID.String(), err),
+			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionReading, ResNameProbe, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -222,7 +222,7 @@ func (r *resourceNetworkMonitorProbe) Read(ctx context.Context, req resource.Rea
 	_, monitorName, err := probeParseID(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionReading, ResNameNetworkMonitorProbe, state.ID.String(), err),
+			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionReading, ResNameProbe, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -264,7 +264,7 @@ func (r *resourceNetworkMonitorProbe) Update(ctx context.Context, req resource.U
 	probeID, monitorName, err := probeParseID(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionUpdating, ResNameNetworkMonitorProbe, state.ID.String(), err),
+			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionUpdating, ResNameProbe, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -291,7 +291,7 @@ func (r *resourceNetworkMonitorProbe) Update(ctx context.Context, req resource.U
 	_, err = conn.UpdateProbe(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionUpdating, ResNameNetworkMonitorProbe, state.ID.String(), nil),
+			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionUpdating, ResNameProbe, state.ID.String(), nil),
 			err.Error(),
 		)
 		return
@@ -300,7 +300,7 @@ func (r *resourceNetworkMonitorProbe) Update(ctx context.Context, req resource.U
 	out, err := waitProbeReady(ctx, conn, state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionWaitingForUpdate, ResNameNetworkMonitorProbe, state.ID.String(), nil),
+			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionWaitingForUpdate, ResNameProbe, state.ID.String(), nil),
 			err.Error(),
 		)
 	}
@@ -324,7 +324,7 @@ func (r *resourceNetworkMonitorProbe) Delete(ctx context.Context, req resource.D
 	probeID, monitorName, err := probeParseID(state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionDeleting, ResNameNetworkMonitorProbe, state.ID.String(), nil),
+			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionDeleting, ResNameProbe, state.ID.String(), nil),
 			err.Error(),
 		)
 		return
@@ -342,7 +342,7 @@ func (r *resourceNetworkMonitorProbe) Delete(ctx context.Context, req resource.D
 		}
 
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionDeleting, ResNameNetworkMonitorProbe, state.ID.String(), nil),
+			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionDeleting, ResNameProbe, state.ID.String(), nil),
 			err.Error(),
 		)
 		return
@@ -351,7 +351,7 @@ func (r *resourceNetworkMonitorProbe) Delete(ctx context.Context, req resource.D
 	_, err = waitProbeDeleted(ctx, conn, state.ID.ValueString())
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionWaitingForDeletion, ResNameNetworkMonitorProbe, state.ID.String(), nil),
+			create.ProblemStandardMessage(names.NetworkMonitor, create.ErrActionWaitingForDeletion, ResNameProbe, state.ID.String(), nil),
 			err.Error(),
 		)
 		return
@@ -406,7 +406,7 @@ func waitProbeReady(ctx context.Context, conn *networkmonitor.Client, id string)
 
 func waitProbeDeleted(ctx context.Context, conn *networkmonitor.Client, id string) (*networkmonitor.GetProbeOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    enum.Slice(awstypes.ProbeStateActive, awstypes.ProbeStateInactive, awstypes.ProbeStateInactive),
+		Pending:    enum.Slice(awstypes.ProbeStateActive, awstypes.ProbeStateInactive, awstypes.ProbeStateDeleting),
 		Target:     []string{},
 		Refresh:    statusProbe(ctx, conn, id),
 		Timeout:    ProbeTimeout,
@@ -524,7 +524,7 @@ func expandProbeConfig(ctx context.Context, object probeConfigModel) awstypes.Pr
 		Destination:     object.Destination.ValueStringPointer(),
 		DestinationPort: aws.Int32(int32(object.DestinationPort.ValueInt64())),
 		PacketSize:      aws.Int32(int32(object.PacketSize.ValueInt64())),
-		Protocol:        awstypes.Protocol(*aws.String(object.Protocol.ValueString())),
+		Protocol:        awstypes.Protocol(object.Protocol.ValueString()),
 		SourceArn:       object.SourceArn.ValueStringPointer(),
 		Tags:            flex.ExpandFrameworkStringValueMap(ctx, object.Tags),
 	}

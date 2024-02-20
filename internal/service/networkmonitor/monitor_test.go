@@ -98,7 +98,7 @@ func TestAccNetworkMonitorMonitor_disappears(t *testing.T) {
 				Config: testAccMonitorConfig(rName, 30),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckMonitorExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnetworkmonitor.ResourceNetworkMonitorMonitor, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnetworkmonitor.ResourceMonitor, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -129,7 +129,7 @@ func testAccCheckMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return create.Error(names.NetworkMonitor, create.ErrActionCheckingDestroyed, tfnetworkmonitor.ResNameNetworkMonitorMonitor, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.NetworkMonitor, create.ErrActionCheckingDestroyed, tfnetworkmonitor.ResNameMonitor, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil
@@ -140,18 +140,18 @@ func testAccCheckMonitorExists(ctx context.Context, name string) resource.TestCh
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.NetworkMonitor, create.ErrActionCheckingExistence, tfnetworkmonitor.ResNameNetworkMonitorMonitor, name, errors.New("not found"))
+			return create.Error(names.NetworkMonitor, create.ErrActionCheckingExistence, tfnetworkmonitor.ResNameMonitor, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.NetworkMonitor, create.ErrActionCheckingExistence, tfnetworkmonitor.ResNameNetworkMonitorMonitor, name, errors.New("not set"))
+			return create.Error(names.NetworkMonitor, create.ErrActionCheckingExistence, tfnetworkmonitor.ResNameMonitor, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkMonitorClient(ctx)
 
 		_, err := tfnetworkmonitor.FindMonitorByName(ctx, conn, rs.Primary.ID)
 		if err != nil {
-			return create.Error(names.NetworkMonitor, create.ErrActionCheckingExistence, tfnetworkmonitor.ResNameNetworkMonitorMonitor, rs.Primary.ID, err)
+			return create.Error(names.NetworkMonitor, create.ErrActionCheckingExistence, tfnetworkmonitor.ResNameMonitor, rs.Primary.ID, err)
 		}
 
 		return nil
