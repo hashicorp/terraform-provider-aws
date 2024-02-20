@@ -64,7 +64,6 @@ func testAccConfigurationRecorder_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationRecorderExists(ctx, resourceName, &cr),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceConfigurationRecorder(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconfig.ResourceConfigurationRecorder(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -95,10 +94,10 @@ func testAccConfigurationRecorder_allParams(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "recording_group.0.resource_types.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "recording_mode.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_frequency", "DAILY"),
-					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_overrides.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_overrides.0.recording_frequency", "CONTINUOUS"),
-					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_overrides.0.resource_types.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_overrides.0.resource_types.0", "AWS::EC2::Instance"),
+					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_override.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_override.0.recording_frequency", "CONTINUOUS"),
+					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_override.0.resource_types.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "recording_mode.0.recording_mode_override.0.resource_types.0", "AWS::EC2::Instance"),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", fmt.Sprintf("role/%s", rName)),
 				),
 			},
@@ -262,7 +261,7 @@ resource "aws_config_configuration_recorder" "test" {
   recording_mode {
     recording_frequency = "DAILY"
 
-    recording_mode_overrides {
+    recording_mode_override {
       resource_types      = ["AWS::EC2::Instance"]
       recording_frequency = "CONTINUOUS"
     }

@@ -78,7 +78,7 @@ resource "aws_config_configuration_recorder" "foo" {
   recording_mode {
     recording_frequency = "CONTINUOUS"
 
-    recording_mode_overrides {
+    recording_mode_override {
       description         = "Only record EC2 network interfaces daily"
       resource_types      = ["AWS::EC2::NetworkInterface"]
       recording_frequency = "DAILY"
@@ -115,9 +115,9 @@ This resource supports the following arguments:
 ### recording_mode Configuration Block
 
 * `recording_frequency` - (Required) Default reecording frequency. `CONTINUOUS` or `DAILY`.
-* `recording_mode_overrides` - (Optional) Recording mode overrides. Detailed below.
+* `recording_mode_override` - (Optional) Recording mode overrides. Detailed below.
 
-#### recording_mode_overrides Configuration Block
+#### recording_mode_override Configuration Block
 
 * `description` - (Optional) A description you provide of the override.
 * `resource_types` - (Required) A list that specifies the types of AWS resources for which the override applies to.  See [restrictions in the AWS Docs](https://docs.aws.amazon.com/config/latest/APIReference/API_RecordingModeOverride.html)

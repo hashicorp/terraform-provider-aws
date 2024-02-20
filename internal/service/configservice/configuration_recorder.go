@@ -108,11 +108,11 @@ func ResourceConfigurationRecorder() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"recording_frequency": {
 							Type:         schema.TypeString,
-							Default:      configservice.RecordingFrequencyContinuous,
 							Optional:     true,
+							Default:      configservice.RecordingFrequencyContinuous,
 							ValidateFunc: validation.StringInSlice(configservice.RecordingFrequency_Values(), false),
 						},
-						"recording_mode_overrides": {
+						"recording_mode_override": {
 							Type:     schema.TypeList,
 							Optional: true,
 							// Even though the name is plural, the API only allows one override:
@@ -124,16 +124,16 @@ func ResourceConfigurationRecorder() *schema.Resource {
 										Type:     schema.TypeString,
 										Optional: true,
 									},
+									"recording_frequency": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(configservice.RecordingFrequency_Values(), false),
+									},
 									"resource_types": {
 										Type:     schema.TypeSet,
 										Required: true,
 										MinItems: 1,
 										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"recording_frequency": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(configservice.RecordingFrequency_Values(), false),
 									},
 								},
 							},
