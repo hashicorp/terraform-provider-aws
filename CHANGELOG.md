@@ -7,8 +7,10 @@ FEATURES:
 ENHANCEMENTS:
 
 * data-source/aws_ec2_instance_type: Add `maximum_network_cards` attribute ([#35840](https://github.com/hashicorp/terraform-provider-aws/issues/35840))
+* data-source/aws_elasticache_subnet_group: Add `vpc_id` attribute ([#35887](https://github.com/hashicorp/terraform-provider-aws/issues/35887))
 * resource/aws_codedeploy_deployment_config: Add `arn` attribute ([#35888](https://github.com/hashicorp/terraform-provider-aws/issues/35888))
 * resource/aws_codepipeline: Add `execution_mode` attribute ([#35875](https://github.com/hashicorp/terraform-provider-aws/issues/35875))
+* resource/aws_elasticache_subnet_group: Add `vpc_id` attribute ([#35887](https://github.com/hashicorp/terraform-provider-aws/issues/35887))
 * resource/aws_redshiftserverless_workgroup: Add `max_capacity` argument ([#35720](https://github.com/hashicorp/terraform-provider-aws/issues/35720))
 
 BUG FIXES:
