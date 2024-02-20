@@ -1,0 +1,7 @@
+```release-note:note
+resource/aws_wafv2_web_acl: `excluded_rule` on `managed_rule_group_statement` has been deprecated. All configurations using `excluded_rule` should be updated to use the new `rule_action_override` attribute instead
+```
+
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Support `rule_action_override` on `managed_rule_group_statement`
+```

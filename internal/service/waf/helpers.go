@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf
 
 import (
@@ -9,25 +12,29 @@ import (
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 func SizeConstraintSetSchema() map[string]*schema.Schema {
 	return map[string]*schema.Schema{
+		"arn": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
 		"name": {
 			Type:     schema.TypeString,
 			Required: true,
 			ForceNew: true,
-		},
-		"arn": {
-			Type:     schema.TypeString,
-			Computed: true,
 		},
 		"size_constraints": {
 			Type:     schema.TypeSet,
 			Optional: true,
 			Elem: &schema.Resource{
 				Schema: map[string]*schema.Schema{
+					"comparison_operator": {
+						Type:     schema.TypeString,
+						Required: true,
+					},
 					"field_to_match": {
 						Type:     schema.TypeList,
 						Required: true,
@@ -44,10 +51,6 @@ func SizeConstraintSetSchema() map[string]*schema.Schema {
 								},
 							},
 						},
-					},
-					"comparison_operator": {
-						Type:     schema.TypeString,
-						Required: true,
 					},
 					"size": {
 						Type:     schema.TypeInt,
@@ -165,7 +168,7 @@ func DiffRegexPatternSetPatternStrings(oldPatterns, newPatterns []interface{}) [
 	updates := make([]*waf.RegexPatternSetUpdate, 0)
 
 	for _, op := range oldPatterns {
-		if idx, contains := verify.SliceContainsString(newPatterns, op.(string)); contains {
+		if idx := tfslices.IndexOf(newPatterns, op.(string)); idx > -1 {
 			newPatterns = append(newPatterns[:idx], newPatterns[idx+1:]...)
 			continue
 		}
@@ -271,7 +274,7 @@ func FlattenActivatedRules(activatedRules []*waf.ActivatedRule) []interface{} {
 
 func ExpandActivatedRule(rule map[string]interface{}) *waf.ActivatedRule {
 	r := &waf.ActivatedRule{
-		Priority: aws.Int64(rule["priority"].(int64)),
+		Priority: aws.Int64(int64(rule["priority"].(int))),
 		RuleId:   aws.String(rule["rule_id"].(string)),
 		Type:     aws.String(rule["type"].(string)),
 	}

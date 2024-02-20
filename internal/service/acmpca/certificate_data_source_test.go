@@ -1,32 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acmpca_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccACMPCACertificateDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate.test"
 	dataSourceName := "data.aws_acmpca_certificate.test"
 
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, acmpca.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccCertificateDataSourceConfig_NonExistent,
-				ExpectError: regexp.MustCompile(`ResourceNotFoundException`),
+				Config:      testAccCertificateDataSourceConfig_nonExistent,
+				ExpectError: regexache.MustCompile(`ResourceNotFoundException`),
 			},
 			{
-				Config: testAccCertificateDataSourceConfig_ARN(domain),
+				Config: testAccCertificateDataSourceConfig_arn(domain),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "certificate", resourceName, "certificate"),
@@ -38,7 +42,7 @@ func TestAccACMPCACertificateDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccCertificateDataSourceConfig_ARN(domain string) string {
+func testAccCertificateDataSourceConfig_arn(domain string) string {
 	return fmt.Sprintf(`
 data "aws_acmpca_certificate" "test" {
   arn                       = aws_acmpca_certificate.test.arn
@@ -76,7 +80,7 @@ data "aws_partition" "current" {}
 `, domain)
 }
 
-const testAccCertificateDataSourceConfig_NonExistent = `
+const testAccCertificateDataSourceConfig_nonExistent = `
 data "aws_acmpca_certificate" "test" {
   arn                       = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/does-not-exist/certificate/does-not-exist"
   certificate_authority_arn = "arn:${data.aws_partition.current.partition}:acm-pca:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:certificate-authority/does-not-exist"

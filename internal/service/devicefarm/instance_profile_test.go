@@ -1,15 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package devicefarm_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdevicefarm "github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
@@ -17,6 +21,7 @@ import (
 )
 
 func TestAccDeviceFarmInstanceProfile_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var profile devicefarm.InstanceProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
@@ -24,24 +29,24 @@ func TestAccDeviceFarmInstanceProfile_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(devicefarm.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, devicefarm.EndpointsID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFarmInstanceProfileDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFarmInstanceProfileConfig(rName),
+				Config: testAccInstanceProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmInstanceProfileExists(resourceName, &profile),
+					testAccCheckInstanceProfileExists(ctx, resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "reboot_after_use", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`instanceprofile:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexache.MustCompile(`instanceprofile:.+`)),
 				),
 			},
 			{
@@ -50,13 +55,13 @@ func TestAccDeviceFarmInstanceProfile_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceFarmInstanceProfileConfig(rNameUpdated),
+				Config: testAccInstanceProfileConfig_basic(rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmInstanceProfileExists(resourceName, &profile),
+					testAccCheckInstanceProfileExists(ctx, resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "reboot_after_use", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexp.MustCompile(`instanceprofile:.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "devicefarm", regexache.MustCompile(`instanceprofile:.+`)),
 				),
 			},
 		},
@@ -64,26 +69,27 @@ func TestAccDeviceFarmInstanceProfile_basic(t *testing.T) {
 }
 
 func TestAccDeviceFarmInstanceProfile_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var profile devicefarm.InstanceProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_instance_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(devicefarm.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, devicefarm.EndpointsID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFarmInstanceProfileDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFarmInstanceProfileConfigTags1(rName, "key1", "value1"),
+				Config: testAccInstanceProfileConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmInstanceProfileExists(resourceName, &profile),
+					testAccCheckInstanceProfileExists(ctx, resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -94,18 +100,18 @@ func TestAccDeviceFarmInstanceProfile_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccDeviceFarmInstanceProfileConfigTags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccInstanceProfileConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmInstanceProfileExists(resourceName, &profile),
+					testAccCheckInstanceProfileExists(ctx, resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccDeviceFarmInstanceProfileConfigTags1(rName, "key2", "value2"),
+				Config: testAccInstanceProfileConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmInstanceProfileExists(resourceName, &profile),
+					testAccCheckInstanceProfileExists(ctx, resourceName, &profile),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -115,28 +121,29 @@ func TestAccDeviceFarmInstanceProfile_tags(t *testing.T) {
 }
 
 func TestAccDeviceFarmInstanceProfile_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var profile devicefarm.InstanceProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_devicefarm_instance_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(devicefarm.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, devicefarm.EndpointsID)
 			// Currently, DeviceFarm is only supported in us-west-2
 			// https://docs.aws.amazon.com/general/latest/gr/devicefarm.html
 			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
 		},
-		ErrorCheck:   acctest.ErrorCheck(t, devicefarm.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeviceFarmInstanceProfileDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, devicefarm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeviceFarmInstanceProfileConfig(rName),
+				Config: testAccInstanceProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeviceFarmInstanceProfileExists(resourceName, &profile),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceInstanceProfile(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdevicefarm.ResourceInstanceProfile(), resourceName),
+					testAccCheckInstanceProfileExists(ctx, resourceName, &profile),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceInstanceProfile(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdevicefarm.ResourceInstanceProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -144,7 +151,7 @@ func TestAccDeviceFarmInstanceProfile_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDeviceFarmInstanceProfileExists(n string, v *devicefarm.InstanceProfile) resource.TestCheckFunc {
+func testAccCheckInstanceProfileExists(ctx context.Context, n string, v *devicefarm.InstanceProfile) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -155,8 +162,8 @@ func testAccCheckDeviceFarmInstanceProfileExists(n string, v *devicefarm.Instanc
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
-		resp, err := tfdevicefarm.FindInstanceProfileByArn(conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn(ctx)
+		resp, err := tfdevicefarm.FindInstanceProfileByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -170,31 +177,33 @@ func testAccCheckDeviceFarmInstanceProfileExists(n string, v *devicefarm.Instanc
 	}
 }
 
-func testAccCheckDeviceFarmInstanceProfileDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn
+func testAccCheckInstanceProfileDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeviceFarmConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_devicefarm_instance_profile" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_devicefarm_instance_profile" {
+				continue
+			}
+
+			// Try to find the resource
+			_, err := tfdevicefarm.FindInstanceProfileByARN(ctx, conn, rs.Primary.ID)
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("DeviceFarm Instance Profile %s still exists", rs.Primary.ID)
 		}
 
-		// Try to find the resource
-		_, err := tfdevicefarm.FindInstanceProfileByArn(conn, rs.Primary.ID)
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("DeviceFarm Instance Profile %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccDeviceFarmInstanceProfileConfig(rName string) string {
+func testAccInstanceProfileConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_devicefarm_instance_profile" "test" {
   name = %[1]q
@@ -202,7 +211,7 @@ resource "aws_devicefarm_instance_profile" "test" {
 `, rName)
 }
 
-func testAccDeviceFarmInstanceProfileConfigTags1(rName, tagKey1, tagValue1 string) string {
+func testAccInstanceProfileConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_devicefarm_instance_profile" "test" {
   name = %[1]q
@@ -214,7 +223,7 @@ resource "aws_devicefarm_instance_profile" "test" {
 `, rName, tagKey1, tagValue1)
 }
 
-func testAccDeviceFarmInstanceProfileConfigTags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccInstanceProfileConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_devicefarm_instance_profile" "test" {
   name = %[1]q

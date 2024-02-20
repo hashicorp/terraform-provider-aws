@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package firehose_test
 
 import (
@@ -11,6 +14,8 @@ import (
 )
 
 func TestMigrateState(t *testing.T) {
+	t.Parallel()
+
 	cases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string
@@ -74,6 +79,8 @@ func TestMigrateState(t *testing.T) {
 }
 
 func TestMigrateState_empty(t *testing.T) {
+	t.Parallel()
+
 	var is *terraform.InstanceState
 	var meta interface{}
 

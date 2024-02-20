@@ -1,0 +1,19 @@
+```release-note:enhancement
+resource/aws_msk_cluster: Add `client_authentication.unauthenticated` argument
+```
+
+```release-note:enhancement
+resource/aws_msk_cluster: Allow in-place update of `client_authentication` and `encryption_info.encryption_in_transit.client_broker`
+```
+
+```release-note:enhancement
+resource/aws_msk_cluster: Add `broker_node_group_info.connectivity_info` argument to support [public access](https://docs.aws.amazon.com/msk/latest/developerguide/public-access.html)
+```
+
+```release-note:enhancement
+resource/aws_msk_cluster: Add `bootstrap_brokers_public_sasl_iam`, `bootstrap_brokers_public_sasl_scram` and `bootstrap_brokers_public_tls` attributes
+```
+
+```release-note:enhancement
+data-source/aws_msk_cluster: Add `bootstrap_brokers_public_sasl_iam`, `bootstrap_brokers_public_sasl_scram` and `bootstrap_brokers_public_tls` attributes
+```

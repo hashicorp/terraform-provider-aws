@@ -1,0 +1,11 @@
+```release-note:bug
+resource/aws_instance: Use EC2 API idempotency to ensure that only a single Instance is created
+```
+
+```release-note:enhancement
+resource/aws_ami_copy: Add `imds_support` attribute
+```
+
+```release-note:enhancement
+resource/aws_ami_from_instance: Add `imds_support` attribute
+```

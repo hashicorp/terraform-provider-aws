@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tags
 
 import (
@@ -5,7 +8,6 @@ import (
 )
 
 // TagsSchema returns the schema to use for tags.
-//
 func TagsSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeMap,

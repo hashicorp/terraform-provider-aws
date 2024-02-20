@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_storagegateway_smb_file_share: Fix update error when `kms_encrypted` is `true` but `kms_key_arn` is not sent in the request
+```

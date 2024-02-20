@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package globalaccelerator
 
 import (
@@ -18,7 +21,7 @@ func EndpointGroupARNToListenerARN(inputARN string) (string, error) {
 	parsedARN, err := arn.Parse(inputARN)
 
 	if err != nil {
-		return "", fmt.Errorf("error parsing ARN (%s): %w", inputARN, err)
+		return "", fmt.Errorf("parsing ARN (%s): %w", inputARN, err)
 	}
 
 	if actual, expected := parsedARN.Service, ARNService; actual != expected {
@@ -48,7 +51,7 @@ func ListenerOrEndpointGroupARNToAcceleratorARN(inputARN string) (string, error)
 	parsedARN, err := arn.Parse(inputARN)
 
 	if err != nil {
-		return "", fmt.Errorf("error parsing ARN (%s): %w", inputARN, err)
+		return "", fmt.Errorf("parsing ARN (%s): %w", inputARN, err)
 	}
 
 	if actual, expected := parsedARN.Service, ARNService; actual != expected {

@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_elasticsearch_domain_policy: Improve refresh to avoid unnecessary diffs in `access_policies`
+```
+
+```release-note:bug
+resource/aws_elasticsearch_domain: Improve refresh to avoid unnecessary diffs in `access_policies`
+```

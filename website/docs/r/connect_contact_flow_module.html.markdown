@@ -27,48 +27,49 @@ resource "aws_connect_contact_flow_module" "example" {
   name        = "Example"
   description = "Example Contact Flow Module Description"
 
-  content = <<JSON
-    {
-		"Version": "2019-10-30",
-		"StartAction": "12345678-1234-1234-1234-123456789012",
-		"Actions": [
-			{
-				"Identifier": "12345678-1234-1234-1234-123456789012",
-				"Parameters": {
-					"Text": "Hello contact flow module"
-				},
-				"Transitions": {
-					"NextAction": "abcdef-abcd-abcd-abcd-abcdefghijkl",
-					"Errors": [],
-					"Conditions": []
-				},
-				"Type": "MessageParticipant"
-			},
-			{
-				"Identifier": "abcdef-abcd-abcd-abcd-abcdefghijkl",
-				"Type": "DisconnectParticipant",
-				"Parameters": {},
-				"Transitions": {}
-			}
-		],
-		"Settings": {
-			"InputParameters": [],
-			"OutputParameters": [],
-			"Transitions": [
-				{
-					"DisplayName": "Success",
-					"ReferenceName": "Success",
-					"Description": ""
-				},
-				{
-					"DisplayName": "Error",
-					"ReferenceName": "Error",
-					"Description": ""
-				}
-			]
-		}
-	}
-    JSON
+  content = jsonencode({
+    Version     = "2019-10-30"
+    StartAction = "12345678-1234-1234-1234-123456789012"
+    Actions = [
+      {
+        Identifier = "12345678-1234-1234-1234-123456789012"
+
+        Parameters = {
+          Text = "Hello contact flow module"
+        }
+
+        Transitions = {
+          NextAction = "abcdef-abcd-abcd-abcd-abcdefghijkl"
+          Errors     = []
+          Conditions = []
+        }
+
+        Type = "MessageParticipant"
+      },
+      {
+        Identifier  = "abcdef-abcd-abcd-abcd-abcdefghijkl"
+        Type        = "DisconnectParticipant"
+        Parameters  = {}
+        Transitions = {}
+      }
+    ]
+    Settings = {
+      InputParameters  = []
+      OutputParameters = []
+      Transitions = [
+        {
+          DisplayName   = "Success"
+          ReferenceName = "Success"
+          Description   = ""
+        },
+        {
+          DisplayName   = "Error"
+          ReferenceName = "Error"
+          Description   = ""
+        }
+      ]
+    }
+  })
 
   tags = {
     "Name"        = "Example Contact Flow Module",
@@ -82,8 +83,8 @@ resource "aws_connect_contact_flow_module" "example" {
 
 Use the AWS CLI to extract Contact Flow Content:
 
-```shell
-$ aws connect describe-contact-flow-module --instance-id 1b3c5d8-1b3c-1b3c-1b3c-1b3c5d81b3c5 --contact-flow-module-id c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5 --region us-west-2 | jq '.ContactFlowModule.Content | fromjson' > contact_flow_module.json
+```console
+% aws connect describe-contact-flow-module --instance-id 1b3c5d8-1b3c-1b3c-1b3c-1b3c5d81b3c5 --contact-flow-module-id c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5 --region us-west-2 | jq '.ContactFlowModule.Content | fromjson' > contact_flow_module.json
 ```
 
 Use the generated file as input:
@@ -106,7 +107,7 @@ resource "aws_connect_contact_flow_module" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `content` - (Optional) Specifies the content of the Contact Flow Module, provided as a JSON string, written in Amazon Connect Contact Flow Language. If defined, the `filename` argument cannot be used.
 * `content_hash` - (Optional) Used to trigger updates. Must be set to a base64-encoded SHA256 hash of the Contact Flow Module source specified with `filename`. The usual way to set this is filebase64sha256("contact_flow_module.json") (Terraform 0.11.12 and later) or base64sha256(file("contact_flow_module.json")) (Terraform 0.11.11 and earlier), where "contact_flow_module.json" is the local filename of the Contact Flow Module source.
@@ -114,21 +115,30 @@ The following arguments are supported:
 * `filename` - (Optional) The path to the Contact Flow Module source within the local filesystem. Conflicts with `content`.
 * `instance_id` - (Required) Specifies the identifier of the hosting Amazon Connect Instance.
 * `name` - (Required) Specifies the name of the Contact Flow Module.
-* `tags` - (Optional) Tags to apply to the Contact Flow Module. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Tags to apply to the Contact Flow Module. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the Contact Flow Module.
 * `id` - The identifier of the hosting Amazon Connect Instance and identifier of the Contact Flow Module separated by a colon (`:`).
 * `contact_flow_module_id` - The identifier of the Contact Flow Module.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Amazon Connect Contact Flow Modules can be imported using the `instance_id` and `contact_flow_module_id` separated by a colon (`:`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Amazon Connect Contact Flow Modules using the `instance_id` and `contact_flow_module_id` separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_connect_contact_flow_module.example
+  id = "f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5"
+}
 ```
-$ terraform import aws_connect_contact_flow_module.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
+
+Using `terraform import`, import Amazon Connect Contact Flow Modules using the `instance_id` and `contact_flow_module_id` separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_connect_contact_flow_module.example f1288a1f-6193-445a-b47e-af739b2:c1d4e5f6-1b3c-1b3c-1b3c-c1d4e5f6c1d4e5
 ```

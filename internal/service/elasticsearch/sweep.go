@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package elasticsearch
 
@@ -10,12 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_elasticsearch_domain", &resource.Sweeper{
 		Name: "aws_elasticsearch_domain",
 		F:    sweepDomains,
@@ -23,22 +23,23 @@ func init() {
 }
 
 func sweepDomains(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).ElasticsearchConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.ElasticsearchConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &elasticsearchservice.ListDomainNamesInput{}
 
 	// ListDomainNames has no pagination support whatsoever
-	output, err := conn.ListDomainNames(input)
+	output, err := conn.ListDomainNamesWithContext(ctx, input)
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, err)
 		return errs.ErrorOrNil()
 	}
@@ -62,11 +63,16 @@ func sweepDomains(region string) error {
 
 		name := aws.StringValue(domainInfo.DomainName)
 
+		if engineType := aws.StringValue(domainInfo.EngineType); engineType != elasticsearchservice.EngineTypeElasticsearch {
+			log.Printf("[INFO] Skipping Elasticsearch Domain %s: EngineType = %s", name, engineType)
+			continue
+		}
+
 		// Elasticsearch Domains have regularly gotten stuck in a "being deleted" state
 		// e.g. Deleted and Processing are both true for days in the API
 		// Filter out domains that are Deleted already.
 
-		output, err := FindDomainByName(conn, name)
+		output, err := FindDomainByName(ctx, conn, name)
 		if err != nil {
 			sweeperErr := fmt.Errorf("error describing Elasticsearch Domain (%s): %w", name, err)
 			log.Printf("[ERROR] %s", sweeperErr)
@@ -87,11 +93,11 @@ func sweepDomains(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	if err = sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Elasticsearch Domains for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Elasticsearch Domain sweep for %s: %s", region, errs)
 		return nil
 	}

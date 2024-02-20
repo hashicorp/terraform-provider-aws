@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_launch_template: Fix `network_interfaces.device_index` and `network_interfaces.network_card_index` of `0` not being set
+```

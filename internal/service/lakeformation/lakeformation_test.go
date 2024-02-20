@@ -1,29 +1,45 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lakeformation_test
 
 import (
 	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccLakeFormation_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"DataLakeSettings": {
 			"basic":            testAccDataLakeSettings_basic,
-			"dataSource":       testAccDataLakeSettingsDataSource_basic,
 			"disappears":       testAccDataLakeSettings_disappears,
 			"withoutCatalogId": testAccDataLakeSettings_withoutCatalogID,
+			"readOnlyAdmins":   testAccDataLakeSettings_readOnlyAdmins,
+		},
+		"DataLakeSettingsDataSource": {
+			"basic":          testAccDataLakeSettingsDataSource_basic,
+			"readOnlyAdmins": testAccDataLakeSettingsDataSource_readOnlyAdmins,
 		},
 		"PermissionsBasic": {
-			"basic":              testAccPermissions_basic,
-			"database":           testAccPermissions_database,
-			"databaseIAMAllowed": testAccPermissions_databaseIAMAllowed,
-			"databaseMultiple":   testAccPermissions_databaseMultiple,
-			"dataLocation":       testAccPermissions_dataLocation,
-			"disappears":         testAccPermissions_disappears,
+			"basic":               testAccPermissions_basic,
+			"database":            testAccPermissions_database,
+			"databaseIAMAllowed":  testAccPermissions_databaseIAMAllowed,
+			"databaseMultiple":    testAccPermissions_databaseMultiple,
+			"dataLocation":        testAccPermissions_dataLocation,
+			"disappears":          testAccPermissions_disappears,
+			"lfTag":               testAccPermissions_lfTag,
+			"lfTagPolicy":         testAccPermissions_lfTagPolicy,
+			"lfTagPolicyMultiple": testAccPermissions_lfTagPolicyMultiple,
 		},
 		"PermissionsDataSource": {
 			"basic":            testAccPermissionsDataSource_basic,
 			"database":         testAccPermissionsDataSource_database,
 			"dataLocation":     testAccPermissionsDataSource_dataLocation,
+			"lfTag":            testAccPermissionsDataSource_lfTag,
+			"lfTagPolicy":      testAccPermissionsDataSource_lfTagPolicy,
 			"table":            testAccPermissionsDataSource_table,
 			"tableWithColumns": testAccPermissionsDataSource_tableWithColumns,
 		},
@@ -45,17 +61,23 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"wildcardSelectOnly":      testAccPermissions_twcWildcardSelectOnly,
 			"wildcardSelectPlus":      testAccPermissions_twcWildcardSelectPlus,
 		},
+		"LFTags": {
+			"basic":           testAccLFTag_basic,
+			"disappears":      testAccLFTag_disappears,
+			"tagKeyComplex":   testAccLFTag_TagKey_complex,
+			"values":          testAccLFTag_Values,
+			"valuesOverFifty": testAccLFTag_Values_overFifty,
+		},
+		"ResourceLFTags": {
+			"basic":                testAccResourceLFTags_basic,
+			"database":             testAccResourceLFTags_database,
+			"databaseMultipleTags": testAccResourceLFTags_databaseMultipleTags,
+			"disappears":           testAccResourceLFTags_disappears,
+			"hierarchy":            testAccResourceLFTags_hierarchy,
+			"table":                testAccResourceLFTags_table,
+			"tableWithColumns":     testAccResourceLFTags_tableWithColumns,
+		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }

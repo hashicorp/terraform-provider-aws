@@ -1,0 +1,3 @@
+```release-note:bug
+data_source/aws_vpc_ipam_pool: error if no pool found 
+```

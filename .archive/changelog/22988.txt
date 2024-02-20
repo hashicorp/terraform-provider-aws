@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_opensearch_outbound_connection
+```
+
+```release-note:new-resource
+aws_opensearch_inbound_connection_accepter
+```

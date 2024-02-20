@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_lb_listener: Fixes unexpected diff when using `default_action` parameters which don't match the `type`.
+```
+
+```release-note:bug
+resource/aws_lb_listener_rule: Fixes unexpected diff when using `action` parameters which don't match the `type`.
+```

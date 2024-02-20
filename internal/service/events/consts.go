@@ -1,7 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events
 
-const (
-	ErrCodeAccessDenied = "AccessDenied"
+import (
+	"time"
 )
 
 const (
@@ -9,5 +12,9 @@ const (
 )
 
 const (
-	mapMaxItemsCount = 100
+	targetInputTransformerMaxInputPaths = 100
+)
+
+const (
+	propagationTimeout = 2 * time.Minute
 )

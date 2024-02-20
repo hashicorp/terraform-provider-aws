@@ -1,74 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
-	"github.com/hashicorp/aws-sdk-go-base/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// FindDBProxyTarget returns matching FindDBProxyTarget.
-func FindDBProxyTarget(conn *rds.RDS, dbProxyName, targetGroupName, targetType, rdsResourceId string) (*rds.DBProxyTarget, error) {
-	input := &rds.DescribeDBProxyTargetsInput{
-		DBProxyName:     aws.String(dbProxyName),
-		TargetGroupName: aws.String(targetGroupName),
-	}
-	var dbProxyTarget *rds.DBProxyTarget
-
-	err := conn.DescribeDBProxyTargetsPages(input, func(page *rds.DescribeDBProxyTargetsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, target := range page.Targets {
-			if aws.StringValue(target.Type) == targetType && aws.StringValue(target.RdsResourceId) == rdsResourceId {
-				dbProxyTarget = target
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	return dbProxyTarget, err
-}
-
-// FindDBProxyEndpoint returns matching FindDBProxyEndpoint.
-func FindDBProxyEndpoint(conn *rds.RDS, id string) (*rds.DBProxyEndpoint, error) {
-	dbProxyName, dbProxyEndpointName, err := ProxyEndpointParseID(id)
-	if err != nil {
-		return nil, err
-	}
-
-	input := &rds.DescribeDBProxyEndpointsInput{
-		DBProxyName:         aws.String(dbProxyName),
-		DBProxyEndpointName: aws.String(dbProxyEndpointName),
-	}
-	var dbProxyEndpoint *rds.DBProxyEndpoint
-
-	err = conn.DescribeDBProxyEndpointsPages(input, func(page *rds.DescribeDBProxyEndpointsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, endpoint := range page.DBProxyEndpoints {
-			if aws.StringValue(endpoint.DBProxyEndpointName) == dbProxyEndpointName &&
-				aws.StringValue(endpoint.DBProxyName) == dbProxyName {
-				dbProxyEndpoint = endpoint
-				return false
-			}
-		}
-
-		return !lastPage
-	})
-
-	return dbProxyEndpoint, err
-}
-
-func FindDBClusterRoleByDBClusterIDAndRoleARN(conn *rds.RDS, dbClusterID, roleARN string) (*rds.DBClusterRole, error) {
-	dbCluster, err := FindDBClusterByID(conn, dbClusterID)
-
+func FindDBClusterRoleByDBClusterIDAndRoleARN(ctx context.Context, conn *rds.RDS, dbClusterID, roleARN string) (*rds.DBClusterRole, error) {
+	dbCluster, err := FindDBClusterByID(ctx, conn, dbClusterID)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +22,7 @@ func FindDBClusterRoleByDBClusterIDAndRoleARN(conn *rds.RDS, dbClusterID, roleAR
 	for _, associatedRole := range dbCluster.AssociatedRoles {
 		if aws.StringValue(associatedRole.RoleArn) == roleARN {
 			if status := aws.StringValue(associatedRole.Status); status == ClusterRoleStatusDeleted {
-				return nil, &resource.NotFoundError{
+				return nil, &retry.NotFoundError{
 					Message: status,
 				}
 			}
@@ -85,107 +31,34 @@ func FindDBClusterRoleByDBClusterIDAndRoleARN(conn *rds.RDS, dbClusterID, roleAR
 		}
 	}
 
-	return nil, &resource.NotFoundError{}
+	return nil, &retry.NotFoundError{}
 }
 
-func FindDBClusterByID(conn *rds.RDS, id string) (*rds.DBCluster, error) {
-	input := &rds.DescribeDBClustersInput{
-		DBClusterIdentifier: aws.String(id),
+func FindReservedDBInstanceByID(ctx context.Context, conn *rds.RDS, id string) (*rds.ReservedDBInstance, error) {
+	input := &rds.DescribeReservedDBInstancesInput{
+		ReservedDBInstanceId: aws.String(id),
 	}
 
-	output, err := conn.DescribeDBClusters(input)
+	output, err := conn.DescribeReservedDBInstancesWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBClusterNotFoundFault) {
-		return nil, &resource.NotFoundError{
+	if tfawserr.ErrCodeEquals(err, rds.ErrCodeReservedDBInstanceNotFoundFault) {
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
-	if output == nil || len(output.DBClusters) == 0 || output.DBClusters[0] == nil {
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.ReservedDBInstances) == 0 || output.ReservedDBInstances[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	dbCluster := output.DBClusters[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(dbCluster.DBClusterIdentifier) != id {
-		return nil, &resource.NotFoundError{
-			LastRequest: input,
-		}
+	if count := len(output.ReservedDBInstances); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return dbCluster, nil
-}
-
-func FindDBInstanceByID(conn *rds.RDS, id string) (*rds.DBInstance, error) {
-	input := &rds.DescribeDBInstancesInput{
-		DBInstanceIdentifier: aws.String(id),
-	}
-
-	output, err := conn.DescribeDBInstances(input)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBInstanceNotFoundFault) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if output == nil || len(output.DBInstances) == 0 || output.DBInstances[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	dbInstance := output.DBInstances[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(dbInstance.DBInstanceIdentifier) != id {
-		return nil, &resource.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return dbInstance, nil
-}
-
-func FindDBProxyByName(conn *rds.RDS, name string) (*rds.DBProxy, error) {
-	input := &rds.DescribeDBProxiesInput{
-		DBProxyName: aws.String(name),
-	}
-
-	output, err := conn.DescribeDBProxies(input)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeDBProxyNotFoundFault) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if output == nil || len(output.DBProxies) == 0 || output.DBProxies[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.DBProxies[0], nil
-}
-
-func FindEventSubscriptionByID(conn *rds.RDS, id string) (*rds.EventSubscription, error) {
-	input := &rds.DescribeEventSubscriptionsInput{
-		SubscriptionName: aws.String(id),
-	}
-
-	output, err := conn.DescribeEventSubscriptions(input)
-
-	if tfawserr.ErrCodeEquals(err, rds.ErrCodeSubscriptionNotFoundFault) {
-		return nil, &resource.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if output == nil || len(output.EventSubscriptionsList) == 0 || output.EventSubscriptionsList[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.EventSubscriptionsList[0], nil
+	return output.ReservedDBInstances[0], nil
 }

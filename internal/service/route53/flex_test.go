@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -8,6 +11,8 @@ import (
 )
 
 func TestFlattenResourceRecords(t *testing.T) {
+	t.Parallel()
+
 	original := []string{
 		`127.0.0.1`,
 		`"abc def"`,
@@ -22,7 +27,7 @@ func TestFlattenResourceRecords(t *testing.T) {
 		`abc" "`,
 	}
 
-	var wrapped []*route53.ResourceRecord = nil
+	var wrapped []*route53.ResourceRecord
 	for _, original := range original {
 		wrapped = append(wrapped, &route53.ResourceRecord{Value: aws.String(original)})
 	}
@@ -47,7 +52,6 @@ func checkFlattenResourceRecords(
 	recordType string,
 	expanded []*route53.ResourceRecord,
 	expected []string) {
-
 	result := FlattenResourceRecords(expanded, recordType)
 
 	if result == nil {

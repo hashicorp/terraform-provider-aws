@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sagemaker_user_profile: Change `user_settings.0.jupyter_server_app_settings.0.default_resource_spec` to be optional
+```

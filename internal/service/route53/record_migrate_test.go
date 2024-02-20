@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53_test
 
 import (
@@ -8,6 +11,8 @@ import (
 )
 
 func TestRecordMigrateState(t *testing.T) {
+	t.Parallel()
+
 	cases := map[string]struct {
 		StateVersion int
 		ID           string
@@ -60,6 +65,8 @@ func TestRecordMigrateState(t *testing.T) {
 }
 
 func TestRecordMigrateStateV1toV2(t *testing.T) {
+	t.Parallel()
+
 	cases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string

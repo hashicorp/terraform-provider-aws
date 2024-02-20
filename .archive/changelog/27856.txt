@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_elasticache_cluster: Add `ip_discovery` and `network_type` arguments in support of [IPv6 clusters](https://docs.aws.amazon.com/AmazonElastiCache/latest/red-ug/network-type.html)
+```
+
+```release-note:enhancement
+data-source/aws_elasticache_cluster: Add `ip_discovery` and `network_type` attributes
+```

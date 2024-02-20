@@ -1,34 +1,39 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package configservice_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/configservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func testAccDeliveryChannel_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var dc configservice.DeliveryChannel
 	rInt := sdkacctest.RandInt()
 	expectedName := fmt.Sprintf("tf-acc-test-awsconfig-%d", rInt)
 	expectedBucketName := fmt.Sprintf("tf-acc-test-awsconfig-%d", rInt)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeliveryChannelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryChannelConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryChannelExists("aws_config_delivery_channel.foo", &dc),
+					testAccCheckDeliveryChannelExists(ctx, "aws_config_delivery_channel.foo", &dc),
 					testAccCheckDeliveryChannelName("aws_config_delivery_channel.foo", expectedName, &dc),
 					resource.TestCheckResourceAttr("aws_config_delivery_channel.foo", "name", expectedName),
 					resource.TestCheckResourceAttr("aws_config_delivery_channel.foo", "s3_bucket_name", expectedBucketName),
@@ -39,6 +44,7 @@ func testAccDeliveryChannel_basic(t *testing.T) {
 }
 
 func testAccDeliveryChannel_allParams(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_config_delivery_channel.foo"
 	var dc configservice.DeliveryChannel
 	rInt := sdkacctest.RandInt()
@@ -46,15 +52,15 @@ func testAccDeliveryChannel_allParams(t *testing.T) {
 	expectedBucketName := fmt.Sprintf("tf-acc-test-awsconfig-%d", rInt)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeliveryChannelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryChannelConfig_allParams(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeliveryChannelExists(resourceName, &dc),
+					testAccCheckDeliveryChannelExists(ctx, resourceName, &dc),
 					testAccCheckDeliveryChannelName(resourceName, expectedName, &dc),
 					resource.TestCheckResourceAttr(resourceName, "name", expectedName),
 					resource.TestCheckResourceAttr(resourceName, "s3_bucket_name", expectedBucketName),
@@ -69,14 +75,15 @@ func testAccDeliveryChannel_allParams(t *testing.T) {
 }
 
 func testAccDeliveryChannel_importBasic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_config_delivery_channel.foo"
 	rInt := sdkacctest.RandInt()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, configservice.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckDeliveryChannelDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryChannelDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDeliveryChannelConfig_basic(rInt),
@@ -104,7 +111,7 @@ func testAccCheckDeliveryChannelName(n, desired string, obj *configservice.Deliv
 	}
 }
 
-func testAccCheckDeliveryChannelExists(n string, obj *configservice.DeliveryChannel) resource.TestCheckFunc {
+func testAccCheckDeliveryChannelExists(ctx context.Context, n string, obj *configservice.DeliveryChannel) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -115,8 +122,8 @@ func testAccCheckDeliveryChannelExists(n string, obj *configservice.DeliveryChan
 			return fmt.Errorf("No delivery channel ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
-		out, err := conn.DescribeDeliveryChannels(&configservice.DescribeDeliveryChannelsInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
+		out, err := conn.DescribeDeliveryChannelsWithContext(ctx, &configservice.DescribeDeliveryChannelsInput{
 			DeliveryChannelNames: []*string{aws.String(rs.Primary.Attributes["name"])},
 		})
 		if err != nil {
@@ -133,27 +140,29 @@ func testAccCheckDeliveryChannelExists(n string, obj *configservice.DeliveryChan
 	}
 }
 
-func testAccCheckDeliveryChannelDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn
+func testAccCheckDeliveryChannelDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_config_delivery_channel" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_config_delivery_channel" {
+				continue
+			}
 
-		resp, err := conn.DescribeDeliveryChannels(&configservice.DescribeDeliveryChannelsInput{
-			DeliveryChannelNames: []*string{aws.String(rs.Primary.Attributes["name"])},
-		})
+			resp, err := conn.DescribeDeliveryChannelsWithContext(ctx, &configservice.DescribeDeliveryChannelsInput{
+				DeliveryChannelNames: []*string{aws.String(rs.Primary.Attributes["name"])},
+			})
 
-		if err == nil {
-			if len(resp.DeliveryChannels) != 0 &&
-				*resp.DeliveryChannels[0].Name == rs.Primary.Attributes["name"] {
-				return fmt.Errorf("Delivery Channel still exists: %s", rs.Primary.Attributes["name"])
+			if err == nil {
+				if len(resp.DeliveryChannels) != 0 &&
+					*resp.DeliveryChannels[0].Name == rs.Primary.Attributes["name"] {
+					return fmt.Errorf("Delivery Channel still exists: %s", rs.Primary.Attributes["name"])
+				}
 			}
 		}
-	}
 
-	return nil
+		return nil
+	}
 }
 
 func testAccDeliveryChannelConfig_basic(randInt int) string {

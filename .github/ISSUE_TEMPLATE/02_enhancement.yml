@@ -1,0 +1,64 @@
+name: "Request an Enhancement"
+description: "Choose this option when you would like to request an enhancement to an existing resource, data source, or the provider itself."
+title: "[Enhancement]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        # Thank you for opening an enhancement request!
+
+        This form is intended as a way to request additional functionality for existing resources, data sources, or the provider itself. This may include requests such as adding additional arguments or attributes enabled by upstream API changes, additional validation for arguments, etc.
+
+        If the absense of the requested feature is causing unexpected behavior in the provider, the "Report a Bug" form should be used. For entirely new resources, data sources, or services, please use the Request a "New Resource, Data Source, or AWS Service" form.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Please leave a brief description of the requested change.
+    validations:
+      required: true
+
+  - type: textarea
+    id: affected
+    attributes:
+      label: Affected Resource(s) and/or Data Source(s)
+      placeholder: "* aws_xxx_yyy"
+    validations:
+      required: false
+
+  - type: textarea
+    id: tf_config
+    attributes:
+      label: Potential Terraform Configuration
+      description: |
+        If this request was implemented, what might the Terraform configuration look like? A best guess is helpful, even if you're unsure of exactly what the end result will look like. This helps maintainers and the community better understand how you (someone who is in need of this feature) envisions it.
+
+        **Note:** This field will render in HCL, so there is no need to add a [code fence](https://docs.github.com/en/get-started/writing-on-github/working-with-advanced-formatting/creating-and-highlighting-code-blocks).
+      render: terraform
+    validations:
+      required: false
+
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: |
+        Where possible, please supply links to vendor documentation, other GitHub issues (open or closed) or pull requests that give additional context.
+
+        [Information about referencing Github Issues](https://help.github.com/articles/basic-writing-and-formatting-syntax/#referencing-issues-and-pull-requests)
+    validations:
+      required: false
+
+  - type: dropdown
+    id: will_contribute
+    attributes:
+      label: Would you like to implement a fix?
+      description: |
+        If you plan to implement a fix for this, check this box to let the maintainers and community know (you can update this later if you change your mind). If this would be your first contribution, refer to the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/) for tips on getting started.
+      options:
+        - "No"
+        - "Yes"
+    validations:
+      required: false

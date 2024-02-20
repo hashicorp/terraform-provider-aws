@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront_test
 
 import (
@@ -8,6 +11,8 @@ import (
 )
 
 func TestDistributionMigrateState(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]struct {
 		StateVersion int
 		Attributes   map[string]string

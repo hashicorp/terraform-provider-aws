@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sagemaker_user_profile: `user_settings.jupyter_server_app_settings`, `user_settings.kernel_gateway_app_settings`, and `user_settings.tensor_board_app_settings` are updateable 
+```

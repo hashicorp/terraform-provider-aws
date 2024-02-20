@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package devicefarm
 
@@ -10,32 +10,38 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/devicefarm"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_devicefarm_project", &resource.Sweeper{
 		Name: "aws_devicefarm_project",
 		F:    sweepProjects,
 	})
+
+	resource.AddTestSweepers("aws_devicefarm_test_grid_project", &resource.Sweeper{
+		Name: "aws_devicefarm_test_grid_project",
+		F:    sweepTestGridProjects,
+	})
 }
 
 func sweepProjects(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).DeviceFarmConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.DeviceFarmConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &devicefarm.ListProjectsInput{}
 
-	err = conn.ListProjectsPages(input, func(page *devicefarm.ListProjectsOutput, lastPage bool) bool {
+	err = conn.ListProjectsPagesWithContext(ctx, input, func(page *devicefarm.ListProjectsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -64,12 +70,67 @@ func sweepProjects(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error listing DeviceFarm Project for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DeviceFarm Project for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping DeviceFarm Project sweep for %s: %s", region, errs)
+		return nil
+	}
+
+	return errs.ErrorOrNil()
+}
+
+func sweepTestGridProjects(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+
+	conn := client.DeviceFarmConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+	var errs *multierror.Error
+
+	input := &devicefarm.ListTestGridProjectsInput{}
+
+	err = conn.ListTestGridProjectsPagesWithContext(ctx, input, func(page *devicefarm.ListTestGridProjectsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, project := range page.TestGridProjects {
+			r := ResourceTestGridProject()
+			d := r.Data(nil)
+
+			id := aws.StringValue(project.Arn)
+			d.SetId(id)
+
+			if err != nil {
+				err := fmt.Errorf("error reading DeviceFarm Project (%s): %w", id, err)
+				log.Printf("[ERROR] %s", err)
+				errs = multierror.Append(errs, err)
+				continue
+			}
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error listing DeviceFarm Test Grid Project for %s: %w", region, err))
+	}
+
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("error sweeping DeviceFarm Test Grid Project for %s: %w", region, err))
+	}
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping DeviceFarm Test Grid Project sweep for %s: %s", region, errs)
 		return nil
 	}
 

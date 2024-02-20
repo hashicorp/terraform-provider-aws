@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_ce_cost_allocation_tag
+```

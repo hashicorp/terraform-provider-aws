@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_service: Ensure that `load_balancer` and `service_registries` can be updated in-place
+```

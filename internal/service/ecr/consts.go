@@ -1,5 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr
 
+import (
+	"time"
+)
+
 const (
-	ErrCodeAccessDenied = "AccessDenied"
+	propagationTimeout = 2 * time.Minute
 )

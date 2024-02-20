@@ -1,27 +1,31 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package resourcegroupstaggingapi_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/resourcegroupstaggingapi"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccResourceGroupsTaggingAPIResourcesDataSource_tagFilter(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
 	resourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, resourcegroupstaggingapi.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsTaggingAPIEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcesTagFilterDataSourceConfig(rName),
+				Config: testAccResourcesDataSourceConfig_tagFilter(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "resource_tag_mapping_list.*", map[string]string{
 						"tags.Key": rName,
@@ -34,16 +38,17 @@ func TestAccResourceGroupsTaggingAPIResourcesDataSource_tagFilter(t *testing.T) 
 }
 
 func TestAccResourceGroupsTaggingAPIResourcesDataSource_includeComplianceDetails(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, resourcegroupstaggingapi.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsTaggingAPIEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcesIncludeComplianceDetailsDataSourceConfig(rName),
+				Config: testAccResourcesDataSourceConfig_includeComplianceDetails(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "resource_tag_mapping_list.0.compliance_details.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "resource_tag_mapping_list.0.compliance_details.0.compliance_status", "true"),
@@ -54,17 +59,18 @@ func TestAccResourceGroupsTaggingAPIResourcesDataSource_includeComplianceDetails
 }
 
 func TestAccResourceGroupsTaggingAPIResourcesDataSource_resourceTypeFilters(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
 	resourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, resourcegroupstaggingapi.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsTaggingAPIEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcesResourceTypeFiltersDataSourceConfig(rName),
+				Config: testAccResourcesDataSourceConfig_resourceTypeFilters(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "resource_tag_mapping_list.*", map[string]string{
 						"tags.Key": rName,
@@ -77,17 +83,18 @@ func TestAccResourceGroupsTaggingAPIResourcesDataSource_resourceTypeFilters(t *t
 }
 
 func TestAccResourceGroupsTaggingAPIResourcesDataSource_resourceARNList(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_resourcegroupstaggingapi_resources.test"
 	resourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, resourcegroupstaggingapi.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsTaggingAPIEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourcesResourceARNListDataSourceConfig(rName),
+				Config: testAccResourcesDataSourceConfig_resourceARNList(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "resource_tag_mapping_list.*", map[string]string{
 						"tags.Key": rName,
@@ -99,7 +106,7 @@ func TestAccResourceGroupsTaggingAPIResourcesDataSource_resourceARNList(t *testi
 	})
 }
 
-func testAccResourcesTagFilterDataSourceConfig(rName string) string {
+func testAccResourcesDataSourceConfig_tagFilter(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -118,7 +125,7 @@ data "aws_resourcegroupstaggingapi_resources" "test" {
 `, rName)
 }
 
-func testAccResourcesResourceTypeFiltersDataSourceConfig(rName string) string {
+func testAccResourcesDataSourceConfig_resourceTypeFilters(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -136,7 +143,7 @@ data "aws_resourcegroupstaggingapi_resources" "test" {
 `, rName)
 }
 
-func testAccResourcesResourceARNListDataSourceConfig(rName string) string {
+func testAccResourcesDataSourceConfig_resourceARNList(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
@@ -152,7 +159,7 @@ data "aws_resourcegroupstaggingapi_resources" "test" {
 `, rName)
 }
 
-func testAccResourcesIncludeComplianceDetailsDataSourceConfig(rName string) string {
+func testAccResourcesDataSourceConfig_includeComplianceDetails(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"

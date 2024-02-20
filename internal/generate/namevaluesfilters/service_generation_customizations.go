@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // This file contains code generation customizations for each AWS Go SDK service.
 
 package namevaluesfilters
@@ -23,7 +26,7 @@ func ServiceFilterType(serviceName string) string {
 // ServiceFilterTypeNameField determines the service filter type name field.
 func ServiceFilterTypeNameField(serviceName string) string {
 	switch serviceName {
-	case "resourcegroupstaggingapi":
+	case "resourcegroupstaggingapi", "secretsmanager":
 		return "Key"
 	default:
 		return "Name"

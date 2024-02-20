@@ -7,13 +7,10 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/amplify"
+	"github.com/aws/aws-sdk-go/service/amplify/amplifyiface"
 )
 
-func listAppsPages(conn *amplify.Amplify, input *amplify.ListAppsInput, fn func(*amplify.ListAppsOutput, bool) bool) error {
-	return listAppsPagesWithContext(context.Background(), conn, input, fn)
-}
-
-func listAppsPagesWithContext(ctx context.Context, conn *amplify.Amplify, input *amplify.ListAppsInput, fn func(*amplify.ListAppsOutput, bool) bool) error {
+func listAppsPages(ctx context.Context, conn amplifyiface.AmplifyAPI, input *amplify.ListAppsInput, fn func(*amplify.ListAppsOutput, bool) bool) error {
 	for {
 		output, err := conn.ListAppsWithContext(ctx, input)
 		if err != nil {

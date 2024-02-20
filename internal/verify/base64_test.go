@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package verify
 
 import (
@@ -5,6 +8,8 @@ import (
 )
 
 func TestBase64Encode(t *testing.T) {
+	t.Parallel()
+
 	for _, tt := range base64encodingTests {
 		out := Base64Encode(tt.in)
 		if out != tt.out {

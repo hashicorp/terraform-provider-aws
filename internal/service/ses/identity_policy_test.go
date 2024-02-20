@@ -1,33 +1,38 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
 )
 
 func TestAccSESIdentityPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	domain := acctest.RandomDomainName()
 	resourceName := "aws_ses_identity_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIdentityPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIdentityPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdentityPolicyIdentityDomainConfig(domain),
+				Config: testAccIdentityPolicyConfig_domain(domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityPolicyExists(resourceName),
+					testAccCheckIdentityPolicyExists(ctx, resourceName),
 				),
 			},
 			{
@@ -40,20 +45,21 @@ func TestAccSESIdentityPolicy_basic(t *testing.T) {
 }
 
 func TestAccSESIdentityPolicy_Identity_email(t *testing.T) {
+	ctx := acctest.Context(t)
 	emailPrefix := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	email := fmt.Sprintf("%s@%s", emailPrefix, acctest.RandomDomainName())
 	resourceName := "aws_ses_identity_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIdentityPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIdentityPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdentityPolicyIdentityEmailConfig(email),
+				Config: testAccIdentityPolicyConfig_email(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityPolicyExists(resourceName),
+					testAccCheckIdentityPolicyExists(ctx, resourceName),
 				),
 			},
 			{
@@ -66,25 +72,26 @@ func TestAccSESIdentityPolicy_Identity_email(t *testing.T) {
 }
 
 func TestAccSESIdentityPolicy_policy(t *testing.T) {
+	ctx := acctest.Context(t)
 	domain := acctest.RandomDomainName()
 	resourceName := "aws_ses_identity_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIdentityPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIdentityPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdentityPolicyPolicy1Config(domain),
+				Config: testAccIdentityPolicyConfig_1(domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityPolicyExists(resourceName),
+					testAccCheckIdentityPolicyExists(ctx, resourceName),
 				),
 			},
 			{
-				Config: testAccIdentityPolicyPolicy2Config(domain),
+				Config: testAccIdentityPolicyConfig_2(domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityPolicyExists(resourceName),
+					testAccCheckIdentityPolicyExists(ctx, resourceName),
 				),
 			},
 			{
@@ -97,63 +104,66 @@ func TestAccSESIdentityPolicy_policy(t *testing.T) {
 }
 
 func TestAccSESIdentityPolicy_ignoreEquivalent(t *testing.T) {
+	ctx := acctest.Context(t)
 	domain := acctest.RandomDomainName()
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_identity_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(t) },
-		ErrorCheck:   acctest.ErrorCheck(t, ses.EndpointsID),
-		Providers:    acctest.Providers,
-		CheckDestroy: testAccCheckIdentityPolicyDestroy,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIdentityPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdentityPolicyEquivalentConfig(rName, domain),
+				Config: testAccIdentityPolicyConfig_equivalent(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityPolicyExists(resourceName),
+					testAccCheckIdentityPolicyExists(ctx, resourceName),
 				),
 			},
 			{
-				Config:   testAccIdentityPolicyEquivalent2Config(rName, domain),
+				Config:   testAccIdentityPolicyConfig_equivalent2(rName, domain),
 				PlanOnly: true,
 			},
 		},
 	})
 }
 
-func testAccCheckIdentityPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+func testAccCheckIdentityPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ses_identity_policy" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ses_identity_policy" {
+				continue
+			}
+
+			identityARN, policyName, err := tfses.IdentityPolicyParseID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			input := &ses.GetIdentityPoliciesInput{
+				Identity:    aws.String(identityARN),
+				PolicyNames: aws.StringSlice([]string{policyName}),
+			}
+
+			output, err := conn.GetIdentityPoliciesWithContext(ctx, input)
+
+			if err != nil {
+				return err
+			}
+
+			if output != nil && len(output.Policies) > 0 && aws.StringValue(output.Policies[policyName]) != "" {
+				return fmt.Errorf("SES Identity (%s) Policy (%s) still exists", identityARN, policyName)
+			}
 		}
 
-		identityARN, policyName, err := tfses.IdentityPolicyParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		input := &ses.GetIdentityPoliciesInput{
-			Identity:    aws.String(identityARN),
-			PolicyNames: aws.StringSlice([]string{policyName}),
-		}
-
-		output, err := conn.GetIdentityPolicies(input)
-
-		if err != nil {
-			return err
-		}
-
-		if output != nil && len(output.Policies) > 0 && aws.StringValue(output.Policies[policyName]) != "" {
-			return fmt.Errorf("SES Identity (%s) Policy (%s) still exists", identityARN, policyName)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckIdentityPolicyExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckIdentityPolicyExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -164,7 +174,7 @@ func testAccCheckIdentityPolicyExists(resourceName string) resource.TestCheckFun
 			return fmt.Errorf("SES Identity Policy ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 		identityARN, policyName, err := tfses.IdentityPolicyParseID(rs.Primary.ID)
 		if err != nil {
@@ -176,7 +186,7 @@ func testAccCheckIdentityPolicyExists(resourceName string) resource.TestCheckFun
 			PolicyNames: aws.StringSlice([]string{policyName}),
 		}
 
-		output, err := conn.GetIdentityPolicies(input)
+		output, err := conn.GetIdentityPoliciesWithContext(ctx, input)
 
 		if err != nil {
 			return err
@@ -190,7 +200,7 @@ func testAccCheckIdentityPolicyExists(resourceName string) resource.TestCheckFun
 	}
 }
 
-func testAccIdentityPolicyIdentityDomainConfig(domain string) string {
+func testAccIdentityPolicyConfig_domain(domain string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "test" {
   statement {
@@ -216,7 +226,7 @@ resource "aws_ses_identity_policy" "test" {
 `, domain)
 }
 
-func testAccIdentityPolicyIdentityEmailConfig(email string) string {
+func testAccIdentityPolicyConfig_email(email string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "test" {
   statement {
@@ -242,7 +252,7 @@ resource "aws_ses_identity_policy" "test" {
 `, email)
 }
 
-func testAccIdentityPolicyPolicy1Config(domain string) string {
+func testAccIdentityPolicyConfig_1(domain string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "test" {
   statement {
@@ -268,7 +278,7 @@ resource "aws_ses_identity_policy" "test" {
 `, domain)
 }
 
-func testAccIdentityPolicyPolicy2Config(domain string) string {
+func testAccIdentityPolicyConfig_2(domain string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -298,7 +308,7 @@ resource "aws_ses_identity_policy" "test" {
 `, domain)
 }
 
-func testAccIdentityPolicyEquivalentConfig(rName, domain string) string {
+func testAccIdentityPolicyConfig_equivalent(rName, domain string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -330,7 +340,7 @@ resource "aws_ses_identity_policy" "test" {
 `, domain, rName)
 }
 
-func testAccIdentityPolicyEquivalent2Config(rName, domain string) string {
+func testAccIdentityPolicyConfig_equivalent2(rName, domain string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 

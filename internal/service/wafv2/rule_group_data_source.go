@@ -1,46 +1,52 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafv2
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafv2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_wafv2_rule_group")
 func DataSourceRuleGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRuleGroupRead,
+		ReadWithoutTimeout: dataSourceRuleGroupRead,
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"scope": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					wafv2.ScopeCloudfront,
-					wafv2.ScopeRegional,
-				}, false),
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"description": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"scope": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.Scope_Values(), false),
+				},
+			}
 		},
 	}
 }
 
-func dataSourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).WAFV2Conn
+func dataSourceRuleGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).WAFV2Conn(ctx)
 	name := d.Get("name").(string)
 
 	var foundRuleGroup *wafv2.RuleGroupSummary
@@ -50,13 +56,13 @@ func dataSourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	for {
-		resp, err := conn.ListRuleGroups(input)
+		resp, err := conn.ListRuleGroupsWithContext(ctx, input)
 		if err != nil {
-			return fmt.Errorf("Error reading WAFv2 RuleGroups: %w", err)
+			return sdkdiag.AppendErrorf(diags, "reading WAFv2 RuleGroups: %s", err)
 		}
 
 		if resp == nil || resp.RuleGroups == nil {
-			return fmt.Errorf("Error reading WAFv2 RuleGroups")
+			return sdkdiag.AppendErrorf(diags, "reading WAFv2 RuleGroups")
 		}
 
 		for _, ruleGroup := range resp.RuleGroups {
@@ -73,12 +79,12 @@ func dataSourceRuleGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if foundRuleGroup == nil {
-		return fmt.Errorf("WAFv2 RuleGroup not found for name: %s", name)
+		return sdkdiag.AppendErrorf(diags, "WAFv2 RuleGroup not found for name: %s", name)
 	}
 
 	d.SetId(aws.StringValue(foundRuleGroup.Id))
 	d.Set("arn", foundRuleGroup.ARN)
 	d.Set("description", foundRuleGroup.Description)
 
-	return nil
+	return diags
 }

@@ -1,12 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appautoscaling
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-func FindScheduledAction(conn *applicationautoscaling.ApplicationAutoScaling, name, serviceNamespace, resourceId string) (*applicationautoscaling.ScheduledAction, error) {
+func FindScheduledAction(ctx context.Context, conn *applicationautoscaling.ApplicationAutoScaling, name, serviceNamespace, resourceId string) (*applicationautoscaling.ScheduledAction, error) {
 	var result *applicationautoscaling.ScheduledAction
 
 	input := &applicationautoscaling.DescribeScheduledActionsInput{
@@ -14,7 +19,7 @@ func FindScheduledAction(conn *applicationautoscaling.ApplicationAutoScaling, na
 		ServiceNamespace:     aws.String(serviceNamespace),
 		ResourceId:           aws.String(resourceId),
 	}
-	err := conn.DescribeScheduledActionsPages(input, func(page *applicationautoscaling.DescribeScheduledActionsOutput, lastPage bool) bool {
+	err := conn.DescribeScheduledActionsPagesWithContext(ctx, input, func(page *applicationautoscaling.DescribeScheduledActionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -37,7 +42,7 @@ func FindScheduledAction(conn *applicationautoscaling.ApplicationAutoScaling, na
 	}
 
 	if result == nil {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
 	}

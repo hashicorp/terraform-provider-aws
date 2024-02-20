@@ -1,5 +1,5 @@
 ---
-subcategory: "KMS"
+subcategory: "KMS (Key Management)"
 layout: "aws"
 page_title: "AWS: aws_kms_public_key"
 description: |-
@@ -32,7 +32,7 @@ data "aws_kms_public_key" "by_key_arn" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `key_id` - (Required) Key identifier which can be one of the following format:
     * Key ID. E.g - `1234abcd-12ab-34cd-56ef-1234567890ab`
@@ -41,9 +41,9 @@ The following arguments are supported:
     * Alias ARN - E.g. - `arn:aws:kms:us-east-1:111122223333:alias/my-key`
 * `grant_tokens` - (Optional) List of grant tokens
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - Key ARN of the asymmetric CMK from which the public key was downloaded.
 * `customer_master_key_spec` - Type of the public key that was downloaded.
@@ -51,4 +51,5 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - Key ARN of the asymmetric CMK from which the public key was downloaded.
 * `key_usage` - Permitted use of the public key. Valid values are `ENCRYPT_DECRYPT` or `SIGN_VERIFY`
 * `public_key` - Exported public key. The value is a DER-encoded X.509 public key, also known as SubjectPublicKeyInfo (SPKI), as defined in [RFC 5280](https://tools.ietf.org/html/rfc5280). The value is Base64-encoded.
+* `public_key_pem` - Exported public key. The value is Privacy Enhanced Mail (PEM) encoded.
 * `signing_algorithms` - Signing algorithms that AWS KMS supports for this key. Only set when the `key_usage` of the public key is `SIGN_VERIFY`.

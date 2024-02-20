@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_apprunner_custom_domain_association: Add the status `binding_certificate` as a valid target when waiting for creation.
+```

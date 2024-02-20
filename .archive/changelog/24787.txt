@@ -1,0 +1,7 @@
+```release-note:new-data-source
+ aws_kms_custom_key_store
+```
+
+```release-note:enhancement
+ resource/aws_kms_key: Add `custom_key_store_id` attribute
+```

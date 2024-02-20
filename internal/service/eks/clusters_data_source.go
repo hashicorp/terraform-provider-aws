@@ -1,17 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/eks"
+	"github.com/aws/aws-sdk-go-v2/service/eks"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-func DataSourceClusters() *schema.Resource {
+// @SDKDataSource("aws_eks_clusters")
+func dataSourceClusters() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceClustersRead,
+		ReadWithoutTimeout: dataSourceClustersRead,
 
 		Schema: map[string]*schema.Schema{
 			"names": {
@@ -23,28 +28,25 @@ func DataSourceClusters() *schema.Resource {
 	}
 }
 
-func dataSourceClustersRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EKSConn
+func dataSourceClustersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EKSClient(ctx)
 
-	var clusters []*string
+	input := &eks.ListClustersInput{}
+	var clusters []string
+	pages := eks.NewListClustersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-	err := conn.ListClustersPages(&eks.ListClustersInput{}, func(page *eks.ListClustersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "listing EKS Clusters: %s", err)
 		}
 
 		clusters = append(clusters, page.Clusters...)
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return fmt.Errorf("error listing EKS Clusters: %w", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
+	d.Set("names", clusters)
 
-	d.Set("names", aws.StringValueSlice(clusters))
-
-	return nil
+	return diags
 }

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_iot_topic_rule: Add `s3.canned_acl` and `error_action.s3.canned_acl` arguments
+```

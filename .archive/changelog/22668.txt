@@ -1,0 +1,7 @@
+```release-note:note
+resource/aws_db_instance The `name` argument has been deprecated. All configurations using `name` should be updated to use the `db_name` argument instead
+```
+
+```release-note:enhancement
+resource/aws_db_instance: Add `db_name` argument
+```

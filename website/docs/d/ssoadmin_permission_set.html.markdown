@@ -27,20 +27,20 @@ output "arn" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 ~> **NOTE:** Either `arn` or `name` must be configured.
 
-* `arn` - (Optional) The Amazon Resource Name (ARN) of the permission set.
-* `instance_arn` - (Required) The Amazon Resource Name (ARN) of the SSO Instance associated with the permission set.
-* `name` - (Optional) The name of the SSO Permission Set.
+* `arn` - (Optional) ARN of the permission set.
+* `instance_arn` - (Required) ARN of the SSO Instance associated with the permission set.
+* `name` - (Optional) Name of the SSO Permission Set.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
-* `id` - The Amazon Resource Name (ARN) of the Permission Set.
-* `description` - The description of the Permission Set.
-* `relay_state` - The relay state URL used to redirect users within the application during the federation authentication process.
-* `session_duration` - The length of time that the application user sessions are valid in the ISO-8601 standard.
+* `id` - ARN of the Permission Set.
+* `description` - Description of the Permission Set.
+* `relay_state` - Relay state URL used to redirect users within the application during the federation authentication process.
+* `session_duration` - Length of time that the application user sessions are valid in the ISO-8601 standard.
 * `tags` - Key-value map of resource tags.

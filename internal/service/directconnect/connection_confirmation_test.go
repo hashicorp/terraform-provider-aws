@@ -1,22 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/directconnect"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 )
 
 func TestAccDirectConnectConnectionConfirmation_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	env, err := testAccCheckHostedConnectionEnv()
 	if err != nil {
 		acctest.Skip(t, err.Error())
@@ -26,27 +31,27 @@ func TestAccDirectConnectConnectionConfirmation_basic(t *testing.T) {
 
 	connectionName := fmt.Sprintf("tf-dx-%s", sdkacctest.RandString(5))
 	resourceName := "aws_dx_connection_confirmation.test"
-	providerFunc := testAccDxConnectionConfirmationProvider(&providers, 0)
-	altProviderFunc := testAccDxConnectionConfirmationProvider(&providers, 1)
+	providerFunc := testAccConnectionConfirmationProvider(&providers, 0)
+	altProviderFunc := testAccConnectionConfirmationProvider(&providers, 1)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
+			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:        acctest.ErrorCheck(t, directconnect.EndpointsID),
-		ProviderFactories: acctest.FactoriesAlternate(&providers),
-		CheckDestroy:      testAccCheckHostedConnectionDestroy(altProviderFunc),
+		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckHostedConnectionDestroy(ctx, altProviderFunc),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDxConnectionConfirmationConfig(connectionName, env.ConnectionId, env.OwnerAccountId),
-				Check:  testAccCheckConnectionConfirmationExists(resourceName, providerFunc),
+				Config: testAccConnectionConfirmationConfig_basic(connectionName, env.ConnectionId, env.OwnerAccountId),
+				Check:  testAccCheckConnectionConfirmationExists(ctx, resourceName, providerFunc),
 			},
 		},
 	})
 }
 
-func testAccCheckConnectionConfirmationExists(name string, providerFunc func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckConnectionConfirmationExists(ctx context.Context, name string, providerFunc func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -58,9 +63,9 @@ func testAccCheckConnectionConfirmationExists(name string, providerFunc func() *
 		}
 
 		provider := providerFunc()
-		conn := provider.Meta().(*conns.AWSClient).DirectConnectConn
+		conn := provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
 
-		connection, err := tfdirectconnect.FindConnectionByID(conn, rs.Primary.ID)
+		connection, err := tfdirectconnect.FindConnectionByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -74,7 +79,7 @@ func testAccCheckConnectionConfirmationExists(name string, providerFunc func() *
 	}
 }
 
-func testAccDxConnectionConfirmationConfig(name, connectionId, ownerAccountId string) string {
+func testAccConnectionConfirmationConfig_basic(name, connectionId, ownerAccountId string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateAccountProvider(),
 		fmt.Sprintf(`
@@ -94,7 +99,7 @@ resource "aws_dx_connection_confirmation" "test" {
 `, name, connectionId, ownerAccountId))
 }
 
-func testAccDxConnectionConfirmationProvider(providers *[]*schema.Provider, index int) func() *schema.Provider {
+func testAccConnectionConfirmationProvider(providers *[]*schema.Provider, index int) func() *schema.Provider {
 	return func() *schema.Provider {
 		return (*providers)[index]
 	}

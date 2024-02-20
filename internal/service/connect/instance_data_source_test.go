@@ -1,35 +1,30 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/connect"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestAccConnectInstanceDataSource_basic(t *testing.T) {
+func testAccInstanceDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix("datasource-test-terraform")
 	dataSourceName := "data.aws_connect_instance.test"
 	resourceName := "aws_connect_instance.test"
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, connect.EndpointsID),
-		Providers:  acctest.Providers,
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccInstanceDataSourceConfig_nonExistentID,
-				ExpectError: regexp.MustCompile(`error getting Connect Instance by instance_id`),
-			},
-			{
-				Config:      testAccInstanceDataSourceConfig_nonExistentAlias,
-				ExpectError: regexp.MustCompile(`error finding Connect Instance Summary by instance_alias`),
-			},
-			{
-				Config: testAccInstanceBasicDataSourceConfig(rName),
+				Config: testAccInstanceDataSourceConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
@@ -41,12 +36,13 @@ func TestAccConnectInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "contact_lens_enabled", dataSourceName, "contact_lens_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "auto_resolve_best_voices_enabled", dataSourceName, "auto_resolve_best_voices_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "early_media_enabled", dataSourceName, "early_media_enabled"),
+					resource.TestCheckResourceAttrPair(resourceName, "multi_party_conference_enabled", dataSourceName, "multi_party_conference_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceName, "status"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_role", dataSourceName, "service_role"),
 				),
 			},
 			{
-				Config: testAccInstanceAliasDataSourceConfig(rName),
+				Config: testAccInstanceDataSourceConfig_alias(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "created_time", dataSourceName, "created_time"),
@@ -58,6 +54,7 @@ func TestAccConnectInstanceDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "contact_lens_enabled", dataSourceName, "contact_lens_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "auto_resolve_best_voices_enabled", dataSourceName, "auto_resolve_best_voices_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "early_media_enabled", dataSourceName, "early_media_enabled"),
+					resource.TestCheckResourceAttrPair(resourceName, "multi_party_conference_enabled", dataSourceName, "multi_party_conference_enabled"),
 					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceName, "status"),
 					resource.TestCheckResourceAttrPair(resourceName, "service_role", dataSourceName, "service_role"),
 				),
@@ -66,19 +63,7 @@ func TestAccConnectInstanceDataSource_basic(t *testing.T) {
 	})
 }
 
-const testAccInstanceDataSourceConfig_nonExistentID = `
-data "aws_connect_instance" "test" {
-  instance_id = "97afc98d-101a-ba98-ab97-ae114fc115ec"
-}
-`
-
-const testAccInstanceDataSourceConfig_nonExistentAlias = `
-data "aws_connect_instance" "test" {
-  instance_alias = "tf-acc-test-does-not-exist"
-}
-`
-
-func testAccInstanceBasicDataSourceConfig(rName string) string {
+func testAccInstanceDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   instance_alias           = %[1]q
@@ -93,7 +78,7 @@ data "aws_connect_instance" "test" {
 `, rName)
 }
 
-func testAccInstanceAliasDataSourceConfig(rName string) string {
+func testAccInstanceDataSourceConfig_alias(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_connect_instance" "test" {
   instance_alias           = %[1]q

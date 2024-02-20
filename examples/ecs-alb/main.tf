@@ -1,10 +1,14 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 terraform {
   required_version = ">= 0.12"
 }
 
 provider "aws" {
-  region = var.aws_region
 }
+
+data "aws_region" "current" {}
 
 ## EC2
 
@@ -38,7 +42,7 @@ resource "aws_route_table" "r" {
 
 resource "aws_route_table_association" "a" {
   count          = var.az_count
-  subnet_id      = element(aws_subnet.main.*.id, count.index)
+  subnet_id      = element(aws_subnet.main[*].id, count.index)
   route_table_id = aws_route_table.r.id
 }
 
@@ -46,44 +50,17 @@ resource "aws_route_table_association" "a" {
 
 resource "aws_autoscaling_group" "app" {
   name                 = "tf-test-asg"
-  vpc_zone_identifier  = aws_subnet.main.*.id
+  vpc_zone_identifier  = aws_subnet.main[*].id
   min_size             = var.asg_min
   max_size             = var.asg_max
   desired_capacity     = var.asg_desired
   launch_configuration = aws_launch_configuration.app.name
 }
 
-data "template_file" "cloud_config" {
-  template = file("${path.module}/cloud-config.yml")
-
-  vars = {
-    aws_region         = var.aws_region
-    ecs_cluster_name   = aws_ecs_cluster.main.name
-    ecs_log_level      = "info"
-    ecs_agent_version  = "latest"
-    ecs_log_group_name = aws_cloudwatch_log_group.ecs.name
-  }
-}
-
-data "aws_ami" "stable_coreos" {
-  most_recent = true
-
-  filter {
-    name   = "description"
-    values = ["CoreOS Container Linux stable *"]
-  }
-
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-
-  owners = ["595879546273"] # CoreOS
+# For a list of Systems Manager Parameter Store parameters for ECS-optimized AMIs, see:
+# https://docs.aws.amazon.com/AmazonECS/latest/developerguide/retrieve-ecs-optimized_AMI.html
+data "aws_ssm_parameter" "ecs_image_id" {
+  name = "/aws/service/ecs/optimized-ami/amazon-linux-2023/recommended/image_id"
 }
 
 resource "aws_launch_configuration" "app" {
@@ -91,11 +68,16 @@ resource "aws_launch_configuration" "app" {
     aws_security_group.instance_sg.id,
   ]
 
-  key_name                    = var.key_name
-  image_id                    = data.aws_ami.stable_coreos.id
-  instance_type               = var.instance_type
-  iam_instance_profile        = aws_iam_instance_profile.app.name
-  user_data                   = data.template_file.cloud_config.rendered
+  image_id             = data.aws_ssm_parameter.ecs_image_id.value
+  instance_type        = var.instance_type
+  iam_instance_profile = aws_iam_instance_profile.app.name
+  user_data = templatefile("${path.module}/cloud-config.yml", {
+    aws_region         = data.aws_region.current.name
+    ecs_cluster_name   = aws_ecs_cluster.main.name
+    ecs_log_level      = "info"
+    ecs_agent_version  = "latest"
+    ecs_log_group_name = aws_cloudwatch_log_group.ecs.name
+  })
   associate_public_ip_address = true
 
   lifecycle {
@@ -168,20 +150,14 @@ resource "aws_ecs_cluster" "main" {
   name = "terraform_example_ecs_cluster"
 }
 
-data "template_file" "task_definition" {
-  template = file("${path.module}/task-definition.json")
-
-  vars = {
+resource "aws_ecs_task_definition" "ghost" {
+  family = "tf_example_ghost_td"
+  container_definitions = templatefile("${path.module}/task-definition.json", {
     image_url        = "ghost:latest"
     container_name   = "ghost"
-    log_group_region = var.aws_region
+    log_group_region = data.aws_region.current.name
     log_group_name   = aws_cloudwatch_log_group.app.name
-  }
-}
-
-resource "aws_ecs_task_definition" "ghost" {
-  family                = "tf_example_ghost_td"
-  container_definitions = data.template_file.task_definition.rendered
+  })
 }
 
 resource "aws_ecs_service" "test" {
@@ -275,19 +251,13 @@ resource "aws_iam_role" "app_instance" {
 EOF
 }
 
-data "template_file" "instance_profile" {
-  template = file("${path.module}/instance-profile-policy.json")
-
-  vars = {
+resource "aws_iam_role_policy" "instance" {
+  name = "TfEcsExampleInstanceRole"
+  role = aws_iam_role.app_instance.name
+  policy = templatefile("${path.module}/instance-profile-policy.json", {
     app_log_group_arn = aws_cloudwatch_log_group.app.arn
     ecs_log_group_arn = aws_cloudwatch_log_group.ecs.arn
-  }
-}
-
-resource "aws_iam_role_policy" "instance" {
-  name   = "TfEcsExampleInstanceRole"
-  role   = aws_iam_role.app_instance.name
-  policy = data.template_file.instance_profile.rendered
+  })
 }
 
 ## ALB
@@ -301,7 +271,7 @@ resource "aws_alb_target_group" "test" {
 
 resource "aws_alb" "main" {
   name            = "tf-example-alb-ecs"
-  subnets         = aws_subnet.main.*.id
+  subnets         = aws_subnet.main[*].id
   security_groups = [aws_security_group.lb_sg.id]
 }
 

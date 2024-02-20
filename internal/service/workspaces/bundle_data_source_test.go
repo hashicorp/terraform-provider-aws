@@ -1,26 +1,31 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package workspaces_test
 
 import (
 	"fmt"
 	"os"
-	"regexp"
+	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/workspaces"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func testAccWorkspaceBundleDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_workspaces_bundle.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceBundleDataSourceConfig("wsb-b0s22j3d7"),
+				Config: testAccBundleDataSourceConfig_basic("wsb-b0s22j3d7"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "bundle_id", "wsb-b0s22j3d7"),
 					resource.TestCheckResourceAttr(dataSourceName, "compute_type.#", "1"),
@@ -39,15 +44,16 @@ func testAccWorkspaceBundleDataSource_basic(t *testing.T) {
 }
 
 func testAccWorkspaceBundleDataSource_byOwnerName(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_workspaces_bundle.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceBundleDataSourceConfig_byOwnerName("AMAZON", "Value with Windows 10 and Office 2016"),
+				Config: testAccBundleDataSourceConfig_byOwnerName("AMAZON", "Value with Windows 10 and Office 2016"),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "bundle_id", "wsb-df76rqys9"),
 					resource.TestCheckResourceAttr(dataSourceName, "compute_type.#", "1"),
@@ -66,33 +72,35 @@ func testAccWorkspaceBundleDataSource_byOwnerName(t *testing.T) {
 }
 
 func testAccWorkspaceBundleDataSource_bundleIDAndNameConflict(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.Test(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t) },
-		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccWorkspaceBundleDataSourceConfig_bundleIDAndOwnerNameConflict("wsb-df76rqys9", "AMAZON", "Value with Windows 10 and Office 2016"),
-				ExpectError: regexp.MustCompile("\"bundle_id\": conflicts with owner"),
+				Config:      testAccBundleDataSourceConfig_idAndOwnerNameConflict("wsb-df76rqys9", "AMAZON", "Value with Windows 10 and Office 2016"),
+				ExpectError: regexache.MustCompile("\"bundle_id\": conflicts with owner"),
 			},
 		},
 	})
 }
 
 func testAccWorkspaceBundleDataSource_privateOwner(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_workspaces_bundle.test"
 	bundleName := os.Getenv("AWS_WORKSPACES_BUNDLE_NAME")
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccWorkspacesBundlePreCheck(t)
+			acctest.PreCheck(ctx, t)
+			testAccBundlePreCheck(t)
 		},
-		ErrorCheck: acctest.ErrorCheck(t, workspaces.EndpointsID),
-		Providers:  acctest.Providers,
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkspaceBundleDataSourceConfig_privateOwner(bundleName),
+				Config: testAccBundleDataSourceConfig_privateOwner(bundleName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "name", bundleName),
 				),
@@ -101,13 +109,13 @@ func testAccWorkspaceBundleDataSource_privateOwner(t *testing.T) {
 	})
 }
 
-func testAccWorkspacesBundlePreCheck(t *testing.T) {
+func testAccBundlePreCheck(t *testing.T) {
 	if os.Getenv("AWS_WORKSPACES_BUNDLE_NAME") == "" {
 		t.Skip("AWS_WORKSPACES_BUNDLE_NAME env var must be set for AWS WorkSpaces private bundle acceptance test. This is required until AWS provides bundle creation API.")
 	}
 }
 
-func testAccWorkspaceBundleDataSourceConfig(bundleID string) string {
+func testAccBundleDataSourceConfig_basic(bundleID string) string {
 	return fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
   bundle_id = %q
@@ -115,7 +123,7 @@ data "aws_workspaces_bundle" "test" {
 `, bundleID)
 }
 
-func testAccWorkspaceBundleDataSourceConfig_byOwnerName(owner, name string) string {
+func testAccBundleDataSourceConfig_byOwnerName(owner, name string) string {
 	return fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
   owner = %q
@@ -124,7 +132,7 @@ data "aws_workspaces_bundle" "test" {
 `, owner, name)
 }
 
-func testAccWorkspaceBundleDataSourceConfig_bundleIDAndOwnerNameConflict(bundleID, owner, name string) string {
+func testAccBundleDataSourceConfig_idAndOwnerNameConflict(bundleID, owner, name string) string {
 	return fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
   bundle_id = %q
@@ -134,7 +142,7 @@ data "aws_workspaces_bundle" "test" {
 `, bundleID, owner, name)
 }
 
-func testAccWorkspaceBundleDataSourceConfig_privateOwner(name string) string {
+func testAccBundleDataSourceConfig_privateOwner(name string) string {
 	return fmt.Sprintf(`
 data "aws_workspaces_bundle" "test" {
   name = %q

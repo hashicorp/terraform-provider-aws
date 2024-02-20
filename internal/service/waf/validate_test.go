@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf
 
 import (
@@ -5,6 +8,8 @@ import (
 )
 
 func TestValidMetricName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"testrule",
 		"testRule",

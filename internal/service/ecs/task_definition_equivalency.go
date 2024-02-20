@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs
 
 import (
@@ -58,20 +61,21 @@ type containerDefinitions []*ecs.ContainerDefinition
 func (cd containerDefinitions) Reduce(isAWSVPC bool) error {
 	// Deal with fields which may be re-ordered in the API
 	cd.OrderEnvironmentVariables()
+	cd.OrderSecrets()
 
 	for i, def := range cd {
 		// Deal with special fields which have defaults
-		if def.Cpu != nil && *def.Cpu == 0 {
+		if def.Cpu != nil && aws.Int64Value(def.Cpu) == 0 {
 			def.Cpu = nil
 		}
 		if def.Essential == nil {
 			def.Essential = aws.Bool(true)
 		}
 		for j, pm := range def.PortMappings {
-			if pm.Protocol != nil && *pm.Protocol == "tcp" {
+			if pm.Protocol != nil && aws.StringValue(pm.Protocol) == "tcp" {
 				cd[i].PortMappings[j].Protocol = nil
 			}
-			if pm.HostPort != nil && *pm.HostPort == 0 {
+			if pm.HostPort != nil && aws.Int64Value(pm.HostPort) == 0 {
 				cd[i].PortMappings[j].HostPort = nil
 			}
 			if isAWSVPC && cd[i].PortMappings[j].HostPort == nil {
@@ -106,6 +110,14 @@ func (cd containerDefinitions) OrderEnvironmentVariables() {
 	for _, def := range cd {
 		sort.Slice(def.Environment, func(i, j int) bool {
 			return aws.StringValue(def.Environment[i].Name) < aws.StringValue(def.Environment[j].Name)
+		})
+	}
+}
+
+func (cd containerDefinitions) OrderSecrets() {
+	for _, def := range cd {
+		sort.Slice(def.Secrets, func(i, j int) bool {
+			return aws.StringValue(def.Secrets[i].Name) < aws.StringValue(def.Secrets[j].Name)
 		})
 	}
 }

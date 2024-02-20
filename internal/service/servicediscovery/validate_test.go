@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicediscovery
 
 import (
@@ -6,6 +9,8 @@ import (
 )
 
 func TestValidNamespaceName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		"ValidName",
 		"V_-.dN01e",

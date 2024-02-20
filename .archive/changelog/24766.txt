@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_directory_service_shared_directory
+```
+
+```release-note:new-resource
+aws_directory_service_shared_directory_accepter
+```

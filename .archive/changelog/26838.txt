@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_network_acl_association: Add retry to read step, resolving `empty result` error
+```

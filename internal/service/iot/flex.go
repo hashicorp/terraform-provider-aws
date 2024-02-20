@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
@@ -19,7 +22,7 @@ func expandThingTypeProperties(config map[string]interface{}) *iot.ThingTypeProp
 	return properties
 }
 
-func flattenIoTThingTypeProperties(s *iot.ThingTypeProperties) []map[string]interface{} {
+func flattenThingTypeProperties(s *iot.ThingTypeProperties) []map[string]interface{} {
 	m := map[string]interface{}{
 		"description":           "",
 		"searchable_attributes": flex.FlattenStringSet(nil),

@@ -1,27 +1,34 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package signer_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/signer"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/service/signer"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
 func TestAccSignerSigningJobDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_signer_signing_job.test"
 	resourceName := "aws_signer_signing_job.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:   func() { acctest.PreCheck(t); testAccPreCheckSingerSigningProfile(t, "AWSLambda-SHA384-ECDSA") },
-		ErrorCheck: acctest.ErrorCheck(t, signer.EndpointsID),
-		Providers:  acctest.Providers,
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSingerSigningProfile(ctx, t, "AWSLambda-SHA384-ECDSA")
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, signer.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSigningJobBasicDataSourceConfig(rName),
+				Config: testAccSigningJobDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "status", resourceName, "status"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "job_owner", resourceName, "job_owner"),
@@ -33,7 +40,7 @@ func TestAccSignerSigningJobDataSource_basic(t *testing.T) {
 	})
 }
 
-func testAccSigningJobBasicDataSourceConfig(rName string) string {
+func testAccSigningJobDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
@@ -42,13 +49,15 @@ resource "aws_signer_signing_profile" "test" {
 }
 
 resource "aws_s3_bucket" "source" {
-  bucket = "%[1]s-source"
-
-  versioning {
-    enabled = true
-  }
-
+  bucket        = "%[1]s-source"
   force_destroy = true
+}
+
+resource "aws_s3_bucket_versioning" "source" {
+  bucket = aws_s3_bucket.source.id
+  versioning_configuration {
+    status = "Enabled"
+  }
 }
 
 resource "aws_s3_bucket" "destination" {
@@ -56,7 +65,10 @@ resource "aws_s3_bucket" "destination" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_object" "source" {
+resource "aws_s3_object" "source" {
+  # Must have bucket versioning enabled first
+  depends_on = [aws_s3_bucket_versioning.source]
+
   bucket = aws_s3_bucket.source.bucket
   key    = "lambdatest.zip"
   source = "test-fixtures/lambdatest.zip"
@@ -67,9 +79,9 @@ resource "aws_signer_signing_job" "test" {
 
   source {
     s3 {
-      bucket  = aws_s3_bucket_object.source.bucket
-      key     = aws_s3_bucket_object.source.key
-      version = aws_s3_bucket_object.source.version_id
+      bucket  = aws_s3_object.source.bucket
+      key     = aws_s3_object.source.key
+      version = aws_s3_object.source.version_id
     }
   }
 

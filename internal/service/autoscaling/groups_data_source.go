@@ -1,27 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling
 
 import (
-	"fmt"
-	"log"
+	"context"
 	"sort"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_autoscaling_groups")
 func DataSourceGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceGroupsRead,
+		ReadWithoutTimeout: dataSourceGroupsRead,
 
 		Schema: map[string]*schema.Schema{
-			"names": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
 			"arns": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -43,6 +43,12 @@ func DataSourceGroups() *schema.Resource {
 						},
 					},
 				},
+			},
+			"names": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 		},
 	}
@@ -75,49 +81,39 @@ func buildFiltersDataSource(set *schema.Set) []*autoscaling.Filter {
 	return filters
 }
 
-func dataSourceGroupsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).AutoScalingConn
+func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
 
-	log.Printf("[DEBUG] Reading Autoscaling Groups.")
+	input := &autoscaling.DescribeAutoScalingGroupsInput{}
 
-	var rawName []string
-	var rawArn []string
-	var err error
-
-	params := autoscaling.DescribeAutoScalingGroupsInput{}
+	if v, ok := d.GetOk("names"); ok && len(v.([]interface{})) > 0 {
+		input.AutoScalingGroupNames = flex.ExpandStringList(v.([]interface{}))
+	}
 
 	if v, ok := d.GetOk("filter"); ok {
-		params.Filters = buildFiltersDataSource(v.(*schema.Set))
+		input.Filters = buildFiltersDataSource(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("names"); ok {
-		params.AutoScalingGroupNames = flex.ExpandStringList(v.([]interface{}))
-	}
-
-	err = conn.DescribeAutoScalingGroupsPages(&params, func(resp *autoscaling.DescribeAutoScalingGroupsOutput, lastPage bool) bool {
-		for _, group := range resp.AutoScalingGroups {
-			rawName = append(rawName, aws.StringValue(group.AutoScalingGroupName))
-			rawArn = append(rawArn, aws.StringValue(group.AutoScalingGroupARN))
-		}
-		return !lastPage
-	})
+	groups, err := findGroups(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("Error fetching Autoscaling Groups: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Groups: %s", err)
 	}
+
+	var arns, names []string
+
+	for _, group := range groups {
+		arns = append(arns, aws.StringValue(group.AutoScalingGroupARN))
+		names = append(names, aws.StringValue(group.AutoScalingGroupName))
+	}
+
+	sort.Strings(arns)
+	sort.Strings(names)
 
 	d.SetId(meta.(*conns.AWSClient).Region)
+	d.Set("arns", arns)
+	d.Set("names", names)
 
-	sort.Strings(rawName)
-	sort.Strings(rawArn)
-
-	if err := d.Set("names", rawName); err != nil {
-		return fmt.Errorf("[WARN] Error setting Autoscaling Group Names: %w", err)
-	}
-
-	if err := d.Set("arns", rawArn); err != nil {
-		return fmt.Errorf("[WARN] Error setting Autoscaling Group ARNs: %w", err)
-	}
-
-	return nil
+	return diags
 }

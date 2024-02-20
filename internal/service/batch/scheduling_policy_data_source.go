@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package batch
 
 import (
@@ -6,17 +9,19 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_batch_scheduling_policy")
 func DataSourceSchedulingPolicy() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceSchedulingPolicyRead,
+		ReadWithoutTimeout: dataSourceSchedulingPolicyRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -73,37 +78,25 @@ func DataSourceSchedulingPolicy() *schema.Resource {
 }
 
 func dataSourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).BatchConn
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	arn := d.Get("arn").(string)
 
-	resp, err := conn.DescribeSchedulingPoliciesWithContext(ctx, &batch.DescribeSchedulingPoliciesInput{
-		Arns: []*string{aws.String(arn)},
-	})
+	schedulingPolicy, err := FindSchedulingPolicyByARN(ctx, conn, d.Get("arn").(string))
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error calling DescribeSchedulingPoliciesWithContext API for arn: %s", arn))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Batch Scheduling Policy", err))
 	}
 
-	if len(resp.SchedulingPolicies) == 0 {
-		return diag.FromErr(fmt.Errorf("no matches found for arn: %s", arn))
-	}
-
-	if len(resp.SchedulingPolicies) > 1 {
-		return diag.FromErr(fmt.Errorf("multiple matches found for arn: %s", arn))
-	}
-
-	schedulingPolicy := resp.SchedulingPolicies[0]
 	d.SetId(aws.StringValue(schedulingPolicy.Arn))
+	if err := d.Set("fair_share_policy", flattenFairsharePolicy(schedulingPolicy.FairsharePolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting fair_share_policy: %s", err)
+	}
 	d.Set("name", schedulingPolicy.Name)
 
-	if err := d.Set("fair_share_policy", flattenFairsharePolicy(schedulingPolicy.FairsharePolicy)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting fair share policy: %s", err))
+	if err := d.Set("tags", KeyValueTags(ctx, schedulingPolicy.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	if err := d.Set("tags", KeyValueTags(schedulingPolicy.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
-	}
-
-	return nil
+	return diags
 }

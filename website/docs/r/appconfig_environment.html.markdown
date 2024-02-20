@@ -40,13 +40,13 @@ resource "aws_appconfig_application" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `application_id` - (Required, Forces new resource) The AppConfig application ID. Must be between 4 and 7 characters in length.
-* `name` - (Required) The name for the environment. Must be between 1 and 64 characters in length.
-* `description` - (Optional) The description of the environment. Can be at most 1024 characters.
+* `application_id` - (Required, Forces new resource) AppConfig application ID. Must be between 4 and 7 characters in length.
+* `name` - (Required) Name for the environment. Must be between 1 and 64 characters in length.
+* `description` - (Optional) Description of the environment. Can be at most 1024 characters.
 * `monitor` - (Optional) Set of Amazon CloudWatch alarms to monitor during the deployment process. Maximum of 5. See [Monitor](#monitor) below for more details.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Monitor
 
@@ -55,19 +55,30 @@ The `monitor` block supports the following:
 * `alarm_arn` - (Required) ARN of the Amazon CloudWatch alarm.
 * `alarm_role_arn` - (Optional) ARN of an IAM role for AWS AppConfig to monitor `alarm_arn`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - The Amazon Resource Name (ARN) of the AppConfig Environment.
-* `id` - The AppConfig environment ID and application ID separated by a colon (`:`).
-* `environment_id` - The AppConfig environment ID.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block).
+* `arn` - ARN of the AppConfig Environment.
+* `id` - (**Deprecated**) AppConfig environment ID and application ID separated by a colon (`:`).
+* `environment_id` - AppConfig environment ID.
+* `state` - State of the environment. Possible values are `READY_FOR_DEPLOYMENT`, `DEPLOYING`, `ROLLING_BACK`
+  or `ROLLED_BACK`.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-AppConfig Environments can be imported by using the environment ID and application ID separated by a colon (`:`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AppConfig Environments using the environment ID and application ID separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_appconfig_environment.example
+  id = "71abcde:11xxxxx"
+}
 ```
-$ terraform import aws_appconfig_environment.example 71abcde:11xxxxx
+
+Using `terraform import`, import AppConfig Environments using the environment ID and application ID separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_appconfig_environment.example 71abcde:11xxxxx
 ```

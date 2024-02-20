@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -10,12 +12,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_emr_release_labels")
 func DataSourceReleaseLabels() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReleaseLabelsRead,
+
 		Schema: map[string]*schema.Schema{
 			"filters": {
 				Type:     schema.TypeList,
@@ -35,7 +39,7 @@ func DataSourceReleaseLabels() *schema.Resource {
 				},
 			},
 			"release_labels": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
 			},
@@ -44,7 +48,9 @@ func DataSourceReleaseLabels() *schema.Resource {
 }
 
 func dataSourceReleaseLabelsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EMRConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	input := &emr.ListReleaseLabelsInput{}
 
@@ -52,19 +58,22 @@ func dataSourceReleaseLabelsRead(ctx context.Context, d *schema.ResourceData, me
 		input.Filters = expandReleaseLabelsFilters(v.([]interface{}))
 	}
 
-	out, err := conn.ListReleaseLabels(input)
+	output, err := findReleaseLabels(ctx, conn, input)
+
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading EMR Release Label: %w", err))
+		return sdkdiag.AppendErrorf(diags, "reading EMR Release Labels: %s", err)
 	}
 
-	if len(out.ReleaseLabels) == 0 {
-		return diag.Errorf("no EMR release labels found")
+	releaseLabels := aws.StringValueSlice(output)
+
+	if len(releaseLabels) == 0 {
+		d.SetId(",")
+	} else {
+		d.SetId(strings.Join(releaseLabels, ","))
 	}
+	d.Set("release_labels", releaseLabels)
 
-	d.SetId(strings.Join(aws.StringValueSlice(out.ReleaseLabels), ","))
-	d.Set("release_labels", flex.FlattenStringSet(out.ReleaseLabels))
-
-	return nil
+	return diags
 }
 
 func expandReleaseLabelsFilters(filters []interface{}) *emr.ReleaseLabelFilter {
@@ -84,4 +93,27 @@ func expandReleaseLabelsFilters(filters []interface{}) *emr.ReleaseLabelFilter {
 	}
 
 	return app
+}
+
+func findReleaseLabels(ctx context.Context, conn *emr.EMR, input *emr.ListReleaseLabelsInput) ([]*string, error) {
+	var output []*string
+
+	err := conn.ListReleaseLabelsPagesWithContext(ctx, input, func(page *emr.ListReleaseLabelsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+		for _, v := range page.ReleaseLabels {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }
