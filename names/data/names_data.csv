@@ -92,7 +92,7 @@ cognito-sync,cognitosync,cognitosync,cognitosync,,cognitosync,,,CognitoSync,Cogn
 comprehend,comprehend,comprehend,comprehend,,comprehend,,,Comprehend,Comprehend,,,2,,aws_comprehend_,,comprehend_,Comprehend,Amazon,,,,,,,Comprehend,ListDocumentClassifiers,,
 comprehendmedical,comprehendmedical,comprehendmedical,comprehendmedical,,comprehendmedical,,,ComprehendMedical,ComprehendMedical,,1,,,aws_comprehendmedical_,,comprehendmedical_,Comprehend Medical,Amazon,,x,,,,,ComprehendMedical,,,
 compute-optimizer,computeoptimizer,computeoptimizer,computeoptimizer,,computeoptimizer,,,ComputeOptimizer,ComputeOptimizer,,,2,,aws_computeoptimizer_,,computeoptimizer_,Compute Optimizer,AWS,,,,,,,Compute Optimizer,GetEnrollmentStatus,,
-configservice,configservice,configservice,configservice,,configservice,,config,ConfigService,ConfigService,,1,,aws_config_,aws_configservice_,,config_,Config,AWS,,,,,,,Config Service,ListStoredQueries,,
+configservice,configservice,configservice,configservice,,configservice,,config,ConfigService,ConfigService,,,2,aws_config_,aws_configservice_,,config_,Config,AWS,,,,,,,Config Service,ListStoredQueries,,
 connect,connect,connect,connect,,connect,,,Connect,Connect,,1,,,aws_connect_,,connect_,Connect,Amazon,,,,,,,Connect,ListInstances,,
 connectcases,connectcases,connectcases,connectcases,,connectcases,,,ConnectCases,ConnectCases,,,2,,aws_connectcases_,,connectcases_,Connect Cases,Amazon,,,,,,,ConnectCases,ListDomains,,
 connect-contact-lens,connectcontactlens,connectcontactlens,connectcontactlens,,connectcontactlens,,,ConnectContactLens,ConnectContactLens,,1,,,aws_connectcontactlens_,,connectcontactlens_,Connect Contact Lens,Amazon,,x,,,,,Connect Contact Lens,,,
