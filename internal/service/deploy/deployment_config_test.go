@@ -23,7 +23,7 @@ import (
 
 func TestAccDeployDeploymentConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config1 types.DeploymentConfigInfo
+	var config types.DeploymentConfigInfo
 	resourceName := "aws_codedeploy_deployment_config.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -36,7 +36,8 @@ func TestAccDeployDeploymentConfig_basic(t *testing.T) {
 			{
 				Config: testAccDeploymentConfigConfig_fleet(rName, 75),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentConfigExists(ctx, resourceName, &config1),
+					testAccCheckDeploymentConfigExists(ctx, resourceName, &config),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_config_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
 					resource.TestCheckResourceAttr(resourceName, "traffic_routing_config.#", "0"),

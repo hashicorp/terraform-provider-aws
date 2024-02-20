@@ -85,7 +85,6 @@ func resourcePipeline() *schema.Resource {
 						"region": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Computed: true,
 						},
 						"type": {
 							Type:             schema.TypeString,
@@ -94,6 +93,12 @@ func resourcePipeline() *schema.Resource {
 						},
 					},
 				},
+			},
+			"execution_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          types.ExecutionModeSuperseded,
+				ValidateDiagFunc: enum.Validate[types.ExecutionMode](),
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -302,6 +307,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendErrorf(diags, "setting artifact_store: %s", err)
 		}
 	}
+	d.Set("execution_mode", pipeline.ExecutionMode)
 	d.Set("name", pipeline.Name)
 	d.Set("pipeline_type", pipeline.PipelineType)
 	d.Set("role_arn", pipeline.RoleArn)
@@ -458,6 +464,10 @@ func expandPipelineDeclaration(d *schema.ResourceData) (*types.PipelineDeclarati
 			}
 			apiObject.ArtifactStores = artifactStores
 		}
+	}
+
+	if v, ok := d.GetOk("execution_mode"); ok {
+		apiObject.ExecutionMode = types.ExecutionMode(v.(string))
 	}
 
 	if v, ok := d.GetOk("name"); ok {
