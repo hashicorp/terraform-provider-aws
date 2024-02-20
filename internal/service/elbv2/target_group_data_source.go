@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -38,13 +39,6 @@ func DataSourceTargetGroup() *schema.Resource {
 			"arn_suffix": {
 				Type:     schema.TypeString,
 				Computed: true,
-			},
-			"lb_arns": {
-				Type:     schema.TypeSet,
-				Computed: true,
-				Elem: &schema.Schema{
-					Type: schema.TypeString,
-				},
 			},
 			"connection_termination": {
 				Type:     schema.TypeBool,
@@ -101,6 +95,11 @@ func DataSourceTargetGroup() *schema.Resource {
 			"lambda_multi_value_headers_enabled": {
 				Type:     schema.TypeBool,
 				Computed: true,
+			},
+			"load_balancer_arns": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"load_balancing_algorithm_type": {
 				Type:     schema.TypeString,
@@ -234,7 +233,7 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.StringValue(targetGroup.TargetGroupArn))
 	d.Set("arn", targetGroup.TargetGroupArn)
 	d.Set("arn_suffix", TargetGroupSuffixFromARN(targetGroup.TargetGroupArn))
-	d.Set("lb_arns", targetGroup.LoadBalancerArns)
+	d.Set("load_balancer_arns", flex.FlattenStringSet(targetGroup.LoadBalancerArns))
 	d.Set("name", targetGroup.TargetGroupName)
 	d.Set("target_type", targetGroup.TargetType)
 
