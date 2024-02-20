@@ -5,7 +5,9 @@ package configservice
 
 // Exports for use in tests only.
 var (
-	ResourceConfigurationRecorder = resourceConfigurationRecorder
+	ResourceConfigurationRecorder       = resourceConfigurationRecorder
+	ResourceConfigurationRecorderStatus = resourceConfigurationRecorderStatus
 
-	FindConfigurationRecorderByName = findConfigurationRecorderByName
+	FindConfigurationRecorderByName       = findConfigurationRecorderByName
+	FindConfigurationRecorderStatusByName = findConfigurationRecorderStatusByName
 )
