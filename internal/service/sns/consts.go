@@ -8,98 +8,103 @@ import (
 )
 
 const (
-	FIFOTopicNameSuffix = ".fifo"
+	fifoTopicNameSuffix = ".fifo"
 )
 
 const (
-	PlatformApplicationAttributeNameAppleCertificateExpiryDate = "AppleCertificateExpiryDate"
-	PlatformApplicationAttributeNameApplePlatformBundleID      = "ApplePlatformBundleID"
-	PlatformApplicationAttributeNameApplePlatformTeamID        = "ApplePlatformTeamID"
-	PlatformApplicationAttributeNameEventDeliveryFailure       = "EventDeliveryFailure"
-	PlatformApplicationAttributeNameEventEndpointCreated       = "EventEndpointCreated"
-	PlatformApplicationAttributeNameEventEndpointDeleted       = "EventEndpointDeleted"
-	PlatformApplicationAttributeNameEventEndpointUpdated       = "EventEndpointUpdated"
-	PlatformApplicationAttributeNameFailureFeedbackRoleARN     = "FailureFeedbackRoleArn"
-	PlatformApplicationAttributeNamePlatformCredential         = "PlatformCredential"
-	PlatformApplicationAttributeNamePlatformPrincipal          = "PlatformPrincipal"
-	PlatformApplicationAttributeNameSuccessFeedbackRoleARN     = "SuccessFeedbackRoleArn"
-	PlatformApplicationAttributeNameSuccessFeedbackSampleRate  = "SuccessFeedbackSampleRate"
+	platformApplicationAttributeNameAppleCertificateExpiryDate = "AppleCertificateExpiryDate"
+	platformApplicationAttributeNameApplePlatformBundleID      = "ApplePlatformBundleID"
+	platformApplicationAttributeNameApplePlatformTeamID        = "ApplePlatformTeamID"
+	platformApplicationAttributeNameEventDeliveryFailure       = "EventDeliveryFailure"
+	platformApplicationAttributeNameEventEndpointCreated       = "EventEndpointCreated"
+	platformApplicationAttributeNameEventEndpointDeleted       = "EventEndpointDeleted"
+	platformApplicationAttributeNameEventEndpointUpdated       = "EventEndpointUpdated"
+	platformApplicationAttributeNameFailureFeedbackRoleARN     = "FailureFeedbackRoleArn"
+	platformApplicationAttributeNamePlatformCredential         = "PlatformCredential"
+	platformApplicationAttributeNamePlatformPrincipal          = "PlatformPrincipal"
+	platformApplicationAttributeNameSuccessFeedbackRoleARN     = "SuccessFeedbackRoleArn"
+	platformApplicationAttributeNameSuccessFeedbackSampleRate  = "SuccessFeedbackSampleRate"
 )
+
+/*
+const (
+	platfomAPNS        = "APNS"
+	platfomAPNSSandbox = "APNS_SANDBOX"
+	platfomGCM         = "GCM"
+)
+*/
 
 const (
-	PlatfomAPNS        = "APNS"
-	PlatfomAPNSSandbox = "APNS_SANDBOX"
-	PlatfomGCM         = "GCM"
+	subscriptionProtocolApplication = "application"
+	subscriptionProtocolEmail       = "email"
+	subscriptionProtocolEmailJSON   = "email-json"
+	subscriptionProtocolFirehose    = "firehose"
+	subscriptionProtocolHTTP        = "http"
+	subscriptionProtocolHTTPS       = "https"
+	subscriptionProtocolLambda      = "lambda"
+	subscriptionProtocolSMS         = "sms"
+	subscriptionProtocolSQS         = "sqs"
 )
 
-const (
-	SubscriptionProtocolApplication = "application"
-	SubscriptionProtocolEmail       = "email"
-	SubscriptionProtocolEmailJSON   = "email-json"
-	SubscriptionProtocolFirehose    = "firehose"
-	SubscriptionProtocolHTTP        = "http"
-	SubscriptionProtocolHTTPS       = "https"
-	SubscriptionProtocolLambda      = "lambda"
-	SubscriptionProtocolSMS         = "sms"
-	SubscriptionProtocolSQS         = "sqs"
-)
-
-func SubscriptionProtocol_Values() []string {
+func subscriptionProtocol_Values() []string {
 	return []string{
-		SubscriptionProtocolApplication,
-		SubscriptionProtocolEmail,
-		SubscriptionProtocolEmailJSON,
-		SubscriptionProtocolFirehose,
-		SubscriptionProtocolHTTP,
-		SubscriptionProtocolHTTPS,
-		SubscriptionProtocolLambda,
-		SubscriptionProtocolSMS,
-		SubscriptionProtocolSQS,
+		subscriptionProtocolApplication,
+		subscriptionProtocolEmail,
+		subscriptionProtocolEmailJSON,
+		subscriptionProtocolFirehose,
+		subscriptionProtocolHTTP,
+		subscriptionProtocolHTTPS,
+		subscriptionProtocolLambda,
+		subscriptionProtocolSMS,
+		subscriptionProtocolSQS,
 	}
 }
 
 const (
-	SubscriptionAttributeNameConfirmationWasAuthenticated = "ConfirmationWasAuthenticated"
-	SubscriptionAttributeNameDeliveryPolicy               = "DeliveryPolicy"
-	SubscriptionAttributeNameEndpoint                     = "Endpoint"
-	SubscriptionAttributeNameFilterPolicy                 = "FilterPolicy"
-	SubscriptionAttributeNameFilterPolicyScope            = "FilterPolicyScope"
-	SubscriptionAttributeNameOwner                        = "Owner"
-	SubscriptionAttributeNamePendingConfirmation          = "PendingConfirmation"
-	SubscriptionAttributeNameProtocol                     = "Protocol"
-	SubscriptionAttributeNameRawMessageDelivery           = "RawMessageDelivery"
-	SubscriptionAttributeNameRedrivePolicy                = "RedrivePolicy"
-	SubscriptionAttributeNameSubscriptionARN              = "SubscriptionArn"
-	SubscriptionAttributeNameSubscriptionRoleARN          = "SubscriptionRoleArn"
-	SubscriptionAttributeNameTopicARN                     = "TopicArn"
+	subscriptionAttributeNameConfirmationWasAuthenticated = "ConfirmationWasAuthenticated"
+	subscriptionAttributeNameDeliveryPolicy               = "DeliveryPolicy"
+	subscriptionAttributeNameEndpoint                     = "Endpoint"
+	subscriptionAttributeNameFilterPolicy                 = "FilterPolicy"
+	subscriptionAttributeNameFilterPolicyScope            = "FilterPolicyScope"
+	subscriptionAttributeNameOwner                        = "Owner"
+	subscriptionAttributeNamePendingConfirmation          = "PendingConfirmation"
+	subscriptionAttributeNameProtocol                     = "Protocol"
+	subscriptionAttributeNameRawMessageDelivery           = "RawMessageDelivery"
+	subscriptionAttributeNameRedrivePolicy                = "RedrivePolicy"
+	subscriptionAttributeNameReplayPolicy                 = "ReplayPolicy"
+	subscriptionAttributeNameSubscriptionARN              = "SubscriptionArn"
+	subscriptionAttributeNameSubscriptionRoleARN          = "SubscriptionRoleArn"
+	subscriptionAttributeNameTopicARN                     = "TopicArn"
 )
 
 const (
-	TopicAttributeNameApplicationFailureFeedbackRoleARN    = "ApplicationFailureFeedbackRoleArn"
-	TopicAttributeNameApplicationSuccessFeedbackRoleARN    = "ApplicationSuccessFeedbackRoleArn"
-	TopicAttributeNameApplicationSuccessFeedbackSampleRate = "ApplicationSuccessFeedbackSampleRate"
-	TopicAttributeNameContentBasedDeduplication            = "ContentBasedDeduplication"
-	TopicAttributeNameDeliveryPolicy                       = "DeliveryPolicy"
-	TopicAttributeNameDisplayName                          = "DisplayName"
-	TopicAttributeNameFIFOTopic                            = "FifoTopic"
-	TopicAttributeNameFirehoseFailureFeedbackRoleARN       = "FirehoseFailureFeedbackRoleArn"
-	TopicAttributeNameFirehoseSuccessFeedbackRoleARN       = "FirehoseSuccessFeedbackRoleArn"
-	TopicAttributeNameFirehoseSuccessFeedbackSampleRate    = "FirehoseSuccessFeedbackSampleRate"
-	TopicAttributeNameHTTPFailureFeedbackRoleARN           = "HTTPFailureFeedbackRoleArn"
-	TopicAttributeNameHTTPSuccessFeedbackRoleARN           = "HTTPSuccessFeedbackRoleArn"
-	TopicAttributeNameHTTPSuccessFeedbackSampleRate        = "HTTPSuccessFeedbackSampleRate"
-	TopicAttributeNameKMSMasterKeyId                       = "KmsMasterKeyId"
-	TopicAttributeNameLambdaFailureFeedbackRoleARN         = "LambdaFailureFeedbackRoleArn"
-	TopicAttributeNameLambdaSuccessFeedbackRoleARN         = "LambdaSuccessFeedbackRoleArn"
-	TopicAttributeNameLambdaSuccessFeedbackSampleRate      = "LambdaSuccessFeedbackSampleRate"
-	TopicAttributeNameOwner                                = "Owner"
-	TopicAttributeNamePolicy                               = "Policy"
-	TopicAttributeNameSignatureVersion                     = "SignatureVersion"
-	TopicAttributeNameSQSFailureFeedbackRoleARN            = "SQSFailureFeedbackRoleArn"
-	TopicAttributeNameSQSSuccessFeedbackRoleARN            = "SQSSuccessFeedbackRoleArn"
-	TopicAttributeNameSQSSuccessFeedbackSampleRate         = "SQSSuccessFeedbackSampleRate"
-	TopicAttributeNameTopicARN                             = "TopicArn"
-	TopicAttributeNameTracingConfig                        = "TracingConfig"
+	topicAttributeNameApplicationFailureFeedbackRoleARN    = "ApplicationFailureFeedbackRoleArn"
+	topicAttributeNameApplicationSuccessFeedbackRoleARN    = "ApplicationSuccessFeedbackRoleArn"
+	topicAttributeNameApplicationSuccessFeedbackSampleRate = "ApplicationSuccessFeedbackSampleRate"
+	topicAttributeNameArchivePolicy                        = "ArchivePolicy"
+	topicAttributeNameBeginningArchiveTime                 = "BeginningArchiveTime"
+	topicAttributeNameContentBasedDeduplication            = "ContentBasedDeduplication"
+	topicAttributeNameDeliveryPolicy                       = "DeliveryPolicy"
+	topicAttributeNameDisplayName                          = "DisplayName"
+	topicAttributeNameFIFOTopic                            = "FifoTopic"
+	topicAttributeNameFirehoseFailureFeedbackRoleARN       = "FirehoseFailureFeedbackRoleArn"
+	topicAttributeNameFirehoseSuccessFeedbackRoleARN       = "FirehoseSuccessFeedbackRoleArn"
+	topicAttributeNameFirehoseSuccessFeedbackSampleRate    = "FirehoseSuccessFeedbackSampleRate"
+	topicAttributeNameHTTPFailureFeedbackRoleARN           = "HTTPFailureFeedbackRoleArn"
+	topicAttributeNameHTTPSuccessFeedbackRoleARN           = "HTTPSuccessFeedbackRoleArn"
+	topicAttributeNameHTTPSuccessFeedbackSampleRate        = "HTTPSuccessFeedbackSampleRate"
+	topicAttributeNameKMSMasterKeyId                       = "KmsMasterKeyId"
+	topicAttributeNameLambdaFailureFeedbackRoleARN         = "LambdaFailureFeedbackRoleArn"
+	topicAttributeNameLambdaSuccessFeedbackRoleARN         = "LambdaSuccessFeedbackRoleArn"
+	topicAttributeNameLambdaSuccessFeedbackSampleRate      = "LambdaSuccessFeedbackSampleRate"
+	topicAttributeNameOwner                                = "Owner"
+	topicAttributeNamePolicy                               = "Policy"
+	topicAttributeNameSignatureVersion                     = "SignatureVersion"
+	topicAttributeNameSQSFailureFeedbackRoleARN            = "SQSFailureFeedbackRoleArn"
+	topicAttributeNameSQSSuccessFeedbackRoleARN            = "SQSSuccessFeedbackRoleArn"
+	topicAttributeNameSQSSuccessFeedbackSampleRate         = "SQSSuccessFeedbackSampleRate"
+	topicAttributeNameTopicARN                             = "TopicArn"
+	topicAttributeNameTracingConfig                        = "TracingConfig"
 )
 
 const (
@@ -107,25 +112,25 @@ const (
 )
 
 const (
-	SubscriptionFilterPolicyScopeMessageAttributes = "MessageAttributes"
-	SubscriptionFilterPolicyScopeMessageBody       = "MessageBody"
+	subscriptionFilterPolicyScopeMessageAttributes = "MessageAttributes"
+	subscriptionFilterPolicyScopeMessageBody       = "MessageBody"
 )
 
-func SubscriptionFilterPolicyScope_Values() []string {
+func subscriptionFilterPolicyScope_Values() []string {
 	return []string{
-		SubscriptionFilterPolicyScopeMessageAttributes,
-		SubscriptionFilterPolicyScopeMessageBody,
+		subscriptionFilterPolicyScopeMessageAttributes,
+		subscriptionFilterPolicyScopeMessageBody,
 	}
 }
 
 const (
-	TopicTracingConfigActive      = "Active"
-	TopicTracingConfigPassThrough = "PassThrough"
+	topicTracingConfigActive      = "Active"
+	topicTracingConfigPassThrough = "PassThrough"
 )
 
-func TopicTracingConfig_Values() []string {
+func topicTracingConfig_Values() []string {
 	return []string{
-		TopicTracingConfigActive,
-		TopicTracingConfigPassThrough,
+		topicTracingConfigActive,
+		topicTracingConfigPassThrough,
 	}
 }

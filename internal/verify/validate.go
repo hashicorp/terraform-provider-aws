@@ -14,6 +14,8 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	basevalidation "github.com/hashicorp/aws-sdk-go-base/v2/validation"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -133,6 +135,18 @@ func ValidAccountID(v interface{}, k string) (ws []string, errors []error) {
 	if !regexache.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q doesn't look like AWS Account ID (exactly 12 digits): %q",
+			k, value))
+	}
+
+	return
+}
+
+func ValidBase64String(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if !IsBase64Encoded([]byte(value)) {
+		errors = append(errors, fmt.Errorf(
+			"%q (%q) must be base64-encoded",
 			k, value))
 	}
 
@@ -458,6 +472,23 @@ func FloatGreaterThan(threshold float64) schema.SchemaValidateFunc {
 	}
 }
 
+func StringHasPrefix(prefix string) schema.SchemaValidateFunc {
+	return func(v interface{}, k string) (warnings []string, errors []error) {
+		s, ok := v.(string)
+		if !ok {
+			errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+			return
+		}
+
+		if !strings.HasPrefix(s, prefix) {
+			errors = append(errors, fmt.Errorf("expected %s to have prefix %s, got %s", k, prefix, s))
+			return
+		}
+
+		return warnings, errors
+	}
+}
+
 func ValidServicePrincipal(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
@@ -474,4 +505,36 @@ func ValidServicePrincipal(v interface{}, k string) (ws []string, errors []error
 
 func IsServicePrincipal(value string) (valid bool) {
 	return servicePrincipalRegexp.MatchString(value)
+}
+
+func MapKeysAre(keyValidators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
+	return func(v interface{}, path cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+
+		for k := range v.(map[string]interface{}) {
+			for _, keyValidator := range keyValidators {
+				diags = append(diags, keyValidator(k, path.IndexString(k))...)
+			}
+		}
+
+		return diags
+	}
+}
+
+func MapLenBetween(min, max int) schema.SchemaValidateDiagFunc {
+	return func(v interface{}, path cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		m := v.(map[string]interface{})
+
+		if l := len(m); l < min || l > max {
+			diags = append(diags, diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       "Bad map length",
+				Detail:        fmt.Sprintf("Map must contain at least %d elements and at most %d elements: length=%d", min, max, l),
+				AttributePath: path,
+			})
+		}
+
+		return diags
+	}
 }

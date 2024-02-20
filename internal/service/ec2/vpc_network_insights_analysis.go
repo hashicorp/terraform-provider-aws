@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -1404,6 +1405,8 @@ var networkInsightsAnalysisExplanationsSchema = &schema.Schema{
 }
 
 func resourceNetworkInsightsAnalysisCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.StartNetworkInsightsAnalysisInput{
@@ -1419,21 +1422,23 @@ func resourceNetworkInsightsAnalysisCreate(ctx context.Context, d *schema.Resour
 	output, err := conn.StartNetworkInsightsAnalysisWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating EC2 Network Insights Analysis: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Network Insights Analysis: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.NetworkInsightsAnalysis.NetworkInsightsAnalysisId))
 
 	if d.Get("wait_for_completion").(bool) {
 		if _, err := WaitNetworkInsightsAnalysisCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-			return diag.Errorf("waiting for EC2 Network Insights Analysis (%s) create: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Network Insights Analysis (%s) create: %s", d.Id(), err)
 		}
 	}
 
-	return resourceNetworkInsightsAnalysisRead(ctx, d, meta)
+	return append(diags, resourceNetworkInsightsAnalysisRead(ctx, d, meta)...)
 }
 
 func resourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	output, err := FindNetworkInsightsAnalysisByID(ctx, conn, d.Id())
@@ -1441,28 +1446,28 @@ func resourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resource
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Network Insights Analysis (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading EC2 Network Insights Analysis (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Network Insights Analysis (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("alternate_path_hints", flattenAlternatePathHints(output.AlternatePathHints)); err != nil {
-		return diag.Errorf("setting alternate_path_hints: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting alternate_path_hints: %s", err)
 	}
 	d.Set("arn", output.NetworkInsightsAnalysisArn)
 	if err := d.Set("explanations", flattenExplanations(output.Explanations)); err != nil {
-		return diag.Errorf("setting explanations: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting explanations: %s", err)
 	}
 	d.Set("filter_in_arns", aws.StringValueSlice(output.FilterInArns))
 	if err := d.Set("forward_path_components", flattenPathComponents(output.ForwardPathComponents)); err != nil {
-		return diag.Errorf("setting forward_path_components: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting forward_path_components: %s", err)
 	}
 	d.Set("network_insights_path_id", output.NetworkInsightsPathId)
 	d.Set("path_found", output.NetworkPathFound)
 	if err := d.Set("return_path_components", flattenPathComponents(output.ReturnPathComponents)); err != nil {
-		return diag.Errorf("setting return_path_components: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting return_path_components: %s", err)
 	}
 	d.Set("start_date", output.StartDate.Format(time.RFC3339))
 	d.Set("status", output.Status)
@@ -1471,7 +1476,7 @@ func resourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resource
 
 	setTagsOut(ctx, output.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceNetworkInsightsAnalysisUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -1480,6 +1485,8 @@ func resourceNetworkInsightsAnalysisUpdate(ctx context.Context, d *schema.Resour
 }
 
 func resourceNetworkInsightsAnalysisDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Network Insights Analysis: %s", d.Id())
@@ -1488,14 +1495,14 @@ func resourceNetworkInsightsAnalysisDelete(ctx context.Context, d *schema.Resour
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkInsightsAnalysisIdNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting EC2 Network Insights Analysis (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Network Insights Analysis (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenAdditionalDetail(apiObject *ec2.AdditionalDetail) map[string]interface{} {

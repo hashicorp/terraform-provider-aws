@@ -194,21 +194,21 @@ class MyConvertedCode extends TerraformStack {
 This argument supports the following arguments:
 
 * `gatewayName` - (Required) Name of the gateway.
-* `gatewayTimezone` - (Required) Time zone for the gateway. The time zone is of the format "GMT", "GMT-hr:mm", or "GMT+hr:mm". For example, `gmt4:00` indicates the time is 4 hours behind GMT. The time zone is used, for example, for scheduling snapshots and your gateway's maintenance schedule.
+* `gatewayTimezone` - (Required) Time zone for the gateway. The time zone is of the format "GMT", "GMT-hr:mm", or "GMT+hr:mm". For example, `GMT-4:00` indicates the time is 4 hours behind GMT. The time zone is used, for example, for scheduling snapshots and your gateway's maintenance schedule.
 * `activationKey` - (Optional) Gateway activation key during resource creation. Conflicts with `gatewayIpAddress`. Additional information is available in the [Storage Gateway User Guide](https://docs.aws.amazon.com/storagegateway/latest/userguide/get-activation-key.html).
-* `averageDownloadRateLimitInBitsPerSec` - (Optional) The average download bandwidth rate limit in bits per second. This is supported for the `cached`, `stored`, and `vtl` gateway types.
-* `averageUploadRateLimitInBitsPerSec` - (Optional) The average upload bandwidth rate limit in bits per second. This is supported for the `cached`, `stored`, and `vtl` gateway types.
+* `averageDownloadRateLimitInBitsPerSec` - (Optional) The average download bandwidth rate limit in bits per second. This is supported for the `CACHED`, `STORED`, and `VTL` gateway types.
+* `averageUploadRateLimitInBitsPerSec` - (Optional) The average upload bandwidth rate limit in bits per second. This is supported for the `CACHED`, `STORED`, and `VTL` gateway types.
 * `gatewayIpAddress` - (Optional) Gateway IP address to retrieve activation key during resource creation. Conflicts with `activationKey`. Gateway must be accessible on port 80 from where Terraform is running. Additional information is available in the [Storage Gateway User Guide](https://docs.aws.amazon.com/storagegateway/latest/userguide/get-activation-key.html).
-* `gatewayType` - (Optional) Type of the gateway. The default value is `stored`. Valid values: `cached`, `fileFsxSmb`, `fileS3`, `stored`, `vtl`.
+* `gatewayType` - (Optional) Type of the gateway. The default value is `STORED`. Valid values: `CACHED`, `FILE_FSX_SMB`, `FILE_S3`, `STORED`, `VTL`.
 * `gatewayVpcEndpoint` - (Optional) VPC endpoint address to be used when activating your gateway. This should be used when your instance is in a private subnet. Requires HTTP access from client computer running terraform. More info on what ports are required by your VPC Endpoint Security group in [Activating a Gateway in a Virtual Private Cloud](https://docs.aws.amazon.com/storagegateway/latest/userguide/gateway-private-link.html).
 * `cloudwatchLogGroupArn` - (Optional) The Amazon Resource Name (ARN) of the Amazon CloudWatch log group to use to monitor and log events in the gateway.
 * `maintenanceStartTime` - (Optional) The gateway's weekly maintenance start time information, including day and time of the week. The maintenance time is the time in your gateway's time zone. More details below.
-* `mediumChangerType` - (Optional) Type of medium changer to use for tape gateway. Terraform cannot detect drift of this argument. Valid values: `stkL700`, `awsGatewayVtl`, `ibm03584L320402`.
-* `smbActiveDirectorySettings` - (Optional) Nested argument with Active Directory domain join information for Server Message Block (SMB) file shares. Only valid for `fileS3` and `fileFsxSmb` gateway types. Must be set before creating `activeDirectory` authentication SMB file shares. More details below.
-* `smbGuestPassword` - (Optional) Guest password for Server Message Block (SMB) file shares. Only valid for `fileS3` and `fileFsxSmb` gateway types. Must be set before creating `guestAccess` authentication SMB file shares. Terraform can only detect drift of the existence of a guest password, not its actual value from the gateway. Terraform can however update the password with changing the argument.
-* `smbSecurityStrategy` - (Optional) Specifies the type of security strategy. Valid values are: `clientSpecified`, `mandatorySigning`, and `mandatoryEncryption`. See [Setting a Security Level for Your Gateway](https://docs.aws.amazon.com/storagegateway/latest/userguide/managing-gateway-file.html#security-strategy) for more information.
+* `mediumChangerType` - (Optional) Type of medium changer to use for tape gateway. Terraform cannot detect drift of this argument. Valid values: `STK-L700`, `AWS-Gateway-VTL`, `IBM-03584L32-0402`.
+* `smbActiveDirectorySettings` - (Optional) Nested argument with Active Directory domain join information for Server Message Block (SMB) file shares. Only valid for `FILE_S3` and `FILE_FSX_SMB` gateway types. Must be set before creating `ActiveDirectory` authentication SMB file shares. More details below.
+* `smbGuestPassword` - (Optional) Guest password for Server Message Block (SMB) file shares. Only valid for `FILE_S3` and `FILE_FSX_SMB` gateway types. Must be set before creating `GuestAccess` authentication SMB file shares. Terraform can only detect drift of the existence of a guest password, not its actual value from the gateway. Terraform can however update the password with changing the argument.
+* `smbSecurityStrategy` - (Optional) Specifies the type of security strategy. Valid values are: `ClientSpecified`, `MandatorySigning`, and `MandatoryEncryption`. See [Setting a Security Level for Your Gateway](https://docs.aws.amazon.com/storagegateway/latest/userguide/managing-gateway-file.html#security-strategy) for more information.
 * `smbFileShareVisibility` - (Optional) Specifies whether the shares on this gateway appear when listing shares.
-* `tapeDriveType` - (Optional) Type of tape drive to use for tape gateway. Terraform cannot detect drift of this argument. Valid values: `ibmUlt3580Td5`.
+* `tapeDriveType` - (Optional) Type of tape drive to use for tape gateway. Terraform cannot detect drift of this argument. Valid values: `IBM-ULT3580-TD5`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### maintenance_start_time
@@ -224,7 +224,7 @@ Information to join the gateway to an Active Directory domain for Server Message
 
 ~> **NOTE** It is not possible to unconfigure this setting without recreating the gateway. Also, Terraform can only detect drift of the `domainName` argument from the gateway.
 
-~> **NOTE:** The Storage Gateway needs to be able to resolve the name of your Active Directory Domain Controller. If the gateway is hosted on EC2, ensure that DNS/DHCP is configured prior to creating the EC2 instance. If you are receiving `networkError` errors during resource creation (gateway joining the domain), ensure your gateway instance meets the [FSx File Gateway requirements](https://docs.aws.amazon.com/filegateway/latest/filefsxw/Requirements.html).
+~> **NOTE:** The Storage Gateway needs to be able to resolve the name of your Active Directory Domain Controller. If the gateway is hosted on EC2, ensure that DNS/DHCP is configured prior to creating the EC2 instance. If you are receiving `NETWORK_ERROR` errors during resource creation (gateway joining the domain), ensure your gateway instance meets the [FSx File Gateway requirements](https://docs.aws.amazon.com/filegateway/latest/filefsxw/Requirements.html).
 
 * `domainName` - (Required) The name of the domain that you want the gateway to join.
 * `password` - (Required) The password of the user who has permission to add the gateway to the Active Directory domain.
@@ -233,7 +233,7 @@ Information to join the gateway to an Active Directory domain for Server Message
 * `organizationalUnit` - (Optional) The organizational unit (OU) is a container in an Active Directory that can hold users, groups,
  computers, and other OUs and this parameter specifies the OU that the gateway will join within the AD domain.
 * `domainControllers` - (Optional) List of IPv4 addresses, NetBIOS names, or host names of your domain server.
- If you need to specify the port number include it after the colon (“:”). For example, `mydcMydomainCom:389`.
+ If you need to specify the port number include it after the colon (“:”). For example, `mydc.mydomain.com:389`.
 
 ## Attribute Reference
 
@@ -250,37 +250,47 @@ This resource exports the following attributes in addition to the arguments abov
 
 ### Gateway Network Interface
 
-* `ipv4Address` - The Internet Protocol version 4 (IPv4) address of the interface.
+* `ipv4_address` - The Internet Protocol version 4 (IPv4) address of the interface.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10M`)
+* `create` - (Default `10m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `awsStoragegatewayGateway` using the gateway Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_storagegateway_gateway` using the gateway Amazon Resource Name (ARN). For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { StoragegatewayGateway } from "./.gen/providers/aws/storagegateway-gateway";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    StoragegatewayGateway.generateConfigForImport(
+      this,
+      "example",
+      "arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678"
+    );
   }
 }
 
 ```
 
-Using `terraform import`, import `awsStoragegatewayGateway` using the gateway Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_storagegateway_gateway` using the gateway Amazon Resource Name (ARN). For example:
 
 ```console
 % terraform import aws_storagegateway_gateway.example arn:aws:storagegateway:us-east-1:123456789012:gateway/sgw-12345678
 ```
 
-Certain resource arguments, like `gatewayIpAddress` do not have a Storage Gateway API method for reading the information after creation, either omit the argument from the Terraform configuration or use [`ignoreChanges`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
+Certain resource arguments, like `gatewayIpAddress` do not have a Storage Gateway API method for reading the information after creation, either omit the argument from the Terraform configuration or use [`ignore_changes`](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html#ignore_changes) to hide the difference. For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
@@ -311,4 +321,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-187ed7975b77b44dfe286243ecbc501bccd2e04c4172f96f87a4eb47a54fcf77 -->
+<!-- cache-key: cdktf-0.20.1 input-187ed7975b77b44dfe286243ecbc501bccd2e04c4172f96f87a4eb47a54fcf77 -->

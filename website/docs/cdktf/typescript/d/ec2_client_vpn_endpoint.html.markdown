@@ -95,6 +95,7 @@ This data source exports the following attributes in addition to the arguments a
 * `dnsServers` - Information about the DNS servers to be used for DNS resolution.
 * `securityGroupIds` - IDs of the security groups for the target network associated with the Client VPN endpoint.
 * `selfServicePortal` - Whether the self-service portal for the Client VPN endpoint is enabled.
+* `selfServicePortalUrl` - The URL of the self-service portal.
 * `serverCertificateArn` - The ARN of the server certificate.
 * `sessionTimeoutHours` - The maximum VPN session duration time in hours.
 * `splitTunnel` - Whether split-tunnel is enabled in the AWS Client VPN endpoint.
@@ -106,6 +107,6 @@ This data source exports the following attributes in addition to the arguments a
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `read` - (Default `20M`)
+- `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-59f6f06c6cf9645ca1b189844289fe1fb6172dca20e441b5097e6b1a94115c5a -->
+<!-- cache-key: cdktf-0.20.1 input-bc05f6bb24f9086ff19f5d3ed7d1f4948088a83b4e318db8a86fe506a18104cf -->

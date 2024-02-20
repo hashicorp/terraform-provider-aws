@@ -8,24 +8,23 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/lakeformation"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func TestAccLakeFormationResource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceAddr := "aws_lakeformation_resource.test"
-	bucketAddr := "aws_s3_bucket.test"
-	roleAddr := "aws_iam_role.test"
+	resourceName := "aws_lakeformation_resource.test"
+	bucketResourceName := "aws_s3_bucket.test"
+	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
@@ -35,10 +34,12 @@ func TestAccLakeFormationResource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourceConfig_basic(bucketName, roleName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceExists(ctx, resourceAddr),
-					resource.TestCheckResourceAttrPair(resourceAddr, "role_arn", roleAddr, "arn"),
-					resource.TestCheckResourceAttrPair(resourceAddr, "arn", bucketAddr, "arn"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckResourceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", bucketResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "hybrid_access_enabled", "false"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "with_federation", "false"),
 				),
 			},
 		},
@@ -71,8 +72,8 @@ func TestAccLakeFormationResource_disappears(t *testing.T) {
 func TestAccLakeFormationResource_serviceLinkedRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceAddr := "aws_lakeformation_resource.test"
-	bucketAddr := "aws_s3_bucket.test"
+	resourceName := "aws_lakeformation_resource.test"
+	bucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -87,9 +88,9 @@ func TestAccLakeFormationResource_serviceLinkedRole(t *testing.T) {
 			{
 				Config: testAccResourceConfig_serviceLinkedRole(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceExists(ctx, resourceAddr),
-					resource.TestCheckResourceAttrPair(resourceAddr, "arn", bucketAddr, "arn"),
-					acctest.CheckResourceAttrGlobalARN(resourceAddr, "role_arn", "iam", "role/aws-service-role/lakeformation.amazonaws.com/AWSServiceRoleForLakeFormationDataAccess"),
+					testAccCheckResourceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", bucketResourceName, "arn"),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", "role/aws-service-role/lakeformation.amazonaws.com/AWSServiceRoleForLakeFormationDataAccess"),
 				),
 			},
 		},
@@ -101,9 +102,9 @@ func TestAccLakeFormationResource_updateRoleToRole(t *testing.T) {
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceAddr := "aws_lakeformation_resource.test"
-	bucketAddr := "aws_s3_bucket.test"
-	roleAddr := "aws_iam_role.test"
+	resourceName := "aws_lakeformation_resource.test"
+	bucketResourceName := "aws_s3_bucket.test"
+	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
@@ -114,17 +115,17 @@ func TestAccLakeFormationResource_updateRoleToRole(t *testing.T) {
 			{
 				Config: testAccResourceConfig_basic(bucketName, roleName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceExists(ctx, resourceAddr),
-					resource.TestCheckResourceAttrPair(resourceAddr, "role_arn", roleAddr, "arn"),
-					resource.TestCheckResourceAttrPair(resourceAddr, "arn", bucketAddr, "arn"),
+					testAccCheckResourceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", bucketResourceName, "arn"),
 				),
 			},
 			{
 				Config: testAccResourceConfig_basic(bucketName, roleName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceExists(ctx, resourceAddr),
-					resource.TestCheckResourceAttrPair(resourceAddr, "role_arn", roleAddr, "arn"),
-					resource.TestCheckResourceAttrPair(resourceAddr, "arn", bucketAddr, "arn"),
+					testAccCheckResourceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", bucketResourceName, "arn"),
 				),
 			},
 		},
@@ -135,9 +136,9 @@ func TestAccLakeFormationResource_updateSLRToRole(t *testing.T) {
 	ctx := acctest.Context(t)
 	bucketName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	roleName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceAddr := "aws_lakeformation_resource.test"
-	bucketAddr := "aws_s3_bucket.test"
-	roleAddr := "aws_iam_role.test"
+	resourceName := "aws_lakeformation_resource.test"
+	bucketResourceName := "aws_s3_bucket.test"
+	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -152,17 +153,44 @@ func TestAccLakeFormationResource_updateSLRToRole(t *testing.T) {
 			{
 				Config: testAccResourceConfig_serviceLinkedRole(bucketName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceExists(ctx, resourceAddr),
-					resource.TestCheckResourceAttrPair(resourceAddr, "arn", bucketAddr, "arn"),
-					acctest.CheckResourceAttrGlobalARN(resourceAddr, "role_arn", "iam", "role/aws-service-role/lakeformation.amazonaws.com/AWSServiceRoleForLakeFormationDataAccess"),
+					testAccCheckResourceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", bucketResourceName, "arn"),
+					acctest.CheckResourceAttrGlobalARN(resourceName, "role_arn", "iam", "role/aws-service-role/lakeformation.amazonaws.com/AWSServiceRoleForLakeFormationDataAccess"),
 				),
 			},
 			{
 				Config: testAccResourceConfig_basic(bucketName, roleName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceExists(ctx, resourceAddr),
-					resource.TestCheckResourceAttrPair(resourceAddr, "role_arn", roleAddr, "arn"),
-					resource.TestCheckResourceAttrPair(resourceAddr, "arn", bucketAddr, "arn"),
+					testAccCheckResourceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", roleResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", bucketResourceName, "arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccLakeFormationResource_hybridAccessEnabled(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_resource.test"
+	bucketResourceName := "aws_s3_bucket.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceConfig_hybridAccessEnabled(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", bucketResourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "hybrid_access_enabled", "true"),
 				),
 			},
 		},
@@ -183,53 +211,36 @@ func testAccCheckResourceDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			resourceArn := rs.Primary.Attributes["arn"]
+			_, err := tflakeformation.FindResourceByARN(ctx, conn, rs.Primary.ID)
 
-			input := &lakeformation.DescribeResourceInput{
-				ResourceArn: aws.String(resourceArn),
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			_, err := conn.DescribeResourceWithContext(ctx, input)
-			if err == nil {
-				return fmt.Errorf("resource still registered: %s", resourceArn)
-			}
-			if !isResourceNotFoundErr(err) {
+			if err != nil {
 				return err
 			}
+
+			return fmt.Errorf("Lake Formation Resource (%s) still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckResourceExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckResourceExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("resource not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn(ctx)
 
-		input := &lakeformation.DescribeResourceInput{
-			ResourceArn: aws.String(rs.Primary.ID),
-		}
+		_, err := tflakeformation.FindResourceByARN(ctx, conn, rs.Primary.ID)
 
-		_, err := conn.DescribeResourceWithContext(ctx, input)
-
-		if err != nil {
-			return fmt.Errorf("error getting Lake Formation resource (%s): %w", rs.Primary.ID, err)
-		}
-
-		return nil
+		return err
 	}
-}
-
-func isResourceNotFoundErr(err error) bool {
-	return tfawserr.ErrMessageContains(
-		err,
-		"EntityNotFoundException",
-		"Entity not found")
 }
 
 func testAccResourceConfig_basic(bucket, role string) string {
@@ -305,7 +316,21 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_lakeformation_resource" "test" {
-  arn = aws_s3_bucket.test.arn
+  arn                     = aws_s3_bucket.test.arn
+  use_service_linked_role = true
+}
+`, rName)
+}
+
+func testAccResourceConfig_hybridAccessEnabled(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_lakeformation_resource" "test" {
+  arn                   = aws_s3_bucket.test.arn
+  hybrid_access_enabled = true
 }
 `, rName)
 }

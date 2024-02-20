@@ -57,6 +57,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceResource,
 			TypeName: "aws_lakeformation_resource",
+			Name:     "Resource",
 		},
 		{
 			Factory:  ResourceResourceLFTags,

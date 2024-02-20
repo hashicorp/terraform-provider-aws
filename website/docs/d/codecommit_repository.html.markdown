@@ -28,7 +28,8 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `repository_id` - ID of the repository
-* `arn` - ARN of the repository
+* `repository_id` - ID of the repository.
+* `kms_key_id` - The ID of the encryption key.
+* `arn` - ARN of the repository.
 * `clone_url_http` - URL to use for cloning the repository over HTTPS.
 * `clone_url_ssh` - URL to use for cloning the repository over SSH.

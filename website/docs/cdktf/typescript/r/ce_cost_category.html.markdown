@@ -74,7 +74,7 @@ The following arguments are required:
 * `name` - (Required) Unique name for the Cost Category.
 * `rule` - (Required) Configuration block for the Cost Category rules used to categorize costs. See below.
 * `ruleVersion` - (Required) Rule schema version in this particular Cost Category.
-* `effectiveStart`- (Optional)  The Cost Category's effective start date. It can only be a billing start date (first day of the month). If the date isn't provided, it's the first day of the current month. Dates can't be before the previous twelve months, or in the future. For example `20221101T00:00:00Z`.
+* `effectiveStart`- (Optional)  The Cost Category's effective start date. It can only be a billing start date (first day of the month). If the date isn't provided, it's the first day of the current month. Dates can't be before the previous twelve months, or in the future. For example `2022-11-01T00:00:00Z`.
 
 The following arguments are optional:
 
@@ -85,46 +85,46 @@ The following arguments are optional:
 ### `rule`
 
 * `inheritedValue` - (Optional) Configuration block for the value the line item is categorized as if the line item contains the matched dimension. See below.
-* `rule` - (Optional) Configuration block for the `expression` object used to categorize costs. See below.
-* `type` - (Optional) You can define the CostCategoryRule rule type as either `regular` or `inheritedValue`.
+* `rule` - (Optional) Configuration block for the `Expression` object used to categorize costs. See below.
+* `type` - (Optional) You can define the CostCategoryRule rule type as either `REGULAR` or `INHERITED_VALUE`.
 * `value` - (Optional) Default value for the cost category.
 
 ### `inheritedValue`
 
 * `dimensionKey` - (Optional) Key to extract cost category values.
-* `dimensionName` - (Optional) Name of the dimension that's used to group costs. If you specify `linkedAccountName`, the cost category value is based on account name. If you specify `tag`, the cost category value will be based on the value of the specified tag key. Valid values are `linkedAccountName`, `tag`
+* `dimensionName` - (Optional) Name of the dimension that's used to group costs. If you specify `LINKED_ACCOUNT_NAME`, the cost category value is based on account name. If you specify `TAG`, the cost category value will be based on the value of the specified tag key. Valid values are `LINKED_ACCOUNT_NAME`, `TAG`
 
 ### `rule`
 
-* `and` - (Optional) Return results that match both `dimension` objects.
-* `costCategory` - (Optional) Configuration block for the filter that's based on `costCategory` values. See below.
-* `dimension` - (Optional) Configuration block for the specific `dimension` to use for `expression`. See below.
-* `not` - (Optional) Return results that match both `dimension` object.
-* `or` - (Optional) Return results that match both `dimension` object.
-* `tags` - (Optional) Configuration block for the specific `tag` to use for `expression`. See below.
+* `and` - (Optional) Return results that match both `Dimension` objects.
+* `costCategory` - (Optional) Configuration block for the filter that's based on `CostCategory` values. See below.
+* `dimension` - (Optional) Configuration block for the specific `Dimension` to use for `Expression`. See below.
+* `not` - (Optional) Return results that match both `Dimension` object.
+* `or` - (Optional) Return results that match both `Dimension` object.
+* `tags` - (Optional) Configuration block for the specific `Tag` to use for `Expression`. See below.
 
 ### `costCategory`
 
 * `key` - (Optional) Unique name of the Cost Category.
-* `matchOptions` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `equals` and `caseSensitive`. Valid values are: `equals`,  `absent`, `startsWith`, `endsWith`, `contains`, `caseSensitive`, `caseInsensitive`.
+* `matchOptions` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `EQUALS` and `CASE_SENSITIVE`. Valid values are: `EQUALS`,  `ABSENT`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`.
 * `values` - (Optional) Specific value of the Cost Category.
 
 ### `dimension`
 
 * `key` - (Optional) Unique name of the Cost Category.
-* `matchOptions` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `equals` and `caseSensitive`. Valid values are: `equals`,  `absent`, `startsWith`, `endsWith`, `contains`, `caseSensitive`, `caseInsensitive`.
+* `matchOptions` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `EQUALS` and `CASE_SENSITIVE`. Valid values are: `EQUALS`,  `ABSENT`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`.
 * `values` - (Optional) Specific value of the Cost Category.
 
 ### `tags`
 
 * `key` - (Optional) Key for the tag.
-* `matchOptions` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `equals` and `caseSensitive`. Valid values are: `equals`,  `absent`, `startsWith`, `endsWith`, `contains`, `caseSensitive`, `caseInsensitive`.
+* `matchOptions` - (Optional) Match options that you can use to filter your results. MatchOptions is only applicable for actions related to cost category. The default values for MatchOptions is `EQUALS` and `CASE_SENSITIVE`. Valid values are: `EQUALS`,  `ABSENT`, `STARTS_WITH`, `ENDS_WITH`, `CONTAINS`, `CASE_SENSITIVE`, `CASE_INSENSITIVE`.
 * `values` - (Optional) Specific value of the Cost Category.
 
 ### `splitChargeRule`
 
-* `method` - (Required) Method that's used to define how to split your source costs across your targets. Valid values are `fixed`, `proportional`, `even`
-* `parameter` - (Optional) Configuration block for the parameters for a split charge method. This is only required for the `fixed` method. See below.
+* `method` - (Required) Method that's used to define how to split your source costs across your targets. Valid values are `FIXED`, `PROPORTIONAL`, `EVEN`
+* `parameter` - (Optional) Configuration block for the parameters for a split charge method. This is only required for the `FIXED` method. See below.
 * `source` - (Required) Cost Category value that you want to split.
 * `targets` - (Required) Cost Category values that you want to split costs across. These values can't be used as a source in other split charge rules.
 
@@ -144,24 +144,30 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `awsCeCostCategory` using the id. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ce_cost_category` using the id. For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { CeCostCategory } from "./.gen/providers/aws/ce-cost-category";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    CeCostCategory.generateConfigForImport(this, "example", "costCategoryARN");
   }
 }
 
 ```
 
-Using `terraform import`, import `awsCeCostCategory` using the id. For example:
+Using `terraform import`, import `aws_ce_cost_category` using the id. For example:
 
 ```console
 % terraform import aws_ce_cost_category.example costCategoryARN
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-6d32509d874b0d724dcb62ee9ca6ed83a7cb80815f66336ea0a19f4b9bd60e60 -->
+<!-- cache-key: cdktf-0.20.1 input-6d32509d874b0d724dcb62ee9ca6ed83a7cb80815f66336ea0a19f4b9bd60e60 -->

@@ -52,15 +52,14 @@ func ResourceAgent() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ExactlyOneOf:  []string{"activation_key", "ip_address"},
-				ConflictsWith: []string{"private_link_endpoint"},
+				ConflictsWith: []string{"private_link_endpoint", "ip_address"},
 			},
 			"ip_address": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"activation_key", "ip_address"},
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"activation_key"},
 			},
 			"private_link_endpoint": {
 				Type:          schema.TypeString,
@@ -107,6 +106,10 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// Perform one time fetch of activation key from gateway IP address.
 	if activationKey == "" {
+		if agentIpAddress == "" {
+			return sdkdiag.AppendErrorf(diags, "one of activation_key or ip_address is required")
+		}
+
 		client := &http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
@@ -122,7 +125,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			requestURL = fmt.Sprintf("http://%s/?gatewayType=SYNC&activationRegion=%s", agentIpAddress, region)
 		}
 
-		request, err := http.NewRequest("GET", requestURL, nil)
+		request, err := http.NewRequest(http.MethodGet, requestURL, nil)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating HTTP request: %s", err)
 		}

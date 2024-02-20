@@ -277,7 +277,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCRUDDestroy(t *testing.T) {
 					testAccInvocationConfig_crudAllowSSM(rName, ssmParameterName),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCRUDDestroyResult(ctx, resourceName, ssmParameterName, destroyJSON, t),
+					testAccCheckCRUDDestroyResult(ctx, t, resourceName, ssmParameterName, destroyJSON),
 				),
 			},
 		},
@@ -365,7 +365,7 @@ func TestAccLambdaInvocation_terraformKey(t *testing.T) {
 // Because a destroy implies the resource will be removed from the state we need another way to check
 // how the lambda was invoked. The JSON used to invoke the lambda is stored in an SSM Parameter.
 // We will read it out, compare with the expected result and clean up the SSM parameter.
-func testAccCheckCRUDDestroyResult(ctx context.Context, name, ssmParameterName, expectedResult string, t *testing.T) resource.TestCheckFunc {
+func testAccCheckCRUDDestroyResult(ctx context.Context, t *testing.T, name, ssmParameterName, expectedResult string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[name]
 		if ok {

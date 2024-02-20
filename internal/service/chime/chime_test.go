@@ -34,6 +34,11 @@ func TestAccChime_serial(t *testing.T) {
 			"disappears": testAccVoiceConnectorOrigination_disappears,
 			"update":     testAccVoiceConnectorOrigination_update,
 		},
+		"VoiceConnectorStreaming": {
+			"basic":      testAccVoiceConnectorStreaming_basic,
+			"disappears": testAccVoiceConnectorStreaming_disappears,
+			"update":     testAccVoiceConnectorStreaming_update,
+		},
 		"VoiceConnectorTermination": {
 			"basic":      testAccVoiceConnectorTermination_basic,
 			"disappears": testAccVoiceConnectorTermination_disappears,

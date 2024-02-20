@@ -88,6 +88,7 @@ This data source exports the following attributes in addition to the arguments a
 * `dns_servers` - Information about the DNS servers to be used for DNS resolution.
 * `security_group_ids` - IDs of the security groups for the target network associated with the Client VPN endpoint.
 * `self_service_portal` - Whether the self-service portal for the Client VPN endpoint is enabled.
+* `self_service_portal_url` - The URL of the self-service portal.
 * `server_certificate_arn` - The ARN of the server certificate.
 * `session_timeout_hours` - The maximum VPN session duration time in hours.
 * `split_tunnel` - Whether split-tunnel is enabled in the AWS Client VPN endpoint.
@@ -101,4 +102,4 @@ This data source exports the following attributes in addition to the arguments a
 
 - `read` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.18.0 input-59f6f06c6cf9645ca1b189844289fe1fb6172dca20e441b5097e6b1a94115c5a -->
+<!-- cache-key: cdktf-0.20.1 input-bc05f6bb24f9086ff19f5d3ed7d1f4948088a83b4e318db8a86fe506a18104cf -->

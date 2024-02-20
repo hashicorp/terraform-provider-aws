@@ -200,7 +200,7 @@ func resourceCustomRoutingEndpointGroupDelete(ctx context.Context, d *schema.Res
 	})
 
 	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeEndpointGroupNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {

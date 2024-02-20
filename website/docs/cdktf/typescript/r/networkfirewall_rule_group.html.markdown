@@ -402,14 +402,14 @@ This resource supports the following arguments:
 
 * `tags` - (Optional) A map of key:value pairs to associate with the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-* `type` - (Required) Whether the rule group is stateless (containing stateless rules) or stateful (containing stateful rules). Valid values include: `stateful` or `stateless`.
+* `type` - (Required) Whether the rule group is stateless (containing stateless rules) or stateful (containing stateful rules). Valid values include: `STATEFUL` or `STATELESS`.
 
 ### Encryption Configuration
 
-`encryptionConfiguration` settings for customer managed KMS keys. Remove this block to use the default AWS-managed KMS encryption (rather than setting `type` to `awsOwnedKmsKey`).
+`encryptionConfiguration` settings for customer managed KMS keys. Remove this block to use the default AWS-managed KMS encryption (rather than setting `type` to `AWS_OWNED_KMS_KEY`).
 
 * `keyId` - (Optional) The ID of the customer managed key. You can use any of the [key identifiers](https://docs.aws.amazon.com/kms/latest/developerguide/concepts.html#key-id) that KMS supports, unless you're using a key that's managed by another account. If you're using a key managed by another account, then specify the key ARN.
-* `type` - (Required) The type of AWS KMS key to use for encryption of your Network Firewall resources. Valid values are `customerKms` and `awsOwnedKmsKey`.
+* `type` - (Required) The type of AWS KMS key to use for encryption of your Network Firewall resources. Valid values are `CUSTOMER_KMS` and `AWS_OWNED_KMS_KEY`.
 
 ### Rule Group
 
@@ -491,17 +491,17 @@ The `rulesSource` block supports the following arguments:
 
 The `statefulRuleOptions` block supports the following argument:
 
-~> **NOTE:** If the `strictOrder` rule order is specified, this rule group can only be referenced in firewall policies that also utilize `strictOrder` for the stateful engine. `strictOrder` can only be specified when using a `rulesSource` of `rulesString` or `statefulRule`.
+~> **NOTE:** If the `STRICT_ORDER` rule order is specified, this rule group can only be referenced in firewall policies that also utilize `STRICT_ORDER` for the stateful engine. `STRICT_ORDER` can only be specified when using a `rulesSource` of `rulesString` or `statefulRule`.
 
-* `ruleOrder` - (Required) Indicates how to manage the order of the rule evaluation for the rule group. Default value: `defaultActionOrder`. Valid values: `defaultActionOrder`, `strictOrder`.
+* `ruleOrder` - (Required) Indicates how to manage the order of the rule evaluation for the rule group. Default value: `DEFAULT_ACTION_ORDER`. Valid values: `DEFAULT_ACTION_ORDER`, `STRICT_ORDER`.
 
 ### Rules Source List
 
 The `rulesSourceList` block supports the following arguments:
 
-* `generatedRulesType` - (Required) String value to specify whether domains in the target list are allowed or denied access. Valid values: `allowlist`, `denylist`.
+* `generatedRulesType` - (Required) String value to specify whether domains in the target list are allowed or denied access. Valid values: `ALLOWLIST`, `DENYLIST`.
 
-* `targetTypes` - (Required) Set of types of domain specifications that are provided in the `targets` argument. Valid values: `httpHost`, `tlsSni`.
+* `targetTypes` - (Required) Set of types of domain specifications that are provided in the `targets` argument. Valid values: `HTTP_HOST`, `TLS_SNI`.
 
 * `targets` - (Required) Set of domains that you want to inspect for in your traffic flows.
 
@@ -509,7 +509,7 @@ The `rulesSourceList` block supports the following arguments:
 
 The `statefulRule` block supports the following arguments:
 
-* `action` - (Required) Action to take with packets in a traffic flow when the flow matches the stateful rule criteria. For all actions, AWS Network Firewall performs the specified action and discontinues stateful inspection of the traffic flow. Valid values: `alert`, `drop`, `pass`, or `reject`.
+* `action` - (Required) Action to take with packets in a traffic flow when the flow matches the stateful rule criteria. For all actions, AWS Network Firewall performs the specified action and discontinues stateful inspection of the traffic flow. Valid values: `ALERT`, `DROP`, `PASS`, or `REJECT`.
 
 * `header` - (Required) A configuration block containing the stateful 5-tuple inspection criteria for the rule, used to inspect traffic flows. See [Header](#header) below for details.
 
@@ -527,17 +527,17 @@ The `statelessRulesAndCustomActions` block supports the following arguments:
 
 The `header` block supports the following arguments:
 
-* `destination` - (Required) The destination IP address or address range to inspect for, in CIDR notation. To match with any address, specify `any`.
+* `destination` - (Required) The destination IP address or address range to inspect for, in CIDR notation. To match with any address, specify `ANY`.
 
-* `destinationPort` - (Required) The destination port to inspect for. To match with any address, specify `any`.
+* `destinationPort` - (Required) The destination port to inspect for. To match with any address, specify `ANY`.
 
-* `direction` - (Required) The direction of traffic flow to inspect. Valid values: `any` or `forward`.
+* `direction` - (Required) The direction of traffic flow to inspect. Valid values: `ANY` or `FORWARD`.
 
-* `protocol` - (Required) The protocol to inspect. Valid values: `ip`, `tcp`, `udp`, `icmp`, `http`, `ftp`, `tls`, `smb`, `dns`, `dcerpc`, `ssh`, `smtp`, `imap`, `msn`, `krb5`, `ikev2`, `tftp`, `ntp`, `dhcp`.
+* `protocol` - (Required) The protocol to inspect. Valid values: `IP`, `TCP`, `UDP`, `ICMP`, `HTTP`, `FTP`, `TLS`, `SMB`, `DNS`, `DCERPC`, `SSH`, `SMTP`, `IMAP`, `MSN`, `KRB5`, `IKEV2`, `TFTP`, `NTP`, `DHCP`.
 
-* `source` - (Required) The source IP address or address range for, in CIDR notation. To match with any address, specify `any`.
+* `source` - (Required) The source IP address or address range for, in CIDR notation. To match with any address, specify `ANY`.
 
-* `sourcePort` - (Required) The source port to inspect for. To match with any address, specify `any`.
+* `sourcePort` - (Required) The source port to inspect for. To match with any address, specify `ANY`.
 
 ### Rule Option
 
@@ -567,7 +567,7 @@ The `statelessRule` block supports the following arguments:
 
 The `ruleDefinition` block supports the following arguments:
 
-* `actions` - (Required) Set of actions to take on a packet that matches one of the stateless rule definition's `matchAttributes`. For every rule you must specify 1 standard action, and you can add custom actions. Standard actions include: `aws:pass`, `aws:drop`, `aws:forwardToSfe`.
+* `actions` - (Required) Set of actions to take on a packet that matches one of the stateless rule definition's `matchAttributes`. For every rule you must specify 1 standard action, and you can add custom actions. Standard actions include: `aws:pass`, `aws:drop`, `aws:forward_to_sfe`.
 
 * `matchAttributes` - (Required) A configuration block containing criteria for AWS Network Firewall to use to inspect an individual packet in stateless rule inspection. See [Match Attributes](#match-attributes) below for details.
 
@@ -638,10 +638,10 @@ The `sourcePort` block supports the following arguments:
 The `tcpFlag` block supports the following arguments:
 
 * `flags` - (Required) Set of flags to look for in a packet. This setting can only specify values that are also specified in `masks`.
-Valid values: `fin`, `syn`, `rst`, `psh`, `ack`, `urg`, `ece`, `cwr`.
+Valid values: `FIN`, `SYN`, `RST`, `PSH`, `ACK`, `URG`, `ECE`, `CWR`.
 
 * `masks` - (Optional) Set of flags to consider in the inspection. To inspect all flags, leave this empty.
-Valid values: `fin`, `syn`, `rst`, `psh`, `ack`, `urg`, `ece`, `cwr`.
+Valid values: `FIN`, `SYN`, `RST`, `PSH`, `ACK`, `URG`, `ECE`, `CWR`.
 
 ## Attribute Reference
 
@@ -663,9 +663,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { NetworkfirewallRuleGroup } from "./.gen/providers/aws/networkfirewall-rule-group";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    NetworkfirewallRuleGroup.generateConfigForImport(
+      this,
+      "example",
+      "arn:aws:network-firewall:us-west-1:123456789012:stateful-rulegroup/example"
+    );
   }
 }
 
@@ -677,4 +687,4 @@ Using `terraform import`, import Network Firewall Rule Groups using their `arn`.
 % terraform import aws_networkfirewall_rule_group.example arn:aws:network-firewall:us-west-1:123456789012:stateful-rulegroup/example
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-ef93e2bf518258ff78b58b7d51462d1757a12fe5ecae8c6b421815590aa49874 -->
+<!-- cache-key: cdktf-0.20.1 input-ef93e2bf518258ff78b58b7d51462d1757a12fe5ecae8c6b421815590aa49874 -->

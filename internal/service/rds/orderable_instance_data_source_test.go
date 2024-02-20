@@ -6,13 +6,16 @@ package rds_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 )
 
 func TestAccRDSOrderableInstanceDataSource_basic(t *testing.T) {
@@ -49,7 +52,6 @@ func TestAccRDSOrderableInstanceDataSource_preferredClass(t *testing.T) {
 	}
 
 	dataSourceName := "data.aws_rds_orderable_db_instance.test"
-	preferredClass := "db.t3.micro"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
@@ -58,9 +60,9 @@ func TestAccRDSOrderableInstanceDataSource_preferredClass(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccOrderableInstanceDataSourceConfig_preferredClass(preferredClass),
+				Config: testAccOrderableInstanceDataSourceConfig_preferredClass(),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "instance_class", preferredClass),
+					resource.TestCheckResourceAttrSet(dataSourceName, "instance_class"),
 				),
 			},
 		},
@@ -134,6 +136,179 @@ func TestAccRDSOrderableInstanceDataSource_supportsEnhancedMonitoring(t *testing
 				Config: testAccOrderableInstanceDataSourceConfig_supportsEnhancedMonitoring(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "supports_enhanced_monitoring", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSOrderableInstanceDataSource_latestVersion(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	dataSourceName := "data.aws_rds_orderable_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrderableInstanceDataSourceConfig_latestVersion(false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.ClusterEngineAuroraMySQL),
+					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", "false"),
+					resource.TestMatchResourceAttr(dataSourceName, "engine_version", regexache.MustCompile(`^5\.7\.mysql_aurora\..*`)),
+				),
+			},
+			{
+				Config: testAccOrderableInstanceDataSourceConfig_latestVersion(true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.ClusterEngineAuroraMySQL),
+					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", "true"),
+					resource.TestMatchResourceAttr(dataSourceName, "engine_version", regexache.MustCompile(`^5\.7\.mysql_aurora\..*`)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSOrderableInstanceDataSource_supportsGlobalDatabases(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	dataSourceName := "data.aws_rds_orderable_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrderableInstanceDataSourceConfig_supportsGlobalDatabases(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "supports_global_databases", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.ClusterEngineAuroraMySQL),
+					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", "true"),
+					resource.TestMatchResourceAttr(dataSourceName, "engine_version", regexache.MustCompile(`^8\.0\.mysql_aurora\..*`)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSOrderableInstanceDataSource_supportsClusters(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_rds_orderable_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrderableInstanceDataSourceConfig_supportsClusters(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "supports_clusters", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.ClusterEngineMySQL),
+					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", "true"),
+					resource.TestMatchResourceAttr(dataSourceName, "instance_class", regexache.MustCompile(`^db\..*large$`)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSOrderableInstanceDataSource_readReplicaCapable(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_rds_orderable_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrderableInstanceDataSourceConfig_readReplicaCapable(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "read_replica_capable", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.InstanceEngineOracleEnterprise),
+					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", "true"),
+					resource.TestCheckResourceAttrSet(dataSourceName, "instance_class"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSOrderableInstanceDataSource_supportsMultiAZ(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_rds_orderable_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrderableInstanceDataSourceConfig_supportsMultiAZ(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "supports_multi_az", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.ClusterEngineMySQL),
+					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", "true"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSOrderableInstanceDataSource_supportedEngineModes(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_rds_orderable_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrderableInstanceDataSourceConfig_supportedEngineModes(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", "true"),
+					resource.TestCheckResourceAttr(dataSourceName, "supported_engine_modes.0", "provisioned"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSOrderableInstanceDataSource_supportedNetworkTypes(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_rds_orderable_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccOrderableInstancePreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOrderableInstanceDataSourceConfig_supportedNetworkTypes(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "engine", tfrds.ClusterEngineAuroraPostgreSQL),
+					resource.TestCheckResourceAttr(dataSourceName, "engine_latest_version", "true"),
+					resource.TestCheckTypeSetElemAttr(dataSourceName, "supported_network_types.*", "DUAL"),
 				),
 			},
 		},
@@ -293,7 +468,6 @@ func testAccOrderableInstancePreCheck(ctx context.Context, t *testing.T) {
 
 	input := &rds.DescribeOrderableDBInstanceOptionsInput{
 		Engine:          aws.String("mysql"),
-		EngineVersion:   aws.String("8.0.20"),
 		DBInstanceClass: aws.String("db.m5.xlarge"),
 	}
 
@@ -327,10 +501,10 @@ data "aws_rds_orderable_db_instance" "test" {
   license_model  = %[3]q
   storage_type   = %[4]q
 }
-`, engine, mySQLPreferredInstanceClasses, license, storage)
+`, engine, mainInstanceClasses, license, storage)
 }
 
-func testAccOrderableInstanceDataSourceConfig_preferredClass(preferredClass string) string {
+func testAccOrderableInstanceDataSourceConfig_preferredClass() string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -341,13 +515,9 @@ data "aws_rds_orderable_db_instance" "test" {
   engine_version = data.aws_rds_engine_version.default.version
   license_model  = "general-public-license"
 
-  preferred_instance_classes = [
-    "db.xyz.xlarge",
-    %[1]q,
-    "db.t3.small",
-  ]
+  preferred_instance_classes = [%[1]s]
 }
-`, preferredClass)
+`, mainInstanceClasses)
 }
 
 func testAccOrderableInstanceDataSourceConfig_preferredVersion() string {
@@ -397,7 +567,7 @@ data "aws_rds_orderable_db_instance" "test" {
     "not.a.version",
   ]
 }
-`, mySQLPreferredInstanceClasses)
+`, mainInstanceClasses)
 }
 
 func testAccOrderableInstanceDataSourceConfig_supportsEnhancedMonitoring() string {
@@ -415,7 +585,88 @@ data "aws_rds_orderable_db_instance" "test" {
   preferred_engine_versions  = ["8.0.25", "8.0.26", data.aws_rds_engine_version.default.version]
   preferred_instance_classes = [%[1]s]
 }
-`, mySQLPreferredInstanceClasses)
+`, mainInstanceClasses)
+}
+
+func testAccOrderableInstanceDataSourceConfig_supportsGlobalDatabases() string {
+	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[2]s]
+  supports_global_databases  = true
+}
+`, tfrds.ClusterEngineAuroraMySQL, mainInstanceClasses)
+}
+
+func testAccOrderableInstanceDataSourceConfig_supportsClusters() string {
+	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[2]s]
+  storage_type               = "io1"
+  supports_iops              = true
+  supports_clusters          = true
+}
+`, tfrds.ClusterEngineMySQL, mainInstanceClasses)
+}
+
+func testAccOrderableInstanceDataSourceConfig_readReplicaCapable() string {
+	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[2]s]
+  read_replica_capable       = true
+  storage_type               = "gp3"
+}
+`, tfrds.InstanceEngineOracleEnterprise, strings.Replace(mainInstanceClasses, "db.t3.small", "frodo", 1))
+}
+
+func testAccOrderableInstanceDataSourceConfig_supportsMultiAZ() string {
+	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[2]s]
+  supports_multi_az          = true
+}
+`, tfrds.ClusterEngineMySQL, mainInstanceClasses)
+}
+
+func testAccOrderableInstanceDataSourceConfig_supportedEngineModes() string {
+	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[2]s]
+  supports_clusters          = true
+  supported_engine_modes     = ["provisioned", "serverless"]
+}
+`, tfrds.ClusterEngineAuroraPostgreSQL, mainInstanceClasses)
+}
+
+func testAccOrderableInstanceDataSourceConfig_supportedNetworkTypes() string {
+	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = true
+  preferred_instance_classes = [%[2]s]
+  supports_clusters          = true
+  supported_network_types    = ["DUAL"]
+}
+`, tfrds.ClusterEngineAuroraPostgreSQL, mainInstanceClasses)
+}
+
+func testAccOrderableInstanceDataSourceConfig_latestVersion(latestVersion bool) string {
+	return fmt.Sprintf(`
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = %[1]q
+  engine_latest_version      = %[2]t
+  preferred_instance_classes = [%[3]s]
+}
+`, tfrds.ClusterEngineAuroraMySQL, latestVersion, mainInstanceClasses)
 }
 
 func testAccOrderableInstanceDataSourceConfig_supportsIAMDatabaseAuthentication() string {
@@ -433,7 +684,7 @@ data "aws_rds_orderable_db_instance" "test" {
   preferred_engine_versions  = ["8.0.25", "8.0.26", data.aws_rds_engine_version.default.version]
   preferred_instance_classes = [%[1]s]
 }
-`, mySQLPreferredInstanceClasses)
+`, mainInstanceClasses)
 }
 
 func testAccOrderableInstanceDataSourceConfig_supportsIops() string {
@@ -450,7 +701,7 @@ data "aws_rds_orderable_db_instance" "test" {
   preferred_engine_versions  = ["8.0.20", "8.0.19", data.aws_rds_engine_version.default.version]
   preferred_instance_classes = [%[1]s]
 }
-`, mySQLPreferredInstanceClasses)
+`, mainInstanceClasses)
 }
 
 func testAccOrderableInstanceDataSourceConfig_supportsKerberosAuthentication() string {
@@ -468,7 +719,7 @@ data "aws_rds_orderable_db_instance" "test" {
   preferred_engine_versions  = ["14.1", "13.5", data.aws_rds_engine_version.default.version]
   preferred_instance_classes = [%[1]s]
 }
-`, postgresPreferredInstanceClasses)
+`, mainInstanceClasses)
 }
 
 func testAccOrderableInstanceDataSourceConfig_supportsPerformanceInsights() string {
@@ -485,7 +736,7 @@ data "aws_rds_orderable_db_instance" "test" {
   preferred_engine_versions  = ["8.0.25", "8.0.26", data.aws_rds_engine_version.default.version]
   preferred_instance_classes = [%[1]s]
 }
-`, mySQLPreferredInstanceClasses)
+`, mainInstanceClasses)
 }
 
 func testAccOrderableInstanceDataSourceConfig_supportsStorageAutoScaling() string {
@@ -502,7 +753,7 @@ data "aws_rds_orderable_db_instance" "test" {
   preferred_engine_versions  = ["8.0.20", "8.0.19", data.aws_rds_engine_version.default.version]
   preferred_instance_classes = [%[1]s]
 }
-`, mySQLPreferredInstanceClasses)
+`, mainInstanceClasses)
 }
 
 func testAccOrderableInstanceDataSourceConfig_supportsStorageEncryption() string {
@@ -520,5 +771,5 @@ data "aws_rds_orderable_db_instance" "test" {
   preferred_engine_versions  = ["8.0.25", "8.0.26", data.aws_rds_engine_version.default.version]
   preferred_instance_classes = [%[1]s]
 }
-`, mySQLPreferredInstanceClasses)
+`, mainInstanceClasses)
 }

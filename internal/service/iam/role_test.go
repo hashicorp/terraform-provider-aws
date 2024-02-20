@@ -171,9 +171,10 @@ func TestAccIAMRole_testNameChange(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"inline_policy"},
 			},
 			{
 				Config: testAccRoleConfig_post(rName),
@@ -436,7 +437,7 @@ func TestAccIAMRole_policiesForceDetach(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"force_detach_policies"},
+				ImportStateVerifyIgnore: []string{"force_detach_policies", "inline_policy", "managed_policy_arns"},
 			},
 		},
 	})

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -194,6 +195,38 @@ func TestAccGlueCatalogDatabase_targetDatabaseWithRegion(t *testing.T) {
 	})
 }
 
+func TestAccGlueCatalogDatabase_federatedDatabase(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_glue_catalog_database.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:  testAccCatalogDatabaseConfig_federatedDatabase(rName),
+				Destroy: false,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckCatalogDatabaseExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "glue", fmt.Sprintf("database/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "federated_database.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "federated_database.0.connection_name", "aws:redshift"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "federated_database.0.identifier", "redshift", regexache.MustCompile(`datashare:+.`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccGlueCatalogDatabase_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_glue_catalog_database.test"
@@ -318,6 +351,90 @@ resource "aws_glue_catalog_database" "test" {
   }
 }
 `, rName, desc)
+}
+
+func testAccCatalogDatabaseConfig_federatedDatabase(rName string) string {
+	return acctest.ConfigCompose(
+		fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+data "aws_caller_identity" "current" {}
+
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name = %[1]q
+  db_name        = "test"
+}
+
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+}
+
+resource "aws_redshiftdata_statement" "test_create" {
+  workgroup_name = aws_redshiftserverless_workgroup.test.workgroup_name
+  database       = aws_redshiftserverless_namespace.test.db_name
+  sql            = "CREATE DATASHARE tfacctest;"
+}
+`, rName),
+		// Split this resource into a string literal so the terraform `format` function
+		// interpolates properly
+		`
+resource "aws_redshiftdata_statement" "test_grant_usage" {
+  depends_on     = [aws_redshiftdata_statement.test_create]
+  workgroup_name = aws_redshiftserverless_workgroup.test.workgroup_name
+  database       = aws_redshiftserverless_namespace.test.db_name
+  sql            = format("GRANT USAGE ON DATASHARE tfacctest TO ACCOUNT '%s' VIA DATA CATALOG;", data.aws_caller_identity.current.account_id)
+}
+
+locals {
+  # Data share ARN is not returned from the GRANT USAGE statement, so must be
+  # composed manually.
+  # Ref: https://docs.aws.amazon.com/service-authorization/latest/reference/list_amazonredshift.html#amazonredshift-resources-for-iam-policies
+  data_share_arn = format("arn:%s:redshift:%s:%s:datashare:%s/%s",
+    data.aws_partition.current.id,
+    data.aws_region.current.name,
+    data.aws_caller_identity.current.account_id,
+    aws_redshiftserverless_namespace.test.namespace_id,
+    "tfacctest",
+  )
+}
+
+resource "aws_redshift_data_share_authorization" "test" {
+  depends_on = [aws_redshiftdata_statement.test_grant_usage]
+
+  data_share_arn      = local.data_share_arn
+  consumer_identifier = format("DataCatalog/%s", data.aws_caller_identity.current.account_id)
+}
+
+resource "aws_redshift_data_share_consumer_association" "test" {
+  depends_on = [aws_redshift_data_share_authorization.test]
+
+  data_share_arn = local.data_share_arn
+  consumer_arn = format("arn:%s:glue:%s:%s:catalog",
+    data.aws_partition.current.id,
+    data.aws_region.current.name,
+    data.aws_caller_identity.current.account_id,
+  )
+}
+
+resource "aws_lakeformation_resource" "test" {
+  depends_on = [aws_redshift_data_share_consumer_association.test]
+
+  arn                     = local.data_share_arn
+  use_service_linked_role = false
+}
+`,
+		fmt.Sprintf(`
+resource "aws_glue_catalog_database" "test" {
+  depends_on = [aws_lakeformation_resource.test]
+
+  name = %[1]q
+  federated_database {
+    connection_name = "aws:redshift"
+    identifier      = local.data_share_arn
+  }
+}
+`, rName))
 }
 
 func testAccCatalogDatabaseConfig_target(rName string) string {

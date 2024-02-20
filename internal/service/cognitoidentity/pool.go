@@ -181,7 +181,7 @@ func resourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return create.DiagError(names.CognitoIdentity, create.ErrActionReading, ResNamePool, d.Id(), err)
+		return create.AppendDiagError(diags, names.CognitoIdentity, create.ErrActionReading, ResNamePool, d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -223,7 +223,7 @@ func resourcePoolUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
 	log.Print("[DEBUG] Updating Cognito Identity Pool")
 
-	if d.HasChangesExcept("tags_all", "tags") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		params := &cognitoidentity.IdentityPool{
 			IdentityPoolId:                 aws.String(d.Id()),
 			AllowUnauthenticatedIdentities: aws.Bool(d.Get("allow_unauthenticated_identities").(bool)),

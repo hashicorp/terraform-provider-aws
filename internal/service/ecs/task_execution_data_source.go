@@ -48,6 +48,10 @@ func DataSourceTaskExecution() *schema.Resource {
 					},
 				},
 			},
+			"client_token": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"cluster": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -295,6 +299,9 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 	if v, ok := d.GetOk("capacity_provider_strategy"); ok {
 		input.CapacityProviderStrategy = expandCapacityProviderStrategy(v.(*schema.Set))
 	}
+	if v, ok := d.GetOk("client_token"); ok {
+		input.ClientToken = aws.String(v.(string))
+	}
 	if v, ok := d.GetOk("desired_count"); ok {
 		input.Count = aws.Int64(int64(v.(int)))
 	}
@@ -319,14 +326,14 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 	if v, ok := d.GetOk("placement_constraints"); ok {
 		pc, err := expandPlacementConstraints(v.(*schema.Set).List())
 		if err != nil {
-			return create.DiagError(names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), err)
+			return create.AppendDiagError(diags, names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), err)
 		}
 		input.PlacementConstraints = pc
 	}
 	if v, ok := d.GetOk("placement_strategy"); ok {
 		ps, err := expandPlacementStrategy(v.([]interface{}))
 		if err != nil {
-			return create.DiagError(names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), err)
+			return create.AppendDiagError(diags, names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), err)
 		}
 		input.PlacementStrategy = ps
 	}
@@ -345,10 +352,10 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 
 	out, err := conn.RunTaskWithContext(ctx, &input)
 	if err != nil {
-		return create.DiagError(names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), err)
+		return create.AppendDiagError(diags, names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), err)
 	}
 	if out == nil || len(out.Tasks) == 0 {
-		return create.DiagError(names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), tfresource.NewEmptyResultError(input))
+		return create.AppendDiagError(diags, names.ECS, create.ErrActionCreating, DSNameTaskExecution, d.Id(), tfresource.NewEmptyResultError(input))
 	}
 
 	var taskArns []*string
