@@ -761,7 +761,7 @@ func FindJobDefinitionByARN(ctx context.Context, conn *batch.Batch, arn string) 
 func ListActiveJobDefinitionByName(ctx context.Context, conn *batch.Batch, name string) ([]*batch.JobDefinition, error) {
 	input := &batch.DescribeJobDefinitionsInput{
 		JobDefinitionName: aws.String(name),
-		Status:            aws.String(JobDefinitionStatusActive),
+		Status:            aws.String(jobDefinitionStatusActive),
 	}
 
 	output, err := conn.DescribeJobDefinitionsWithContext(ctx, input)
