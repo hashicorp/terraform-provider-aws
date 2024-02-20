@@ -46,11 +46,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_combinedIngressEgressBasic
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			// acctest.PreCheckPartitionHasService(t, names.NetworkFirewall)
-			testAccPreCheck(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx),
@@ -140,24 +136,15 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_egressBasic(t *testing.T) 
 	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
-	commonName := "example.com"
-	caKey := acctest.TLSRSAPrivateKeyPEM(t, 4096)
-	caCertificate := acctest.TLSRSAX509SelfSignedCACertificatePEM(t, caKey)
-	key := acctest.TLSRSAPrivateKeyPEM(t, 4096)
-	certificate := acctest.TLSRSAX509LocallySignedCertificatePEM(t, caKey, caCertificate, key, commonName)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			// acctest.PreCheckPartitionHasService(t, names.NetworkFirewall)
-			testAccPreCheck(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTLSInspectionConfigurationConfig_egressBasic(rName, certificate, key, caCertificate, ca),
+				Config: testAccTLSInspectionConfigurationConfig_egressBasic(rName, ca),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &tlsinspectionconfiguration),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -188,7 +175,62 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_egressBasic(t *testing.T) 
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+}
+
+func TestAccNetworkFirewallTLSInspectionConfiguration_egressWithEncryptionConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var tlsinspectionconfiguration networkfirewall.DescribeTLSInspectionConfigurationOutput
+	ca := os.Getenv("ACM_CA_CERTIFICATE_ARN")
+	if ca == "" {
+		t.Skipf("Environment variable %s is not set, skipping test", ca)
+	}
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
+	keyName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTLSInspectionConfigurationConfig_egressWithEncryptionConfiguration(rName, ca),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &tlsinspectionconfiguration),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", "test"),
+					resource.TestCheckResourceAttrSet(resourceName, "last_modified_time"),
+					resource.TestCheckResourceAttrSet(resourceName, "number_of_associations"),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttrSet(resourceName, "update_token"),
+					resource.TestCheckResourceAttr(resourceName, "encryption_configuration.0.type", "CUSTOMER_KMS"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "encryption_configuration.0.key_id", keyName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.certificate_authority_arn", ca),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.check_certificate_revocation_status.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.check_certificate_revocation_status.0.revoked_status_action", "REJECT"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.check_certificate_revocation_status.0.unknown_status_action", "PASS"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.destinations.0.address_definition", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.destination_ports.0.from_port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.destination_ports.0.to_port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.protocols.0", "6"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.sources.0.address_definition", "0.0.0.0/0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.source_ports.0.from_port", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.source_ports.0.to_port", "65535"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "network-firewall", regexache.MustCompile(`tls-configuration/+.`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -209,11 +251,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_ingressBasic(t *testing.T)
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			// acctest.PreCheckPartitionHasService(t, names.NetworkFirewall)
-			testAccPreCheck(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx),
@@ -250,7 +288,6 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_ingressBasic(t *testing.T)
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
 			},
 		},
 	})
@@ -272,11 +309,7 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_ingressWithEncryptionConfi
 	keyName := "aws_kms_key.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			// acctest.PreCheckPartitionHasService(t, names.NetworkFirewall)
-			testAccPreCheck(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx),
@@ -303,7 +336,6 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_ingressWithEncryptionConfi
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.scopes.0.source_ports.0.to_port", "65535"),
 					resource.TestCheckResourceAttr(resourceName, "tls_inspection_configuration.0.server_certificate_configurations.0.check_certificate_revocation_status.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "certificate_authority.#", "0"),
-					// resource.TestCheckResourceAttr(resourceName, "certificates.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "network-firewall", regexache.MustCompile(`tls-configuration/+.`)),
 				),
 			},
@@ -311,7 +343,6 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_ingressWithEncryptionConfi
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				// ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
 			},
 		},
 	})
@@ -322,32 +353,25 @@ func TestAccNetworkFirewallTLSInspectionConfiguration_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
+	certificateArn := os.Getenv("ACM_CERTIFICATE_ARN")
+	if certificateArn == "" {
+		t.Skipf("Environment variable %s is not set, skipping test", certificateArn)
+	}
 
 	var tlsinspectionconfiguration networkfirewall.DescribeTLSInspectionConfigurationOutput
-	domainName := acctest.ACMCertificateDomainFromEnv(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_networkfirewall_tls_inspection_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.NetworkFirewall)
-			testAccPreCheck(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkFirewall),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTLSInspectionConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccTLSInspectionConfigurationConfig_ingressBasic(rName, domainName),
+				Config: testAccTLSInspectionConfigurationConfig_ingressBasic(rName, certificateArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTLSInspectionConfigurationExists(ctx, resourceName, &tlsinspectionconfiguration),
-					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-					// but expects a new resource factory function as the third argument. To expose this
-					// private function to the testing package, you may need to add a line like the following
-					// to exports_test.go:
-					//
-					//   var ResourceTLSInspectionConfiguration = newResourceTLSInspectionConfiguration
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfnetworkfirewall.ResourceTLSInspectionConfiguration, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -408,30 +432,6 @@ func testAccCheckTLSInspectionConfigurationExists(ctx context.Context, name stri
 		return nil
 	}
 }
-
-// func testAccPreCheck(ctx context.Context, t *testing.T) {
-// 	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkFirewallConn(ctx)
-
-// 	input := &networkfirewall.ListTLSInspectionConfigurationsInput{}
-// 	_, err := conn.ListTLSInspectionConfigurationsWithContext(ctx, input)
-
-// 	if acctest.PreCheckSkipError(err) {
-// 		t.Skipf("skipping acceptance testing: %s", err)
-// 	}
-// 	if err != nil {
-// 		t.Fatalf("unexpected PreCheck error: %s", err)
-// 	}
-// }
-
-// func testAccCheckTLSInspectionConfigurationNotRecreated(before, after *networkfirewall.DescribeTLSInspectionConfigurationOutput) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		if before, after := aws.ToString(before.TLSInspectionConfigurationResponse.TLSInspectionConfigurationId), aws.ToString(after.TLSInspectionConfigurationResponse.TLSInspectionConfigurationId); before != after {
-// 			return create.Error(names.NetworkFirewall, create.ErrActionCheckingNotRecreated, tfnetworkfirewall.ResNameTLSInspectionConfiguration, aws.ToString(before.TLSInspectionConfigurationId), errors.New("recreated"))
-// 		}
-
-// 		return nil
-// 	}
-// }
 
 func testAccTLSInspectionConfigurationConfig_combinedIngressEgress(rName, certificateARN, ca string) string {
 	return fmt.Sprintf(`
@@ -600,14 +600,8 @@ resource "aws_networkfirewall_tls_inspection_configuration" "test" {
 `, rName, certificateARN))
 }
 
-func testAccTLSInspectionConfigurationConfig_egressBasic(rName, certificate, privateKey, chain, ca string) string {
+func testAccTLSInspectionConfigurationConfig_egressBasic(rName, ca string) string {
 	return fmt.Sprintf(`
-resource "aws_acm_certificate" "test" {
-  certificate_body  = "%[2]s"
-  private_key       = "%[3]s"
-  certificate_chain = "%[4]s"
-}
-
 resource "aws_networkfirewall_tls_inspection_configuration" "test" {
   name        = %[1]q
   description = "test"
@@ -617,7 +611,7 @@ resource "aws_networkfirewall_tls_inspection_configuration" "test" {
   }
   tls_inspection_configuration {
     server_certificate_configurations {
-      certificate_authority_arn = %[5]q
+      certificate_authority_arn = %[2]q
       check_certificate_revocation_status {
         revoked_status_action = "REJECT"
         unknown_status_action = "PASS"
@@ -642,5 +636,44 @@ resource "aws_networkfirewall_tls_inspection_configuration" "test" {
     }
   }
 }
-`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(privateKey), acctest.TLSPEMEscapeNewlines(chain), ca)
+`, rName, ca)
+}
+
+func testAccTLSInspectionConfigurationConfig_egressWithEncryptionConfiguration(rName, ca string) string {
+	return acctest.ConfigCompose(testAccTLSInspectionConfigurationConfig_encryptionConfiguration(rName), fmt.Sprintf(`
+resource "aws_networkfirewall_tls_inspection_configuration" "test" {
+  name        = %[1]q
+  description = "test"
+  encryption_configuration {
+    key_id = aws_kms_key.test.arn
+    type   = "CUSTOMER_KMS"
+  }
+  tls_inspection_configuration {
+    server_certificate_configurations {
+      certificate_authority_arn = %[2]q
+      check_certificate_revocation_status {
+        revoked_status_action = "REJECT"
+        unknown_status_action = "PASS"
+      }
+      scopes {
+        protocols = [6]
+        destination_ports {
+          from_port = 443
+          to_port   = 443
+        }
+        destinations {
+          address_definition = "0.0.0.0/0"
+        }
+        source_ports {
+          from_port = 0
+          to_port   = 65535
+        }
+        sources {
+          address_definition = "0.0.0.0/0"
+        }
+      }
+    }
+  }
+}
+`, rName, ca))
 }
