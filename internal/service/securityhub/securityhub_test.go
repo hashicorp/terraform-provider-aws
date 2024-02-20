@@ -86,6 +86,10 @@ func TestAccSecurityHub_centralConfiguration(t *testing.T) {
 		"OrganizationConfiguration": {
 			"CentralConfiguration": testAccOrganizationConfiguration_centralConfiguration,
 		},
+		"ConfigurationPolicy": {
+			"basic":            testAccConfigurationPolicy_basic,
+			"customParameters": testAccConfigurationPolicy_controlCustomParameters,
+		},
 	}
 	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
