@@ -46,7 +46,7 @@ func ListJobDefinitionsV2ByNameWithStatus(ctx context.Context, conn *batch.Clien
 		out = append(out, page.JobDefinitions...)
 	}
 
-	if out == nil || len(out) == 0 {
+	if len(out) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
