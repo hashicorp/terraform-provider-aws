@@ -46,9 +46,11 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[types.AutoEnableStandards](),
 			},
 			"organization_configuration": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
+				Type:        schema.TypeList,
+				Optional:    true,
+				Computed:    true,
+				DefaultFunc: func() (interface{}, error) { return defaultOrganizationConfiguration, nil },
+				MaxItems:    1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"configuration_type": {
@@ -232,4 +234,10 @@ func flattenOrganizationConfiguration(apiObject *types.OrganizationConfiguration
 	}
 
 	return tfMap
+}
+
+var defaultOrganizationConfiguration = []interface{}{
+	map[string]interface{}{
+		"configuration_type": types.OrganizationConfigurationConfigurationTypeLocal,
+	},
 }

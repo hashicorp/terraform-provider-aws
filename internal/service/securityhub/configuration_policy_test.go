@@ -321,7 +321,7 @@ func testAccConfigurationPolicyConfig_controlCustomParametersMulti(standardsArn 
 		testAccCentralConfigurationEnabledConfig_base,
 		fmt.Sprintf(`
 			resource "aws_securityhub_configuration_policy" "test" {
-				name        = "MultipleControlCustomParametersPolicy"
+				name = "MultipleControlCustomParametersPolicy"
 				security_hub_policy {
 					service_enabled       = true
 					enabled_standard_arns = [
@@ -375,7 +375,7 @@ func testAccConfigurationPolicyConfig_controlCustomParametersSingle(standardsArn
 		testAccCentralConfigurationEnabledConfig_base,
 		fmt.Sprintf(`
 			resource "aws_securityhub_configuration_policy" "test" {
-				name        = "ControlCustomParametersPolicy"
+				name = "ControlCustomParametersPolicy"
 				security_hub_policy {
 					service_enabled       = true
 					enabled_standard_arns = [
@@ -413,7 +413,7 @@ func testAccConfigurationPolicyConfig_specifcControlIdentifiers(standardsArn, co
 		testAccCentralConfigurationEnabledConfig_base,
 		fmt.Sprintf(`
 			resource "aws_securityhub_configuration_policy" "test" {
-				name        = "ControlCustomParametersPolicy"
+				name = "ControlIdentifiersPolicy"
 				security_hub_policy {
 					service_enabled       = true
 					enabled_standard_arns = [
