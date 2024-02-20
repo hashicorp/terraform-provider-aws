@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_config_configuration_recorder: Fix `panic: interface conversion: interface {} is nil, not map[string]interface {}` when `recording_group.exclusion_by_resource_types` is empty
+```
