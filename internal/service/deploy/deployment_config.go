@@ -5,7 +5,6 @@ package deploy
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -183,12 +182,12 @@ func resourceDeploymentConfigRead(ctx context.Context, d *schema.ResourceData, m
 		Service:   "codedeploy",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("deploymentconfig:%s", deploymentConfigName),
+		Resource:  "deploymentconfig:" + deploymentConfigName,
 	}.String()
 	d.Set("arn", arn)
 	d.Set("compute_platform", deploymentConfig.ComputePlatform)
 	d.Set("deployment_config_id", deploymentConfig.DeploymentConfigId)
-	d.Set("deployment_config_name", deploymentConfig.DeploymentConfigName)
+	d.Set("deployment_config_name", deploymentConfigName)
 	if err := d.Set("minimum_healthy_hosts", flattenMinimumHealthHosts(deploymentConfig.MinimumHealthyHosts)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting minimum_healthy_hosts: %s", err)
 	}
