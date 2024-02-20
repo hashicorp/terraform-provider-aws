@@ -449,7 +449,6 @@ func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req res
 				return
 			}
 			in.TLSInspectionConfiguration = expandTLSInspectionConfiguration(ctx, tfList)
-
 		}
 
 		if !plan.EncryptionConfiguration.IsNull() {
@@ -730,7 +729,6 @@ func flattenTLSInspectionConfiguration(ctx context.Context, tlsInspectionConfigu
 	diags.Append(d...)
 
 	return listVal, diags
-
 }
 
 func flattenServerCertificateConfigurations(ctx context.Context, serverCertificateConfigurations []*networkfirewall.ServerCertificateConfiguration) (types.List, diag.Diagnostics) {
@@ -819,30 +817,6 @@ func flattenServerCertificates(ctx context.Context, serverCertificateList []*net
 	return listVal, diags
 }
 
-// func flattenCertificates(ctx context.Context, certificateList []*networkfirewall.TlsCertificateData) (types.List, diag.Diagnostics) {
-// 	var diags diag.Diagnostics
-// 	elemType := types.ObjectType{AttrTypes: certificatesAttrTypes}
-
-// 	if len(certificateList) == 0 {
-// 		return types.ListNull(elemType), diags
-// 	}
-
-// 	elems := []attr.Value{}
-// 	for _, certificate := range certificateList {
-// 		if certificate == nil {
-// 			continue
-// 		}
-// 		flattenedCertificate, d := flattenTLSCertificate(ctx, certificate)
-// 		diags.Append(d...)
-// 		elems = append(elems, flattenedCertificate)
-// 	}
-
-// 	listVal, d := types.ListValue(elemType, elems)
-// 	diags.Append(d...)
-
-// 	return listVal, diags
-// }
-
 func flattenTLSCertificate(ctx context.Context, certificate *networkfirewall.TlsCertificateData) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: certificatesAttrTypes}
@@ -864,7 +838,6 @@ func flattenTLSCertificate(ctx context.Context, certificate *networkfirewall.Tls
 	diags.Append(d...)
 
 	return listVal, diags
-
 }
 
 func flattenScopes(ctx context.Context, scopes []*networkfirewall.ServerCertificateScope) (types.List, diag.Diagnostics) {
@@ -909,7 +882,6 @@ func flattenScopes(ctx context.Context, scopes []*networkfirewall.ServerCertific
 	diags.Append(d...)
 
 	return listVal, diags
-
 }
 
 func flattenProtocols(list []*int64) (types.List, diag.Diagnostics) {
@@ -1015,9 +987,7 @@ func flattenTLSEncryptionConfiguration(ctx context.Context, encryptionConfigurat
 	diags.Append(d...)
 
 	return listVal, diags
-
 }
-
 // TODO: add note explaining why not using existing expandEncryptionConfiguration()
 func expandTLSEncryptionConfiguration(tfList []encryptionConfigurationData) *networkfirewall.EncryptionConfiguration {
 	if len(tfList) == 0 {
