@@ -68,7 +68,8 @@ func testAccConfigurationPolicy_basic(t *testing.T) {
 func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_configuration_policy.test"
-	standardsArn := fmt.Sprintf("arn:aws:securityhub:%s::standards/aws-foundational-security-best-practices/v/1.0.0", acctest.Region())
+	foundationalStandardsArn := fmt.Sprintf("arn:aws:securityhub:%s::standards/aws-foundational-security-best-practices/v/1.0.0", acctest.Region())
+	nistStandardsArn := fmt.Sprintf("arn:aws:securityhub:%s::standards/nist-800-53/v/5.0.0", acctest.Region())
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -81,7 +82,7 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationPolicyConfig_controlCustomParametersMulti(standardsArn),
+				Config: testAccConfigurationPolicyConfig_controlCustomParametersMulti(foundationalStandardsArn),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
 
@@ -120,12 +121,139 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
-			// {
-			// 	Config: testAccConfigurationPolicyConfig_controlCustomParametersSingle(standardsArn, "id", "name", "type", "value"),
-			// 	Check: resource.ComposeTestCheckFunc(
-			// 		testAccCheckConfigurationPolicyExists(ctx, resourceName),
-			// 	),
-			// },
+			{
+				// bool type
+				Config: testAccConfigurationPolicyConfig_controlCustomParametersSingle(nistStandardsArn, "CloudWatch.15", "insufficientDataActionRequired", "bool", "true"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationPolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.security_controls_configuration.0.control_custom_parameter.0.control_identifier", "CloudWatch.15"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "security_hub_policy.0.security_controls_configuration.0.control_custom_parameter.0.parameter.*", map[string]string{
+						"name":         "insufficientDataActionRequired",
+						"value_type":   "CUSTOM",
+						"bool.0.value": "true",
+					}),
+				),
+			},
+			{
+				// double type
+				Config: testAccConfigurationPolicyConfig_controlCustomParametersSingle(foundationalStandardsArn, "RDS.14", "BacktrackWindowInHours", "double", "20.25"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationPolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.security_controls_configuration.0.control_custom_parameter.0.control_identifier", "RDS.14"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "security_hub_policy.0.security_controls_configuration.0.control_custom_parameter.0.parameter.*", map[string]string{
+						"name":           "BacktrackWindowInHours",
+						"value_type":     "CUSTOM",
+						"double.0.value": "20.25",
+					}),
+				),
+			},
+			{
+				// enum type
+				Config: testAccConfigurationPolicyConfig_controlCustomParametersSingle(foundationalStandardsArn, "APIGateway.1", "loggingLevel", "enum", `"ERROR"`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationPolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.security_controls_configuration.0.control_custom_parameter.0.control_identifier", "APIGateway.1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "security_hub_policy.0.security_controls_configuration.0.control_custom_parameter.0.parameter.*", map[string]string{
+						"name":         "loggingLevel",
+						"value_type":   "CUSTOM",
+						"enum.0.value": "ERROR",
+					}),
+				),
+			},
+			{
+				// enum_list type
+				Config: testAccConfigurationPolicyConfig_controlCustomParametersSingle(foundationalStandardsArn, "S3.11", "eventTypes", "enum_list", `["s3:IntelligentTiering", "s3:LifecycleExpiration:*"]`),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationPolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.security_controls_configuration.0.control_custom_parameter.0.control_identifier", "S3.11"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "security_hub_policy.0.security_controls_configuration.0.control_custom_parameter.0.parameter.*", map[string]string{
+						"name":                "eventTypes",
+						"value_type":          "CUSTOM",
+						"enum_list.0.value.#": "2",
+						"enum_list.0.value.0": "s3:IntelligentTiering",
+						"enum_list.0.value.1": "s3:LifecycleExpiration:*",
+					}),
+				),
+			},
+			{
+				// int type
+				Config: testAccConfigurationPolicyConfig_controlCustomParametersSingle(foundationalStandardsArn, "DocumentDB.2", "minimumBackupRetentionPeriod", "int", "20"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationPolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.security_controls_configuration.0.control_custom_parameter.0.control_identifier", "DocumentDB.2"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "security_hub_policy.0.security_controls_configuration.0.control_custom_parameter.0.parameter.*", map[string]string{
+						"name":        "minimumBackupRetentionPeriod",
+						"value_type":  "CUSTOM",
+						"int.0.value": "20",
+					}),
+				),
+			},
+			{
+				// int_list type
+				Config: testAccConfigurationPolicyConfig_controlCustomParametersSingle(foundationalStandardsArn, "EC2.18", "authorizedTcpPorts", "int_list", "[443, 8080]"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationPolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.security_controls_configuration.0.control_custom_parameter.0.control_identifier", "EC2.18"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "security_hub_policy.0.security_controls_configuration.0.control_custom_parameter.0.parameter.*", map[string]string{
+						"name":               "authorizedTcpPorts",
+						"value_type":         "CUSTOM",
+						"int_list.0.value.#": "2",
+						"int_list.0.value.0": "443",
+						"int_list.0.value.1": "8080",
+					}),
+				),
+			},
+			// TODO: add string, string_list type tests when controls exist
+		},
+	})
+}
+
+func testAccConfigurationPolicy_specificControlIdentifiers(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_securityhub_configuration_policy.test"
+	foundationalStandardsArn := fmt.Sprintf("arn:aws:securityhub:%s::standards/aws-foundational-security-best-practices/v/1.0.0", acctest.Region())
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckAlternateRegionIs(t, acctest.Region())
+			acctest.PreCheckOrganizationMemberAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationPolicyConfig_specifcControlIdentifiers(foundationalStandardsArn, "IAM.7", "APIGateway.1", false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationPolicyExists(ctx, resourceName),
+
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.security_controls_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.security_controls_configuration.0.disabled_control_identifiers.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.security_controls_configuration.0.disabled_control_identifiers.0", "IAM.7"),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.security_controls_configuration.0.disabled_control_identifiers.1", "APIGateway.1"),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.security_controls_configuration.0.enabled_control_identifiers.#", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccConfigurationPolicyConfig_specifcControlIdentifiers(foundationalStandardsArn, "APIGateway.1", "IAM.7", true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationPolicyExists(ctx, resourceName),
+
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.security_controls_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.security_controls_configuration.0.enabled_control_identifiers.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.security_controls_configuration.0.enabled_control_identifiers.0", "APIGateway.1"),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.security_controls_configuration.0.enabled_control_identifiers.1", "IAM.7"),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.security_controls_configuration.0.disabled_control_identifiers.#", "0"),
+				),
+			},
 		},
 	})
 }
@@ -193,7 +321,7 @@ func testAccConfigurationPolicyConfig_controlCustomParametersMulti(standardsArn 
 		testAccCentralConfigurationEnabledConfig_base,
 		fmt.Sprintf(`
 			resource "aws_securityhub_configuration_policy" "test" {
-				name        = "ControlCustomParametersPolicy"
+				name        = "MultipleControlCustomParametersPolicy"
 				security_hub_policy {
 					service_enabled       = true
 					enabled_standard_arns = [
@@ -261,7 +389,7 @@ func testAccConfigurationPolicyConfig_controlCustomParametersSingle(standardsArn
 								name       = %[3]q
 								value_type = "CUSTOM"
 								%[4]s {
-									value = %[5]q 
+									value = %[5]s
 								}
 							}
 						}
@@ -270,6 +398,37 @@ func testAccConfigurationPolicyConfig_controlCustomParametersSingle(standardsArn
 
 				depends_on = [aws_securityhub_organization_configuration.test]
 			}`, standardsArn, controlID, paramName, paramType, paramValue),
+	)
+}
+
+func testAccConfigurationPolicyConfig_specifcControlIdentifiers(standardsArn, control1, control2 string, enabledOnly bool) string {
+	controlIDAttr := "disabled_control_identifiers"
+	if enabledOnly {
+		controlIDAttr = "enabled_control_identifiers"
+	}
+
+	return acctest.ConfigCompose(
+		acctest.ConfigAlternateAccountProvider(),
+		testAccMemberAccountDelegatedAdminConfig_base,
+		testAccCentralConfigurationEnabledConfig_base,
+		fmt.Sprintf(`
+			resource "aws_securityhub_configuration_policy" "test" {
+				name        = "ControlCustomParametersPolicy"
+				security_hub_policy {
+					service_enabled       = true
+					enabled_standard_arns = [
+						%[1]q
+					]
+					security_controls_configuration {
+						%[2]s = [
+							%[3]q,
+							%[4]q
+						]
+					}
+				}
+
+				depends_on = [aws_securityhub_organization_configuration.test]
+			}`, standardsArn, controlIDAttr, control1, control2),
 	)
 }
 

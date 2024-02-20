@@ -84,11 +84,12 @@ func TestAccSecurityHub_centralConfiguration(t *testing.T) {
 	t.Parallel()
 	testCases := map[string]map[string]func(t *testing.T){
 		"OrganizationConfiguration": {
-			"CentralConfiguration": testAccOrganizationConfiguration_centralConfiguration,
+			"centralConfiguration": testAccOrganizationConfiguration_centralConfiguration,
 		},
 		"ConfigurationPolicy": {
-			"basic":            testAccConfigurationPolicy_basic,
-			"customParameters": testAccConfigurationPolicy_controlCustomParameters,
+			"basic":              testAccConfigurationPolicy_basic,
+			"customParameters":   testAccConfigurationPolicy_controlCustomParameters,
+			"controlIdentifiers": testAccConfigurationPolicy_specificControlIdentifiers,
 		},
 	}
 	acctest.RunSerialTests2Levels(t, testCases, 0)
