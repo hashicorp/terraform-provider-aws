@@ -13,6 +13,7 @@ const (
 
 const (
 	defaultConfigurationRecorderName = "default"
+	defaultDeliveryChannelName       = "default"
 )
 
 const (

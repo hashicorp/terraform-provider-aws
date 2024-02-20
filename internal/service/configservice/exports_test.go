@@ -7,7 +7,9 @@ package configservice
 var (
 	ResourceConfigurationRecorder       = resourceConfigurationRecorder
 	ResourceConfigurationRecorderStatus = resourceConfigurationRecorderStatus
+	ResourceDeliveryChannel             = resourceDeliveryChannel
 
 	FindConfigurationRecorderByName       = findConfigurationRecorderByName
 	FindConfigurationRecorderStatusByName = findConfigurationRecorderStatusByName
+	FindDeliveryChannelByName             = findDeliveryChannelByName
 )

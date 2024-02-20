@@ -274,13 +274,3 @@ func flattenRuleSourceDetails(details []*configservice.SourceDetail) []interface
 
 	return items
 }
-
-func flattenSnapshotDeliveryProperties(p *configservice.ConfigSnapshotDeliveryProperties) []map[string]interface{} {
-	m := make(map[string]interface{})
-
-	if p.DeliveryFrequency != nil {
-		m["delivery_frequency"] = aws.StringValue(p.DeliveryFrequency)
-	}
-
-	return []map[string]interface{}{m}
-}
