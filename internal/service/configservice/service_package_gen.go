@@ -53,8 +53,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceConfigurationRecorder,
+			Factory:  resourceConfigurationRecorder,
 			TypeName: "aws_config_configuration_recorder",
+			Name:     "Configuration Recorder",
 		},
 		{
 			Factory:  ResourceConfigurationRecorderStatus,

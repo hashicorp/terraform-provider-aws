@@ -12,6 +12,10 @@ const (
 )
 
 const (
+	defaultConfigurationRecorderName = "default"
+)
+
+const (
 	ResNameAggregateAuthorization      = "Aggregate Authorization"
 	ResNameConfigurationAggregator     = "Configuration Aggregator"
 	ResNameConfigurationRecorderStatus = "Configuration Recorder Status"
