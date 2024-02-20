@@ -55,7 +55,7 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 
 	name := d.Get("name").(string)
 
-	group, err := FindCacheSubnetGroupByName(ctx, conn, name)
+	group, err := findCacheSubnetGroupByName(ctx, conn, name)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Subnet Group (%s): %s", name, err)

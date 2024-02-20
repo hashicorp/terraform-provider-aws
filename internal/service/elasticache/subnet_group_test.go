@@ -39,14 +39,13 @@ func TestAccElastiCacheSubnetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"description"},
 			},
 		},
 	})
@@ -100,8 +99,6 @@ func TestAccElastiCacheSubnetGroup_tags(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"description"},
 			},
 			{
 				Config: testAccSubnetGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -150,8 +147,6 @@ func TestAccElastiCacheSubnetGroup_update(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"description"},
 			},
 			{
 				Config: testAccSubnetGroupConfig_updatePost(rName),
