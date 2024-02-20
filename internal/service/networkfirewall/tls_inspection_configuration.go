@@ -431,7 +431,6 @@ func (r *resourceTLSInspectionConfiguration) Update(ctx context.Context, req res
 	if !plan.Description.Equal(state.Description) ||
 		!plan.TLSInspectionConfiguration.Equal(state.TLSInspectionConfiguration) ||
 		!plan.EncryptionConfiguration.Equal(state.EncryptionConfiguration) {
-
 		in := &networkfirewall.UpdateTLSInspectionConfigurationInput{
 			TLSInspectionConfigurationArn:  aws.String(plan.ARN.ValueString()),
 			TLSInspectionConfigurationName: aws.String(plan.Name.ValueString()),
