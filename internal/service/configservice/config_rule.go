@@ -36,7 +36,6 @@ func ResourceConfigRule() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(0, 64),
-				ForceNew:     true,
 			},
 			"rule_id": {
 				Type:     schema.TypeString,
