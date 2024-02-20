@@ -242,6 +242,60 @@ func (r *resourceEnrollmentStatus) Create(ctx context.Context, req resource.Crea
 }
 
 func (r *resourceEnrollmentStatus) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	// TIP: ==== RESOURCE READ ====
+	// Generally, the Read function should do the following things. Make
+	// sure there is a good reason if you don't do one of these.
+	//
+	// 1. Get a client connection to the relevant service
+	// 2. Fetch the state
+	// 3. Get the resource from AWS
+	// 4. Remove resource from state if it is not found
+	// 5. Set the arguments and attributes
+	// 6. Set the state
+
+	// TIP: -- 1. Get a client connection to the relevant service
+	conn := r.Meta().CostOptimizationHubClient(ctx)
+
+	// TIP: -- 2. Fetch the state
+	var state resourceEnrollmentStatusData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
+	// type function, or, better yet, using a finder.
+	// TIP: -- 3. Populate a create input structure
+	in := &costoptimizationhub.ListEnrollmentStatusesInput{
+		IncludeOrganizationInfo: false, //Pass in false to get only this account's status
+	}
+
+	out, err := conn.ListEnrollmentStatuses(ctx, in)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionSetting, ResNameEnrollmentStatus, "ListEnrollmentStatuses", err),
+			err.Error(),
+		)
+		return
+	}
+
+	// TIP: -- 5. Set the arguments and attributes
+	//
+	// For simple data types (i.e., schema.StringAttribute, schema.BoolAttribute,
+	// schema.Int64Attribute, and schema.Float64Attribue), simply setting the
+	// appropriate data struct field is sufficient. The flex package implements
+	// helpers for converting between Go and Plugin-Framework types seamlessly. No
+	// error or nil checking is necessary.
+	//
+	// However, there are some situations where more handling is needed such as
+	// complex data types (e.g., schema.ListAttribute, schema.SetAttribute). In
+	// these cases the flatten function may have a diagnostics return value, which
+	// should be appended to resp.Diagnostics.
+	state.Status = flex.StringValueToFramework(ctx, out.Items[0].Status)
+	state.IncludeMemberAccounts = flex.BoolToFramework(ctx, out.IncludeMemberAccounts)
+
+	// TIP: -- 6. Set the state
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
 func (r *resourceEnrollmentStatus) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
