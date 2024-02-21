@@ -51,7 +51,8 @@ func (r *resourceDeployment) Schema(ctx context.Context, req resource.SchemaRequ
 			"service_arn": schema.StringAttribute{
 				Required: true,
 			},
-			"id": schema.StringAttribute{
+			"id": framework.IDAttribute(),
+			"operation_id": schema.StringAttribute{
 				Computed: true,
 			},
 			"status": schema.StringAttribute{
@@ -97,7 +98,7 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	plan.ID = flex.StringToFramework(ctx, out.OperationId)
+	plan.OperationID = flex.StringToFramework(ctx, out.OperationId)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitDeploymentSucceeded(ctx, conn, plan.ServiceArn.ValueString(), createTimeout)
@@ -134,7 +135,7 @@ func (r *resourceDeployment) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	state.ID = flex.StringToFramework(ctx, out.Id)
+	state.OperationID = flex.StringToFramework(ctx, out.Id)
 	state.Status = flex.StringValueToFramework(ctx, out.Status)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -221,8 +222,9 @@ func findDeploymentOperationByServiceARN(ctx context.Context, conn *apprunner.Cl
 }
 
 type resourceDeploymentData struct {
-	ServiceArn types.String   `tfsdk:"service_arn"`
-	ID         types.String   `tfsdk:"id"`
-	Status     types.String   `tfsdk:"status"`
-	Timeouts   timeouts.Value `tfsdk:"timeouts"`
+	ServiceArn  types.String   `tfsdk:"service_arn"`
+	ID          types.String   `tfsdk:"id"`
+	OperationID types.String   `tfsdk:"operation_id"`
+	Status      types.String   `tfsdk:"status"`
+	Timeouts    timeouts.Value `tfsdk:"timeouts"`
 }
