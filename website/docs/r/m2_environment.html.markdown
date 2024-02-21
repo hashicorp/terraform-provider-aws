@@ -19,7 +19,7 @@ resource "aws_m2_environment" "test" {
   engine_type     = "bluage"
   instance_type   = "M2.m5.large"
   security_groups = ["sg-01234567890abcdef"]
-  subnet_ids      = ["subnet-01234567890abcdef"]
+  subnet_ids      = ["subnet-01234567890abcdef", "subnet-01234567890abcdea"]
 }
 ```
 
@@ -47,7 +47,7 @@ resource "aws_m2_environment" "test" {
   engine_type     = "bluage"
   instance_type   = "M2.m5.large"
   security_groups = ["sg-01234567890abcdef"]
-  subnet_ids      = ["subnet-01234567890abcdef"]
+  subnet_ids      = ["subnet-01234567890abcdef", "subnet-01234567890abcdea"]
   storage_configuration {
     efs {
       file_system_id = "fs-01234567890abcdef"
@@ -65,7 +65,7 @@ resource "aws_m2_environment" "test" {
   engine_type     = "bluage"
   instance_type   = "M2.m5.large"
   security_groups = ["sg-01234567890abcdef"]
-  subnet_ids      = ["subnet-01234567890abcdef"]
+  subnet_ids      = ["subnet-01234567890abcdef", "subnet-01234567890abcdea"]
 
   storage_configuration {
     fsx {
@@ -84,8 +84,6 @@ The following arguments are required:
 * `name` - (Required) Name of the runtime environment. Must be unique within the account.
 * `engine_type` - (Required) Engine type must be `microfocus | bluage`.
 * `instance_type` - (Required) M2 Instance Type.
-* `security_groups` - (Required) List of security group ids.
-* `subnet_ids` - (Required) List of subnet ids to deploy environment to.
 
 The following arguments are optional:
 
@@ -94,6 +92,8 @@ The following arguments are optional:
 * `kms_key_id` - (Optional) KMS Key to use for the Environment.
 * `preferred_maintenance_window` - (Optional) Configures the maintenance window that you want for the runtime environment. The maintenance window must have the format `ddd:hh24:mi-ddd:hh24:mi` and must be less than 24 hours. If not provided a random value will be used.
 * `publicly_accessible` - (Optional) Allow applications deployed to this environment to be publicly accessible.
+* `security_groups` - (Optional) List of security group ids.
+* `subnet_ids` - (Optional) List of subnet ids to deploy environment to.
 * `tags` - (Optional) Key-value tags for the place index. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### storage_configuration
@@ -129,6 +129,8 @@ The following arguments are required:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Environment.
+* `id` - The id of the Environment.
+* `environment_id` - The id of the Environment.
 * `load_balancer_arn` - ARN of the load balancer created by the Environment.
 
 ## Timeouts
