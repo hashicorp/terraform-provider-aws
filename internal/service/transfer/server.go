@@ -457,7 +457,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("directory_id", "")
 	}
 	d.Set("domain", output.Domain)
-	d.Set("endpoint", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.server.transfer", d.Id())))
+	d.Set("endpoint", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.server.transfer", d.Id())))
 	if output.EndpointDetails != nil {
 		securityGroupIDs := make([]*string, 0)
 

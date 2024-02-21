@@ -70,7 +70,7 @@ func (c *AWSClient) PartitionHostname(ctx context.Context, prefix string) string
 // RegionalHostname returns a hostname with the provider domain suffix for the region and partition
 // e.g. PREFIX.us-west-2.amazonaws.com
 // The prefix should not contain a trailing period.
-func (c *AWSClient) RegionalHostname(prefix string) string {
+func (c *AWSClient) RegionalHostname(ctx context.Context, prefix string) string {
 	return fmt.Sprintf("%s.%s.%s", prefix, c.Region, c.DNSSuffix)
 }
 
@@ -121,23 +121,23 @@ func (c *AWSClient) RegisterLogger(ctx context.Context) context.Context {
 
 // APIGatewayInvokeURL returns the Amazon API Gateway (REST APIs) invoke URL for the configured AWS Region.
 // See https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-call-api.html.
-func (c *AWSClient) APIGatewayInvokeURL(restAPIID, stageName string) string {
-	return fmt.Sprintf("https://%s/%s", c.RegionalHostname(fmt.Sprintf("%s.execute-api", restAPIID)), stageName)
+func (c *AWSClient) APIGatewayInvokeURL(ctx context.Context, restAPIID, stageName string) string {
+	return fmt.Sprintf("https://%s/%s", c.RegionalHostname(ctx, fmt.Sprintf("%s.execute-api", restAPIID)), stageName)
 }
 
 // APIGatewayV2InvokeURL returns the Amazon API Gateway v2 (WebSocket & HTTP APIs) invoke URL for the configured AWS Region.
 // See https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-publish.html and
 // https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-set-up-websocket-deployment.html.
-func (c *AWSClient) APIGatewayV2InvokeURL(protocolType, apiID, stageName string) string {
+func (c *AWSClient) APIGatewayV2InvokeURL(ctx context.Context, protocolType, apiID, stageName string) string {
 	if protocolType == apigatewayv2_sdkv1.ProtocolTypeWebsocket {
-		return fmt.Sprintf("wss://%s/%s", c.RegionalHostname(fmt.Sprintf("%s.execute-api", apiID)), stageName)
+		return fmt.Sprintf("wss://%s/%s", c.RegionalHostname(ctx, fmt.Sprintf("%s.execute-api", apiID)), stageName)
 	}
 
 	if stageName == "$default" {
-		return fmt.Sprintf("https://%s/", c.RegionalHostname(fmt.Sprintf("%s.execute-api", apiID)))
+		return fmt.Sprintf("https://%s/", c.RegionalHostname(ctx, fmt.Sprintf("%s.execute-api", apiID)))
 	}
 
-	return fmt.Sprintf("https://%s/%s", c.RegionalHostname(fmt.Sprintf("%s.execute-api", apiID)), stageName)
+	return fmt.Sprintf("https://%s/%s", c.RegionalHostname(ctx, fmt.Sprintf("%s.execute-api", apiID)), stageName)
 }
 
 // CloudFrontDistributionHostedZoneID returns the Route 53 hosted zone ID

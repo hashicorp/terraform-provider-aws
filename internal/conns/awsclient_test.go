@@ -53,6 +53,7 @@ func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-
 func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	t.Parallel()
 
+	ctx := context.TODO()
 	testCases := []struct {
 		Name      string
 		AWSClient *AWSClient
@@ -84,7 +85,7 @@ func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
-			got := testCase.AWSClient.RegionalHostname(testCase.Prefix)
+			got := testCase.AWSClient.RegionalHostname(ctx, testCase.Prefix)
 
 			if got != testCase.Expected {
 				t.Errorf("got %s, expected %s", got, testCase.Expected)

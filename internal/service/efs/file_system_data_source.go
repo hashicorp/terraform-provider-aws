@@ -151,7 +151,7 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("availability_zone_id", fs.AvailabilityZoneId)
 	d.Set("availability_zone_name", fs.AvailabilityZoneName)
 	d.Set("creation_token", fs.CreationToken)
-	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(d.Id()+".efs"))
+	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, d.Id()+".efs"))
 	d.Set("file_system_id", fsID)
 	d.Set("encrypted", fs.Encrypted)
 	d.Set("kms_key_id", fs.KmsKeyId)
