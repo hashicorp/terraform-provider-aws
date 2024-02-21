@@ -67,7 +67,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.18.2
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.27.1
-	github.com/aws/aws-sdk-go-v2/service/fis v1.22.1
+	github.com/aws/aws-sdk-go-v2/service/fis v1.22.2
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.22.1
