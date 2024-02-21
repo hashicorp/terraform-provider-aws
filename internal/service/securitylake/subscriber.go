@@ -1,6 +1,3 @@
-// Copyright (c) HashiCorp, Inc.
-// SPDX-License-Identifier: MPL-2.0
-
 package securitylake
 
 import (
@@ -11,25 +8,21 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
-	// "github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
-	// "github.com/hashicorp/terraform-plugin-framework/attr"
-	// "github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	// "github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	// tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -38,7 +31,7 @@ import (
 // @FrameworkResource(name="Subscriber")
 // @Tags(identifierAttribute="arn")
 func newSubscriberResource(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceSubscriber{}
+	r := &subscriberResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -51,34 +44,32 @@ const (
 	ResNameSubscriber = "Subscriber"
 )
 
-type resourceSubscriber struct {
+type subscriberResource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 }
 
-func (r *resourceSubscriber) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_securitylake_subscriber"
+func (r *subscriberResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_securitylake_subscriber"
 }
 
-func (r *resourceSubscriber) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *subscriberResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn":        framework.ARNAttributeComputedOnly(),
-			names.AttrID: framework.IDAttribute(),
+			"arn":             framework.ARNAttributeComputedOnly(),
+			names.AttrID:      framework.IDAttribute(),
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"access_types": schema.SetAttribute{
 				CustomType:  fwtypes.SetOfStringType,
 				Optional:    true,
 				ElementType: types.StringType,
 			},
-			"subscriber_description": schema.SetAttribute{
-				CustomType:  fwtypes.SetOfStringType,
-				Optional:    true,
-				ElementType: types.StringType,
+			"subscriber_description": schema.StringAttribute{
+				Optional: true,
 			},
-			"subscriber_name": schema.SetAttribute{
-				CustomType:  fwtypes.SetOfStringType,
-				Required:    true,
-				ElementType: types.StringType,
+			"subscriber_name": schema.StringAttribute{
+				Required: true,
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -211,7 +202,7 @@ func (r *resourceSubscriber) Schema(ctx context.Context, req resource.SchemaRequ
 	}
 }
 
-func (r *resourceSubscriber) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *subscriberResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().SecurityLakeClient(ctx)
 
 	var data subscriberResourceModel
@@ -220,16 +211,24 @@ func (r *resourceSubscriber) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	input := &securitylake.CreateSubscriberInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	var sourcesData []subscriberSourcesModel
+	response.Diagnostics.Append(data.Sources.ElementsAs(ctx, &sourcesData, false)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+	sources, _ := expandSubscriptionSources(ctx, sourcesData)
+
+	var subscriberIdentityData []subscriberSubscriberIdentiryModel
+	response.Diagnostics.Append(data.SubscriberIdentity.ElementsAs(ctx, &subscriberIdentityData, false)...)
+
+	input := &securitylake.CreateSubscriberInput{
+		Sources:            sources,
+		SubscriberIdentity: expandSubsciberIdentity(ctx, subscriberIdentityData),
+		SubscriberName:     flex.StringFromFramework(ctx, data.SubscriberName),
 	}
 
 	out, err := conn.CreateSubscriber(ctx, input)
 	if err != nil {
-		// TIP: Since ID has not been set yet, you cannot use plan.ID.String()
-		// in error messages at this point.
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionCreating, ResNameSubscriber, data.SubscriberName.String(), err),
 			err.Error(),
@@ -257,19 +256,19 @@ func (r *resourceSubscriber) Create(ctx context.Context, request resource.Create
 	// 	)
 	// 	return
 	// }
-	var sources subscriberSourcesModel
-	response.Diagnostics.Append(fwflex.Flatten(ctx, out.Subscriber.Sources, &sources)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
+	// var sources subscriberSourcesModel
+	// response.Diagnostics.Append(fwflex.Flatten(ctx, out.Subscriber.Sources, &sources)...)
+	// if response.Diagnostics.HasError() {
+	// 	return
+	// }
 
 	// Set values for unknowns after creation is complete.
-	data.Sources = fwtypes.NewListNestedObjectValueOfPtr(ctx, &sources)
+	// data.Sources = fwtypes.NewListNestedObjectValueOfPtr(ctx, &sources)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceSubscriber) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *subscriberResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().SecurityLakeClient(ctx)
 
 	var state subscriberResourceModel
@@ -292,26 +291,26 @@ func (r *resourceSubscriber) Read(ctx context.Context, request resource.ReadRequ
 		return
 	}
 
-	state.SubscriberArn = flex.StringToFramework(ctx, out.Subscriber.SubscriberArn)
-	state.ID = flex.StringToFramework(ctx, out.Subscriber.SubscriberId)
-	state.SubscriberName = flex.StringToFramework(ctx, out.Subscriber.SubscriberName)
+	state.SubscriberArn = flex.StringToFramework(ctx, out.SubscriberArn)
+	state.ID = flex.StringToFramework(ctx, out.SubscriberId)
+	state.SubscriberName = flex.StringToFramework(ctx, out.SubscriberName)
 
-	var sources subscriberSourcesModel
-	response.Diagnostics.Append(fwflex.Flatten(ctx, out.Subscriber.Sources, &sources)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
+	// var sources subscriberSourcesModel
+	// response.Diagnostics.Append(fwflex.Flatten(ctx, out.Sources, &sources)...)
+	// if response.Diagnostics.HasError() {
+	// 	return
+	// }
 
-	state.Sources = fwtypes.NewListNestedObjectValueOfPtr(ctx, &sources)
+	// state.Sources = fwtypes.NewListNestedObjectValueOfPtr(ctx, &sources)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceSubscriber) Update(ctx context.Context, request resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *subscriberResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	// conn := r.Meta().SecurityLakeClient(ctx)
 
 	// // TIP: -- 2. Fetch the plan
-	// var plan, state resourceSubscriberData
+	// var plan, state subscriberResourceData
 	// resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	// resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	// if resp.Diagnostics.HasError() {
@@ -371,7 +370,7 @@ func (r *resourceSubscriber) Update(ctx context.Context, request resource.Update
 	// 	plan.ID = flex.StringToFramework(ctx, out.Subscriber.SubscriberId)
 	// }
 
-	// TIP: -- 5. Use a waiter to wait for update to complete
+	// // TIP: -- 5. Use a waiter to wait for update to complete
 	// updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 	// _, err := waitSubscriberUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
 	// if err != nil {
@@ -382,10 +381,11 @@ func (r *resourceSubscriber) Update(ctx context.Context, request resource.Update
 	// 	return
 	// }
 
+	// // TIP: -- 6. Save the request plan to response state
 	// resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceSubscriber) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *subscriberResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().SecurityLakeClient(ctx)
 
 	// TIP: -- 2. Fetch the state
@@ -425,23 +425,10 @@ func (r *resourceSubscriber) Delete(ctx context.Context, request resource.Delete
 	// }
 }
 
-func (r *resourceSubscriber) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *subscriberResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-// TIP: ==== WAITERS ====
-// Some resources of some services have waiters provided by the AWS API.
-// Unless they do not work properly, use them rather than defining new ones
-// here.
-//
-// Sometimes we define the wait, status, and find functions in separate
-// files, wait.go, status.go, and find.go. Follow the pattern set out in the
-// service and define these where it makes the most sense.
-//
-// If these functions are used in the _test.go file, they will need to be
-// exported (i.e., capitalized).
-//
-// You will need to adjust the parameters and names to fit the service.
 // func waitSubscriberCreated(ctx context.Context, conn *securitylake.Client, id string, timeout time.Duration) (*securitylake.Subscriber, error) {
 // 	stateConf := &retry.StateChangeConf{
 // 		Pending:                   []string{},
@@ -460,10 +447,6 @@ func (r *resourceSubscriber) ImportState(ctx context.Context, req resource.Impor
 // 	return nil, err
 // }
 
-// // TIP: It is easier to determine whether a resource is updated for some
-// // resources than others. The best case is a status flag that tells you when
-// // the update has been fully realized. Other times, you can check to see if a
-// // key resource argument is updated to a new value or not.
 // func waitSubscriberUpdated(ctx context.Context, conn *securitylake.Client, id string, timeout time.Duration) (*securitylake.Subscriber, error) {
 // 	stateConf := &retry.StateChangeConf{
 // 		Pending:                   []string{statusChangePending},
@@ -482,8 +465,6 @@ func (r *resourceSubscriber) ImportState(ctx context.Context, req resource.Impor
 // 	return nil, err
 // }
 
-// // TIP: A deleted waiter is almost like a backwards created waiter. There may
-// // be additional pending states, however.
 // func waitSubscriberDeleted(ctx context.Context, conn *securitylake.Client, id string, timeout time.Duration) (*securitylake.Subscriber, error) {
 // 	stateConf := &retry.StateChangeConf{
 // 		Pending: []string{statusDeleting, statusNormal},
@@ -515,7 +496,7 @@ func (r *resourceSubscriber) ImportState(ctx context.Context, req resource.Impor
 // 	}
 // }
 
-func findSubscriberByID(ctx context.Context, conn *securitylake.Client, id string) (*securitylake.GetSubscriberOutput, error) {
+func findSubscriberByID(ctx context.Context, conn *securitylake.Client, id string) (*awstypes.SubscriberResource, error) {
 	in := &securitylake.GetSubscriberInput{
 		SubscriberId: aws.String(id),
 	}
@@ -525,24 +506,110 @@ func findSubscriberByID(ctx context.Context, conn *securitylake.Client, id strin
 		return nil, err
 	}
 
-	return out, nil
+	return out.Subscriber, nil
+}
+
+func expandSubscriptionSources(ctx context.Context, subscriberSourcesModels []subscriberSourcesModel) ([]awstypes.LogSourceResource, diag.Diagnostics) {
+	sources := []awstypes.LogSourceResource{}
+	var diags diag.Diagnostics
+
+	for _, item := range subscriberSourcesModels {
+		if !item.AwsLogSourceResource.IsNull() {
+			var awsLogSources []subscriberAwsLogSourceSourceModel
+			diags.Append(item.AwsLogSourceResource.ElementsAs(ctx, &awsLogSources, false)...)
+			logSource := expandSubscriberAwsLogSourceSource(ctx, awsLogSources)
+			sources = append(sources, logSource)
+		}
+		if !item.CustomLogSourceResource.IsNull() {
+			var customLogSource []subscriberCustomLogSourceSourceModel
+			diags.Append(item.CustomLogSourceResource.ElementsAs(ctx, &customLogSource, false)...)
+			logSource := expandSubscriberCustomLogSourceSource(ctx, customLogSource)
+			sources = append(sources, logSource)
+		}
+	}
+
+	return sources, diags
+}
+
+func expandSubscriberAwsLogSourceSource(ctx context.Context, awsLogSources []subscriberAwsLogSourceSourceModel) *awstypes.LogSourceResourceMemberAwsLogSource {
+	if len(awsLogSources) == 0 {
+		return nil
+	}
+	return &awstypes.LogSourceResourceMemberAwsLogSource{
+		Value: awstypes.AwsLogSourceResource{
+			SourceName:    awstypes.AwsLogSourceName(*flex.StringFromFramework(ctx, awsLogSources[0].SourceName)),
+			SourceVersion: flex.StringFromFramework(ctx, awsLogSources[0].SourceVersion),
+		},
+	}
+}
+
+func expandSubscriberCustomLogSourceSource(ctx context.Context, customLogSources []subscriberCustomLogSourceSourceModel) *awstypes.LogSourceResourceMemberCustomLogSource {
+	if len(customLogSources) == 0 {
+		return nil
+	}
+	var diags diag.Diagnostics
+	var customLogSourceAttributes []subscriberCustomLogSourceAttributesModel
+	diags.Append(customLogSources[0].Attributes.ElementsAs(ctx, &customLogSourceAttributes, false)...)
+
+	var customLogSourceProvider []subscriberCustomLogSourceProviderModel
+	diags.Append(customLogSources[0].Provider.ElementsAs(ctx, &customLogSourceProvider, false)...)
+
+	return &awstypes.LogSourceResourceMemberCustomLogSource{
+		Value: awstypes.CustomLogSourceResource{
+			SourceName:    flex.StringFromFramework(ctx, customLogSources[0].SourceName),
+			SourceVersion: flex.StringFromFramework(ctx, customLogSources[0].SourceVersion),
+			Attributes:    expandsubscriberCustomLogSourceAttributes(ctx, customLogSourceAttributes),
+			Provider:      expandSubscriberCustomLogSourceProvider(ctx, customLogSourceProvider),
+		},
+	}
+}
+
+func expandsubscriberCustomLogSourceAttributes(ctx context.Context, customLogSourceAtributes []subscriberCustomLogSourceAttributesModel) *awstypes.CustomLogSourceAttributes {
+	if len(customLogSourceAtributes) == 0 {
+		return nil
+	}
+	return &awstypes.CustomLogSourceAttributes{
+		CrawlerArn:  flex.StringFromFramework(ctx, customLogSourceAtributes[0].CrawlerARN),
+		DatabaseArn: flex.StringFromFramework(ctx, customLogSourceAtributes[0].DatabaseARN),
+		TableArn:    flex.StringFromFramework(ctx, customLogSourceAtributes[0].TableARN),
+	}
+}
+
+func expandSubscriberCustomLogSourceProvider(ctx context.Context, customLogSourceProvider []subscriberCustomLogSourceProviderModel) *awstypes.CustomLogSourceProvider {
+	if len(customLogSourceProvider) == 0 {
+		return nil
+	}
+	return &awstypes.CustomLogSourceProvider{
+		Location: flex.StringFromFramework(ctx, customLogSourceProvider[0].Location),
+		RoleArn:  flex.StringFromFramework(ctx, customLogSourceProvider[0].RoleARN),
+	}
+}
+
+func expandSubsciberIdentity(ctx context.Context, subscriberIdentities []subscriberSubscriberIdentiryModel) *awstypes.AwsIdentity {
+	if len(subscriberIdentities) == 0 {
+		return nil
+	}
+	return &awstypes.AwsIdentity{
+		ExternalId: flex.StringFromFramework(ctx, subscriberIdentities[0].ExternalID),
+		Principal:  flex.StringFromFramework(ctx, subscriberIdentities[0].Principal),
+	}
 }
 
 type subscriberResourceModel struct {
-	AccessTypes           types.String                                                       `tfsdk:"access_types"`
+	AccessTypes           fwtypes.SetValueOf[types.String]                                   `tfsdk:"access_types"`
 	Sources               fwtypes.ListNestedObjectValueOf[subscriberSourcesModel]            `tfsdk:"sources"`
 	SubscriberDescription types.String                                                       `tfsdk:"subscriber_description"`
 	SubscriberIdentity    fwtypes.ListNestedObjectValueOf[subscriberSubscriberIdentiryModel] `tfsdk:"subscriber_identity"`
 	SubscriberName        types.String                                                       `tfsdk:"subscriber_name"`
 	Tags                  types.Map                                                          `tfsdk:"tags"`
 	TagsAll               types.Map                                                          `tfsdk:"tags_all"`
-	SubscriberArn                   types.String                                                       `tfsdk:"arn"`
+	SubscriberArn         types.String                                                       `tfsdk:"arn"`
 	ID                    types.String                                                       `tfsdk:"id"`
 }
 
 type subscriberSourcesModel struct {
-	AwslogSource    fwtypes.ListNestedObjectValueOf[subscriberAwsLogSourceSourceModel]    `tfsdk:"aws_log_source_resource"`
-	CustomlogSource fwtypes.ListNestedObjectValueOf[subscriberCustomLogSourceSourceModel] `tfsdk:"custom_log_source_resource"`
+	AwsLogSourceResource    fwtypes.ListNestedObjectValueOf[subscriberAwsLogSourceSourceModel]    `tfsdk:"aws_log_source_resource"`
+	CustomLogSourceResource fwtypes.ListNestedObjectValueOf[subscriberCustomLogSourceSourceModel] `tfsdk:"custom_log_source_resource"`
 }
 
 type subscriberAwsLogSourceSourceModel struct {

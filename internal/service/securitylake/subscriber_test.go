@@ -8,18 +8,21 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/securitylake"
+	"github.com/aws/aws-sdk-go-v2/service/securitylake/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsecuritylake "github.com/hashicorp/terraform-provider-aws/internal/service/securitylake"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSubscriber_basic(t *testing.T) {
+func testAccSubscriber_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_securitylake_subscriber_test"
-	// var subscriber types.SubscriberResource
+	resourceName := "aws_securitylake_subscriber.test"
+	var subscriber types.SubscriberResource
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
@@ -29,11 +32,13 @@ func TestAccSubscriber_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCustomLogSourceDestroy(ctx),
+		CheckDestroy:             testAccCheckSubscriberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSubscriberConfig_basic(rName),
-				Check:  resource.ComposeAggregateTestCheckFunc(),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
+				),
 			},
 			{
 				ResourceName:            resourceName,
@@ -83,74 +88,66 @@ func TestAccSubscriber_basic(t *testing.T) {
 // 	})
 // }
 
-// func testAccCheckSubscriberDestroy(ctx context.Context) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
+func testAccCheckSubscriberDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
 
-// 		for _, rs := range s.RootModule().Resources {
-// 			if rs.Type != "aws_securitylake_securitylake_subscriber" {
-// 				continue
-// 			}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_securitylake_data_lake" {
+				continue
+			}
 
-// 			input := &securitylake.DescribeSubscriberInput{
-// 				SubscriberId: aws.String(rs.Primary.ID),
-// 			}
-// 			_, err := conn.DescribeSubscriber(ctx, &securitylake.DescribeSubscriberInput{
-// 				SubscriberId: aws.String(rs.Primary.ID),
-// 			})
-// 			if errs.IsA[*types.ResourceNotFoundException](err) {
-// 				return nil
-// 			}
-// 			if err != nil {
-// 				return nil
-// 			}
+			_, err := tfsecuritylake.FindSubscriberByID(ctx, conn, rs.Primary.ID)
 
-// 			return create.Error(names.SecurityLake, create.ErrActionCheckingDestroyed, tfsecuritylake.ResNameSubscriber, rs.Primary.ID, errors.New("not destroyed"))
-// 		}
+			if tfresource.NotFound(err) {
+				continue
+			}
 
-// 		return nil
-// 	}
-// }
+			if err != nil {
+				return err
+			}
 
-// func testAccCheckSubscriberExists(ctx context.Context, name string, Subscriber *securitylake.DescribeSubscriberResponse) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		rs, ok := s.RootModule().Resources[name]
-// 		if !ok {
-// 			return create.Error(names.SecurityLake, create.ErrActionCheckingExistence, tfsecuritylake.ResNameSubscriber, name, errors.New("not found"))
-// 		}
+			return fmt.Errorf("Security Lake Data Lake %s still exists", rs.Primary.ID)
+		}
 
-// 		if rs.Primary.ID == "" {
-// 			return create.Error(names.SecurityLake, create.ErrActionCheckingExistence, tfsecuritylake.ResNameSubscriber, name, errors.New("not set"))
-// 		}
-
-// 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
-// 		resp, err := conn.DescribeSubscriber(ctx, &securitylake.DescribeSubscriberInput{
-// 			SubscriberId: aws.String(rs.Primary.ID),
-// 		})
-
-// 		if err != nil {
-// 			return create.Error(names.SecurityLake, create.ErrActionCheckingExistence, tfsecuritylake.ResNameSubscriber, rs.Primary.ID, err)
-// 		}
-
-// 		*Subscriber = *resp
-
-// 		return nil
-// 	}
-// }
-
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
-
-	input := &securitylake.ListSubscribersInput{}
-	_, err := conn.ListSubscribers(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
+		return nil
 	}
 }
+
+func testAccCheckSubscriberExists(ctx context.Context, n string, v *types.SubscriberResource) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
+
+		output, err := tfsecuritylake.FindSubscriberByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+// func testAccPreCheck(ctx context.Context, t *testing.T) {
+// 	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
+
+// 	input := &securitylake.ListSubscribersInput{}
+// 	_, err := conn.ListSubscribers(ctx, input)
+
+// 	if acctest.PreCheckSkipError(err) {
+// 		t.Skipf("skipping acceptance testing: %s", err)
+// 	}
+// 	if err != nil {
+// 		t.Fatalf("unexpected PreCheck error: %s", err)
+// 	}
+// }
 
 // func testAccCheckSubscriberNotRecreated(before, after *securitylake.DescribeSubscriberResponse) resource.TestCheckFunc {
 // 	return func(s *terraform.State) error {
@@ -165,19 +162,18 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 func testAccSubscriberConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 	
-data "aws_caller_identity" "current" {}
 resource "aws_securitylake_subscriber" "test" {
+	subscriber_name = %[1]q
 	sources {
 		aws_log_source_resource {
-			source_name = "ROUTE53"
-			source_version = "1"
+			source_name    = "ROUTE53"
+			source_version = "1.0"
 		}
 	}
 	subscriber_identity {
-		external_id = "test-external"
-		principal   = data.aws_caller_identity.current.account_id
+		external_id = "windows-sysmon-test"
+		principal   = "568227374639"
 	}
-	subscriber_name = %[1]q
 }
 `, rName)
 }
