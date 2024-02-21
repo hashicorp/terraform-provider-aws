@@ -172,7 +172,7 @@ func (c *AWSClient) DefaultKMSKeyPolicy(context.Context) string {
 
 // GlobalAcceleratorHostedZoneID returns the Route 53 hosted zone ID
 // for AWS Global Accelerator accelerators in the configured AWS partition.
-func (c *AWSClient) GlobalAcceleratorHostedZoneID() string {
+func (c *AWSClient) GlobalAcceleratorHostedZoneID(context.Context) string {
 	return "Z2BJ6XQ5FK7U4H" // See https://docs.aws.amazon.com/general/latest/gr/global_accelerator.html#global_accelerator_region
 }
 
