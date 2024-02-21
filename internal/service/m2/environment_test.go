@@ -724,12 +724,12 @@ resource "aws_subnet" "test" {
 resource "aws_kms_key" "test" {
   description = "tf-test-cmk-kms-key-id"
 }
-  
+
 resource "aws_security_group" "test" {
   name        = %[1]q
   description = %[1]q
   vpc_id      = aws_vpc.test.id
-  
+
   ingress {
     from_port   = -1
     to_port     = -1
