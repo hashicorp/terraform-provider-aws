@@ -254,7 +254,7 @@ This resource supports the following arguments:
 * `postAuthenticationLoginBanner`- (Optional) Specify a string to display when users connect to a server. This string is displayed after the user authenticates. The SFTP protocol does not support post-authentication display banners.
 * `preAuthenticationLoginBanner`- (Optional) Specify a string to display when users connect to a server. This string is displayed before the user authenticates.
 * `protocolDetails`- (Optional) The protocol settings that are configured for your server.
-* `securityPolicyName` - (Optional) Specifies the name of the security policy that is attached to the server. Default value is: `TransferSecurityPolicy-2024-01`. The available values are:
+* `securityPolicyName` - (Optional) Specifies the name of the security policy that is attached to the server. Default value is: `TransferSecurityPolicy-2018-11`. The available values are:
     * `TransferSecurityPolicy-2024-01`
     * `TransferSecurityPolicy-2023-05`
     * `TransferSecurityPolicy-2022-03`
