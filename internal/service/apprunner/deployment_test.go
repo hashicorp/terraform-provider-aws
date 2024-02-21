@@ -29,6 +29,7 @@ func TestAccAppRunnerDeployment_basic(t *testing.T) {
 			{
 				Config: testAccStartdeployment_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "operation_id"),
 					resource.TestCheckResourceAttr(resourceName, "status", string(types.OperationStatusSucceeded)),
 				),
