@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -28,13 +28,10 @@ type dataSourceDataSourceUserGroup struct {
 	framework.DataSourceWithConfigure
 }
 
-// Metadata should return the full name of the data source, such as
-// examplecloud_thing.
 func (d *dataSourceDataSourceUserGroup) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
 	response.TypeName = "aws_cognito_user_group"
 }
 
-// Schema returns the schema for this data source.
 func (d *dataSourceDataSourceUserGroup) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
@@ -74,8 +71,10 @@ func (d *dataSourceDataSourceUserGroup) Read(ctx context.Context, request dataso
 		GroupName:  data.Name.ValueStringPointer(),
 		UserPoolId: data.UserPoolID.ValueStringPointer(),
 	}
-	conn := d.Meta().CognitoIDPClient(ctx)
-	resp, err := conn.GetGroup(ctx, params)
+	// 🌱 For the person who migrates to sdkv2:
+	// this should work by just updating the client, and removing the WithContext method.
+	conn := d.Meta().CognitoIDPConn(ctx)
+	resp, err := conn.GetGroupWithContext(ctx, params)
 	if err != nil {
 		response.Diagnostics.AddError(
 			fmt.Sprintf("reading Cognito User Group (%s) for UserPool (%s)", data.Name.ValueString(), data.UserPoolID.ValueString()),
