@@ -195,6 +195,9 @@ func (r *resourceServerlessCache) Schema(ctx context.Context, request resource.S
 								Attributes: map[string]schema.Attribute{
 									"maximum": schema.Int64Attribute{
 										Required: true,
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.RequiresReplace(),
+										},
 									},
 									"unit": schema.StringAttribute{
 										CustomType: fwtypes.StringEnumType[awstypes.DataStorageUnit](),
@@ -212,6 +215,9 @@ func (r *resourceServerlessCache) Schema(ctx context.Context, request resource.S
 								Attributes: map[string]schema.Attribute{
 									"maximum": schema.Int64Attribute{
 										Required: true,
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.RequiresReplace(),
+										},
 									},
 								},
 							},
