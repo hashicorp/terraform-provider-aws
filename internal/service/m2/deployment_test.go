@@ -40,7 +40,7 @@ func TestAccM2Deployment_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.M2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -77,7 +77,7 @@ func TestAccM2Deployment_nostart(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.M2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -114,7 +114,7 @@ func TestAccM2Deployment_update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.M2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -158,7 +158,7 @@ func TestAccM2Deployment_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.M2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
