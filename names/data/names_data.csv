@@ -34,7 +34,7 @@ autoscaling-plans,autoscalingplans,autoscalingplans,autoscalingplans,,autoscalin
 ,,,,,,,,,,,,,,,,,Backint Agent for SAP HANA,AWS,x,,,,,,,,,No SDK support
 backup,backup,backup,backup,,backup,,,Backup,Backup,,1,,,aws_backup_,,backup_,Backup,AWS,,,,,,,Backup,ListBackupPlans,,
 backup-gateway,backupgateway,backupgateway,backupgateway,,backupgateway,,,BackupGateway,BackupGateway,,1,,,aws_backupgateway_,,backupgateway_,Backup Gateway,AWS,,x,,,,,Backup Gateway,,,
-batch,batch,batch,batch,,batch,,,Batch,Batch,,1,,,aws_batch_,,batch_,Batch,AWS,,,,,,,Batch,ListJobs,,
+batch,batch,batch,batch,,batch,,,Batch,Batch,,1,2,,aws_batch_,,batch_,Batch,AWS,,,,,,,Batch,ListJobs,,
 bedrock,bedrock,bedrock,bedrock,,bedrock,,,Bedrock,Bedrock,,,2,,aws_bedrock_,,bedrock_,Amazon Bedrock,Amazon,,,,,,,Bedrock,ListFoundationModels,,
 bedrock-agent,bedrockagent,bedrockagent,bedrockagent,,bedrockagent,,,BedrockAgent,BedrockAgent,,,2,,aws_bedrockagent_,,bedrock_agent_,Agents for Amazon Bedrock,Amazon,,,,,,,Bedrock Agent,ListAgents,,
 billingconductor,billingconductor,billingconductor,,,billingconductor,,,BillingConductor,BillingConductor,,1,,,aws_billingconductor_,,billingconductor_,Billing Conductor,AWS,,x,,,,,billingconductor,,,
@@ -64,7 +64,7 @@ cloudformation,cloudformation,cloudformation,cloudformation,,cloudformation,,,Cl
 cloudfront,cloudfront,cloudfront,cloudfront,,cloudfront,,,CloudFront,CloudFront,,1,2,,aws_cloudfront_,,cloudfront_,CloudFront,Amazon,,,,,,,CloudFront,ListDistributions,,
 cloudfront-keyvaluestore,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,,CloudFrontKeyValueStore,CloudFrontKeyValueStore,,,2,,aws_cloudfrontkeyvaluestore_,,cloudfront_keyvaluestore_,CloudFront KeyValueStore,Amazon,,,,,,,CloudFront KeyValueStore,ListKeys,"KvsARN: aws_sdkv2.String(""arn:aws:cloudfront::111122223333:key-value-store/MaxAge"")",
 cloudhsm,cloudhsm,cloudhsm,cloudhsm,,,,,,,,,,,,,,CloudHSM,AWS,x,,,,,,,,,Legacy
-cloudhsmv2,cloudhsmv2,cloudhsmv2,cloudhsmv2,,cloudhsmv2,,cloudhsm,CloudHSMV2,CloudHSMV2,,1,,aws_cloudhsm_v2_,aws_cloudhsmv2_,,cloudhsm,CloudHSM,AWS,,,,,,,CloudHSM V2,DescribeClusters,,
+cloudhsmv2,cloudhsmv2,cloudhsmv2,cloudhsmv2,,cloudhsmv2,,cloudhsm,CloudHSMV2,CloudHSMV2,,,2,aws_cloudhsm_v2_,aws_cloudhsmv2_,,cloudhsm,CloudHSM,AWS,,,,,,,CloudHSM V2,DescribeClusters,,
 cloudsearch,cloudsearch,cloudsearch,cloudsearch,,cloudsearch,,,CloudSearch,CloudSearch,,,2,,aws_cloudsearch_,,cloudsearch_,CloudSearch,Amazon,,,,,,,CloudSearch,ListDomainNames,,
 cloudsearchdomain,cloudsearchdomain,cloudsearchdomain,cloudsearchdomain,,cloudsearchdomain,,,CloudSearchDomain,CloudSearchDomain,,1,,,aws_cloudsearchdomain_,,cloudsearchdomain_,CloudSearch Domain,Amazon,,x,,,,,CloudSearch Domain,,,
 ,,,,,,,,,,,,,,,,,CloudShell,AWS,x,,,,,,,,,No SDK support

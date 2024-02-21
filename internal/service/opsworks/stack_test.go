@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfopsworks "github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOpsWorksStack_basic(t *testing.T) {
@@ -33,7 +34,7 @@ func TestAccOpsWorksStack_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
 			testAccPreCheckStacks(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -88,7 +89,7 @@ func TestAccOpsWorksStack_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
 			testAccPreCheckStacks(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -116,7 +117,7 @@ func TestAccOpsWorksStack_noVPC_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
 			testAccPreCheckStacks(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -158,7 +159,7 @@ func TestAccOpsWorksStack_noVPC_defaultAZ(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
 			testAccPreCheckStacks(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -192,7 +193,7 @@ func TestAccOpsWorksStack_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
 			testAccPreCheckStacks(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -247,7 +248,7 @@ func TestAccOpsWorksStack_tagsAlternateRegion(t *testing.T) {
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckAlternateRegionIs(t, endpoints.UsWest1RegionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -313,7 +314,7 @@ func TestAccOpsWorksStack_allAttributes(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
 			testAccPreCheckStacks(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -449,7 +450,7 @@ func TestAccOpsWorksStack_windows(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
 			testAccPreCheckStacks(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		Steps: []resource.TestStep{

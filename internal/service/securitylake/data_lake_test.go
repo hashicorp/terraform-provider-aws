@@ -30,7 +30,7 @@ func testAccDataLake_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -70,7 +70,7 @@ func testAccDataLake_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -97,7 +97,7 @@ func testAccDataLake_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -148,7 +148,7 @@ func testAccDataLake_lifeCycle(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -192,7 +192,7 @@ func testAccDataLake_lifeCycleUpdate(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -259,7 +259,7 @@ func testAccDataLake_replication(t *testing.T) {
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
 		Steps: []resource.TestStep{

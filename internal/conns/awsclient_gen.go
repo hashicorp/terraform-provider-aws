@@ -14,6 +14,7 @@ import (
 	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	batch_sdkv2 "github.com/aws/aws-sdk-go-v2/service/batch"
 	bedrock_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrock"
 	bedrockagent_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	budgets_sdkv2 "github.com/aws/aws-sdk-go-v2/service/budgets"
@@ -24,6 +25,7 @@ import (
 	cloudcontrol_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudcontrol"
 	cloudfront_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	cloudfrontkeyvaluestore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore"
+	cloudhsmv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudhsmv2"
 	cloudsearch_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudsearch"
 	cloudtrail_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudtrail"
 	cloudwatch_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudwatch"
@@ -151,7 +153,6 @@ import (
 	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
 	cloudformation_sdkv1 "github.com/aws/aws-sdk-go/service/cloudformation"
 	cloudfront_sdkv1 "github.com/aws/aws-sdk-go/service/cloudfront"
-	cloudhsmv2_sdkv1 "github.com/aws/aws-sdk-go/service/cloudhsmv2"
 	cloudwatchrum_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	cognitoidentity_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentity"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -350,6 +351,10 @@ func (c *AWSClient) BatchConn(ctx context.Context) *batch_sdkv1.Batch {
 	return errs.Must(conn[*batch_sdkv1.Batch](ctx, c, names.Batch, make(map[string]any)))
 }
 
+func (c *AWSClient) BatchClient(ctx context.Context) *batch_sdkv2.Client {
+	return errs.Must(client[*batch_sdkv2.Client](ctx, c, names.Batch, make(map[string]any)))
+}
+
 func (c *AWSClient) BedrockClient(ctx context.Context) *bedrock_sdkv2.Client {
 	return errs.Must(client[*bedrock_sdkv2.Client](ctx, c, names.Bedrock, make(map[string]any)))
 }
@@ -410,8 +415,8 @@ func (c *AWSClient) CloudFrontKeyValueStoreClient(ctx context.Context) *cloudfro
 	return errs.Must(client[*cloudfrontkeyvaluestore_sdkv2.Client](ctx, c, names.CloudFrontKeyValueStore, make(map[string]any)))
 }
 
-func (c *AWSClient) CloudHSMV2Conn(ctx context.Context) *cloudhsmv2_sdkv1.CloudHSMV2 {
-	return errs.Must(conn[*cloudhsmv2_sdkv1.CloudHSMV2](ctx, c, names.CloudHSMV2, make(map[string]any)))
+func (c *AWSClient) CloudHSMV2Client(ctx context.Context) *cloudhsmv2_sdkv2.Client {
+	return errs.Must(client[*cloudhsmv2_sdkv2.Client](ctx, c, names.CloudHSMV2, make(map[string]any)))
 }
 
 func (c *AWSClient) CloudSearchClient(ctx context.Context) *cloudsearch_sdkv2.Client {
