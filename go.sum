@@ -220,8 +220,8 @@ github.com/aws/aws-sdk-go-v2/service/mq v1.21.2 h1:KfwnkZs4fhfpS8mRUx31AEkXqcRmz
 github.com/aws/aws-sdk-go-v2/service/mq v1.21.2/go.mod h1:Fae0MSpQIKQC8oYmk8LN5PK9REpNuqNgEElTpg9/t4E=
 github.com/aws/aws-sdk-go-v2/service/oam v1.8.2 h1:PeqeoqiWU9eJkDdD+w3xE3EJWKndvQkN8osZqbQg5WY=
 github.com/aws/aws-sdk-go-v2/service/oam v1.8.2/go.mod h1:Ts1HngIlDHl+GjJam4qd4hNNRlCFoWvB4eiJ8/dsMoI=
-github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.10.2 h1:1vP+rmLjgUvtUN0AlwGDJQJTtZD/juc4rS3inDj2n8o=
-github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.10.2/go.mod h1:iYmmMOFZ9/CnyYVFtKph6125oEtq/Adqy93XnE7dWXU=
+github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.10.3 h1:ifyRKR+MAwUiSOziiHj38ayCmTvkDvMr1NtTnZchNRA=
+github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.10.3/go.mod h1:bICXcBYJKF1vOa+jphM+UqfJwjk9zj/fi8AHCJSoEXM=
 github.com/aws/aws-sdk-go-v2/service/osis v1.7.2 h1:KbnGHCMG1ZR2gtb+kRzz4V5ll7vs9iH6QDneLePLuJg=
 github.com/aws/aws-sdk-go-v2/service/osis v1.7.2/go.mod h1:iTQniDwWDlCBp7/C4HASo1rrQEoUBtI7G+Mh36vrgWA=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.4.1 h1:hBEd7fI6Q3Ob8h637e27FFC6+5Gm9fKTV2chImVS+GI=
