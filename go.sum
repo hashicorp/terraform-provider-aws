@@ -72,8 +72,8 @@ github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.3.2 h1:+nmxRpMGsN2rYesLxqmw
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.3.2/go.mod h1:F0NHdLL+F3NmI34Gx+aEJQI6HmTR5tiqKGIv96S31a4=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.21.3 h1:Qa7D5UwHwMxqPPeTjh2UDku02BbvDisZtOBjBhNo9UQ=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.21.3/go.mod h1:c0muzVdRjHbfLvWnmcTdOV2BH6QlrgzlbPBC0vExdfY=
-github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.14.1 h1:NqEyHZuGzfufTZ29cxD876WUT1FyoBmUsb5iDtI4ROU=
-github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.14.1/go.mod h1:VUyRmowhtCs4TaaW7njlHxy72Qqwsmllw7Y9X10nrPk=
+github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.14.2 h1:LznxGOHtCSkrctMAbP39D/MVxGyCs78vRY1KPAXRLEs=
+github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.14.2/go.mod h1:lWPNAa8CJCtb5VMS5KeTUvFAY176uYZhExIy+Crlljs=
 github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.13.1 h1:sER4iZdFVQRH5Prv3fvn0CMn7Mq5YDieGGEipxOV6dA=
 github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.13.1/go.mod h1:wkIRu2StHZ5icdPk0rtHM6zPjqe4+Ll0Q1iEKvQjjFg=
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.9.1 h1:ZzuVU1pCbpOQowv28fv/fKP4jwoKMVmw0BhbvLCQ8K8=
