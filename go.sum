@@ -216,8 +216,8 @@ github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.8.1 h1:8+7L0HeHxa3FUdA8QO
 github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.8.1/go.mod h1:8XrKlKjFH4ZLQzKi5J0H6NJQtaT6Re7dXHTWQSMJ64s=
 github.com/aws/aws-sdk-go-v2/service/mediastore v1.19.2 h1:hACWyubRLU18GqIxE5uADK8UihvA1gxaSGGTNqAHzdI=
 github.com/aws/aws-sdk-go-v2/service/mediastore v1.19.2/go.mod h1:4f7uf3HxtZe6HcvGddNdTvkhUExFt9KlV1i/X0S23lM=
-github.com/aws/aws-sdk-go-v2/service/mq v1.21.0 h1:2UnOtMpl9YLs4rOO5lqWa3OZTlTePU/AXw2aglTPW5Q=
-github.com/aws/aws-sdk-go-v2/service/mq v1.21.0/go.mod h1:Zyt1KgAVTQMIY8v+0yd41yBuCPOQJDZ8GZb0vLOGiIA=
+github.com/aws/aws-sdk-go-v2/service/mq v1.21.1 h1:EsCe8IBrHRItNYQ8e1MvPUsYZBDmEzSxOuKD/3MGGCo=
+github.com/aws/aws-sdk-go-v2/service/mq v1.21.1/go.mod h1:Zyt1KgAVTQMIY8v+0yd41yBuCPOQJDZ8GZb0vLOGiIA=
 github.com/aws/aws-sdk-go-v2/service/oam v1.8.0 h1:sJQH1d1vh4xtK1+K+whAM9Wvwkvov0CftfRrKwtq1Bg=
 github.com/aws/aws-sdk-go-v2/service/oam v1.8.0/go.mod h1:er1UyYlkDd7lkjPB+GiPB3neYiliZcJN6na6L+bP/1A=
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.10.1 h1:+r1IlXwb+IlBC0GhUvooPHYTtJyQgiuBTOQq3GmqFhI=
