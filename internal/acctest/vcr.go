@@ -391,7 +391,7 @@ func closeVCRRecorder(t *testing.T) {
 		panic(p)
 	}
 
-	ctx := context.TODO()
+	ctx := context.TODO() // nosemgrep:ci.semgrep.migrate.context-todo
 	testName := t.Name()
 	providerMetas.Lock()
 	meta, ok := providerMetas[testName]
