@@ -1,19 +1,19 @@
 ---
 subcategory: "App Runner"
 layout: "aws"
-page_title: "AWS: aws_apprunner_start_deployment"
+page_title: "AWS: aws_apprunner_deployment"
 description: |-
   Manages an App Runner Start Deployment Operation.
 ---
 
-# Resource: aws_apprunner_start_deployment
+# Resource: aws_apprunner_deployment
 
 Manages an App Runner Start Deployment Operation.
 
 ## Example Usage
 
 ```terraform
-resource "aws_apprunner_start_deployment" "example" {
+resource "aws_apprunner_deployment" "example" {
   service_arn = aws_apprunner_service.example.arn
 }
 ```

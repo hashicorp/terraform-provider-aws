@@ -17,7 +17,7 @@ import (
 func TestAccAppRunnerStartDeployment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_apprunner_start_deployment.test"
+	resourceName := "aws_apprunner_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -53,7 +53,7 @@ resource "aws_apprunner_service" "test" {
   }
 }
 
-resource "aws_apprunner_start_deployment" "test" {
+resource "aws_apprunner_deployment" "test" {
   service_arn = aws_apprunner_service.test.arn
 }
 `, rName)

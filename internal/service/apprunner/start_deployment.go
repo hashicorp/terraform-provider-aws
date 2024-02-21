@@ -40,7 +40,7 @@ type resourceStartDeployment struct {
 }
 
 func (r *resourceStartDeployment) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_apprunner_start_deployment"
+	resp.TypeName = "aws_apprunner_deployment"
 }
 
 const (

@@ -1,3 +1,3 @@
 ```release-note:new-resource
-aws_apprunner_start_deployment
+aws_apprunner_deployment
 ```
