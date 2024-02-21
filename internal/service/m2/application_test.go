@@ -329,7 +329,7 @@ resource "aws_s3_object" "test" {
 
 resource "aws_m2_application" "test" {
   name        = %[1]q
-  engine_type = %[2]q 
+  engine_type = "%[2]s"
   definition {
     content = templatefile("test-fixtures/application-definition.json", { s3_bucket = aws_s3_bucket.test.id, version = %[3]q })
   }
