@@ -98,8 +98,6 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	plan.OperationID = flex.StringToFramework(ctx, out.OperationId)
-
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitDeploymentSucceeded(ctx, conn, plan.ServiceArn.ValueString(), createTimeout)
 	if err != nil {
@@ -109,6 +107,10 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 		)
 		return
 	}
+
+	plan.ID = flex.StringToFramework(ctx, out.OperationId)
+	plan.Status = flex.StringValueToFramework(ctx, apprunner_types.OperationStatusSucceeded)
+	plan.OperationID = flex.StringToFramework(ctx, out.OperationId)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
