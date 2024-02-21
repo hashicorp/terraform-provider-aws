@@ -182,7 +182,7 @@ func TestAccM2Application_disappears(t *testing.T) {
 	})
 }
 
-func TestAccApplicationM2_tags(t *testing.T) {
+func TestAccM2Application_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
