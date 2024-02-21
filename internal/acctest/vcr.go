@@ -391,6 +391,7 @@ func closeVCRRecorder(t *testing.T) {
 		panic(p)
 	}
 
+	ctx := context.TODO()
 	testName := t.Name()
 	providerMetas.Lock()
 	meta, ok := providerMetas[testName]
@@ -398,7 +399,7 @@ func closeVCRRecorder(t *testing.T) {
 
 	if ok {
 		if !t.Failed() {
-			if v, ok := meta.HTTPClient().Transport.(*recorder.Recorder); ok {
+			if v, ok := meta.HTTPClient(ctx).Transport.(*recorder.Recorder); ok {
 				t.Log("stopping VCR recorder")
 				if err := v.Stop(); err != nil {
 					t.Error(err)

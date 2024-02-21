@@ -110,7 +110,7 @@ func (c *AWSClient) SetHTTPClient(_ context.Context, httpClient *http.Client) {
 }
 
 // HTTPClient returns the http.Client used for AWS API calls.
-func (c *AWSClient) HTTPClient() *http.Client {
+func (c *AWSClient) HTTPClient(context.Context) *http.Client {
 	return c.httpClient
 }
 

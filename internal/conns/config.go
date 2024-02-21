@@ -79,7 +79,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		ForbiddenAccountIds:            c.ForbiddenAccountIds,
 		IamEndpoint:                    c.Endpoints[names.IAM],
 		Insecure:                       c.Insecure,
-		HTTPClient:                     client.HTTPClient(),
+		HTTPClient:                     client.HTTPClient(ctx),
 		HTTPProxy:                      c.HTTPProxy,
 		HTTPSProxy:                     c.HTTPSProxy,
 		HTTPProxyMode:                  awsbase.HTTPProxyModeLegacy,
