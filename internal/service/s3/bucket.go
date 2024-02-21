@@ -1657,7 +1657,7 @@ func findBucketRegion(ctx context.Context, awsClient *conns.AWSClient, bucket st
 			// a HEAD request to get the bucket region. This breaks in aws-cn regions
 			// when the account doesn't have an ICP license to host public content.
 			// Use the current credentials when getting the bucket region.
-			o.Credentials = awsClient.CredentialsProvider()
+			o.Credentials = awsClient.CredentialsProvider(ctx)
 		})
 
 	region, err := manager.GetBucketRegion(ctx, awsClient.S3Client(ctx), bucket, optFns...)

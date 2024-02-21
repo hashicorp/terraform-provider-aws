@@ -299,7 +299,7 @@ func (d testCaseDriver) Apply(ctx context.Context, t *testing.T) (context.Contex
 
 	meta := p.Meta().(*conns.AWSClient)
 
-	return ctx, thing{meta.CredentialsProvider()}
+	return ctx, thing{meta.CredentialsProvider(ctx)}
 }
 
 var _ configtesting.Configurer = &configurer{}

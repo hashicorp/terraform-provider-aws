@@ -49,7 +49,7 @@ type AWSClient struct {
 }
 
 // CredentialsProvider returns the AWS SDK for Go v2 credentials provider.
-func (c *AWSClient) CredentialsProvider() aws_sdkv2.CredentialsProvider {
+func (c *AWSClient) CredentialsProvider(context.Context) aws_sdkv2.CredentialsProvider {
 	if c.awsConfig == nil {
 		return nil
 	}
