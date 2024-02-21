@@ -150,7 +150,7 @@ func (c *AWSClient) CloudFrontDistributionHostedZoneID(context.Context) string {
 }
 
 // DefaultKMSKeyPolicy returns the default policy for KMS keys in the configured AWS partition.
-func (c *AWSClient) DefaultKMSKeyPolicy() string {
+func (c *AWSClient) DefaultKMSKeyPolicy(context.Context) string {
 	return fmt.Sprintf(`
 {
 	"Id": "default",
