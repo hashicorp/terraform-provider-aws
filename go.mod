@@ -78,7 +78,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.48.3
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.9.4
-	github.com/aws/aws-sdk-go-v2/service/kinesis v1.26.1
+	github.com/aws/aws-sdk-go-v2/service/kinesis v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.2.1
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.41.1
