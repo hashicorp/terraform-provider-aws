@@ -6,14 +6,17 @@ package configservice
 // Exports for use in tests only.
 var (
 	ResourceAggregateAuthorization      = resourceAggregateAuthorization
+	ResourceConfigurationAggregator     = resourceConfigurationAggregator
 	ResourceConfigurationRecorder       = resourceConfigurationRecorder
 	ResourceConfigurationRecorderStatus = resourceConfigurationRecorderStatus
 	ResourceConformancePack             = resourceConformancePack
 	ResourceDeliveryChannel             = resourceDeliveryChannel
+	ResourceRemediationConfiguration    = resourceRemediationConfiguration
 
-	FindAggregateAuthorizationByTwoPartKey = findAggregateAuthorizationByTwoPartKey
-	FindConfigurationRecorderByName        = findConfigurationRecorderByName
-	FindConfigurationRecorderStatusByName  = findConfigurationRecorderStatusByName
-	FindConformancePackByName              = findConformancePackByName
-	FindDeliveryChannelByName              = findDeliveryChannelByName
+	FindAggregateAuthorizationByTwoPartKey       = findAggregateAuthorizationByTwoPartKey
+	FindConfigurationRecorderByName              = findConfigurationRecorderByName
+	FindConfigurationRecorderStatusByName        = findConfigurationRecorderStatusByName
+	FindConformancePackByName                    = findConformancePackByName
+	FindDeliveryChannelByName                    = findDeliveryChannelByName
+	FindRemediationConfigurationByConfigRuleName = findRemediationConfigurationByConfigRuleName
 )
