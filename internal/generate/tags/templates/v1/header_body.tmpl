@@ -6,6 +6,9 @@ import (
 	{{- if .FmtPkg }}
 	"fmt"
 	{{- end }}
+	{{- if and .ListTagsOpPaginated .ServiceTagsMap }}
+	"maps"
+	{{- end }}
 	{{- if .TimePkg }}
 	"time"
 	{{- end }}

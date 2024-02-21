@@ -20,7 +20,7 @@ func NewIncorrectValueTypeAttributeError(path cty.Path, expected string) diag.Di
 	return NewAttributeErrorDiagnostic(
 		path,
 		summaryInvalidValueType,
-		fmt.Sprintf("Expected type to be %s", expected),
+		"Expected type to be "+expected,
 	)
 }
 

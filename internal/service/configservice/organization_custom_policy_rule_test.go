@@ -39,7 +39,7 @@ func TestAccConfigServiceOrganizationCustomPolicyRule_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, configservice.EndpointsID)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationCustomPolicyRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -86,7 +86,7 @@ func TestAccConfigServiceOrganizationCustomPolicyRule_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, configservice.EndpointsID)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationCustomPolicyRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -118,7 +118,7 @@ func TestAccConfigServiceOrganizationCustomPolicyRule_PolicyText(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, configservice.EndpointsID)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOrganizationCustomPolicyRuleDestroy(ctx),
 

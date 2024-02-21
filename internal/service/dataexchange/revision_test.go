@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdataexchange "github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDataExchangeRevision_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccDataExchangeRevision_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, dataexchange.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, dataexchange.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRevisionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -57,7 +58,7 @@ func TestAccDataExchangeRevision_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, dataexchange.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, dataexchange.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRevisionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,7 +104,7 @@ func TestAccDataExchangeRevision_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, dataexchange.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, dataexchange.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRevisionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -128,7 +129,7 @@ func TestAccDataExchangeRevision_disappears_dataSet(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, dataexchange.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, dataexchange.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataExchangeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRevisionDestroy(ctx),
 		Steps: []resource.TestStep{

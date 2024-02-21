@@ -198,6 +198,18 @@ resource "aws_wafv2_web_acl" "example" {
 }
 ```
 
+### GraphQL run complexity, query depth, and introspection
+
+```terraform
+resource "aws_appsync_graphql_api" "example" {
+  authentication_type  = "AWS_IAM"
+  name                 = "example"
+  introspection_config = "ENABLED"
+  query_depth_limit    = 2
+  resolver_count_limit = 2
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -210,6 +222,11 @@ This resource supports the following arguments:
 * `lambda_authorizer_config` - (Optional) Nested argument containing Lambda authorizer configuration. Defined below.
 * `schema` - (Optional) Schema definition, in GraphQL schema language format. Terraform cannot perform drift detection of this configuration.
 * `additional_authentication_provider` - (Optional) One or more additional authentication providers for the GraphqlApi. Defined below.
+* `introspection_config` - (Optional) Sets the value of the GraphQL API to enable (`ENABLED`) or disable (`DISABLED`) introspection. If no value is provided, the introspection configuration will be set to ENABLED by default. This field will produce an error if the operation attempts to use the introspection feature while this field is disabled. For more information about introspection, see [GraphQL introspection](https://graphql.org/learn/introspection/).
+* `query_depth_limit` - (Optional) The maximum depth a query can have in a single request. Depth refers to the amount of nested levels allowed in the body of query. The default value is `0` (or unspecified), which indicates there's no depth limit. If you set a limit, it can be between `1` and `75` nested levels. This field will produce a limit error if the operation falls out of bounds.
+
+  Note that fields can still be set to nullable or non-nullable. If a non-nullable field produces an error, the error will be thrown upwards to the first nullable field available.
+* `resolver_count_limit` - (Optional) The maximum number of resolvers that can be invoked in a single request. The default value is `0` (or unspecified), which will set the limit to `10000`. When specified, the limit value can be between `1` and `10000`. This field will produce a limit error if the operation falls out of bounds.
 * `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `xray_enabled` - (Optional) Whether tracing with X-ray is enabled. Defaults to false.
 * `visibility` - (Optional) Sets the value of the GraphQL API to public (`GLOBAL`) or private (`PRIVATE`). If no value is provided, the visibility will be set to `GLOBAL` by default. This value cannot be changed once the API has been created.

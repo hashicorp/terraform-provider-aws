@@ -22,7 +22,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -1094,7 +1093,7 @@ func resourceProjectDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 func findProjectByNameOrARN(ctx context.Context, conn *codebuild.Client, nameOrARN string) (*types.Project, error) {
 	input := &codebuild.BatchGetProjectsInput{
-		Names: tfslices.Of(nameOrARN),
+		Names: []string{nameOrARN},
 	}
 
 	return findProject(ctx, conn, input)

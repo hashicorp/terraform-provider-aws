@@ -30,7 +30,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 
 // @SDKResource("aws_transfer_server", name="Server")
 // @Tags(identifierAttribute="arn")
-func ResourceServer() *schema.Resource {
+func resourceServer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServerCreate,
 		ReadWithoutTimeout:   resourceServerRead,

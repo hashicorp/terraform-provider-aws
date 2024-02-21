@@ -22,18 +22,26 @@ func {{ .ListTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier
 		{{- end }}
 	}
 {{- if .ListTagsOpPaginated }}
-	var output []*{{ .TagPackage }}.{{ .TagType }}
+    {{- if .ServiceTagsMap }}
+	output := make(map[string]*string)
+	{{- else }}
+	var output []*{{ .TagPackage }}.{{ or .TagType2 .TagType }}
+    {{- end }}
 
 	err := conn.{{ .ListTagsOp }}PagesWithContext(ctx, input, func(page *{{ .TagPackage  }}.{{ .ListTagsOp }}Output, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
+    {{ if .ServiceTagsMap }}
+		maps.Copy(output, page.{{ .ListTagsOutTagsElem }})
+	{{- else }}
 		for _, v := range page.{{ .ListTagsOutTagsElem }} {
 			if v != nil {
 				output = append(output, v)
 			}
 		}
+    {{- end }}
 
 		return !lastPage
 	})

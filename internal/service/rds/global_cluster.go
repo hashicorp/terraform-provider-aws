@@ -262,7 +262,7 @@ func resourceGlobalClusterDelete(ctx context.Context, d *schema.ResourceData, me
 	deadline := tfresource.NewDeadline(d.Timeout(schema.TimeoutDelete))
 
 	if d.Get("force_destroy").(bool) {
-		log.Printf("[DEBUG] Removing cluster members from  RDS Global Cluster: %s", d.Id())
+		log.Printf("[DEBUG] Removing cluster members from RDS Global Cluster: %s", d.Id())
 
 		// The writer cluster must be removed last
 		var writerARN string

@@ -45,8 +45,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
-			Factory: newResourceModelInvocationLoggingConfiguration,
+			Factory: newModelInvocationLoggingConfigurationResource,
 			Name:    "Model Invocation Logging Configuration",
+		},
+		{
+			Factory: newProvisionedModelThroughputResource,
+			Name:    "Provisioned Model Throughput",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "provisioned_model_arn",
+			},
 		},
 	}
 }

@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelbv2 "github.com/hashicorp/terraform-provider-aws/internal/service/elbv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestLBTargetGroupCloudWatchSuffixFromARN(t *testing.T) {
@@ -97,7 +98,7 @@ func TestAccELBV2TargetGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -108,6 +109,7 @@ func TestAccELBV2TargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "protocol_version", "HTTP1"),
@@ -156,7 +158,7 @@ func TestAccELBV2TargetGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -180,7 +182,7 @@ func TestAccELBV2TargetGroup_nameGenerated(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -215,7 +217,7 @@ func TestAccELBV2TargetGroup_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -250,7 +252,7 @@ func TestAccELBV2TargetGroup_duplicateName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -276,7 +278,7 @@ func TestAccELBV2TargetGroup_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -317,7 +319,7 @@ func TestAccELBV2TargetGroup_backwardsCompatibility(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -327,6 +329,7 @@ func TestAccELBV2TargetGroup_backwardsCompatibility(t *testing.T) {
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
@@ -361,7 +364,7 @@ func TestAccELBV2TargetGroup_ProtocolVersion_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -415,7 +418,7 @@ func TestAccELBV2TargetGroup_ProtocolVersion_grpcHealthCheck(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -440,7 +443,7 @@ func TestAccELBV2TargetGroup_ProtocolVersion_grpcUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -472,7 +475,7 @@ func TestAccELBV2TargetGroup_ipAddressType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -507,7 +510,7 @@ func TestAccELBV2TargetGroup_tls(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -530,7 +533,7 @@ func TestAccELBV2TargetGroup_HealthCheck_tcpHTTPS(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -590,7 +593,7 @@ func TestAccELBV2TargetGroup_attrsOnCreate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -624,7 +627,7 @@ func TestAccELBV2TargetGroup_udp(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -657,7 +660,7 @@ func TestAccELBV2TargetGroup_ForceNew_name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -688,7 +691,7 @@ func TestAccELBV2TargetGroup_ForceNew_port(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -719,7 +722,7 @@ func TestAccELBV2TargetGroup_ForceNew_protocol(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -750,7 +753,7 @@ func TestAccELBV2TargetGroup_ForceNew_vpc(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -779,7 +782,7 @@ func TestAccELBV2TargetGroup_Defaults_application(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -824,7 +827,7 @@ timeout  = 4
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -862,7 +865,7 @@ func TestAccELBV2TargetGroup_HealthCheck_enable(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -898,7 +901,7 @@ func TestAccELBV2TargetGroup_NetworkLB_tcpHealthCheckUpdated(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -961,7 +964,7 @@ func TestAccELBV2TargetGroup_networkLB_TargetGroupWithConnectionTermination(t *t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -991,7 +994,7 @@ func TestAccELBV2TargetGroup_NetworkLB_targetGroupWithProxy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1021,7 +1024,7 @@ func TestAccELBV2TargetGroup_preserveClientIPValid(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1051,7 +1054,7 @@ func TestAccELBV2TargetGroup_Geneve_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGatewayLoadBalancer(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1087,7 +1090,7 @@ func TestAccELBV2TargetGroup_Geneve_notSticky(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGatewayLoadBalancer(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1128,7 +1131,7 @@ func TestAccELBV2TargetGroup_Geneve_Sticky(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGatewayLoadBalancer(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1166,7 +1169,7 @@ func TestAccELBV2TargetGroup_Geneve_targetFailover(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGatewayLoadBalancer(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1224,7 +1227,7 @@ func TestAccELBV2TargetGroup_Stickiness_defaultALB(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1249,7 +1252,7 @@ func TestAccELBV2TargetGroup_Stickiness_defaultNLB(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1290,7 +1293,7 @@ func TestAccELBV2TargetGroup_Stickiness_invalidALB(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1329,7 +1332,7 @@ func TestAccELBV2TargetGroup_Stickiness_invalidNLB(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1361,7 +1364,7 @@ func TestAccELBV2TargetGroup_Stickiness_validALB(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1397,7 +1400,7 @@ func TestAccELBV2TargetGroup_Stickiness_validNLB(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1449,7 +1452,7 @@ func TestAccELBV2TargetGroup_Stickiness_updateAppEnabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1538,7 +1541,7 @@ func TestAccELBV2TargetGroup_Stickiness_updateStickinessType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1632,7 +1635,7 @@ func TestAccELBV2TargetGroup_HealthCheck_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1698,7 +1701,7 @@ func TestAccELBV2TargetGroup_Stickiness_updateEnabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1785,7 +1788,7 @@ func TestAccELBV2TargetGroup_HealthCheck_without(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1811,7 +1814,7 @@ func TestAccELBV2TargetGroup_ALBAlias_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1857,7 +1860,7 @@ func TestAccELBV2TargetGroup_ALBAlias_changeNameForceNew(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1887,7 +1890,7 @@ func TestAccELBV2TargetGroup_ALBAlias_changePortForceNew(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1917,7 +1920,7 @@ func TestAccELBV2TargetGroup_ALBAlias_changeProtocolForceNew(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1947,7 +1950,7 @@ func TestAccELBV2TargetGroup_ALBAlias_changeVPCForceNew(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1975,7 +1978,7 @@ func TestAccELBV2TargetGroup_ALBAlias_generatedName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1997,7 +2000,7 @@ func TestAccELBV2TargetGroup_ALBAlias_lambda(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2033,7 +2036,7 @@ func TestAccELBV2TargetGroup_ALBAlias_lambdaMultiValueHeadersEnabled(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2107,7 +2110,7 @@ func TestAccELBV2TargetGroup_ALBAlias_missing(t *testing.T) {
 
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+				ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 				Steps: []resource.TestStep{
@@ -2129,7 +2132,7 @@ func TestAccELBV2TargetGroup_ALBAlias_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2152,7 +2155,7 @@ func TestAccELBV2TargetGroup_ALBAlias_setAndUpdateSlowStart(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2180,7 +2183,7 @@ func TestAccELBV2TargetGroup_ALBAlias_InvalidSlowStart(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2200,7 +2203,7 @@ func TestAccELBV2TargetGroup_ALBAlias_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2233,7 +2236,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateHealthCheck(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2297,7 +2300,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAlgorithmType(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2347,7 +2350,7 @@ func TestAccELBV2TargetGroup_ALBAlias_InvalidAnomalyMitigation(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2371,7 +2374,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingAnomalyMitigation(t *te
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2414,7 +2417,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateLoadBalancingCrossZoneEnabled(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2457,7 +2460,7 @@ func TestAccELBV2TargetGroup_ALBAlias_updateStickinessEnabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2544,7 +2547,7 @@ func TestAccELBV2TargetGroup_targetHealthStateUnhealthyConnectionTermination(t *
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2753,7 +2756,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_defaults(t *testing.T) {
 					}
 					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-						ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+						ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 						CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 						Steps: []resource.TestStep{
@@ -2895,7 +2898,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcher(t *testing.T) {
 					}
 					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-						ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+						ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 						CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 						Steps: []resource.TestStep{
@@ -3037,7 +3040,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_path(t *testing.T) {
 					}
 					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-						ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+						ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 						CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 						Steps: []resource.TestStep{
@@ -3182,7 +3185,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheck_matcherOutOfRange(t *testing.T
 					}
 					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-						ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+						ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 						CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 						Steps: []resource.TestStep{
@@ -3236,7 +3239,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGeneve_defaults(t *testing.T) {
 
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+				ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 				Steps: []resource.TestStep{
@@ -3331,7 +3334,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_defaults(t *testing.T) {
 					}
 					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-						ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+						ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 						CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 						Steps: []resource.TestStep{
@@ -3403,7 +3406,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_path(t *testing.T) {
 					}
 					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-						ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+						ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 						CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 						Steps: []resource.TestStep{
@@ -3461,7 +3464,7 @@ func TestAccELBV2TargetGroup_Instance_HealthCheckGRPC_matcherOutOfRange(t *testi
 					}
 					resource.ParallelTest(t, resource.TestCase{
 						PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-						ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+						ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 						CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 						Steps: []resource.TestStep{
@@ -3536,7 +3539,7 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion(t *testing.T) {
 
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+				ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 				Steps: []resource.TestStep{
@@ -3620,10 +3623,11 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion_MigrateV0(t *testing.T) {
 
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:     func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:   acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+				ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 				CheckDestroy: testAccCheckTargetGroupDestroy(ctx),
 				Steps: testAccMigrateTest{
 					PreviousVersion: "5.25.0",
+					NextVersion:     "5.26.0",
 					Config:          testAccTargetGroupConfig_Instance_protocolVersion(protocol, "HTTP1"),
 					PreCheck:        preCheck,
 					PostCheck:       postCheck,
@@ -3641,7 +3645,7 @@ func TestAccELBV2TargetGroup_Lambda_defaults(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -3671,10 +3675,11 @@ func TestAccELBV2TargetGroup_Lambda_defaults_MigrateV0(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy: testAccCheckTargetGroupDestroy(ctx),
 		Steps: testAccMigrateTest{
 			PreviousVersion: "5.25.0",
+			NextVersion:     "5.26.0",
 			Config:          testAccTargetGroupConfig_Lambda_basic(),
 			PreCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -3710,7 +3715,7 @@ func TestAccELBV2TargetGroup_Lambda_vpc(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -3734,10 +3739,11 @@ func TestAccELBV2TargetGroup_Lambda_vpc_MigrateV0(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy: testAccCheckTargetGroupDestroy(ctx),
 		Steps: testAccMigrateTest{
 			PreviousVersion: "5.25.0",
+			NextVersion:     "5.26.0",
 			Config:          testAccTargetGroupConfig_Lambda_vpc(),
 			PreCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -3767,7 +3773,7 @@ func TestAccELBV2TargetGroup_Lambda_protocol(t *testing.T) {
 
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+				ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 				Steps: []resource.TestStep{
@@ -3799,10 +3805,11 @@ func TestAccELBV2TargetGroup_Lambda_protocol_MigrateV0(t *testing.T) {
 
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:     func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:   acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+				ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 				CheckDestroy: testAccCheckTargetGroupDestroy(ctx),
 				Steps: testAccMigrateTest{
 					PreviousVersion: "5.25.0",
+					NextVersion:     "5.26.0",
 					Config:          testAccTargetGroupConfig_Lambda_protocol(protocol),
 					PreCheck: resource.ComposeAggregateTestCheckFunc(
 						testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -3828,7 +3835,7 @@ func TestAccELBV2TargetGroup_Lambda_protocolVersion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -3852,10 +3859,11 @@ func TestAccELBV2TargetGroup_Lambda_protocolVersion_MigrateV0(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy: testAccCheckTargetGroupDestroy(ctx),
 		Steps: testAccMigrateTest{
 			PreviousVersion: "5.25.0",
+			NextVersion:     "5.26.0",
 			Config:          testAccTargetGroupConfig_Lambda_protocolVersion("GRPC"),
 			PreCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -3879,7 +3887,7 @@ func TestAccELBV2TargetGroup_Lambda_port(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -3903,10 +3911,11 @@ func TestAccELBV2TargetGroup_Lambda_port_MigrateV0(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy: testAccCheckTargetGroupDestroy(ctx),
 		Steps: testAccMigrateTest{
 			PreviousVersion: "5.25.0",
+			NextVersion:     "5.26.0",
 			Config:          testAccTargetGroupConfig_Lambda_port("443"),
 			PreCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -3930,7 +3939,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -3962,10 +3971,11 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_basic_MigrateV0(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		CheckDestroy: testAccCheckTargetGroupDestroy(ctx),
 		Steps: testAccMigrateTest{
 			PreviousVersion: "5.25.0",
+			NextVersion:     "5.26.0",
 			Config:          testAccTargetGroupConfig_Lambda_HealthCheck_basic(),
 			PreCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -4046,7 +4056,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol(t *testing.T) {
 			}
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+				ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 				Steps: []resource.TestStep{
@@ -4119,15 +4129,21 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol_MigrateV0(t *testing.T)
 			steps := []resource.TestStep{step}
 			if tc.warning {
 				steps = append(steps, resource.TestStep{
-					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-					Config:                   config,
-					PlanOnly:                 true,
+					// check that the plan is still valid with the IMMEDIATE next published version
+					ExternalProviders: map[string]resource.ExternalProvider{
+						"aws": {
+							Source:            "hashicorp/aws",
+							VersionConstraint: "5.26.0",
+						},
+					},
+					Config:   config,
+					PlanOnly: true,
 				})
 			}
 
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:     func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:   acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+				ErrorCheck:   acctest.ErrorCheck(t, names.ELBV2ServiceID),
 				CheckDestroy: testAccCheckTargetGroupDestroy(ctx),
 				Steps:        steps,
 			})
@@ -4140,7 +4156,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_matcherOutOfRange(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -4223,6 +4239,9 @@ type testAccMigrateTest struct {
 	// PreviousVersion is a version of the provider previous to the changes to be migrated
 	PreviousVersion string
 
+	// NextVersion is a version of the provider following the changes to be migrated
+	NextVersion string
+
 	// Config is the configuration to be deployed with the previous version and checked with the updated version
 	Config string
 
@@ -4245,9 +4264,14 @@ func (t testAccMigrateTest) Steps() []resource.TestStep {
 			Check:  t.PreCheck,
 		},
 		{
-			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-			Config:                   t.Config,
-			PlanOnly:                 true,
+			ExternalProviders: map[string]resource.ExternalProvider{
+				"aws": {
+					Source:            "hashicorp/aws",
+					VersionConstraint: t.NextVersion,
+				},
+			},
+			Config:   t.Config,
+			PlanOnly: true,
 		},
 		{
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
