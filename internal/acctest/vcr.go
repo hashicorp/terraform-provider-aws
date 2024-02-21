@@ -264,7 +264,7 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 		} else {
 			meta = new(conns.AWSClient)
 		}
-		meta.SetHTTPClient(httpClient)
+		meta.SetHTTPClient(ctx, httpClient)
 		provider.SetMeta(meta)
 
 		if v, ds := configureContextFunc(ctx, d); ds.HasError() {

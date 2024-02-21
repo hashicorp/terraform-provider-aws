@@ -103,7 +103,7 @@ func (c *AWSClient) S3UsePathStyle(context.Context) bool {
 
 // SetHTTPClient sets the http.Client used for AWS API calls.
 // To have effect it must be called before the AWS SDK v1 Session is created.
-func (c *AWSClient) SetHTTPClient(httpClient *http.Client) {
+func (c *AWSClient) SetHTTPClient(_ context.Context, httpClient *http.Client) {
 	if c.Session == nil {
 		c.httpClient = httpClient
 	}
