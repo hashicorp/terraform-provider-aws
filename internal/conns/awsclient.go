@@ -142,7 +142,7 @@ func (c *AWSClient) APIGatewayV2InvokeURL(ctx context.Context, protocolType, api
 
 // CloudFrontDistributionHostedZoneID returns the Route 53 hosted zone ID
 // for Amazon CloudFront distributions in the configured AWS partition.
-func (c *AWSClient) CloudFrontDistributionHostedZoneID() string {
+func (c *AWSClient) CloudFrontDistributionHostedZoneID(context.Context) string {
 	if c.Partition == endpoints_sdkv1.AwsCnPartitionID {
 		return "Z3RFFRIM2A3IF5" // See https://docs.amazonaws.cn/en_us/aws/latest/userguide/route53.html
 	}
