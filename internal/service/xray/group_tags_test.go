@@ -93,7 +93,7 @@ func TestAccXRayGroup_tags_null(t *testing.T) {
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccGroupConfig_tagsNull(rName),
+				Config: testAccGroupConfig_tagsNull(rName, "key1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -626,7 +626,7 @@ func TestAccXRayGroup_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	})
 }
 
-func TestAccXRayGroup_tags_DefaultTags_nullResourceTag(t *testing.T) {
+func TestAccXRayGroup_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.Group
 	resourceName := "aws_xray_group.test"
@@ -640,14 +640,47 @@ func TestAccXRayGroup_tags_DefaultTags_nullResourceTag(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccGroupConfig_tagsNull(rName),
+					acctest.ConfigDefaultTags_Tags1("key1", "providervalue1"),
+					testAccGroupConfig_tagsNull(rName, "key1"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "providervalue1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccXRayGroup_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.Group
+	resourceName := "aws_xray_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+					testAccGroupConfig_tagsNull(rName, "resourcekey1"),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
 				),
 			},
 			{

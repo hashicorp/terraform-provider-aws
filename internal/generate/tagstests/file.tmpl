@@ -102,7 +102,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_null(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
-				Config: testAcc{{ .Name }}Config_tagsNull(rName),
+				Config: testAcc{{ .Name }}Config_tagsNull(rName, "key1"),
 				Check:  resource.ComposeAggregateTestCheckFunc(
 					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -495,7 +495,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_emptyResourceTa
 	})
 }
 
-func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nullResourceTag(t *testing.T) {
+func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	{{- template "Init" . }}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -503,14 +503,37 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nullResourceTag
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAcc{{ .Name }}Config_tagsNull(rName),
+					acctest.ConfigDefaultTags_Tags1("key1", "providervalue1"),
+					testAcc{{ .Name }}Config_tagsNull(rName, "key1"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "providervalue1"),
+				),
+			},
+			{{- template "Import" .ImportIgnore -}}
+		},
+	})
+}
+
+func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+	{{- template "Init" . }}
+
+	resource.ParallelTest(t, resource.TestCase{
+		{{ template "TestCaseSetup" . }}
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+					testAcc{{ .Name }}Config_tagsNull(rName, "resourcekey1"),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
 				),
 			},
 			{{- template "Import" .ImportIgnore -}}

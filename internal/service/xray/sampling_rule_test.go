@@ -308,7 +308,7 @@ resource "aws_xray_sampling_rule" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccSamplingRuleConfig_tagsNull(rName string) string {
+func testAccSamplingRuleConfig_tagsNull(rName, tagKey1 string) string {
 	return fmt.Sprintf(`
 resource "aws_xray_sampling_rule" "test" {
   rule_name      = %[1]q
@@ -328,8 +328,8 @@ resource "aws_xray_sampling_rule" "test" {
   }
 
   tags = {
-	"key" = null
+	%[2]q = null
   }
 }
-`, rName)
+`, rName, tagKey1)
 }

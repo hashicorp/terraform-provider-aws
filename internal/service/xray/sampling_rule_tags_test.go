@@ -93,7 +93,7 @@ func TestAccXRaySamplingRule_tags_null(t *testing.T) {
 		CheckDestroy:             testAccCheckSamplingRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSamplingRuleConfig_tagsNull(rName),
+				Config: testAccSamplingRuleConfig_tagsNull(rName, "key1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -626,7 +626,7 @@ func TestAccXRaySamplingRule_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	})
 }
 
-func TestAccXRaySamplingRule_tags_DefaultTags_nullResourceTag(t *testing.T) {
+func TestAccXRaySamplingRule_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v types.SamplingRule
 	resourceName := "aws_xray_sampling_rule.test"
@@ -640,14 +640,47 @@ func TestAccXRaySamplingRule_tags_DefaultTags_nullResourceTag(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccSamplingRuleConfig_tagsNull(rName),
+					acctest.ConfigDefaultTags_Tags1("key1", "providervalue1"),
+					testAccSamplingRuleConfig_tagsNull(rName, "key1"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "providervalue1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccXRaySamplingRule_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.SamplingRule
+	resourceName := "aws_xray_sampling_rule.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSamplingRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: acctest.ConfigCompose(
+					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
+					testAccSamplingRuleConfig_tagsNull(rName, "resourcekey1"),
+				),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSamplingRuleExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),
 				),
 			},
 			{
