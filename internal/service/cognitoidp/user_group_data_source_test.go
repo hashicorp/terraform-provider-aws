@@ -19,7 +19,11 @@ func TestAccCognitoIDPUserGroupDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_cognito_user_group.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, cognitoidentityprovider.ServiceID)
+			testAccPreCheckIdentityProvider(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserGroupDestroy(ctx),

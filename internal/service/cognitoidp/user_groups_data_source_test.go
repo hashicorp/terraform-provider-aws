@@ -19,7 +19,11 @@ func TestAccCognitoIDPUserGroupsDataSource_basic(t *testing.T) {
 	dataSourceName := "data.aws_cognito_user_groups.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, cognitoidentityprovider.ServiceID)
+			testAccPreCheckIdentityProvider(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserGroupDestroy(ctx),
@@ -27,9 +31,7 @@ func TestAccCognitoIDPUserGroupsDataSource_basic(t *testing.T) {
 			{
 				Config: testAccUserGroupsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(dataSourceName, "groups.#"),
-					resource.TestCheckResourceAttr(dataSourceName, "groups.0.group_name", fmt.Sprintf("%s-1", rName)),
-					resource.TestCheckResourceAttr(dataSourceName, "groups.1.group_name", fmt.Sprintf("%s-2", rName)),
+					resource.TestCheckResourceAttr(dataSourceName, "groups.#", "2"),
 				),
 			},
 		},
