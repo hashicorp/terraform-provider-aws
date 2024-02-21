@@ -10,49 +10,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-func expandAccountAggregationSources(configured []interface{}) []*configservice.AccountAggregationSource {
-	var results []*configservice.AccountAggregationSource
-	for _, item := range configured {
-		detail := item.(map[string]interface{})
-		source := configservice.AccountAggregationSource{
-			AllAwsRegions: aws.Bool(detail["all_regions"].(bool)),
-		}
-
-		if v, ok := detail["account_ids"]; ok {
-			accountIDs := v.([]interface{})
-			if len(accountIDs) > 0 {
-				source.AccountIds = flex.ExpandStringList(accountIDs)
-			}
-		}
-
-		if v, ok := detail["regions"]; ok {
-			regions := v.([]interface{})
-			if len(regions) > 0 {
-				source.AwsRegions = flex.ExpandStringList(regions)
-			}
-		}
-
-		results = append(results, &source)
-	}
-	return results
-}
-
-func expandOrganizationAggregationSource(configured map[string]interface{}) *configservice.OrganizationAggregationSource {
-	source := configservice.OrganizationAggregationSource{
-		AllAwsRegions: aws.Bool(configured["all_regions"].(bool)),
-		RoleArn:       aws.String(configured["role_arn"].(string)),
-	}
-
-	if v, ok := configured["regions"]; ok {
-		regions := v.([]interface{})
-		if len(regions) > 0 {
-			source.AwsRegions = flex.ExpandStringList(regions)
-		}
-	}
-
-	return &source
-}
-
 func expandRulesEvaluationModes(in []interface{}) []*configservice.EvaluationModeConfiguration {
 	if len(in) == 0 {
 		return nil
@@ -155,37 +112,6 @@ func expandRuleSourceCustomPolicyDetails(configured []interface{}) *configservic
 	}
 
 	return &source
-}
-
-func flattenAccountAggregationSources(sources []*configservice.AccountAggregationSource) []interface{} {
-	var result []interface{}
-
-	if len(sources) == 0 {
-		return result
-	}
-
-	source := sources[0]
-	m := make(map[string]interface{})
-	m["account_ids"] = flex.FlattenStringList(source.AccountIds)
-	m["all_regions"] = aws.BoolValue(source.AllAwsRegions)
-	m["regions"] = flex.FlattenStringList(source.AwsRegions)
-	result = append(result, m)
-	return result
-}
-
-func flattenOrganizationAggregationSource(source *configservice.OrganizationAggregationSource) []interface{} {
-	var result []interface{}
-
-	if source == nil {
-		return result
-	}
-
-	m := make(map[string]interface{})
-	m["all_regions"] = aws.BoolValue(source.AllAwsRegions)
-	m["regions"] = flex.FlattenStringList(source.AwsRegions)
-	m["role_arn"] = aws.StringValue(source.RoleArn)
-	result = append(result, m)
-	return result
 }
 
 func flattenRuleEvaluationMode(in []*configservice.EvaluationModeConfiguration) []interface{} {
