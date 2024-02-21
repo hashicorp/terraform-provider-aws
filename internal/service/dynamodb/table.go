@@ -1795,25 +1795,6 @@ func replicaPITR(ctx context.Context, conn *dynamodb.DynamoDB, tableName string,
 	return enabled, nil
 }
 
-func replicaStream(ctx context.Context, conn *dynamodb.DynamoDB, tableName string, region string, tfVersion string) (string, string) {
-	// This does not return an error because it is attempting to add "Computed"-only information to replica - tolerating errors.
-	session, err := conns.NewSessionForRegion(&conn.Config, region, tfVersion)
-	if err != nil {
-		log.Printf("[WARN] Attempting to get replica (%s) stream information, ignoring encountered error: %s", tableName, err)
-		return "", ""
-	}
-
-	conn = dynamodb.New(session)
-
-	table, err := FindTableByName(ctx, conn, tableName)
-	if err != nil {
-		log.Printf("[WARN] When attempting to get replica (%s) stream information, ignoring encountered error: %s", tableName, err)
-		return "", ""
-	}
-
-	return aws.StringValue(table.LatestStreamArn), aws.StringValue(table.LatestStreamLabel)
-}
-
 func addReplicaPITRs(ctx context.Context, conn *dynamodb.DynamoDB, tableName string, tfVersion string, replicas []interface{}) ([]interface{}, error) {
 	// This non-standard approach is needed because PITR info for a replica
 	// must come from a region-specific connection.
@@ -1832,25 +1813,46 @@ func addReplicaPITRs(ctx context.Context, conn *dynamodb.DynamoDB, tableName str
 	return replicas, nil
 }
 
-func enrichReplicas(ctx context.Context, conn *dynamodb.DynamoDB, arn, tableName, tfVersion string, replicas []interface{}) ([]interface{}, error) {
+func enrichReplicas(ctx context.Context, conn *dynamodb.DynamoDB, arn, tableName, tfVersion string, tfList []interface{}) ([]interface{}, error) {
 	// This non-standard approach is needed because PITR info for a replica
 	// must come from a region-specific connection.
-	for i, replicaRaw := range replicas {
-		replica := replicaRaw.(map[string]interface{})
+	for i, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
+		}
 
-		newARN, err := ARNForNewRegion(arn, replica["region_name"].(string))
+		newARN, err := ARNForNewRegion(arn, tfMap["region_name"].(string))
 		if err != nil {
 			return nil, fmt.Errorf("creating new-region ARN: %s", err)
 		}
-		replica[names.AttrARN] = newARN
+		tfMap[names.AttrARN] = newARN
 
-		streamARN, streamLabel := replicaStream(ctx, conn, tableName, replica["region_name"].(string), tfVersion)
-		replica["stream_arn"] = streamARN
-		replica["stream_label"] = streamLabel
-		replicas[i] = replica
+		session, err := conns.NewSessionForRegion(&conn.Config, tfMap["region_name"].(string), tfVersion)
+		if err != nil {
+			log.Printf("[WARN] Attempting to get replica (%s) stream information, ignoring encountered error: %s", tableName, err)
+			continue
+		}
+
+		conn = dynamodb.New(session)
+
+		table, err := FindTableByName(ctx, conn, tableName)
+		if err != nil {
+			log.Printf("[WARN] When attempting to get replica (%s) stream information, ignoring encountered error: %s", tableName, err)
+			continue
+		}
+
+		tfMap["stream_arn"] = aws.StringValue(table.LatestStreamArn)
+		tfMap["stream_label"] = aws.StringValue(table.LatestStreamLabel)
+
+		if table.SSEDescription != nil {
+			tfMap[names.AttrKMSKeyARN] = aws.StringValue(table.SSEDescription.KMSMasterKeyArn)
+		}
+
+		tfList[i] = tfMap
 	}
 
-	return replicas, nil
+	return tfList, nil
 }
 
 func addReplicaTagPropagates(configReplicas *schema.Set, replicas []interface{}) []interface{} {

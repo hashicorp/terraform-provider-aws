@@ -4,7 +4,6 @@
 package configservice
 
 import (
-	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -163,7 +163,6 @@ func ResourceConfigRule() *schema.Resource {
 						},
 						"source_detail": {
 							Type:     schema.TypeSet,
-							Set:      ruleSourceDetailsHash,
 							Optional: true,
 							MaxItems: 25,
 							Elem: &schema.Resource{
@@ -186,6 +185,7 @@ func ResourceConfigRule() *schema.Resource {
 									},
 								},
 							},
+							Set: sdkv2.SimpleSchemaSetFunc("message_type", "event_source", "maximum_execution_frequency"),
 						},
 						"source_identifier": {
 							Type:         schema.TypeString,
@@ -330,19 +330,4 @@ func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	return diags
-}
-
-func ruleSourceDetailsHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	if v, ok := m["message_type"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["event_source"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	if v, ok := m["maximum_execution_frequency"]; ok {
-		buf.WriteString(fmt.Sprintf("%s-", v.(string)))
-	}
-	return create.StringHashcode(buf.String())
 }

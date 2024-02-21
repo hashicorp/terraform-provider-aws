@@ -32,7 +32,7 @@ func TestAccSSOAdminAccountAssignment_Basic_group(t *testing.T) {
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 			testAccPreCheckIdentityStoreGroupName(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -66,7 +66,7 @@ func TestAccSSOAdminAccountAssignment_Basic_user(t *testing.T) {
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 			testAccPreCheckIdentityStoreUserName(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -99,7 +99,7 @@ func TestAccSSOAdminAccountAssignment_MissingPolicy(t *testing.T) {
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 			testAccPreCheckIdentityStoreUserName(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -124,7 +124,7 @@ func TestAccSSOAdminAccountAssignment_disappears(t *testing.T) {
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 			testAccPreCheckIdentityStoreGroupName(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountAssignmentDestroy(ctx),
 		Steps: []resource.TestStep{

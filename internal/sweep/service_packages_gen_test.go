@@ -4,6 +4,7 @@ package sweep_test
 
 import (
 	"context"
+	"slices"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/accessanalyzer"
@@ -31,6 +32,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ce"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/chime"
@@ -41,6 +43,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudcontrol"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudfrontkeyvaluestore"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudhsmv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudsearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cloudtrail"
@@ -62,6 +65,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/connectcases"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/controltower"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/costoptimizationhub"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/cur"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/customerprofiles"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
@@ -230,7 +234,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/worklink"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/xray"
-	"golang.org/x/exp/slices"
 )
 
 func servicePackages(ctx context.Context) []conns.ServicePackage {
@@ -260,6 +263,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		backup.ServicePackage(ctx),
 		batch.ServicePackage(ctx),
 		bedrock.ServicePackage(ctx),
+		bedrockagent.ServicePackage(ctx),
 		budgets.ServicePackage(ctx),
 		ce.ServicePackage(ctx),
 		chime.ServicePackage(ctx),
@@ -270,6 +274,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		cloudcontrol.ServicePackage(ctx),
 		cloudformation.ServicePackage(ctx),
 		cloudfront.ServicePackage(ctx),
+		cloudfrontkeyvaluestore.ServicePackage(ctx),
 		cloudhsmv2.ServicePackage(ctx),
 		cloudsearch.ServicePackage(ctx),
 		cloudtrail.ServicePackage(ctx),
@@ -291,6 +296,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		connect.ServicePackage(ctx),
 		connectcases.ServicePackage(ctx),
 		controltower.ServicePackage(ctx),
+		costoptimizationhub.ServicePackage(ctx),
 		cur.ServicePackage(ctx),
 		customerprofiles.ServicePackage(ctx),
 		dataexchange.ServicePackage(ctx),

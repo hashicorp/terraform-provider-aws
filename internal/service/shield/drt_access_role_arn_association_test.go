@@ -9,7 +9,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/shield"
+	"github.com/aws/aws-sdk-go-v2/service/shield"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +23,7 @@ import (
 )
 
 // Acceptance test access AWS and cost money to run.
-func TestAccShieldDRTAccessRoleARNAssociation_basic(t *testing.T) {
+func testDRTAccessRoleARNAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -51,7 +52,7 @@ func TestAccShieldDRTAccessRoleARNAssociation_basic(t *testing.T) {
 	})
 }
 
-func TestAccShieldDRTAccessRoleARNAssociation_disappears(t *testing.T) {
+func testDRTAccessRoleARNAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -83,16 +84,16 @@ func TestAccShieldDRTAccessRoleARNAssociation_disappears(t *testing.T) {
 
 func testAccCheckDRTAccessRoleARNAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_shield_drt_access_role_arn_association" {
 				continue
 			}
 
 			input := &shield.DescribeDRTAccessInput{}
-			resp, err := conn.DescribeDRTAccessWithContext(ctx, input)
+			resp, err := conn.DescribeDRTAccess(ctx, input)
 
-			if errs.IsA[*shield.ResourceNotFoundException](err) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				return nil
 			}
 
@@ -116,8 +117,8 @@ func testAccCheckDRTAccessRoleARNAssociationExists(ctx context.Context, name str
 		if rs.Primary.ID == "" {
 			return create.Error(names.Shield, create.ErrActionCheckingExistence, tfshield.ResNameDRTAccessLogBucketAssociation, name, errors.New("not set"))
 		}
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
-		resp, err := conn.DescribeDRTAccessWithContext(ctx, &shield.DescribeDRTAccessInput{})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
+		resp, err := conn.DescribeDRTAccess(ctx, &shield.DescribeDRTAccessInput{})
 		if err != nil {
 			return create.Error(names.Shield, create.ErrActionCheckingExistence, tfshield.ResNameDRTAccessRoleARNAssociation, "testing", err)
 		}
@@ -128,10 +129,10 @@ func testAccCheckDRTAccessRoleARNAssociationExists(ctx context.Context, name str
 }
 
 func testAccPreCheckRoleARN(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
 
 	input := &shield.DescribeDRTAccessInput{}
-	_, err := conn.DescribeDRTAccessWithContext(ctx, input)
+	_, err := conn.DescribeDRTAccess(ctx, input)
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}

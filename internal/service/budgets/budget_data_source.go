@@ -293,7 +293,7 @@ func dataSourceBudgetRead(ctx context.Context, d *schema.ResourceData, meta inte
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "budgets",
 		AccountID: accountID,
-		Resource:  fmt.Sprintf("budget/%s", budgetName),
+		Resource:  "budget/" + budgetName,
 	}
 	d.Set("arn", arn.String())
 
