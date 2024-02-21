@@ -65,7 +65,7 @@ func (d *dataSourcePartition) Read(ctx context.Context, request datasource.ReadR
 	data.DNSSuffix = types.StringValue(d.Meta().DNSSuffix)
 	data.ID = types.StringValue(d.Meta().Partition)
 	data.Partition = types.StringValue(d.Meta().Partition)
-	data.ReverseDNSPrefix = types.StringValue(d.Meta().ReverseDNSPrefix)
+	data.ReverseDNSPrefix = types.StringValue(d.Meta().ReverseDNSPrefix(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

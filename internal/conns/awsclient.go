@@ -30,7 +30,6 @@ type AWSClient struct {
 	IgnoreTagsConfig  *tftags.IgnoreConfig
 	Partition         string
 	Region            string
-	ReverseDNSPrefix  string
 	ServicePackages   map[string]ServicePackage
 	Session           *session_sdkv1.Session
 	TerraformVersion  string
@@ -174,6 +173,10 @@ func (c *AWSClient) DefaultKMSKeyPolicy(context.Context) string {
 // for AWS Global Accelerator accelerators in the configured AWS partition.
 func (c *AWSClient) GlobalAcceleratorHostedZoneID(context.Context) string {
 	return "Z2BJ6XQ5FK7U4H" // See https://docs.aws.amazon.com/general/latest/gr/global_accelerator.html#global_accelerator_region
+}
+
+func (c *AWSClient) ReverseDNSPrefix(context.Context) string {
+	return names.ReverseDNS(c.DNSSuffix)
 }
 
 // apiClientConfig returns the AWS API client configuration parameters for the specified service.
