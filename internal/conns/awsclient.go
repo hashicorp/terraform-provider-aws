@@ -14,7 +14,6 @@ import (
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	config_sdkv2 "github.com/aws/aws-sdk-go-v2/config"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
-	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
@@ -142,7 +141,7 @@ func (c *AWSClient) APIGatewayV2InvokeURL(ctx context.Context, protocolType, api
 // CloudFrontDistributionHostedZoneID returns the Route 53 hosted zone ID
 // for Amazon CloudFront distributions in the configured AWS partition.
 func (c *AWSClient) CloudFrontDistributionHostedZoneID(context.Context) string {
-	if c.Partition == endpoints_sdkv1.AwsCnPartitionID {
+	if c.Partition == names.ChinaPartitionID {
 		return "Z3RFFRIM2A3IF5" // See https://docs.amazonaws.cn/en_us/aws/latest/userguide/route53.html
 	}
 	return "Z2FDTNDATAQYW2" // See https://docs.aws.amazon.com/Route53/latest/APIReference/API_AliasTarget.html#Route53-Type-AliasTarget-HostedZoneId
