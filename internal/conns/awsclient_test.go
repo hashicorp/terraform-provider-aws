@@ -21,7 +21,7 @@ func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-
 		{
 			Name: "AWS Commercial",
 			AWSClient: &AWSClient{
-				DNSSuffix: "amazonaws.com",
+				dnsSuffix: "amazonaws.com",
 			},
 			Prefix:   "test",
 			Expected: "test.amazonaws.com",
@@ -29,7 +29,7 @@ func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-
 		{
 			Name: "AWS China",
 			AWSClient: &AWSClient{
-				DNSSuffix: "amazonaws.com.cn",
+				dnsSuffix: "amazonaws.com.cn",
 			},
 			Prefix:   "test",
 			Expected: "test.amazonaws.com.cn",
@@ -63,7 +63,7 @@ func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 		{
 			Name: "AWS Commercial",
 			AWSClient: &AWSClient{
-				DNSSuffix: "amazonaws.com",
+				dnsSuffix: "amazonaws.com",
 				Region:    "us-west-2", //lintignore:AWSAT003
 			},
 			Prefix:   "test",
@@ -72,7 +72,7 @@ func TestAWSClientRegionalHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-n
 		{
 			Name: "AWS China",
 			AWSClient: &AWSClient{
-				DNSSuffix: "amazonaws.com.cn",
+				dnsSuffix: "amazonaws.com.cn",
 				Region:    "cn-northwest-1", //lintignore:AWSAT003
 			},
 			Prefix:   "test",

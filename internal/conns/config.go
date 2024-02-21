@@ -191,14 +191,14 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		return nil, sdkdiag.AppendErrorf(diags, err.Error())
 	}
 
-	DNSSuffix := "amazonaws.com"
+	dnsSuffix := "amazonaws.com"
 	if p, ok := endpoints_sdkv1.PartitionForRegion(endpoints_sdkv1.DefaultPartitions(), c.Region); ok {
-		DNSSuffix = p.DNSSuffix()
+		dnsSuffix = p.DNSSuffix()
 	}
 
 	client.AccountID = accountID
 	client.DefaultTagsConfig = c.DefaultTagsConfig
-	client.DNSSuffix = DNSSuffix
+	client.dnsSuffix = dnsSuffix
 	client.IgnoreTagsConfig = c.IgnoreTagsConfig
 	client.Partition = partition
 	client.Region = c.Region

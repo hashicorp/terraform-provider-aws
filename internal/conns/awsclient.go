@@ -26,7 +26,6 @@ import (
 type AWSClient struct {
 	AccountID         string
 	DefaultTagsConfig *tftags.DefaultConfig
-	DNSSuffix         string
 	IgnoreTagsConfig  *tftags.IgnoreConfig
 	Partition         string
 	Region            string
@@ -37,6 +36,7 @@ type AWSClient struct {
 	awsConfig                 *aws_sdkv2.Config
 	clients                   map[string]any
 	conns                     map[string]any
+	dnsSuffix                 string
 	endpoints                 map[string]string // From provider configuration.
 	httpClient                *http.Client
 	lock                      sync.Mutex
@@ -63,14 +63,14 @@ func (c *AWSClient) AwsConfig(context.Context) aws_sdkv2.Config { // nosemgrep:c
 // e.g. PREFIX.amazonaws.com
 // The prefix should not contain a trailing period.
 func (c *AWSClient) PartitionHostname(ctx context.Context, prefix string) string {
-	return fmt.Sprintf("%s.%s", prefix, c.DNSSuffix)
+	return fmt.Sprintf("%s.%s", prefix, c.DNSSuffix(ctx))
 }
 
 // RegionalHostname returns a hostname with the provider domain suffix for the region and partition
 // e.g. PREFIX.us-west-2.amazonaws.com
 // The prefix should not contain a trailing period.
 func (c *AWSClient) RegionalHostname(ctx context.Context, prefix string) string {
-	return fmt.Sprintf("%s.%s.%s", prefix, c.Region, c.DNSSuffix)
+	return fmt.Sprintf("%s.%s.%s", prefix, c.Region, c.DNSSuffix(ctx))
 }
 
 // S3ExpressClient returns an S3 API client suitable for use with S3 Express (directory buckets).
@@ -175,8 +175,14 @@ func (c *AWSClient) GlobalAcceleratorHostedZoneID(context.Context) string {
 	return "Z2BJ6XQ5FK7U4H" // See https://docs.aws.amazon.com/general/latest/gr/global_accelerator.html#global_accelerator_region
 }
 
-func (c *AWSClient) ReverseDNSPrefix(context.Context) string {
-	return names.ReverseDNS(c.DNSSuffix)
+// DNSSuffix returns the domain suffix for the configured AWS partition.
+func (c *AWSClient) DNSSuffix(context.Context) string {
+	return c.dnsSuffix
+}
+
+// ReverseDNSPrefix returns the reverse DNS prefix for the configured AWS partition.
+func (c *AWSClient) ReverseDNSPrefix(ctx context.Context) string {
+	return names.ReverseDNS(c.DNSSuffix(ctx))
 }
 
 // apiClientConfig returns the AWS API client configuration parameters for the specified service.
