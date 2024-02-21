@@ -47,7 +47,7 @@ func TestAccM2Environment_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.M2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -132,7 +132,7 @@ func TestAccM2Environment_update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.M2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -191,7 +191,7 @@ func TestAccM2Environment_highAvailability(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.M2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -238,7 +238,7 @@ func TestAccM2Environment_efs(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.M2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -283,7 +283,7 @@ func TestAccM2Environment_fsx(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.M2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -689,11 +689,11 @@ resource "aws_m2_environment" "test" {
 func testAccEnvironmentConfig_full(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
 resource "aws_m2_environment" "test" {
-  description     = "Test-1"
-  engine_type     = "microfocus"
+  description    = "Test-1"
+  engine_type    = "microfocus"
   engine_version = "8.0.10"
   high_availability_config {
-	desired_capacity = 1
+    desired_capacity = 1
   }
   instance_type   = "M2.m5.large"
   kms_key_id      = aws_kms_key.test.arn
@@ -705,7 +705,7 @@ resource "aws_m2_environment" "test" {
   }
 }
 resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
   enable_dns_hostnames = true
   tags = {
@@ -718,23 +718,23 @@ resource "aws_subnet" "test" {
   availability_zone = data.aws_availability_zones.available.names[count.index]
   cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
   tags = {
-	  Name = %[1]q
+    Name = %[1]q
   }
 }
 resource "aws_kms_key" "test" {
   description = "tf-test-cmk-kms-key-id"
 }
-  
+
 resource "aws_security_group" "test" {
   name        = %[1]q
   description = %[1]q
   vpc_id      = aws_vpc.test.id
-  
+
   ingress {
     from_port   = -1
     to_port     = -1
     protocol    = "icmp"
-	cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 }
 `, rName))

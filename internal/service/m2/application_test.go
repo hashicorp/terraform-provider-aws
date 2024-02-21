@@ -43,7 +43,7 @@ func TestAccM2Application_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.M2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -117,7 +117,7 @@ func TestAccM2Application_update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.M2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -166,7 +166,7 @@ func TestAccM2Application_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
 			testAccApplicationPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.M2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -406,13 +406,13 @@ resource "aws_iam_role_policy" "test" {
     Version = "2012-10-17"
     Statement = [
       {
-	     Action   = [
-                      "secretsmanager:DescribeSecret",
-	  			      "secretsmanager:GetSecretValue",
-				      "kms:Decrypt",
-	     ]
-	     Effect   = "Allow"
-	     Resource = "*"
+        Action = [
+          "secretsmanager:DescribeSecret",
+          "secretsmanager:GetSecretValue",
+          "kms:Decrypt",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
       },
     ]
   })
