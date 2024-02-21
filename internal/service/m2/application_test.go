@@ -40,10 +40,10 @@ func TestAccM2Application_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
+			acctest.PreCheckPartitionHasService(t, names.M2ServiceID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.M2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -114,10 +114,10 @@ func TestAccM2Application_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
+			acctest.PreCheckPartitionHasService(t, names.M2ServiceID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.M2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -163,10 +163,10 @@ func TestAccM2Application_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
+			acctest.PreCheckPartitionHasService(t, names.M2ServiceID)
 			testAccApplicationPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.M2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -394,19 +394,19 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_iam_role_policy" "test" {
-  name = "m2_permissions"
-  role = aws_iam_role.test.id
+  name   = "m2_permissions"
+  role   = aws_iam_role.test.id
   policy = jsonencode({
-    Version = "2012-10-17"
+    Version   = "2012-10-17"
     Statement = [
       {
-	     Action   = [
-                      "secretsmanager:DescribeSecret",
-	  			      "secretsmanager:GetSecretValue",
-				      "kms:Decrypt",
-	     ]
-	     Effect   = "Allow"
-	     Resource = "*"
+        Action = [
+          "secretsmanager:DescribeSecret",
+          "secretsmanager:GetSecretValue",
+          "kms:Decrypt",
+        ]
+        Effect   = "Allow"
+        Resource = "*"
       },
     ]
   })
