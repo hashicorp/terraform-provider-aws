@@ -7,7 +7,7 @@ require (
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
 	github.com/aws/aws-sdk-go v1.50.22
-	github.com/aws/aws-sdk-go-v2 v1.25.0
+	github.com/aws/aws-sdk-go-v2 v1.25.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.0
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.3
@@ -141,7 +141,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.37.2
 	github.com/aws/aws-sdk-go-v2/service/xray v1.24.1
-	github.com/aws/smithy-go v1.20.0
+	github.com/aws/smithy-go v1.20.1
 	github.com/beevik/etree v1.3.0
 	github.com/davecgh/go-spew v1.1.1
 	github.com/gertd/go-pluralize v0.2.1
