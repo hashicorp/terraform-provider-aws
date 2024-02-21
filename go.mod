@@ -52,7 +52,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.14.1
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.12.1
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.3.2
-	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.35.0
+	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.29.0
