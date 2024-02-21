@@ -63,8 +63,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Configuration Recorder Status",
 		},
 		{
-			Factory:  ResourceConformancePack,
+			Factory:  resourceConformancePack,
 			TypeName: "aws_config_conformance_pack",
+			Name:     "Conformance Pack",
 		},
 		{
 			Factory:  resourceDeliveryChannel,

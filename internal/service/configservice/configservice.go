@@ -16,74 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-const (
-	conformancePackCreateTimeout = 5 * time.Minute
-	conformancePackDeleteTimeout = 5 * time.Minute
-
-	conformancePackStatusNotFound = "NotFound"
-	conformancePackStatusUnknown  = "Unknown"
-)
-
-func DescribeConformancePack(ctx context.Context, conn *configservice.ConfigService, name string) (*configservice.ConformancePackDetail, error) {
-	input := &configservice.DescribeConformancePacksInput{
-		ConformancePackNames: []*string{aws.String(name)},
-	}
-
-	for {
-		output, err := conn.DescribeConformancePacksWithContext(ctx, input)
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, pack := range output.ConformancePackDetails {
-			if pack == nil {
-				continue
-			}
-
-			if aws.StringValue(pack.ConformancePackName) == name {
-				return pack, nil
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil, nil
-}
-
-func describeConformancePackStatus(ctx context.Context, conn *configservice.ConfigService, name string) (*configservice.ConformancePackStatusDetail, error) {
-	input := &configservice.DescribeConformancePackStatusInput{
-		ConformancePackNames: []*string{aws.String(name)},
-	}
-
-	for {
-		output, err := conn.DescribeConformancePackStatusWithContext(ctx, input)
-
-		if err != nil {
-			return nil, err
-		}
-
-		for _, status := range output.ConformancePackStatusDetails {
-			if aws.StringValue(status.ConformancePackName) == name {
-				return status, nil
-			}
-		}
-
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-
-		input.NextToken = output.NextToken
-	}
-
-	return nil, nil
-}
-
 func DescribeOrganizationConfigRule(ctx context.Context, conn *configservice.ConfigService, name string) (*configservice.OrganizationConfigRule, error) {
 	input := &configservice.DescribeOrganizationConfigRulesInput{
 		OrganizationConfigRuleNames: []*string{aws.String(name)},
@@ -253,26 +185,6 @@ func getOrganizationConformancePackDetailedStatus(ctx context.Context, conn *con
 	return statuses, nil
 }
 
-func refreshConformancePackStatus(ctx context.Context, conn *configservice.ConfigService, name string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		status, err := describeConformancePackStatus(ctx, conn, name)
-
-		if err != nil {
-			return nil, conformancePackStatusUnknown, err
-		}
-
-		if status == nil {
-			return nil, conformancePackStatusNotFound, nil
-		}
-
-		if errMsg := aws.StringValue(status.ConformancePackStatusReason); errMsg != "" {
-			return status, aws.StringValue(status.ConformancePackState), errors.New(errMsg)
-		}
-
-		return status, aws.StringValue(status.ConformancePackState), nil
-	}
-}
-
 func refreshOrganizationConfigRuleStatus(ctx context.Context, conn *configservice.ConfigService, name string, target string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		status, err := describeOrganizationConfigRuleStatus(ctx, conn, name)
@@ -387,40 +299,6 @@ func organizationConformancePackDetailedStatusError(ctx context.Context, conn *c
 	}
 
 	return fmt.Errorf("Failed in %d account(s):\n\n%s", len(memberAccountStatuses), errBuilder.String())
-}
-
-func waitForConformancePackStateCreateComplete(ctx context.Context, conn *configservice.ConfigService, name string) error {
-	stateChangeConf := retry.StateChangeConf{
-		Pending: []string{configservice.ConformancePackStateCreateInProgress},
-		Target:  []string{configservice.ConformancePackStateCreateComplete},
-		Timeout: conformancePackCreateTimeout,
-		Refresh: refreshConformancePackStatus(ctx, conn, name),
-	}
-
-	_, err := stateChangeConf.WaitForStateContext(ctx)
-
-	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConformancePackException) {
-		return nil
-	}
-
-	return err
-}
-
-func waitForConformancePackStateDeleteComplete(ctx context.Context, conn *configservice.ConfigService, name string) error {
-	stateChangeConf := retry.StateChangeConf{
-		Pending: []string{configservice.ConformancePackStateDeleteInProgress},
-		Target:  []string{},
-		Timeout: conformancePackDeleteTimeout,
-		Refresh: refreshConformancePackStatus(ctx, conn, name),
-	}
-
-	_, err := stateChangeConf.WaitForStateContext(ctx)
-
-	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConformancePackException) {
-		return nil
-	}
-
-	return err
 }
 
 func waitForOrganizationConformancePackStatusCreateSuccessful(ctx context.Context, conn *configservice.ConfigService, name string, timeout time.Duration) error {

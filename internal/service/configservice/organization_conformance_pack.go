@@ -139,7 +139,7 @@ func resourceOrganizationConformancePackCreate(ctx context.Context, d *schema.Re
 	}
 
 	if v, ok := d.GetOk("input_parameter"); ok {
-		input.ConformancePackInputParameters = expandConfigConformancePackInputParameters(v.(*schema.Set).List())
+		input.ConformancePackInputParameters = expandConformancePackInputParameters(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("template_body"); ok {
@@ -200,7 +200,7 @@ func resourceOrganizationConformancePackRead(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "setting excluded_accounts: %s", err)
 	}
 
-	if err = d.Set("input_parameter", flattenConfigConformancePackInputParameters(pack.ConformancePackInputParameters)); err != nil {
+	if err = d.Set("input_parameter", flattenConformancePackInputParameters(pack.ConformancePackInputParameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting input_parameter: %s", err)
 	}
 
@@ -228,7 +228,7 @@ func resourceOrganizationConformancePackUpdate(ctx context.Context, d *schema.Re
 	}
 
 	if v, ok := d.GetOk("input_parameter"); ok {
-		input.ConformancePackInputParameters = expandConfigConformancePackInputParameters(v.(*schema.Set).List())
+		input.ConformancePackInputParameters = expandConformancePackInputParameters(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("template_body"); ok {
