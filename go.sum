@@ -66,8 +66,8 @@ github.com/aws/aws-sdk-go-v2/service/auditmanager v1.31.3 h1:mxzq/Hk0WrvIGZopU/V
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.31.3/go.mod h1:Sj1AvAWCjzgr+UKtsP6BgYT7sH9QYRVBFOj1fNyruLw=
 github.com/aws/aws-sdk-go-v2/service/batch v1.32.2 h1:Xbyc8VP2Lw0UCSZ+NyEltcyGH2UDGl7QIk0mFf/u3wg=
 github.com/aws/aws-sdk-go-v2/service/batch v1.32.2/go.mod h1:pAmtV/L6ba2CpOiBUMMEBG40AwsF1jkU0iy8ZKRmKJk=
-github.com/aws/aws-sdk-go-v2/service/bedrock v1.6.1 h1:Oj1/RoOwxMkWxmgu673r+hoQHcIlqgJa3VwyFhnEkgI=
-github.com/aws/aws-sdk-go-v2/service/bedrock v1.6.1/go.mod h1:orxULvnjYi9X3Na7eGy27KD6uOE8vDvyJCNJejmU92E=
+github.com/aws/aws-sdk-go-v2/service/bedrock v1.6.2 h1:McTdPAxhW78yQtvDTVOLKIKt6NSz+Ph0xvfAnf+6SoU=
+github.com/aws/aws-sdk-go-v2/service/bedrock v1.6.2/go.mod h1:yDdowyj52XzMqQGOrFUwl/fbSEYQ5DfLMiPD559jFks=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.3.1 h1:T3IHtdlLQmds/tZD14BASd5EO9pKBX4pBXvMlV3ZM9g=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.3.1/go.mod h1:2JwewcOywORJafWipQ67h7P6CGLxgj1dWGgsuQ2gau4=
 github.com/aws/aws-sdk-go-v2/service/budgets v1.21.2 h1:06UN47uUHv9fVdK1kHArQfQyqriMkXiLjX0FCv8vfA4=
