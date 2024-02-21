@@ -264,7 +264,7 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 		} else {
 			meta = new(conns.AWSClient)
 		}
-		meta.SetHTTPClient(httpClient)
+		meta.SetHTTPClient(ctx, httpClient)
 		provider.SetMeta(meta)
 
 		if v, ds := configureContextFunc(ctx, d); ds.HasError() {
@@ -391,6 +391,7 @@ func closeVCRRecorder(t *testing.T) {
 		panic(p)
 	}
 
+	ctx := context.TODO() // nosemgrep:ci.semgrep.migrate.context-todo
 	testName := t.Name()
 	providerMetas.Lock()
 	meta, ok := providerMetas[testName]
@@ -398,7 +399,7 @@ func closeVCRRecorder(t *testing.T) {
 
 	if ok {
 		if !t.Failed() {
-			if v, ok := meta.HTTPClient().Transport.(*recorder.Recorder); ok {
+			if v, ok := meta.HTTPClient(ctx).Transport.(*recorder.Recorder); ok {
 				t.Log("stopping VCR recorder")
 				if err := v.Stop(); err != nil {
 					t.Error(err)

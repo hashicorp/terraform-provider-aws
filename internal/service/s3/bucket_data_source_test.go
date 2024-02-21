@@ -32,7 +32,7 @@ func TestAccS3BucketDataSource_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "region", region),
-					testAccCheckBucketDomainName(dataSourceName, "bucket_domain_name", rName),
+					testAccCheckBucketDomainName(ctx, dataSourceName, "bucket_domain_name", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "bucket_regional_domain_name", testAccBucketRegionalDomainName(rName, region)),
 					resource.TestCheckResourceAttr(dataSourceName, "hosted_zone_id", hostedZoneID),
 					resource.TestCheckNoResourceAttr(dataSourceName, "website_endpoint"),
