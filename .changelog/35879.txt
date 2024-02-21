@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_transfer_server: Add `TransferSecurityPolicy-2024-01` and `TransferSecurityPolicy-FIPS-2024-01` as valid values for `security_policy_name`
+```

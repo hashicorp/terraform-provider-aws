@@ -6,9 +6,9 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.50.21
+	github.com/aws/aws-sdk-go v1.50.22
 	github.com/aws/aws-sdk-go-v2 v1.25.0
-	github.com/aws/aws-sdk-go-v2/config v1.27.0
+	github.com/aws/aws-sdk-go-v2/config v1.27.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.0
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.2
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.27.0
@@ -47,7 +47,6 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.21.0
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.22.2
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.14.0
@@ -129,9 +128,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.11.0
-	github.com/aws/aws-sdk-go-v2/service/sso v1.19.0
+	github.com/aws/aws-sdk-go-v2/service/sso v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.24.1
-	github.com/aws/aws-sdk-go-v2/service/sts v1.27.0
+	github.com/aws/aws-sdk-go-v2/service/sts v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/swf v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.23.0
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.24.1
@@ -191,7 +190,7 @@ require (
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.0 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.0 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.1 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
@@ -203,7 +202,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.9.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.11.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.22.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.22.1 // indirect
 	github.com/bgentry/speakeasy v0.1.0 // indirect
 	github.com/boombuler/barcode v1.0.1 // indirect
 	github.com/bufbuild/protocompile v0.6.0 // indirect

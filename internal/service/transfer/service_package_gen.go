@@ -73,7 +73,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceServer,
+			Factory:  resourceServer,
 			TypeName: "aws_transfer_server",
 			Name:     "Server",
 			Tags: &types.ServicePackageResourceTags{

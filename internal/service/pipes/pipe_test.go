@@ -36,7 +36,7 @@ func TestAccPipesPipe_basicSQS(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -89,7 +89,7 @@ func TestAccPipesPipe_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -117,7 +117,7 @@ func TestAccPipesPipe_description(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -170,7 +170,7 @@ func TestAccPipesPipe_desiredState(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -223,7 +223,7 @@ func TestAccPipesPipe_enrichment(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -269,7 +269,7 @@ func TestAccPipesPipe_enrichmentParameters(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -324,7 +324,7 @@ func TestAccPipesPipe_sourceParameters_filterCriteria(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -411,7 +411,7 @@ func TestAccPipesPipe_nameGenerated(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -444,7 +444,7 @@ func TestAccPipesPipe_namePrefix(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -477,7 +477,7 @@ func TestAccPipesPipe_roleARN(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -516,7 +516,7 @@ func TestAccPipesPipe_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -566,7 +566,7 @@ func TestAccPipesPipe_targetUpdate(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -605,7 +605,7 @@ func TestAccPipesPipe_targetParameters_inputTemplate(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -651,7 +651,7 @@ func TestAccPipesPipe_kinesisSourceAndTarget(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -772,7 +772,7 @@ func TestAccPipesPipe_dynamoDBSourceCloudWatchLogsTarget(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -844,7 +844,7 @@ func TestAccPipesPipe_activeMQSourceStepFunctionTarget(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -912,7 +912,7 @@ func TestAccPipesPipe_rabbitMQSourceEventBusTarget(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -970,7 +970,7 @@ func TestAccPipesPipe_mskSourceHTTPTarget(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1046,7 +1046,7 @@ func TestAccPipesPipe_selfManagedKafkaSourceLambdaFunctionTarget(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1121,7 +1121,7 @@ func TestAccPipesPipe_sqsSourceRedshiftTarget(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1193,7 +1193,7 @@ func TestAccPipesPipe_SourceSageMakerTarget(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1260,7 +1260,7 @@ func TestAccPipesPipe_sqsSourceBatchJobTarget(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1344,7 +1344,7 @@ func TestAccPipesPipe_sqsSourceECSTaskTarget(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.PipesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PipesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PipesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipeDestroy(ctx),
 		Steps: []resource.TestStep{
