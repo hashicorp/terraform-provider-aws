@@ -23,7 +23,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/batch v1.32.2
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.6.2
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.3.1
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.3.2
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.14.1
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.13.1
