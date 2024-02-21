@@ -21,12 +21,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceIndex,
-			Name:    "Default AutoScaling Configuration Version",
+			Factory: newResourceDeployment,
+			Name:    "Deployment",
 		},
 		{
-			Factory: newResourceStartDeployment,
-			Name:    "Start Deployment",
+			Factory: newResourceIndex,
+			Name:    "Default AutoScaling Configuration Version",
 		},
 	}
 }

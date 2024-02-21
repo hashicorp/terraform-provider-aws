@@ -25,29 +25,29 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Start Deployment")
-func newResourceStartDeployment(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceStartDeployment{}
+// @FrameworkResource(name="Deployment")
+func newResourceDeployment(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourceDeployment{}
 	r.SetDefaultCreateTimeout(20 * time.Minute)
 	r.SetDefaultReadTimeout(20 * time.Minute)
 
 	return r, nil
 }
 
-type resourceStartDeployment struct {
+type resourceDeployment struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 }
 
-func (r *resourceStartDeployment) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *resourceDeployment) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = "aws_apprunner_deployment"
 }
 
 const (
-	ResNameStartDeployment = "Start Deployment"
+	ResNameDeployment = "Deployment"
 )
 
-func (r *resourceStartDeployment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *resourceDeployment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"service_arn": schema.StringAttribute{
@@ -75,10 +75,10 @@ func (r *resourceStartDeployment) Schema(ctx context.Context, req resource.Schem
 	}
 }
 
-func (r *resourceStartDeployment) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().AppRunnerClient(ctx)
 
-	var plan resourceStartDeploymentData
+	var plan resourceDeploymentData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -91,7 +91,7 @@ func (r *resourceStartDeployment) Create(ctx context.Context, req resource.Creat
 	out, err := conn.StartDeployment(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppRunner, create.ErrActionCreating, ResNameStartDeployment, plan.ServiceArn.String(), err),
+			create.ProblemStandardMessage(names.AppRunner, create.ErrActionCreating, ResNameDeployment, plan.ServiceArn.String(), err),
 			err.Error(),
 		)
 		return
@@ -99,7 +99,7 @@ func (r *resourceStartDeployment) Create(ctx context.Context, req resource.Creat
 
 	if out == nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppRunner, create.ErrActionCreating, ResNameStartDeployment, plan.ServiceArn.String(), nil),
+			create.ProblemStandardMessage(names.AppRunner, create.ErrActionCreating, ResNameDeployment, plan.ServiceArn.String(), nil),
 			"no output",
 		)
 		return
@@ -108,10 +108,10 @@ func (r *resourceStartDeployment) Create(ctx context.Context, req resource.Creat
 	plan.OperationId = flex.StringToFramework(ctx, out.OperationId)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitStartDeploymentSucceeded(ctx, conn, plan.ServiceArn.ValueString(), createTimeout)
+	_, err = waitDeploymentSucceeded(ctx, conn, plan.ServiceArn.ValueString(), createTimeout)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppRunner, create.ErrActionWaitingForCreation, ResNameStartDeployment, plan.ServiceArn.String(), err),
+			create.ProblemStandardMessage(names.AppRunner, create.ErrActionWaitingForCreation, ResNameDeployment, plan.ServiceArn.String(), err),
 			err.Error(),
 		)
 		return
@@ -120,23 +120,23 @@ func (r *resourceStartDeployment) Create(ctx context.Context, req resource.Creat
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceStartDeployment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourceDeployment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().AppRunnerClient(ctx)
 
-	var state resourceStartDeploymentData
+	var state resourceDeploymentData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findStartDeploymentOperationByServiceARN(ctx, conn, state.ServiceArn.ValueString())
+	out, err := findDeploymentOperationByServiceARN(ctx, conn, state.ServiceArn.ValueString())
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppRunner, create.ErrActionReading, ResNameStartDeployment, state.ServiceArn.String(), err),
+			create.ProblemStandardMessage(names.AppRunner, create.ErrActionReading, ResNameDeployment, state.ServiceArn.String(), err),
 			err.Error(),
 		)
 		return
@@ -148,18 +148,18 @@ func (r *resourceStartDeployment) Read(ctx context.Context, req resource.ReadReq
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceStartDeployment) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *resourceDeployment) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 }
 
 // Delete does not need to explicitly call resp.State.RemoveResource() as this is automatically handled by the framework.
-func (r *resourceStartDeployment) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourceDeployment) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 }
 
-func waitStartDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, arn string, timeout time.Duration) (*apprunner_types.OperationSummary, error) {
+func waitDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, arn string, timeout time.Duration) (*apprunner_types.OperationSummary, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:        []string{},
 		Target:         enum.Slice(apprunner_types.OperationStatusSucceeded),
-		Refresh:        statusStartDeployment(ctx, conn, arn),
+		Refresh:        statusDeployment(ctx, conn, arn),
 		Timeout:        timeout,
 		PollInterval:   30 * time.Second,
 		NotFoundChecks: 30,
@@ -174,9 +174,9 @@ func waitStartDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, a
 	return nil, err
 }
 
-func statusStartDeployment(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
+func statusDeployment(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findStartDeploymentOperationByServiceARN(ctx, conn, arn)
+		output, err := findDeploymentOperationByServiceARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -190,7 +190,7 @@ func statusStartDeployment(ctx context.Context, conn *apprunner.Client, arn stri
 	}
 }
 
-func findStartDeploymentOperationByServiceARN(ctx context.Context, conn *apprunner.Client, arn string) (*apprunner_types.OperationSummary, error) {
+func findDeploymentOperationByServiceARN(ctx context.Context, conn *apprunner.Client, arn string) (*apprunner_types.OperationSummary, error) {
 	input := &apprunner.ListOperationsInput{
 		ServiceArn: aws.String(arn),
 	}
@@ -203,7 +203,7 @@ func findStartDeploymentOperationByServiceARN(ctx context.Context, conn *apprunn
 
 	if len(output.OperationSummaryList) == 0 {
 		return nil, &retry.NotFoundError{
-			Message:     "start deployment operation not found",
+			Message:     "deployment operation not found",
 			LastRequest: input,
 		}
 	}
@@ -220,7 +220,7 @@ func findStartDeploymentOperationByServiceARN(ctx context.Context, conn *apprunn
 
 	if !found {
 		return nil, &retry.NotFoundError{
-			Message:     "start deployment operation not found",
+			Message:     "deployment operation not found",
 			LastRequest: input,
 		}
 	}
@@ -228,7 +228,7 @@ func findStartDeploymentOperationByServiceARN(ctx context.Context, conn *apprunn
 	return &operation, nil
 }
 
-type resourceStartDeploymentData struct {
+type resourceDeploymentData struct {
 	ServiceArn  types.String   `tfsdk:"service_arn"`
 	OperationId types.String   `tfsdk:"operation_id"`
 	Status      types.String   `tfsdk:"status"`
