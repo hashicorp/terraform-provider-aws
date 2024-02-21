@@ -64,7 +64,8 @@ func (r *resourceApplication) Metadata(_ context.Context, req resource.MetadataR
 func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			"application_id": framework.IDAttribute(),
+			"arn":            framework.ARNAttributeComputedOnly(),
 			"current_version": schema.Int64Attribute{
 				Computed: true,
 			},
@@ -73,8 +74,11 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
-			"id": framework.IDAttribute(),
 			"engine_type": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -84,6 +88,7 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 					stringvalidator.OneOf(enum.Values[awstypes.EngineType]()...),
 				},
 			},
+			"id": framework.IDAttribute(),
 			"kms_key_id": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
@@ -229,6 +234,16 @@ func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest
 		)
 		return
 	}
+	// Tags are on GetApplicationOutput, but nil
+	tags, err := listTags(ctx, conn, *out.ApplicationArn)
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.M2, create.ErrActionSetting, ResNameApplication, state.ID.String(), err),
+			err.Error(),
+		)
+	}
+
+	setTagsOut(ctx, tags.Map())
 
 	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
 	resp.Diagnostics.Append(state.refreshFromVersion(ctx, version)...)
@@ -523,6 +538,7 @@ func flattenApplicationDefinitionFromVersion(ctx context.Context, version *m2.Ge
 }
 
 type resourceApplicationData struct {
+	ApplicationId  types.String   `tfsdk:"application_id"`
 	ARN            types.String   `tfsdk:"arn"`
 	ClientToken    types.String   `tfsdk:"client_token"`
 	CurrentVersion types.Int64    `tfsdk:"current_version"`

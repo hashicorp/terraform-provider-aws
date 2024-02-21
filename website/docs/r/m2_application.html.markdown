@@ -77,6 +77,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `application_id` - Id of the Application.
 * `arn` - ARN of the Application.
 * `current_version` - Current version of the application deployed.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
