@@ -19,8 +19,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -75,8 +77,11 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
-			"id": framework.IDAttribute(),
 			"engine_type": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -86,10 +91,15 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 			"engine_version": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
+			"environment_id": framework.IDAttribute(),
 			"force_update": schema.BoolAttribute{
 				Optional: true,
 			},
+			"id": framework.IDAttribute(),
 			"instance_type": schema.StringAttribute{
 				Required:   true,
 				Validators: []validator.String{},
@@ -112,25 +122,58 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 			"preferred_maintenance_window": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"publicly_accessible": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"security_groups": schema.SetAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				ElementType: types.StringType,
 				Validators: []validator.Set{
 					setvalidator.SizeAtLeast(1),
 				},
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+					setplanmodifier.RequiresReplace(),
+				},
 			},
 			"subnet_ids": schema.SetAttribute{
-				Required:    true,
+				Optional:    true,
+				Computed:    true,
 				ElementType: types.StringType,
 				Validators: []validator.Set{
-					setvalidator.SizeAtLeast(1),
+					setvalidator.SizeAtLeast(2),
+				},
+				PlanModifiers: []planmodifier.Set{
+					setplanmodifier.UseStateForUnknown(),
+					setplanmodifier.RequiresReplace(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
+			"high_availability_config": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[haData](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"desired_capacity": schema.Int64Attribute{
+							Required: true,
+						},
+					},
+				},
+			},
 			"storage_configuration": schema.ListNestedBlock{
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
@@ -173,19 +216,6 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 					},
 				},
 			},
-			"high_availability_config": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[haData](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"desired_capacity": schema.Int64Attribute{
-							Required: true,
-						},
-					},
-				},
-			},
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -220,7 +250,7 @@ func (r *resourceEnvironment) Create(ctx context.Context, req resource.CreateReq
 	in.Tags = getTagsIn(ctx)
 
 	if !plan.StorageConfiguration.IsNull() {
-		var sc []storageData
+		var sc []storageConfiguration
 		resp.Diagnostics.Append(plan.StorageConfiguration.ElementsAs(ctx, &sc, false)...)
 		storageConfig, d := expandStorageConfigurations(ctx, sc)
 		resp.Diagnostics.Append(d...)
@@ -299,37 +329,9 @@ func (r *resourceEnvironment) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	in := &m2.UpdateEnvironmentInput{
-		EnvironmentId: flex.StringFromFramework(ctx, plan.ID),
-	}
-
-	if r.hasChangesForMaintenance(plan, state) {
-		in.ApplyDuringMaintenanceWindow = true
-		in.EngineVersion = flex.StringFromFramework(ctx, plan.EngineVersion)
-	} else if r.hasChanges(plan, state) {
-		if !plan.EngineVersion.Equal(state.EngineVersion) {
-			in.EngineVersion = flex.StringFromFramework(ctx, plan.EngineVersion)
-		}
-		if !plan.InstanceType.Equal(state.InstanceType) {
-			in.InstanceType = flex.StringFromFramework(ctx, plan.InstanceType)
-		}
-		if !plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow) {
-			in.PreferredMaintenanceWindow = flex.StringFromFramework(ctx, plan.PreferredMaintenanceWindow)
-		}
-
-		if !plan.HighAvailabilityConfig.Equal(state.HighAvailabilityConfig) {
-			v, d := plan.HighAvailabilityConfig.ToSlice(ctx)
-			resp.Diagnostics.Append(d...)
-			if len(v) > 0 {
-				in.DesiredCapacity = flex.Int32FromFramework(ctx, v[0].DesiredCapacity)
-			}
-		}
-	} else {
+	in, updateRequired := r.updateEnvironmentInput(ctx, plan, state, resp)
+	if !updateRequired {
 		return
-	}
-
-	if !plan.ForceUpdate.IsNull() {
-		in.ForceUpdate = plan.ForceUpdate.ValueBool()
 	}
 
 	out, err := conn.UpdateEnvironment(ctx, in)
@@ -367,6 +369,42 @@ func (r *resourceEnvironment) Update(ctx context.Context, req resource.UpdateReq
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func (r *resourceEnvironment) updateEnvironmentInput(ctx context.Context, plan, state resourceEnvironmentData, resp *resource.UpdateResponse) (*m2.UpdateEnvironmentInput, bool) {
+	in := &m2.UpdateEnvironmentInput{
+		EnvironmentId: flex.StringFromFramework(ctx, plan.ID),
+	}
+
+	if r.hasChangesForMaintenance(plan, state) {
+		in.ApplyDuringMaintenanceWindow = true
+		in.EngineVersion = flex.StringFromFramework(ctx, plan.EngineVersion)
+	} else if r.hasChanges(plan, state) {
+		if !plan.EngineVersion.Equal(state.EngineVersion) {
+			in.EngineVersion = flex.StringFromFramework(ctx, plan.EngineVersion)
+		}
+		if !plan.InstanceType.Equal(state.InstanceType) {
+			in.InstanceType = flex.StringFromFramework(ctx, plan.InstanceType)
+		}
+		if !plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow) {
+			in.PreferredMaintenanceWindow = flex.StringFromFramework(ctx, plan.PreferredMaintenanceWindow)
+		}
+
+		if !plan.HighAvailabilityConfig.Equal(state.HighAvailabilityConfig) {
+			v, d := plan.HighAvailabilityConfig.ToSlice(ctx)
+			resp.Diagnostics.Append(d...)
+			if len(v) > 0 {
+				in.DesiredCapacity = flex.Int32FromFramework(ctx, v[0].DesiredCapacity)
+			}
+		}
+	} else {
+		return nil, false
+	}
+
+	if !plan.ForceUpdate.IsNull() {
+		in.ForceUpdate = plan.ForceUpdate.ValueBool()
+	}
+	return in, true
 }
 
 func (r *resourceEnvironment) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -521,12 +559,14 @@ type resourceEnvironmentData struct {
 	ID                           types.String                            `tfsdk:"id"`
 	EngineType                   types.String                            `tfsdk:"engine_type"`
 	EngineVersion                types.String                            `tfsdk:"engine_version"`
+	EnvironmentId                types.String                            `tfsdk:"environment_id"`
 	ForceUpdate                  types.Bool                              `tfsdk:"force_update"`
 	HighAvailabilityConfig       fwtypes.ListNestedObjectValueOf[haData] `tfsdk:"high_availability_config"`
 	InstanceType                 types.String                            `tfsdk:"instance_type"`
 	KmsKeyId                     types.String                            `tfsdk:"kms_key_id"`
 	LoadBalancerArn              types.String                            `tfsdk:"load_balancer_arn"`
 	PreferredMaintenanceWindow   types.String                            `tfsdk:"preferred_maintenance_window"`
+	PubliclyAccessible           types.Bool                              `tfsdk:"publicly_accessible"`
 	SecurityGroupIds             types.Set                               `tfsdk:"security_groups"`
 	StorageConfiguration         types.List                              `tfsdk:"storage_configuration"`
 	SubnetIds                    types.Set                               `tfsdk:"subnet_ids"`
@@ -536,7 +576,7 @@ type resourceEnvironmentData struct {
 	Timeouts                     timeouts.Value                          `tfsdk:"timeouts"`
 }
 
-type storageData struct {
+type storageConfiguration struct {
 	EFS types.List `tfsdk:"efs"`
 	FSX types.List `tfsdk:"fsx"`
 }
@@ -573,7 +613,7 @@ func (r *resourceEnvironment) ModifyPlan(ctx context.Context, req resource.Modif
 	r.SetTagsAll(ctx, req, resp)
 }
 
-func expandStorageConfigurations(ctx context.Context, storageConfigurations []storageData) ([]awstypes.StorageConfiguration, diag.Diagnostics) {
+func expandStorageConfigurations(ctx context.Context, storageConfigurations []storageConfiguration) ([]awstypes.StorageConfiguration, diag.Diagnostics) {
 	storage := []awstypes.StorageConfiguration{}
 	var diags diag.Diagnostics
 
