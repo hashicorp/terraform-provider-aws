@@ -109,6 +109,7 @@ func TestAccELBV2TargetGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttr(resourceName, "protocol_version", "HTTP1"),
@@ -328,6 +329,7 @@ func TestAccELBV2TargetGroup_backwardsCompatibility(t *testing.T) {
 					testAccCheckTargetGroupExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "load_balancer_arns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "port", "443"),
 					resource.TestCheckResourceAttr(resourceName, "protocol", "HTTPS"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
@@ -3625,6 +3627,7 @@ func TestAccELBV2TargetGroup_Instance_protocolVersion_MigrateV0(t *testing.T) {
 				CheckDestroy: testAccCheckTargetGroupDestroy(ctx),
 				Steps: testAccMigrateTest{
 					PreviousVersion: "5.25.0",
+					NextVersion:     "5.26.0",
 					Config:          testAccTargetGroupConfig_Instance_protocolVersion(protocol, "HTTP1"),
 					PreCheck:        preCheck,
 					PostCheck:       postCheck,
@@ -3676,6 +3679,7 @@ func TestAccELBV2TargetGroup_Lambda_defaults_MigrateV0(t *testing.T) {
 		CheckDestroy: testAccCheckTargetGroupDestroy(ctx),
 		Steps: testAccMigrateTest{
 			PreviousVersion: "5.25.0",
+			NextVersion:     "5.26.0",
 			Config:          testAccTargetGroupConfig_Lambda_basic(),
 			PreCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -3739,6 +3743,7 @@ func TestAccELBV2TargetGroup_Lambda_vpc_MigrateV0(t *testing.T) {
 		CheckDestroy: testAccCheckTargetGroupDestroy(ctx),
 		Steps: testAccMigrateTest{
 			PreviousVersion: "5.25.0",
+			NextVersion:     "5.26.0",
 			Config:          testAccTargetGroupConfig_Lambda_vpc(),
 			PreCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -3804,6 +3809,7 @@ func TestAccELBV2TargetGroup_Lambda_protocol_MigrateV0(t *testing.T) {
 				CheckDestroy: testAccCheckTargetGroupDestroy(ctx),
 				Steps: testAccMigrateTest{
 					PreviousVersion: "5.25.0",
+					NextVersion:     "5.26.0",
 					Config:          testAccTargetGroupConfig_Lambda_protocol(protocol),
 					PreCheck: resource.ComposeAggregateTestCheckFunc(
 						testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -3857,6 +3863,7 @@ func TestAccELBV2TargetGroup_Lambda_protocolVersion_MigrateV0(t *testing.T) {
 		CheckDestroy: testAccCheckTargetGroupDestroy(ctx),
 		Steps: testAccMigrateTest{
 			PreviousVersion: "5.25.0",
+			NextVersion:     "5.26.0",
 			Config:          testAccTargetGroupConfig_Lambda_protocolVersion("GRPC"),
 			PreCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -3908,6 +3915,7 @@ func TestAccELBV2TargetGroup_Lambda_port_MigrateV0(t *testing.T) {
 		CheckDestroy: testAccCheckTargetGroupDestroy(ctx),
 		Steps: testAccMigrateTest{
 			PreviousVersion: "5.25.0",
+			NextVersion:     "5.26.0",
 			Config:          testAccTargetGroupConfig_Lambda_port("443"),
 			PreCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -3967,6 +3975,7 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_basic_MigrateV0(t *testing.T) {
 		CheckDestroy: testAccCheckTargetGroupDestroy(ctx),
 		Steps: testAccMigrateTest{
 			PreviousVersion: "5.25.0",
+			NextVersion:     "5.26.0",
 			Config:          testAccTargetGroupConfig_Lambda_HealthCheck_basic(),
 			PreCheck: resource.ComposeAggregateTestCheckFunc(
 				testAccCheckTargetGroupExists(ctx, resourceName, &targetGroup),
@@ -4120,9 +4129,15 @@ func TestAccELBV2TargetGroup_Lambda_HealthCheck_protocol_MigrateV0(t *testing.T)
 			steps := []resource.TestStep{step}
 			if tc.warning {
 				steps = append(steps, resource.TestStep{
-					ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-					Config:                   config,
-					PlanOnly:                 true,
+					// check that the plan is still valid with the IMMEDIATE next published version
+					ExternalProviders: map[string]resource.ExternalProvider{
+						"aws": {
+							Source:            "hashicorp/aws",
+							VersionConstraint: "5.26.0",
+						},
+					},
+					Config:   config,
+					PlanOnly: true,
 				})
 			}
 
@@ -4224,6 +4239,9 @@ type testAccMigrateTest struct {
 	// PreviousVersion is a version of the provider previous to the changes to be migrated
 	PreviousVersion string
 
+	// NextVersion is a version of the provider following the changes to be migrated
+	NextVersion string
+
 	// Config is the configuration to be deployed with the previous version and checked with the updated version
 	Config string
 
@@ -4246,9 +4264,14 @@ func (t testAccMigrateTest) Steps() []resource.TestStep {
 			Check:  t.PreCheck,
 		},
 		{
-			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-			Config:                   t.Config,
-			PlanOnly:                 true,
+			ExternalProviders: map[string]resource.ExternalProvider{
+				"aws": {
+					Source:            "hashicorp/aws",
+					VersionConstraint: t.NextVersion,
+				},
+			},
+			Config:   t.Config,
+			PlanOnly: true,
 		},
 		{
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
