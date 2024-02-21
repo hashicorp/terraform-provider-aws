@@ -80,8 +80,8 @@ github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.9.1 h1:ZzuVU1pCbpOQowv28fv/fK
 github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.9.1/go.mod h1:7njFwVPAH3AKw1+zFRY4LSaJZ/6Q7d0Dhm2k8CXXG/8=
 github.com/aws/aws-sdk-go-v2/service/cloud9 v1.23.2 h1:OLeVHoW+UYdpvzejYlvf/BxxSeSpyJd2ke+dIRLknQc=
 github.com/aws/aws-sdk-go-v2/service/cloud9 v1.23.2/go.mod h1:DdWNqme/f3Tt1E7WFoXgwCW8KtGO7j10dpMLbgbupDo=
-github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.17.0 h1:4UFy9T97YYdtz6Rr+zSe/NLJPcDNeV5Y/X1Y6hX9azk=
-github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.17.0/go.mod h1:krbDa/4uw3YgW1KXqkmjWYD1PFhjEJcChqvmG9cXxAY=
+github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.17.1 h1:lwAdJ34hq2cOmHx+e8VfTm5AS9mO9uLTq19JO6ouZR0=
+github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.17.1/go.mod h1:krbDa/4uw3YgW1KXqkmjWYD1PFhjEJcChqvmG9cXxAY=
 github.com/aws/aws-sdk-go-v2/service/cloudfront v1.34.0 h1:e3ggIEy6VLeDq35yqCANFwws382WlEozjoJc4gWMoiA=
 github.com/aws/aws-sdk-go-v2/service/cloudfront v1.34.0/go.mod h1:/AZ24tZ/H2O3sNeLyv15mm5XqhhzeehASgNBI7oerFw=
 github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.3.0 h1:bnPkHnxkVsyxuorlWAJJJibnvWiVoXCaqezbRxnlPE8=
