@@ -117,7 +117,7 @@ region = us-west-2
 sso_start_url = https://d-123456789a.awsapps.com/start#
 `, //lintignore:AWSAT003
 			Check: func(t *testing.T, meta *conns.AWSClient) {
-				awsConfig := meta.AwsConfig()
+				awsConfig := meta.AwsConfig(context.TODO())
 				var ssoStartUrl string
 				for _, source := range awsConfig.ConfigSources {
 					if shared, ok := source.(config.SharedConfig); ok {
