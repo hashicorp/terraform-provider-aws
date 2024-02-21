@@ -108,7 +108,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.38.2
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.9.2
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.20.2
-	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.20.2
+	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.20.3
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.7.1
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.22.2
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.50.3
