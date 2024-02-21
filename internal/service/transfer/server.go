@@ -30,7 +30,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 
 // @SDKResource("aws_transfer_server", name="Server")
 // @Tags(identifierAttribute="arn")
-func ResourceServer() *schema.Resource {
+func resourceServer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServerCreate,
 		ReadWithoutTimeout:   resourceServerRead,
@@ -224,7 +224,7 @@ func ResourceServer() *schema.Resource {
 			"security_policy_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      SecurityPolicyName2024_01,
+				Default:      SecurityPolicyName2018_11,
 				ValidateFunc: validation.StringInSlice(SecurityPolicyName_Values(), false),
 			},
 			"structured_log_destinations": {
