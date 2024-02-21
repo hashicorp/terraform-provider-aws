@@ -6,13 +6,13 @@ package apigateway_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(apigateway.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.APIGatewayServiceID, testAccErrorCheckSkip)
 }
 
 // skips tests that have error messages indicating unsupported features

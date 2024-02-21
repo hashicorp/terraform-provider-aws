@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkafkaconnect "github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
@@ -25,7 +26,7 @@ func TestAccKafkaConnectCustomPlugin_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kafkaconnect.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaConnectServiceID),
 		CheckDestroy:             testAccCheckCustomPluginDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -62,7 +63,7 @@ func TestAccKafkaConnectCustomPlugin_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kafkaconnect.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaConnectServiceID),
 		CheckDestroy:             testAccCheckCustomPluginDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -85,7 +86,7 @@ func TestAccKafkaConnectCustomPlugin_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kafkaconnect.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaConnectServiceID),
 		CheckDestroy:             testAccCheckCustomPluginDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -112,7 +113,7 @@ func TestAccKafkaConnectCustomPlugin_objectVersion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kafkaconnect.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, kafkaconnect.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaConnectServiceID),
 		CheckDestroy:             testAccCheckCustomPluginDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

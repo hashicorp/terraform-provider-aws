@@ -246,6 +246,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 		if d.HasChange("authorizer_id") {
 			req.AuthorizerId = aws.String(d.Get("authorizer_id").(string))
+			req.AuthorizationType = aws.String(d.Get("authorization_type").(string))
 		}
 		if d.HasChange("model_selection_expression") {
 			req.ModelSelectionExpression = aws.String(d.Get("model_selection_expression").(string))

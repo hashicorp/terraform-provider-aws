@@ -1695,6 +1695,65 @@ rules:
           patterns:
             - pattern-regex: "(?i)Bedrock"
     severity: WARNING
+  - id: bedrockagent-in-func-name
+    languages:
+      - go
+    message: Do not use "BedrockAgent" in func name inside bedrockagent package
+    paths:
+      include:
+        - internal/service/bedrockagent
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)BedrockAgent"
+            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+    severity: WARNING
+  - id: bedrockagent-in-test-name
+    languages:
+      - go
+    message: Include "BedrockAgent" in test name
+    paths:
+      include:
+        - internal/service/bedrockagent/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccBedrockAgent"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: bedrockagent-in-const-name
+    languages:
+      - go
+    message: Do not use "BedrockAgent" in const name inside bedrockagent package
+    paths:
+      include:
+        - internal/service/bedrockagent
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)BedrockAgent"
+    severity: WARNING
+  - id: bedrockagent-in-var-name
+    languages:
+      - go
+    message: Do not use "BedrockAgent" in var name inside bedrockagent package
+    paths:
+      include:
+        - internal/service/bedrockagent
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)BedrockAgent"
+    severity: WARNING
   - id: budgets-in-func-name
     languages:
       - go
@@ -2334,6 +2393,65 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CloudFront"
+    severity: WARNING
+  - id: cloudfrontkeyvaluestore-in-func-name
+    languages:
+      - go
+    message: Do not use "CloudFrontKeyValueStore" in func name inside cloudfrontkeyvaluestore package
+    paths:
+      include:
+        - internal/service/cloudfrontkeyvaluestore
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CloudFrontKeyValueStore"
+            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+    severity: WARNING
+  - id: cloudfrontkeyvaluestore-in-test-name
+    languages:
+      - go
+    message: Include "CloudFrontKeyValueStore" in test name
+    paths:
+      include:
+        - internal/service/cloudfrontkeyvaluestore/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccCloudFrontKeyValueStore"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: cloudfrontkeyvaluestore-in-const-name
+    languages:
+      - go
+    message: Do not use "CloudFrontKeyValueStore" in const name inside cloudfrontkeyvaluestore package
+    paths:
+      include:
+        - internal/service/cloudfrontkeyvaluestore
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CloudFrontKeyValueStore"
+    severity: WARNING
+  - id: cloudfrontkeyvaluestore-in-var-name
+    languages:
+      - go
+    message: Do not use "CloudFrontKeyValueStore" in var name inside cloudfrontkeyvaluestore package
+    paths:
+      include:
+        - internal/service/cloudfrontkeyvaluestore
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CloudFrontKeyValueStore"
     severity: WARNING
   - id: cloudhsm-in-func-name
     languages:
@@ -3764,65 +3882,5 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-not-regex: "^TestAccConfigService"
-            - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: configservice-in-const-name
-    languages:
-      - go
-    message: Do not use "ConfigService" in const name inside configservice package
-    paths:
-      include:
-        - internal/service/configservice
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConfigService"
-    severity: WARNING
-  - id: configservice-in-var-name
-    languages:
-      - go
-    message: Do not use "ConfigService" in var name inside configservice package
-    paths:
-      include:
-        - internal/service/configservice
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConfigService"
-    severity: WARNING
-  - id: connect-in-func-name
-    languages:
-      - go
-    message: Do not use "Connect" in func name inside connect package
-    paths:
-      include:
-        - internal/service/connect
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Connect"
-            - pattern-not-regex: .*uickConnect.*
-            - pattern-not-regex: ^TestAcc.*
-      - focus-metavariable: $NAME
-    severity: WARNING
-  - id: connect-in-test-name
-    languages:
-      - go
-    message: Include "Connect" in test name
-    paths:
-      include:
-        - internal/service/connect/*_test.go
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-not-regex: "^TestAccConnect"
             - pattern-regex: ^TestAcc.*
     severity: WARNING

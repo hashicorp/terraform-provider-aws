@@ -23,53 +23,32 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
-// These "should" be defined by the AWS Go SDK v2, but currently aren't.
+// Endpoint constants defined by the AWS SDK v1 but not defined in the AWS SDK v2.
 const (
 	AccessAnalyzerEndpointID             = "access-analyzer"
-	AccountEndpointID                    = "account"
-	ACMEndpointID                        = "acm"
 	AMPEndpointID                        = "aps"
-	AppFlowEndpointID                    = "appflow"
-	AppRunnerEndpointID                  = "apprunner"
 	AthenaEndpointID                     = "athena"
 	AuditManagerEndpointID               = "auditmanager"
+	BatchEndpointID                      = "batch"
 	BedrockEndpointID                    = "bedrock"
 	BudgetsEndpointID                    = "budgets"
-	ChimeSDKVoiceEndpointID              = "voice-chime"
 	ChimeSDKMediaPipelinesEndpointID     = "media-pipelines-chime"
-	CleanRoomsEndpointID                 = "cleanrooms"
-	CloudWatchLogsEndpointID             = "logs"
+	ChimeSDKVoiceEndpointID              = "voice-chime"
+	CloudSearchEndpointID                = "cloudsearch"
+	CloudWatchEndpointID                 = "monitoring"
+	Cloud9EndpointID                     = "cloud9"
 	CodeArtifactEndpointID               = "codeartifact"
-	CodeBuildEndpointID                  = "codebuild"
-	CodeCommitEndpointID                 = "codecommit"
-	CodeDeployEndpointID                 = "codedeploy"
-	CodeGuruProfilerEndpointID           = "codeguru-profiler"
 	CodeGuruReviewerEndpointID           = "codeguru-reviewer"
-	CodePipelineEndpointID               = "codepipeline"
 	CodeStarConnectionsEndpointID        = "codestar-connections"
-	CodeStarNotificationsEndpointID      = "codestar-notifications"
 	ComprehendEndpointID                 = "comprehend"
-	ComputeOptimizerEndpointID           = "computeoptimizer"
-	DocDBElasticEndpointID               = "docdb-elastic"
-	ControlTowerEndpointID               = "controltower"
-	DSEndpointID                         = "ds"
 	ECREndpointID                        = "api.ecr"
 	EKSEndpointID                        = "eks"
 	EMREndpointID                        = "elasticmapreduce"
-	EMRServerlessEndpointID              = "emrserverless"
 	EvidentlyEndpointID                  = "evidently"
-	FirehoseEndpointID                   = "firehose"
-	GlacierEndpointID                    = "glacier"
-	GroundStationEndpointID              = "groundstation"
 	IdentityStoreEndpointID              = "identitystore"
 	Inspector2EndpointID                 = "inspector2"
-	InternetMonitorEndpointID            = "internetmonitor"
 	IVSChatEndpointID                    = "ivschat"
-	KafkaEndpointID                      = "kafka"
 	KendraEndpointID                     = "kendra"
-	KeyspacesEndpointID                  = "keyspaces"
-	KinesisEndpointID                    = "kinesis"
-	LambdaEndpointID                     = "lambda"
 	LexV2ModelsEndpointID                = "models-v2-lex"
 	M2EndpointID                         = "m2"
 	MediaConvertEndpointID               = "mediaconvert"
@@ -77,39 +56,24 @@ const (
 	MQEndpointID                         = "mq"
 	ObservabilityAccessManagerEndpointID = "oam"
 	OpenSearchServerlessEndpointID       = "aoss"
+	OpenSearchIngestionEndpointID        = "osis"
 	PipesEndpointID                      = "pipes"
 	PollyEndpointID                      = "polly"
-	PricingEndpointID                    = "pricing"
 	QLDBEndpointID                       = "qldb"
-	RedshiftDataEndpointID               = "redshift-data"
 	RekognitionEndpointID                = "rekognition"
 	ResourceExplorer2EndpointID          = "resource-explorer-2"
-	ResourceGroupsEndpointID             = "resource-groups"
-	ResourceGroupsTaggingAPIEndpointID   = "tagging"
 	RolesAnywhereEndpointID              = "rolesanywhere"
 	Route53DomainsEndpointID             = "route53domains"
 	SchedulerEndpointID                  = "scheduler"
-	SecretsManagerEndpointID             = "secretsmanager"
-	SecurityLakeEndpointID               = "securitylake"
 	ServiceQuotasEndpointID              = "servicequotas"
-	S3EndpointID                         = "s3"
-	S3ControlEndpointID                  = "s3-control"
-	SecurityHubEndpointID                = "securityhub"
-	SESV2EndpointID                      = "sesv2"
-	SNSEndpointID                        = "sns"
-	SQSEndpointID                        = "sqs"
+	ShieldEndpointID                     = "shield"
 	SSMEndpointID                        = "ssm"
-	SSMContactsEndpointID                = "ssm-contacts"
 	SSMIncidentsEndpointID               = "ssm-incidents"
 	SSOAdminEndpointID                   = "sso"
 	STSEndpointID                        = "sts"
-	SWFEndpointID                        = "swf"
-	SyntheticsEndpointID                 = "synthetics"
-	TimestreamWriteEndpointID            = "ingest.timestream"
 	TranscribeEndpointID                 = "transcribe"
 	VerifiedPermissionsEndpointID        = "verifiedpermissions"
 	VPCLatticeEndpointID                 = "vpc-lattice"
-	XRayEndpointID                       = "xray"
 )
 
 // These should move to aws-sdk-go-base.
@@ -373,6 +337,7 @@ func Endpoints() []Endpoint {
 type ServiceNameUpper struct {
 	ProviderPackage   string
 	ProviderNameUpper string
+	SdkID             string
 }
 
 func ServiceNamesUpper() []ServiceNameUpper {
@@ -382,6 +347,7 @@ func ServiceNamesUpper() []ServiceNameUpper {
 		sn := ServiceNameUpper{
 			ProviderPackage:   k,
 			ProviderNameUpper: v.ProviderNameUpper,
+			SdkID:             v.SdkId,
 		}
 		serviceNames = append(serviceNames, sn)
 	}

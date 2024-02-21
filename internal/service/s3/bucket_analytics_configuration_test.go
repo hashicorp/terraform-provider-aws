@@ -28,13 +28,13 @@ func TestAccS3BucketAnalyticsConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_basic(rName, rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
@@ -59,13 +59,13 @@ func TestAccS3BucketAnalyticsConfiguration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_basic(rName, rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfs3.ResourceBucketAnalyticsConfiguration(), resourceName),
 				),
@@ -86,13 +86,13 @@ func TestAccS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_basic(originalACName, originalBucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "name", originalACName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
@@ -102,7 +102,7 @@ func TestAccS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 			},
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_basic(updatedACName, originalBucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedACName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test", "bucket"),
@@ -112,7 +112,7 @@ func TestAccS3BucketAnalyticsConfiguration_updateBasic(t *testing.T) {
 			},
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_update(updatedACName, originalBucketName, updatedBucketName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "name", updatedACName),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", "aws_s3_bucket.test_2", "bucket"),
@@ -135,7 +135,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_empty(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -159,13 +159,13 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_prefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_filterPrefix(rName, rName, prefix),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
@@ -174,7 +174,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_prefix(t *testing.T) {
 			},
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_filterPrefix(rName, rName, prefixUpdate),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
@@ -202,13 +202,13 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_singleTag(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_filterSingleTag(rName, rName, tag1),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
@@ -218,7 +218,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_singleTag(t *testing.T) {
 			},
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_filterSingleTag(rName, rName, tag1Update),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
@@ -249,13 +249,13 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_multipleTags(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_filterMultipleTags(rName, rName, tag1, tag2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
@@ -266,7 +266,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_multipleTags(t *testing.T)
 			},
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_filterMultipleTags(rName, rName, tag1Update, tag2Update),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", ""),
@@ -300,13 +300,13 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_prefixAndTags(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_filterPrefixAndTags(rName, rName, prefix, tag1, tag2),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefix),
@@ -317,7 +317,7 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_prefixAndTags(t *testing.T
 			},
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_filterPrefixAndTags(rName, rName, prefixUpdate, tag1Update, tag2Update),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", prefixUpdate),
@@ -346,19 +346,19 @@ func TestAccS3BucketAnalyticsConfiguration_WithFilter_remove(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_filterPrefix(rName, rName, prefix),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 				),
 			},
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_basic(rName, rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "filter.#", "0"),
 				),
@@ -378,13 +378,13 @@ func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_empty(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBucketAnalyticsConfigurationConfig_emptyStorageClassAnalysis(rName, rName),
-				ExpectError: regexache.MustCompile(`running pre-apply refresh`),
+				ExpectError: regexache.MustCompile(`Insufficient data_export blocks`),
 			},
 		},
 	})
@@ -399,13 +399,13 @@ func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_default(t *t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_defaultStorageClassAnalysis(rName, rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.0.data_export.#", "1"),
@@ -436,13 +436,13 @@ func TestAccS3BucketAnalyticsConfiguration_WithStorageClassAnalysis_full(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBucketAnalyticsConfigurationConfig_fullStorageClassAnalysis(rName, rName, prefix),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBucketAnalyticsConfigurationExists(ctx, resourceName, &ac),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_class_analysis.0.data_export.#", "1"),
@@ -469,7 +469,7 @@ func TestAccS3BucketAnalyticsConfiguration_directoryBucket(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketAnalyticsConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{

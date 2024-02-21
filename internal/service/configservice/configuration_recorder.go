@@ -99,6 +99,48 @@ func ResourceConfigurationRecorder() *schema.Resource {
 					},
 				},
 			},
+			"recording_mode": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"recording_frequency": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      configservice.RecordingFrequencyContinuous,
+							ValidateFunc: validation.StringInSlice(configservice.RecordingFrequency_Values(), false),
+						},
+						"recording_mode_override": {
+							Type:     schema.TypeList,
+							Optional: true,
+							// Even though the name is plural, the API only allows one override:
+							// ValidationException: 1 validation error detected: Value '[com.amazonaws.starling.dove.RecordingModeOverride@aa179030, com.amazonaws.starling.dove.RecordingModeOverride@4b13c61c]' at 'configurationRecorder.recordingMode.recordingModeOverrides' failed to satisfy constraint: Member must have length less than or equal to 1
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"description": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+									"recording_frequency": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(configservice.RecordingFrequency_Values(), false),
+									},
+									"resource_types": {
+										Type:     schema.TypeSet,
+										Required: true,
+										MinItems: 1,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -124,8 +166,11 @@ func resourceConfigurationRecorderPut(ctx context.Context, d *schema.ResourceDat
 		input.ConfigurationRecorder.RecordingGroup = expandRecordingGroup(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	_, err := conn.PutConfigurationRecorderWithContext(ctx, input)
+	if v, ok := d.GetOk("recording_mode"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.ConfigurationRecorder.RecordingMode = expandRecordingMode(v.([]interface{})[0].(map[string]interface{}))
+	}
 
+	_, err := conn.PutConfigurationRecorderWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting ConfigService Configuration Recorder (%s): %s", name, err)
 	}
@@ -159,6 +204,12 @@ func resourceConfigurationRecorderRead(ctx context.Context, d *schema.ResourceDa
 	if recorder.RecordingGroup != nil {
 		if err := d.Set("recording_group", flattenRecordingGroup(recorder.RecordingGroup)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting recording_group: %s", err)
+		}
+	}
+
+	if recorder.RecordingMode != nil {
+		if err := d.Set("recording_mode", flattenRecordingMode(recorder.RecordingMode)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting recording_mode: %s", err)
 		}
 	}
 
@@ -261,6 +312,16 @@ func resourceConfigCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v
 				}
 			}
 		}
+
+		/*
+					if g, ok := diff.GetOk("recording_mode"); ok {
+						mode := g.([]interface{})[0].(map[string]interface{})
+
+						if f, ok := mode["recording_frequency"]; ok {
+			                if f.(string) != configservice.RecordingFrequencyOneHour && f.(string) != configservice.RecordingFrequencyThreeHours && f.(string) != configservice.RecordingFrequencySixHours && f.(string) != configservice.RecordingFrequencyTwelveHours && f.(string) != configservice.RecordingFrequencyTwentyFourHours {
+						}
+					}
+		*/
 	}
 	return nil
 }

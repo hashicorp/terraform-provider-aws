@@ -32,8 +32,8 @@ const (
 )
 
 // @SDKResource("aws_iam_instance_profile", name="Instance Profile")
-// @Tags
-func ResourceInstanceProfile() *schema.Resource {
+// @Tags(identifierAttribute="id", resourceType="InstanceProfile")
+func resourceInstanceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceProfileCreate,
 		ReadWithoutTimeout:   resourceInstanceProfileRead,
@@ -118,7 +118,7 @@ func resourceInstanceProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	d.SetId(aws.StringValue(output.InstanceProfile.InstanceProfileName))
 
 	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return FindInstanceProfileByName(ctx, conn, d.Id())
+		return findInstanceProfileByName(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -154,7 +154,7 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	instanceProfile, err := FindInstanceProfileByName(ctx, conn, d.Id())
+	instanceProfile, err := findInstanceProfileByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Instance Profile (%s) not found, removing from state", d.Id())
@@ -168,7 +168,7 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 
 	if len(instanceProfile.Roles) > 0 {
 		roleName := aws.StringValue(instanceProfile.Roles[0].RoleName)
-		_, err := FindRoleByName(ctx, conn, roleName)
+		_, err := findRoleByName(ctx, conn, roleName)
 
 		if err != nil {
 			if tfresource.NotFound(err) {
@@ -219,21 +219,6 @@ func resourceInstanceProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 			if err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := instanceProfileUpdateTags(ctx, conn, d.Id(), o, n)
-
-		// Some partitions (e.g. ISO) may not support tagging.
-		if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-			return append(diags, resourceInstanceProfileRead(ctx, d, meta)...)
-		}
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for IAM Instance Profile (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -316,7 +301,7 @@ func instanceProfileRemoveRole(ctx context.Context, conn *iam.IAM, profileName, 
 	return nil
 }
 
-func FindInstanceProfileByName(ctx context.Context, conn *iam.IAM, name string) (*iam.InstanceProfile, error) {
+func findInstanceProfileByName(ctx context.Context, conn *iam.IAM, name string) (*iam.InstanceProfile, error) {
 	input := &iam.GetInstanceProfileInput{
 		InstanceProfileName: aws.String(name),
 	}

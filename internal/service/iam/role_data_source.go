@@ -86,7 +86,7 @@ func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interf
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
-	role, err := FindRoleByName(ctx, conn, name)
+	role, err := findRoleByName(ctx, conn, name)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): %s", name, err)

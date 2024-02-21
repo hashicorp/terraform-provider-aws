@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_iam_user_ssh_key")
-func ResourceUserSSHKey() *schema.Resource {
+// @SDKResource("aws_iam_user_ssh_key", name="User SSH Key")
+func resourceUserSSHKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserSSHKeyCreate,
 		ReadWithoutTimeout:   resourceUserSSHKeyRead,
@@ -93,7 +93,7 @@ func resourceUserSSHKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	d.SetId(aws.StringValue(output.SSHPublicKey.SSHPublicKeyId))
 
 	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return FindSSHPublicKeyByThreePartKey(ctx, conn, d.Id(), d.Get("encoding").(string), username)
+		return findSSHPublicKeyByThreePartKey(ctx, conn, d.Id(), d.Get("encoding").(string), username)
 	})
 
 	if err != nil {
@@ -122,7 +122,7 @@ func resourceUserSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	encoding := d.Get("encoding").(string)
-	key, err := FindSSHPublicKeyByThreePartKey(ctx, conn, d.Id(), encoding, d.Get("username").(string))
+	key, err := findSSHPublicKeyByThreePartKey(ctx, conn, d.Id(), encoding, d.Get("username").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM User SSH Key (%s) not found, removing from state", d.Id())
@@ -175,6 +175,10 @@ func resourceUserSSHKeyDelete(ctx context.Context, d *schema.ResourceData, meta 
 		UserName:       aws.String(d.Get("username").(string)),
 	})
 
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting IAM User SSH Key (%s): %s", d.Id(), err)
 	}
@@ -201,7 +205,7 @@ func resourceUserSSHKeyImport(ctx context.Context, d *schema.ResourceData, meta 
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindSSHPublicKeyByThreePartKey(ctx context.Context, conn *iam.IAM, id, encoding, username string) (*iam.SSHPublicKey, error) {
+func findSSHPublicKeyByThreePartKey(ctx context.Context, conn *iam.IAM, id, encoding, username string) (*iam.SSHPublicKey, error) {
 	input := &iam.GetSSHPublicKeyInput{
 		Encoding:       aws.String(encoding),
 		SSHPublicKeyId: aws.String(id),

@@ -6,4 +6,7 @@ package elasticache
 // Exports for use in tests only.
 var (
 	ResourceServerlessCache = newResourceServerlessCache
+	ResourceSubnetGroup     = resourceSubnetGroup
+
+	FindCacheSubnetGroupByName = findCacheSubnetGroupByName
 )

@@ -38,7 +38,7 @@ func TestAccMediaLiveChannel_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -95,7 +95,7 @@ func TestAccMediaLiveChannel_captionDescriptions(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -153,7 +153,7 @@ func TestAccMediaLiveChannel_M2TS_settings(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -223,7 +223,7 @@ func TestAccMediaLiveChannel_UDP_outputSettings(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -285,7 +285,7 @@ func TestAccMediaLiveChannel_MsSmooth_outputSettings(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -345,7 +345,7 @@ func TestAccMediaLiveChannel_AudioDescriptions_codecSettings(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -404,7 +404,7 @@ func TestAccMediaLiveChannel_VideoDescriptions_CodecSettings_h264Settings(t *tes
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -507,7 +507,7 @@ func TestAccMediaLiveChannel_VideoDescriptions_CodecSettings_h265Settings(t *tes
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -605,7 +605,7 @@ func TestAccMediaLiveChannel_hls(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -635,6 +635,7 @@ func TestAccMediaLiveChannel_hls(t *testing.T) {
 						"name": "test-video-name",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "encoder_settings.0.output_groups.0.outputs.0.output_settings.0.hls_output_settings.0.h265_packaging_type", "HVC1"),
+					resource.TestCheckResourceAttr(resourceName, "encoder_settings.0.output_groups.0.output_group_settings.0.hls_group_settings.0.client_cache", "ENABLED"),
 				),
 			},
 		},
@@ -657,7 +658,7 @@ func TestAccMediaLiveChannel_status(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -696,7 +697,7 @@ func TestAccMediaLiveChannel_update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -774,7 +775,7 @@ func TestAccMediaLiveChannel_updateTags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -823,7 +824,7 @@ func TestAccMediaLiveChannel_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccChannelsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1774,6 +1775,7 @@ resource "aws_medialive_channel" "test" {
           destination {
             destination_ref_id = %[1]q
           }
+          client_cache = "ENABLED"
         }
       }
 
