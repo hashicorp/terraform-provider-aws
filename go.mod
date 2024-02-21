@@ -69,7 +69,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/fis v1.22.1
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.21.1
-	github.com/aws/aws-sdk-go-v2/service/groundstation v1.25.0
+	github.com/aws/aws-sdk-go-v2/service/groundstation v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.22.1
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.23.0
