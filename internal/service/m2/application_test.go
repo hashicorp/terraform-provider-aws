@@ -64,6 +64,41 @@ func TestAccM2Application_basic(t *testing.T) {
 	})
 }
 
+func TestAccM2Application_full(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_m2_application.test"
+	var application m2.GetApplicationOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckApplicationDestroy(ctx),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_full(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`app/.+`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccM2Application_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -142,6 +177,69 @@ func TestAccM2Application_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfm2.ResourceApplication, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccApplicationM2_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_m2_application.test"
+	var application m2.GetApplicationOutput
+
+	tags1 := `
+  tags = {
+    key1 = "value1"
+  }
+`
+	tags2 := `
+  tags = {
+    key1 = "value1"
+    key2 = "value2"
+  }
+`
+	tags3 := `
+  tags = {
+    key2 = "value2"
+  }
+`
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckApplicationDestroy(ctx),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_tags(rName, tags1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccApplicationConfig_tags(rName, tags2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccApplicationConfig_tags(rName, tags3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName, &application),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -231,7 +329,7 @@ resource "aws_s3_object" "test" {
 
 resource "aws_m2_application" "test" {
   name        = %[1]q
-  engine_type = %[2]q
+  engine_type = %[2]q 
   definition {
     content = templatefile("test-fixtures/application-definition.json", { s3_bucket = aws_s3_bucket.test.id, version = %[3]q })
   }
@@ -249,4 +347,93 @@ func skipIfDemoAppMissing(t *testing.T) {
 	if _, err := os.Stat("test-fixtures/PlanetsDemo-v1.zip"); errors.Is(err, os.ErrNotExist) {
 		t.Skip("Download test-fixtures/PlanetsDemo-v1.zip from: https://docs.aws.amazon.com/m2/latest/userguide/tutorial-runtime-ba.html")
 	}
+}
+
+func testAccApplicationConfig_full(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.id
+  key    = "v1/PlanetsDemo-v1.zip"
+  source = "test-fixtures/PlanetsDemo-v1.zip"
+}
+
+resource "aws_m2_application" "test" {
+  name        = %[1]q
+  engine_type = "bluage"
+  kms_key_id  = aws_kms_key.test.arn
+  role_arn    = aws_iam_role.test.arn
+  definition {
+    content = templatefile("test-fixtures/application-definition.json", { s3_bucket = aws_s3_bucket.test.id, version = "v1" })
+  }
+  depends_on = [aws_s3_object.test, aws_iam_role_policy.test]
+}
+
+resource "aws_kms_key" "test" {
+  description = "tf-test-cmk-kms-key-id"
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = "sts:AssumeRole"
+        Effect = "Allow"
+        Sid    = ""
+        Principal = {
+          Service = "m2.amazonaws.com"
+        }
+      },
+    ]
+  })
+}
+
+resource "aws_iam_role_policy" "test" {
+  name = "m2_permissions"
+  role = aws_iam_role.test.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+	     Action   = [
+                      "secretsmanager:DescribeSecret",
+	  			      "secretsmanager:GetSecretValue",
+				      "kms:Decrypt",
+	     ]
+	     Effect   = "Allow"
+	     Resource = "*"
+      },
+    ]
+  })
+}
+`, rName))
+}
+
+func testAccApplicationConfig_tags(rName, tags string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.id
+  key    = "v1/PlanetsDemo-v1.zip"
+  source = "test-fixtures/PlanetsDemo-v1.zip"
+}
+
+resource "aws_m2_application" "test" {
+  name        = %[1]q
+  engine_type = "bluage"
+  definition {
+    content = templatefile("test-fixtures/application-definition.json", { s3_bucket = aws_s3_bucket.test.id, version = "v1" })
+  }
+%[2]s
+  depends_on = [aws_s3_object.test]
+}
+`, rName, tags)
 }
