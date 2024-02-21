@@ -44,7 +44,7 @@ func TestAccM2Environment_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.M2ServiceID)
+			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
@@ -129,7 +129,7 @@ func TestAccM2Environment_update(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.M2ServiceID)
+			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
@@ -188,7 +188,7 @@ func TestAccM2Environment_highAvailability(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.M2ServiceID)
+			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
@@ -235,7 +235,7 @@ func TestAccM2Environment_efs(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.M2ServiceID)
+			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
@@ -280,7 +280,7 @@ func TestAccM2Environment_fsx(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.M2ServiceID)
+			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
