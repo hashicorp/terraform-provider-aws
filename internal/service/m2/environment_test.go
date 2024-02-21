@@ -76,6 +76,44 @@ func TestAccM2Environment_basic(t *testing.T) {
 	})
 }
 
+func TestAccM2Environment_full(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_m2_environment.test"
+	var environment m2.GetEnvironmentOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckEnvironmentDestroy(ctx),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_full(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					resource.TestCheckResourceAttrSet(resourceName, "environment_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "name"),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_type"),
+					resource.TestCheckResourceAttrSet(resourceName, "instance_type"),
+					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccM2Environment_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	// TIP: This is a long-running test guard for tests that run longer than
@@ -227,7 +265,51 @@ func TestAccM2Environment_efs(t *testing.T) {
 		},
 	})
 }
+func TestAccM2Environment_fsx(t *testing.T) {
+	ctx := acctest.Context(t)
+	// TIP: This is a long-running test guard for tests that run longer than
+	// 300s (5 min) generally.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
 
+	var environment m2.GetEnvironmentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_m2_environment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2EndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_fsxComplete(rName, testEngineType, testEngineVersion),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", testEngineType),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", testEngineVersion),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
+					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.fsx.0.mount_point", "/m2/mount/example"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "M2.m5.large"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
 func TestAccM2Environment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -255,6 +337,69 @@ func TestAccM2Environment_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfm2.ResourceEnvironment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccM2Environment_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_m2_environment.test"
+	var environment m2.GetEnvironmentOutput
+
+	tags1 := `
+  tags = {
+    key1 = "value1"
+  }
+`
+	tags2 := `
+  tags = {
+    key1 = "value1"
+    key2 = "value2"
+  }
+`
+	tags3 := `
+  tags = {
+    key2 = "value2"
+  }
+`
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckEnvironmentDestroy(ctx),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnvironmentConfig_tags(rName, tags1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccEnvironmentConfig_tags(rName, tags2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccEnvironmentConfig_tags(rName, tags3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
 			},
 		},
 	})
@@ -416,6 +561,29 @@ resource "aws_m2_environment" "test" {
 `, rName, engineType, engineVersion))
 }
 
+func testAccEnvironmentConfig_fsxComplete(rName, engineType, engineVersion string) string {
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName),
+		testAccEnvironmentConfig_fsx(rName),
+		fmt.Sprintf(`
+resource "aws_m2_environment" "test" {
+  name            = %[1]q
+  description     = %[1]q
+  engine_type     = %[2]q
+  engine_version  = %[3]q
+  instance_type   = "M2.m5.large"
+  security_groups = [aws_security_group.test.id]
+  subnet_ids      = aws_subnet.test[*].id
+
+  storage_configuration {
+    fsx {
+      file_system_id = aws_fsx_lustre_file_system.test.id
+      mount_point    = "/m2/mount/example"
+    }
+  }
+}
+`, rName, engineType, engineVersion))
+}
+
 func testAccEnvironmentConfig_base(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
 		fmt.Sprintf(`
@@ -492,4 +660,82 @@ resource "aws_efs_mount_target" "test" {
   security_groups = [aws_security_group.test.id]
 }
 `, rName)
+}
+
+func testAccEnvironmentConfig_fsx(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_fsx_lustre_file_system" "test" {
+  storage_capacity   = 1200
+  subnet_ids         = [aws_subnet.test[0].id]
+  security_group_ids = [aws_security_group.test.id]
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName)
+}
+
+func testAccEnvironmentConfig_tags(rName, tags string) string {
+	return fmt.Sprintf(`
+resource "aws_m2_environment" "test" {
+  engine_type   = "microfocus"
+  instance_type = "M2.m5.large"
+  name          = %[1]q
+%[2]s
+}
+`, rName, tags)
+}
+
+func testAccEnvironmentConfig_full(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_m2_environment" "test" {
+  description     = "Test-1"
+  engine_type     = "microfocus"
+  engine_version = "8.0.10"
+  high_availability_config {
+	desired_capacity = 1
+  }
+  instance_type   = "M2.m5.large"
+  kms_key_id      = aws_kms_key.test.arn
+  name            = %[1]q
+  security_groups = [aws_security_group.test.id]
+  subnet_ids      = aws_subnet.test[*].id
+  tags = {
+    Name = %[1]q
+  }
+}
+resource "aws_vpc" "test" {
+  cidr_block = "10.0.0.0/16"
+  enable_dns_support   = true
+  enable_dns_hostnames = true
+  tags = {
+    Name = %[1]q
+  }
+}
+resource "aws_subnet" "test" {
+  count             = 2
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[count.index]
+  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
+  tags = {
+	  Name = %[1]q
+  }
+}
+resource "aws_kms_key" "test" {
+  description = "tf-test-cmk-kms-key-id"
+}
+  
+resource "aws_security_group" "test" {
+  name        = %[1]q
+  description = %[1]q
+  vpc_id      = aws_vpc.test.id
+  
+  ingress {
+    from_port   = -1
+    to_port     = -1
+    protocol    = "icmp"
+	cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+`, rName))
 }
