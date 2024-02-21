@@ -6,6 +6,7 @@ package configservice
 // Exports for use in tests only.
 var (
 	ResourceAggregateAuthorization      = resourceAggregateAuthorization
+	ResourceConfigRule                  = resourceConfigRule
 	ResourceConfigurationAggregator     = resourceConfigurationAggregator
 	ResourceConfigurationRecorder       = resourceConfigurationRecorder
 	ResourceConfigurationRecorderStatus = resourceConfigurationRecorderStatus
@@ -14,6 +15,7 @@ var (
 	ResourceRemediationConfiguration    = resourceRemediationConfiguration
 
 	FindAggregateAuthorizationByTwoPartKey       = findAggregateAuthorizationByTwoPartKey
+	FindConfigRuleByName                         = findConfigRuleByName
 	FindConfigurationRecorderByName              = findConfigurationRecorderByName
 	FindConfigurationRecorderStatusByName        = findConfigurationRecorderStatusByName
 	FindConformancePackByName                    = findConformancePackByName
