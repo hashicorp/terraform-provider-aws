@@ -101,7 +101,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.26.4
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.3.2
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.20.2
-	github.com/aws/aws-sdk-go-v2/service/rbin v1.15.1
+	github.com/aws/aws-sdk-go-v2/service/rbin v1.15.2
 	github.com/aws/aws-sdk-go-v2/service/rds v1.71.1
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.16.3
