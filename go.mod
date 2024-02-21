@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.25.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.1
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.0
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.2
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.3
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/account v1.15.0
 	github.com/aws/aws-sdk-go-v2/service/acm v1.24.0
@@ -111,7 +111,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.22.1
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.50.1
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.50.2
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.27.1
