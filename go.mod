@@ -133,7 +133,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sts v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/swf v1.21.3
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.23.2
-	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.24.2
+	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.35.2
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.9.2
