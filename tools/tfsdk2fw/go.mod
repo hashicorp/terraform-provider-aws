@@ -65,6 +65,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.25.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.23.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.21.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.22.2 // indirect
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.30.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.32.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.14.0 // indirect

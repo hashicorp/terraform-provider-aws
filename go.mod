@@ -47,6 +47,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.23.1
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.21.0
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.22.2
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.32.1
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.14.0
@@ -195,6 +196,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/v4a v1.3.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/iam v1.29.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.0 // indirect
