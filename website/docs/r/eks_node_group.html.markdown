@@ -151,7 +151,7 @@ The following arguments are optional:
 * `node_group_name` – (Optional) Name of the EKS Node Group. If omitted, Terraform will assign a random, unique name. Conflicts with `node_group_name_prefix`. The node group name can't be longer than 63 characters. It must start with a letter or digit, but can also include hyphens and underscores for the remaining characters.
 * `node_group_name_prefix` – (Optional) Creates a unique name beginning with the specified prefix. Conflicts with `node_group_name`.
 * `release_version` – (Optional) AMI version of the EKS Node Group. Defaults to latest version for Kubernetes version.
-* `remote_access` - (Optional) Configuration block with remote access settings. See [`remote_access`](#remote_access-configuration-block) below for details.
+* `remote_access` - (Optional) Configuration block with remote access settings. See [`remote_access`](#remote_access-configuration-block) below for details. Conflicts with `launch_template`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `taint` - (Optional) The Kubernetes taints to be applied to the nodes in the node group. Maximum of 50 taints per node group. See [taint](#taint-configuration-block) below for details.
 * `update_config` - (Optional) Configuration block with update settings. See [`update_config`](#update_config-configuration-block) below for details.
