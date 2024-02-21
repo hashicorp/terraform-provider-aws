@@ -82,8 +82,8 @@ github.com/aws/aws-sdk-go-v2/service/cloud9 v1.23.3 h1:Ine+4xEraDaZDYAg/FNLHcX2a
 github.com/aws/aws-sdk-go-v2/service/cloud9 v1.23.3/go.mod h1:2lNfyUjOL/3UZKazkVqn4BloLENeV07ielYSg1HJOzc=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.17.2 h1:PmRHGUc9H3DlZVn1mRR1WEh5t8AyrV6KfyjOtGDMDS8=
 github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.17.2/go.mod h1:UwBg7UvM620x9Ld5q1HQN1kksAFLUalJAakCs08apsg=
-github.com/aws/aws-sdk-go-v2/service/cloudfront v1.34.1 h1:fGpjGBqtfTz2mymcChLB42StEw0vHwsHqDFnctmoOQ8=
-github.com/aws/aws-sdk-go-v2/service/cloudfront v1.34.1/go.mod h1:/AZ24tZ/H2O3sNeLyv15mm5XqhhzeehASgNBI7oerFw=
+github.com/aws/aws-sdk-go-v2/service/cloudfront v1.34.2 h1:bx94P151E+cOli1sxWpYJvPkU+ATkhhj/JlEIAytqPg=
+github.com/aws/aws-sdk-go-v2/service/cloudfront v1.34.2/go.mod h1:AP6K53k+LOhRKXUNSpGE8NKqYuo0firmy5VxvSUA5NI=
 github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.3.1 h1:q/wG7vHB1MCC/UYCmtoL0D3FF64KttKPvW+Y5PjhFQo=
 github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.3.1/go.mod h1:MdEUDRtXKXQxnAxA43l0YimNcBK4BIG3r+6nr9YrJf4=
 github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.20.2 h1:RhDh+McNDTl3L8N1eQDoIy59q+H2cji4NAitRQwuXx8=
