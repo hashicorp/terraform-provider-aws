@@ -323,15 +323,10 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_m2_application" "test" {
   name        = %[1]q
-  engine_type = %[2]q 
+  engine_type = "%[2]s"
   definition {
     content = templatefile("test-fixtures/application-definition.json", { s3_bucket = aws_s3_bucket.test.id, version = %[3]d })
   }
-
-  tags = {
-    engine = %[2]q
-  }
-
   depends_on = [aws_s3_object.test]
 }
 `, rName, engineType, version),
