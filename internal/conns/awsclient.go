@@ -97,7 +97,7 @@ func (c *AWSClient) S3ExpressClient(ctx context.Context) *s3_sdkv2.Client {
 }
 
 // S3UsePathStyle returns the s3_force_path_style provider configuration value.
-func (c *AWSClient) S3UsePathStyle() bool {
+func (c *AWSClient) S3UsePathStyle(context.Context) bool {
 	return c.s3UsePathStyle
 }
 

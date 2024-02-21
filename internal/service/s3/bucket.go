@@ -1108,7 +1108,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	// Bucket Region etc.
 	//
 	region, err := manager.GetBucketRegion(ctx, conn, d.Id(), func(o *s3.Options) {
-		o.UsePathStyle = meta.(*conns.AWSClient).S3UsePathStyle()
+		o.UsePathStyle = meta.(*conns.AWSClient).S3UsePathStyle(ctx)
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
@@ -1650,7 +1650,7 @@ func findBucketRegion(ctx context.Context, awsClient *conns.AWSClient, bucket st
 			// is not compatible with many non-AWS implementations. Instead, pass
 			// the provider s3_force_path_style configuration, which defaults to
 			// false, but allows override.
-			o.UsePathStyle = awsClient.S3UsePathStyle()
+			o.UsePathStyle = awsClient.S3UsePathStyle(ctx)
 		},
 		func(o *s3.Options) {
 			// By default, GetBucketRegion uses anonymous credentials when doing
