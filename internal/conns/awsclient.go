@@ -63,7 +63,7 @@ func (c *AWSClient) AwsConfig(context.Context) aws_sdkv2.Config { // nosemgrep:c
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
 // e.g. PREFIX.amazonaws.com
 // The prefix should not contain a trailing period.
-func (c *AWSClient) PartitionHostname(prefix string) string {
+func (c *AWSClient) PartitionHostname(ctx context.Context, prefix string) string {
 	return fmt.Sprintf("%s.%s", prefix, c.DNSSuffix)
 }
 

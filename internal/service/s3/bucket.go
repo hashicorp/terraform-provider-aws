@@ -799,7 +799,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}.String()
 	d.Set("arn", arn)
 	d.Set("bucket", d.Id())
-	d.Set("bucket_domain_name", meta.(*conns.AWSClient).PartitionHostname(d.Id()+".s3"))
+	d.Set("bucket_domain_name", meta.(*conns.AWSClient).PartitionHostname(ctx, d.Id()+".s3"))
 	d.Set("bucket_prefix", create.NamePrefixFromName(d.Id()))
 
 	//

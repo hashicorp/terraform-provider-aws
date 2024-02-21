@@ -4,12 +4,14 @@
 package conns
 
 import (
+	"context"
 	"testing"
 )
 
 func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	t.Parallel()
 
+	ctx := context.TODO()
 	testCases := []struct {
 		Name      string
 		AWSClient *AWSClient
@@ -39,7 +41,7 @@ func TestAWSClientPartitionHostname(t *testing.T) { // nosemgrep:ci.aws-in-func-
 		t.Run(testCase.Name, func(t *testing.T) {
 			t.Parallel()
 
-			got := testCase.AWSClient.PartitionHostname(testCase.Prefix)
+			got := testCase.AWSClient.PartitionHostname(ctx, testCase.Prefix)
 
 			if got != testCase.Expected {
 				t.Errorf("got %s, expected %s", got, testCase.Expected)

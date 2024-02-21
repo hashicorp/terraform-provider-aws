@@ -68,7 +68,7 @@ func TestAccS3Bucket_Basic_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "acl"),
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "arn", "s3", rName),
 					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
-					testAccCheckBucketDomainName(resourceName, "bucket_domain_name", rName),
+					testAccCheckBucketDomainName(ctx, resourceName, "bucket_domain_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "bucket_prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "bucket_regional_domain_name", testAccBucketRegionalDomainName(rName, region)),
 					resource.TestCheckResourceAttr(resourceName, "cors_rule.#", "0"),
@@ -2734,9 +2734,9 @@ func testAccCheckBucketTagKeys(ctx context.Context, n string, keys ...string) re
 	}
 }
 
-func testAccCheckBucketDomainName(resourceName string, attributeName string, bucketName string) resource.TestCheckFunc {
+func testAccCheckBucketDomainName(ctx context.Context, resourceName string, attributeName string, bucketName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		expectedValue := acctest.Provider.Meta().(*conns.AWSClient).PartitionHostname(fmt.Sprintf("%s.s3", bucketName))
+		expectedValue := acctest.Provider.Meta().(*conns.AWSClient).PartitionHostname(ctx, fmt.Sprintf("%s.s3", bucketName))
 
 		return resource.TestCheckResourceAttr(resourceName, attributeName, expectedValue)(s)
 	}
