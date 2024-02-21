@@ -13,7 +13,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.3
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/account v1.15.1
-	github.com/aws/aws-sdk-go-v2/service/acm v1.24.0
+	github.com/aws/aws-sdk-go-v2/service/acm v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/amp v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.6.0
