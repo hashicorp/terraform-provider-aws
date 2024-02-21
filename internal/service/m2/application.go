@@ -74,10 +74,6 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			"engine_type": schema.StringAttribute{
 				Required: true,
