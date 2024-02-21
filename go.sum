@@ -298,8 +298,8 @@ github.com/aws/aws-sdk-go-v2/service/ssooidc v1.22.2 h1:L4yhKxW6HbTSQ08OsvPJuasp
 github.com/aws/aws-sdk-go-v2/service/ssooidc v1.22.2/go.mod h1:lZB123q0SVQ3dfIbEOcGzhQHrwVBcHVReNS9tm20oU4=
 github.com/aws/aws-sdk-go-v2/service/sts v1.27.2 h1:Dr+7r/p20XpN+1U5tVNZfA2bLq0kQ9IjVBM0iAyMMLg=
 github.com/aws/aws-sdk-go-v2/service/sts v1.27.2/go.mod h1:ozhhG9/NB5c9jcmhGq6tX9dpp21LYdmRWRQVppASim4=
-github.com/aws/aws-sdk-go-v2/service/swf v1.21.2 h1:i9aXEGbp8IvOlgvNvN4JYNcJspOiqL+oI2u75BaiEIc=
-github.com/aws/aws-sdk-go-v2/service/swf v1.21.2/go.mod h1:DTCna/8VGkXYHdW6oc/iIbpp++sYid2/svsvoZJaVB4=
+github.com/aws/aws-sdk-go-v2/service/swf v1.21.3 h1:zHkLgAHP3SS3Y9ZfKUWNzJj4aAPqF3NlIIk/nvOoJdU=
+github.com/aws/aws-sdk-go-v2/service/swf v1.21.3/go.mod h1:bIKYoKb+gFWolLus3bZEXBLL6vuoUsYhXiy9qNXh3hM=
 github.com/aws/aws-sdk-go-v2/service/synthetics v1.23.1 h1:BfDTI0xvMbvUfmTuXvLXsqHYkhqts4cnxVbo3hGtvds=
 github.com/aws/aws-sdk-go-v2/service/synthetics v1.23.1/go.mod h1:pJ7d/VCpDWeVsopXcpyf6GiGvNRIj5ZGw8ZMeZDiJf4=
 github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.24.2 h1:8Lx9yIUd38Yq8qkSU0oGEfxL1EV/txO5x1Aae3A1KdI=
