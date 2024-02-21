@@ -60,7 +60,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.40.2
 	github.com/aws/aws-sdk-go-v2/service/eks v1.39.2
-	github.com/aws/aws-sdk-go-v2/service/elasticache v1.36.1
+	github.com/aws/aws-sdk-go-v2/service/elasticache v1.36.2
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.29.1
 	github.com/aws/aws-sdk-go-v2/service/emr v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.16.1
