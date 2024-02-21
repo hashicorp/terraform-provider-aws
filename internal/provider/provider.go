@@ -234,6 +234,11 @@ func New(ctx context.Context) (*schema.Provider, error) {
 				Description: "session token. A session token is only required if you are\n" +
 					"using temporary security credentials.",
 			},
+			"token_bucket_rate_limiter_capacity": {
+				Type:        schema.TypeInt,
+				Optional:    true,
+				Description: "The capacity of the AWS SDK's token bucket rate limiter.",
+			},
 			"use_dualstack_endpoint": {
 				Type:        schema.TypeBool,
 				Optional:    true,
@@ -488,6 +493,7 @@ func configure(ctx context.Context, provider *schema.Provider, d *schema.Resourc
 		STSRegion:                      d.Get("sts_region").(string),
 		TerraformVersion:               terraformVersion,
 		Token:                          d.Get("token").(string),
+		TokenBucketRateLimiterCapacity: d.Get("token_bucket_rate_limiter_capacity").(int),
 		UseDualStackEndpoint:           d.Get("use_dualstack_endpoint").(bool),
 		UseFIPSEndpoint:                d.Get("use_fips_endpoint").(bool),
 	}

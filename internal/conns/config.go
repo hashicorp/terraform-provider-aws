@@ -57,6 +57,7 @@ type Config struct {
 	SuppressDebugLog               bool
 	TerraformVersion               string
 	Token                          string
+	TokenBucketRateLimiterCapacity int
 	UseDualStackEndpoint           bool
 	UseFIPSEndpoint                bool
 }
