@@ -53,7 +53,7 @@ func (r *resourceDeployment) Schema(ctx context.Context, req resource.SchemaRequ
 			"service_arn": schema.StringAttribute{
 				Required: true,
 			},
-			"operation_id": schema.StringAttribute{
+			"id": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -61,9 +61,6 @@ func (r *resourceDeployment) Schema(ctx context.Context, req resource.SchemaRequ
 			},
 			"status": schema.StringAttribute{
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -105,7 +102,7 @@ func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequ
 		return
 	}
 
-	plan.OperationId = flex.StringToFramework(ctx, out.OperationId)
+	plan.ID = flex.StringToFramework(ctx, out.OperationId)
 
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitDeploymentSucceeded(ctx, conn, plan.ServiceArn.ValueString(), createTimeout)
@@ -142,8 +139,8 @@ func (r *resourceDeployment) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	state.OperationId = flex.StringToFramework(ctx, out.Id)
-	state.Status = flex.StringValueToFramework(ctx, string(out.Status))
+	state.ID = flex.StringToFramework(ctx, out.Id)
+	state.Status = flex.StringValueToFramework(ctx, out.Status)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -229,8 +226,8 @@ func findDeploymentOperationByServiceARN(ctx context.Context, conn *apprunner.Cl
 }
 
 type resourceDeploymentData struct {
-	ServiceArn  types.String   `tfsdk:"service_arn"`
-	OperationId types.String   `tfsdk:"operation_id"`
-	Status      types.String   `tfsdk:"status"`
-	Timeouts    timeouts.Value `tfsdk:"timeouts"`
+	ServiceArn types.String   `tfsdk:"service_arn"`
+	ID         types.String   `tfsdk:"id"`
+	Status     types.String   `tfsdk:"status"`
+	Timeouts   timeouts.Value `tfsdk:"timeouts"`
 }
