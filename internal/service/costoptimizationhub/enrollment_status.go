@@ -96,6 +96,7 @@ const (
 type resourceEnrollmentStatus struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
+	framework.WithImportByID
 }
 
 func (r *resourceEnrollmentStatus) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -165,6 +166,7 @@ func (r *resourceEnrollmentStatus) Schema(ctx context.Context, req resource.Sche
 					stringvalidator.OneOf([]string{"Active", "Inactive"}...),
 				},
 			},
+			"id": framework.IDAttribute(),
 		},
 	}
 }
@@ -225,6 +227,7 @@ func (r *resourceEnrollmentStatus) Create(ctx context.Context, req resource.Crea
 	// TIP: -- 5. Using the output from the create function, set the minimum attributes
 	plan.Status = flex.StringToFramework(ctx, out.Status)
 	plan.IncludeMemberAccounts = flex.BoolToFramework(ctx, plan.IncludeMemberAccounts.ValueBoolPointer())
+	plan.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
 
 	// TIP: -- 6. Use a waiter to wait for create to complete
 	// createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
@@ -265,7 +268,6 @@ func (r *resourceEnrollmentStatus) Read(ctx context.Context, req resource.ReadRe
 
 	// TIP: -- 3. Get the resource from AWS using an API Get, List, or Describe-
 	// type function, or, better yet, using a finder.
-	// TIP: -- 3. Populate a create input structure
 	in := &costoptimizationhub.ListEnrollmentStatusesInput{
 		IncludeOrganizationInfo: false, //Pass in false to get only this account's status
 	}
@@ -293,6 +295,7 @@ func (r *resourceEnrollmentStatus) Read(ctx context.Context, req resource.ReadRe
 	// should be appended to resp.Diagnostics.
 	state.Status = flex.StringValueToFramework(ctx, out.Items[0].Status)
 	state.IncludeMemberAccounts = flex.BoolToFramework(ctx, out.IncludeMemberAccounts)
+	state.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
 
 	// TIP: -- 6. Set the state
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -436,4 +439,5 @@ func (r *resourceEnrollmentStatus) Delete(ctx context.Context, req resource.Dele
 type resourceEnrollmentStatusData struct {
 	Status                types.String `tfsdk:"status"`
 	IncludeMemberAccounts types.Bool   `tfsdk:"include_member_accounts"`
+	ID                    types.String `tfsdk:"id"`
 }
