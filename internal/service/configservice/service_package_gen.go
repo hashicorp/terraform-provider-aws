@@ -73,8 +73,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Delivery Channel",
 		},
 		{
-			Factory:  ResourceOrganizationConformancePack,
+			Factory:  resourceOrganizationConformancePack,
 			TypeName: "aws_config_organization_conformance_pack",
+			Name:     "Organization Conformance Pack",
 		},
 		{
 			Factory:  ResourceOrganizationCustomPolicyRule,

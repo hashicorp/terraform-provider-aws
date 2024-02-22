@@ -79,9 +79,10 @@ func resourceConformancePack() *schema.Resource {
 					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters")),
 			},
 			"template_body": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONOrYAMLDiffs,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				DiffSuppressFunc:      verify.SuppressEquivalentJSONOrYAMLDiffs,
+				DiffSuppressOnRefresh: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 51200),
 					verify.ValidStringIsJSONOrYAML,

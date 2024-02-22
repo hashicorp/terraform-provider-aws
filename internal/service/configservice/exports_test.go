@@ -12,6 +12,7 @@ var (
 	ResourceConfigurationRecorderStatus = resourceConfigurationRecorderStatus
 	ResourceConformancePack             = resourceConformancePack
 	ResourceDeliveryChannel             = resourceDeliveryChannel
+	ResourceOrganizationConformancePack = resourceOrganizationConformancePack
 	ResourceRemediationConfiguration    = resourceRemediationConfiguration
 
 	FindAggregateAuthorizationByTwoPartKey       = findAggregateAuthorizationByTwoPartKey
