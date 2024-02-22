@@ -5,21 +5,27 @@ package cognitoidp
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource(name="User Group")
 func newDataSourceDataSourceUserGroup(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceDataSourceUserGroup{}, nil
 }
+
+const (
+	DSNameUserGroup = "User Group Data Source"
+)
 
 type dataSourceDataSourceUserGroup struct {
 	framework.DataSourceWithConfigure
@@ -60,6 +66,21 @@ func (d *dataSourceDataSourceUserGroup) Read(ctx context.Context, request dataso
 		return
 	}
 
+	parts := []string{
+		data.Name.ValueString(),
+		data.UserPoolID.ValueString(),
+	}
+	partCount := 2
+	id, err := intflex.FlattenResourceId(parts, partCount, false)
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionFlatteningResourceId, DSNameUserGroup, data.Name.String(), err),
+			err.Error(),
+		)
+		return
+	}
+	data.ID = types.StringValue(id)
+
 	params := &cognitoidentityprovider.GetGroupInput{
 		GroupName:  data.Name.ValueStringPointer(),
 		UserPoolId: data.UserPoolID.ValueStringPointer(),
@@ -70,7 +91,7 @@ func (d *dataSourceDataSourceUserGroup) Read(ctx context.Context, request dataso
 	resp, err := conn.GetGroupWithContext(ctx, params)
 	if err != nil {
 		response.Diagnostics.AddError(
-			fmt.Sprintf("reading Cognito User Group (%s) for UserPool (%s)", data.Name.ValueString(), data.UserPoolID.ValueString()),
+			create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionReading, DSNameUserGroup, data.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -80,8 +101,6 @@ func (d *dataSourceDataSourceUserGroup) Read(ctx context.Context, request dataso
 	if response.Diagnostics.HasError() {
 		return
 	}
-	id := fmt.Sprintf("%s/%s", data.Name.ValueString(), data.UserPoolID.ValueString())
-	data.ID = types.StringValue(id)
 	data.Name = types.StringValue(aws.StringValue(resp.Group.GroupName))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)

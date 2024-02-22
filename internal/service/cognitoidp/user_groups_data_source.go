@@ -5,21 +5,26 @@ package cognitoidp
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource(name="User Groups")
 func newDataSourceDataSourceUserGroups(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceDataSourceUserGroups{}, nil
 }
+
+const (
+	DSNameUserGroups = "User Groups Data Source"
+)
 
 type dataSourceDataSourceUserGroups struct {
 	framework.DataSourceWithConfigure
@@ -69,26 +74,27 @@ func (d *dataSourceDataSourceUserGroups) Read(ctx context.Context, request datas
 
 	var data dataSourceDataSourceUserGroupsData
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
+	data.ID = types.StringValue(data.UserPoolID.ValueString())
 
 	resp, err := conn.ListGroupsWithContext(ctx, &cognitoidentityprovider.ListGroupsInput{
 		UserPoolId: data.UserPoolID.ValueStringPointer(),
 	})
 	if err != nil {
 		response.Diagnostics.AddError(
-			fmt.Sprintf("Error reading aws_cognito_user_groups: %s", data.UserPoolID),
+			create.ProblemStandardMessage(names.CognitoIDP, create.ErrActionReading, DSNameUserGroups, data.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
+
 	response.Diagnostics.Append(flex.Flatten(ctx, resp.Groups, &data.Groups)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-	data.ID = types.StringValue(data.UserPoolID.String())
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
