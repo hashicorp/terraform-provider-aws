@@ -16,16 +16,13 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-type dataSourceDataSourceUserGroups struct {
-	framework.DataSourceWithConfigure
-}
-
 // @FrameworkDataSource(name="User Groups")
 func newDataSourceDataSourceUserGroups(context.Context) (datasource.DataSourceWithConfigure, error) {
-	d := &dataSourceDataSourceUserGroups{}
-	d.SetMigratedFromPluginSDK(true)
+	return &dataSourceDataSourceUserGroups{}, nil
+}
 
-	return d, nil
+type dataSourceDataSourceUserGroups struct {
+	framework.DataSourceWithConfigure
 }
 
 func (d *dataSourceDataSourceUserGroups) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
@@ -36,10 +33,7 @@ func (d *dataSourceDataSourceUserGroups) Metadata(_ context.Context, request dat
 func (d *dataSourceDataSourceUserGroups) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
+			"id": framework.IDAttribute(),
 			"user_pool_id": schema.StringAttribute{
 				Required: true,
 			},

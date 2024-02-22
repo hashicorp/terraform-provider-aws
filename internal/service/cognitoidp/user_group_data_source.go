@@ -18,10 +18,7 @@ import (
 
 // @FrameworkDataSource(name="User Group")
 func newDataSourceDataSourceUserGroup(context.Context) (datasource.DataSourceWithConfigure, error) {
-	d := &dataSourceDataSourceUserGroup{}
-	d.SetMigratedFromPluginSDK(true)
-
-	return d, nil
+	return &dataSourceDataSourceUserGroup{}, nil
 }
 
 type dataSourceDataSourceUserGroup struct {
@@ -38,10 +35,7 @@ func (d *dataSourceDataSourceUserGroup) Schema(ctx context.Context, request data
 			"description": schema.StringAttribute{
 				Computed: true,
 			},
-			"id": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-			},
+			"id": framework.IDAttribute(),
 			"name": schema.StringAttribute{
 				Required: true,
 			},
@@ -62,7 +56,6 @@ func (d *dataSourceDataSourceUserGroup) Read(ctx context.Context, request dataso
 	var data dataSourceDataSourceUserGroupData
 
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
