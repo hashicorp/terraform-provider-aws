@@ -32,7 +32,7 @@ func TestAccCleanRoomsCollaboration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCollaborationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -74,7 +74,7 @@ func TestAccCleanRoomsCollaboration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCollaborationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -99,7 +99,7 @@ func TestAccCleanRoomsCollaboration_mutableProperties(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCollaborationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -138,7 +138,7 @@ func TestAccCleanRoomsCollaboration_updateCreatorDisplayName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCollaborationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -172,7 +172,7 @@ func TestAccCleanRoomsCollaboration_updateQueryLogStatus(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCollaborationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -206,7 +206,7 @@ func TestAccCleanRoomsCollaboration_dataEncryptionSettings(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCollaborationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -253,7 +253,7 @@ func TestAccCleanRoomsCollaboration_updateMemberAbilities(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCollaborationDestroy(ctx),
 		Steps: []resource.TestStep{

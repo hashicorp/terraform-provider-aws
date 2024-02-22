@@ -219,7 +219,7 @@ func resourceMultiRegionAccessPointRead(ctx context.Context, d *schema.ResourceD
 		return diag.Errorf("setting details: %s", err)
 	}
 	// https://docs.aws.amazon.com/AmazonS3/latest/userguide//MultiRegionAccessPointRequests.html#MultiRegionAccessPointHostnames.
-	d.Set("domain_name", meta.(*conns.AWSClient).PartitionHostname(fmt.Sprintf("%s.accesspoint.s3-global", alias)))
+	d.Set("domain_name", meta.(*conns.AWSClient).PartitionHostname(ctx, alias+".accesspoint.s3-global"))
 	d.Set("status", accessPoint.Status)
 
 	return nil

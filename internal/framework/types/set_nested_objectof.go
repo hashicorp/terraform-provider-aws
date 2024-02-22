@@ -20,10 +20,10 @@ type setNestedObjectTypeOf[T any] struct {
 }
 
 var (
-	_ basetypes.SetTypable  = (*setNestedObjectTypeOf[struct{}])(nil)
-	_ NestedObjectType      = (*setNestedObjectTypeOf[struct{}])(nil)
-	_ basetypes.SetValuable = (*SetNestedObjectValueOf[struct{}])(nil)
-	_ NestedObjectValue     = (*SetNestedObjectValueOf[struct{}])(nil)
+	_ basetypes.SetTypable        = (*setNestedObjectTypeOf[struct{}])(nil)
+	_ NestedObjectCollectionType  = (*setNestedObjectTypeOf[struct{}])(nil)
+	_ basetypes.SetValuable       = (*SetNestedObjectValueOf[struct{}])(nil)
+	_ NestedObjectCollectionValue = (*SetNestedObjectValueOf[struct{}])(nil)
 )
 
 func NewSetNestedObjectTypeOf[T any](ctx context.Context) setNestedObjectTypeOf[T] {
@@ -95,7 +95,7 @@ func (t setNestedObjectTypeOf[T]) ValueType(ctx context.Context) attr.Value {
 }
 
 func (t setNestedObjectTypeOf[T]) NewObjectPtr(ctx context.Context) (any, diag.Diagnostics) {
-	return nestedObjectTypeNewObjectPtr[T](ctx)
+	return objectTypeNewObjectPtr[T](ctx)
 }
 
 func (t setNestedObjectTypeOf[T]) NewObjectSlice(ctx context.Context, len, cap int) (any, diag.Diagnostics) {

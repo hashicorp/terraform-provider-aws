@@ -4,10 +4,6 @@
 package elbv2
 
 // Exports for use in tests only.
-const (
-	AwsSdkId = awsSdkId
-)
-
 var (
 	FindListenerByARN             = findListenerByARN
 	HealthCheckProtocolEnumValues = healthCheckProtocolEnumValues

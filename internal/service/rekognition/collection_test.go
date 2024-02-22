@@ -33,7 +33,7 @@ func TestAccRekognitionCollection_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
 			testAccCollectionPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -69,7 +69,7 @@ func TestAccRekognitionCollection_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
 			testAccCollectionPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -114,7 +114,7 @@ func TestAccRekognitionCollection_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.RekognitionEndpointID)
 			testAccCollectionPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RekognitionServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -23,7 +23,7 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(names.CloudTrailEndpointID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.CloudTrailServiceID, testAccErrorCheckSkip)
 }
 
 // testAccErrorCheckSkip skips CloudTrail tests that have error messages indicating unsupported features
@@ -68,7 +68,7 @@ func testAccTrail_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -115,7 +115,7 @@ func testAccTrail_cloudWatch(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -157,7 +157,7 @@ func testAccTrail_enableLogging(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -212,7 +212,7 @@ func testAccTrail_multiRegion(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -260,7 +260,7 @@ func testAccTrail_organization(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationManagementAccount(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -299,7 +299,7 @@ func testAccTrail_logValidation(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -342,7 +342,7 @@ func testAccTrail_kmsKey(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -373,7 +373,7 @@ func testAccTrail_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -419,7 +419,7 @@ func testAccTrail_globalServiceEvents(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -446,7 +446,7 @@ func testAccTrail_eventSelector(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -518,7 +518,7 @@ func testAccTrail_eventSelectorDynamoDB(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -545,7 +545,7 @@ func testAccTrail_eventSelectorExclude(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -595,7 +595,7 @@ func testAccTrail_insightSelector(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -643,7 +643,7 @@ func testAccTrail_advancedEventSelector(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -743,7 +743,7 @@ func testAccTrail_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -768,7 +768,7 @@ func testAccTrail_migrateV0(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.CloudTrailEndpointID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.CloudTrailServiceID),
 		CheckDestroy: testAccCheckTrailDestroy(ctx),
 		Steps: []resource.TestStep{
 			{

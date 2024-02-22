@@ -5,6 +5,7 @@ package configservice
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -265,7 +266,7 @@ func refreshConformancePackStatus(ctx context.Context, conn *configservice.Confi
 		}
 
 		if errMsg := aws.StringValue(status.ConformancePackStatusReason); errMsg != "" {
-			return status, aws.StringValue(status.ConformancePackState), fmt.Errorf(errMsg)
+			return status, aws.StringValue(status.ConformancePackState), errors.New(errMsg)
 		}
 
 		return status, aws.StringValue(status.ConformancePackState), nil
@@ -287,7 +288,7 @@ func refreshOrganizationConfigRuleStatus(ctx context.Context, conn *configservic
 		}
 
 		if status == nil {
-			return nil, "", fmt.Errorf("status not found")
+			return nil, "", errors.New("status not found")
 		}
 
 		if status.ErrorCode != nil {

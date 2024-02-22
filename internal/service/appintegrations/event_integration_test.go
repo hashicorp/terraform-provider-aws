@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappintegrations "github.com/hashicorp/terraform-provider-aws/internal/service/appintegrations"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppIntegrationsEventIntegration_basic(t *testing.T) {
@@ -40,7 +41,7 @@ func TestAccAppIntegrationsEventIntegration_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, appintegrationsservice.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppIntegrationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -99,7 +100,7 @@ func TestAccAppIntegrationsEventIntegration_updateTags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, appintegrationsservice.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppIntegrationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -179,7 +180,7 @@ func TestAccAppIntegrationsEventIntegration_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, appintegrationsservice.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, appintegrationsservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppIntegrationsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEventIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{

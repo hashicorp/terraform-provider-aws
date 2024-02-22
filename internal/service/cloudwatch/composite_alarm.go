@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -223,7 +222,7 @@ func resourceCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, m
 
 	log.Printf("[INFO] Deleting CloudWatch Composite Alarm: %s", d.Id())
 	_, err := conn.DeleteAlarms(ctx, &cloudwatch.DeleteAlarmsInput{
-		AlarmNames: tfslices.Of(d.Id()),
+		AlarmNames: []string{d.Id()},
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -239,8 +238,8 @@ func resourceCompositeAlarmDelete(ctx context.Context, d *schema.ResourceData, m
 
 func findCompositeAlarmByName(ctx context.Context, conn *cloudwatch.Client, name string) (*types.CompositeAlarm, error) {
 	input := &cloudwatch.DescribeAlarmsInput{
-		AlarmNames: tfslices.Of(name),
-		AlarmTypes: tfslices.Of(types.AlarmTypeCompositeAlarm),
+		AlarmNames: []string{name},
+		AlarmTypes: []types.AlarmType{types.AlarmTypeCompositeAlarm},
 	}
 
 	output, err := conn.DescribeAlarms(ctx, input)

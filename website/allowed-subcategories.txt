@@ -34,6 +34,7 @@ Cloud Map
 Cloud9
 CloudFormation
 CloudFront
+CloudFront KeyValueStore
 CloudHSM
 CloudSearch
 CloudTrail
@@ -64,6 +65,7 @@ Connect
 Connect Cases
 Connect Customer Profiles
 Control Tower
+Cost Optimization Hub
 Cost and Usage Report
 DLM (Data Lifecycle Manager)
 DMS (Database Migration)
