@@ -273,6 +273,10 @@ func resourceOrganizationManagedRuleDelete(ctx context.Context, d *schema.Resour
 		OrganizationConfigRuleName: aws.String(d.Id()),
 	})
 
+	if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ConfigService Organization Managed Rule (%s): %s", d.Id(), err)
 	}

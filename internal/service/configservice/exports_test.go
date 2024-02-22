@@ -5,17 +5,18 @@ package configservice
 
 // Exports for use in tests only.
 var (
-	ResourceAggregateAuthorization      = resourceAggregateAuthorization
-	ResourceConfigRule                  = resourceConfigRule
-	ResourceConfigurationAggregator     = resourceConfigurationAggregator
-	ResourceConfigurationRecorder       = resourceConfigurationRecorder
-	ResourceConfigurationRecorderStatus = resourceConfigurationRecorderStatus
-	ResourceConformancePack             = resourceConformancePack
-	ResourceOrganizationCustomRule      = resourceOrganizationCustomRule
-	ResourceDeliveryChannel             = resourceDeliveryChannel
-	ResourceOrganizationConformancePack = resourceOrganizationConformancePack
-	ResourceOrganizationManagedRule     = resourceOrganizationManagedRule
-	ResourceRemediationConfiguration    = resourceRemediationConfiguration
+	ResourceAggregateAuthorization       = resourceAggregateAuthorization
+	ResourceConfigRule                   = resourceConfigRule
+	ResourceConfigurationAggregator      = resourceConfigurationAggregator
+	ResourceConfigurationRecorder        = resourceConfigurationRecorder
+	ResourceConfigurationRecorderStatus  = resourceConfigurationRecorderStatus
+	ResourceConformancePack              = resourceConformancePack
+	ResourceDeliveryChannel              = resourceDeliveryChannel
+	ResourceOrganizationConformancePack  = resourceOrganizationConformancePack
+	ResourceOrganizationCustomPolicyRule = resourceOrganizationCustomPolicyRule
+	ResourceOrganizationCustomRule       = resourceOrganizationCustomRule
+	ResourceOrganizationManagedRule      = resourceOrganizationManagedRule
+	ResourceRemediationConfiguration     = resourceRemediationConfiguration
 
 	FindAggregateAuthorizationByTwoPartKey       = findAggregateAuthorizationByTwoPartKey
 	FindConfigRuleByName                         = findConfigRuleByName
