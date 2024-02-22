@@ -18,6 +18,7 @@ import (
 	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccClientVPNEndpoint_basic(t *testing.T, semaphore tfsync.Semaphore) {
@@ -31,7 +32,7 @@ func testAccClientVPNEndpoint_basic(t *testing.T, semaphore tfsync.Semaphore) {
 			testAccPreCheckClientVPNSyncronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -90,7 +91,7 @@ func testAccClientVPNEndpoint_disappears(t *testing.T, semaphore tfsync.Semaphor
 			testAccPreCheckClientVPNSyncronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -116,7 +117,7 @@ func testAccClientVPNEndpoint_tags(t *testing.T, semaphore tfsync.Semaphore) {
 			testAccPreCheckClientVPNSyncronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -170,7 +171,7 @@ func testAccClientVPNEndpoint_msADAuth(t *testing.T, semaphore tfsync.Semaphore)
 			testAccPreCheckClientVPNSyncronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -209,7 +210,7 @@ func testAccClientVPNEndpoint_msADAuthAndMutualAuth(t *testing.T, semaphore tfsy
 			testAccPreCheckClientVPNSyncronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -247,7 +248,7 @@ func testAccClientVPNEndpoint_federatedAuth(t *testing.T, semaphore tfsync.Semap
 			testAccPreCheckClientVPNSyncronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -282,7 +283,7 @@ func testAccClientVPNEndpoint_federatedAuthWithSelfServiceProvider(t *testing.T,
 			testAccPreCheckClientVPNSyncronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -318,7 +319,7 @@ func testAccClientVPNEndpoint_withClientConnectOptions(t *testing.T, semaphore t
 			testAccPreCheckClientVPNSyncronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -369,7 +370,7 @@ func testAccClientVPNEndpoint_withClientLoginBannerOptions(t *testing.T, semapho
 			testAccPreCheckClientVPNSyncronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -423,7 +424,7 @@ func testAccClientVPNEndpoint_withConnectionLogOptions(t *testing.T, semaphore t
 			testAccPreCheckClientVPNSyncronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -487,7 +488,7 @@ func testAccClientVPNEndpoint_withDNSServers(t *testing.T, semaphore tfsync.Sema
 			testAccPreCheckClientVPNSyncronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -537,7 +538,7 @@ func testAccClientVPNEndpoint_simpleAttributesUpdate(t *testing.T, semaphore tfs
 			testAccPreCheckClientVPNSyncronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -586,7 +587,7 @@ func testAccClientVPNEndpoint_selfServicePortal(t *testing.T, semaphore tfsync.S
 			testAccPreCheckClientVPNSyncronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -628,7 +629,7 @@ func testAccClientVPNEndpoint_vpcNoSecurityGroups(t *testing.T, semaphore tfsync
 			testAccPreCheckClientVPNSyncronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -664,7 +665,7 @@ func testAccClientVPNEndpoint_vpcSecurityGroups(t *testing.T, semaphore tfsync.S
 			testAccPreCheckClientVPNSyncronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -1606,20 +1606,20 @@ type ServiceErrorCheckFunc func(*testing.T) resource.ErrorCheckFunc
 
 var serviceErrorCheckFuncs map[string]ServiceErrorCheckFunc
 
-func RegisterServiceErrorCheckFunc(endpointID string, f ServiceErrorCheckFunc) {
+func RegisterServiceErrorCheckFunc(serviceID string, f ServiceErrorCheckFunc) {
 	if serviceErrorCheckFuncs == nil {
 		serviceErrorCheckFuncs = make(map[string]ServiceErrorCheckFunc)
 	}
 
-	if _, ok := serviceErrorCheckFuncs[endpointID]; ok {
+	if _, ok := serviceErrorCheckFuncs[serviceID]; ok {
 		// already registered
-		panic(fmt.Sprintf("Cannot re-register a service! ServiceErrorCheckFunc exists for %s", endpointID)) //lintignore:R009
+		panic(fmt.Sprintf("Cannot re-register a service! ServiceErrorCheckFunc exists for %s", serviceID)) //lintignore:R009
 	}
 
-	serviceErrorCheckFuncs[endpointID] = f
+	serviceErrorCheckFuncs[serviceID] = f
 }
 
-func ErrorCheck(t *testing.T, endpointIDs ...string) resource.ErrorCheckFunc {
+func ErrorCheck(t *testing.T, serviceIDs ...string) resource.ErrorCheckFunc {
 	t.Helper()
 
 	return func(err error) error {
@@ -1627,8 +1627,8 @@ func ErrorCheck(t *testing.T, endpointIDs ...string) resource.ErrorCheckFunc {
 			return nil
 		}
 
-		for _, endpointID := range endpointIDs {
-			if f, ok := serviceErrorCheckFuncs[endpointID]; ok {
+		for _, serviceID := range serviceIDs {
+			if f, ok := serviceErrorCheckFuncs[serviceID]; ok {
 				ef := f(t)
 				err = ef(err)
 			}

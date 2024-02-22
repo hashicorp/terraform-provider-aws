@@ -28,7 +28,7 @@ func testAccModelInvocationLoggingConfiguration_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelInvocationLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -62,7 +62,7 @@ func testAccModelInvocationLoggingConfiguration_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckModelInvocationLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{

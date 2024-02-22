@@ -3,15 +3,25 @@
 FEATURES:
 
 * **New Data Source:** `aws_batch_job_definition` ([#34663](https://github.com/hashicorp/terraform-provider-aws/issues/34663))
+* **New Data Source:** `aws_cognito_user_group` ([#34046](https://github.com/hashicorp/terraform-provider-aws/issues/34046))
+* **New Data Source:** `aws_cognito_user_groups` ([#34046](https://github.com/hashicorp/terraform-provider-aws/issues/34046))
 
 ENHANCEMENTS:
 
+* data-source/aws_alb_target_group: Add `load_balancer_arns` attribute ([#34364](https://github.com/hashicorp/terraform-provider-aws/issues/34364))
 * data-source/aws_ec2_instance_type: Add `maximum_network_cards` attribute ([#35840](https://github.com/hashicorp/terraform-provider-aws/issues/35840))
 * data-source/aws_elasticache_subnet_group: Add `vpc_id` attribute ([#35887](https://github.com/hashicorp/terraform-provider-aws/issues/35887))
+* data-source/aws_lb_target_group: Add `load_balancer_arns` attribute ([#34364](https://github.com/hashicorp/terraform-provider-aws/issues/34364))
+* provider: Add `token_bucket_rate_limiter_capacity` parameter ([#35926](https://github.com/hashicorp/terraform-provider-aws/issues/35926))
+* resource/aws_alb_target_group: Add `load_balancer_arns` attribute ([#34364](https://github.com/hashicorp/terraform-provider-aws/issues/34364))
 * resource/aws_codedeploy_deployment_config: Add `arn` attribute ([#35888](https://github.com/hashicorp/terraform-provider-aws/issues/35888))
-* resource/aws_codepipeline: Add `execution_mode` attribute ([#35875](https://github.com/hashicorp/terraform-provider-aws/issues/35875))
+* resource/aws_codepipeline: Add `execution_mode` argument ([#35875](https://github.com/hashicorp/terraform-provider-aws/issues/35875))
+* resource/aws_config_configuration_recorder: Add `recording_mode` configuration block ([#35527](https://github.com/hashicorp/terraform-provider-aws/issues/35527))
+* resource/aws_db_instance: Add plan-time validation of `performance_insights_retention_period` ([#35870](https://github.com/hashicorp/terraform-provider-aws/issues/35870))
 * resource/aws_elasticache_subnet_group: Add `vpc_id` attribute ([#35887](https://github.com/hashicorp/terraform-provider-aws/issues/35887))
+* resource/aws_lb_target_group: Add `load_balancer_arns` attribute ([#34364](https://github.com/hashicorp/terraform-provider-aws/issues/34364))
 * resource/aws_redshiftserverless_workgroup: Add `max_capacity` argument ([#35720](https://github.com/hashicorp/terraform-provider-aws/issues/35720))
+* resource/aws_transfer_server: Add `TransferSecurityPolicy-2024-01` and `TransferSecurityPolicy-FIPS-2024-01` as valid values for `security_policy_name` ([#35879](https://github.com/hashicorp/terraform-provider-aws/issues/35879))
 
 BUG FIXES:
 
@@ -19,6 +29,7 @@ BUG FIXES:
 * data-source/aws_eks_access_entry: Fix `cluster_name` plan-time validation, allowing single-character names ([#35874](https://github.com/hashicorp/terraform-provider-aws/issues/35874))
 * data-source/aws_eks_addon: Fix `cluster_name` plan-time validation, allowing single-character names ([#35874](https://github.com/hashicorp/terraform-provider-aws/issues/35874))
 * data-source/aws_eks_cluster: Fix `name` plan-time validation, allowing single-character names ([#35874](https://github.com/hashicorp/terraform-provider-aws/issues/35874))
+* resource/aws_cloudsearch_domain: Prevent panic when reading nil `index_field` options response values ([#35900](https://github.com/hashicorp/terraform-provider-aws/issues/35900))
 * resource/aws_eks_access_entry: Fix `cluster_name` plan-time validation, allowing single-character names ([#35874](https://github.com/hashicorp/terraform-provider-aws/issues/35874))
 * resource/aws_eks_access_policy_association: Fix `cluster_name` plan-time validation, allowing single-character names ([#35874](https://github.com/hashicorp/terraform-provider-aws/issues/35874))
 * resource/aws_eks_addon: Fix `cluster_name` plan-time validation, allowing single-character names ([#35874](https://github.com/hashicorp/terraform-provider-aws/issues/35874))
