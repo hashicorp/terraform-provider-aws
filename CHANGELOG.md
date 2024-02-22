@@ -3,6 +3,8 @@
 FEATURES:
 
 * **New Data Source:** `aws_batch_job_definition` ([#34663](https://github.com/hashicorp/terraform-provider-aws/issues/34663))
+* **New Data Source:** `aws_cognito_user_group` ([#34046](https://github.com/hashicorp/terraform-provider-aws/issues/34046))
+* **New Data Source:** `aws_cognito_user_groups` ([#34046](https://github.com/hashicorp/terraform-provider-aws/issues/34046))
 
 ENHANCEMENTS:
 
