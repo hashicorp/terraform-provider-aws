@@ -75,8 +75,4 @@ jobs:
         with:
           go-version-file: go.mod
       - name: go mod
-        run: |
-          echo "==> Checking source code with go mod tidy..."
-          go mod tidy
-          git diff --exit-code -- go.mod go.sum || \
-            (echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
+        run: make depscheck
