@@ -1,4 +1,5 @@
-## 5.38.0 (Unreleased)
+## 5.39.0 (Unreleased)
+## 5.38.0 (February 22, 2024)
 
 FEATURES:
 
