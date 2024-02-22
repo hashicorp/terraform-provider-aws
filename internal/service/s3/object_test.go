@@ -645,7 +645,7 @@ func TestAccS3Object_updatesWithVersioningViaAccessPoint(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectConfig_updateableViaAccessPoint(rName, true, sourceInitial),
+				Config: testAccObjectConfig_updateableViaAccessPoint(rName, sourceInitial),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &originalObj),
 					testAccCheckObjectBody(&originalObj, "initial versioned object state"),
@@ -654,7 +654,7 @@ func TestAccS3Object_updatesWithVersioningViaAccessPoint(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccObjectConfig_updateableViaAccessPoint(rName, true, sourceModified),
+				Config: testAccObjectConfig_updateableViaAccessPoint(rName, sourceModified),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &modifiedObj),
 					testAccCheckObjectBody(&modifiedObj, "modified versioned object"),
@@ -2410,6 +2410,52 @@ func testAccCheckObjectCheckTags(ctx context.Context, n string, expectedTags map
 	}
 }
 
+func testAccObjectConfig_baseAccessPoint(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3_access_point" "test" {
+  # Must have bucket versioning enabled first
+  bucket = aws_s3_bucket_versioning.test.bucket
+  name   = %[1]q
+}
+`, rName)
+}
+
+func testAccObjectConfig_baseMultiRegionAccessPoint(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3control_multi_region_access_point" "test" {
+  details {
+    name = %[1]q
+
+    region {
+      bucket = aws_s3_bucket_versioning.test.bucket
+    }
+  }
+}
+`, rName)
+}
+
 func testAccObjectConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -2538,32 +2584,15 @@ resource "aws_s3_object" "object" {
 `, rName, bucketVersioning, source)
 }
 
-func testAccObjectConfig_updateableViaAccessPoint(rName string, bucketVersioning bool, source string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_access_point" "test" {
-  # Must have bucket versioning enabled first
-  bucket = aws_s3_bucket_versioning.test.bucket
-  name   = %[1]q
-}
-
+func testAccObjectConfig_updateableViaAccessPoint(rName string, source string) string {
+	return acctest.ConfigCompose(testAccObjectConfig_baseAccessPoint(rName), fmt.Sprintf(`
 resource "aws_s3_object" "test" {
   bucket = aws_s3_access_point.test.arn
   key    = "updateable-key"
-  source = %[3]q
-  etag   = filemd5(%[3]q)
+  source = %[1]q
+  etag   = filemd5(%[1]q)
 }
-`, rName, bucketVersioning, source)
+`, source))
 }
 
 func testAccObjectConfig_kmsID(rName string, source string) string {
@@ -2857,28 +2886,11 @@ resource "aws_s3_object" "object" {
 }
 
 func testAccObjectConfig_tagsViaAccessPointARN(rName, key, content string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_access_point" "test" {
-  # Must have bucket versioning enabled first
-  bucket = aws_s3_bucket_versioning.test.bucket
-  name   = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccObjectConfig_baseAccessPoint(rName), fmt.Sprintf(`
 resource "aws_s3_object" "object" {
   bucket  = aws_s3_access_point.test.arn
-  key     = %[2]q
-  content = %[3]q
+  key     = %[1]q
+  content = %[2]q
 
   tags = {
     Key1 = "A@AA"
@@ -2886,32 +2898,15 @@ resource "aws_s3_object" "object" {
     Key3 = "CCC"
   }
 }
-`, rName, key, content)
+`, key, content))
 }
 
 func testAccObjectConfig_updatedTagsViaAccessPointARN(rName, key, content string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_access_point" "test" {
-  # Must have bucket versioning enabled first
-  bucket = aws_s3_bucket_versioning.test.bucket
-  name   = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccObjectConfig_baseAccessPoint(rName), fmt.Sprintf(`
 resource "aws_s3_object" "object" {
   bucket  = aws_s3_access_point.test.arn
-  key     = %[2]q
-  content = %[3]q
+  key     = %[1]q
+  content = %[2]q
 
   tags = {
     Key2 = "B@BB"
@@ -2920,32 +2915,15 @@ resource "aws_s3_object" "object" {
     Key5 = "E:/"
   }
 }
-`, rName, key, content)
+`, key, content))
 }
 
 func testAccObjectConfig_tagsViaAccessPointAlias(rName, key, content string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_access_point" "test" {
-  # Must have bucket versioning enabled first
-  bucket = aws_s3_bucket_versioning.test.bucket
-  name   = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccObjectConfig_baseAccessPoint(rName), fmt.Sprintf(`
 resource "aws_s3_object" "object" {
   bucket  = aws_s3_access_point.test.alias
-  key     = %[2]q
-  content = %[3]q
+  key     = %[1]q
+  content = %[2]q
 
   tags = {
     Key1 = "A@AA"
@@ -2953,32 +2931,15 @@ resource "aws_s3_object" "object" {
     Key3 = "CCC"
   }
 }
-`, rName, key, content)
+`, key, content))
 }
 
 func testAccObjectConfig_updatedTagsViaAccessPointAlias(rName, key, content string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3_access_point" "test" {
-  # Must have bucket versioning enabled first
-  bucket = aws_s3_bucket_versioning.test.bucket
-  name   = %[1]q
-}
-
+	return acctest.ConfigCompose(testAccObjectConfig_baseAccessPoint(rName), fmt.Sprintf(`
 resource "aws_s3_object" "object" {
   bucket  = aws_s3_access_point.test.alias
-  key     = %[2]q
-  content = %[3]q
+  key     = %[1]q
+  content = %[2]q
 
   tags = {
     Key2 = "B@BB"
@@ -2987,36 +2948,15 @@ resource "aws_s3_object" "object" {
     Key5 = "E:/"
   }
 }
-`, rName, key, content)
+`, key, content))
 }
 
 func testAccObjectConfig_tagsViaMultiRegionAccessPoint(rName, key, content string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3control_multi_region_access_point" "test" {
-  details {
-    name = %[1]q
-
-    region {
-      bucket = aws_s3_bucket_versioning.test.bucket
-    }
-  }
-}
-
+	return acctest.ConfigCompose(testAccObjectConfig_baseMultiRegionAccessPoint(rName), fmt.Sprintf(`
 resource "aws_s3_object" "object" {
   bucket  = aws_s3control_multi_region_access_point.test.arn
-  key     = %[2]q
-  content = %[3]q
+  key     = %[1]q
+  content = %[2]q
 
   tags = {
     Key1 = "A@AA"
@@ -3024,36 +2964,15 @@ resource "aws_s3_object" "object" {
     Key3 = "CCC"
   }
 }
-`, rName, key, content)
+`, key, content))
 }
 
 func testAccObjectConfig_updatedTagsViaMultiRegionAccessPoint(rName, key, content string) string {
-	return fmt.Sprintf(`
-resource "aws_s3_bucket" "test" {
-  bucket = %[1]q
-}
-
-resource "aws_s3_bucket_versioning" "test" {
-  bucket = aws_s3_bucket.test.id
-  versioning_configuration {
-    status = "Enabled"
-  }
-}
-
-resource "aws_s3control_multi_region_access_point" "test" {
-  details {
-    name = %[1]q
-
-    region {
-      bucket = aws_s3_bucket_versioning.test.bucket
-    }
-  }
-}
-
+	return acctest.ConfigCompose(testAccObjectConfig_baseMultiRegionAccessPoint(rName), fmt.Sprintf(`
 resource "aws_s3_object" "object" {
   bucket  = aws_s3control_multi_region_access_point.test.arn
-  key     = %[2]q
-  content = %[3]q
+  key     = %[1]q
+  content = %[2]q
 
   tags = {
     Key2 = "B@BB"
@@ -3062,7 +2981,7 @@ resource "aws_s3_object" "object" {
     Key5 = "E:/"
   }
 }
-`, rName, key, content)
+`, key, content))
 }
 
 func testAccObjectConfig_metadata(rName string, metadataKey1, metadataValue1, metadataKey2, metadataValue2 string) string {
