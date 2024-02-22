@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccSubscriber_basic(t *testing.T) {
+func TestAccSubscriber_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_subscriber.test"
 	var subscriber types.SubscriberResource
