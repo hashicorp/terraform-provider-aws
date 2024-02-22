@@ -75,4 +75,6 @@ jobs:
         with:
           go-version-file: go.mod
       - name: go mod
-        run: make depscheck
+        run: |
+          echo "Using make to check dependencies"
+          make depscheck
