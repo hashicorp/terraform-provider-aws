@@ -32,6 +32,7 @@ The following arguments are required:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `description` - The description of the user group.
-* `precedence` - The precedence of the user group.
-* `role_arn` - The ARN of the IAM role to be associated with the user group.
+* `description` - Description of the user group.
+* `id` - A comma-delimited string concatenating `name` and `user_pool_id`.
+* `precedence` - Precedence of the user group.
+* `role_arn` - ARN of the IAM role to be associated with the user group.
