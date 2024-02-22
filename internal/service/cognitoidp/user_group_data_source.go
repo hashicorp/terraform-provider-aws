@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
 
-// @FrameworkDataSource
+// @FrameworkDataSource(name="User Group")
 func newDataSourceDataSourceUserGroup(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceDataSourceUserGroup{}
 	d.SetMigratedFromPluginSDK(true)

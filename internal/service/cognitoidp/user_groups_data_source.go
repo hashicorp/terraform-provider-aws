@@ -20,7 +20,7 @@ type dataSourceDataSourceUserGroups struct {
 	framework.DataSourceWithConfigure
 }
 
-// @FrameworkDataSource
+// @FrameworkDataSource(name="User Groups")
 func newDataSourceDataSourceUserGroups(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceDataSourceUserGroups{}
 	d.SetMigratedFromPluginSDK(true)
