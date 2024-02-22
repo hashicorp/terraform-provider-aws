@@ -21,7 +21,6 @@ func TestAccCognitoIDPUserGroupDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cognitoidentityprovider.ServiceID)
 			testAccPreCheckIdentityProvider(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentityprovider.ServiceID),
