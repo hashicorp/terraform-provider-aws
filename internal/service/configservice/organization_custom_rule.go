@@ -179,7 +179,7 @@ func resourceOrganizationCustomRuleCreate(ctx context.Context, d *schema.Resourc
 
 	d.SetId(name)
 
-	if err := waitForOrganizationRuleStatusCreateSuccessful(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if err := waitOrganizationConfigRuleCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionWaitingForCreation, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
@@ -301,7 +301,7 @@ func resourceOrganizationCustomRuleUpdate(ctx context.Context, d *schema.Resourc
 		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionUpdating, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
-	if err := waitForOrganizationRuleStatusUpdateSuccessful(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if err := waitOrganizationConfigRuleUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionWaitingForUpdate, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
@@ -322,7 +322,7 @@ func resourceOrganizationCustomRuleDelete(ctx context.Context, d *schema.Resourc
 		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionDeleting, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 
-	if err := waitForOrganizationRuleStatusDeleteSuccessful(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := waitOrganizationConfigRuleDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return create.AppendDiagError(diags, names.ConfigService, create.ErrActionWaitingForDeletion, ResNameOrganizationCustomRule, d.Id(), err)
 	}
 

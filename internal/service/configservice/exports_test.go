@@ -13,6 +13,7 @@ var (
 	ResourceConformancePack             = resourceConformancePack
 	ResourceDeliveryChannel             = resourceDeliveryChannel
 	ResourceOrganizationConformancePack = resourceOrganizationConformancePack
+	ResourceOrganizationManagedRule     = resourceOrganizationManagedRule
 	ResourceRemediationConfiguration    = resourceRemediationConfiguration
 
 	FindAggregateAuthorizationByTwoPartKey       = findAggregateAuthorizationByTwoPartKey

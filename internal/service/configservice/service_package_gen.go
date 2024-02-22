@@ -86,8 +86,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_config_organization_custom_rule",
 		},
 		{
-			Factory:  ResourceOrganizationManagedRule,
+			Factory:  resourceOrganizationManagedRule,
 			TypeName: "aws_config_organization_managed_rule",
+			Name:     "Organization Managed Rule",
 		},
 		{
 			Factory:  resourceRemediationConfiguration,
