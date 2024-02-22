@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/acm/types"
 	"github.com/aws/aws-sdk-go/service/acm"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -231,6 +232,63 @@ func TestAccACMCertificateDataSource_keyTypes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags", dataSourceName, "tags"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAcMCertificateDataSource_emailValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
+		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
+	}
+
+	domain := os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN")
+	resourceName := "data.aws_acm_certificate.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateDataSourceConfig_basic(domain),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "validation_emails.#", 0),
+					resource.TestMatchResourceAttr(resourceName, "validation_emails.0", regexache.MustCompile(`^[^@]+@.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodEmail)),
+					resource.TestCheckResourceAttr(resourceName, "domain_validation_options.#", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAcMCertificateDataSource_dnsValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	if os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN") == "" {
+		t.Skip("Environment variable ACM_CERTIFICATE_ROOT_DOMAIN is not set")
+	}
+
+	domain := os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN")
+	resourceName := "data.aws_acm_certificate.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccCertificateDataSourceConfig_basic(domain),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "domain_validation_options.#", 0),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "domain_validation_options.*", map[string]string{
+						"domain_name":          domain,
+						"resource_record_type": "CNAME",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "validation_emails.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "validation_method", string(types.ValidationMethodDns)),
 				),
 			},
 		},
