@@ -1415,7 +1415,7 @@ func TestAccS3Object_DefaultTags_providerAndResourceWithOverride(t *testing.T) {
 	})
 }
 
-func TestAccS3Object_tagsViaAccessPoint(t *testing.T) {
+func TestAccS3Object_tagsViaAccessPointARN(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj1, obj2 s3.GetObjectOutput
 	resourceName := "aws_s3_object.object"
@@ -1429,7 +1429,7 @@ func TestAccS3Object_tagsViaAccessPoint(t *testing.T) {
 		CheckDestroy:             testAccCheckObjectDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccObjectConfig_tagsViaAccessPoint(rName, key, "stuff"),
+				Config: testAccObjectConfig_tagsViaAccessPointARN(rName, key, "stuff"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj1),
 					testAccCheckObjectBody(&obj1, "stuff"),
@@ -1440,7 +1440,7 @@ func TestAccS3Object_tagsViaAccessPoint(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccObjectConfig_updatedTagsViaAccessPoint(rName, key, "stuff"),
+				Config: testAccObjectConfig_updatedTagsViaAccessPointARN(rName, key, "stuff"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj2),
 					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
@@ -2774,7 +2774,7 @@ resource "aws_s3_object" "object" {
 `, rName, key, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
-func testAccObjectConfig_tagsViaAccessPoint(rName, key, content string) string {
+func testAccObjectConfig_tagsViaAccessPointARN(rName, key, content string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -2807,7 +2807,7 @@ resource "aws_s3_object" "object" {
 `, rName, key, content)
 }
 
-func testAccObjectConfig_updatedTagsViaAccessPoint(rName, key, content string) string {
+func testAccObjectConfig_updatedTagsViaAccessPointARN(rName, key, content string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
