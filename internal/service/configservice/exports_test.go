@@ -11,6 +11,7 @@ var (
 	ResourceConfigurationRecorder       = resourceConfigurationRecorder
 	ResourceConfigurationRecorderStatus = resourceConfigurationRecorderStatus
 	ResourceConformancePack             = resourceConformancePack
+	ResourceOrganizationCustomRule      = resourceOrganizationCustomRule
 	ResourceDeliveryChannel             = resourceDeliveryChannel
 	ResourceOrganizationConformancePack = resourceOrganizationConformancePack
 	ResourceOrganizationManagedRule     = resourceOrganizationManagedRule
