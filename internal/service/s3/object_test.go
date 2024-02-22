@@ -1538,6 +1538,47 @@ func TestAccS3Object_tagsViaMultiRegionAccessPoint(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_tagsViaObjectLambdaAccessPointARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj1, obj2 s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	key := "test-key"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_tagsViaObjectLambdaAccessPointARN(rName, key, "stuff"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj1),
+					testAccCheckObjectBody(&obj1, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
+				),
+			},
+			{
+				Config: testAccObjectConfig_updatedTagsViaObjectLambdaAccessPointARN(rName, key, "stuff"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj2),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
+					testAccCheckObjectBody(&obj2, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "B@BB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "E:/"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccS3Object_objectLockLegalHoldStartWithNone(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj1, obj2, obj3 s3.GetObjectOutput
@@ -2456,6 +2497,36 @@ resource "aws_s3control_multi_region_access_point" "test" {
 `, rName)
 }
 
+func testAccObjectConfig_baseObjectLambdaAccessPoint(rName string) string {
+	return acctest.ConfigCompose(testAccObjectConfig_baseAccessPoint(rName), acctest.ConfigLambdaBase(rName, rName, rName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.iam_for_lambda.arn
+  handler       = "index.handler"
+  runtime       = "nodejs20.x"
+}
+
+resource "aws_s3control_object_lambda_access_point" "test" {
+  name = %[1]q
+
+  configuration {
+    supporting_access_point = aws_s3_access_point.test.arn
+
+    transformation_configuration {
+      actions = ["GetObject"]
+
+      content_transformation {
+        aws_lambda {
+          function_arn = aws_lambda_function.test.arn
+        }
+      }
+    }
+  }
+}
+`, rName))
+}
+
 func testAccObjectConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -2971,6 +3042,39 @@ func testAccObjectConfig_updatedTagsViaMultiRegionAccessPoint(rName, key, conten
 	return acctest.ConfigCompose(testAccObjectConfig_baseMultiRegionAccessPoint(rName), fmt.Sprintf(`
 resource "aws_s3_object" "object" {
   bucket  = aws_s3control_multi_region_access_point.test.arn
+  key     = %[1]q
+  content = %[2]q
+
+  tags = {
+    Key2 = "B@BB"
+    Key3 = "X X"
+    Key4 = "DDD"
+    Key5 = "E:/"
+  }
+}
+`, key, content))
+}
+
+func testAccObjectConfig_tagsViaObjectLambdaAccessPointARN(rName, key, content string) string {
+	return acctest.ConfigCompose(testAccObjectConfig_baseObjectLambdaAccessPoint(rName), fmt.Sprintf(`
+resource "aws_s3_object" "object" {
+  bucket  = aws_s3control_object_lambda_access_point.test.arn
+  key     = %[1]q
+  content = %[2]q
+
+  tags = {
+    Key1 = "A@AA"
+    Key2 = "BBB"
+    Key3 = "CCC"
+  }
+}
+`, key, content))
+}
+
+func testAccObjectConfig_updatedTagsViaObjectLambdaAccessPointARN(rName, key, content string) string {
+	return acctest.ConfigCompose(testAccObjectConfig_baseObjectLambdaAccessPoint(rName), fmt.Sprintf(`
+resource "aws_s3_object" "object" {
+  bucket  = aws_s3control_object_lambda_access_point.test.arn
   key     = %[1]q
   content = %[2]q
 
