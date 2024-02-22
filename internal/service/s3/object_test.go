@@ -1497,6 +1497,47 @@ func TestAccS3Object_tagsViaAccessPointAlias(t *testing.T) {
 	})
 }
 
+func TestAccS3Object_tagsViaMultiRegionAccessPoint(t *testing.T) {
+	ctx := acctest.Context(t)
+	var obj1, obj2 s3.GetObjectOutput
+	resourceName := "aws_s3_object.object"
+	key := "test-key"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccObjectConfig_tagsViaMultiRegionAccessPoint(rName, key, "stuff"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj1),
+					testAccCheckObjectBody(&obj1, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "CCC"),
+				),
+			},
+			{
+				Config: testAccObjectConfig_updatedTagsViaMultiRegionAccessPoint(rName, key, "stuff"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckObjectExists(ctx, resourceName, &obj2),
+					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
+					testAccCheckObjectBody(&obj2, "stuff"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "B@BB"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key4", "DDD"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key5", "E:/"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccS3Object_objectLockLegalHoldStartWithNone(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj1, obj2, obj3 s3.GetObjectOutput
@@ -2936,6 +2977,81 @@ resource "aws_s3_access_point" "test" {
 
 resource "aws_s3_object" "object" {
   bucket  = aws_s3_access_point.test.alias
+  key     = %[2]q
+  content = %[3]q
+
+  tags = {
+    Key2 = "B@BB"
+    Key3 = "X X"
+    Key4 = "DDD"
+    Key5 = "E:/"
+  }
+}
+`, rName, key, content)
+}
+
+func testAccObjectConfig_tagsViaMultiRegionAccessPoint(rName, key, content string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3control_multi_region_access_point" "test" {
+  details {
+    name = %[1]q
+
+    region {
+      bucket = aws_s3_bucket_versioning.test.bucket
+    }
+  }
+}
+
+resource "aws_s3_object" "object" {
+  bucket  = aws_s3control_multi_region_access_point.test.arn
+  key     = %[2]q
+  content = %[3]q
+
+  tags = {
+    Key1 = "A@AA"
+    Key2 = "BBB"
+    Key3 = "CCC"
+  }
+}
+`, rName, key, content)
+}
+
+func testAccObjectConfig_updatedTagsViaMultiRegionAccessPoint(rName, key, content string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_bucket_versioning" "test" {
+  bucket = aws_s3_bucket.test.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+resource "aws_s3control_multi_region_access_point" "test" {
+  details {
+    name = %[1]q
+
+    region {
+      bucket = aws_s3_bucket_versioning.test.bucket
+    }
+  }
+}
+
+resource "aws_s3_object" "object" {
+  bucket  = aws_s3control_multi_region_access_point.test.arn
   key     = %[2]q
   content = %[3]q
 
