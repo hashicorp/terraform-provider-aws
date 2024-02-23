@@ -156,7 +156,7 @@ func testAccDeliveryChannelConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_config_configuration_recorder" "test" {
   name     = %[1]q
-  role_arn = aws_iam_role.tes.arn
+  role_arn = aws_iam_role.test.arn
 }
 
 resource "aws_iam_role" "test" {

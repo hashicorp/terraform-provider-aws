@@ -170,6 +170,10 @@ func resourceDeliveryChannelDelete(ctx context.Context, d *schema.ResourceData, 
 		})
 	}, "there is a running configuration recorder")
 
+	if errs.IsA[*types.NoSuchDeliveryChannelException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ConfigService Delivery Channel (%s): %s", d.Id(), err)
 	}
