@@ -254,6 +254,10 @@ func resourceRemediationConfigurationDelete(ctx context.Context, d *schema.Resou
 		return conn.DeleteRemediationConfiguration(ctx, input)
 	})
 
+	if errs.IsA[*types.NoSuchRemediationConfigurationException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ConfigService Remediation Configuration (%s): %s", d.Id(), err)
 	}
