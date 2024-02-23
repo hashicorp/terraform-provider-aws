@@ -5,7 +5,9 @@ package ssm_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -24,6 +26,7 @@ import (
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/jmespath/go-jmespath"
 )
 
 func TestAccSSMPatchBaseline_basic(t *testing.T) {
@@ -56,11 +59,14 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_enable_non_security", acctest.CtFalse),
 					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovedPatchesEnableNonSecurity", acctest.CtFalse),
 					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovedPatches|length(@)", acctest.Ct1),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovalRules.PatchRules[0].ApproveUntilDate", "2024-01-02"),
 					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "ApprovedPatches[0]", resourceName, "approved_patches.0"),
 					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "Name", resourceName, names.AttrName),
 					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "Description", resourceName, names.AttrDescription),
 					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "ApprovedPatchesEnableNonSecurity", resourceName, "approved_patches_enable_non_security"),
 					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "OperatingSystem", resourceName, "operating_system"),
+					checkResourceAttrJMESNotExists(resourceName, name.AttrJSON, "ApprovalRules.PatchRules[0].ApproveAfterDays"),
+
 				),
 				ConfigStateChecks: []statecheck.StateCheck{
 					statecheck.ExpectKnownValue(resourceName, tfjsonpath.New(names.AttrTags), knownvalue.Null()),
@@ -88,15 +94,63 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, names.AttrName, fmt.Sprintf("updated-patch-baseline-%s", name)),
 					resource.TestCheckResourceAttr(resourceName, "approved_patches_compliance_level", string(awstypes.PatchComplianceLevelHigh)),
 					resource.TestCheckResourceAttr(resourceName, names.AttrDescription, "Baseline containing all updates approved for production systems - August 2017"),
+					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovalRules.PatchRules[0].ApproveAfterDays", "7"),
 					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "ApprovedPatches[0]", resourceName, "approved_patches.1"),
 					acctest.CheckResourceAttrJMESPair(resourceName, names.AttrJSON, "ApprovedPatches[1]", resourceName, "approved_patches.0"),
 					acctest.CheckResourceAttrJMES(resourceName, names.AttrJSON, "ApprovedPatches|length(@)", acctest.Ct2),
+					checkResourceAttrJMESNotExists(resourceName, names.AttrJSON, "ApprovalRules.PatchRules[0].ApproveUntilDate"),
+
 					func(*terraform.State) error {
 						if aws.ToString(before.BaselineId) != aws.ToString(after.BaselineId) {
 							t.Fatal("Baseline IDs changed unexpectedly")
 						}
 						return nil
 					},
+				),
+			},
+		},
+	})
+}
+
+func TestAccSSMPatchBaseline_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var patch ssm.GetPatchBaselineOutput
+	name := sdkacctest.RandString(10)
+	resourceName := "aws_ssm_patch_baseline.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPatchBaselineConfig_tags1(name, acctest.CtKey1, acctest.CtValue1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPatchBaselineExists(ctx, resourceName, &patch),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccPatchBaselineConfig_tags2(name, acctest.CtKey1, acctest.CtValue1Updated, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPatchBaselineExists(ctx, resourceName, &patch),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct2),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey1, acctest.CtValue1Updated),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
+				),
+			},
+			{
+				Config: testAccPatchBaselineConfig_tags1(name, acctest.CtKey2, acctest.CtValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPatchBaselineExists(ctx, resourceName, &patch),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsPercent, acctest.Ct1),
+					resource.TestCheckResourceAttr(resourceName, acctest.CtTagsKey2, acctest.CtValue2),
 				),
 			},
 		},
@@ -425,6 +479,47 @@ func testAccCheckPatchBaselineDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
+func checkResourceAttrJMESNotExists(name, key, jmesPath string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		is, err := acctest.PrimaryInstanceState(s, name)
+		if err != nil {
+			return err
+		}
+
+		attr, ok := is.Attributes[key]
+		if !ok {
+			return fmt.Errorf("%s: Attribute %q not set", name, key)
+		}
+
+		var jsonData any
+		err = json.Unmarshal([]byte(attr), &jsonData)
+		if err != nil {
+			return fmt.Errorf("%s: Expected attribute %q to be JSON: %w", name, key, err)
+		}
+
+		result, err := jmespath.Search(jmesPath, jsonData)
+		if err != nil {
+			return nil
+		}
+
+		var v string
+		switch x := result.(type) {
+		case nil:
+			return nil
+		case string:
+			v = x
+		case float64:
+			v = strconv.FormatFloat(x, 'f', -1, 64)
+		case bool:
+			v = fmt.Sprint(x)
+		default:
+			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T), expected no attribute`, name, key, jmesPath, result)
+		}
+
+		return fmt.Errorf("%s: Attribute %q, JMESPath %q expected no attribute, got %#v", name, key, jmesPath, v)
+	}
+}
+
 func testAccPatchBaselineConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ssm_patch_baseline" "test" {
@@ -432,8 +527,46 @@ resource "aws_ssm_patch_baseline" "test" {
   description                       = "Baseline containing all updates approved for production systems"
   approved_patches                  = ["KB123456"]
   approved_patches_compliance_level = "CRITICAL"
+  approval_rule  {
+	approve_until_date = "2024-01-02"
+	patch_filter {
+		key    = "CLASSIFICATION"
+		values = ["CriticalUpdates"]
+	  }
+  }
 }
 `, rName)
+}
+
+func testAccPatchBaselineConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_patch_baseline" "test" {
+  name                              = %[1]q
+  description                       = "Baseline containing all updates approved for production systems"
+  approved_patches                  = ["KB123456"]
+  approved_patches_compliance_level = "CRITICAL"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccPatchBaselineConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_ssm_patch_baseline" "test" {
+  name                              = %[1]q
+  description                       = "Baseline containing all updates approved for production systems"
+  approved_patches                  = ["KB123456"]
+  approved_patches_compliance_level = "CRITICAL"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }
 
 func testAccPatchBaselineConfig_basicUpdated(rName string) string {
@@ -443,6 +576,13 @@ resource "aws_ssm_patch_baseline" "test" {
   description                       = "Baseline containing all updates approved for production systems - August 2017"
   approved_patches                  = ["KB123456", "KB456789"]
   approved_patches_compliance_level = "HIGH"
+  approval_rule  {
+	approve_after_days = 7
+	patch_filter {
+		key    = "CLASSIFICATION"
+		values = ["CriticalUpdates"]
+	  }
+  }
 }
 `, rName)
 }

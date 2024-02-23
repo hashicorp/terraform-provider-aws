@@ -298,6 +298,52 @@ func resourcePatchBaselineCreate(ctx context.Context, d *schema.ResourceData, me
 	return append(diags, resourcePatchBaselineRead(ctx, d, meta)...)
 }
 
+type jsonOutputWithJsonOmitTags struct {
+	*ssm.GetPatchBaselineOutput
+	// A set of rules used to include patches in the baseline.
+	ApprovalRules *PatchRuleGroup `type:"structure"`
+}
+
+type PatchRuleGroup struct {
+	_ struct{} `type:"structure"`
+
+	// The rules that make up the rule group.
+	//
+	// PatchRules is a required field
+	PatchRules []*PatchRule `type:"list" required:"true"`
+}
+
+// Defines an approval rule for a patch baseline.
+type PatchRule struct {
+	_ struct{} `type:"structure"`
+
+	// The number of days after the release date of each patch matched by the rule
+	// that the patch is marked as approved in the patch baseline. For example,
+	// a value of 7 means that patches are approved seven days after they are released.
+	// Not supported on Debian Server or Ubuntu Server.
+	ApproveAfterDays *int64 `type:"integer" json:",omitempty"`
+
+	// The cutoff date for auto approval of released patches. Any patches released
+	// on or before this date are installed automatically. Not supported on Debian
+	// Server or Ubuntu Server.
+	//
+	// Enter dates in the format YYYY-MM-DD. For example, 2021-12-31.
+	ApproveUntilDate *string `min:"1" type:"string" json:",omitempty"`
+
+	// A compliance severity level for all approved patches in a patch baseline.
+	ComplianceLevel *string `type:"string" enum:"PatchComplianceLevel"`
+
+	// For managed nodes identified by the approval rule filters, enables a patch
+	// baseline to apply non-security updates available in the specified repository.
+	// The default value is false. Applies to Linux managed nodes only.
+	EnableNonSecurity *bool `type:"boolean"`
+
+	// The patch filter group that defines the criteria for the rule.
+	//
+	// PatchFilterGroup is a required field
+	PatchFilterGroup *ssm.PatchFilterGroup `type:"structure" required:"true"`
+}
+
 func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
@@ -314,7 +360,24 @@ func resourcePatchBaselineRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading SSM Patch Baseline (%s): %s", d.Id(), err)
 	}
 
-	jsonDoc, err := json.MarshalIndent(output, "", "  ")
+	patchRules := []*PatchRule{}
+
+	for _, outputPatchRule := range output.ApprovalRules.PatchRules {
+		patchRules = append(patchRules, &PatchRule{
+			ApproveAfterDays:  outputPatchRule.ApproveAfterDays,
+			ApproveUntilDate:  outputPatchRule.ApproveUntilDate,
+			ComplianceLevel:   outputPatchRule.ComplianceLevel,
+			EnableNonSecurity: outputPatchRule.EnableNonSecurity,
+			PatchFilterGroup:  outputPatchRule.PatchFilterGroup,
+		})
+	}
+
+	jsonOutputWithJsonOmitTags := jsonOutputWithJsonOmitTags{
+		GetPatchBaselineOutput: output,
+		ApprovalRules:          &PatchRuleGroup{PatchRules: patchRules},
+	}
+
+	jsonDoc, err := json.MarshalIndent(jsonOutputWithJsonOmitTags, "", "  ")
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
