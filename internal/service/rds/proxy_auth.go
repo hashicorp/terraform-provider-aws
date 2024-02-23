@@ -183,7 +183,7 @@ func resourceProxyAuthItemRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("db_proxy_name", dbProxyName)
 	d.Set("iam_auth", dbAuthItem.IAMAuth)
 	d.Set("auth_scheme", dbAuthItem.AuthScheme)
-	d.Set("rds_resource_id", dbAuthItem.ClientPasswordAuthType)
+	d.Set("client_password_auth_type", dbAuthItem.ClientPasswordAuthType)
 	d.Set("description", dbAuthItem.Description)
 	d.Set("username", dbAuthItem.UserName)
 	d.Set("secret_arn", dbAuthItem.SecretArn)
