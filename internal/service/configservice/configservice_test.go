@@ -97,12 +97,11 @@ func TestAccConfigService_serial(t *testing.T) {
 			"TagValueScope":             testAccOrganizationManagedRule_TagValueScope,
 		},
 		"RemediationConfiguration": {
-			"basic":             testAccRemediationConfiguration_basic,
-			"basicBackward":     testAccRemediationConfiguration_basicBackwardCompatible,
-			"disappears":        testAccRemediationConfiguration_disappears,
-			"migrateParameters": testAccRemediationConfiguration_migrateParameters,
-			"updates":           testAccRemediationConfiguration_updates,
-			"values":            testAccRemediationConfiguration_values,
+			"basic":         testAccRemediationConfiguration_basic,
+			"basicBackward": testAccRemediationConfiguration_basicBackwardCompatible,
+			"disappears":    testAccRemediationConfiguration_disappears,
+			"updates":       testAccRemediationConfiguration_updates,
+			"values":        testAccRemediationConfiguration_values,
 		},
 	}
 

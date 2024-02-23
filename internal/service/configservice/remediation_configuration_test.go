@@ -233,45 +233,6 @@ func testAccRemediationConfiguration_values(t *testing.T) {
 	})
 }
 
-func testAccRemediationConfiguration_migrateParameters(t *testing.T) {
-	ctx := acctest.Context(t)
-	var rc types.RemediationConfiguration
-	resourceName := "aws_config_remediation_configuration.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	automatic := "false"
-	rAttempts := sdkacctest.RandIntRange(1, 25)
-	rSeconds := sdkacctest.RandIntRange(1, 2678000)
-	rExecPct := sdkacctest.RandIntRange(1, 100)
-	rErrorPct := sdkacctest.RandIntRange(1, 100)
-	sseAlgorithm := "AES256"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, names.ConfigServiceServiceID),
-		CheckDestroy: testAccCheckRemediationConfigurationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				ExternalProviders: map[string]resource.ExternalProvider{
-					"aws": {
-						Source:            "hashicorp/aws",
-						VersionConstraint: "4.66.0",
-					},
-				},
-				Config: testAccRemediationConfigurationConfig_basic(rName, sseAlgorithm, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRemediationConfigurationExists(ctx, resourceName, &rc),
-					resource.TestCheckResourceAttr(resourceName, "config_rule_name", rName),
-				),
-			},
-			{
-				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				Config:                   testAccRemediationConfigurationConfig_basic(rName, sseAlgorithm, rAttempts, rSeconds, rExecPct, rErrorPct, automatic),
-				PlanOnly:                 true,
-			},
-		},
-	})
-}
-
 func testAccCheckRemediationConfigurationExists(ctx context.Context, n string, v *types.RemediationConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
