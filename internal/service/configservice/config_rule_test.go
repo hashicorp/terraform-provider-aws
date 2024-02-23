@@ -541,7 +541,7 @@ EOF
 }
 
 func testAccConfigRuleConfig_customLambda(rName string) string {
-	return acctest.ConfigCompose(testAccConfigRuleConfig_base(rName), acctest.ConfigLambdaBase(rName, rName, rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLambdaBase(rName, rName, rName), fmt.Sprintf(`
 resource "aws_config_config_rule" "test" {
   name                        = %[1]q
   description                 = "Terraform Acceptance tests"
