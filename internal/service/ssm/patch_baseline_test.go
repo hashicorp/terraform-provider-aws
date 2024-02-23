@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfssm "github.com/hashicorp/terraform-provider-aws/internal/service/ssm"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/jmespath/go-jmespath"
 )
 
@@ -37,7 +36,7 @@ func TestAccSSMPatchBaseline_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -119,7 +118,7 @@ func TestAccSSMPatchBaseline_tags(t *testing.T) {
 	resourceName := "aws_ssm_patch_baseline.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -165,7 +164,7 @@ func TestAccSSMPatchBaseline_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -188,7 +187,7 @@ func TestAccSSMPatchBaseline_operatingSystem(t *testing.T) {
 	resourceName := "aws_ssm_patch_baseline.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -233,7 +232,7 @@ func TestAccSSMPatchBaseline_approveUntilDateParam(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -283,7 +282,7 @@ func TestAccSSMPatchBaseline_sources(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -337,7 +336,7 @@ func TestAccSSMPatchBaseline_approvedPatchesNonSec(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -365,7 +364,7 @@ func TestAccSSMPatchBaseline_rejectPatchesAction(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -395,7 +394,7 @@ func testAccSSMPatchBaseline_deleteDefault(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
+		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -532,7 +531,7 @@ resource "aws_ssm_patch_baseline" "test" {
 	patch_filter {
 		key    = "CLASSIFICATION"
 		values = ["CriticalUpdates"]
-	  }
+	}
   }
 }
 `, rName)
@@ -581,7 +580,7 @@ resource "aws_ssm_patch_baseline" "test" {
 	patch_filter {
 		key    = "CLASSIFICATION"
 		values = ["CriticalUpdates"]
-	  }
+	}
   }
 }
 `, rName)
