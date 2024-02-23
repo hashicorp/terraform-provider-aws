@@ -189,7 +189,9 @@ func resourceOrganizationCustomPolicyRuleCreate(ctx context.Context, d *schema.R
 		input.OrganizationCustomPolicyRuleMetadata.TagValueScope = aws.String(v.(string))
 	}
 
-	_, err := conn.PutOrganizationConfigRule(ctx, input)
+	_, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func() (interface{}, error) {
+		return conn.PutOrganizationConfigRule(ctx, input)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ConfigService Organization Custom Policy Rule (%s): %s", name, err)
