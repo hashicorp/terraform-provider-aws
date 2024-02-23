@@ -15,7 +15,7 @@ func TestAccConfigService_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"ConfigRule": {
 			"basic":            testAccConfigRule_basic,
-			"ownerAws":         testAccConfigRule_ownerAws,
+			"ownerAws":         testAccConfigRule_ownerAWS,
 			"customlambda":     testAccConfigRule_customlambda,
 			"customPolicy":     testAccConfigRule_ownerPolicy,
 			"evaluationMode":   testAccConfigRule_evaluationMode,
@@ -28,7 +28,7 @@ func TestAccConfigService_serial(t *testing.T) {
 		"ConfigurationRecorderStatus": {
 			"basic":        testAccConfigurationRecorderStatus_basic,
 			"startEnabled": testAccConfigurationRecorderStatus_startEnabled,
-			"importBasic":  testAccConfigurationRecorderStatus_importBasic,
+			"disappears":   testAccConfigurationRecorderStatus_disappears,
 		},
 		"ConfigurationRecorder": {
 			"basic":          testAccConfigurationRecorder_basic,
@@ -50,9 +50,9 @@ func TestAccConfigService_serial(t *testing.T) {
 			"updateTemplateBody":        testAccConformancePack_updateTemplateBody,
 		},
 		"DeliveryChannel": {
-			"basic":       testAccDeliveryChannel_basic,
-			"allParams":   testAccDeliveryChannel_allParams,
-			"importBasic": testAccDeliveryChannel_importBasic,
+			"basic":      testAccDeliveryChannel_basic,
+			"allParams":  testAccDeliveryChannel_allParams,
+			"disappears": testAccDeliveryChannel_disappears,
 		},
 		"OrganizationConformancePack": {
 			"basic":                 testAccOrganizationConformancePack_basic,
@@ -101,7 +101,6 @@ func TestAccConfigService_serial(t *testing.T) {
 			"basicBackward":     testAccRemediationConfiguration_basicBackwardCompatible,
 			"disappears":        testAccRemediationConfiguration_disappears,
 			"migrateParameters": testAccRemediationConfiguration_migrateParameters,
-			"recreates":         testAccRemediationConfiguration_recreates,
 			"updates":           testAccRemediationConfiguration_updates,
 			"values":            testAccRemediationConfiguration_values,
 		},

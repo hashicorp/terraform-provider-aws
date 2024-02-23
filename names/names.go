@@ -41,6 +41,7 @@ const (
 	CodeGuruReviewerEndpointID           = "codeguru-reviewer"
 	CodeStarConnectionsEndpointID        = "codestar-connections"
 	ComprehendEndpointID                 = "comprehend"
+	ConfigServiceEndpointID              = "config"
 	ECREndpointID                        = "api.ecr"
 	EKSEndpointID                        = "eks"
 	EMREndpointID                        = "elasticmapreduce"

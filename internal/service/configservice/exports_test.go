@@ -9,7 +9,6 @@ var (
 	ResourceConfigRule                   = resourceConfigRule
 	ResourceConfigurationAggregator      = resourceConfigurationAggregator
 	ResourceConfigurationRecorder        = resourceConfigurationRecorder
-	ResourceConfigurationRecorderStatus  = resourceConfigurationRecorderStatus
 	ResourceConformancePack              = resourceConformancePack
 	ResourceDeliveryChannel              = resourceDeliveryChannel
 	ResourceOrganizationConformancePack  = resourceOrganizationConformancePack
@@ -20,9 +19,14 @@ var (
 
 	FindAggregateAuthorizationByTwoPartKey       = findAggregateAuthorizationByTwoPartKey
 	FindConfigRuleByName                         = findConfigRuleByName
+	FindConfigurationAggregatorByName            = findConfigurationAggregatorByName
 	FindConfigurationRecorderByName              = findConfigurationRecorderByName
 	FindConfigurationRecorderStatusByName        = findConfigurationRecorderStatusByName
 	FindConformancePackByName                    = findConformancePackByName
 	FindDeliveryChannelByName                    = findDeliveryChannelByName
+	FindOrganizationConformancePackByName        = findOrganizationConformancePackByName
+	FindOrganizationCustomPolicyRuleByName       = findOrganizationCustomPolicyRuleByName
+	FindOrganizationCustomRuleByName             = findOrganizationCustomRuleByName
+	FindOrganizationManagedRuleByName            = findOrganizationManagedRuleByName
 	FindRemediationConfigurationByConfigRuleName = findRemediationConfigurationByConfigRuleName
 )

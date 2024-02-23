@@ -200,7 +200,7 @@ func resourceConfigurationAggregatorDelete(ctx context.Context, d *schema.Resour
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Config Configuration Aggregator (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting ConfigService Configuration Aggregator (%s): %s", d.Id(), err)
 	}
 
 	return diags
