@@ -10,11 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securityhub/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -36,30 +36,31 @@ import (
 
 // @FrameworkResource(name="Automation Rule")
 // @Tags(identifierAttribute="arn")
-func newResourceAutomationRule(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceAutomationRule{}, nil
+func newAutomationRuleResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	return &automationRuleResource{}, nil
 }
 
 const (
 	ResNameAutomationRule = "Automation Rule"
 )
 
-type resourceAutomationRule struct {
+type automationRuleResource struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 }
 
-func (r *resourceAutomationRule) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_securityhub_automation_rule"
+func (r *automationRuleResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_securityhub_automation_rule"
 }
 
-func (r *resourceAutomationRule) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *automationRuleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"description": schema.StringAttribute{
 				Required: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"is_terminal": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -331,271 +332,287 @@ func MapFilterSchema() schema.SetNestedBlock {
 	}
 }
 
-func (r *resourceAutomationRule) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().SecurityHubClient(ctx)
-
-	var plan resourceAutomationRuleData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *automationRuleResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data automationRuleResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().SecurityHubClient(ctx)
+
 	in := &securityhub.CreateAutomationRuleInput{
-		Description: aws.String(plan.Description.ValueString()),
-		IsTerminal:  aws.Bool(plan.IsTerminal.ValueBool()),
-		RuleName:    aws.String(plan.RuleName.ValueString()),
-		RuleOrder:   aws.Int32(int32(plan.RuleOrder.ValueInt64())),
+		Description: aws.String(data.Description.ValueString()),
+		IsTerminal:  aws.Bool(data.IsTerminal.ValueBool()),
+		RuleName:    aws.String(data.RuleName.ValueString()),
+		RuleOrder:   aws.Int32(int32(data.RuleOrder.ValueInt64())),
 		Tags:        getTagsIn(ctx),
 	}
 
-	if !plan.Actions.IsNull() {
+	if !data.Actions.IsNull() {
 		var tfList []actionsData
-		resp.Diagnostics.Append(plan.Actions.ElementsAs(ctx, &tfList, false)...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(data.Actions.ElementsAs(ctx, &tfList, false)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
 		actions, d := expandActions(ctx, tfList)
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(d...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 		in.Actions = actions
 	}
 
-	if !plan.Criteria.IsNull() {
+	if !data.Criteria.IsNull() {
 		var tfList []criteriaData
-		resp.Diagnostics.Append(plan.Criteria.ElementsAs(ctx, &tfList, false)...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(data.Criteria.ElementsAs(ctx, &tfList, false)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
 		criteria, d := expandCriteria(ctx, tfList)
-		resp.Diagnostics.Append(d...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(d...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 		in.Criteria = criteria
 	}
 
-	if !plan.RuleStatus.IsNull() {
-		in.RuleStatus = awstypes.RuleStatus(plan.RuleStatus.ValueString())
+	if !data.RuleStatus.IsNull() {
+		in.RuleStatus = awstypes.RuleStatus(data.RuleStatus.ValueString())
 	}
 
 	out, err := conn.CreateAutomationRule(ctx, in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityHub, create.ErrActionCreating, ResNameAutomationRule, plan.RuleName.String(), err),
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SecurityHub, create.ErrActionCreating, ResNameAutomationRule, data.RuleName.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityHub, create.ErrActionCreating, ResNameAutomationRule, plan.RuleName.String(), nil),
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SecurityHub, create.ErrActionCreating, ResNameAutomationRule, data.RuleName.String(), nil),
 			errors.New("empty output").Error(),
 		)
 		return
 	}
 
-	plan.ARN = flex.StringToFramework(ctx, out.RuleArn)
-	plan.ID = flex.StringToFramework(ctx, out.RuleArn)
+	data.ARN = flex.StringToFramework(ctx, out.RuleArn)
+	data.ID = flex.StringToFramework(ctx, out.RuleArn)
 
 	// Read to get computed attributes omitted from create response
-	readOut, err := findAutomationRuleByARN(ctx, conn, plan.ARN.ValueString())
+	readOut, err := findAutomationRuleByARN(ctx, conn, data.ARN.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityHub, create.ErrActionReading, ResNameAutomationRule, plan.ID.String(), err),
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SecurityHub, create.ErrActionReading, ResNameAutomationRule, data.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	plan.RuleStatus = flex.StringValueToFramework(ctx, readOut.RuleStatus)
+	data.RuleStatus = flex.StringValueToFramework(ctx, readOut.RuleStatus)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceAutomationRule) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().SecurityHubClient(ctx)
-
-	var state resourceAutomationRuleData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *automationRuleResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data automationRuleResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findAutomationRuleByARN(ctx, conn, state.ID.ValueString())
+	conn := r.Meta().SecurityHubClient(ctx)
+
+	out, err := findAutomationRuleByARN(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityHub, create.ErrActionReading, ResNameAutomationRule, state.ID.String(), err),
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SecurityHub, create.ErrActionReading, ResNameAutomationRule, data.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	state.ARN = flex.StringToFramework(ctx, out.RuleArn)
-	state.Description = flex.StringToFramework(ctx, out.Description)
-	state.ID = flex.StringToFramework(ctx, out.RuleArn)
-	state.IsTerminal = flex.BoolToFramework(ctx, out.IsTerminal)
-	state.RuleName = flex.StringToFramework(ctx, out.RuleName)
-	state.RuleOrder = flex.Int32ToFramework(ctx, out.RuleOrder)
-	state.RuleStatus = flex.StringValueToFramework(ctx, out.RuleStatus)
+	data.ARN = flex.StringToFramework(ctx, out.RuleArn)
+	data.Description = flex.StringToFramework(ctx, out.Description)
+	data.ID = flex.StringToFramework(ctx, out.RuleArn)
+	data.IsTerminal = flex.BoolToFramework(ctx, out.IsTerminal)
+	data.RuleName = flex.StringToFramework(ctx, out.RuleName)
+	data.RuleOrder = flex.Int32ToFramework(ctx, out.RuleOrder)
+	data.RuleStatus = flex.StringValueToFramework(ctx, out.RuleStatus)
 
 	actions, d := flattenActions(ctx, out.Actions)
-	resp.Diagnostics.Append(d...)
-	state.Actions = actions
+	response.Diagnostics.Append(d...)
+	data.Actions = actions
 
 	criteria, d := flattenCriteria(ctx, out.Criteria)
-	resp.Diagnostics.Append(d...)
-	state.Criteria = criteria
+	response.Diagnostics.Append(d...)
+	data.Criteria = criteria
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceAutomationRule) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().SecurityHubClient(ctx)
-
-	var plan, state resourceAutomationRuleData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *automationRuleResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new automationRuleResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.Actions.Equal(state.Actions) ||
-		!plan.Criteria.Equal(state.Criteria) ||
-		!plan.Description.Equal(state.Description) ||
-		!plan.IsTerminal.Equal(state.IsTerminal) ||
-		!plan.RuleName.Equal(state.RuleName) ||
-		!plan.RuleOrder.Equal(state.RuleOrder) ||
-		!plan.RuleStatus.Equal(state.RuleStatus) {
+	conn := r.Meta().SecurityHubClient(ctx)
+
+	if !new.Actions.Equal(old.Actions) ||
+		!new.Criteria.Equal(old.Criteria) ||
+		!new.Description.Equal(old.Description) ||
+		!new.IsTerminal.Equal(old.IsTerminal) ||
+		!new.RuleName.Equal(old.RuleName) ||
+		!new.RuleOrder.Equal(old.RuleOrder) ||
+		!new.RuleStatus.Equal(old.RuleStatus) {
 		in := &securityhub.BatchUpdateAutomationRulesInput{}
 		automationRuleItem := awstypes.UpdateAutomationRulesRequestItem{
-			Description: aws.String(plan.Description.ValueString()),
-			IsTerminal:  aws.Bool(plan.IsTerminal.ValueBool()),
-			RuleArn:     aws.String(plan.ARN.ValueString()),
-			RuleName:    aws.String(plan.RuleName.ValueString()),
-			RuleOrder:   aws.Int32(int32(plan.RuleOrder.ValueInt64())),
+			Description: aws.String(new.Description.ValueString()),
+			IsTerminal:  aws.Bool(new.IsTerminal.ValueBool()),
+			RuleArn:     aws.String(new.ARN.ValueString()),
+			RuleName:    aws.String(new.RuleName.ValueString()),
+			RuleOrder:   aws.Int32(int32(new.RuleOrder.ValueInt64())),
 		}
 
-		if !plan.Actions.IsNull() {
+		if !new.Actions.IsNull() {
 			var tfList []actionsData
-			resp.Diagnostics.Append(plan.Actions.ElementsAs(ctx, &tfList, false)...)
-			if resp.Diagnostics.HasError() {
+			response.Diagnostics.Append(new.Actions.ElementsAs(ctx, &tfList, false)...)
+			if response.Diagnostics.HasError() {
 				return
 			}
 
 			actions, d := expandActions(ctx, tfList)
-			resp.Diagnostics.Append(d...)
-			if resp.Diagnostics.HasError() {
+			response.Diagnostics.Append(d...)
+			if response.Diagnostics.HasError() {
 				return
 			}
 			automationRuleItem.Actions = actions
 		}
 
-		if !plan.Criteria.IsNull() {
+		if !new.Criteria.IsNull() {
 			var tfList []criteriaData
-			resp.Diagnostics.Append(plan.Criteria.ElementsAs(ctx, &tfList, false)...)
-			if resp.Diagnostics.HasError() {
+			response.Diagnostics.Append(new.Criteria.ElementsAs(ctx, &tfList, false)...)
+			if response.Diagnostics.HasError() {
 				return
 			}
 
 			criteria, d := expandCriteria(ctx, tfList)
-			resp.Diagnostics.Append(d...)
-			if resp.Diagnostics.HasError() {
+			response.Diagnostics.Append(d...)
+			if response.Diagnostics.HasError() {
 				return
 			}
 			automationRuleItem.Criteria = criteria
 		}
 
-		if !plan.RuleStatus.IsNull() {
-			automationRuleItem.RuleStatus = awstypes.RuleStatus(plan.RuleStatus.ValueString())
+		if !new.RuleStatus.IsNull() {
+			automationRuleItem.RuleStatus = awstypes.RuleStatus(new.RuleStatus.ValueString())
 		}
 
 		in.UpdateAutomationRulesRequestItems = append(in.UpdateAutomationRulesRequestItems, automationRuleItem)
 
 		out, err := conn.BatchUpdateAutomationRules(ctx, in)
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.SecurityHub, create.ErrActionUpdating, ResNameAutomationRule, plan.ID.String(), err),
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.SecurityHub, create.ErrActionUpdating, ResNameAutomationRule, new.ID.String(), err),
 				err.Error(),
 			)
 			return
 		}
 		if out == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.SecurityHub, create.ErrActionUpdating, ResNameAutomationRule, plan.ID.String(), nil),
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.SecurityHub, create.ErrActionUpdating, ResNameAutomationRule, new.ID.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
 		}
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceAutomationRule) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().SecurityHubClient(ctx)
-
-	var state resourceAutomationRuleData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *automationRuleResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data automationRuleResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
+	conn := r.Meta().SecurityHubClient(ctx)
+
 	in := &securityhub.BatchDeleteAutomationRulesInput{
-		AutomationRulesArns: []string{state.ARN.ValueString()},
+		AutomationRulesArns: []string{data.ARN.ValueString()},
 	}
 
 	_, err := conn.BatchDeleteAutomationRules(ctx, in)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.SecurityHub, create.ErrActionDeleting, ResNameAutomationRule, state.ID.String(), err),
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.SecurityHub, create.ErrActionDeleting, ResNameAutomationRule, data.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 }
 
-func (r *resourceAutomationRule) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func (r *resourceAutomationRule) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
+func (r *automationRuleResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
 }
 
 func findAutomationRuleByARN(ctx context.Context, conn *securityhub.Client, arn string) (*awstypes.AutomationRulesConfig, error) {
-	in := &securityhub.BatchGetAutomationRulesInput{
+	input := &securityhub.BatchGetAutomationRulesInput{
 		AutomationRulesArns: []string{arn},
 	}
 
-	out, err := conn.BatchGetAutomationRules(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) || errs.MessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
+	return findAutomationRule(ctx, conn, input)
+}
 
+func findAutomationRule(ctx context.Context, conn *securityhub.Client, input *securityhub.BatchGetAutomationRulesInput) (*awstypes.AutomationRulesConfig, error) {
+	output, err := findAutomationRules(ctx, conn, input)
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findAutomationRules(ctx context.Context, conn *securityhub.Client, input *securityhub.BatchGetAutomationRulesInput) ([]awstypes.AutomationRulesConfig, error) {
+	output, err := conn.BatchGetAutomationRules(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
 
-	return tfresource.AssertSingleValueResult(out.Rules)
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Rules, nil
 }
 
 func expandActions(ctx context.Context, tfList []actionsData) ([]awstypes.AutomationRulesAction, diag.Diagnostics) {
@@ -1804,7 +1821,7 @@ func flattenDateRange(ctx context.Context, apiObject *awstypes.DateRange) (types
 	return listVal, diags
 }
 
-type resourceAutomationRuleData struct {
+type automationRuleResourceModel struct {
 	Actions     types.Set    `tfsdk:"actions"`
 	ARN         types.String `tfsdk:"arn"`
 	Criteria    types.List   `tfsdk:"criteria"`

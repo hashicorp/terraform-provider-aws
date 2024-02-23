@@ -5,7 +5,7 @@ package securityhub
 
 // Exports for use in tests only.
 var (
-	ResourceAutomationRule = newResourceAutomationRule
+	ResourceAutomationRule = newAutomationRuleResource
 
 	FindAutomationRuleByARN = findAutomationRuleByARN
 )

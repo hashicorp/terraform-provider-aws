@@ -5,7 +5,6 @@ package securityhub_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 	"time"
@@ -17,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -342,24 +340,22 @@ func testAccAutomationRule_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAutomationRuleExists(ctx context.Context, name string, automationRule *types.AutomationRulesConfig) resource.TestCheckFunc {
+func testAccCheckAutomationRuleExists(ctx context.Context, n string, v *types.AutomationRulesConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.SecurityHubServiceID, create.ErrActionCheckingExistence, tfsecurityhub.ResNameAutomationRule, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.SecurityHubServiceID, create.ErrActionCheckingExistence, tfsecurityhub.ResNameAutomationRule, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
-		resp, err := tfsecurityhub.FindAutomationRuleByARN(ctx, conn, rs.Primary.ID)
+
+		output, err := tfsecurityhub.FindAutomationRuleByARN(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
-			return create.Error(names.SecurityHubServiceID, create.ErrActionCheckingExistence, tfsecurityhub.ResNameAutomationRule, rs.Primary.ID, err)
+			return err
 		}
 
-		*automationRule = *resp
+		*v = *output
 
 		return nil
 	}
@@ -375,14 +371,16 @@ func testAccCheckAutomationRuleDestroy(ctx context.Context) resource.TestCheckFu
 			}
 
 			_, err := tfsecurityhub.FindAutomationRuleByARN(ctx, conn, rs.Primary.ID)
+
 			if tfresource.NotFound(err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.SecurityHubServiceID, create.ErrActionCheckingDestroyed, tfsecurityhub.ResNameAutomationRule, rs.Primary.ID, err)
+				continue
 			}
 
-			return create.Error(names.SecurityHubServiceID, create.ErrActionCheckingDestroyed, tfsecurityhub.ResNameAutomationRule, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Security Hub Automation Rule %s still exists", rs.Primary.ID)
 		}
 
 		return nil
