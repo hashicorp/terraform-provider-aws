@@ -23,9 +23,10 @@ func TestAccAppRunnerDeployment_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStartdeployment_basic(rName),
+				Config: testAccDeployment_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "operation_id"),
@@ -36,7 +37,7 @@ func TestAccAppRunnerDeployment_basic(t *testing.T) {
 	})
 }
 
-func testAccStartdeployment_basic(rName string) string {
+func testAccDeployment_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apprunner_service" "test" {
   service_name = %[1]q

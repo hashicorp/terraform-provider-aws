@@ -5,55 +5,66 @@ package apprunner
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apprunner"
-	apprunner_types "github.com/aws/aws-sdk-go-v2/service/apprunner/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource(name="Deployment")
-func newResourceDeployment(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceDeployment{}
+func newDeploymentResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &deploymentResource{}
+
 	r.SetDefaultCreateTimeout(20 * time.Minute)
-	r.SetDefaultReadTimeout(20 * time.Minute)
 
 	return r, nil
 }
 
-type resourceDeployment struct {
+type deploymentResource struct {
 	framework.ResourceWithConfigure
+	framework.WithNoUpdate
+	framework.WithNoOpDelete
 	framework.WithTimeouts
 }
 
-func (r *resourceDeployment) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_apprunner_deployment"
+func (r *deploymentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_apprunner_deployment"
 }
 
-const (
-	ResNameDeployment = "Deployment"
-)
-
-func (r *resourceDeployment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *deploymentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"service_arn": schema.StringAttribute{
-				Required: true,
-			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"operation_id": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"service_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"status": schema.StringAttribute{
 				Computed: true,
@@ -62,116 +73,135 @@ func (r *resourceDeployment) Schema(ctx context.Context, req resource.SchemaRequ
 		Blocks: map[string]schema.Block{
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
-				Delete: true,
 			}),
 		},
 	}
 }
 
-func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().AppRunnerClient(ctx)
-
-	var plan resourceDeploymentData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+func (r *deploymentResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+	var data deploymentResourceModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	in := &apprunner.StartDeploymentInput{
-		ServiceArn: aws.String(plan.ServiceArn.ValueString()),
+	conn := r.Meta().AppRunnerClient(ctx)
+
+	serviceARN := data.ServiceARN.ValueString()
+	input := &apprunner.StartDeploymentInput{
+		ServiceArn: aws.String(serviceARN),
 	}
 
-	out, err := conn.StartDeployment(ctx, in)
+	output, err := conn.StartDeployment(ctx, input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppRunner, create.ErrActionCreating, ResNameDeployment, plan.ServiceArn.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("starting App Runner Deployment (%s)", serviceARN), err.Error())
+
 		return
 	}
 
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppRunner, create.ErrActionCreating, ResNameDeployment, plan.ServiceArn.String(), nil),
-			"no output",
-		)
-		return
-	}
+	// Set values for unknowns.
+	operationID := aws.ToString(output.OperationId)
+	data.OperationID = types.StringValue(operationID)
+	data.setID()
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	_, err = waitDeploymentSucceeded(ctx, conn, plan.ServiceArn.ValueString(), createTimeout)
+	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
+
+	op, err := waitDeploymentSucceeded(ctx, conn, serviceARN, operationID, createTimeout)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppRunner, create.ErrActionWaitingForCreation, ResNameDeployment, plan.ServiceArn.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("waiting for App Runner Deployment (%s/%s)", serviceARN, operationID), err.Error())
+
 		return
 	}
 
-	plan.ID = flex.StringToFramework(ctx, out.OperationId)
-	plan.Status = flex.StringValueToFramework(ctx, apprunner_types.OperationStatusSucceeded)
-	plan.OperationID = flex.StringToFramework(ctx, out.OperationId)
+	// Set values for unknowns.
+	data.Status = fwflex.StringValueToFramework(ctx, op.Status)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, data)...)
 }
 
-func (r *resourceDeployment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().AppRunnerClient(ctx)
-
-	var state resourceDeploymentData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+func (r *deploymentResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+	var data deploymentResourceModel
+	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findDeploymentOperationByServiceARN(ctx, conn, state.ServiceArn.ValueString())
+	conn := r.Meta().AppRunnerClient(ctx)
+
+	serviceARN, operationID := data.ServiceARN.ValueString(), data.OperationID.ValueString()
+	output, err := findOperationByTwoPartKey(ctx, conn, serviceARN, operationID)
+
 	if tfresource.NotFound(err) {
+		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
+
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.AppRunner, create.ErrActionReading, ResNameDeployment, state.ServiceArn.String(), err),
-			err.Error(),
-		)
+		resp.Diagnostics.AddError(fmt.Sprintf("reading App Runner Deployment (%s/%s)", serviceARN, operationID), err.Error())
+
 		return
 	}
 
-	state.OperationID = flex.StringToFramework(ctx, out.Id)
-	state.Status = flex.StringValueToFramework(ctx, out.Status)
+	data.Status = fwflex.StringValueToFramework(ctx, output.Status)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
-func (r *resourceDeployment) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-}
-
-// Delete does not need to explicitly call resp.State.RemoveResource() as this is automatically handled by the framework.
-func (r *resourceDeployment) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-}
-
-func waitDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, arn string, timeout time.Duration) (*apprunner_types.OperationSummary, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:        []string{},
-		Target:         enum.Slice(apprunner_types.OperationStatusSucceeded),
-		Refresh:        statusDeployment(ctx, conn, arn),
-		Timeout:        timeout,
-		PollInterval:   30 * time.Second,
-		NotFoundChecks: 30,
+func findOperationByTwoPartKey(ctx context.Context, conn *apprunner.Client, serviceARN, operationID string) (*awstypes.OperationSummary, error) {
+	input := &apprunner.ListOperationsInput{
+		ServiceArn: aws.String(serviceARN),
 	}
 
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*apprunner_types.OperationSummary); ok {
-		return output, err
-	}
-
-	return nil, err
+	return findOperation(ctx, conn, input, func(v *awstypes.OperationSummary) bool {
+		return aws.ToString(v.Id) == operationID
+	})
 }
 
-func statusDeployment(ctx context.Context, conn *apprunner.Client, arn string) retry.StateRefreshFunc {
+func findOperation(ctx context.Context, conn *apprunner.Client, input *apprunner.ListOperationsInput, filter tfslices.Predicate[*awstypes.OperationSummary]) (*awstypes.OperationSummary, error) {
+	output, err := findOperations(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findOperations(ctx context.Context, conn *apprunner.Client, input *apprunner.ListOperationsInput, filter tfslices.Predicate[*awstypes.OperationSummary]) ([]awstypes.OperationSummary, error) {
+	var output []awstypes.OperationSummary
+
+	pages := apprunner.NewListOperationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.OperationSummaryList {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func statusOperation(ctx context.Context, conn *apprunner.Client, serviceARN, operationID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findDeploymentOperationByServiceARN(ctx, conn, arn)
+		output, err := findOperationByTwoPartKey(ctx, conn, serviceARN, operationID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -185,48 +215,33 @@ func statusDeployment(ctx context.Context, conn *apprunner.Client, arn string) r
 	}
 }
 
-func findDeploymentOperationByServiceARN(ctx context.Context, conn *apprunner.Client, arn string) (*apprunner_types.OperationSummary, error) {
-	input := &apprunner.ListOperationsInput{
-		ServiceArn: aws.String(arn),
+func waitDeploymentSucceeded(ctx context.Context, conn *apprunner.Client, serviceARN, operationID string, timeout time.Duration) (*awstypes.OperationSummary, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:        enum.Slice(awstypes.OperationStatusPending, awstypes.OperationStatusInProgress),
+		Target:         enum.Slice(awstypes.OperationStatusSucceeded),
+		Refresh:        statusOperation(ctx, conn, serviceARN, operationID),
+		Timeout:        timeout,
+		PollInterval:   30 * time.Second,
+		NotFoundChecks: 30,
 	}
 
-	output, err := conn.ListOperations(ctx, input)
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if err != nil {
-		return nil, err
+	if output, ok := outputRaw.(*awstypes.OperationSummary); ok {
+		return output, err
 	}
 
-	if len(output.OperationSummaryList) == 0 {
-		return nil, &retry.NotFoundError{
-			Message:     "deployment operation not found",
-			LastRequest: input,
-		}
-	}
-
-	var operation apprunner_types.OperationSummary
-	var found bool
-	for _, op := range output.OperationSummaryList {
-		if aws.ToString(op.TargetArn) == arn {
-			operation = op
-			found = true
-			break
-		}
-	}
-
-	if !found {
-		return nil, &retry.NotFoundError{
-			Message:     "deployment operation not found",
-			LastRequest: input,
-		}
-	}
-
-	return &operation, nil
+	return nil, err
 }
 
-type resourceDeploymentData struct {
-	ServiceArn  types.String   `tfsdk:"service_arn"`
+type deploymentResourceModel struct {
 	ID          types.String   `tfsdk:"id"`
 	OperationID types.String   `tfsdk:"operation_id"`
+	ServiceARN  fwtypes.ARN    `tfsdk:"service_arn"`
 	Status      types.String   `tfsdk:"status"`
 	Timeouts    timeouts.Value `tfsdk:"timeouts"`
+}
+
+func (data *deploymentResourceModel) setID() {
+	data.ID = data.OperationID
 }
