@@ -359,6 +359,10 @@ func TestAccMWAAEnvironment_pluginsS3ObjectVersion(t *testing.T) {
 }
 
 func TestAccMWAAEnvironment_updateAirflowVersionMinor(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
 	ctx := acctest.Context(t)
 	var environment1, environment2 awstypes.Environment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

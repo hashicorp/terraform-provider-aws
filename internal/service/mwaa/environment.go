@@ -76,6 +76,13 @@ func ResourceEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"endpoint_management": {
+				Type:             schema.TypeString,
+				ForceNew:         true,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.EndpointManagement](),
+			},
 			"environment_class": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -317,6 +324,10 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.AirflowVersion = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("endpoint_management"); ok {
+		input.EndpointManagement = awstypes.EndpointManagement(v.(string))
+	}
+
 	if v, ok := d.GetOk("environment_class"); ok {
 		input.EnvironmentClass = aws.String(v.(string))
 	}
@@ -419,6 +430,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("arn", environment.Arn)
 	d.Set("created_at", aws.ToTime(environment.CreatedAt).String())
 	d.Set("dag_s3_path", environment.DagS3Path)
+	d.Set("endpoint_management", environment.EndpointManagement)
 	d.Set("environment_class", environment.EnvironmentClass)
 	d.Set("execution_role_arn", environment.ExecutionRoleArn)
 	d.Set("kms_key", environment.KmsKey)
