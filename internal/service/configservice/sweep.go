@@ -44,6 +44,11 @@ func RegisterSweepers() {
 		F:    sweepConfigurationRecorder,
 	})
 
+	resource.AddTestSweepers("aws_config_conformance_pack", &resource.Sweeper{
+		Name: "aws_config_conformance_pack",
+		F:    sweepConformancePacks,
+	})
+
 	resource.AddTestSweepers("aws_config_delivery_channel", &resource.Sweeper{
 		Name: "aws_config_delivery_channel",
 		F:    sweepDeliveryChannels,
@@ -238,6 +243,47 @@ func sweepConfigurationRecorder(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping ConfigService Configuration Recorders (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepConformancePacks(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.ConfigServiceClient(ctx)
+	input := &configservice.DescribeConformancePacksInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := configservice.NewDescribeConformancePacksPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping ConfigService Conformance Pack sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing ConfigService Conformance Packs (%s): %w", region, err)
+		}
+
+		for _, v := range page.ConformancePackDetails {
+			r := resourceConformancePack()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.ConformancePackName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping ConfigService Conformance Packs (%s): %w", region, err)
 	}
 
 	return nil
