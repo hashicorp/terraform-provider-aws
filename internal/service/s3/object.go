@@ -280,7 +280,10 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
 
-	arn := newObjectARN(meta.(*conns.AWSClient).Partition, bucket, key)
+	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition, bucket, key)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
+	}
 	d.Set("arn", arn.String())
 
 	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
@@ -779,38 +782,4 @@ func expandDefaultTags(ctx context.Context, tfMap map[string]interface{}) *tftag
 	}
 
 	return data
-}
-
-func newObjectARN(partition string, bucket, key string) arn.ARN {
-	return arn.ARN{
-		Partition: partition,
-		Service:   "s3",
-		Resource:  fmt.Sprintf("%s/%s", bucket, key),
-	}
-}
-
-type objectARN struct {
-	arn.ARN
-	Bucket string
-	Key    string
-}
-
-func parseObjectARN(s string) (objectARN, error) {
-	arn, err := arn.Parse(s)
-	if err != nil {
-		return objectARN{}, err
-	}
-
-	result := objectARN{
-		ARN: arn,
-	}
-
-	parts := strings.SplitN(arn.Resource, "/", 2)
-	if len(parts) != 2 {
-		return objectARN{}, fmt.Errorf("S3 Object ARN: unexpected resource section: %s", arn.Resource)
-	}
-	result.Bucket = parts[0]
-	result.Key = parts[1]
-
-	return result, nil
 }

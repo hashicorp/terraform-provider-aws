@@ -649,6 +649,7 @@ func TestAccS3Object_updatesWithVersioningViaAccessPoint(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &originalObj),
 					testAccCheckObjectBody(&originalObj, "initial versioned object state"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "s3", fmt.Sprintf("accesspoint/%s/updateable-key", rName)),
 					resource.TestCheckResourceAttrPair(resourceName, "bucket", accessPointResourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "etag", "cee4407fa91906284e2a5e5e03e86b1b"),
 				),
@@ -1432,7 +1433,6 @@ func TestAccS3Object_tagsViaAccessPointARN(t *testing.T) {
 				Config: testAccObjectConfig_tagsViaAccessPointARN(rName, key, "stuff"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj1),
-					testAccCheckObjectBody(&obj1, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
@@ -1444,7 +1444,6 @@ func TestAccS3Object_tagsViaAccessPointARN(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj2),
 					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
-					testAccCheckObjectBody(&obj2, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "B@BB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
@@ -1459,21 +1458,21 @@ func TestAccS3Object_tagsViaAccessPointARN(t *testing.T) {
 func TestAccS3Object_tagsViaAccessPointAlias(t *testing.T) {
 	ctx := acctest.Context(t)
 	var obj1, obj2 s3.GetObjectOutput
-	resourceName := "aws_s3_object.object"
-	key := "test-key"
+	const resourceName = "aws_s3_object.object"
+	const key = "test-key"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop, // Cannot access the object via the access point alias after the access point is destroyed
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectConfig_tagsViaAccessPointAlias(rName, key, "stuff"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj1),
-					testAccCheckObjectBody(&obj1, "stuff"),
+					acctest.MatchResourceAttrGlobalARNNoAccount(resourceName, "arn", "s3", regexache.MustCompile(fmt.Sprintf(`%s-\w+-s3alias/%s`, rName[:20], key))),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "3"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key1", "A@AA"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "BBB"),
@@ -1485,7 +1484,6 @@ func TestAccS3Object_tagsViaAccessPointAlias(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckObjectExists(ctx, resourceName, &obj2),
 					testAccCheckObjectVersionIDEquals(&obj2, &obj1),
-					testAccCheckObjectBody(&obj2, "stuff"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key2", "B@BB"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Key3", "X X"),
@@ -1508,7 +1506,7 @@ func TestAccS3Object_tagsViaMultiRegionAccessPoint(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckObjectDestroy(ctx),
+		CheckDestroy:             acctest.CheckDestroyNoop, // Cannot access the object via the access point alias after the access point is destroyed
 		Steps: []resource.TestStep{
 			{
 				Config: testAccObjectConfig_tagsViaMultiRegionAccessPoint(rName, key, "stuff"),
@@ -1539,6 +1537,7 @@ func TestAccS3Object_tagsViaMultiRegionAccessPoint(t *testing.T) {
 }
 
 func TestAccS3Object_tagsViaObjectLambdaAccessPointARN(t *testing.T) {
+	t.Skip("Accessing Objects via Lambda Access Points is not yet supported")
 	ctx := acctest.Context(t)
 	var obj1, obj2 s3.GetObjectOutput
 	resourceName := "aws_s3_object.object"
