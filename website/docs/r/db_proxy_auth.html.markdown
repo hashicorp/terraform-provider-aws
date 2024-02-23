@@ -6,7 +6,7 @@ description: |-
   Terraform resource for managing an AWS RDS (Relational Database) Proxy Auth Association.
 ---
 
-# Resource: aws_rds_proxy_auth_item
+# Resource: aws_db_proxy_auth_item
 
 Terraform resource for managing an AWS RDS (Relational Database) Proxy Auth Association. For additional information, see the [RDS Proxy Guide](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/rds-proxy.html).
 
