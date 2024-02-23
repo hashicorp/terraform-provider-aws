@@ -35,14 +35,10 @@ import (
 	// types.<Type Name>.
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	"github.com/aws/aws-sdk-go-v2/service/costoptimizationhub/types"
-	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -70,70 +66,6 @@ import (
 // 7. Helper functions (exists, destroy, check, etc.)
 // 8. Functions that return Terraform configurations
 
-// TIP: ==== UNIT TESTS ====
-// This is an example of a unit test. Its name is not prefixed with
-// "TestAcc" like an acceptance test.
-//
-// Unlike acceptance tests, unit tests do not access AWS and are focused on a
-// function (or method). Because of this, they are quick and cheap to run.
-//
-// In designing a resource's implementation, isolate complex bits from AWS bits
-// so that they can be tested through a unit test. We encourage more unit tests
-// in the provider.
-//
-// Cut and dry functions using well-used patterns, like typical flatteners and
-// expanders, don't need unit testing. However, if they are complex or
-// intricate, they should be unit tested.
-func TestEnrollmentExampleUnitTest(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
-		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-			got, err := tfcostoptimizationhub.FunctionFromResource(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
 // TIP: ==== ACCEPTANCE TESTS ====
 // This is an example of a basic acceptance test. This should test as much of
 // standard functionality of the resource as possible, and test importing, if
@@ -149,40 +81,34 @@ func TestAccCostOptimizationHubEnrollment_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var enrollment costoptimizationhub.DescribeEnrollmentResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var les_out costoptimizationhub.ListEnrollmentStatusesOutput
+	//var es_in costoptimizationhub.ListEnrollmentStatusesInput
+	//var up_out costoptimizationhub.UpdateEnrollmentStatusOutput
+	//var up_in costoptimizationhub.UpdatePreferencesInput
+
 	resourceName := "aws_costoptimizationhub_enrollment.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.CostOptimizationHubEndpointID)
-			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CostOptimizationHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CostOptimizationHub),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnrollmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnrollmentConfig_basic(rName),
+				Config: testAccEnrollmentConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnrollmentExists(ctx, resourceName, &enrollment),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "costoptimizationhub", regexache.MustCompile(`enrollment:+.`)),
+					testAccCheckEnrollmentExists(ctx, resourceName, &les_out),
+					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", "false"),
+					resource.TestCheckResourceAttr(resourceName, "member_account_discount_visibility", "All"),
+					resource.TestCheckResourceAttr(resourceName, "savings_estimation_mode", "BeforeDiscounts"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -194,22 +120,19 @@ func TestAccCostOptimizationHubEnrollment_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var enrollment costoptimizationhub.DescribeEnrollmentResponse
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	var enrollment costoptimizationhub.ListEnrollmentStatusesOutput
 	resourceName := "aws_costoptimizationhub_enrollment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.CostOptimizationHubEndpointID)
-			testAccPreCheck(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CostOptimizationHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CostOptimizationHub),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnrollmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnrollmentConfig_basic(rName, testAccEnrollmentVersionNewer),
+				Config: testAccEnrollmentConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnrollmentExists(ctx, resourceName, &enrollment),
 					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
@@ -235,27 +158,24 @@ func testAccCheckEnrollmentDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := &costoptimizationhub.DescribeEnrollmentInput{
-				EnrollmentId: aws.String(rs.Primary.ID),
-			}
-			_, err := conn.DescribeEnrollment(ctx, &costoptimizationhub.DescribeEnrollmentInput{
-				EnrollmentId: aws.String(rs.Primary.ID),
-			})
+			les_out, err := conn.ListEnrollmentStatuses(ctx, &costoptimizationhub.ListEnrollmentStatusesInput{})
 			if errs.IsA[*types.ResourceNotFoundException](err) {
 				return nil
 			}
 			if err != nil {
 				return create.Error(names.CostOptimizationHub, create.ErrActionCheckingDestroyed, tfcostoptimizationhub.ResNameEnrollment, rs.Primary.ID, err)
 			}
+			if les_out.Items[0].Status == "Active" {
+				return create.Error(names.CostOptimizationHub, create.ErrActionCheckingDestroyed, tfcostoptimizationhub.ResNameEnrollment, rs.Primary.ID, errors.New("not destroyed"))
+			}
 
-			return create.Error(names.CostOptimizationHub, create.ErrActionCheckingDestroyed, tfcostoptimizationhub.ResNameEnrollment, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckEnrollmentExists(ctx context.Context, name string, enrollment *costoptimizationhub.DescribeEnrollmentResponse) resource.TestCheckFunc {
+func testAccCheckEnrollmentExists(ctx context.Context, name string, enrollment *costoptimizationhub.ListEnrollmentStatusesOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -267,67 +187,45 @@ func testAccCheckEnrollmentExists(ctx context.Context, name string, enrollment *
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CostOptimizationHubClient(ctx)
-		resp, err := conn.DescribeEnrollment(ctx, &costoptimizationhub.DescribeEnrollmentInput{
-			EnrollmentId: aws.String(rs.Primary.ID),
-		})
+		les_out, err := conn.ListEnrollmentStatuses(ctx, &costoptimizationhub.ListEnrollmentStatusesInput{})
 
-		if err != nil {
+		if err != nil || les_out.Items[0].Status != "Active" {
 			return create.Error(names.CostOptimizationHub, create.ErrActionCheckingExistence, tfcostoptimizationhub.ResNameEnrollment, rs.Primary.ID, err)
 		}
 
-		*enrollment = *resp
+		*enrollment = *les_out
 
 		return nil
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CostOptimizationHubClient(ctx)
+// func testAccPreCheck(ctx context.Context, t *testing.T) {
+// 	conn := acctest.Provider.Meta().(*conns.AWSClient).CostOptimizationHubClient(ctx)
 
-	input := &costoptimizationhub.ListEnrollmentsInput{}
-	_, err := conn.ListEnrollments(ctx, input)
+// 	input := &costoptimizationhub.ListEnrollmentsInput{}
+// 	_, err := conn.ListEnrollments(ctx, input)
 
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
+// 	if acctest.PreCheckSkipError(err) {
+// 		t.Skipf("skipping acceptance testing: %s", err)
+// 	}
+// 	if err != nil {
+// 		t.Fatalf("unexpected PreCheck error: %s", err)
+// 	}
+// }
 
-func testAccCheckEnrollmentNotRecreated(before, after *costoptimizationhub.DescribeEnrollmentResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.EnrollmentId), aws.ToString(after.EnrollmentId); before != after {
-			return create.Error(names.CostOptimizationHub, create.ErrActionCheckingNotRecreated, tfcostoptimizationhub.ResNameEnrollment, aws.ToString(before.EnrollmentId), errors.New("recreated"))
-		}
+// func testAccCheckEnrollmentNotRecreated(before, after *costoptimizationhub.DescribeEnrollmentResponse) resource.TestCheckFunc {
+// 	return func(s *terraform.State) error {
+// 		if before, after := aws.ToString(before.EnrollmentId), aws.ToString(after.EnrollmentId); before != after {
+// 			return create.Error(names.CostOptimizationHub, create.ErrActionCheckingNotRecreated, tfcostoptimizationhub.ResNameEnrollment, aws.ToString(before.EnrollmentId), errors.New("recreated"))
+// 		}
 
-		return nil
-	}
-}
+// 		return nil
+// 	}
+// }
 
-func testAccEnrollmentConfig_basic(rName, version string) string {
-	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
-}
-
-resource "aws_costoptimizationhub_enrollment" "test" {
-  enrollment_name             = %[1]q
-  engine_type             = "ActiveCostOptimizationHub"
-  engine_version          = %[2]q
-  host_instance_type      = "costoptimizationhub.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
-
-  logs {
-    general = true
-  }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
-  }
-}
-`, rName, version)
+func testAccEnrollmentConfig_basic() string {
+	return `
+	resource "aws_costoptimizationhub_enrollment" "test" {
+	}	
+`
 }
