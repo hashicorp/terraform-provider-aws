@@ -20,10 +20,8 @@ func TestAccAppRunnerDeployment_basic(t *testing.T) {
 	resourceName := "aws_apprunner_deployment.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerEndpointID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppRunnerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -42,6 +40,7 @@ func testAccStartdeployment_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_apprunner_service" "test" {
   service_name = %[1]q
+
   source_configuration {
     auto_deployments_enabled = false
     image_repository {
