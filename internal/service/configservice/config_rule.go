@@ -309,6 +309,10 @@ func resourceConfigRuleDelete(ctx context.Context, d *schema.ResourceData, meta 
 		})
 	})
 
+	if errs.IsA[*types.NoSuchConfigRuleException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ConfigService Config Rule (%s): %s", d.Id(), err)
 	}
