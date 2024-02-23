@@ -49,7 +49,7 @@ func TestNewObjectARN_AccessPoint(t *testing.T) {
 	expectedARN := arn.ARN{
 		Partition: "test-partition",
 		Service:   "s3",
-		Region:    "us-west-2",
+		Region:    "us-west-2", //lintignore:AWSAT003
 		AccountID: "123456789012",
 		Resource:  "accesspoint/test-accesspoint/test-key",
 	}
@@ -57,7 +57,7 @@ func TestNewObjectARN_AccessPoint(t *testing.T) {
 	apARN := arn.ARN{
 		Partition: "test-partition",
 		Service:   "s3",
-		Region:    "us-west-2",
+		Region:    "us-west-2", //lintignore:AWSAT003
 		AccountID: "123456789012",
 		Resource:  "accesspoint/test-accesspoint",
 	}
@@ -173,18 +173,18 @@ func TestParseObjectARN_AccessPoint(t *testing.T) {
 		ARN: arn.ARN{
 			Partition: "test-partition",
 			Service:   "s3",
-			Region:    "us-west-2",
+			Region:    "us-west-2", //lintignore:AWSAT003
 			AccountID: "123456789012",
 			Resource:  "accesspoint/test-accesspoint/test-key",
 		},
-		Bucket: "arn:test-partition:s3:us-west-2:123456789012:accesspoint/test-accesspoint",
+		Bucket: "arn:test-partition:s3:us-west-2:123456789012:accesspoint/test-accesspoint", //lintignore:AWSAT003
 		Key:    "test-key",
 	}
 
 	apARN := arn.ARN{
 		Partition: "test-partition",
 		Service:   "s3",
-		Region:    "us-west-2",
+		Region:    "us-west-2", //lintignore:AWSAT003
 		AccountID: "123456789012",
 		Resource:  "accesspoint/test-accesspoint",
 	}
