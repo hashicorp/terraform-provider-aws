@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccConfigRule_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func testAccConfigRule_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -72,7 +73,7 @@ func testAccConfigRule_evaluationMode(t *testing.T) {
 `
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -113,7 +114,7 @@ func testAccConfigRule_ownerAws(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -156,7 +157,7 @@ func testAccConfigRule_customlambda(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -201,7 +202,7 @@ func testAccConfigRule_ownerPolicy(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -240,7 +241,7 @@ func testAccConfigRule_Scope_TagKey(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -272,7 +273,7 @@ func testAccConfigRule_Scope_TagKey_Empty(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -294,7 +295,7 @@ func testAccConfigRule_Scope_TagValue(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -326,7 +327,7 @@ func testAccConfigRule_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -374,7 +375,7 @@ func testAccConfigRule_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, configservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConfigServiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{

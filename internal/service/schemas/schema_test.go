@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfschemas "github.com/hashicorp/terraform-provider-aws/internal/service/schemas"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -100,7 +101,7 @@ func TestAccSchemasSchema_openAPI3(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, schemas.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -137,7 +138,7 @@ func TestAccSchemasSchema_jsonSchemaDraftv4(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, schemas.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -174,7 +175,7 @@ func TestAccSchemasSchema_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, schemas.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -198,7 +199,7 @@ func TestAccSchemasSchema_contentDescription(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, schemas.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -245,7 +246,7 @@ func TestAccSchemasSchema_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, schemas.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, schemas.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SchemasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
 		Steps: []resource.TestStep{

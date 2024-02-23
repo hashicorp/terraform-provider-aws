@@ -29,7 +29,7 @@ func testAccLandingZone_basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			testAccPreCheckNoLandingZone(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
 		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -63,7 +63,7 @@ func testAccLandingZone_disappears(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			testAccPreCheckNoLandingZone(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -90,7 +90,7 @@ func testAccLandingZone_tags(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			testAccPreCheckNoLandingZone(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
 		CheckDestroy:             testAccCheckLandingZoneDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

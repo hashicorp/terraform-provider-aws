@@ -7,14 +7,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/route53resolver"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(route53resolver.EndpointsID, testAccErrorCheckSkipRoute53)
+	acctest.RegisterServiceErrorCheckFunc(names.Route53ResolverServiceID, testAccErrorCheckSkipRoute53)
 }
 
 func TestAccRoute53ResolverRuleDataSource_basic(t *testing.T) {
@@ -28,7 +28,7 @@ func TestAccRoute53ResolverRuleDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -81,7 +81,7 @@ func TestAccRoute53ResolverRuleDataSource_resolverEndpointIdWithTags(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -119,7 +119,7 @@ func TestAccRoute53ResolverRuleDataSource_sharedByMe(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
@@ -157,7 +157,7 @@ func TestAccRoute53ResolverRuleDataSource_sharedWithMe(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, route53resolver.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ResolverServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{

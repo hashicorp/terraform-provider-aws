@@ -24,7 +24,7 @@ import (
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(tfelbv2.AwsSdkId, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.ELBV2ServiceID, testAccErrorCheckSkip)
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -76,7 +76,7 @@ func TestAccELBV2LoadBalancer_ALB_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -120,7 +120,7 @@ func TestAccELBV2LoadBalancer_NLB_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -159,7 +159,7 @@ func TestAccELBV2LoadBalancer_LoadBalancerType_gateway(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGatewayLoadBalancer(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -194,7 +194,7 @@ func TestAccELBV2LoadBalancer_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -218,7 +218,7 @@ func TestAccELBV2LoadBalancer_nameGenerated(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -253,7 +253,7 @@ func TestAccELBV2LoadBalancer_nameGeneratedForZeroValue(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -277,7 +277,7 @@ func TestAccELBV2LoadBalancer_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -312,7 +312,7 @@ func TestAccELBV2LoadBalancer_duplicateName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -339,7 +339,7 @@ func TestAccELBV2LoadBalancer_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -390,7 +390,7 @@ func TestAccELBV2LoadBalancer_ipv6SubnetMapping(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -421,7 +421,7 @@ func TestAccELBV2LoadBalancer_LoadBalancerTypeGateway_enableCrossZoneLoadBalanci
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckGatewayLoadBalancer(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -466,7 +466,7 @@ func TestAccELBV2LoadBalancer_ALB_outpost(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -506,7 +506,7 @@ func TestAccELBV2LoadBalancer_networkLoadBalancerEIP(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -543,7 +543,7 @@ func TestAccELBV2LoadBalancer_NLB_privateIPv4Address(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -574,7 +574,7 @@ func TestAccELBV2LoadBalancer_backwardsCompatibility(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -610,7 +610,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateCrossZone(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -652,7 +652,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateHTTP2(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -694,7 +694,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDropInvalidHeaderFie
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -736,7 +736,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatePreserveHostHeader(t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -778,7 +778,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateDeletionProtection(t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -820,7 +820,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updateWAFFailOpen(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -864,7 +864,7 @@ func TestAccELBV2LoadBalancer_updateIPAddressType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -898,7 +898,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_updatedSecurityGroups(t *t
 			// GovCloud Regions don't always have 3 AZs.
 			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -935,7 +935,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnet(t *testing.T) {
 			// GovCloud Regions don't always have 3 AZs.
 			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -972,7 +972,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_deleteSubnet(t *testing.T)
 			// GovCloud Regions don't always have 3 AZs.
 			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1009,7 +1009,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_addSubnetMapping(t *testin
 			// GovCloud Regions don't always have 3 AZs.
 			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1046,7 +1046,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_deleteSubnetMapping(t *tes
 			// GovCloud Regions don't always have 3 AZs.
 			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1082,7 +1082,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_noSecurityGroup(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1113,7 +1113,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_accessLogs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1186,7 +1186,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_accessLogsPrefix(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1246,7 +1246,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_connectionLogs(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1319,7 +1319,7 @@ func TestAccELBV2LoadBalancer_ApplicationLoadBalancer_connectionLogsPrefix(t *te
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1385,7 +1385,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_accessLogs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1465,7 +1465,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_accessLogsPrefix(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1530,7 +1530,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateDNSRecordClientRoutingPo
 			// GovCloud doesn't support dns_record_client_routing_policy.
 			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1572,7 +1572,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_updateSecurityGroups(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1629,7 +1629,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_enforcePrivateLink(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1694,7 +1694,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_addSubnet(t *testing.T) {
 			// GovCloud Regions don't always have 3 AZs.
 			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1729,7 +1729,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnet(t *testing.T) {
 			// GovCloud Regions don't always have 3 AZs.
 			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1764,7 +1764,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_addSubnetMapping(t *testing.T)
 			// GovCloud Regions don't always have 3 AZs.
 			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1801,7 +1801,7 @@ func TestAccELBV2LoadBalancer_NetworkLoadBalancer_deleteSubnetMapping(t *testing
 			// GovCloud Regions don't always have 3 AZs.
 			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1834,7 +1834,7 @@ func TestAccELBV2LoadBalancer_updateDesyncMitigationMode(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1879,7 +1879,7 @@ func TestAccELBV2LoadBalancer_ALB_updateTLSVersionAndCipherSuite(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1924,7 +1924,7 @@ func TestAccELBV2LoadBalancer_ALB_updateXffHeaderProcessingMode(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1969,7 +1969,7 @@ func TestAccELBV2LoadBalancer_ALB_updateXffClientPort(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, tfelbv2.AwsSdkId),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoadBalancerDestroy(ctx),
 		Steps: []resource.TestStep{

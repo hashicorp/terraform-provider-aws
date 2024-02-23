@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccImageBuilderContainerRecipe_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccImageBuilderContainerRecipe_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -74,7 +75,7 @@ func TestAccImageBuilderContainerRecipe_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -97,7 +98,7 @@ func TestAccImageBuilderContainerRecipe_component(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -126,7 +127,7 @@ func TestAccImageBuilderContainerRecipe_componentParameter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -158,7 +159,7 @@ func TestAccImageBuilderContainerRecipe_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -185,7 +186,7 @@ func TestAccImageBuilderContainerRecipe_dockerfileTemplateURI(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -213,7 +214,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -242,7 +243,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -272,7 +273,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -302,7 +303,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -333,7 +334,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -364,7 +365,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -394,7 +395,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -424,7 +425,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -454,7 +455,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -484,7 +485,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -513,7 +514,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_BlockDeviceMapping
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -543,7 +544,7 @@ func TestAccImageBuilderContainerRecipe_InstanceConfiguration_Image(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -572,7 +573,7 @@ func TestAccImageBuilderContainerRecipe_kmsKeyID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -599,7 +600,7 @@ func TestAccImageBuilderContainerRecipe_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -644,7 +645,7 @@ func TestAccImageBuilderContainerRecipe_workingDirectory(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -671,7 +672,7 @@ func TestAccImageBuilderContainerRecipe_platformOverride(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, imagebuilder.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContainerRecipeDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcognitoidentity "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCognitoIdentityPoolProviderPrincipalTags_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolProviderPrincipalTagsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -50,7 +51,7 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_updated(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolProviderPrincipalTagsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -87,7 +88,7 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolProviderPrincipalTagsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -110,7 +111,7 @@ func TestAccCognitoIdentityPoolProviderPrincipalTags_oidc(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolProviderPrincipalTagsDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -25,7 +25,7 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObjectLambdaAccessPointPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -55,7 +55,7 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObjectLambdaAccessPointPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,7 +79,7 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_Disappears_accessPoint(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObjectLambdaAccessPointPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -102,7 +102,7 @@ func TestAccS3ControlObjectLambdaAccessPointPolicy_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckObjectLambdaAccessPointPolicyDestroy(ctx),
 		Steps: []resource.TestStep{

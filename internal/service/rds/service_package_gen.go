@@ -56,8 +56,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_db_parameter_group",
 		},
 		{
-			Factory:  DataSourceProxy,
+			Factory:  dataSourceProxy,
 			TypeName: "aws_db_proxy",
+			Name:     "DB Proxy",
 		},
 		{
 			Factory:  DataSourceSnapshot,
@@ -66,8 +67,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceSubnetGroup,
+			Factory:  dataSourceSubnetGroup,
 			TypeName: "aws_db_subnet_group",
+			Name:     "DB Subnet Group",
 		},
 		{
 			Factory:  DataSourceCertificate,
@@ -107,7 +109,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceEventSubscription,
+			Factory:  resourceEventSubscription,
 			TypeName: "aws_db_event_subscription",
 			Name:     "Event Subscription",
 			Tags: &types.ServicePackageResourceTags{
@@ -147,7 +149,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceProxy,
+			Factory:  resourceProxy,
 			TypeName: "aws_db_proxy",
 			Name:     "DB Proxy",
 			Tags: &types.ServicePackageResourceTags{
@@ -155,11 +157,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceProxyDefaultTargetGroup,
+			Factory:  resourceProxyDefaultTargetGroup,
 			TypeName: "aws_db_proxy_default_target_group",
+			Name:     "DB Proxy Default Target Group",
 		},
 		{
-			Factory:  ResourceProxyEndpoint,
+			Factory:  resourceProxyEndpoint,
 			TypeName: "aws_db_proxy_endpoint",
 			Name:     "DB Proxy Endpoint",
 			Tags: &types.ServicePackageResourceTags{
@@ -167,8 +170,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceProxyTarget,
+			Factory:  resourceProxyTarget,
 			TypeName: "aws_db_proxy_target",
+			Name:     "DB Proxy Target",
 		},
 		{
 			Factory:  ResourceSnapshot,
@@ -187,7 +191,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSubnetGroup,
+			Factory:  resourceSubnetGroup,
 			TypeName: "aws_db_subnet_group",
 			Name:     "DB Subnet Group",
 			Tags: &types.ServicePackageResourceTags{

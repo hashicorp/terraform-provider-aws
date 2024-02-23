@@ -14,12 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccVerifiedAccessGroup_basic(t *testing.T) {
+func testAccVerifiedAccessGroup_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessGroup
 	resourceName := "aws_verifiedaccess_group.test"
@@ -27,6 +28,7 @@ func TestAccVerifiedAccessGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccess(ctx, t)
 		},
@@ -61,7 +63,7 @@ func TestAccVerifiedAccessGroup_basic(t *testing.T) {
 	})
 }
 
-func TestAccVerifiedAccessGroup_kms(t *testing.T) {
+func testAccVerifiedAccessGroup_kms(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessGroup
 	resourceName := "aws_verifiedaccess_group.test"
@@ -70,6 +72,7 @@ func TestAccVerifiedAccessGroup_kms(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccess(ctx, t)
 		},
@@ -96,7 +99,7 @@ func TestAccVerifiedAccessGroup_kms(t *testing.T) {
 	})
 }
 
-func TestAccVerifiedAccessGroup_updateKMS(t *testing.T) {
+func testAccVerifiedAccessGroup_updateKMS(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessGroup
 	resourceName := "aws_verifiedaccess_group.test"
@@ -106,6 +109,7 @@ func TestAccVerifiedAccessGroup_updateKMS(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccess(ctx, t)
 		},
@@ -155,7 +159,7 @@ func TestAccVerifiedAccessGroup_updateKMS(t *testing.T) {
 	})
 }
 
-func TestAccVerifiedAccessGroup_disappears(t *testing.T) {
+func testAccVerifiedAccessGroup_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessGroup
 	resourceName := "aws_verifiedaccess_group.test"
@@ -163,6 +167,7 @@ func TestAccVerifiedAccessGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccess(ctx, t)
 		},
@@ -182,7 +187,7 @@ func TestAccVerifiedAccessGroup_disappears(t *testing.T) {
 	})
 }
 
-func TestAccVerifiedAccessGroup_tags(t *testing.T) {
+func testAccVerifiedAccessGroup_tags(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessGroup
 	resourceName := "aws_verifiedaccess_group.test"
@@ -190,6 +195,7 @@ func TestAccVerifiedAccessGroup_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccess(ctx, t)
 		},
@@ -232,7 +238,7 @@ func TestAccVerifiedAccessGroup_tags(t *testing.T) {
 	})
 }
 
-func TestAccVerifiedAccessGroup_policy(t *testing.T) {
+func testAccVerifiedAccessGroup_policy(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessGroup
 	resourceName := "aws_verifiedaccess_group.test"
@@ -242,6 +248,7 @@ func TestAccVerifiedAccessGroup_policy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccess(ctx, t)
 		},
@@ -267,7 +274,7 @@ func TestAccVerifiedAccessGroup_policy(t *testing.T) {
 	})
 }
 
-func TestAccVerifiedAccessGroup_updatePolicy(t *testing.T) {
+func testAccVerifiedAccessGroup_updatePolicy(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessGroup
 	resourceName := "aws_verifiedaccess_group.test"
@@ -278,6 +285,7 @@ func TestAccVerifiedAccessGroup_updatePolicy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccess(ctx, t)
 		},
@@ -316,7 +324,7 @@ func TestAccVerifiedAccessGroup_updatePolicy(t *testing.T) {
 		},
 	})
 }
-func TestAccVerifiedAccessGroup_setPolicy(t *testing.T) {
+func testAccVerifiedAccessGroup_setPolicy(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v types.VerifiedAccessGroup
 	resourceName := "aws_verifiedaccess_group.test"
@@ -326,6 +334,7 @@ func TestAccVerifiedAccessGroup_setPolicy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckVerifiedAccessSynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckVerifiedAccess(ctx, t)
 		},

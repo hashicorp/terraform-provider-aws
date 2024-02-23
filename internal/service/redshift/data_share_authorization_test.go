@@ -33,7 +33,7 @@ func TestAccRedshiftDataShareAuthorization_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, redshift.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataShareAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -65,7 +65,7 @@ func TestAccRedshiftDataShareAuthorization_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, redshift.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataShareAuthorizationDestroy(ctx),
 		Steps: []resource.TestStep{

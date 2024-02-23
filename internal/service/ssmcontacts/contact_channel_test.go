@@ -38,7 +38,7 @@ func testContactChannel_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -85,7 +85,7 @@ func testContactChannel_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -117,7 +117,7 @@ func testContactChannel_contactID(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -171,7 +171,7 @@ func testContactChannel_deliveryAddress(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -225,7 +225,7 @@ func testContactChannel_name(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactChannelDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -274,7 +274,7 @@ func testContactChannel_type(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccContactPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMContactsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckContactChannelDestroy(ctx),
 		Steps: []resource.TestStep{

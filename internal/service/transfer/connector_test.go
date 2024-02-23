@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccTransferConnector_basic(t *testing.T) {
@@ -30,7 +31,7 @@ func TestAccTransferConnector_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -73,7 +74,7 @@ func TestAccTransferConnector_sftpConfig(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -107,7 +108,7 @@ func TestAccTransferConnector_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -135,7 +136,7 @@ func TestAccTransferConnector_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
