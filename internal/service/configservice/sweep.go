@@ -140,7 +140,7 @@ func (s *configurationRecorderSweeper) Delete(ctx context.Context, timeout time.
 		return err
 	}
 
-	r = resourceConfigurationAggregator()
+	r = resourceConfigurationRecorder()
 	d = r.Data(nil)
 	d.SetId(s.name)
 
