@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfserverlessrepo "github.com/hashicorp/terraform-provider-aws/internal/service/serverlessrepo"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Since aws_serverlessapplicationrepository_cloudformation_stack creates CloudFormation stacks,
@@ -36,7 +37,7 @@ func TestAccServerlessRepoCloudFormationStack_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServerlessRepoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCloudFormationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -88,7 +89,7 @@ func TestAccServerlessRepoCloudFormationStack_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServerlessRepoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAMIDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -118,7 +119,7 @@ func TestAccServerlessRepoCloudFormationStack_versioned(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServerlessRepoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCloudFormationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -175,7 +176,7 @@ func TestAccServerlessRepoCloudFormationStack_paired(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServerlessRepoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCloudFormationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -202,7 +203,7 @@ func TestAccServerlessRepoCloudFormationStack_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServerlessRepoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCloudFormationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -250,7 +251,7 @@ func TestAccServerlessRepoCloudFormationStack_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, serverlessrepo.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServerlessRepoServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCloudFormationDestroy(ctx),
 		Steps: []resource.TestStep{

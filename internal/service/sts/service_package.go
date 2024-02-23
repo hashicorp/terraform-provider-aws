@@ -32,7 +32,9 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 	return sts_sdkv2.NewFromConfig(cfg, func(o *sts_sdkv2.Options) {
 		if endpoint := config["endpoint"].(string); endpoint != "" {
 			o.BaseEndpoint = aws_sdkv2.String(endpoint)
-		} else if stsRegion := config["sts_region"].(string); stsRegion != "" {
+		}
+
+		if stsRegion := config["sts_region"].(string); stsRegion != "" {
 			o.Region = stsRegion
 		}
 	}), nil

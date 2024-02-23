@@ -4,37 +4,26 @@
 package toproto
 
 import (
-	"fmt"
-
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5/internal/tfplugin5"
 )
 
-func CallFunction_Response(in *tfprotov5.CallFunctionResponse) (*tfplugin5.CallFunction_Response, error) {
+func CallFunction_Response(in *tfprotov5.CallFunctionResponse) *tfplugin5.CallFunction_Response {
 	if in == nil {
-		return nil, nil
-	}
-
-	diags, err := Diagnostics(in.Diagnostics)
-
-	if err != nil {
-		return nil, err
+		return nil
 	}
 
 	resp := &tfplugin5.CallFunction_Response{
-		Diagnostics: diags,
+		Diagnostics: Diagnostics(in.Diagnostics),
+		Result:      DynamicValue(in.Result),
 	}
 
-	if in.Result != nil {
-		resp.Result = DynamicValue(in.Result)
-	}
-
-	return resp, nil
+	return resp
 }
 
-func Function(in *tfprotov5.Function) (*tfplugin5.Function, error) {
+func Function(in *tfprotov5.Function) *tfplugin5.Function {
 	if in == nil {
-		return nil, nil
+		return nil
 	}
 
 	resp := &tfplugin5.Function{
@@ -42,51 +31,21 @@ func Function(in *tfprotov5.Function) (*tfplugin5.Function, error) {
 		DescriptionKind:    StringKind(in.DescriptionKind),
 		DeprecationMessage: in.DeprecationMessage,
 		Parameters:         make([]*tfplugin5.Function_Parameter, 0, len(in.Parameters)),
+		Return:             Function_Return(in.Return),
 		Summary:            in.Summary,
+		VariadicParameter:  Function_Parameter(in.VariadicParameter),
 	}
 
-	for position, parameter := range in.Parameters {
-		if parameter == nil {
-			return nil, fmt.Errorf("missing function parameter definition at position: %d", position)
-		}
-
-		functionParameter, err := Function_Parameter(parameter)
-
-		if err != nil {
-			return nil, fmt.Errorf("unable to marshal function parameter at position %d: %w", position, err)
-		}
-
-		resp.Parameters = append(resp.Parameters, functionParameter)
+	for _, parameter := range in.Parameters {
+		resp.Parameters = append(resp.Parameters, Function_Parameter(parameter))
 	}
 
-	if in.Return == nil {
-		return nil, fmt.Errorf("missing function return definition")
-	}
-
-	functionReturn, err := Function_Return(in.Return)
-
-	if err != nil {
-		return nil, fmt.Errorf("unable to marshal function return: %w", err)
-	}
-
-	resp.Return = functionReturn
-
-	if in.VariadicParameter != nil {
-		variadicParameter, err := Function_Parameter(in.VariadicParameter)
-
-		if err != nil {
-			return nil, fmt.Errorf("unable to marshal variadic function parameter: %w", err)
-		}
-
-		resp.VariadicParameter = variadicParameter
-	}
-
-	return resp, nil
+	return resp
 }
 
-func Function_Parameter(in *tfprotov5.FunctionParameter) (*tfplugin5.Function_Parameter, error) {
+func Function_Parameter(in *tfprotov5.FunctionParameter) *tfplugin5.Function_Parameter {
 	if in == nil {
-		return nil, nil
+		return nil
 	}
 
 	resp := &tfplugin5.Function_Parameter{
@@ -95,72 +54,39 @@ func Function_Parameter(in *tfprotov5.FunctionParameter) (*tfplugin5.Function_Pa
 		Description:        in.Description,
 		DescriptionKind:    StringKind(in.DescriptionKind),
 		Name:               in.Name,
+		Type:               CtyType(in.Type),
 	}
 
-	if in.Type == nil {
-		return nil, fmt.Errorf("missing function parameter type definition")
-	}
-
-	ctyType, err := CtyType(in.Type)
-
-	if err != nil {
-		return resp, fmt.Errorf("error marshaling function parameter type: %w", err)
-	}
-
-	resp.Type = ctyType
-
-	return resp, nil
+	return resp
 }
 
-func Function_Return(in *tfprotov5.FunctionReturn) (*tfplugin5.Function_Return, error) {
+func Function_Return(in *tfprotov5.FunctionReturn) *tfplugin5.Function_Return {
 	if in == nil {
-		return nil, nil
+		return nil
 	}
 
-	resp := &tfplugin5.Function_Return{}
-
-	if in.Type == nil {
-		return nil, fmt.Errorf("missing function return type definition")
+	resp := &tfplugin5.Function_Return{
+		Type: CtyType(in.Type),
 	}
 
-	ctyType, err := CtyType(in.Type)
-
-	if err != nil {
-		return resp, fmt.Errorf("error marshaling function return type: %w", err)
-	}
-
-	resp.Type = ctyType
-
-	return resp, nil
+	return resp
 }
 
-func GetFunctions_Response(in *tfprotov5.GetFunctionsResponse) (*tfplugin5.GetFunctions_Response, error) {
+func GetFunctions_Response(in *tfprotov5.GetFunctionsResponse) *tfplugin5.GetFunctions_Response {
 	if in == nil {
-		return nil, nil
-	}
-
-	diags, err := Diagnostics(in.Diagnostics)
-
-	if err != nil {
-		return nil, err
+		return nil
 	}
 
 	resp := &tfplugin5.GetFunctions_Response{
-		Diagnostics: diags,
+		Diagnostics: Diagnostics(in.Diagnostics),
 		Functions:   make(map[string]*tfplugin5.Function, len(in.Functions)),
 	}
 
-	for name, functionPtr := range in.Functions {
-		function, err := Function(functionPtr)
-
-		if err != nil {
-			return nil, fmt.Errorf("error marshaling function definition for %q: %w", name, err)
-		}
-
-		resp.Functions[name] = function
+	for name, function := range in.Functions {
+		resp.Functions[name] = Function(function)
 	}
 
-	return resp, nil
+	return resp
 }
 
 func GetMetadata_FunctionMetadata(in *tfprotov5.FunctionMetadata) *tfplugin5.GetMetadata_FunctionMetadata {
@@ -168,7 +94,9 @@ func GetMetadata_FunctionMetadata(in *tfprotov5.FunctionMetadata) *tfplugin5.Get
 		return nil
 	}
 
-	return &tfplugin5.GetMetadata_FunctionMetadata{
+	resp := &tfplugin5.GetMetadata_FunctionMetadata{
 		Name: in.Name,
 	}
+
+	return resp
 }

@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_s3_bucket_ownership_controls")
-func ResourceBucketOwnershipControls() *schema.Resource {
+// @SDKResource("aws_s3_bucket_ownership_controls", name="Bucket Ownership Controls")
+func resourceBucketOwnershipControls() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketOwnershipControlsCreate,
 		ReadWithoutTimeout:   resourceBucketOwnershipControlsRead,

@@ -13,6 +13,7 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 
@@ -20,7 +21,6 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
-	"golang.org/x/exp/slices"
 )
 
 func main() {
@@ -76,16 +76,9 @@ func main() {
 			SDKResources:         v.sdkResources,
 		}
 
-		if l.ClientSDKV1() != "" {
-			s.SDKVersion = "1"
+		s.SDKVersion = l.SDKVersion()
+		if l.ClientSDKV1() {
 			s.GoV1ClientTypeName = l.GoV1ClientTypeName()
-		}
-		if l.ClientSDKV2() != "" {
-			if l.ClientSDKV1() != "" {
-				s.SDKVersion = "1,2"
-			} else {
-				s.SDKVersion = "2"
-			}
 		}
 
 		sort.SliceStable(s.FrameworkDataSources, func(i, j int) bool {

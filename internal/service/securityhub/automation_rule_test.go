@@ -31,7 +31,7 @@ func testAccAutomationRule_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutomationRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -58,7 +58,7 @@ func testAccAutomationRule_full(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutomationRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -121,7 +121,7 @@ func testAccAutomationRule_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutomationRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -145,7 +145,7 @@ func testAccAutomationRule_stringFilters(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutomationRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -184,7 +184,7 @@ func testAccAutomationRule_numberFilters(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutomationRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -223,7 +223,7 @@ func testAccAutomationRule_dateFilters(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutomationRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -263,7 +263,7 @@ func testAccAutomationRule_mapFilters(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutomationRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -304,7 +304,7 @@ func testAccAutomationRule_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAutomationRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -346,17 +346,17 @@ func testAccCheckAutomationRuleExists(ctx context.Context, name string, automati
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.SecurityHubEndpointID, create.ErrActionCheckingExistence, tfsecurityhub.ResNameAutomationRule, name, errors.New("not found"))
+			return create.Error(names.SecurityHubServiceID, create.ErrActionCheckingExistence, tfsecurityhub.ResNameAutomationRule, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.SecurityHubEndpointID, create.ErrActionCheckingExistence, tfsecurityhub.ResNameAutomationRule, name, errors.New("not set"))
+			return create.Error(names.SecurityHubServiceID, create.ErrActionCheckingExistence, tfsecurityhub.ResNameAutomationRule, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
 		resp, err := tfsecurityhub.FindAutomationRuleByARN(ctx, conn, rs.Primary.ID)
 		if err != nil {
-			return create.Error(names.SecurityHubEndpointID, create.ErrActionCheckingExistence, tfsecurityhub.ResNameAutomationRule, rs.Primary.ID, err)
+			return create.Error(names.SecurityHubServiceID, create.ErrActionCheckingExistence, tfsecurityhub.ResNameAutomationRule, rs.Primary.ID, err)
 		}
 
 		*automationRule = *resp
@@ -379,10 +379,10 @@ func testAccCheckAutomationRuleDestroy(ctx context.Context) resource.TestCheckFu
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.SecurityHubEndpointID, create.ErrActionCheckingDestroyed, tfsecurityhub.ResNameAutomationRule, rs.Primary.ID, err)
+				return create.Error(names.SecurityHubServiceID, create.ErrActionCheckingDestroyed, tfsecurityhub.ResNameAutomationRule, rs.Primary.ID, err)
 			}
 
-			return create.Error(names.SecurityHubEndpointID, create.ErrActionCheckingDestroyed, tfsecurityhub.ResNameAutomationRule, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.SecurityHubServiceID, create.ErrActionCheckingDestroyed, tfsecurityhub.ResNameAutomationRule, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil

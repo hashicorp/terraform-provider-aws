@@ -914,7 +914,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("in_progress_validation_batches", output.Distribution.InProgressInvalidationBatches)
 	d.Set("etag", output.ETag)
 	d.Set("arn", output.Distribution.ARN)
-	d.Set("hosted_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID())
+	d.Set("hosted_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
 
 	return diags
 }

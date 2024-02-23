@@ -30,14 +30,7 @@ func TestExpand(t *testing.T) {
 	testTimeStr := "2013-09-25T09:34:01Z"
 	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr))
 
-	testCases := []struct {
-		Context    context.Context //nolint:containedctx // testing context use
-		TestName   string
-		Source     any
-		Target     any
-		WantErr    bool
-		WantTarget any
-	}{
+	testCases := autoFlexTestCases{
 		{
 			TestName: "nil Source and Target",
 			WantErr:  true,
@@ -297,32 +290,7 @@ func TestExpand(t *testing.T) {
 		},
 	}
 
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-
-			testCtx := ctx //nolint:contextcheck // simplify use of testing context
-			if testCase.Context != nil {
-				testCtx = testCase.Context
-			}
-
-			err := Expand(testCtx, testCase.Source, testCase.Target)
-			gotErr := err != nil
-
-			if gotErr != testCase.WantErr {
-				t.Errorf("gotErr = %v, wantErr = %v", gotErr, testCase.WantErr)
-			}
-
-			if gotErr {
-				if !testCase.WantErr {
-					t.Errorf("err = %q", err)
-				}
-			} else if diff := cmp.Diff(testCase.Target, testCase.WantTarget); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
-			}
-		})
-	}
+	runAutoExpandTestCases(ctx, t, testCases)
 }
 
 func TestExpandGeneric(t *testing.T) {
@@ -330,14 +298,7 @@ func TestExpandGeneric(t *testing.T) {
 
 	ctx := context.Background()
 
-	testCases := []struct {
-		Context    context.Context //nolint:containedctx // testing context use
-		TestName   string
-		Source     any
-		Target     any
-		WantErr    bool
-		WantTarget any
-	}{
+	testCases := autoFlexTestCases{
 		{
 			TestName:   "single list Source and *struct Target",
 			Source:     &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF01{Field1: types.StringValue("a")})},
@@ -464,7 +425,7 @@ func TestExpandGeneric(t *testing.T) {
 		{
 			TestName: "map string",
 			Source: &TestFlexTF11{
-				FieldInner: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+				FieldInner: fwtypes.NewMapValueOfMust[types.String](ctx, map[string]attr.Value{
 					"x": types.StringValue("y"),
 				}),
 			},
@@ -476,68 +437,10 @@ func TestExpandGeneric(t *testing.T) {
 			},
 		},
 		{
-			TestName: "object map",
-			Source: &TestFlexTF12{
-				FieldInner: fwtypes.NewObjectMapValueMapOf[TestFlexTF01](ctx, map[string]TestFlexTF01{
-					"x": {
-						Field1: types.StringValue("a"),
-					}},
-				),
-			},
-			Target: &TestFlexAWS14{},
-			WantTarget: &TestFlexAWS14{
-				FieldInner: map[string]TestFlexAWS01{
-					"x": {
-						Field1: "a",
-					},
-				},
-			},
-		},
-		{
-			TestName: "object map ptr target",
-			Source: &TestFlexTF12{
-				FieldInner: fwtypes.NewObjectMapValueMapOf[TestFlexTF01](ctx,
-					map[string]TestFlexTF01{
-						"x": {
-							Field1: types.StringValue("a"),
-						},
-					},
-				),
-			},
-			Target: &TestFlexAWS15{},
-			WantTarget: &TestFlexAWS15{
-				FieldInner: map[string]*TestFlexAWS01{
-					"x": {
-						Field1: "a",
-					},
-				},
-			},
-		},
-		{
-			TestName: "object map ptr source and target",
-			Source: &TestFlexTF13{
-				FieldInner: fwtypes.NewObjectMapValuePtrMapOf[TestFlexTF01](ctx,
-					map[string]*TestFlexTF01{
-						"x": {
-							Field1: types.StringValue("a"),
-						},
-					},
-				),
-			},
-			Target: &TestFlexAWS15{},
-			WantTarget: &TestFlexAWS15{
-				FieldInner: map[string]*TestFlexAWS01{
-					"x": {
-						Field1: "a",
-					},
-				},
-			},
-		},
-		{
 			TestName: "nested string map",
 			Source: &TestFlexTF14{
 				FieldOuter: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF11{
-					FieldInner: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
+					FieldInner: fwtypes.NewMapValueOfMust[basetypes.StringValue](ctx, map[string]attr.Value{
 						"x": types.StringValue("y"),
 					}),
 				}),
@@ -547,30 +450,6 @@ func TestExpandGeneric(t *testing.T) {
 				FieldOuter: TestFlexAWS13{
 					FieldInner: map[string]string{
 						"x": "y",
-					},
-				},
-			},
-		},
-		{
-			TestName: "nested object map",
-			Source: &TestFlexTF15{
-				FieldOuter: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF12{
-					FieldInner: fwtypes.NewObjectMapValueMapOf[TestFlexTF01](ctx,
-						map[string]TestFlexTF01{
-							"x": {
-								Field1: types.StringValue("a"),
-							},
-						},
-					),
-				}),
-			},
-			Target: &TestFlexAWS17{},
-			WantTarget: &TestFlexAWS17{
-				FieldOuter: TestFlexAWS14{
-					FieldInner: map[string]TestFlexAWS01{
-						"x": {
-							Field1: "a",
-						},
 					},
 				},
 			},
@@ -725,53 +604,121 @@ func TestExpandGeneric(t *testing.T) {
 				},
 			},
 		},
+	}
+
+	runAutoExpandTestCases(ctx, t, testCases)
+}
+
+func TestExpandSimpleSingleNestedBlock(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field1 types.String `tfsdk:"field1"`
+		Field2 types.Int64  `tfsdk:"field2"`
+	}
+	type aws01 struct {
+		Field1 *string
+		Field2 int64
+	}
+
+	type tf02 struct {
+		Field1 fwtypes.ObjectValueOf[tf01] `tfsdk:"field1"`
+	}
+	type aws02 struct {
+		Field1 *aws01
+	}
+	type aws03 struct {
+		Field1 aws01
+	}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
 		{
-			TestName: "complex nesting",
-			Source: &TestFlexComplexNestTF01{
-				DialogAction: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF02{
-					Type:                fwtypes.StringEnumValue(TestEnumList),
-					SlotToElicit:        types.StringValue("x"),
-					SuppressNextMessage: types.BoolValue(true),
-				}),
-				Intent: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF03{
-					Name: types.StringValue("x"),
-					Slots: fwtypes.NewObjectMapValueMapOf[TestFlexComplexNestTF04](ctx, map[string]TestFlexComplexNestTF04{
-						"x": {
-							Shape: fwtypes.StringEnumValue(TestEnumList),
-							Value: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexComplexNestTF05{
-								InterpretedValue: types.StringValue("y"),
-							}),
-						},
-					}),
-				}),
-				SessionAttributes: fwtypes.NewMapValueOf(ctx, map[string]basetypes.StringValue{
-					"x": basetypes.NewStringValue("y"),
-				}),
-			},
-			Target: &TestFlexComplexNestAWS01{},
-			WantTarget: &TestFlexComplexNestAWS01{
-				DialogAction: &TestFlexComplexNestAWS02{
-					Type:                TestEnumList,
-					SlotToElicit:        aws.String("x"),
-					SuppressNextMessage: aws.Bool(true),
-				},
-				Intent: &TestFlexComplexNestAWS03{
-					Name: aws.String("x"),
-					Slots: map[string]TestFlexComplexNestAWS04{
-						"x": {
-							Shape: TestEnumList,
-							Value: &TestFlexComplexNestAWS05{
-								InterpretedValue: aws.String("y"),
-							},
-						},
-					},
-				},
-				SessionAttributes: map[string]string{
-					"x": "y",
-				},
-			},
+			TestName:   "single nested block pointer",
+			Source:     &tf02{Field1: fwtypes.NewObjectValueOf[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
+			Target:     &aws02{},
+			WantTarget: &aws02{Field1: &aws01{Field1: aws.String("a"), Field2: 1}},
+		},
+		{
+			TestName:   "single nested block nil",
+			Source:     &tf02{Field1: fwtypes.NewObjectValueOfNull[tf01](ctx)},
+			Target:     &aws02{},
+			WantTarget: &aws02{},
+		},
+		{
+			TestName:   "single nested block value",
+			Source:     &tf02{Field1: fwtypes.NewObjectValueOf[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
+			Target:     &aws03{},
+			WantTarget: &aws03{Field1: aws01{Field1: aws.String("a"), Field2: 1}},
 		},
 	}
+	runAutoExpandTestCases(ctx, t, testCases)
+}
+
+func TestExpandComplexSingleNestedBlock(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field1 types.Bool                        `tfsdk:"field1"`
+		Field2 fwtypes.ListValueOf[types.String] `tfsdk:"field2"`
+	}
+	type aws01 struct {
+		Field1 bool
+		Field2 []string
+	}
+
+	type tf02 struct {
+		Field1 fwtypes.ObjectValueOf[tf01] `tfsdk:"field1"`
+	}
+	type aws02 struct {
+		Field1 *aws01
+	}
+
+	type tf03 struct {
+		Field1 fwtypes.ObjectValueOf[tf02] `tfsdk:"field1"`
+	}
+	type aws03 struct {
+		Field1 *aws02
+	}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName: "single nested block pointer",
+			Source: &tf03{
+				Field1: fwtypes.NewObjectValueOf[tf02](
+					ctx,
+					&tf02{
+						Field1: fwtypes.NewObjectValueOf[tf01](
+							ctx,
+							&tf01{
+								Field1: types.BoolValue(true),
+								Field2: fwtypes.NewListValueOfMust[types.String](ctx, []attr.Value{types.StringValue("a"), types.StringValue("b")}),
+							},
+						),
+					},
+				),
+			},
+			Target:     &aws03{},
+			WantTarget: &aws03{Field1: &aws02{Field1: &aws01{Field1: true, Field2: []string{"a", "b"}}}},
+		},
+	}
+	runAutoExpandTestCases(ctx, t, testCases)
+}
+
+type autoFlexTestCase struct {
+	Context    context.Context //nolint:containedctx // testing context use
+	TestName   string
+	Source     any
+	Target     any
+	WantErr    bool
+	WantTarget any
+}
+
+type autoFlexTestCases []autoFlexTestCase
+
+func runAutoExpandTestCases(ctx context.Context, t *testing.T, testCases autoFlexTestCases) {
+	t.Helper()
 
 	for _, testCase := range testCases {
 		testCase := testCase

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccPortfolioShare_basic(t *testing.T) {
@@ -31,7 +32,7 @@ func testAccPortfolioShare_basic(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckPortfolioShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -85,7 +86,7 @@ func testAccPortfolioShare_sharePrincipals(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckPortfolioShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -128,7 +129,7 @@ func testAccPortfolioShare_organizationalUnit(t *testing.T) {
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPortfolioShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -167,7 +168,7 @@ func testAccPortfolioShare_disappears(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 			acctest.PreCheckPartitionHasService(t, servicecatalog.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckPortfolioShareDestroy(ctx),
 		Steps: []resource.TestStep{

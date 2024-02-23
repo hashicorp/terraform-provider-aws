@@ -22,7 +22,7 @@ func TestAccKafkaKafkaVersionDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -43,7 +43,7 @@ func TestAccKafkaKafkaVersionDataSource_preferred(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{

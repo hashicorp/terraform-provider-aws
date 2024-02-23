@@ -30,7 +30,7 @@ func TestAccCleanRoomsConfiguredTable_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckConfiguredTable(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -64,7 +64,7 @@ func TestAccCleanRoomsConfiguredTable_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -89,7 +89,7 @@ func TestAccCleanRoomsConfiguredTable_mutableProperties(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -121,7 +121,7 @@ func TestAccCleanRoomsConfiguredTable_updateAllowedColumns(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -157,7 +157,7 @@ func TestAccCleanRoomsConfiguredTable_updateTableReference(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -192,7 +192,7 @@ func TestAccCleanRoomsConfiguredTable_updateTableReference_onlyDatabase(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -227,7 +227,7 @@ func TestAccCleanRoomsConfiguredTable_updateTableReference_onlyTable(t *testing.
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CleanRoomsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfiguredTableDestroy(ctx),
 		Steps: []resource.TestStep{

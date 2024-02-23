@@ -288,7 +288,7 @@ func sweepEventSubscriptions(region string) error {
 		}
 
 		for _, eventSubscription := range page.EventSubscriptionsList {
-			r := ResourceEventSubscription()
+			r := resourceEventSubscription()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(eventSubscription.CustSubscriptionId))
 
@@ -527,7 +527,7 @@ func sweepProxies(region string) error {
 		}
 
 		for _, v := range page.DBProxies {
-			r := ResourceProxy()
+			r := resourceProxy()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.DBProxyName))
 
@@ -621,7 +621,7 @@ func sweepSubnetGroups(region string) error {
 		}
 
 		for _, v := range page.DBSubnetGroups {
-			r := ResourceSubnetGroup()
+			r := resourceSubnetGroup()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.DBSubnetGroupName))
 
