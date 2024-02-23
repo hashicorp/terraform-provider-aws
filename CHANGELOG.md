@@ -1,4 +1,10 @@
 ## 5.39.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_instance: Add configurable `read` timeout ([#35955](https://github.com/hashicorp/terraform-provider-aws/issues/35955))
+* resource/aws_spot_instance_request: Add configurable `read` timeout ([#35955](https://github.com/hashicorp/terraform-provider-aws/issues/35955))
+
 ## 5.38.0 (February 22, 2024)
 
 FEATURES:
