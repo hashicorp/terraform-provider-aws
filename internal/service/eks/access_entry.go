@@ -120,7 +120,9 @@ func resourceAccessEntryCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.Username = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateAccessEntry(ctx, input)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidParameterException](ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateAccessEntry(ctx, input)
+	}, "The specified principalArn is invalid: invalid principal")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EKS Access Entry (%s): %s", id, err)

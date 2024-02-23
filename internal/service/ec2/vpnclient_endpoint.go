@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -32,6 +33,7 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 		ReadWithoutTimeout:   resourceClientVPNEndpointRead,
 		DeleteWithoutTimeout: resourceClientVPNEndpointDelete,
 		UpdateWithoutTimeout: resourceClientVPNEndpointUpdate,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -232,6 +234,7 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 
 	input := &ec2.CreateClientVpnEndpointInput{
 		ClientCidrBlock:      aws.String(d.Get("client_cidr_block").(string)),
+		ClientToken:          aws.String(id.UniqueId()),
 		ServerCertificateArn: aws.String(d.Get("server_certificate_arn").(string)),
 		SplitTunnel:          aws.Bool(d.Get("split_tunnel").(bool)),
 		TagSpecifications:    getTagSpecificationsIn(ctx, ec2.ResourceTypeClientVpnEndpoint),
@@ -279,7 +282,6 @@ func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData
 		input.VpcId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Client VPN Endpoint: %s", input)
 	output, err := conn.CreateClientVpnEndpointWithContext(ctx, input)
 
 	if err != nil {

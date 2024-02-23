@@ -9,7 +9,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
-func TestRandInt(t *testing.T) { //nolint:paralleltest
+func TestRandInt(t *testing.T) {
 	t.Setenv("VCR_PATH", t.TempDir())
 
 	t.Setenv("VCR_MODE", "RECORDING")
@@ -29,7 +29,7 @@ func TestRandInt(t *testing.T) { //nolint:paralleltest
 	}
 }
 
-func TestRandomWithPrefix(t *testing.T) { //nolint:paralleltest
+func TestRandomWithPrefix(t *testing.T) {
 	t.Setenv("VCR_PATH", t.TempDir())
 
 	t.Setenv("VCR_MODE", "RECORDING")

@@ -34,7 +34,7 @@ func TestAccEKSAccessEntry_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -75,7 +75,7 @@ func TestAccEKSAccessEntry_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -107,7 +107,7 @@ func TestAccEKSAccessEntry_Disappears_cluster(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -138,7 +138,7 @@ func TestAccEKSAccessEntry_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -191,7 +191,7 @@ func TestAccEKSAccessEntry_type(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -228,7 +228,7 @@ func TestAccEKSAccessEntry_username(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -252,6 +252,43 @@ func TestAccEKSAccessEntry_username(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "type", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "user_name", "user2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccEKSAccessEntry_eventualConsistency(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var accessentry types.AccessEntry
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_eks_access_entry.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessEntryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessEntryConfig_eventualConsistency(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(resourceName, "kubernetes_groups.#", 1),
+					resource.TestCheckResourceAttr(resourceName, "type", "EC2_LINUX"),
+					resource.TestCheckResourceAttrSet(resourceName, "user_name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -447,6 +484,36 @@ resource "aws_eks_access_entry" "test" {
   type = "EC2_LINUX"
 }
 `, rName))
+}
+
+func testAccAccessEntryConfig_eventualConsistency(rName string) string {
+	return acctest.ConfigCompose(testAccAccessEntryConfig_base(rName), `
+resource "aws_iam_role" "test2" {
+  name = "${aws_eks_cluster.test.name}-2"
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "eks.${data.aws_partition.current.dns_suffix}"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_eks_access_entry" "test" {
+  cluster_name  = aws_eks_cluster.test.name
+  principal_arn = aws_iam_role.test2.arn
+
+  type = "EC2_LINUX"
+}
+`)
 }
 
 func testAccAccessEntryConfig_username(rName, username string) string {

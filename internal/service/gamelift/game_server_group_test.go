@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGameLiftGameServerGroup_basic(t *testing.T) {
@@ -30,7 +31,7 @@ func TestAccGameLiftGameServerGroup_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -68,7 +69,7 @@ func TestAccGameLiftGameServerGroup_AutoScalingPolicy(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -101,7 +102,7 @@ func TestAccGameLiftGameServerGroup_AutoScalingPolicy_EstimatedInstanceWarmup(t 
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -134,7 +135,7 @@ func TestAccGameLiftGameServerGroup_BalancingStrategy(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -170,7 +171,7 @@ func TestAccGameLiftGameServerGroup_GameServerGroupName(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -209,7 +210,7 @@ func TestAccGameLiftGameServerGroup_InstanceDefinition(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -248,7 +249,7 @@ func TestAccGameLiftGameServerGroup_InstanceDefinition_WeightedCapacity(t *testi
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -291,7 +292,7 @@ func TestAccGameLiftGameServerGroup_LaunchTemplate_Id(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -325,7 +326,7 @@ func TestAccGameLiftGameServerGroup_LaunchTemplate_Name(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -359,7 +360,7 @@ func TestAccGameLiftGameServerGroup_LaunchTemplate_Version(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -393,7 +394,7 @@ func TestAccGameLiftGameServerGroup_GameServerProtectionPolicy(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -429,7 +430,7 @@ func TestAccGameLiftGameServerGroup_MaxSize(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -472,7 +473,7 @@ func TestAccGameLiftGameServerGroup_MinSize(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -511,7 +512,7 @@ func TestAccGameLiftGameServerGroup_roleARN(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -556,7 +557,7 @@ func TestAccGameLiftGameServerGroup_vpcSubnets(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGameServerGroupDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -77,35 +77,55 @@ default: build
 
 build: fmtcheck ## Build provider
 	$(GO_VER) install
+	@echo "make: build complete"
 
 cleango: ## Clean up Go cache
-	@echo "==> Cleaning Go..."
-	@echo "WARNING: This will kill gopls and clean Go caches"
+	@echo "make: cleaning Go..."
+	@echo "make: WARNING: This will kill gopls and clean Go caches"
 	@vscode=`ps -ef | grep Visual\ Studio\ Code | wc -l | xargs` ; \
 	if [ $$vscode -gt 1 ] ; then \
-		echo "ALERT: vscode is running. Close it and try again." ; \
+		echo "make: ALERT: vscode is running. Close it and try again." ; \
 		exit 1 ; \
 	fi
 	@for proc in `pgrep gopls` ; do \
-		echo "Killing gopls process $$proc" ; \
+		echo "make: killing gopls process $$proc" ; \
 		kill -9 $$proc ; \
 	done ; \
-	$(GO_VER) clean -modcache -testcache -cache ; \
+	$(GO_VER) clean -modcache -testcache -cache -i -r
+	@echo "make: Go caches cleaned"
 
-clean: cleango build tools ## Clean up Go cache and re-install tools
-	$(GO_VER) mod tidy
+cleantidy: ## Clean up tidy
+	@echo "make: tidying Go mods..."
+	@gover="$(GO_VER)" ; \
+	if [ "$$gover" = "go" ] ; then \
+		gover=go`cat .go-version | xargs` ; \
+		echo "make: WARNING: no version provided so tidying with $$gover" ; \
+		echo "make: tidying with newer versions can make go.mod incompatible" ; \
+		echo "make: to use a different version, use 'GO_VER=go1.16 make cleantidy'" ; \
+		echo "make: to use the version in .go-version, use 'make cleantidy'" ; \
+		echo "make: if you get an error, see https://go.dev/doc/manage-install to locally install various Go versions" ; \
+	fi ; \
+	cd .ci/providerlint && $$gover mod tidy && cd ../.. ; \
+	cd tools/tfsdk2fw && $$gover mod tidy && cd ../.. ; \
+	cd .ci/tools && $$gover mod tidy && cd ../.. ; \
+	cd .ci/providerlint && $$gover mod tidy && cd ../.. ; \
+	cd skaff && $$gover mod tidy && cd .. ; \
+	$$gover mod tidy
+	@echo "make: Go mods tidied"
+
+clean: cleango cleantidy build tools ## Clean up Go cache, tidy and re-install tools
+	@echo "make: clean complete"	
 
 copyright: ## Run copywrite (generate source code headers)
 	@copywrite headers
 
-depscheck: ## Verify dependencies are tidy
-	@echo "==> Checking source code with go mod tidy..."
-	@$(GO_VER) mod tidy
+depscheck: cleantidy ## Verify dependencies are tidy
+	@echo "make: checking source code with go mod tidy..."
 	@git diff --exit-code -- go.mod go.sum || \
 		(echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
 
 docs-lint: ## Lint documentation
-	@echo "==> Checking docs against linters..."
+	@echo "make: checking docs against linters..."
 	@misspell -error -source=text docs/ || (echo; \
 		echo "Unexpected misspelling found in docs files."; \
 		echo "To automatically fix the misspelling, run 'make docs-lint-fix' and commit the changes."; \
@@ -116,7 +136,7 @@ docs-lint: ## Lint documentation
 		exit 1)
 
 docs-lint-fix: ## Fix documentation linter findings
-	@echo "==> Applying automatic docs linter fixes..."
+	@echo "make: applying automatic docs linter fixes..."
 	@misspell -w -source=text docs/
 	@docker run --rm -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix docs/
 
@@ -131,7 +151,7 @@ docscheck: ## Check provider documentation
 	@misspell -error -source text CHANGELOG.md .changelog
 
 fmt: ## Fix Go source formatting
-	@echo "==> Fixing source code with gofmt..."
+	@echo "make: fixing source code with gofmt..."
 	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
 # Currently required by tf-deploy compile
@@ -139,7 +159,7 @@ fmtcheck: ## Verify Go source is formatted
 	@sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
 
 fumpt: ## Run gofumpt
-	@echo "==> Fixing source code with gofumpt..."
+	@echo "make: fixing source code with gofumpt..."
 	gofumpt -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
 gen: ## Run all Go generators
@@ -149,6 +169,7 @@ gen: ## Run all Go generators
 	rm -f internal/conns/*_gen.go
 	rm -f internal/provider/*_gen.go
 	rm -f internal/service/**/*_gen.go
+	rm -f internal/service/**/*_gen_test.go
 	rm -f names/caps.md
 	rm -f names/*_gen.go
 	rm -f website/docs/guides/custom-service-endpoints.html.md
@@ -161,22 +182,22 @@ gen: ## Run all Go generators
 	$(GO_VER) generate ./internal/provider
 	$(GO_VER) generate ./internal/sweep
 
-gencheck: ## Verify generated code is tidy
-	@echo "==> Checking generated source code..."
+gencheck: ## Verify generated code is synched
+	@echo "make: checking generated source code..."
 	@$(MAKE) gen
 	@git diff --compact-summary --exit-code || \
 		(echo; echo "Unexpected difference in directories after code generation. Run 'make gen' command and commit."; exit 1)
 
 generate-changelog: ## Generate changelog
-	@echo "==> Generating changelog..."
+	@echo "make: generating changelog..."
 	@sh -c "'$(CURDIR)/.ci/scripts/generate-changelog.sh'"
 
 gh-workflows-lint: ## Lint github workflows (via actionlint)
-	@echo "==> Checking github workflows with actionlint..."
+	@echo "make: checking github workflows with actionlint..."
 	@actionlint
 
 golangci-lint: ## Lint Go source (via golangci-lint)
-	@echo "==> Checking source code with golangci-lint..."
+	@echo "make: checking source code with golangci-lint..."
 	@golangci-lint run \
 		--config .ci/.golangci.yml \
 		--config .ci/.golangci2.yml \
@@ -186,7 +207,7 @@ help:
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-23s\033[0m %s\n", $$1, $$2}'
 
 importlint: ## Lint imports (via impi)
-	@echo "==> Checking source code with importlint..."
+	@echo "make: checking source code with importlint..."
 	@impi --local . --scheme stdThirdPartyLocal ./internal/...
 
 lint: golangci-lint providerlint importlint ## Run all linters
@@ -194,7 +215,7 @@ lint: golangci-lint providerlint importlint ## Run all linters
 lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix ## Fix all linter findings
 
 providerlint: ## Lint provider (via providerlint)
-	@echo "==> Checking source code with providerlint..."
+	@echo "make: checking source code with providerlint..."
 	@providerlint \
 		-c 1 \
 		-AT001.ignored-filename-suffixes=_data_source_test.go \
@@ -221,9 +242,9 @@ providerlint: ## Lint provider (via providerlint)
 		./internal/service/... ./internal/provider/...
 
 sane: ## Run sanity checks
-	@echo "==> Sane Check (48 tests of Top 30 resources)"
-	@echo "==> Like 'sanity' except full output and stops soon after 1st error"
-	@echo "==> NOTE: NOT an exhaustive set of tests! Finds big problems only."
+	@echo "make: sane Check (48 tests of Top 30 resources)"
+	@echo "make: like 'sanity' except full output and stops soon after 1st error"
+	@echo "make: NOTE: NOT an exhaustive set of tests! Finds big problems only."
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='TestAccIAMRole_basic|TestAccIAMRole_namePrefix|TestAccIAMRole_disappears|TestAccIAMRole_InlinePolicy_basic|TestAccIAMPolicyDocumentDataSource_basic|TestAccIAMPolicyDocumentDataSource_sourceConflicting|TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON|TestAccIAMRolePolicyAttachment_basic|TestAccIAMRolePolicyAttachment_disappears|TestAccIAMRolePolicyAttachment_Disappears_role|TestAccIAMPolicy_basic|TestAccIAMPolicy_policy|TestAccIAMPolicy_tags|TestAccIAMRolePolicy_basic|TestAccIAMRolePolicy_unknownsInPolicy|TestAccIAMInstanceProfile_basic|TestAccIAMInstanceProfile_tags' -timeout $(ACCTEST_TIMEOUT)
@@ -233,7 +254,7 @@ sane: ## Run sanity checks
 		./internal/service/ecs/... \
 		./internal/service/elbv2/... \
 		./internal/service/kms/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='TestAccVPCSecurityGroup_basic|TestAccVPCSecurityGroup_ipRangesWithSameRules|TestAccVPCSecurityGroup_vpcAllEgress|TestAccVPCSecurityGroupRule_race|TestAccVPCSecurityGroupRule_protocolChange|TestAccVPCDataSource_basic|TestAccVPCSubnet_basic|TestAccVPC_tenancy|TestAccVPCRouteTableAssociation_Subnet_basic|TestAccVPCRouteTable_basic|TestAccLogsGroup_basic|TestAccLogsGroup_multiple|TestAccKMSKey_basic|TestAccELBV2TargetGroup_basic|TestAccECSTaskDefinition_basic|TestAccECSService_basic' -timeout $(ACCTEST_TIMEOUT)
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='TestAccVPCSecurityGroup_basic|TestAccVPCSecurityGroup_egressMode|TestAccVPCSecurityGroup_vpcAllEgress|TestAccVPCSecurityGroupRule_race|TestAccVPCSecurityGroupRule_protocolChange|TestAccVPCDataSource_basic|TestAccVPCSubnet_basic|TestAccVPC_tenancy|TestAccVPCRouteTableAssociation_Subnet_basic|TestAccVPCRouteTable_basic|TestAccLogsGroup_basic|TestAccLogsGroup_multiple|TestAccKMSKey_basic|TestAccELBV2TargetGroup_basic|TestAccECSTaskDefinition_basic|TestAccECSService_basic' -timeout $(ACCTEST_TIMEOUT)
 	@TF_ACC=1 $(GO_VER) test \
 		./internal/service/lambda/... \
 		./internal/service/meta/... \
@@ -244,9 +265,9 @@ sane: ## Run sanity checks
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='TestAccSTSCallerIdentityDataSource_basic|TestAccMetaRegionDataSource_basic|TestAccMetaRegionDataSource_endpoint|TestAccMetaPartitionDataSource_basic|TestAccS3Bucket_Basic_basic|TestAccS3Bucket_Security_corsUpdate|TestAccS3BucketPublicAccessBlock_basic|TestAccS3BucketPolicy_basic|TestAccS3BucketACL_updateACL|TestAccRoute53Record_basic|TestAccRoute53Record_Latency_basic|TestAccRoute53ZoneDataSource_name|TestAccLambdaFunction_basic|TestAccLambdaPermission_basic|TestAccSecretsManagerSecret_basic' -timeout $(ACCTEST_TIMEOUT)
 
 sanity: ## Run sanity checks with failures allowed
-	@echo "==> Sanity Check (48 tests of Top 30 resources)"
-	@echo "==> Like 'sane' but less output and runs all tests despite most errors"
-	@echo "==> NOTE: NOT an exhaustive set of tests! Finds big problems only."
+	@echo "make: sanity Check (48 tests of Top 30 resources)"
+	@echo "make: like 'sane' but less output and runs all tests despite most errors"
+	@echo "make: NOTE: NOT an exhaustive set of tests! Finds big problems only."
 	@iam=`TF_ACC=1 $(GO_VER) test \
 		./internal/service/iam/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='TestAccIAMRole_basic|TestAccIAMRole_namePrefix|TestAccIAMRole_disappears|TestAccIAMRole_InlinePolicy_basic|TestAccIAMPolicyDocumentDataSource_basic|TestAccIAMPolicyDocumentDataSource_sourceConflicting|TestAccIAMPolicyDocumentDataSource_sourceJSONValidJSON|TestAccIAMRolePolicyAttachment_basic|TestAccIAMRolePolicyAttachment_disappears|TestAccIAMRolePolicyAttachment_Disappears_role|TestAccIAMPolicy_basic|TestAccIAMPolicy_policy|TestAccIAMPolicy_tags|TestAccIAMRolePolicy_basic|TestAccIAMRolePolicy_unknownsInPolicy|TestAccIAMInstanceProfile_basic|TestAccIAMInstanceProfile_tags' -timeout $(ACCTEST_TIMEOUT) || true` ; \
@@ -259,7 +280,7 @@ sanity: ## Run sanity checks with failures allowed
 		./internal/service/ecs/... \
 		./internal/service/elbv2/... \
 		./internal/service/kms/... \
-		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='TestAccVPCSecurityGroup_basic|TestAccVPCSecurityGroup_ipRangesWithSameRules|TestAccVPCSecurityGroup_vpcAllEgress|TestAccVPCSecurityGroupRule_race|TestAccVPCSecurityGroupRule_protocolChange|TestAccVPCDataSource_basic|TestAccVPCSubnet_basic|TestAccVPC_tenancy|TestAccVPCRouteTableAssociation_Subnet_basic|TestAccVPCRouteTable_basic|TestAccLogsGroup_basic|TestAccLogsGroup_multiple|TestAccKMSKey_basic|TestAccELBV2TargetGroup_basic|TestAccECSTaskDefinition_basic|TestAccECSService_basic' -timeout $(ACCTEST_TIMEOUT) || true` ; \
+		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='TestAccVPCSecurityGroup_basic|TestAccVPCSecurityGroup_egressMode|TestAccVPCSecurityGroup_vpcAllEgress|TestAccVPCSecurityGroupRule_race|TestAccVPCSecurityGroupRule_protocolChange|TestAccVPCDataSource_basic|TestAccVPCSubnet_basic|TestAccVPC_tenancy|TestAccVPCRouteTableAssociation_Subnet_basic|TestAccVPCRouteTable_basic|TestAccLogsGroup_basic|TestAccLogsGroup_multiple|TestAccKMSKey_basic|TestAccELBV2TargetGroup_basic|TestAccECSTaskDefinition_basic|TestAccECSService_basic' -timeout $(ACCTEST_TIMEOUT) || true` ; \
 	fails2=`echo -n $$logs | grep -Fo FAIL: | wc -l | xargs` ; \
 	tot_fails=$$(( $$fails1+$$fails2 )) ; \
 	passes=$$(( 33-$$tot_fails )) ; \
@@ -282,7 +303,7 @@ sanity: ## Run sanity checks with failures allowed
 	fi
 
 semall: semgrep-validate ## Run semgrep on all files
-	@echo "==> Running Semgrep checks locally (must have semgrep installed)..."
+	@echo "make: running Semgrep checks locally (must have semgrep installed)..."
 	@semgrep --error --metrics=off \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep.yml \
@@ -312,7 +333,7 @@ semgrep-validate: ## Validate semgrep configuration files
 		--config .ci/semgrep/
 
 semgrep: semgrep-validate ## Run semgrep
-	@echo "==> Running Semgrep static analysis..."
+	@echo "make: running Semgrep static analysis..."
 	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml
 
 skaff: ## Install skaff
@@ -375,6 +396,7 @@ tfsdk2fw: ## Install tfsdk2fw
 	cd tools/tfsdk2fw && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
 
 tools: ## Install tools
+	@echo "make: installing tools..."
 	cd .ci/providerlint && $(GO_VER) install .
 	cd .ci/tools && $(GO_VER) install github.com/YakDriver/tfproviderdocs
 	cd .ci/tools && $(GO_VER) install github.com/client9/misspell/cmd/misspell
@@ -386,6 +408,7 @@ tools: ## Install tools
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/copywrite
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
+	@echo "make: tools installed"
 
 ts: testacc-short ## Alias to testacc-short
 
@@ -396,7 +419,7 @@ website-link-check-ghrc: ## Check website links with ghrc
 	@LINK_CHECK_CONTAINER="ghcr.io/tcort/markdown-link-check:stable" .ci/scripts/markdown-link-check.sh
 
 website-lint: ## Lint website files
-	@echo "==> Checking website against linters..."
+	@echo "make: checking website against linters..."
 	@misspell -error -source=text website/ || (echo; \
 		echo "Unexpected mispelling found in website files."; \
 		echo "To automatically fix the misspelling, run 'make website-lint-fix' and commit the changes."; \
@@ -412,7 +435,7 @@ website-lint: ## Lint website files
 		exit 1)
 
 website-lint-fix: ## Fix website linter findings
-	@echo "==> Applying automatic website linter fixes..."
+	@echo "make: applying automatic website linter fixes..."
 	@misspell -w -source=text website/
 	@docker run --rm -v $(PWD):/markdown 06kellyjac/markdownlint-cli --fix website/docs/
 	@terrafmt fmt ./website --pattern '*.markdown'

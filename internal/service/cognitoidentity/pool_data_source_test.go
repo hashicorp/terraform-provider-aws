@@ -11,6 +11,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCognitoIdentityPoolDataSource_basic(t *testing.T) {
@@ -31,7 +32,7 @@ func TestAccCognitoIdentityPoolDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, cognitoidentity.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -67,7 +68,7 @@ func TestAccCognitoIdentityPoolDataSource_openidConnectProviderARNs(t *testing.T
 			acctest.PreCheckPartitionHasService(t, cognitoidentity.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -101,7 +102,7 @@ func TestAccCognitoIdentityPoolDataSource_cognitoIdentityProviders(t *testing.T)
 			acctest.PreCheckPartitionHasService(t, cognitoidentity.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -136,7 +137,7 @@ func TestAccCognitoIdentityPoolDataSource_samlProviderARNs(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, cognitoidentity.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -170,7 +171,7 @@ func TestAccCognitoIdentityPoolDataSource_supportedLoginProviders(t *testing.T) 
 			acctest.PreCheckPartitionHasService(t, cognitoidentity.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -204,7 +205,7 @@ func TestAccCognitoIdentityPoolDataSource_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, cognitoidentity.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolDestroy(ctx),
 		Steps: []resource.TestStep{

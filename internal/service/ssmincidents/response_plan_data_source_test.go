@@ -32,7 +32,7 @@ func testResponsePlanDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{

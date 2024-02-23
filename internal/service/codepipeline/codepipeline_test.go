@@ -34,7 +34,7 @@ func TestAccCodePipeline_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -134,7 +134,7 @@ func TestAccCodePipeline_disappears(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -162,7 +162,7 @@ func TestAccCodePipeline_emptyStageArtifacts(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -205,7 +205,7 @@ func TestAccCodePipeline_deployWithServiceRole(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -239,7 +239,7 @@ func TestAccCodePipeline_tags(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -295,7 +295,7 @@ func TestAccCodePipeline_MultiRegion_basic(t *testing.T) {
 			testAccPreCheck(ctx, t, acctest.AlternateRegion())
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -335,7 +335,7 @@ func TestAccCodePipeline_MultiRegion_update(t *testing.T) {
 			testAccPreCheck(ctx, t, acctest.AlternateRegion())
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -388,7 +388,7 @@ func TestAccCodePipeline_MultiRegion_convertSingleRegion(t *testing.T) {
 			testAccPreCheck(ctx, t, acctest.AlternateRegion())
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -397,6 +397,7 @@ func TestAccCodePipeline_MultiRegion_convertSingleRegion(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &p),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.region", ""),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
@@ -408,6 +409,8 @@ func TestAccCodePipeline_MultiRegion_convertSingleRegion(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &p),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.region", acctest.Region()),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.1.region", acctest.AlternateRegion()),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
@@ -421,6 +424,7 @@ func TestAccCodePipeline_MultiRegion_convertSingleRegion(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &p),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "artifact_store.0.region", ""),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.name", "Build"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "stage.1.action.0.name", "Build"),
@@ -449,7 +453,7 @@ func TestAccCodePipeline_withNamespace(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -482,7 +486,7 @@ func TestAccCodePipeline_withGitHubV1SourceAction(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -554,7 +558,7 @@ func TestAccCodePipeline_ecr(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -604,7 +608,7 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodePipelineServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPipelineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -615,6 +619,7 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.codepipeline_role", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexache.MustCompile(fmt.Sprintf("test-pipeline-%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "execution_mode", string(types.ExecutionModeSuperseded)),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_type", string(types.PipelineTypeV1)),
 					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.name", "Source"),
@@ -660,6 +665,7 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 				Config: testAccCodePipelineConfig_pipelinetypeUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPipelineExists(ctx, resourceName, &p),
+					resource.TestCheckResourceAttr(resourceName, "execution_mode", string(types.ExecutionModeQueued)),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_type", string(types.PipelineTypeV2)),
 					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.name", "Source"),
@@ -704,6 +710,7 @@ func TestAccCodePipeline_pipelinetype(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.codepipeline_role", "arn"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "codepipeline", regexache.MustCompile(fmt.Sprintf("test-pipeline-%s", rName))),
 					resource.TestCheckResourceAttr(resourceName, "artifact_store.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "execution_mode", string(types.ExecutionModeSuperseded)),
 					resource.TestCheckResourceAttr(resourceName, "pipeline_type", string(types.PipelineTypeV1)),
 					resource.TestCheckResourceAttr(resourceName, "stage.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "stage.0.name", "Source"),
@@ -1186,6 +1193,8 @@ resource "aws_codepipeline" "test" {
       }
     }
   }
+
+  execution_mode = "QUEUED"
 
   pipeline_type = "V2"
 

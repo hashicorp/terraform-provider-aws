@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -24,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
-	"golang.org/x/exp/maps"
 )
 
 type endpointTestCase struct {
@@ -49,6 +49,8 @@ type caseExpectations struct {
 }
 
 type setupFunc func(setup *caseSetup)
+
+type callFunc func(ctx context.Context, t *testing.T, meta *conns.AWSClient) string
 
 const (
 	packageNameConfigEndpoint = "https://packagename-config.endpoint.test/"
@@ -204,7 +206,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 		testcase := testcase
 
 		t.Run(name, func(t *testing.T) {
-			testEndpointCase(t, region, testcase)
+			testEndpointCase(t, region, testcase, callService)
 		})
 	}
 }
@@ -316,7 +318,7 @@ func expectBaseConfigFileEndpoint() caseExpectations {
 	}
 }
 
-func testEndpointCase(t *testing.T, region string, testcase endpointTestCase) {
+func testEndpointCase(t *testing.T, region string, testcase endpointTestCase, callF callFunc) {
 	t.Helper()
 
 	ctx := context.Background()
@@ -376,7 +378,7 @@ func testEndpointCase(t *testing.T, region string, testcase endpointTestCase) {
 
 	meta := p.Meta().(*conns.AWSClient)
 
-	endpoint := callService(ctx, t, meta)
+	endpoint := callF(ctx, t, meta)
 
 	if endpoint != testcase.expected.endpoint {
 		t.Errorf("expected endpoint %q, got %q", testcase.expected.endpoint, endpoint)

@@ -1560,15 +1560,17 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		// HasChange() thinks there is a diff between what is set on the instance and what is set in state. We need to ensure that
 		// if a diff has occurred, it's not because it's a new instance.
 		if d.HasChange("source_dest_check") && !d.IsNewResource() || d.IsNewResource() && !sourceDestCheck {
-			log.Printf("[INFO] Modifying `source_dest_check` on Instance %s", d.Id())
-			_, err := conn.ModifyInstanceAttributeWithContext(ctx, &ec2.ModifyInstanceAttributeInput{
+			input := &ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
 				SourceDestCheck: &ec2.AttributeBooleanValue{
 					Value: aws.Bool(sourceDestCheck),
 				},
-			})
+			}
+
+			_, err := conn.ModifyInstanceAttributeWithContext(ctx, input)
+
 			if err != nil {
-				return create.AppendDiagError(diags, names.EC2, create.ErrActionUpdating, "Instance", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) SourceDestCheck attribute: %s", d.Id(), err)
 			}
 		}
 	}
@@ -1668,17 +1670,18 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		// Only one attribute can be modified at a time, else we get
 		// "InvalidParameterCombination: Fields for multiple attribute types specified"
 		if d.HasChange("instance_type") {
-			log.Printf("[INFO] Modifying instance type %s", d.Id())
+			if !d.HasChange("capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_id") {
+				instanceType := d.Get("instance_type").(string)
+				input := &ec2.ModifyInstanceAttributeInput{
+					InstanceId: aws.String(d.Id()),
+					InstanceType: &ec2.AttributeValue{
+						Value: aws.String(instanceType),
+					},
+				}
 
-			input := &ec2.ModifyInstanceAttributeInput{
-				InstanceId: aws.String(d.Id()),
-				InstanceType: &ec2.AttributeValue{
-					Value: aws.String(d.Get("instance_type").(string)),
-				},
-			}
-
-			if err := modifyInstanceAttributeWithStopStart(ctx, conn, input); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) type: %s", d.Id(), err)
+				if err := modifyInstanceAttributeWithStopStart(ctx, conn, input, fmt.Sprintf("InstanceType (%s)", instanceType)); err != nil {
+					return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) type: %s", d.Id(), err)
+				}
 			}
 		}
 
@@ -1704,7 +1707,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				},
 			}
 
-			if err := modifyInstanceAttributeWithStopStart(ctx, conn, input); err != nil {
+			if err := modifyInstanceAttributeWithStopStart(ctx, conn, input, "UserData"); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) user data: %s", d.Id(), err)
 			}
 		}
@@ -1727,7 +1730,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				},
 			}
 
-			if err := modifyInstanceAttributeWithStopStart(ctx, conn, input); err != nil {
+			if err := modifyInstanceAttributeWithStopStart(ctx, conn, input, "UserData (base64)"); err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) user data base64: %s", d.Id(), err)
 			}
 		}
@@ -1746,15 +1749,17 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if d.HasChange("instance_initiated_shutdown_behavior") {
-		log.Printf("[INFO] Modifying instance %s", d.Id())
-		_, err := conn.ModifyInstanceAttributeWithContext(ctx, &ec2.ModifyInstanceAttributeInput{
+		input := &ec2.ModifyInstanceAttributeInput{
 			InstanceId: aws.String(d.Id()),
 			InstanceInitiatedShutdownBehavior: &ec2.AttributeValue{
 				Value: aws.String(d.Get("instance_initiated_shutdown_behavior").(string)),
 			},
-		})
+		}
+
+		_, err := conn.ModifyInstanceAttributeWithContext(ctx, input)
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): modifying InstanceInitiatedShutdownBehavior: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) InstanceInitiatedShutdownBehavior attribute: %s", d.Id(), err)
 		}
 	}
 
@@ -1799,6 +1804,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			instanceCreditSpecification := expandInstanceCreditSpecificationRequest(v.([]interface{})[0].(map[string]interface{}))
 			instanceCreditSpecification.InstanceId = aws.String(d.Id())
 			input := &ec2.ModifyInstanceCreditSpecificationInput{
+				ClientToken:                  aws.String(id.UniqueId()),
 				InstanceCreditSpecifications: []*ec2.InstanceCreditSpecificationRequest{instanceCreditSpecification},
 			}
 
@@ -1918,11 +1924,10 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 					InstanceId: aws.String(d.Id()),
 				}
 
-				log.Printf("[DEBUG] Modifying EC2 Instance attribute: %s", input)
 				_, err := conn.ModifyInstanceAttributeWithContext(ctx, input)
 
 				if err != nil {
-					return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) root block device (%s) DeleteOnTermination attribute: %s", d.Id(), deviceName, err)
+					return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) BlockDeviceMappings (%s) attribute: %s", d.Id(), deviceName, err)
 				}
 
 				if _, err := WaitInstanceRootBlockDeviceDeleteOnTerminationUpdated(ctx, conn, d.Id(), v, d.Timeout(schema.TimeoutUpdate)); err != nil {
@@ -1945,12 +1950,31 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	if d.HasChange("capacity_reservation_specification") && !d.IsNewResource() {
 		if v, ok := d.GetOk("capacity_reservation_specification"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			if v := expandCapacityReservationSpecification(v.([]interface{})[0].(map[string]interface{})); v != nil && (v.CapacityReservationPreference != nil || v.CapacityReservationTarget != nil) {
+				if err := stopInstance(ctx, conn, d.Id(), false, InstanceStopTimeout); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
+
+				if d.HasChange("capacity_reservation_specification.0.capacity_reservation_target.0.capacity_reservation_id") && d.HasChange("instance_type") {
+					instanceType := d.Get("instance_type").(string)
+					input := &ec2.ModifyInstanceAttributeInput{
+						InstanceId: aws.String(d.Id()),
+						InstanceType: &ec2.AttributeValue{
+							Value: aws.String(instanceType),
+						},
+					}
+
+					if _, err := conn.ModifyInstanceAttributeWithContext(ctx, input); err != nil {
+						return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) InstanceType (%s) attribute: %s", d.Id(), instanceType, err)
+					}
+				}
+
 				input := &ec2.ModifyInstanceCapacityReservationAttributesInput{
 					CapacityReservationSpecification: v,
 					InstanceId:                       aws.String(d.Id()),
 				}
 
 				log.Printf("[DEBUG] Modifying EC2 Instance capacity reservation attributes: %s", input)
+
 				_, err := conn.ModifyInstanceCapacityReservationAttributesWithContext(ctx, input)
 
 				if err != nil {
@@ -1959,6 +1983,10 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 				if _, err := WaitInstanceCapacityReservationSpecificationUpdated(ctx, conn, d.Id(), v); err != nil {
 					return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) capacity reservation attributes update: %s", d.Id(), err)
+				}
+
+				if err := startInstance(ctx, conn, d.Id(), true, InstanceStartTimeout); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
 				}
 			}
 		}
@@ -2031,12 +2059,14 @@ func resourceInstanceDelete(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func disableInstanceAPIStop(ctx context.Context, conn *ec2.EC2, id string, disableAPIStop bool) error {
-	_, err := conn.ModifyInstanceAttributeWithContext(ctx, &ec2.ModifyInstanceAttributeInput{
+	input := &ec2.ModifyInstanceAttributeInput{
 		DisableApiStop: &ec2.AttributeBooleanValue{
 			Value: aws.Bool(disableAPIStop),
 		},
 		InstanceId: aws.String(id),
-	})
+	}
+
+	_, err := conn.ModifyInstanceAttributeWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "not supported for spot instances") {
 		log.Printf("[WARN] failed to modify EC2 Instance (%s) attribute: %s", id, err)
@@ -2044,19 +2074,21 @@ func disableInstanceAPIStop(ctx context.Context, conn *ec2.EC2, id string, disab
 	}
 
 	if err != nil {
-		return fmt.Errorf("modifying DisableApiStop: %w", err)
+		return fmt.Errorf("modifying EC2 Instance (%s) DisableApiStop attribute: %s", id, err)
 	}
 
 	return nil
 }
 
 func disableInstanceAPITermination(ctx context.Context, conn *ec2.EC2, id string, disableAPITermination bool) error {
-	_, err := conn.ModifyInstanceAttributeWithContext(ctx, &ec2.ModifyInstanceAttributeInput{
+	input := &ec2.ModifyInstanceAttributeInput{
 		DisableApiTermination: &ec2.AttributeBooleanValue{
 			Value: aws.Bool(disableAPITermination),
 		},
 		InstanceId: aws.String(id),
-	})
+	}
+
+	_, err := conn.ModifyInstanceAttributeWithContext(ctx, input)
 
 	if tfawserr.ErrMessageContains(err, errCodeUnsupportedOperation, "not supported for spot instances") {
 		log.Printf("[WARN] failed to modify EC2 Instance (%s) attribute: %s", id, err)
@@ -2064,7 +2096,7 @@ func disableInstanceAPITermination(ctx context.Context, conn *ec2.EC2, id string
 	}
 
 	if err != nil {
-		return fmt.Errorf("modifying DisableApiTermination: %w", err)
+		return fmt.Errorf("modifying EC2 Instance (%s) DisableApiTermination attribute: %s", id, err)
 	}
 
 	return nil
@@ -2074,7 +2106,7 @@ func disableInstanceAPITermination(ctx context.Context, conn *ec2.EC2, id string
 // as input by first stopping the EC2 instance before the modification
 // and then starting up the EC2 instance after modification.
 // Reference: https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Stop_Start.html
-func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.EC2, input *ec2.ModifyInstanceAttributeInput) error {
+func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.EC2, input *ec2.ModifyInstanceAttributeInput, attrName string) error {
 	id := aws.StringValue(input.InstanceId)
 
 	if err := stopInstance(ctx, conn, id, false, InstanceStopTimeout); err != nil {
@@ -2082,25 +2114,11 @@ func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.EC2, in
 	}
 
 	if _, err := conn.ModifyInstanceAttributeWithContext(ctx, input); err != nil {
-		return fmt.Errorf("modifying EC2 Instance (%s) attribute: %w", id, err)
+		return fmt.Errorf("modifying EC2 Instance (%s) %s attribute: %w", id, attrName, err)
 	}
 
-	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433.
-	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout,
-		func() (interface{}, error) {
-			return conn.StartInstancesWithContext(ctx, &ec2.StartInstancesInput{
-				InstanceIds: aws.StringSlice([]string{id}),
-			})
-		},
-		errCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value",
-	)
-
-	if err != nil {
-		return fmt.Errorf("starting EC2 Instance (%s): %w", id, err)
-	}
-
-	if _, err := waitInstanceStarted(ctx, conn, id, InstanceStartTimeout); err != nil {
-		return fmt.Errorf("starting EC2 Instance (%s): waiting for completion: %w", id, err)
+	if err := startInstance(ctx, conn, id, true, InstanceStartTimeout); err != nil {
+		return err
 	}
 
 	return nil
@@ -2976,20 +2994,34 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 // startInstance starts an EC2 instance and waits for the instance to start.
-func startInstance(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) error {
+func startInstance(ctx context.Context, conn *ec2.EC2, id string, retry bool, timeout time.Duration) error {
+	var err error
+
 	tflog.Info(ctx, "Starting EC2 Instance", map[string]any{
 		"ec2_instance_id": id,
 	})
-	_, err := conn.StartInstancesWithContext(ctx, &ec2.StartInstancesInput{
-		InstanceIds: aws.StringSlice([]string{id}),
-	})
+	if retry {
+		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/16433.
+		_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, ec2PropagationTimeout,
+			func() (interface{}, error) {
+				return conn.StartInstancesWithContext(ctx, &ec2.StartInstancesInput{
+					InstanceIds: aws.StringSlice([]string{id}),
+				})
+			},
+			errCodeInvalidParameterValue, "LaunchPlan instance type does not match attribute value",
+		)
+	} else {
+		_, err = conn.StartInstancesWithContext(ctx, &ec2.StartInstancesInput{
+			InstanceIds: aws.StringSlice([]string{id}),
+		})
+	}
 
 	if err != nil {
 		return fmt.Errorf("starting EC2 Instance (%s): %w", id, err)
 	}
 
 	if _, err := waitInstanceStarted(ctx, conn, id, timeout); err != nil {
-		return fmt.Errorf("starting EC2 Instance (%s): waiting for completion: %w", id, err)
+		return fmt.Errorf("waiting for EC2 Instance (%s) start: %w", id, err)
 	}
 
 	return nil
@@ -3002,6 +3034,7 @@ func stopInstance(ctx context.Context, conn *ec2.EC2, id string, force bool, tim
 		"force":           force,
 	})
 	_, err := conn.StopInstancesWithContext(ctx, &ec2.StopInstancesInput{
+		Force:       aws.Bool(force),
 		InstanceIds: aws.StringSlice([]string{id}),
 	})
 
@@ -3010,7 +3043,7 @@ func stopInstance(ctx context.Context, conn *ec2.EC2, id string, force bool, tim
 	}
 
 	if _, err := waitInstanceStopped(ctx, conn, id, timeout); err != nil {
-		return fmt.Errorf("stopping EC2 Instance (%s): waiting for completion: %w", id, err)
+		return fmt.Errorf("waiting for EC2 Instance (%s) stop: %w", id, err)
 	}
 
 	return nil
@@ -3113,7 +3146,7 @@ func waitInstanceReady(ctx context.Context, conn *ec2.EC2, id string, timeout ti
 	return nil, err
 }
 
-func waitInstanceStarted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) { //nolint:unparam
+func waitInstanceStarted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Instance, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{ec2.InstanceStateNamePending, ec2.InstanceStateNameStopped},
 		Target:     []string{ec2.InstanceStateNameRunning},

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccTransitGatewayPeeringAttachment_basic(t *testing.T) {
@@ -32,7 +33,7 @@ func testAccTransitGatewayPeeringAttachment_basic(t *testing.T) {
 			testAccPreCheckTransitGateway(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -69,7 +70,7 @@ func testAccTransitGatewayPeeringAttachment_disappears(t *testing.T) {
 			testAccPreCheckTransitGateway(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -97,7 +98,7 @@ func testAccTransitGatewayPeeringAttachment_tags(t *testing.T) {
 			testAccPreCheckTransitGateway(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -151,7 +152,7 @@ func testAccTransitGatewayPeeringAttachment_differentAccount(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{

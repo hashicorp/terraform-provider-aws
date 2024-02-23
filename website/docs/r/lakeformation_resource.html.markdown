@@ -37,6 +37,7 @@ The following arguments are optional:
 
 * `role_arn` – (Optional) Role that has read/write access to the resource.
 * `use_service_linked_role` - (Optional) Designates an AWS Identity and Access Management (IAM) service-linked role by registering this role with the Data Catalog.
+* `hybrid_access_enabled` - (Optional) Flag to enable AWS LakeFormation hybrid access permission mode.
 
 ~> **NOTE:** AWS does not support registering an S3 location with an IAM role and subsequently updating the S3 location registration to a service-linked role.
 
