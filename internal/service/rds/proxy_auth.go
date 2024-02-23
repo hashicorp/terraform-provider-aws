@@ -58,6 +58,7 @@ func resourceProxyAuthItem() *schema.Resource {
 			"client_password_auth_type": {
 				Type:             schema.TypeString,
 				ForceNew:         true,
+				Computed:         true,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.ClientPasswordAuthType](),
 			},
