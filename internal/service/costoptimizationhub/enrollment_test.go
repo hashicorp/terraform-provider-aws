@@ -114,6 +114,128 @@ func TestAccCostOptimizationHubEnrollment_basic(t *testing.T) {
 	})
 }
 
+func TestAccCostOptimizationHubEnrollment_IncludeMemberAccounts(t *testing.T) {
+	ctx := acctest.Context(t)
+	// TIP: This is a long-running test guard for tests that run longer than
+	// 300s (5 min) generally.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var les_out costoptimizationhub.ListEnrollmentStatusesOutput
+	//var es_in costoptimizationhub.ListEnrollmentStatusesInput
+	//var up_out costoptimizationhub.UpdateEnrollmentStatusOutput
+	//var up_in costoptimizationhub.UpdatePreferencesInput
+
+	resourceName := "aws_costoptimizationhub_enrollment.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CostOptimizationHub),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnrollmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnrollmentConfig_IncludeMemberAccounts(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnrollmentExists(ctx, resourceName, &les_out),
+					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", "true"),
+					resource.TestCheckResourceAttr(resourceName, "member_account_discount_visibility", "All"),
+					resource.TestCheckResourceAttr(resourceName, "savings_estimation_mode", "BeforeDiscounts"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCostOptimizationHubEnrollment_MemberAccountDiscountVisibility(t *testing.T) {
+	ctx := acctest.Context(t)
+	// TIP: This is a long-running test guard for tests that run longer than
+	// 300s (5 min) generally.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var les_out costoptimizationhub.ListEnrollmentStatusesOutput
+	//var es_in costoptimizationhub.ListEnrollmentStatusesInput
+	//var up_out costoptimizationhub.UpdateEnrollmentStatusOutput
+	//var up_in costoptimizationhub.UpdatePreferencesInput
+
+	resourceName := "aws_costoptimizationhub_enrollment.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CostOptimizationHub),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnrollmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnrollmentConfig_MemberAccountDiscountVisibility(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnrollmentExists(ctx, resourceName, &les_out),
+					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", "false"),
+					resource.TestCheckResourceAttr(resourceName, "member_account_discount_visibility", "None"),
+					resource.TestCheckResourceAttr(resourceName, "savings_estimation_mode", "BeforeDiscounts"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+func TestAccCostOptimizationHubEnrollment_SavingsEstimationMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	// TIP: This is a long-running test guard for tests that run longer than
+	// 300s (5 min) generally.
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var les_out costoptimizationhub.ListEnrollmentStatusesOutput
+	//var es_in costoptimizationhub.ListEnrollmentStatusesInput
+	//var up_out costoptimizationhub.UpdateEnrollmentStatusOutput
+	//var up_in costoptimizationhub.UpdatePreferencesInput
+
+	resourceName := "aws_costoptimizationhub_enrollment.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CostOptimizationHub),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnrollmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEnrollmentConfig_SavingsEstimationMode(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnrollmentExists(ctx, resourceName, &les_out),
+					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", "false"),
+					resource.TestCheckResourceAttr(resourceName, "member_account_discount_visibility", "All"),
+					resource.TestCheckResourceAttr(resourceName, "savings_estimation_mode", "AfterDiscounts"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccCostOptimizationHubEnrollment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -226,6 +348,28 @@ func testAccCheckEnrollmentExists(ctx context.Context, name string, enrollment *
 func testAccEnrollmentConfig_basic() string {
 	return `
 	resource "aws_costoptimizationhub_enrollment" "test" {
+	}	
+`
+}
+
+func testAccEnrollmentConfig_IncludeMemberAccounts() string {
+	return `
+	resource "aws_costoptimizationhub_enrollment" "test" {
+		include_member_accounts = true
+	}	
+`
+}
+func testAccEnrollmentConfig_MemberAccountDiscountVisibility() string {
+	return `
+	resource "aws_costoptimizationhub_enrollment" "test" {
+		member_account_discount_visibility = "None"
+	}	
+`
+}
+func testAccEnrollmentConfig_SavingsEstimationMode() string {
+	return `
+	resource "aws_costoptimizationhub_enrollment" "test" {
+		savings_estimation_mode = "AfterDiscounts"
 	}	
 `
 }
