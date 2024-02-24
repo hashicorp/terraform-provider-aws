@@ -248,25 +248,12 @@ func resourcePipeline() *schema.Resource {
 				MaxItems: 50,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"provider_type": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.PipelineTriggerProviderType](),
-						},
 						"git_configuration": {
 							Type:     schema.TypeList,
 							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"source_action_name": {
-										Type:     schema.TypeString,
-										Required: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(1, 100),
-											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
-										),
-									},
 									"pull_request": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -442,8 +429,21 @@ func resourcePipeline() *schema.Resource {
 											},
 										},
 									},
+									"source_action_name": {
+										Type:     schema.TypeString,
+										Required: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(1, 100),
+											validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.@-]+`), ""),
+										),
+									},
 								},
 							},
+						},
+						"provider_type": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.PipelineTriggerProviderType](),
 						},
 					},
 				},
@@ -1591,9 +1591,8 @@ func flattenGitConfiguration(apiObject *types.GitConfiguration) map[string]inter
 func flattenTriggerDeclaration(apiObject types.PipelineTriggerDeclaration) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
-	tfMap["provider_type"] = apiObject.ProviderType
-
 	tfMap["git_configuration"] = []interface{}{flattenGitConfiguration(apiObject.GitConfiguration)}
+	tfMap["provider_type"] = apiObject.ProviderType
 
 	return tfMap
 }
