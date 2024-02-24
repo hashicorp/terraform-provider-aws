@@ -73,8 +73,7 @@ func main() {
 		sourceName := foo.FileName
 		ext := filepath.Ext(sourceName)
 		sourceName = strings.TrimSuffix(sourceName, ext)
-		// filename := filepath.Join("./internal/service", servicePackage, fmt.Sprintf("%s_tags_test.go", sourceName))
-		filename := fmt.Sprintf("%s_tags_test.go", sourceName)
+		filename := fmt.Sprintf("%s_tags_gen_test.go", sourceName)
 
 		d := g.NewGoFileDestination(filename)
 
