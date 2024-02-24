@@ -67,6 +67,11 @@ func TestAccConfigService_serial(t *testing.T) {
 			"updateS3Template":      testAccOrganizationConformancePack_updateS3Template,
 			"updateTemplateBody":    testAccOrganizationConformancePack_updateTemplateBody,
 		},
+		"OrganizationCustomPolicyRule": {
+			"basic":      testAccOrganizationCustomPolicyRule_basic,
+			"disappears": testAccOrganizationCustomPolicyRule_disappears,
+			"policyText": testAccOrganizationCustomPolicyRule_PolicyText,
+		},
 		"OrganizationCustomRule": {
 			"basic":                     testAccOrganizationCustomRule_basic,
 			"disappears":                testAccOrganizationCustomRule_disappears,

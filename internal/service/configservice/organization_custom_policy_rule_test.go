@@ -20,12 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccConfigServiceOrganizationCustomPolicyRule_basic(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+func testAccOrganizationCustomPolicyRule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var rule types.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_custom_policy_rule.test"
@@ -67,12 +63,8 @@ func TestAccConfigServiceOrganizationCustomPolicyRule_basic(t *testing.T) {
 	})
 }
 
-func TestAccConfigServiceOrganizationCustomPolicyRule_disappears(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+func testAccOrganizationCustomPolicyRule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var organizationcustompolicy types.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_custom_policy_rule.test"
@@ -99,12 +91,8 @@ func TestAccConfigServiceOrganizationCustomPolicyRule_disappears(t *testing.T) {
 	})
 }
 
-func TestAccConfigServiceOrganizationCustomPolicyRule_PolicyText(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+func testAccOrganizationCustomPolicyRule_PolicyText(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var organizationcustompolicy types.OrganizationConfigRule
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_organization_custom_policy_rule.test"
