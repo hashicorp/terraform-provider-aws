@@ -17,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfconfig "github.com/hashicorp/terraform-provider-aws/internal/service/configservice"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -444,12 +443,6 @@ func testAccCheckOrganizationConformancePackDestroy(ctx context.Context) resourc
 			_, err := tfconfig.FindOrganizationConformancePackByName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
-				continue
-			}
-
-			// In the event the Organizations Organization is deleted first, its Conformance Packs
-			// are deleted and we can continue through the loop.
-			if errs.IsA[*types.OrganizationAccessDeniedException](err) {
 				continue
 			}
 

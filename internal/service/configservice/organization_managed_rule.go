@@ -161,9 +161,9 @@ func resourceOrganizationManagedRuleCreate(ctx context.Context, d *schema.Resour
 		input.OrganizationManagedRuleMetadata.TagValueScope = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func() (interface{}, error) {
 		return conn.PutOrganizationConfigRule(ctx, input)
-	})
+	}, "This action can only be made by accounts in an AWS Organization")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ConfigService Organization Managed Rule (%s): %s", name, err)
@@ -330,6 +330,13 @@ func findOrganizationConfigRules(ctx context.Context, conn *configservice.Client
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if errs.IsAErrorMessageContains[*types.OrganizationAccessDeniedException](err, "This action can only be made by accounts in an AWS Organization") {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,

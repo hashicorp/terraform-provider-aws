@@ -156,9 +156,9 @@ func resourceOrganizationConformancePackCreate(ctx context.Context, d *schema.Re
 		input.TemplateS3Uri = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func() (interface{}, error) {
 		return conn.PutOrganizationConformancePack(ctx, input)
-	})
+	}, "This action can only be made by accounts in an AWS Organization")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ConfigService Organization Conformance Pack (%s): %s", name, err)
@@ -302,6 +302,13 @@ func findOrganizationConformancePacks(ctx context.Context, conn *configservice.C
 			}
 		}
 
+		if errs.IsAErrorMessageContains[*types.OrganizationAccessDeniedException](err, "This action can only be made by accounts in an AWS Organization") {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
 		if err != nil {
 			return nil, err
 		}
@@ -358,6 +365,13 @@ func findOrganizationConformancePackStatuses(ctx context.Context, conn *configse
 			}
 		}
 
+		if errs.IsAErrorMessageContains[*types.OrganizationAccessDeniedException](err, "This action can only be made by accounts in an AWS Organization") {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
 		if err != nil {
 			return nil, err
 		}
@@ -387,6 +401,13 @@ func findOrganizationConformancePackDetailedStatuses(ctx context.Context, conn *
 		page, err := pages.NextPage(ctx)
 
 		if errs.IsA[*types.NoSuchOrganizationConformancePackException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if errs.IsAErrorMessageContains[*types.OrganizationAccessDeniedException](err, "This action can only be made by accounts in an AWS Organization") {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
