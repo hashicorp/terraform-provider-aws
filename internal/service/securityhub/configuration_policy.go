@@ -5,7 +5,6 @@ package securityhub
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"log"
 	"math"
@@ -120,6 +119,10 @@ func ResourceConfigurationPolicy() *schema.Resource {
 						},
 					},
 				},
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 		},
 	}
@@ -272,20 +275,18 @@ func resourceConfigurationPolicyCreate(ctx context.Context, d *schema.ResourceDa
 	if v, ok := d.Get("security_hub_policy").([]interface{}); ok && len(v) > 0 {
 		policy := expandSecurityHubPolicy(v[0].(map[string]interface{}))
 		if err := validateSecurityHubPolicy(policy); err != nil {
-			requestBody, _ := json.MarshalIndent(policy, "", " ")
-			return sdkdiag.AppendErrorf(diags, "creating Security Hub Configuration Policy (%s): %s, %s", *input.Name, err, string(requestBody))
+			return sdkdiag.AppendErrorf(diags, "creating Security Hub Configuration Policy (%s): %s", *input.Name, err)
 		}
 		input.ConfigurationPolicy = policy
 	}
 
 	out, err := conn.CreateConfigurationPolicy(ctx, input)
 	if err != nil {
-		requestBody, _ := json.MarshalIndent(input, "", " ")
-		return sdkdiag.AppendErrorf(diags, "creating Security Hub Configuration Policy (%s): %s for request %s", *input.Name, err, string(requestBody))
+		return sdkdiag.AppendErrorf(diags, "creating Security Hub Configuration Policy (%s): %s", *input.Name, err)
 	}
 
 	if d.IsNewResource() {
-		d.SetId(*out.Arn)
+		d.SetId(*out.Id)
 	}
 
 	return append(diags, resourceConfigurationPolicyRead(ctx, d, meta)...)
@@ -307,16 +308,14 @@ func resourceConfigurationPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 	if v, ok := d.Get("security_hub_policy").([]interface{}); ok && len(v) > 0 {
 		policy := expandSecurityHubPolicy(v[0].(map[string]interface{}))
 		if err := validateSecurityHubPolicy(policy); err != nil {
-			requestBody, _ := json.MarshalIndent(policy, "", " ")
-			return sdkdiag.AppendErrorf(diags, "updating Security Hub Configuration Policy (%s): %s, %s", d.Id(), err, requestBody)
+			return sdkdiag.AppendErrorf(diags, "updating Security Hub Configuration Policy (%s): %s", d.Id(), err)
 		}
 		input.ConfigurationPolicy = policy
 	}
 
 	_, err := conn.UpdateConfigurationPolicy(ctx, input)
 	if err != nil {
-		requestBody, _ := json.MarshalIndent(input, "", " ")
-		return sdkdiag.AppendErrorf(diags, "updating Security Hub Configuration Policy (%s): %s from request:\n%s", d.Id(), err, string(requestBody))
+		return sdkdiag.AppendErrorf(diags, "updating Security Hub Configuration Policy (%s): %s", d.Id(), err)
 	}
 
 	return append(diags, resourceConfigurationPolicyRead(ctx, d, meta)...)
@@ -343,6 +342,7 @@ func resourceConfigurationPolicyRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set("name", out.Name)
 	d.Set("description", out.Description)
+	d.Set("arn", out.Arn)
 	if err := d.Set("security_hub_policy", []interface{}{flattenSecurityHubPolicy(out.ConfigurationPolicy)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting security_hub_policy: %s", err)
 	}

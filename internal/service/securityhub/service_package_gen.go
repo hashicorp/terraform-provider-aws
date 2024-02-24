@@ -41,6 +41,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_securityhub_configuration_policy",
 		},
 		{
+			Factory:  ResourceConfigurationPolicyAssociation,
+			TypeName: "aws_securityhub_configuration_policy_association",
+		},
+		{
 			Factory:  ResourceFindingAggregator,
 			TypeName: "aws_securityhub_finding_aggregator",
 		},
