@@ -503,11 +503,12 @@ func waitOrganizationConfigRuleUpdated(ctx context.Context, conn *configservice.
 
 func waitOrganizationConfigRuleDeleted(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConfigRuleStatus, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.OrganizationRuleStatusDeleteInProgress),
-		Target:  []string{},
-		Refresh: statusOrganizationConfigRule(ctx, conn, name),
-		Timeout: timeout,
-		Delay:   10 * time.Second,
+		Pending:                   enum.Slice(types.OrganizationRuleStatusDeleteInProgress),
+		Target:                    []string{},
+		Refresh:                   statusOrganizationConfigRule(ctx, conn, name),
+		Timeout:                   timeout,
+		Delay:                     10 * time.Second,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
