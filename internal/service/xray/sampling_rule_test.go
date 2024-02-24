@@ -328,7 +328,7 @@ resource "aws_xray_sampling_rule" "test" {
   }
 
   tags = {
-	%[2]q = null
+    %[2]q = null
   }
 }
 `, rName, tagKey1)

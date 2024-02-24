@@ -231,7 +231,7 @@ resource "aws_xray_group" "test" {
   filter_expression = "responsetime > 5"
 
   tags = {
-	%[2]q = null
+    %[2]q = null
   }
 }
 `, rName, tagKey1)
