@@ -51,9 +51,10 @@ func ResourceNamespace() *schema.Resource {
 				ValidateFunc: verify.ValidKMSKeyID,
 			},
 			"admin_user_password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				ConflictsWith: []string{"manage_admin_password"},
 			},
 			"admin_username": {
 				Type:      schema.TypeString,
@@ -165,12 +166,6 @@ func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if v, ok := d.GetOk("manage_admin_password"); ok {
 		input.ManageAdminPassword = aws.Bool(v.(bool))
-	}
-
-	if _, ok := d.GetOk("admin_user_password"); !ok {
-		if _, ok := d.GetOk("manage_admin_password"); !ok {
-			return sdkdiag.AppendErrorf(diags, `provider.aws: aws_redshiftserverless_namespace: %s: one of "admin_user_password" or "manage_admin_password" is required`, d.Get("namespace_name").(string))
-		}
 	}
 
 	output, err := conn.CreateNamespaceWithContext(ctx, input)
