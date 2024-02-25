@@ -157,6 +157,11 @@ func ResourceTargetGroup() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"load_balancer_arns": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"load_balancing_algorithm_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -536,6 +541,7 @@ func resourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "setting health_check: %s", err)
 	}
 	d.Set("ip_address_type", targetGroup.IpAddressType)
+	d.Set("load_balancer_arns", flex.FlattenStringSet(targetGroup.LoadBalancerArns))
 	d.Set("name", targetGroup.TargetGroupName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(targetGroup.TargetGroupName)))
 	targetType := aws.StringValue(targetGroup.TargetType)

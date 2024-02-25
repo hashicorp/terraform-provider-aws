@@ -64,7 +64,7 @@ cloudformation,cloudformation,cloudformation,cloudformation,,cloudformation,,,Cl
 cloudfront,cloudfront,cloudfront,cloudfront,,cloudfront,,,CloudFront,CloudFront,,1,2,,aws_cloudfront_,,cloudfront_,CloudFront,Amazon,,,,,,,CloudFront,ListDistributions,,
 cloudfront-keyvaluestore,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,,CloudFrontKeyValueStore,CloudFrontKeyValueStore,,,2,,aws_cloudfrontkeyvaluestore_,,cloudfront_keyvaluestore_,CloudFront KeyValueStore,Amazon,,,,,,,CloudFront KeyValueStore,ListKeys,"KvsARN: aws_sdkv2.String(""arn:aws:cloudfront::111122223333:key-value-store/MaxAge"")",
 cloudhsm,cloudhsm,cloudhsm,cloudhsm,,,,,,,,,,,,,,CloudHSM,AWS,x,,,,,,,,,Legacy
-cloudhsmv2,cloudhsmv2,cloudhsmv2,cloudhsmv2,,cloudhsmv2,,cloudhsm,CloudHSMV2,CloudHSMV2,,1,,aws_cloudhsm_v2_,aws_cloudhsmv2_,,cloudhsm,CloudHSM,AWS,,,,,,,CloudHSM V2,DescribeClusters,,
+cloudhsmv2,cloudhsmv2,cloudhsmv2,cloudhsmv2,,cloudhsmv2,,cloudhsm,CloudHSMV2,CloudHSMV2,,,2,aws_cloudhsm_v2_,aws_cloudhsmv2_,,cloudhsm,CloudHSM,AWS,,,,,,,CloudHSM V2,DescribeClusters,,
 cloudsearch,cloudsearch,cloudsearch,cloudsearch,,cloudsearch,,,CloudSearch,CloudSearch,,,2,,aws_cloudsearch_,,cloudsearch_,CloudSearch,Amazon,,,,,,,CloudSearch,ListDomainNames,,
 cloudsearchdomain,cloudsearchdomain,cloudsearchdomain,cloudsearchdomain,,cloudsearchdomain,,,CloudSearchDomain,CloudSearchDomain,,1,,,aws_cloudsearchdomain_,,cloudsearchdomain_,CloudSearch Domain,Amazon,,x,,,,,CloudSearch Domain,,,
 ,,,,,,,,,,,,,,,,,CloudShell,AWS,x,,,,,,,,,No SDK support
@@ -295,7 +295,7 @@ rds-data,rdsdata,rdsdataservice,rdsdata,,rdsdata,,rdsdataservice,RDSData,RDSData
 pi,pi,pi,pi,,pi,,,PI,PI,,1,,,aws_pi_,,pi_,RDS Performance Insights (PI),Amazon,,x,,,,,PI,,,
 rbin,rbin,recyclebin,rbin,,rbin,,recyclebin,RBin,RecycleBin,,,2,,aws_rbin_,,rbin_,Recycle Bin (RBin),Amazon,,,,,,,rbin,ListRules,ResourceType: awstypes.ResourceTypeEc2Image,
 ,,,,,,,,,,,,,,,,,Red Hat OpenShift Service on AWS (ROSA),AWS,x,,,,,,,,,No SDK support
-redshift,redshift,redshift,redshift,,redshift,,,Redshift,Redshift,,1,,,aws_redshift_,,redshift_,Redshift,Amazon,,,,,,,Redshift,DescribeClusters,,
+redshift,redshift,redshift,redshift,,redshift,,,Redshift,Redshift,,1,2,,aws_redshift_,,redshift_,Redshift,Amazon,,,,,,,Redshift,DescribeClusters,,
 redshift-data,redshiftdata,redshiftdataapiservice,redshiftdata,,redshiftdata,,redshiftdataapiservice,RedshiftData,RedshiftDataAPIService,,,2,,aws_redshiftdata_,,redshiftdata_,Redshift Data,Amazon,,,,,,,Redshift Data,ListDatabases,"Database: aws_sdkv2.String(""test"")",
 redshift-serverless,redshiftserverless,redshiftserverless,redshiftserverless,,redshiftserverless,,,RedshiftServerless,RedshiftServerless,,1,2,,aws_redshiftserverless_,,redshiftserverless_,Redshift Serverless,Amazon,,,,,,,Redshift Serverless,ListNamespaces,,
 rekognition,rekognition,rekognition,rekognition,,rekognition,,,Rekognition,Rekognition,,,2,,aws_rekognition_,,rekognition_,Rekognition,Amazon,,,,,,,Rekognition,ListCollections,,

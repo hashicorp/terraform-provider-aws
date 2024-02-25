@@ -30,7 +30,7 @@ func TestAccKeyspacesKeyspace_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -59,7 +59,7 @@ func TestAccKeyspacesKeyspace_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -82,7 +82,7 @@ func TestAccKeyspacesKeyspace_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx),
 		Steps: []resource.TestStep{

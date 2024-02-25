@@ -31,7 +31,7 @@ func TestAccRDSProxyTarget_instance(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -68,7 +68,7 @@ func TestAccRDSProxyTarget_cluster(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -105,7 +105,7 @@ func TestAccRDSProxyTarget_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyTargetDestroy(ctx),
 		Steps: []resource.TestStep{

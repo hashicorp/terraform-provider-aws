@@ -58,6 +58,7 @@ func ResourceInstance() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
+			Read:   schema.DefaultTimeout(15 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
@@ -1385,7 +1386,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.Get("get_password_data").(bool) {
-		passwordData, err := getInstancePasswordData(ctx, aws.StringValue(instance.InstanceId), conn)
+		passwordData, err := getInstancePasswordData(ctx, aws.StringValue(instance.InstanceId), conn, d.Timeout(schema.TimeoutRead))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
 		}
@@ -2680,7 +2681,7 @@ func readInstanceShutdownBehavior(ctx context.Context, d *schema.ResourceData, c
 	return nil
 }
 
-func getInstancePasswordData(ctx context.Context, instanceID string, conn *ec2.EC2) (string, error) {
+func getInstancePasswordData(ctx context.Context, instanceID string, conn *ec2.EC2, timeout time.Duration) (string, error) {
 	log.Printf("[INFO] Reading password data for instance %s", instanceID)
 
 	var passwordData string
@@ -2688,7 +2689,7 @@ func getInstancePasswordData(ctx context.Context, instanceID string, conn *ec2.E
 	input := &ec2.GetPasswordDataInput{
 		InstanceId: aws.String(instanceID),
 	}
-	err := retry.RetryContext(ctx, 15*time.Minute, func() *retry.RetryError {
+	err := retry.RetryContext(ctx, timeout, func() *retry.RetryError {
 		var err error
 		resp, err = conn.GetPasswordDataWithContext(ctx, input)
 

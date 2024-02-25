@@ -35,7 +35,7 @@ func TestAccEvidentlyLaunch_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -91,7 +91,7 @@ func TestAccEvidentlyLaunch_updateDescription(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -135,7 +135,7 @@ func TestAccEvidentlyLaunch_updateGroups(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -217,7 +217,7 @@ func TestAccEvidentlyLaunch_updateMetricMonitors(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -309,7 +309,7 @@ func TestAccEvidentlyLaunch_updateRandomizationSalt(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -355,7 +355,7 @@ func TestAccEvidentlyLaunch_scheduledSplitsConfig_updateSteps(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -444,7 +444,7 @@ func TestAccEvidentlyLaunch_scheduledSplitsConfig_steps_updateSegmentOverrides(t
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -551,7 +551,7 @@ func TestAccEvidentlyLaunch_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -601,7 +601,7 @@ func TestAccEvidentlyLaunch_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLaunchDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -34,7 +34,7 @@ func TestAccRDSProxy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -85,7 +85,7 @@ func TestAccRDSProxy_name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -124,7 +124,7 @@ func TestAccRDSProxy_debugLogging(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -163,7 +163,7 @@ func TestAccRDSProxy_idleClientTimeout(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -202,7 +202,7 @@ func TestAccRDSProxy_requireTLS(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -242,7 +242,7 @@ func TestAccRDSProxy_roleARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -282,7 +282,7 @@ func TestAccRDSProxy_vpcSecurityGroupIDs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -324,7 +324,7 @@ func TestAccRDSProxy_authDescription(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -370,7 +370,7 @@ func TestAccRDSProxy_authIAMAuth(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -416,7 +416,7 @@ func TestAccRDSProxy_authSecretARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -458,7 +458,7 @@ func TestAccRDSProxy_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -507,7 +507,7 @@ func TestAccRDSProxy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccDBProxyPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.RDSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProxyDestroy(ctx),
 		Steps: []resource.TestStep{

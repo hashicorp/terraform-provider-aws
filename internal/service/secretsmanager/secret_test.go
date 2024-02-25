@@ -28,7 +28,7 @@ func TestAccSecretsManagerSecret_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -63,7 +63,7 @@ func TestAccSecretsManagerSecret_withNamePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,7 +93,7 @@ func TestAccSecretsManagerSecret_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -117,7 +117,7 @@ func TestAccSecretsManagerSecret_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -153,7 +153,7 @@ func TestAccSecretsManagerSecret_basicReplica(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 2) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy:             testAccCheckSecretDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -177,7 +177,7 @@ func TestAccSecretsManagerSecret_overwriteReplica(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); acctest.PreCheckMultipleRegion(t, 3) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
 		CheckDestroy:             testAccCheckSecretDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -214,7 +214,7 @@ func TestAccSecretsManagerSecret_kmsKeyID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -250,7 +250,7 @@ func TestAccSecretsManagerSecret_RecoveryWindowInDays_recreate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -287,7 +287,7 @@ func TestAccSecretsManagerSecret_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -334,7 +334,7 @@ func TestAccSecretsManagerSecret_policy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecretsManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecretDestroy(ctx),
 		Steps: []resource.TestStep{

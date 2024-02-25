@@ -98,7 +98,7 @@ func dataSourceServerRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("arn", output.Arn)
 	d.Set("certificate", output.Certificate)
 	d.Set("domain", output.Domain)
-	d.Set("endpoint", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.server.transfer", serverID)))
+	d.Set("endpoint", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.server.transfer", serverID)))
 	d.Set("endpoint_type", output.EndpointType)
 	d.Set("identity_provider_type", output.IdentityProviderType)
 	if output.IdentityProviderDetails != nil {

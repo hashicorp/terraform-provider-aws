@@ -31,7 +31,7 @@ func testAccDelegatedAdminAccount_basic(t *testing.T) {
 			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDelegatedAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -82,7 +82,7 @@ func testAccDelegatedAdminAccount_disappears(t *testing.T) {
 			acctest.PreCheckInspector2(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Inspector2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDelegatedAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
