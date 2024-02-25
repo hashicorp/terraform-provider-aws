@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -170,14 +169,15 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 										},
 									},
 									"workflow": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[workflowUpdateModel](ctx),
 										Validators: []validator.List{
 											listvalidator.SizeAtMost(1),
 										},
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"status": schema.StringAttribute{
+													CustomType: fwtypes.StringEnumType[awstypes.WorkflowStatus](),
 													Optional:   true,
-													Validators: []validator.String{enum.FrameworkValidate[awstypes.WorkflowStatus]()},
 												},
 											},
 										},
@@ -583,6 +583,7 @@ type automationRulesFindingFieldsUpdateModel struct {
 	Types             fwtypes.ListValueOf[types.String]                    `tfsdk:"types"`
 	UserDefinedFields fwtypes.MapValueOf[types.String]                     `tfsdk:"user_defined_fields"`
 	VerificationState fwtypes.StringEnum[awstypes.VerificationState]       `tfsdk:"verification_state"`
+	Workflow          fwtypes.ListNestedObjectValueOf[workflowUpdateModel] `tfsdk:"workflow"`
 }
 
 type noteUpdateModel struct {
@@ -598,6 +599,10 @@ type relatedFindingModel struct {
 type severityUpdateModel struct {
 	ID         types.String `tfsdk:"id"`
 	ProductARN fwtypes.ARN  `tfsdk:"product_arn"`
+}
+
+type workflowUpdateModel struct {
+	Status fwtypes.StringEnum[awstypes.WorkflowStatus] `tfsdk:"status"`
 }
 
 type automationRulesFindingFiltersModel struct {
