@@ -38,6 +38,10 @@ func ResourceConfigurationPolicyAssociation() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Read: schema.DefaultTimeout(180 * time.Second),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"target_id": {
 				Type:        schema.TypeString,
@@ -117,15 +121,11 @@ func resourceConfigurationPolicyAssociationDelete(ctx context.Context, d *schema
 	return diags
 }
 
-const (
-	configurationPolicyAssociationTimeout = 60 * time.Second
-)
-
 func resourceConfigurationPolicyAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	out, err := waitConfigurationPolicyAssociationSuccess(ctx, conn, GetTarget(d.Id()), configurationPolicyAssociationTimeout)
+	out, err := waitConfigurationPolicyAssociationSuccess(ctx, conn, GetTarget(d.Id()), d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Configuration Policy Association (%s) not found, removing from state", d.Id())

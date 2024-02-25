@@ -34,6 +34,11 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
+		Timeouts: &schema.ResourceTimeout{
+			Read:   schema.DefaultTimeout(180 * time.Second),
+			Delete: schema.DefaultTimeout(180 * time.Second),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"auto_enable": {
 				Type:     schema.TypeBool,
@@ -113,7 +118,7 @@ func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "deleting Security Hub Organization Configuration (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitOrganizationConfigurationEnabled(ctx, conn, organizationsConfigurationStatusTimeout)
+	_, err = waitOrganizationConfigurationEnabled(ctx, conn, d.Timeout(schema.TimeoutDelete))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Security Hub Organization Configuration (%s): %s", d.Id(), err)
 	}
@@ -122,13 +127,11 @@ func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-const organizationsConfigurationStatusTimeout = 300 * time.Second
-
 func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	output, err := waitOrganizationConfigurationEnabled(ctx, conn, organizationsConfigurationStatusTimeout)
+	output, err := waitOrganizationConfigurationEnabled(ctx, conn, d.Timeout(schema.TimeoutRead))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Organization Configuration %s not found, removing from state", d.Id())
