@@ -523,7 +523,7 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := d.Set("variable", flattenVariableDeclarations(pipeline.Variables)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting variable: %s", err)
 	}
-	if err := d.Set("trigger", flattenTriggerDeclarations(d, pipeline.Triggers)); err != nil {
+	if err := d.Set("trigger", flattenTriggerDeclarations(pipeline.Triggers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting trigger: %s", err)
 	}
 
@@ -1597,7 +1597,7 @@ func flattenTriggerDeclaration(apiObject types.PipelineTriggerDeclaration) map[s
 	return tfMap
 }
 
-func flattenTriggerDeclarations(d *schema.ResourceData, apiObjects []types.PipelineTriggerDeclaration) []interface{} {
+func flattenTriggerDeclarations(apiObjects []types.PipelineTriggerDeclaration) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
