@@ -1,5 +1,9 @@
 ## 5.39.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_apprunner_deployment` ([#35758](https://github.com/hashicorp/terraform-provider-aws/issues/35758))
+
 ENHANCEMENTS:
 
 * resource/aws_instance: Add configurable `read` timeout ([#35955](https://github.com/hashicorp/terraform-provider-aws/issues/35955))
