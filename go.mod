@@ -95,7 +95,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.9.1
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.1
 	github.com/aws/aws-sdk-go-v2/service/osis v1.8.1
-	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.4.2
+	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.5.1
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.10.2
 	github.com/aws/aws-sdk-go-v2/service/polly v1.38.2
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.26.4

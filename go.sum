@@ -224,8 +224,8 @@ github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.1 h1:it1xeN5Unxm
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.1/go.mod h1:P0MSNa4HLhC1nNIcVVmJAMLt87qNWjqizeN3xqnRnHs=
 github.com/aws/aws-sdk-go-v2/service/osis v1.8.1 h1:ese7YHaZ05lKrNbk+cM1F+cawV9gAIU47iYjApcOh7c=
 github.com/aws/aws-sdk-go-v2/service/osis v1.8.1/go.mod h1:dnIOAFr3mIzKHiuMYp0bzZJCLsE/CeWzw32IVgRyd/4=
-github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.4.2 h1:Su8Yk4atogIfyE9c5VhP81alMF1BKCFtRgr9wHedlw0=
-github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.4.2/go.mod h1:yXevGYI+/A2ZeO9sICAPk/tolz20zckGO9J1A/Mz4WI=
+github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.5.1 h1:3xjnMZNuLN6jTf/AOu8ErgI6BHfVTuzx4M/1JxM1pJw=
+github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.5.1/go.mod h1:hISA8L4B2e1OtS/QhNMJHu79zTZJINYjSMKoVYXeS/g=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.10.2 h1:7hQ0nmBVI1PPPGkg/k0pCuIhZkYfbKO88xaha+pJI04=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.10.2/go.mod h1:D812N6HHBzeMlcB6ESdTKBfbzpKN+caPIzGRuTCjEOE=
 github.com/aws/aws-sdk-go-v2/service/polly v1.38.2 h1:sL6zqkJo/ZXiX+F+fgOIfP0xvfKWtpsOvpsF2RMcJWc=
