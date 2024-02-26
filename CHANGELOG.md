@@ -8,6 +8,7 @@ ENHANCEMENTS:
 
 * resource/aws_codepipeline: Add `trigger` configuration block ([#35475](https://github.com/hashicorp/terraform-provider-aws/issues/35475))
 * resource/aws_instance: Add configurable `read` timeout ([#35955](https://github.com/hashicorp/terraform-provider-aws/issues/35955))
+* resource/aws_mwaa_environment: Add `endpoint_management` attribute ([#35961](https://github.com/hashicorp/terraform-provider-aws/issues/35961))
 * resource/aws_redshiftserverless_namespace:
 Add attributes `admin_password_secret_kms_key_id` and `manage_admin_password` ([#35965](https://github.com/hashicorp/terraform-provider-aws/issues/35965))
 * resource/aws_spot_instance_request: Add configurable `read` timeout ([#35955](https://github.com/hashicorp/terraform-provider-aws/issues/35955))
