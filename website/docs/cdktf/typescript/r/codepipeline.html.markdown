@@ -195,6 +195,9 @@ This resource supports the following arguments:
 * `pipelineType` - (Optional) Type of the pipeline. Possible values are: `V1` and `V2`. Default value is `V1`.
 * `roleArn` - (Required) A service role Amazon Resource Name (ARN) that grants AWS CodePipeline permission to make calls to AWS services on your behalf.
 * `artifactStore` (Required) One or more artifact_store blocks. Artifact stores are documented below.
+* `executionMode` (Optional) The method that the pipeline will use to handle multiple executions. The default mode is `SUPERSEDED`. For value values, refer to the [AWS documentation](https://docs.aws.amazon.com/codepipeline/latest/APIReference/API_PipelineDeclaration.html#CodePipeline-Type-PipelineDeclaration-executionMode).
+
+  **Note:** `QUEUED` or `PARALLEL` mode can only be used with V2 pipelines.
 * `stage` (Minimum of at least two `stage` blocks is required) A stage block. Stages are documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `variable` - (Optional) A pipeline-level variable block. Valid only when `pipelineType` is `V2`. Variable are documented below.
@@ -275,4 +278,4 @@ Using `terraform import`, import CodePipelines using the name. For example:
 % terraform import aws_codepipeline.foo example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e1025a278a59d0c266797634d95f819b31425f7facb05b1eeff5d7b24738c176 -->
+<!-- cache-key: cdktf-0.20.1 input-43cfb826461255334152dc12306b158442ad6952f1aeafd82e4fd6e6c90401b9 -->
