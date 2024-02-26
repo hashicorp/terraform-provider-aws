@@ -102,3 +102,12 @@ func TestStringEnumTypeValidate(t *testing.T) {
 		})
 	}
 }
+
+func TestStringEnumZeroValue(t *testing.T) {
+	t.Parallel()
+
+	var x fwtypes.StringEnum[awstypes.AclPermission]
+	if got, want := x.IsNull(), true; got != want {
+		t.Errorf("IsNull = %t, want %t", got, want)
+	}
+}
