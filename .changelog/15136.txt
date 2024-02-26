@@ -5,3 +5,7 @@ resource/aws_config_configuration_recorder: Fix `panic: interface conversion: in
 ```release-note:enhancement
 resource/aws_config_configuration_recorder: Add plan-time validation of `aws_config_organization_custom_rule.lambda_function_arn`
 ```
+
+```release-note:bug
+resource/aws_config_rule: Change `name` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew)
+```
