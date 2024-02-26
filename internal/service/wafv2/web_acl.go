@@ -63,6 +63,11 @@ func ResourceWebACL() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"application_integration_url": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+				},
 				"association_config": associationConfigSchema(),
 				"capacity": {
 					Type:     schema.TypeInt,
@@ -253,6 +258,7 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("description", webACL.Description)
 	d.Set("lock_token", output.LockToken)
 	d.Set("name", webACL.Name)
+	d.Set("application_integration_url", output.ApplicationIntegrationURL)
 	rules := filterWebACLRules(webACL.Rules, expandWebACLRules(d.Get("rule").(*schema.Set).List()))
 	if err := d.Set("rule", flattenWebACLRules(rules)); err != nil {
 		return diag.Errorf("setting rule: %s", err)
