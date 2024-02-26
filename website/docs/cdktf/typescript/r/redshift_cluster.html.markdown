@@ -96,6 +96,7 @@ This resource supports the following arguments:
   Password must contain at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one number.
 * `masterPasswordSecretKmsKeyId` - (Optional) ID of the KMS key used to encrypt the cluster admin credentials secret.
 * `masterUsername` - (Required unless a `snapshotIdentifier` is provided) Username for the master DB user.
+* `multiAz` - (Optional) Specifies if the Redshift cluster is multi-AZ.
 * `vpcSecurityGroupIds` - (Optional) A list of Virtual Private Cloud (VPC) security groups to be associated with the cluster.
 * `clusterSubnetGroupName` - (Optional) The name of a cluster subnet group to be associated with this cluster. If this parameter is not provided the resulting cluster will be deployed outside virtual private cloud (VPC).
 * `availabilityZone` - (Optional) The EC2 Availability Zone (AZ) in which you want Amazon Redshift to provision the cluster. For example, if you have several EC2 instances running in a specific Availability Zone, then you might want the cluster to be provisioned in the same zone in order to decrease network latency. Can only be changed if `availabilityZoneRelocationEnabled` is `true`.
@@ -225,4 +226,4 @@ Using `terraform import`, import Redshift Clusters using the `clusterIdentifier`
 % terraform import aws_redshift_cluster.myprodcluster tf-redshift-cluster-12345
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-319e699af8bea86cc52b0b11069bc07d0517d8528e32c3cfcc4e71b1e3a6dca2 -->
+<!-- cache-key: cdktf-0.20.1 input-c11ae9197def7f55cfd89a1e9dfeb03f0c0cf2850ac38ee4859936641ee9bfd8 -->
