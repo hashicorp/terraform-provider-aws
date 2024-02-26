@@ -760,6 +760,42 @@ func TestExpandSimpleNestedBlockWithStringEnum(t *testing.T) {
 	runAutoExpandTestCases(ctx, t, testCases)
 }
 
+func TestExpandComplexNestedBlockWithStringEnum(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field2 fwtypes.StringEnum[TestEnum] `tfsdk:"field2"`
+	}
+	type tf02 struct {
+		Field1 types.Int64                           `tfsdk:"field1"`
+		Field2 fwtypes.ListNestedObjectValueOf[tf01] `tfsdk:"field2"`
+	}
+	type aws02 struct {
+		Field2 TestEnum
+	}
+	type aws01 struct {
+		Field1 int64
+		Field2 *aws02
+	}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName:   "single nested valid value",
+			Source:     &tf02{Field1: types.Int64Value(1), Field2: fwtypes.NewListNestedObjectValueOfPtr(ctx, &tf01{Field2: fwtypes.StringEnumValue(TestEnumList)})},
+			Target:     &aws01{},
+			WantTarget: &aws01{Field1: 1, Field2: &aws02{Field2: TestEnumList}},
+		},
+		{
+			TestName:   "single nested empty value",
+			Source:     &tf02{Field1: types.Int64Value(1), Field2: fwtypes.NewListNestedObjectValueOfPtr(ctx, &tf01{Field2: fwtypes.StringEnumNull[TestEnum]()})},
+			Target:     &aws01{},
+			WantTarget: &aws01{Field1: 1, Field2: &aws02{Field2: ""}},
+		},
+	}
+	runAutoExpandTestCases(ctx, t, testCases)
+}
+
 type autoFlexTestCase struct {
 	Context    context.Context //nolint:containedctx // testing context use
 	TestName   string
