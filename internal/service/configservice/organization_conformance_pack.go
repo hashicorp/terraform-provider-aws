@@ -442,12 +442,12 @@ func statusOrganizationConformancePack(ctx context.Context, conn *configservice.
 
 func waitOrganizationConformancePackCreated(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConformancePackStatus, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.OrganizationResourceStatusCreateInProgress),
-		Target:  enum.Slice(types.OrganizationResourceStatusCreateSuccessful),
-		Refresh: statusOrganizationConformancePack(ctx, conn, name),
-		Timeout: timeout,
-		// Include a delay to help avoid ResourceDoesNotExist errors.
-		Delay: 30 * time.Second,
+		Pending:        enum.Slice(types.OrganizationResourceStatusCreateInProgress),
+		Target:         enum.Slice(types.OrganizationResourceStatusCreateSuccessful),
+		Refresh:        statusOrganizationConformancePack(ctx, conn, name),
+		Timeout:        timeout,
+		Delay:          30 * time.Second,
+		NotFoundChecks: 10,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -467,6 +467,7 @@ func waitOrganizationConformancePackUpdated(ctx context.Context, conn *configser
 		Target:  enum.Slice(types.OrganizationResourceStatusUpdateSuccessful),
 		Refresh: statusOrganizationConformancePack(ctx, conn, name),
 		Timeout: timeout,
+		Delay:   10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -482,10 +483,12 @@ func waitOrganizationConformancePackUpdated(ctx context.Context, conn *configser
 
 func waitOrganizationConformancePackDeleted(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConformancePackStatus, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.OrganizationResourceStatusDeleteInProgress),
-		Target:  []string{},
-		Refresh: statusOrganizationConformancePack(ctx, conn, name),
-		Timeout: timeout,
+		Pending:                   enum.Slice(types.OrganizationResourceStatusDeleteInProgress),
+		Target:                    []string{},
+		Refresh:                   statusOrganizationConformancePack(ctx, conn, name),
+		Timeout:                   timeout,
+		Delay:                     10 * time.Second,
+		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
