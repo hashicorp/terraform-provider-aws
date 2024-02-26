@@ -77,7 +77,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.12.1
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.49.1
-	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.9.4
+	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.52.1
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.2.2
