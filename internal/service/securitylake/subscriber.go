@@ -2,12 +2,14 @@ package securitylake
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -20,7 +22,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -172,6 +177,11 @@ func (r *subscriberResource) Schema(ctx context.Context, request resource.Schema
 					},
 				},
 			},
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+				Update: true,
+				Delete: true,
+			}),
 		},
 	}
 }
@@ -215,9 +225,16 @@ func (r *subscriberResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	subscriber := output.Subscriber
-	data.ID = fwflex.StringToFramework(ctx, subscriber.SubscriberId)
-	data.SubscriberArn = fwflex.StringToFramework(ctx, subscriber.SubscriberArn)
+	data.ID = fwflex.StringToFramework(ctx, output.Subscriber.SubscriberId)
+	data.SubscriberArn = fwflex.StringToFramework(ctx, output.Subscriber.SubscriberArn)
+
+	subscriber, err := waitSubscriberCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Security Lake Subscriber (%s) create", data.ID.ValueString()), err.Error())
+
+		return
+	}
 
 	var subscriberIdentity subscriberIdentityModel
 	response.Diagnostics.Append(fwflex.Flatten(ctx, subscriber.SubscriberIdentity, &subscriberIdentity)...)
@@ -282,25 +299,26 @@ func (r *subscriberResource) Read(ctx context.Context, request resource.ReadRequ
 }
 
 func (r *subscriberResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	conn := r.Meta().SecurityLakeClient(ctx)
 	var diags diag.Diagnostics
-	var plan, state subscriberResourceModel
+	var old, new subscriberResourceModel
 
-	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
-	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if !plan.AccessTypes.Equal(state.AccessTypes) ||
-		!plan.SubscriberDescription.Equal(state.SubscriberDescription) ||
-		!plan.SubscriberName.Equal(state.SubscriberName) ||
-		!plan.SubscriberIdentity.Equal(state.SubscriberIdentity) ||
-		!plan.Sources.Equal(state.Sources) ||
-		!plan.Tags.Equal(state.Tags) {
+	conn := r.Meta().SecurityLakeClient(ctx)
+
+	if !new.AccessTypes.Equal(old.AccessTypes) ||
+		!new.SubscriberDescription.Equal(old.SubscriberDescription) ||
+		!new.SubscriberName.Equal(old.SubscriberName) ||
+		!new.SubscriberIdentity.Equal(old.SubscriberIdentity) ||
+		!new.Sources.Equal(old.Sources) ||
+		!new.Tags.Equal(old.Tags) {
 
 		var sourcesData []subscriberSourcesModel
-		response.Diagnostics.Append(plan.Sources.ElementsAs(ctx, &sourcesData, false)...)
+		response.Diagnostics.Append(new.Sources.ElementsAs(ctx, &sourcesData, false)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -312,7 +330,7 @@ func (r *subscriberResource) Update(ctx context.Context, request resource.Update
 		}
 
 		input := &securitylake.UpdateSubscriberInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, plan, input)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -323,22 +341,16 @@ func (r *subscriberResource) Update(ctx context.Context, request resource.Update
 		output, err := conn.UpdateSubscriber(ctx, input)
 		if err != nil {
 			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.SecurityLake, create.ErrActionUpdating, ResNameSubscriber, plan.ID.String(), err),
+				create.ProblemStandardMessage(names.SecurityLake, create.ErrActionUpdating, ResNameSubscriber, new.ID.String(), err),
 				err.Error(),
 			)
 			return
 		}
-		if output == nil || output.Subscriber == nil {
-			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.SecurityLake, create.ErrActionUpdating, ResNameSubscriber, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
 
-		subscriber := output.Subscriber
-		plan.ID = fwflex.StringToFramework(ctx, subscriber.SubscriberId)
-		plan.SubscriberArn = fwflex.StringToFramework(ctx, subscriber.SubscriberArn)
+		new.ID = fwflex.StringToFramework(ctx, output.Subscriber.SubscriberId)
+		new.SubscriberArn = fwflex.StringToFramework(ctx, output.Subscriber.SubscriberArn)
+
+		subscriber, err := waitSubscriberUpdated(ctx, conn, new.ID.ValueString(), r.CreateTimeout(ctx, new.Timeouts))
 
 		var subscriberIdentity subscriberIdentityModel
 		response.Diagnostics.Append(fwflex.Flatten(ctx, subscriber.SubscriberIdentity, &subscriberIdentity)...)
@@ -346,17 +358,17 @@ func (r *subscriberResource) Update(ctx context.Context, request resource.Update
 			return
 		}
 
-		plan.SubscriberIdentity = fwtypes.NewListNestedObjectValueOfPtr(ctx, &subscriberIdentity)
+		new.SubscriberIdentity = fwtypes.NewListNestedObjectValueOfPtr(ctx, &subscriberIdentity)
 
 		sourcesOutput, d := flattenSubscriberSourcesModel(ctx, subscriber.Sources)
 		diags.Append(d...)
-		plan.Sources = sourcesOutput
+		new.Sources = sourcesOutput
 
-		plan.SubscriberName = fwflex.StringToFramework(ctx, subscriber.SubscriberName)
-		plan.SubscriberDescription = fwflex.StringToFramework(ctx, subscriber.SubscriberDescription)
+		new.SubscriberName = fwflex.StringToFramework(ctx, subscriber.SubscriberName)
+		new.SubscriberDescription = fwflex.StringToFramework(ctx, subscriber.SubscriberDescription)
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
 func (r *subscriberResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -374,15 +386,26 @@ func (r *subscriberResource) Delete(ctx context.Context, request resource.Delete
 
 	_, err := conn.DeleteSubscriber(ctx, in)
 
+	// No Subscriber:
+	// "An error occurred (AccessDeniedException) when calling the DeleteSubscriber operation: User: ... is not authorized to perform: securitylake:GetSubscriber", or
+	// "UnauthorizedException: Unauthorized"
+	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to perform") ||
+		tfawserr.ErrMessageContains(err, errCodeUnauthorizedException, "Unauthorized") {
+		return
+	}
+
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return
-		}
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.SecurityLake, create.ErrActionDeleting, ResNameSubscriber, data.ID.String(), err),
 			err.Error(),
 		)
+
+		return
+	}
+
+	if _, err = waitSubscriberDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Security Lake Subscriber (%s) delete", data.ID.ValueString()), err.Error())
+
 		return
 	}
 }
@@ -397,6 +420,15 @@ func findSubscriberByID(ctx context.Context, conn *securitylake.Client, id strin
 	}
 
 	output, err := conn.GetSubscriber(ctx, input)
+
+	// No Subscriber:
+	// "An error occurred (AccessDeniedException) when calling the DeleteSubscriber operation: User: ... is not authorized to perform: securitylake:GetSubscriber", or
+	// "UnauthorizedException: Unauthorized"
+	if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized to perform") ||
+		tfawserr.ErrMessageContains(err, errCodeUnauthorizedException, "Unauthorized") {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
 	if err != nil {
 		return nil, err
 	}
@@ -406,6 +438,74 @@ func findSubscriberByID(ctx context.Context, conn *securitylake.Client, id strin
 	}
 
 	return output.Subscriber, nil
+}
+
+func statusSubscriber(ctx context.Context, conn *securitylake.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findSubscriberByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.SubscriberStatus), nil
+	}
+}
+
+func waitSubscriberCreated(ctx context.Context, conn *securitylake.Client, id string, timeout time.Duration) (*awstypes.SubscriberResource, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SubscriberStatusPending),
+		Target:  enum.Slice(awstypes.SubscriberStatusActive, awstypes.SubscriberStatusReady),
+		Refresh: statusSubscriber(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.SubscriberResource); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSubscriberUpdated(ctx context.Context, conn *securitylake.Client, id string, timeout time.Duration) (*awstypes.SubscriberResource, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SubscriberStatusPending),
+		Target:  enum.Slice(awstypes.SubscriberStatusActive, awstypes.SubscriberStatusReady),
+		Refresh: statusSubscriber(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.SubscriberResource); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitSubscriberDeleted(ctx context.Context, conn *securitylake.Client, id string, timeout time.Duration) (*awstypes.SubscriberResource, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.SubscriberStatusActive, awstypes.SubscriberStatusReady, awstypes.SubscriberStatusDeactivated),
+		Target:  []string{},
+		Refresh: statusSubscriber(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.SubscriberResource); ok {
+
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandSubscriptionValueSources(ctx context.Context, subscriberSourcesModels []subscriberSourcesModel) ([]awstypes.LogSourceResource, diag.Diagnostics) {
@@ -614,6 +714,7 @@ type subscriberResourceModel struct {
 	TagsAll               types.Map                                                `tfsdk:"tags_all"`
 	SubscriberArn         types.String                                             `tfsdk:"arn"`
 	ID                    types.String                                             `tfsdk:"id"`
+	Timeouts              timeouts.Value                                           `tfsdk:"timeouts"`
 }
 
 type subscriberSourcesModel struct {

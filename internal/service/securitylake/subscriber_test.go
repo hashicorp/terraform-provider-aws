@@ -113,7 +113,7 @@ func testAccCheckSubscriberDestroy(ctx context.Context) resource.TestCheckFunc {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_securitylake_data_lake" {
+			if rs.Type != "aws_securitylake_subscriber" {
 				continue
 			}
 
@@ -127,7 +127,7 @@ func testAccCheckSubscriberDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("Security Lake Data Lake %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Security Lake Subscriber %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -154,16 +154,6 @@ func testAccCheckSubscriberExists(ctx context.Context, n string, v *types.Subscr
 		return nil
 	}
 }
-
-// func testAccCheckSubscriberNotRecreated(before, after *securitylake.DescribeSubscriberResponse) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		if before, after := aws.ToString(before.SubscriberId), aws.ToString(after.SubscriberId); before != after {
-// 			return create.Error(names.SecurityLake, create.ErrActionCheckingNotRecreated, tfsecuritylake.ResNameSubscriber, aws.ToString(before.SubscriberId), errors.New("recreated"))
-// 		}
-
-// 		return nil
-// 	}
-// }
 
 func testAccSubscriberConfig_basic(rName string) string {
 	return fmt.Sprintf(`
