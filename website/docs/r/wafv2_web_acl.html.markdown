@@ -1052,6 +1052,7 @@ The `uri_path` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `application_integration_url` - The URL to use in SDK integrations with managed rule groups.
 * `arn` - The ARN of the WAF WebACL.
 * `capacity` - Web ACL capacity units (WCUs) currently being used by this web ACL.
 * `id` - The ID of the WAF WebACL.

@@ -159,7 +159,7 @@ class MyConvertedCode extends TerraformStack {
       dataLocation: {
         arn: Token.asString(awsLakeformationResourceExample.arn),
       },
-      permissions: ["ALL"],
+      permissions: ["DATA_LOCATION_ACCESS"],
       principal: workflowRole.arn,
     });
   }
@@ -331,4 +331,4 @@ The following arguments are optional:
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.1 input-fd78e0884a6908a814356ab7d33f0f75b98fe926eb713d3c171ff4fd77586027 -->
+<!-- cache-key: cdktf-0.20.1 input-f0c64cc1d87d005e1718bdb79cd5c23d1a36e916999401f38c44de54da6544c9 -->

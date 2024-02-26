@@ -718,6 +718,79 @@ func TestFlattenGeneric(t *testing.T) {
 	runAutoFlattenTestCases(ctx, t, testCases)
 }
 
+func TestFlattenSimpleNestedBlockWithStringEnum(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field1 types.Int64                  `tfsdk:"field1"`
+		Field2 fwtypes.StringEnum[TestEnum] `tfsdk:"field2"`
+	}
+	type aws01 struct {
+		Field1 int64
+		Field2 TestEnum
+	}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName:   "single nested valid value",
+			Source:     &aws01{Field1: 1, Field2: TestEnumList},
+			Target:     &tf01{},
+			WantTarget: &tf01{Field1: types.Int64Value(1), Field2: fwtypes.StringEnumValue(TestEnumList)},
+		},
+		{
+			TestName:   "single nested empty value",
+			Source:     &aws01{Field1: 1, Field2: ""},
+			Target:     &tf01{},
+			WantTarget: &tf01{Field1: types.Int64Value(1), Field2: fwtypes.StringEnumNull[TestEnum]()},
+		},
+	}
+	runAutoFlattenTestCases(ctx, t, testCases)
+}
+
+func TestFlattenComplexNestedBlockWithStringEnum(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field2 fwtypes.StringEnum[TestEnum] `tfsdk:"field2"`
+	}
+	type tf02 struct {
+		Field1 types.Int64                           `tfsdk:"field1"`
+		Field2 fwtypes.ListNestedObjectValueOf[tf01] `tfsdk:"field2"`
+	}
+	type aws02 struct {
+		Field2 TestEnum
+	}
+	type aws01 struct {
+		Field1 int64
+		Field2 *aws02
+	}
+
+	ctx := context.Background()
+	var zero fwtypes.StringEnum[TestEnum]
+	testCases := autoFlexTestCases{
+		{
+			TestName:   "single nested valid value",
+			Source:     &aws01{Field1: 1, Field2: &aws02{Field2: TestEnumList}},
+			Target:     &tf02{},
+			WantTarget: &tf02{Field1: types.Int64Value(1), Field2: fwtypes.NewListNestedObjectValueOfPtr(ctx, &tf01{Field2: fwtypes.StringEnumValue(TestEnumList)})},
+		},
+		{
+			TestName:   "single nested empty value",
+			Source:     &aws01{Field1: 1, Field2: &aws02{Field2: ""}},
+			Target:     &tf02{},
+			WantTarget: &tf02{Field1: types.Int64Value(1), Field2: fwtypes.NewListNestedObjectValueOfPtr(ctx, &tf01{Field2: fwtypes.StringEnumNull[TestEnum]()})},
+		},
+		{
+			TestName:   "single nested zero value",
+			Source:     &aws01{Field1: 1, Field2: &aws02{Field2: ""}},
+			Target:     &tf02{},
+			WantTarget: &tf02{Field1: types.Int64Value(1), Field2: fwtypes.NewListNestedObjectValueOfPtr(ctx, &tf01{Field2: zero})},
+		},
+	}
+	runAutoFlattenTestCases(ctx, t, testCases)
+}
+
 func TestFlattenSimpleSingleNestedBlock(t *testing.T) {
 	t.Parallel()
 

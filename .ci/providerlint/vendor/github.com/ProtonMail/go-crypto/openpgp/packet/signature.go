@@ -15,6 +15,8 @@ import (
 	"time"
 
 	"github.com/ProtonMail/go-crypto/openpgp/ecdsa"
+	"github.com/ProtonMail/go-crypto/openpgp/ed25519"
+	"github.com/ProtonMail/go-crypto/openpgp/ed448"
 	"github.com/ProtonMail/go-crypto/openpgp/eddsa"
 	"github.com/ProtonMail/go-crypto/openpgp/errors"
 	"github.com/ProtonMail/go-crypto/openpgp/internal/algorithm"
@@ -39,6 +41,9 @@ type Signature struct {
 	SigType    SignatureType
 	PubKeyAlgo PublicKeyAlgorithm
 	Hash       crypto.Hash
+	// salt contains a random salt value for v6 signatures
+	// See RFC the crypto refresh Section 5.2.3.
+	salt []byte
 
 	// HashSuffix is extra data that is hashed in after the signed data.
 	HashSuffix []byte
@@ -57,6 +62,7 @@ type Signature struct {
 	DSASigR, DSASigS     encoding.Field
 	ECDSASigR, ECDSASigS encoding.Field
 	EdDSASigR, EdDSASigS encoding.Field
+	EdSig                []byte
 
 	// rawSubpackets contains the unparsed subpackets, in order.
 	rawSubpackets []outputSubpacket
@@ -72,6 +78,7 @@ type Signature struct {
 	SignerUserId                                            *string
 	IsPrimaryId                                             *bool
 	Notations                                               []*Notation
+	IntendedRecipients                                      []*Recipient
 
 	// TrustLevel and TrustAmount can be set by the signer to assert that
 	// the key is not only valid but also trustworthy at the specified
@@ -113,26 +120,59 @@ type Signature struct {
 	outSubpackets []outputSubpacket
 }
 
+// VerifiableSignature internally keeps state if the
+// the signature has been verified before.
+type VerifiableSignature struct {
+	Valid  *bool // nil if it has not been verified yet
+	Packet *Signature
+}
+
+// SaltedHashSpecifier specifies that the given salt and hash are
+// used by a v6 signature.
+type SaltedHashSpecifier struct {
+	Hash crypto.Hash
+	Salt []byte
+}
+
+// NewVerifiableSig returns a struct of type VerifiableSignature referencing the input signature.
+func NewVerifiableSig(signature *Signature) *VerifiableSignature {
+	return &VerifiableSignature{
+		Packet: signature,
+	}
+}
+
+// Salt returns the signature salt for v6 signatures.
+func (sig *Signature) Salt() []byte {
+	if sig == nil {
+		return nil
+	}
+	return sig.salt
+}
+
 func (sig *Signature) parse(r io.Reader) (err error) {
 	// RFC 4880, section 5.2.3
-	var buf [5]byte
+	var buf [7]byte
 	_, err = readFull(r, buf[:1])
 	if err != nil {
 		return
 	}
-	if buf[0] != 4 && buf[0] != 5 {
+	if buf[0] != 4 && buf[0] != 5 && buf[0] != 6 {
 		err = errors.UnsupportedError("signature packet version " + strconv.Itoa(int(buf[0])))
 		return
 	}
 	sig.Version = int(buf[0])
-	_, err = readFull(r, buf[:5])
+	if sig.Version == 6 {
+		_, err = readFull(r, buf[:7])
+	} else {
+		_, err = readFull(r, buf[:5])
+	}
 	if err != nil {
 		return
 	}
 	sig.SigType = SignatureType(buf[0])
 	sig.PubKeyAlgo = PublicKeyAlgorithm(buf[1])
 	switch sig.PubKeyAlgo {
-	case PubKeyAlgoRSA, PubKeyAlgoRSASignOnly, PubKeyAlgoDSA, PubKeyAlgoECDSA, PubKeyAlgoEdDSA:
+	case PubKeyAlgoRSA, PubKeyAlgoRSASignOnly, PubKeyAlgoDSA, PubKeyAlgoECDSA, PubKeyAlgoEdDSA, PubKeyAlgoEd25519, PubKeyAlgoEd448:
 	default:
 		err = errors.UnsupportedError("public key algorithm " + strconv.Itoa(int(sig.PubKeyAlgo)))
 		return
@@ -150,7 +190,17 @@ func (sig *Signature) parse(r io.Reader) (err error) {
 		return errors.UnsupportedError("hash function " + strconv.Itoa(int(buf[2])))
 	}
 
-	hashedSubpacketsLength := int(buf[3])<<8 | int(buf[4])
+	var hashedSubpacketsLength int
+	if sig.Version == 6 {
+		// For a v6 signature, a four-octet length is used.
+		hashedSubpacketsLength =
+			int(buf[3])<<24 |
+				int(buf[4])<<16 |
+				int(buf[5])<<8 |
+				int(buf[6])
+	} else {
+		hashedSubpacketsLength = int(buf[3])<<8 | int(buf[4])
+	}
 	hashedSubpackets := make([]byte, hashedSubpacketsLength)
 	_, err = readFull(r, hashedSubpackets)
 	if err != nil {
@@ -166,11 +216,21 @@ func (sig *Signature) parse(r io.Reader) (err error) {
 		return
 	}
 
-	_, err = readFull(r, buf[:2])
+	if sig.Version == 6 {
+		_, err = readFull(r, buf[:4])
+	} else {
+		_, err = readFull(r, buf[:2])
+	}
+
 	if err != nil {
 		return
 	}
-	unhashedSubpacketsLength := int(buf[0])<<8 | int(buf[1])
+	var unhashedSubpacketsLength uint32
+	if sig.Version == 6 {
+		unhashedSubpacketsLength = uint32(buf[0])<<24 | uint32(buf[1])<<16 | uint32(buf[2])<<8 | uint32(buf[3])
+	} else {
+		unhashedSubpacketsLength = uint32(buf[0])<<8 | uint32(buf[1])
+	}
 	unhashedSubpackets := make([]byte, unhashedSubpacketsLength)
 	_, err = readFull(r, unhashedSubpackets)
 	if err != nil {
@@ -184,6 +244,30 @@ func (sig *Signature) parse(r io.Reader) (err error) {
 	_, err = readFull(r, sig.HashTag[:2])
 	if err != nil {
 		return
+	}
+
+	if sig.Version == 6 {
+		// Only for v6 signatures, a variable-length field containing the salt
+		_, err = readFull(r, buf[:1])
+		if err != nil {
+			return
+		}
+		saltLength := int(buf[0])
+		var expectedSaltLength int
+		expectedSaltLength, err = SaltLengthForHash(sig.Hash)
+		if err != nil {
+			return
+		}
+		if saltLength != expectedSaltLength {
+			err = errors.StructuralError("unexpected salt size for the given hash algorithm")
+			return
+		}
+		salt := make([]byte, expectedSaltLength)
+		_, err = readFull(r, salt)
+		if err != nil {
+			return
+		}
+		sig.salt = salt
 	}
 
 	switch sig.PubKeyAlgo {
@@ -214,6 +298,16 @@ func (sig *Signature) parse(r io.Reader) (err error) {
 
 		sig.EdDSASigS = new(encoding.MPI)
 		if _, err = sig.EdDSASigS.ReadFrom(r); err != nil {
+			return
+		}
+	case PubKeyAlgoEd25519:
+		sig.EdSig, err = ed25519.ReadSignature(r)
+		if err != nil {
+			return
+		}
+	case PubKeyAlgoEd448:
+		sig.EdSig, err = ed448.ReadSignature(r)
+		if err != nil {
 			return
 		}
 	default:
@@ -260,6 +354,7 @@ const (
 	featuresSubpacket            signatureSubpacketType = 30
 	embeddedSignatureSubpacket   signatureSubpacketType = 32
 	issuerFingerprintSubpacket   signatureSubpacketType = 33
+	intendedRecipientSubpacket   signatureSubpacketType = 35
 	prefCipherSuitesSubpacket    signatureSubpacketType = 39
 )
 
@@ -365,16 +460,18 @@ func parseSignatureSubpacket(sig *Signature, subpacket []byte, isHashed bool) (r
 		copy(sig.PreferredSymmetric, subpacket)
 	case issuerSubpacket:
 		// Issuer, section 5.2.3.5
-		if sig.Version > 4 {
-			err = errors.StructuralError("issuer subpacket found in v5 key")
+		if sig.Version > 4 && isHashed {
+			err = errors.StructuralError("issuer subpacket found in v6 key")
 			return
 		}
 		if len(subpacket) != 8 {
 			err = errors.StructuralError("issuer subpacket with bad length")
 			return
 		}
-		sig.IssuerKeyId = new(uint64)
-		*sig.IssuerKeyId = binary.BigEndian.Uint64(subpacket)
+		if sig.Version <= 4 {
+			sig.IssuerKeyId = new(uint64)
+			*sig.IssuerKeyId = binary.BigEndian.Uint64(subpacket)
+		}
 	case notationDataSubpacket:
 		// Notation data, section 5.2.3.16
 		if len(subpacket) < 8 {
@@ -453,7 +550,7 @@ func parseSignatureSubpacket(sig *Signature, subpacket []byte, isHashed bool) (r
 			return
 		}
 		sig.RevocationReason = new(ReasonForRevocation)
-		*sig.RevocationReason = ReasonForRevocation(subpacket[0])
+		*sig.RevocationReason = NewReasonForRevocation(subpacket[0])
 		sig.RevocationReasonText = string(subpacket[1:])
 	case featuresSubpacket:
 		// Features subpacket, section 5.2.3.24 specifies a very general
@@ -495,17 +592,30 @@ func parseSignatureSubpacket(sig *Signature, subpacket []byte, isHashed bool) (r
 			return
 		}
 		v, l := subpacket[0], len(subpacket[1:])
-		if v == 5 && l != 32 || v != 5 && l != 20 {
+		if v >= 5 && l != 32 || v < 5 && l != 20 {
 			return nil, errors.StructuralError("bad fingerprint length")
 		}
 		sig.IssuerFingerprint = make([]byte, l)
 		copy(sig.IssuerFingerprint, subpacket[1:])
 		sig.IssuerKeyId = new(uint64)
-		if v == 5 {
+		if v >= 5 {
 			*sig.IssuerKeyId = binary.BigEndian.Uint64(subpacket[1:9])
 		} else {
 			*sig.IssuerKeyId = binary.BigEndian.Uint64(subpacket[13:21])
 		}
+	case intendedRecipientSubpacket:
+		// Intended Recipient Fingerprint
+		// https://datatracker.ietf.org/doc/html/draft-ietf-openpgp-crypto-refresh#name-intended-recipient-fingerpr
+		if len(subpacket) < 1 {
+			return nil, errors.StructuralError("invalid intended recipient fingerpring length")
+		}
+		version, length := subpacket[0], len(subpacket[1:])
+		if version >= 5 && length != 32 || version < 5 && length != 20 {
+			return nil, errors.StructuralError("invalid fingerprint length")
+		}
+		fingerprint := make([]byte, length)
+		copy(fingerprint, subpacket[1:])
+		sig.IntendedRecipients = append(sig.IntendedRecipients, &Recipient{int(version), fingerprint})
 	case prefCipherSuitesSubpacket:
 		// Preferred AEAD cipher suites
 		// See https://www.ietf.org/archive/id/draft-ietf-openpgp-crypto-refresh-07.html#name-preferred-aead-ciphersuites
@@ -548,6 +658,13 @@ func (sig *Signature) CheckKeyIdOrFingerprint(pk *PublicKey) bool {
 		return bytes.Equal(sig.IssuerFingerprint, pk.Fingerprint)
 	}
 	return sig.IssuerKeyId != nil && *sig.IssuerKeyId == pk.KeyId
+}
+
+func (sig *Signature) CheckKeyIdOrFingerprintExplicit(fingerprint []byte, keyId uint64) bool {
+	if sig.IssuerFingerprint != nil && len(sig.IssuerFingerprint) >= 20 && fingerprint != nil {
+		return bytes.Equal(sig.IssuerFingerprint, fingerprint)
+	}
+	return sig.IssuerKeyId != nil && *sig.IssuerKeyId == keyId
 }
 
 // serializeSubpacketLength marshals the given length into to.
@@ -598,20 +715,19 @@ func serializeSubpackets(to []byte, subpackets []outputSubpacket, hashed bool) {
 			to = to[n:]
 		}
 	}
-	return
 }
 
 // SigExpired returns whether sig is a signature that has expired or is created
 // in the future.
 func (sig *Signature) SigExpired(currentTime time.Time) bool {
-	if sig.CreationTime.After(currentTime) {
+	if sig.CreationTime.Unix() > currentTime.Unix() {
 		return true
 	}
 	if sig.SigLifetimeSecs == nil || *sig.SigLifetimeSecs == 0 {
 		return false
 	}
 	expiry := sig.CreationTime.Add(time.Duration(*sig.SigLifetimeSecs) * time.Second)
-	return currentTime.After(expiry)
+	return currentTime.Unix() > expiry.Unix()
 }
 
 // buildHashSuffix constructs the HashSuffix member of sig in preparation for signing.
@@ -635,20 +751,36 @@ func (sig *Signature) buildHashSuffix(hashedSubpackets []byte) (err error) {
 		uint8(sig.SigType),
 		uint8(sig.PubKeyAlgo),
 		uint8(hashId),
-		uint8(len(hashedSubpackets) >> 8),
-		uint8(len(hashedSubpackets)),
 	})
+	hashedSubpacketsLength := len(hashedSubpackets)
+	if sig.Version == 6 {
+		// v6 signatures store the length in 4 octets
+		hashedFields.Write([]byte{
+			uint8(hashedSubpacketsLength >> 24),
+			uint8(hashedSubpacketsLength >> 16),
+			uint8(hashedSubpacketsLength >> 8),
+			uint8(hashedSubpacketsLength),
+		})
+	} else {
+		hashedFields.Write([]byte{
+			uint8(hashedSubpacketsLength >> 8),
+			uint8(hashedSubpacketsLength),
+		})
+	}
+	lenPrefix := hashedFields.Len()
 	hashedFields.Write(hashedSubpackets)
 
-	var l uint64 = uint64(6 + len(hashedSubpackets))
+	var l uint64 = uint64(lenPrefix + len(hashedSubpackets))
 	if sig.Version == 5 {
+		// v5 case
 		hashedFields.Write([]byte{0x05, 0xff})
 		hashedFields.Write([]byte{
 			uint8(l >> 56), uint8(l >> 48), uint8(l >> 40), uint8(l >> 32),
 			uint8(l >> 24), uint8(l >> 16), uint8(l >> 8), uint8(l),
 		})
 	} else {
-		hashedFields.Write([]byte{0x04, 0xff})
+		// v4 and v6 case
+		hashedFields.Write([]byte{byte(sig.Version), 0xff})
 		hashedFields.Write([]byte{
 			uint8(l >> 24), uint8(l >> 16), uint8(l >> 8), uint8(l),
 		})
@@ -674,6 +806,67 @@ func (sig *Signature) signPrepareHash(h hash.Hash) (digest []byte, err error) {
 	digest = h.Sum(nil)
 	copy(sig.HashTag[:], digest)
 	return
+}
+
+// PrepareSign must be called to create a hash object before Sign for v6 signatures.
+// The created hash object initially hashes a randomly generated salt
+// as required by v6 signatures. The generated salt is stored in sig. If the signature is not v6,
+// the method returns an empty hash object.
+// See RFC the crypto refresh Section 3.2.4.
+func (sig *Signature) PrepareSign(config *Config) (hash.Hash, error) {
+	if !sig.Hash.Available() {
+		return nil, errors.UnsupportedError("hash function")
+	}
+	hasher := sig.Hash.New()
+	if sig.Version == 6 {
+		if sig.salt == nil {
+			var err error
+			sig.salt, err = SignatureSaltForHash(sig.Hash, config.Random())
+			if err != nil {
+				return nil, err
+			}
+		}
+		hasher.Write(sig.salt)
+	}
+	return hasher, nil
+}
+
+// SetSalt sets the signature salt for v6 signatures.
+// Assumes salt is generated correctly and checks if length matches.
+// If the signature is not v6, the method ignores the salt.
+// Use PrepareSign whenever possible instead of generating and
+// hashing the salt externally.
+// See RFC the crypto refresh Section 3.2.4.
+func (sig *Signature) SetSalt(salt []byte) error {
+	if sig.Version == 6 {
+		expectedSaltLength, err := SaltLengthForHash(sig.Hash)
+		if err != nil {
+			return err
+		}
+		if salt == nil || len(salt) != expectedSaltLength {
+			return errors.InvalidArgumentError("unexpected salt size for the given hash algorithm")
+		}
+		sig.salt = salt
+	}
+	return nil
+}
+
+// PrepareVerify must be called to create a hash object before verifying v6 signatures.
+// The created hash object initially hashes the internally stored salt.
+// If the signature is not v6, the method returns an empty hash object.
+// See crypto refresh Section 3.2.4.
+func (sig *Signature) PrepareVerify() (hash.Hash, error) {
+	if !sig.Hash.Available() {
+		return nil, errors.UnsupportedError("hash function")
+	}
+	hasher := sig.Hash.New()
+	if sig.Version == 6 {
+		if sig.salt == nil {
+			return nil, errors.StructuralError("v6 requires a salt for the hash to be signed")
+		}
+		hasher.Write(sig.salt)
+	}
+	return hasher, nil
 }
 
 // Sign signs a message with a private key. The hash, h, must contain
@@ -729,6 +922,18 @@ func (sig *Signature) Sign(h hash.Hash, priv *PrivateKey, config *Config) (err e
 			sig.EdDSASigR = encoding.NewMPI(r)
 			sig.EdDSASigS = encoding.NewMPI(s)
 		}
+	case PubKeyAlgoEd25519:
+		sk := priv.PrivateKey.(*ed25519.PrivateKey)
+		signature, err := ed25519.Sign(sk, digest)
+		if err == nil {
+			sig.EdSig = signature
+		}
+	case PubKeyAlgoEd448:
+		sk := priv.PrivateKey.(*ed448.PrivateKey)
+		signature, err := ed448.Sign(sk, digest)
+		if err == nil {
+			sig.EdSig = signature
+		}
 	default:
 		err = errors.UnsupportedError("public key algorithm: " + strconv.Itoa(int(sig.PubKeyAlgo)))
 	}
@@ -744,11 +949,32 @@ func (sig *Signature) SignUserId(id string, pub *PublicKey, priv *PrivateKey, co
 	if priv.Dummy() {
 		return errors.ErrDummyPrivateKey("dummy key found")
 	}
-	h, err := userIdSignatureHash(id, pub, sig.Hash)
+	prepareHash, err := sig.PrepareSign(config)
 	if err != nil {
 		return err
 	}
-	return sig.Sign(h, priv, config)
+	if err := userIdSignatureHash(id, pub, prepareHash); err != nil {
+		return err
+	}
+	return sig.Sign(prepareHash, priv, config)
+}
+
+// SignDirectKeyBinding computes a signature from priv
+// On success, the signature is stored in sig.
+// Call Serialize to write it out.
+// If config is nil, sensible defaults will be used.
+func (sig *Signature) SignDirectKeyBinding(pub *PublicKey, priv *PrivateKey, config *Config) error {
+	if priv.Dummy() {
+		return errors.ErrDummyPrivateKey("dummy key found")
+	}
+	prepareHash, err := sig.PrepareSign(config)
+	if err != nil {
+		return err
+	}
+	if err := directKeySignatureHash(pub, prepareHash); err != nil {
+		return err
+	}
+	return sig.Sign(prepareHash, priv, config)
 }
 
 // CrossSignKey computes a signature from signingKey on pub hashed using hashKey. On success,
@@ -756,7 +982,11 @@ func (sig *Signature) SignUserId(id string, pub *PublicKey, priv *PrivateKey, co
 // If config is nil, sensible defaults will be used.
 func (sig *Signature) CrossSignKey(pub *PublicKey, hashKey *PublicKey, signingKey *PrivateKey,
 	config *Config) error {
-	h, err := keySignatureHash(hashKey, pub, sig.Hash)
+	prepareHash, err := sig.PrepareSign(config)
+	if err != nil {
+		return err
+	}
+	h, err := keySignatureHash(hashKey, pub, prepareHash)
 	if err != nil {
 		return err
 	}
@@ -770,7 +1000,11 @@ func (sig *Signature) SignKey(pub *PublicKey, priv *PrivateKey, config *Config) 
 	if priv.Dummy() {
 		return errors.ErrDummyPrivateKey("dummy key found")
 	}
-	h, err := keySignatureHash(&priv.PublicKey, pub, sig.Hash)
+	prepareHash, err := sig.PrepareSign(config)
+	if err != nil {
+		return err
+	}
+	h, err := keySignatureHash(&priv.PublicKey, pub, prepareHash)
 	if err != nil {
 		return err
 	}
@@ -781,11 +1015,14 @@ func (sig *Signature) SignKey(pub *PublicKey, priv *PrivateKey, config *Config) 
 // stored in sig. Call Serialize to write it out.
 // If config is nil, sensible defaults will be used.
 func (sig *Signature) RevokeKey(pub *PublicKey, priv *PrivateKey, config *Config) error {
-	h, err := keyRevocationHash(pub, sig.Hash)
+	prepareHash, err := sig.PrepareSign(config)
 	if err != nil {
 		return err
 	}
-	return sig.Sign(h, priv, config)
+	if err := keyRevocationHash(pub, prepareHash); err != nil {
+		return err
+	}
+	return sig.Sign(prepareHash, priv, config)
 }
 
 // RevokeSubkey computes a subkey revocation signature of pub using priv.
@@ -802,7 +1039,7 @@ func (sig *Signature) Serialize(w io.Writer) (err error) {
 	if len(sig.outSubpackets) == 0 {
 		sig.outSubpackets = sig.rawSubpackets
 	}
-	if sig.RSASignature == nil && sig.DSASigR == nil && sig.ECDSASigR == nil && sig.EdDSASigR == nil {
+	if sig.RSASignature == nil && sig.DSASigR == nil && sig.ECDSASigR == nil && sig.EdDSASigR == nil && sig.EdSig == nil {
 		return errors.InvalidArgumentError("Signature: need to call Sign, SignUserId or SignKey before Serialize")
 	}
 
@@ -819,16 +1056,24 @@ func (sig *Signature) Serialize(w io.Writer) (err error) {
 	case PubKeyAlgoEdDSA:
 		sigLength = int(sig.EdDSASigR.EncodedLength())
 		sigLength += int(sig.EdDSASigS.EncodedLength())
+	case PubKeyAlgoEd25519:
+		sigLength = ed25519.SignatureSize
+	case PubKeyAlgoEd448:
+		sigLength = ed448.SignatureSize
 	default:
 		panic("impossible")
 	}
 
+	hashedSubpacketsLen := subpacketsLength(sig.outSubpackets, true)
 	unhashedSubpacketsLen := subpacketsLength(sig.outSubpackets, false)
-	length := len(sig.HashSuffix) - 6 /* trailer not included */ +
+	length := 4 + /* length of version|signature type|public-key algorithm|hash algorithm */
+		2 /* length of hashed subpackets */ + hashedSubpacketsLen +
 		2 /* length of unhashed subpackets */ + unhashedSubpacketsLen +
 		2 /* hash tag */ + sigLength
-	if sig.Version == 5 {
-		length -= 4 // eight-octet instead of four-octet big endian
+	if sig.Version == 6 {
+		length += 4 + /* the two length fields are four-octet instead of two */
+			1 + /* salt length */
+			len(sig.salt) /* length salt */
 	}
 	err = serializeHeader(w, packetTypeSignature, length)
 	if err != nil {
@@ -842,18 +1087,41 @@ func (sig *Signature) Serialize(w io.Writer) (err error) {
 }
 
 func (sig *Signature) serializeBody(w io.Writer) (err error) {
-	hashedSubpacketsLen := uint16(uint16(sig.HashSuffix[4])<<8) | uint16(sig.HashSuffix[5])
-	fields := sig.HashSuffix[:6+hashedSubpacketsLen]
+	var fields []byte
+	if sig.Version == 6 {
+		// v6 signatures use 4 octets for length
+		hashedSubpacketsLen :=
+			uint32(uint32(sig.HashSuffix[4])<<24) |
+				uint32(uint32(sig.HashSuffix[5])<<16) |
+				uint32(uint32(sig.HashSuffix[6])<<8) |
+				uint32(sig.HashSuffix[7])
+		fields = sig.HashSuffix[:8+hashedSubpacketsLen]
+	} else {
+		hashedSubpacketsLen := uint16(uint16(sig.HashSuffix[4])<<8) |
+			uint16(sig.HashSuffix[5])
+		fields = sig.HashSuffix[:6+hashedSubpacketsLen]
+
+	}
 	_, err = w.Write(fields)
 	if err != nil {
 		return
 	}
 
 	unhashedSubpacketsLen := subpacketsLength(sig.outSubpackets, false)
-	unhashedSubpackets := make([]byte, 2+unhashedSubpacketsLen)
-	unhashedSubpackets[0] = byte(unhashedSubpacketsLen >> 8)
-	unhashedSubpackets[1] = byte(unhashedSubpacketsLen)
-	serializeSubpackets(unhashedSubpackets[2:], sig.outSubpackets, false)
+	var unhashedSubpackets []byte
+	if sig.Version == 6 {
+		unhashedSubpackets = make([]byte, 4+unhashedSubpacketsLen)
+		unhashedSubpackets[0] = byte(unhashedSubpacketsLen >> 24)
+		unhashedSubpackets[1] = byte(unhashedSubpacketsLen >> 16)
+		unhashedSubpackets[2] = byte(unhashedSubpacketsLen >> 8)
+		unhashedSubpackets[3] = byte(unhashedSubpacketsLen)
+		serializeSubpackets(unhashedSubpackets[4:], sig.outSubpackets, false)
+	} else {
+		unhashedSubpackets = make([]byte, 2+unhashedSubpacketsLen)
+		unhashedSubpackets[0] = byte(unhashedSubpacketsLen >> 8)
+		unhashedSubpackets[1] = byte(unhashedSubpacketsLen)
+		serializeSubpackets(unhashedSubpackets[2:], sig.outSubpackets, false)
+	}
 
 	_, err = w.Write(unhashedSubpackets)
 	if err != nil {
@@ -862,6 +1130,18 @@ func (sig *Signature) serializeBody(w io.Writer) (err error) {
 	_, err = w.Write(sig.HashTag[:])
 	if err != nil {
 		return
+	}
+
+	if sig.Version == 6 {
+		// write salt for v6 signatures
+		_, err = w.Write([]byte{uint8(len(sig.salt))})
+		if err != nil {
+			return
+		}
+		_, err = w.Write(sig.salt)
+		if err != nil {
+			return
+		}
 	}
 
 	switch sig.PubKeyAlgo {
@@ -882,6 +1162,10 @@ func (sig *Signature) serializeBody(w io.Writer) (err error) {
 			return
 		}
 		_, err = w.Write(sig.EdDSASigS.EncodedBytes())
+	case PubKeyAlgoEd25519:
+		err = ed25519.WriteSignature(w, sig.EdSig)
+	case PubKeyAlgoEd448:
+		err = ed448.WriteSignature(w, sig.EdSig)
 	default:
 		panic("impossible")
 	}
@@ -908,7 +1192,7 @@ func (sig *Signature) buildSubpackets(issuer PublicKey) (subpackets []outputSubp
 	}
 	if sig.IssuerFingerprint != nil {
 		contents := append([]uint8{uint8(issuer.Version)}, sig.IssuerFingerprint...)
-		subpackets = append(subpackets, outputSubpacket{true, issuerFingerprintSubpacket, sig.Version == 5, contents})
+		subpackets = append(subpackets, outputSubpacket{true, issuerFingerprintSubpacket, sig.Version >= 5, contents})
 	}
 	if sig.SignerUserId != nil {
 		subpackets = append(subpackets, outputSubpacket{true, signerUserIdSubpacket, false, []byte(*sig.SignerUserId)})
@@ -955,6 +1239,17 @@ func (sig *Signature) buildSubpackets(issuer PublicKey) (subpackets []outputSubp
 				notationDataSubpacket,
 				notation.IsCritical,
 				notation.getData(),
+			})
+	}
+
+	for _, recipient := range sig.IntendedRecipients {
+		subpackets = append(
+			subpackets,
+			outputSubpacket{
+				true,
+				intendedRecipientSubpacket,
+				false,
+				recipient.Serialize(),
 			})
 	}
 
@@ -1073,12 +1368,42 @@ func (sig *Signature) AddMetadataToHashSuffix() {
 	binary.BigEndian.PutUint32(buf[:], lit.Time)
 	suffix.Write(buf[:])
 
-	// Update the counter and restore trailing bytes
-	l = uint64(suffix.Len())
 	suffix.Write([]byte{0x05, 0xff})
 	suffix.Write([]byte{
 		uint8(l >> 56), uint8(l >> 48), uint8(l >> 40), uint8(l >> 32),
 		uint8(l >> 24), uint8(l >> 16), uint8(l >> 8), uint8(l),
 	})
 	sig.HashSuffix = suffix.Bytes()
+}
+
+// SaltLengthForHash selects the required salt length for the given hash algorithm,
+// as per Table 23 (Hash algorithm registry) of the crypto refresh.
+// See https://datatracker.ietf.org/doc/html/draft-ietf-openpgp-crypto-refresh#section-9.5|Crypto Refresh Section 9.5.
+func SaltLengthForHash(hash crypto.Hash) (int, error) {
+	switch hash {
+	case crypto.SHA256, crypto.SHA224, crypto.SHA3_256:
+		return 16, nil
+	case crypto.SHA384:
+		return 24, nil
+	case crypto.SHA512, crypto.SHA3_512:
+		return 32, nil
+	default:
+		return 0, errors.UnsupportedError("hash function not supported for V6 signatures")
+	}
+}
+
+// SignatureSaltForHash generates a random signature salt
+// with the length for the given hash algorithm.
+// See https://datatracker.ietf.org/doc/html/draft-ietf-openpgp-crypto-refresh#section-9.5|Crypto Refresh Section 9.5.
+func SignatureSaltForHash(hash crypto.Hash, randReader io.Reader) ([]byte, error) {
+	saltLength, err := SaltLengthForHash(hash)
+	if err != nil {
+		return nil, err
+	}
+	salt := make([]byte, saltLength)
+	_, err = io.ReadFull(randReader, salt)
+	if err != nil {
+		return nil, err
+	}
+	return salt, nil
 }

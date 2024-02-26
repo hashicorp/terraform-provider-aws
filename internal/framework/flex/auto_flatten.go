@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -198,7 +199,10 @@ func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, 
 	case basetypes.StringTypable:
 		stringValue := types.StringNull()
 		if !isNullFrom {
-			stringValue = types.StringValue(vFrom.String())
+			// If the target is a StringEnumType, an empty string value is converted to a null String.
+			if value := vFrom.String(); !strings.HasPrefix(tTo.String(), "StringEnumType[") || value != "" {
+				stringValue = types.StringValue(value)
+			}
 		}
 		v, d := tTo.ValueFromString(ctx, stringValue)
 		diags.Append(d...)

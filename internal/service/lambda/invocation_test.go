@@ -330,7 +330,7 @@ func TestAccLambdaInvocation_lifecycle_scopeCreateOnlyToCRUD(t *testing.T) {
 func TestAccLambdaInvocation_terraformKey(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_lambda_invocation.test"
-	fName := "lambda_invocation_crud"
+	fName := "lambda_invocation"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	inputJSON := `{"key1":"value1","key2":"value2"}`
@@ -466,7 +466,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[2]q
   role          = aws_iam_role.test.arn
   handler       = "%[1]s.handler"
-  runtime       = "nodejs14.x"
+  runtime       = "nodejs18.x"
 
   environment {
     variables = {
