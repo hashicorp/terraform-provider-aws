@@ -390,7 +390,7 @@ resource "aws_redshiftserverless_namespace" "test" {
 func testAccNamespaceConfig_manageAdminPassword(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_redshiftserverless_namespace" "test" {
-  namespace_name = %[1]q
+  namespace_name        = %[1]q
   manage_admin_password = true
 }
 `, rName)
