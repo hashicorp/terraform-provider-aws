@@ -168,8 +168,8 @@ github.com/aws/aws-sdk-go-v2/service/iam v1.30.1 h1:sCLZjJpGNMeyhyudAhipabxqwZpP
 github.com/aws/aws-sdk-go-v2/service/iam v1.30.1/go.mod h1:vc5DmJnsyyX6UpZwIKT2y1hEhzHoGDjONKhDcDwA49g=
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.23.1 h1:cMpbBT+CTvA/1OqnthdTpaXuXWFOBalT5RdLhtoeDeE=
 github.com/aws/aws-sdk-go-v2/service/identitystore v1.23.1/go.mod h1:N5oCfOlt4oKVFU/HcVYBK3dUn6mxPgSXk5ev87mvfrM=
-github.com/aws/aws-sdk-go-v2/service/inspector2 v1.23.2 h1:E2VxdpkzB4wqUEewrGtLb1yHmYAMOT0yeOPpSwqIqBs=
-github.com/aws/aws-sdk-go-v2/service/inspector2 v1.23.2/go.mod h1:3ZupaX32b25M5/Ohh2KVeluHZxdfOmZhdtSIEbyhPrs=
+github.com/aws/aws-sdk-go-v2/service/inspector2 v1.24.1 h1:IZBvoT4DceXymN3gd5QfqiskD9WZ511ECL8yyByFtiA=
+github.com/aws/aws-sdk-go-v2/service/inspector2 v1.24.1/go.mod h1:auZ223/ID3dhv7XU8NbSmOXBDd4acNJ427m/2NN/0Vg=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.1 h1:EyBZibRTVAs6ECHZOw5/wlylS9OcTzwyjeQMudmREjE=
 github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.11.1/go.mod h1:JKpmtYhhPs7D97NL/ltqz7yCkERFW5dOlHyVl66ZYF8=
 github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.3.2 h1:zSdTXYLwuXDNPUS+V41i1SFDXG7V0ITp0D9UT9Cvl18=
