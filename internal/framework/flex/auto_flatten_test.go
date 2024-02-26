@@ -718,6 +718,36 @@ func TestFlattenGeneric(t *testing.T) {
 	runAutoFlattenTestCases(ctx, t, testCases)
 }
 
+func TestFlattenSimpleNestedBlockWithStringEnum(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field1 types.Int64                  `tfsdk:"field1"`
+		Field2 fwtypes.StringEnum[TestEnum] `tfsdk:"field2"`
+	}
+	type aws01 struct {
+		Field1 int64
+		Field2 TestEnum
+	}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName:   "single nested valid value",
+			Source:     &aws01{Field1: 1, Field2: TestEnumList},
+			Target:     &tf01{},
+			WantTarget: &tf01{Field1: types.Int64Value(1), Field2: fwtypes.StringEnumValue(TestEnumList)},
+		},
+		{
+			TestName:   "single nested empty value",
+			Source:     &aws01{Field1: 1, Field2: ""},
+			Target:     &tf01{},
+			WantTarget: &tf01{Field1: types.Int64Value(1), Field2: fwtypes.StringEnumNull[TestEnum]()},
+		},
+	}
+	runAutoFlattenTestCases(ctx, t, testCases)
+}
+
 func TestFlattenSimpleSingleNestedBlock(t *testing.T) {
 	t.Parallel()
 

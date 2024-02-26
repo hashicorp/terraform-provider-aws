@@ -730,7 +730,7 @@ func TestExpandStringEnum(t *testing.T) {
 	runAutoExpandTestCases(ctx, t, testCases)
 }
 
-func TestExpandNestedBlockWithStringEnum(t *testing.T) {
+func TestExpandSimpleNestedBlockWithStringEnum(t *testing.T) {
 	t.Parallel()
 
 	type tf01 struct {
