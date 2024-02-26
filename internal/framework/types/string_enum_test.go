@@ -77,6 +77,9 @@ func TestStringEnumTypeValidate(t *testing.T) {
 		"valid enum": {
 			val: tftypes.NewValue(tftypes.String, string(awstypes.AclPermissionWrite)),
 		},
+		"valid zero value": {
+			val: tftypes.NewValue(tftypes.String, ""),
+		},
 		"invalid enum": {
 			val:         tftypes.NewValue(tftypes.String, "LIST"),
 			expectError: true,

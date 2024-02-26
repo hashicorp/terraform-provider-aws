@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -18,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 type customStringTypeWithValidator struct {
@@ -68,7 +70,7 @@ type stringEnumType[T enum.Valueser[T]] struct {
 }
 
 func StringEnumType[T enum.Valueser[T]]() stringEnumTypeWithAttributeDefault[T] {
-	return stringEnumType[T]{customStringTypeWithValidator: customStringTypeWithValidator{validator: enum.FrameworkValidate[T]()}}
+	return stringEnumType[T]{customStringTypeWithValidator: customStringTypeWithValidator{validator: stringvalidator.OneOf(tfslices.AppendUnique(enum.Values[T](), "")...)}}
 }
 
 type dummyValueser string
