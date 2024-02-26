@@ -222,26 +222,6 @@ func resourcePipeline() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"variable": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"default_value": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"description": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
 			"trigger": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -448,6 +428,26 @@ func resourcePipeline() *schema.Resource {
 					},
 				},
 			},
+			"variable": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"default_value": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"description": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -520,11 +520,11 @@ func resourcePipelineRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := d.Set("stage", flattenStageDeclarations(d, pipeline.Stages)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting stage: %s", err)
 	}
-	if err := d.Set("variable", flattenVariableDeclarations(pipeline.Variables)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting variable: %s", err)
-	}
 	if err := d.Set("trigger", flattenTriggerDeclarations(pipeline.Triggers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting trigger: %s", err)
+	}
+	if err := d.Set("variable", flattenVariableDeclarations(pipeline.Variables)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting variable: %s", err)
 	}
 
 	return diags
@@ -695,12 +695,12 @@ func expandPipelineDeclaration(d *schema.ResourceData) (*types.PipelineDeclarati
 		apiObject.Stages = expandStageDeclarations(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("variable"); ok && len(v.([]interface{})) > 0 {
-		apiObject.Variables = expandVariableDeclarations(v.([]interface{}))
-	}
-
 	if v, ok := d.GetOk("trigger"); ok && len(v.([]interface{})) > 0 {
 		apiObject.Triggers = expandTriggerDeclarations(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("variable"); ok && len(v.([]interface{})) > 0 {
+		apiObject.Variables = expandVariableDeclarations(v.([]interface{}))
 	}
 
 	return apiObject, nil

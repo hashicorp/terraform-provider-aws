@@ -1234,7 +1234,7 @@ func testAccCodePipelineConfig_basicUpdated(rName string) string { // nosemgrep:
 		testAccServiceIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
-  name     = "test-pipeline-%s"
+  name     = "test-pipeline-%[1]s"
   role_arn = aws_iam_role.codepipeline_role.arn
 
   artifact_store {
@@ -1363,7 +1363,7 @@ func testAccCodePipelineConfig_pipelinetypeUpdated1(rName string) string { // no
 		testAccServiceIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
-  name     = "test-pipeline-%s"
+  name     = "test-pipeline-%[1]s"
   role_arn = aws_iam_role.codepipeline_role.arn
 
   artifact_store {
@@ -1475,7 +1475,7 @@ func testAccCodePipelineConfig_pipelinetypeUpdated2(rName string) string { // no
 		testAccServiceIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
-  name     = "test-pipeline-%s"
+  name     = "test-pipeline-%[1]s"
   role_arn = aws_iam_role.codepipeline_role.arn
 
   artifact_store {
@@ -1587,7 +1587,7 @@ func testAccCodePipelineConfig_pipelinetypeUpdated3(rName string) string { // no
 		testAccServiceIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
-  name     = "test-pipeline-%s"
+  name     = "test-pipeline-%[1]s"
   role_arn = aws_iam_role.codepipeline_role.arn
 
   artifact_store {
@@ -1725,7 +1725,7 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "codepipeline_action_role" {
-  name = "codepipeline-action-role-%s"
+  name = "codepipeline-action-role-%[1]s"
 
   assume_role_policy = <<EOF
 {
@@ -1777,7 +1777,7 @@ func testAccCodePipelineConfig_deployServiceRole(rName string) string { // nosem
 		testAccDeployActionIAMRole(rName),
 		fmt.Sprintf(`
 resource "aws_codepipeline" "test" {
-  name     = "test-pipeline-%s"
+  name     = "test-pipeline-%[1]s"
   role_arn = aws_iam_role.codepipeline_role.arn
 
   artifact_store {
@@ -2011,7 +2011,7 @@ resource "aws_codepipeline" "test" {
       type = "KMS"
     }
 
-    region = "%[2]s"
+    region = %[2]q
   }
 
   artifact_store {
@@ -2023,7 +2023,7 @@ resource "aws_codepipeline" "test" {
       type = "KMS"
     }
 
-    region = "%[3]s"
+    region = %[3]q
   }
 
   stage {
@@ -2049,7 +2049,7 @@ resource "aws_codepipeline" "test" {
     name = "Build"
 
     action {
-      region          = "%[2]s"
+      region          = %[2]q
       name            = "Build"
       category        = "Build"
       owner           = "AWS"
@@ -2063,7 +2063,7 @@ resource "aws_codepipeline" "test" {
     }
 
     action {
-      region          = "%[3]s"
+      region          = %[3]q
       name            = "%[3]s-Build"
       category        = "Build"
       owner           = "AWS"
@@ -2105,7 +2105,7 @@ resource "aws_codepipeline" "test" {
       type = "KMS"
     }
 
-    region = "%[2]s"
+    region = %[2]q
   }
 
   artifact_store {
@@ -2117,7 +2117,7 @@ resource "aws_codepipeline" "test" {
       type = "KMS"
     }
 
-    region = "%[3]s"
+    region = %[3]q
   }
 
   stage {
@@ -2143,7 +2143,7 @@ resource "aws_codepipeline" "test" {
     name = "Build"
 
     action {
-      region          = "%[2]s"
+      region          = %[2]q
       name            = "BuildUpdated"
       category        = "Build"
       owner           = "AWS"
@@ -2157,7 +2157,7 @@ resource "aws_codepipeline" "test" {
     }
 
     action {
-      region          = "%[3]s"
+      region          = %[3]q
       name            = "%[3]s-BuildUpdated"
       category        = "Build"
       owner           = "AWS"
