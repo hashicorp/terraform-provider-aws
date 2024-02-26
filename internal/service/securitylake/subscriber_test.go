@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccSubscriber_basic(t *testing.T) {
+func testAccSubscriber_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securitylake_subscriber.test"
 	var subscriber types.SubscriberResource
@@ -50,43 +50,63 @@ func TestAccSubscriber_basic(t *testing.T) {
 	})
 }
 
-// func TestAccSecurityLakeSubscriber_disappears(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	if testing.Short() {
-// 		t.Skip("skipping long-running test in short mode")
-// 	}
+func testAccSubscriber_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var subscriber types.SubscriberResource
+	resourceName := "aws_securitylake_subscriber.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-// 	var Subscriber securitylake.DescribeSubscriberResponse
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	resourceName := "aws_securitylake_securitylake_subscriber.test"
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubscriberDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubscriberConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceSubscriber, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
 
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck: func() {
-// 			acctest.PreCheck(ctx, t)
-// 			acctest.PreCheckPartitionHasService(t, names.SecurityLakeEndpointID)
-// 			testAccPreCheck(t)
-// 		},
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckSubscriberDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccSubscriberConfig_basic(rName, testAccSubscriberVersionNewer),
-// 				Check: resource.ComposeTestCheckFunc(
-// 					testAccCheckSubscriberExists(ctx, resourceName, &Subscriber),
-// 					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-// 					// but expects a new resource factory function as the third argument. To expose this
-// 					// private function to the testing package, you may need to add a line like the following
-// 					// to exports_test.go:
-// 					//
-// 					//   var ResourceSubscriber = newResourceSubscriber
-// 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceSubscriber, resourceName),
-// 				),
-// 				ExpectNonEmptyPlan: true,
-// 			},
-// 		},
-// 	})
-// }
+func testAccSubscriber_customLogSource(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_securitylake_subscriber.test"
+	var subscriber types.SubscriberResource
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubscriberDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubscriberCustomLogConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+		},
+	})
+}
 
 func testAccCheckSubscriberDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -135,20 +155,6 @@ func testAccCheckSubscriberExists(ctx context.Context, n string, v *types.Subscr
 	}
 }
 
-// func testAccPreCheck(ctx context.Context, t *testing.T) {
-// 	conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
-
-// 	input := &securitylake.ListSubscribersInput{}
-// 	_, err := conn.ListSubscribers(ctx, input)
-
-// 	if acctest.PreCheckSkipError(err) {
-// 		t.Skipf("skipping acceptance testing: %s", err)
-// 	}
-// 	if err != nil {
-// 		t.Fatalf("unexpected PreCheck error: %s", err)
-// 	}
-// }
-
 // func testAccCheckSubscriberNotRecreated(before, after *securitylake.DescribeSubscriberResponse) resource.TestCheckFunc {
 // 	return func(s *terraform.State) error {
 // 		if before, after := aws.ToString(before.SubscriberId), aws.ToString(after.SubscriberId); before != after {
@@ -165,10 +171,27 @@ func testAccSubscriberConfig_basic(rName string) string {
 resource "aws_securitylake_subscriber" "test" {
 	subscriber_name = %[1]q
 	sources {
-		// aws_log_source_resource {
-		// 		source_name    = "ROUTE53"
-		// 		source_version = "1.0"
-		// 	}
+	aws_log_source_resource {
+			source_name    = "ROUTE53"
+			source_version = "1.0"
+		}
+	}
+	subscriber_identity {
+		external_id = "windows-sysmon-test"
+		principal   = "568227374639"
+	}
+}
+`, rName)
+}
+
+func testAccSubscriberCustomLogConfig_basic(rName string) string {
+	return fmt.Sprintf(`
+	
+resource "aws_securitylake_subscriber" "test" {
+	subscriber_name = %[1]q
+	// access_types 	= ["LAKEFORMATION"]
+	subscriber_description = "Testing"
+	sources {
 		custom_log_source_resource {
 			source_name    = "windows-sysmon"
 			source_version = "1.0"
