@@ -5,6 +5,7 @@ package configservice_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
@@ -110,5 +111,5 @@ func TestAccConfigService_serial(t *testing.T) {
 		},
 	}
 
-	acctest.RunSerialTests2Levels(t, testCases, 0)
+	acctest.RunSerialTests2Levels(t, testCases, 15*time.Second)
 }
