@@ -156,9 +156,9 @@ func resourceOrganizationConformancePackCreate(ctx context.Context, d *schema.Re
 		input.TemplateS3Uri = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, organizationsPropagationTimeout, func() (interface{}, error) {
 		return conn.PutOrganizationConformancePack(ctx, input)
-	}, "This action can only be made by accounts in an AWS Organization")
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ConfigService Organization Conformance Pack (%s): %s", name, err)
