@@ -44,7 +44,7 @@ func TestAccSubscriber_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"sources"},
+				ImportStateVerifyIgnore: []string{},
 			},
 		},
 	})
@@ -165,14 +165,14 @@ func testAccSubscriberConfig_basic(rName string) string {
 resource "aws_securitylake_subscriber" "test" {
 	subscriber_name = %[1]q
 	sources {
-		aws_log_source_resource {
-				source_name    = "ROUTE53"
-				source_version = "1.0"
-			}
-		// custom_log_source_resource {
-		// 	source_name    = "windows-sysmon"
-		// 	source_version = "1.0"
-		// }
+		// aws_log_source_resource {
+		// 		source_name    = "ROUTE53"
+		// 		source_version = "1.0"
+		// 	}
+		custom_log_source_resource {
+			source_name    = "windows-sysmon"
+			source_version = "1.0"
+		}
 	}
 	subscriber_identity {
 		external_id = "windows-sysmon-test"

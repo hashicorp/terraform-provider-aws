@@ -20,8 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-
-	// "github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -114,6 +113,19 @@ func (r *subscriberResource) Schema(ctx context.Context, request resource.Schema
 									"source_version": schema.StringAttribute{
 										Optional: true,
 									},
+									"attributes": schema.ListAttribute{
+										Computed:   true,
+										ElementType: types.ObjectType{
+											AttrTypes: map[string]attr.Type{
+												"crawler_arn":  types.StringType,
+												"database_arn": types.StringType,
+												"table_arn":    types.StringType,
+											},
+										},
+										PlanModifiers: []planmodifier.List{
+											listplanmodifier.UseStateForUnknown(),
+										},
+									}, 
 								},
 							},
 						},
@@ -573,13 +585,13 @@ func flattenSubscriberSourcesModel(ctx context.Context, apiObject []awstypes.Log
             diags.Append(d...)
 			obj = map[string]attr.Value{
 				"aws_log_source_resource": subscriberLogSource,
-				"custom_log_source_resource": types.ListNull(subscriberLogSourcesModelAttrTypes),
+				"custom_log_source_resource": types.ListNull(customLogSubscriberSourceModelAttrTypes),
 			}
         case *awstypes.LogSourceResourceMemberCustomLogSource:
             subscriberLogSource, d := flattenSubscriberLogSourceResourceModel(ctx, nil, &v.Value, "custom")
             diags.Append(d...)
 			obj = map[string]attr.Value{
-				"aws_log_source_resource": types.ListNull(subscriberLogSourcesModelAttrTypes),
+				"aws_log_source_resource": types.ListNull(awsLogSubscriberSourcesModelAttrTypes),
 				"custom_log_source_resource": subscriberLogSource,
 			}
         }
@@ -596,23 +608,30 @@ func flattenSubscriberSourcesModel(ctx context.Context, apiObject []awstypes.Log
 
 func flattenSubscriberLogSourceResourceModel(ctx context.Context, awsLogApiObject *awstypes.AwsLogSourceResource, customLogApiObject *awstypes.CustomLogSourceResource, logSourceType string) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: subscriberLogSourceResourceModelAttrTypes}
+	elemType := types.ObjectType{}
 	obj := map[string]attr.Value{}
+	var objVal basetypes.ObjectValue
 
 	if logSourceType == "aws" {
+		elemType = types.ObjectType{AttrTypes: subscriberAwsLogSourceResourceModelAttrTypes}
 		obj = map[string]attr.Value{
 			"source_name":    flex.StringValueToFramework(ctx, awsLogApiObject.SourceName),
 			"source_version": flex.StringToFramework(ctx, awsLogApiObject.SourceVersion),
 		}
+		objVal, _ = types.ObjectValue(subscriberAwsLogSourceResourceModelAttrTypes, obj)
 	} else if logSourceType == "custom" {
+		elemType = types.ObjectType{AttrTypes: subscriberCustomLogSourceResourceModelAttrTypes}
+		attributes, d := flattensubscriberCustomLogSourceAttributeModel(ctx, customLogApiObject.Attributes)
+		diags.Append(d...)
 		obj = map[string]attr.Value{
 			"source_name":    flex.StringToFramework(ctx, customLogApiObject.SourceName),
 			"source_version": flex.StringToFramework(ctx, customLogApiObject.SourceVersion),
+			"attributes": attributes,
 		}
+		objVal, d = types.ObjectValue(subscriberCustomLogSourceResourceModelAttrTypes, obj)
+		diags.Append(d...)
 	}
 
-	objVal, d := types.ObjectValue(subscriberLogSourceResourceModelAttrTypes, obj)
-	diags.Append(d...)
 
 	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
 	diags.Append(d...)
@@ -620,28 +639,28 @@ func flattenSubscriberLogSourceResourceModel(ctx context.Context, awsLogApiObjec
 	return listVal, diags
 }
 
-// func flattensubscriberCustomLogSourceAttributeModel(ctx context.Context, apiObject *awstypes.CustomLogSourceAttributes) (types.List, diag.Diagnostics) {
-// 	var diags diag.Diagnostics
-// 	elemType := types.ObjectType{AttrTypes: subscriberCustomLogSourceAttributesModelAttrTypes}
+func flattensubscriberCustomLogSourceAttributeModel(ctx context.Context, apiObject *awstypes.CustomLogSourceAttributes) (types.List, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	elemType := types.ObjectType{AttrTypes: subscriberCustomLogSourceAttributesModelAttrTypes}
 
-// 	if apiObject == nil {
-// 		return types.ListValueMust(elemType, []attr.Value{}), diags
-// 	}
+	if apiObject == nil {
+		return types.ListValueMust(elemType, []attr.Value{}), diags
+	}
 
-// 	obj := map[string]attr.Value{
-// 		"crawler_arn":  flex.StringToFramework(ctx, apiObject.CrawlerArn),
-// 		"database_arn": flex.StringToFramework(ctx, apiObject.DatabaseArn),
-// 		"table_arn":    flex.StringToFramework(ctx, apiObject.TableArn),
-// 	}
+	obj := map[string]attr.Value{
+		"crawler_arn":  flex.StringToFramework(ctx, apiObject.CrawlerArn),
+		"database_arn": flex.StringToFramework(ctx, apiObject.DatabaseArn),
+		"table_arn":    flex.StringToFramework(ctx, apiObject.TableArn),
+	}
 
-// 	objVal, d := types.ObjectValue(subscriberCustomLogSourceAttributesModelAttrTypes, obj)
-// 	diags.Append(d...)
+	objVal, d := types.ObjectValue(subscriberCustomLogSourceAttributesModelAttrTypes, obj)
+	diags.Append(d...)
 
-// 	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
-// 	diags.Append(d...)
+	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+	diags.Append(d...)
 
-// 	return listVal, diags
-// }
+	return listVal, diags
+}
 
 // func flattensubscriberCustomLogSourceProviderModel(ctx context.Context, apiObject *awstypes.CustomLogSourceProvider) (types.List, diag.Diagnostics) {
 // 	var diags diag.Diagnostics
@@ -693,16 +712,29 @@ var (
 		"principal":   types.StringType,
 	}
 
-	subscriberLogSourcesModelAttrTypes = types.ObjectType{AttrTypes: subscriberLogSourceResourceModelAttrTypes}
+	awsLogSubscriberSourcesModelAttrTypes = types.ObjectType{AttrTypes: subscriberAwsLogSourceResourceModelAttrTypes}
+	customLogSubscriberSourceModelAttrTypes = types.ObjectType{AttrTypes: subscriberCustomLogSourceResourceModelAttrTypes}
 
-	subscriberLogSourceResourceModelAttrTypes = map[string]attr.Type{
+	subscriberAwsLogSourceResourceModelAttrTypes = map[string]attr.Type{
 		"source_name":    types.StringType,
 		"source_version": types.StringType,
 	}
 
+	subscriberCustomLogSourceResourceModelAttrTypes = map[string]attr.Type{
+		"source_name":    types.StringType,
+		"source_version": types.StringType,
+		"attributes":     types.ListType{ElemType: types.ObjectType{AttrTypes: subscriberCustomLogSourceAttributesModelAttrTypes}},
+	}
+
+	subscriberCustomLogSourceAttributesModelAttrTypes = map[string]attr.Type{
+		"crawler_arn": types.StringType,
+		"database_arn": types.StringType,
+		"table_arn":    types.StringType,
+	}
+
 	subscriberSourcesModelAttrTypes = map[string]attr.Type{
-		"aws_log_source_resource":    types.ListType{ElemType: subscriberLogSourcesModelAttrTypes},
-		"custom_log_source_resource": types.ListType{ElemType: subscriberLogSourcesModelAttrTypes},
+		"aws_log_source_resource":    types.ListType{ElemType: awsLogSubscriberSourcesModelAttrTypes},
+		"custom_log_source_resource": types.ListType{ElemType: customLogSubscriberSourceModelAttrTypes},
 	}
 )
 
@@ -731,6 +763,13 @@ type awsLogSubscriberSourceModel struct {
 type customLogSubscriberSourceModel struct {
 	SourceName    types.String `tfsdk:"source_name"`
 	SourceVersion types.String `tfsdk:"source_version"`
+	Attributes      types.List   `tfsdk:"attributes"`
+}
+
+type subscriberCustomLogSourceAttributesModel struct {
+	CrawlerARN  types.String `tfsdk:"crawler_arn"`
+	DatabaseARN types.String `tfsdk:"database_arn"`
+	TableARN    types.String `tfsdk:"table_arn"`
 }
 
 type subscriberIdentiryModel struct {
