@@ -124,7 +124,7 @@ The following arguments are optional:
 
 ### ECPUPerSecond Configuration
 
-* `maximum` - The upper limit for data storage the cache is set to use. Set as Integer.
+* `maximum` - The maximum number of ECPUs the cache can consume per second. Set as Integer.
 
 ## Attribute Reference
 
@@ -176,4 +176,4 @@ Using `terraform import`, import ElastiCache Serverless Cache using the `name`. 
 % terraform import aws_elasticache_serverless_cache.my_cluster my_cluster
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6f0f50dba314c6b69df2f62dd3a634408ccc1d2651aba0d910d19edd4f2494bd -->
+<!-- cache-key: cdktf-0.20.1 input-ed2f0a6afd8f8d8de2398efc4b4f4f8be57b8c3cb69ea335e3799ec3c42dae03 -->

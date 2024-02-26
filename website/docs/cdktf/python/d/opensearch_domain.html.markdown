@@ -64,6 +64,7 @@ This data source exports the following attributes in addition to the arguments a
     * `dedicated_master_enabled` - Indicates whether dedicated master nodes are enabled for the cluster.
     * `dedicated_master_type` - Instance type of the dedicated master nodes in the cluster.
     * `dedicated_master_count` - Number of dedicated master nodes in the cluster.
+    * `multi_az_with_standby_enabled` - Whether a multi-AZ domain is turned on with a standby AZ.
     * `zone_awareness_enabled` - Indicates whether zone awareness is enabled.
     * `zone_awareness_config` - Configuration block containing zone awareness settings.
         * `availability_zone_count` - Number of availability zones used.
@@ -115,4 +116,4 @@ This data source exports the following attributes in addition to the arguments a
     * `subnet_ids` - Subnets used by the domain.
     * `vpc_id` - VPC used by the domain.
 
-<!-- cache-key: cdktf-0.20.1 input-4b1000ae383db531a922afd36d146f59e8c9e92158fd3664a1e082f23a890d8d -->
+<!-- cache-key: cdktf-0.20.1 input-01f37a17c598cc10c99e74b9d128dbd7cbef41745f5cf5aaa6e1db32feb9eb3e -->
