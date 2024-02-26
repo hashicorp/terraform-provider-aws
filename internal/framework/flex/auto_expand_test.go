@@ -706,6 +706,60 @@ func TestExpandComplexSingleNestedBlock(t *testing.T) {
 	runAutoExpandTestCases(ctx, t, testCases)
 }
 
+func TestExpandStringEnum(t *testing.T) {
+	t.Parallel()
+
+	var testEnum TestEnum
+	testEnumList := TestEnumList
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName:   "valid value",
+			Source:     fwtypes.StringEnumValue(TestEnumList),
+			Target:     &testEnum,
+			WantTarget: &testEnumList,
+		},
+		{
+			TestName:   "empty value",
+			Source:     fwtypes.StringEnumNull[TestEnum](),
+			Target:     &testEnum,
+			WantTarget: &testEnum,
+		},
+	}
+	runAutoExpandTestCases(ctx, t, testCases)
+}
+
+func TestExpandNestedBlockWithStringEnum(t *testing.T) {
+	t.Parallel()
+
+	type tf01 struct {
+		Field1 types.Int64                  `tfsdk:"field1"`
+		Field2 fwtypes.StringEnum[TestEnum] `tfsdk:"field2"`
+	}
+	type aws01 struct {
+		Field1 int64
+		Field2 TestEnum
+	}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName:   "single nested valid value",
+			Source:     &tf01{Field1: types.Int64Value(1), Field2: fwtypes.StringEnumValue(TestEnumList)},
+			Target:     &aws01{},
+			WantTarget: &aws01{Field1: 1, Field2: TestEnumList},
+		},
+		{
+			TestName:   "single nested empty value",
+			Source:     &tf01{Field1: types.Int64Value(1), Field2: fwtypes.StringEnumNull[TestEnum]()},
+			Target:     &aws01{},
+			WantTarget: &aws01{Field1: 1, Field2: ""},
+		},
+	}
+	runAutoExpandTestCases(ctx, t, testCases)
+}
+
 type autoFlexTestCase struct {
 	Context    context.Context //nolint:containedctx // testing context use
 	TestName   string
