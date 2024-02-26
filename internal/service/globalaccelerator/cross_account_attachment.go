@@ -7,16 +7,15 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -65,16 +64,10 @@ func (r *resourceCrossAccountAttachment) Schema(ctx context.Context, req resourc
 			"principals": schema.ListAttribute{
 				Optional:    true,
 				ElementType: types.StringType,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
 			},
 			"resources": schema.ListAttribute{
 				Optional:    true,
 				ElementType: ResourceDataElementType,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
 			},
 			"created_time": schema.StringAttribute{
 				Computed: true,
@@ -133,8 +126,8 @@ func (r *resourceCrossAccountAttachment) Create(ctx context.Context, req resourc
 		return
 	}
 
-	plan.ID = flex.StringToFramework(ctx, out.CrossAccountAttachment.AttachmentArn)
 	state := plan
+	state.ID = flex.StringToFramework(ctx, out.CrossAccountAttachment.AttachmentArn)
 	state.ARN = flex.StringToFramework(ctx, out.CrossAccountAttachment.AttachmentArn)
 
 	state.CreatedTime = types.StringValue(out.CrossAccountAttachment.CreatedTime.Format(time.RFC3339))
@@ -178,6 +171,7 @@ func (r *resourceCrossAccountAttachment) Read(ctx context.Context, req resource.
 	if out.CrossAccountAttachment.LastModifiedTime != nil {
 		state.LastModifiedTime = types.StringValue(out.CrossAccountAttachment.LastModifiedTime.Format(time.RFC3339))
 	}
+	state.Principals = flex.FlattenFrameworkStringList(ctx, out.CrossAccountAttachment.Principals)
 
 	resources, errDiags := flattenResources(ctx, out.CrossAccountAttachment.Resources)
 	resp.Diagnostics.Append(errDiags...)
@@ -204,12 +198,12 @@ func (r *resourceCrossAccountAttachment) Update(ctx context.Context, req resourc
 
 	var diags diag.Diagnostics
 	if !plan.Principals.Equal(state.Principals) {
-		input.AddPrincipals, input.RemovePrincipals, diags = DiffPrincipals(ctx, state.Principals, plan.Principals)
+		input.AddPrincipals, input.RemovePrincipals, diags = diffPrincipals(ctx, state.Principals, plan.Principals)
 		resp.Diagnostics.Append(diags...)
 	}
 
 	if !plan.Resources.Equal(state.Resources) {
-		input.AddResources, input.RemoveResources, diags = DiffResources(ctx, state.Resources, plan.Resources)
+		input.AddResources, input.RemoveResources, diags = diffResources(ctx, state.Resources, plan.Resources)
 		resp.Diagnostics.Append(diags...)
 	}
 
@@ -346,11 +340,13 @@ func flattenResources(ctx context.Context, resources []*globalaccelerator.Resour
 		endpointID := aws.StringValue(resource.EndpointId)
 		region := ""
 		// Extract the region from the ARN if the endpoint ID is an ARN
-		if strings.HasPrefix(endpointID, "arn:") {
-			parts := strings.Split(endpointID, ":")
-			if len(parts) > 3 {
-				region = parts[3]
+		if arn.IsARN(endpointID) {
+			parsedARN, err := arn.Parse(endpointID)
+			if err != nil {
+				diags.AddError("Error parsing ARN", err.Error())
+				continue
 			}
+			region = parsedARN.Region
 		}
 
 		obj := map[string]attr.Value{

@@ -42,7 +42,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `principals` - (Optional) List of AWS account IDs that are allowed to associate resources with the accelerator.
-* `resources` - (Optional) List of resources to be associated with the accelerator. Each resource is specified as a map with keys `endpoint_id` and `region.
+* `resources` - (Optional) List of resources to be associated with the accelerator. Each resource is specified as a map with keys `endpoint_id` and `region`. The `region` field is optional. 
 
 ## Attribute Reference
 
@@ -52,7 +52,6 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - ID of the Cross Account Attachment.
 * `created_time` - Creation Time when the Cross Account Attachment.
 * `last_modified_time` - Last modified time of the Cross Account Attachment. 
-* 
 
 ## Timeouts
 
@@ -69,12 +68,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_globalaccelerator_cross_account_attachment.example
-  id = "cross_account_attachment-id-12345678"
+  id = "arn:aws:globalaccelerator::012345678910:attachment/01234567-abcd-8910-efgh-123456789012"
 }
 ```
 
 Using `terraform import`, import Global Accelerator Cross Account Attachment using the `example_id_arg`. For example:
 
 ```console
-% terraform import aws_globalaccelerator_cross_account_attachment.example cross_account_attachment-id-12345678
+% terraform import arn:aws:globalaccelerator::012345678910:attachment/01234567-abcd-8910-efgh-123456789012
 ```
