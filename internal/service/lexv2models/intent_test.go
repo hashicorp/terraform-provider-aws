@@ -911,7 +911,7 @@ func TestAccLexV2ModelsIntent_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -947,7 +947,7 @@ func TestAccLexV2ModelsIntent_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -977,7 +977,7 @@ func TestAccLexV2ModelsIntent_updateConfirmationSetting(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1042,7 +1042,7 @@ func TestAccLexV2ModelsIntent_updateClosingSetting(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1106,7 +1106,7 @@ func TestAccLexV2ModelsIntent_updateInputContext(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1162,7 +1162,7 @@ func TestAccLexV2ModelsIntent_updateInitialResponseSetting(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1384,7 +1384,7 @@ func TestAccLexV2ModelsIntent_updateFulfillmentCodeHook(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1658,7 +1658,7 @@ func TestAccLexV2ModelsIntent_updateDialogCodeHook(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1706,7 +1706,7 @@ func TestAccLexV2ModelsIntent_updateOutputContext(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1774,7 +1774,7 @@ func TestAccLexV2ModelsIntent_updateSampleUtterance(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIntentDestroy(ctx),
 		Steps: []resource.TestStep{

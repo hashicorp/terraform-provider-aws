@@ -26,7 +26,7 @@ func testAccDomainPermissionsPolicy_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CodeArtifactEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainPermissionsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -67,7 +67,7 @@ func testAccDomainPermissionsPolicy_ignoreEquivalent(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CodeArtifactEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainPermissionsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -97,7 +97,7 @@ func testAccDomainPermissionsPolicy_owner(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CodeArtifactEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainPermissionsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -127,7 +127,7 @@ func testAccDomainPermissionsPolicy_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CodeArtifactEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainPermissionsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -150,7 +150,7 @@ func testAccDomainPermissionsPolicy_Disappears_domain(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CodeArtifactEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainPermissionsDestroy(ctx),
 		Steps: []resource.TestStep{

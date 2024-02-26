@@ -28,7 +28,7 @@ func TestAccCloud9EnvironmentEC2_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.Cloud9EndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Cloud9EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Cloud9ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentEC2Destroy(ctx),
 		Steps: []resource.TestStep{
@@ -67,7 +67,7 @@ func TestAccCloud9EnvironmentEC2_allFields(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.Cloud9EndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Cloud9EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Cloud9ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentEC2Destroy(ctx),
 		Steps: []resource.TestStep{
@@ -112,7 +112,7 @@ func TestAccCloud9EnvironmentEC2_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.Cloud9EndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Cloud9EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Cloud9ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentEC2Destroy(ctx),
 		Steps: []resource.TestStep{
@@ -159,7 +159,7 @@ func TestAccCloud9EnvironmentEC2_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.Cloud9EndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Cloud9EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Cloud9ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEnvironmentEC2Destroy(ctx),
 		Steps: []resource.TestStep{

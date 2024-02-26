@@ -33,7 +33,7 @@ func TestAccRedshiftDataShareConsumerAssociation_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, redshift.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataShareConsumerAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -65,7 +65,7 @@ func TestAccRedshiftDataShareConsumerAssociation_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, redshift.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataShareConsumerAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -91,7 +91,7 @@ func TestAccRedshiftDataShareConsumerAssociation_associateEntireAccount(t *testi
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, redshift.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataShareConsumerAssociationDestroy(ctx),
 		Steps: []resource.TestStep{

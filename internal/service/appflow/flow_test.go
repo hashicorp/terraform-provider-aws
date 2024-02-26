@@ -32,7 +32,7 @@ func TestAccAppFlowFlow_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFlowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -82,7 +82,7 @@ func TestAccAppFlowFlow_S3_outputFormatConfig_ParquetFileType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFlowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -130,7 +130,7 @@ func TestAccAppFlowFlow_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFlowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -167,7 +167,7 @@ func TestAccAppFlowFlow_taskProperties(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFlowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -194,7 +194,7 @@ func TestAccAppFlowFlow_taskUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFlowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -276,7 +276,7 @@ func TestAccAppFlowFlow_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFlowDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -325,7 +325,7 @@ func TestAccAppFlowFlow_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFlowDestroy(ctx),
 		Steps: []resource.TestStep{

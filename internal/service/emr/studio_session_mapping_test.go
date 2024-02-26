@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfemr "github.com/hashicorp/terraform-provider-aws/internal/service/emr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEMRStudioSessionMapping_basic(t *testing.T) {
@@ -34,7 +35,7 @@ func TestAccEMRStudioSessionMapping_basic(t *testing.T) {
 			testAccPreCheckUserID(t)
 			testAccPreCheckGroupName(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStudioSessionMappingDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -101,7 +102,7 @@ func TestAccEMRStudioSessionMapping_disappears(t *testing.T) {
 			testAccPreCheckUserID(t)
 			testAccPreCheckGroupName(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStudioSessionMappingDestroy(ctx),
 		Steps: []resource.TestStep{

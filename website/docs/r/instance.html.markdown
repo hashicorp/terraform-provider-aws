@@ -440,6 +440,7 @@ For `instance_market_options`, in addition to the arguments above, the following
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
+* `read` - (Default `15m`)
 * `update` - (Default `10m`)
 * `delete` - (Default `20m`)
 

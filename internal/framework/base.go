@@ -130,6 +130,12 @@ func (w *WithNoOpUpdate[T]) Update(ctx context.Context, request resource.UpdateR
 	response.Diagnostics.Append(response.State.Set(ctx, &t)...)
 }
 
+// WithNoOpUpdate is intended to be embedded in resources which have no need of a custom Delete method.
+type WithNoOpDelete struct{}
+
+func (w *WithNoOpDelete) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+}
+
 // DataSourceWithConfigure is a structure to be embedded within a DataSource that implements the DataSourceWithConfigure interface.
 type DataSourceWithConfigure struct {
 	withMeta

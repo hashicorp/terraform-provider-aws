@@ -96,12 +96,21 @@ cleango: ## Clean up Go cache
 
 cleantidy: ## Clean up tidy
 	@echo "make: tidying Go mods..."
-	cd .ci/providerlint && $(GO_VER) mod tidy
-	cd tools/tfsdk2fw && $(GO_VER) mod tidy
-	cd .ci/tools && $(GO_VER) mod tidy
-	cd .ci/providerlint && $(GO_VER) mod tidy
-	cd skaff && $(GO_VER) mod tidy
-	@$(GO_VER) mod tidy
+	@gover="$(GO_VER)" ; \
+	if [ "$$gover" = "go" ] ; then \
+		gover=go`cat .go-version | xargs` ; \
+		echo "make: WARNING: no version provided so tidying with $$gover" ; \
+		echo "make: tidying with newer versions can make go.mod incompatible" ; \
+		echo "make: to use a different version, use 'GO_VER=go1.16 make cleantidy'" ; \
+		echo "make: to use the version in .go-version, use 'make cleantidy'" ; \
+		echo "make: if you get an error, see https://go.dev/doc/manage-install to locally install various Go versions" ; \
+	fi ; \
+	cd .ci/providerlint && $$gover mod tidy && cd ../.. ; \
+	cd tools/tfsdk2fw && $$gover mod tidy && cd ../.. ; \
+	cd .ci/tools && $$gover mod tidy && cd ../.. ; \
+	cd .ci/providerlint && $$gover mod tidy && cd ../.. ; \
+	cd skaff && $$gover mod tidy && cd .. ; \
+	$$gover mod tidy
 	@echo "make: Go mods tidied"
 
 clean: cleango cleantidy build tools ## Clean up Go cache, tidy and re-install tools

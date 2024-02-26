@@ -100,6 +100,47 @@ func expandRecordingGroupRecordingStrategy(configured []interface{}) *configserv
 	return &recordingStrategy
 }
 
+func expandRecordingMode(mode map[string]interface{}) *configservice.RecordingMode {
+	recordingMode := configservice.RecordingMode{}
+
+	if v, ok := mode["recording_frequency"].(string); ok {
+		recordingMode.RecordingFrequency = aws.String(v)
+	}
+
+	if v, ok := mode["recording_mode_override"]; ok {
+		recordingMode.RecordingModeOverrides = expandRecordingModeRecordingModeOverrides(v.([]interface{}))
+	}
+
+	return &recordingMode
+}
+
+func expandRecordingModeRecordingModeOverrides(configured []interface{}) []*configservice.RecordingModeOverride {
+	var out []*configservice.RecordingModeOverride
+	for _, val := range configured {
+		m, ok := val.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		e := &configservice.RecordingModeOverride{}
+
+		if v, ok := m["description"].(string); ok && v != "" {
+			e.Description = aws.String(v)
+		}
+
+		if v, ok := m["resource_types"]; ok {
+			e.ResourceTypes = flex.ExpandStringSet(v.(*schema.Set))
+		}
+
+		if v, ok := m["recording_frequency"].(string); ok && v != "" {
+			e.RecordingFrequency = aws.String(v)
+		}
+
+		out = append(out, e)
+	}
+	return out
+}
+
 func expandRulesEvaluationModes(in []interface{}) []*configservice.EvaluationModeConfiguration {
 	if len(in) == 0 {
 		return nil
@@ -260,6 +301,39 @@ func flattenRecordingGroup(g *configservice.RecordingGroup) []map[string]interfa
 
 	return []map[string]interface{}{m}
 }
+
+func flattenRecordingMode(g *configservice.RecordingMode) []map[string]interface{} {
+	m := make(map[string]interface{}, 1)
+
+	if g.RecordingFrequency != nil {
+		m["recording_frequency"] = aws.StringValue(g.RecordingFrequency)
+	}
+
+	if g.RecordingModeOverrides != nil && len(g.RecordingModeOverrides) > 0 {
+		m["recording_mode_override"] = flattenRecordingModeRecordingModeOverrides(g.RecordingModeOverrides)
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenRecordingModeRecordingModeOverrides(in []*configservice.RecordingModeOverride) []interface{} {
+	var out []interface{}
+	for _, v := range in {
+		m := map[string]interface{}{
+			"description":         aws.StringValue(v.Description),
+			"recording_frequency": aws.StringValue(v.RecordingFrequency),
+		}
+
+		if v.ResourceTypes != nil {
+			m["resource_types"] = flex.FlattenStringSet(v.ResourceTypes)
+		}
+
+		out = append(out, m)
+	}
+
+	return out
+}
+
 func flattenExclusionByResourceTypes(exclusionByResourceTypes *configservice.ExclusionByResourceTypes) []interface{} {
 	if exclusionByResourceTypes == nil {
 		return nil
@@ -300,6 +374,7 @@ func flattenRecordingGroupRecordingStrategy(recordingStrategy *configservice.Rec
 
 	return []interface{}{m}
 }
+
 func flattenRuleScope(scope *configservice.Scope) []interface{} {
 	var items []interface{}
 

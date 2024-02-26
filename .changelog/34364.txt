@@ -1,0 +1,15 @@
+```release-note:enhancement
+resource/aws_lb_target_group: Add `load_balancer_arns` attribute
+```
+
+```release-note:enhancement
+data-source/aws_lb_target_group: Add `load_balancer_arns` attribute
+```
+
+```release-note:enhancement
+resource/aws_alb_target_group: Add `load_balancer_arns` attribute
+```
+
+```release-note:enhancement
+data-source/aws_alb_target_group: Add `load_balancer_arns` attribute
+```
