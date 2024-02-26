@@ -319,7 +319,7 @@ func resourceOrganizationCustomPolicyRuleDelete(ctx context.Context, d *schema.R
 		OrganizationConfigRuleName: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) {
+	if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) || errs.IsA[*types.OrganizationAccessDeniedException](err) {
 		return diags
 	}
 

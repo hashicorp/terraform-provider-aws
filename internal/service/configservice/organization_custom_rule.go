@@ -285,7 +285,7 @@ func resourceOrganizationCustomRuleDelete(ctx context.Context, d *schema.Resourc
 		OrganizationConfigRuleName: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) {
+	if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) || errs.IsA[*types.OrganizationAccessDeniedException](err) {
 		return diags
 	}
 

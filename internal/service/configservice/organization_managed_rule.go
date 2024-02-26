@@ -275,7 +275,7 @@ func resourceOrganizationManagedRuleDelete(ctx context.Context, d *schema.Resour
 		OrganizationConfigRuleName: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) {
+	if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) || errs.IsA[*types.OrganizationAccessDeniedException](err) {
 		return diags
 	}
 
@@ -466,8 +466,8 @@ func waitOrganizationConfigRuleCreated(ctx context.Context, conn *configservice.
 		Target:         enum.Slice(types.OrganizationRuleStatusCreateSuccessful),
 		Refresh:        statusOrganizationConfigRule(ctx, conn, name),
 		Timeout:        timeout,
-		NotFoundChecks: 10,
 		Delay:          30 * time.Second,
+		NotFoundChecks: 10,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

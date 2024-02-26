@@ -255,7 +255,7 @@ func resourceOrganizationConformancePackDelete(ctx context.Context, d *schema.Re
 		OrganizationConformancePackName: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*types.NoSuchOrganizationConformancePackException](err) {
+	if errs.IsA[*types.NoSuchOrganizationConformancePackException](err) || errs.IsA[*types.OrganizationAccessDeniedException](err) {
 		return diags
 	}
 
