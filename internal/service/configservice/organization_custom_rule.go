@@ -27,9 +27,9 @@ import (
 func resourceOrganizationCustomRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationCustomRuleCreate,
-		DeleteWithoutTimeout: resourceOrganizationCustomRuleDelete,
 		ReadWithoutTimeout:   resourceOrganizationCustomRuleRead,
 		UpdateWithoutTimeout: resourceOrganizationCustomRuleUpdate,
+		DeleteWithoutTimeout: resourceOrganizationCustomRuleDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -280,9 +280,14 @@ func resourceOrganizationCustomRuleDelete(ctx context.Context, d *schema.Resourc
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
+	const (
+		timeout = 2 * time.Minute
+	)
 	log.Printf("[DEBUG] Deleting ConfigService Organization Custom Rule: %s", d.Id())
-	_, err := conn.DeleteOrganizationConfigRule(ctx, &configservice.DeleteOrganizationConfigRuleInput{
-		OrganizationConfigRuleName: aws.String(d.Id()),
+	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteOrganizationConfigRule(ctx, &configservice.DeleteOrganizationConfigRuleInput{
+			OrganizationConfigRuleName: aws.String(d.Id()),
+		})
 	})
 
 	if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) || errs.IsA[*types.OrganizationAccessDeniedException](err) {

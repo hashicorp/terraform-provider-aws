@@ -40,8 +40,8 @@ func resourceOrganizationManagedRule() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
-			Delete: schema.DefaultTimeout(5 * time.Minute),
 			Update: schema.DefaultTimeout(5 * time.Minute),
+			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -270,9 +270,14 @@ func resourceOrganizationManagedRuleDelete(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
+	const (
+		timeout = 2 * time.Minute
+	)
 	log.Printf("[DEBUG] Deleting ConfigService Organization Managed Rule: %s", d.Id())
-	_, err := conn.DeleteOrganizationConfigRule(ctx, &configservice.DeleteOrganizationConfigRuleInput{
-		OrganizationConfigRuleName: aws.String(d.Id()),
+	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteOrganizationConfigRule(ctx, &configservice.DeleteOrganizationConfigRuleInput{
+			OrganizationConfigRuleName: aws.String(d.Id()),
+		})
 	})
 
 	if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) || errs.IsA[*types.OrganizationAccessDeniedException](err) {
@@ -390,7 +395,12 @@ func findOrganizationConfigRuleStatuses(ctx context.Context, conn *configservice
 
 	pages := configservice.NewDescribeOrganizationConfigRuleStatusesPaginator(conn, input)
 	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+		const (
+			timeout = 15 * time.Second
+		)
+		outputRaw, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, timeout, func() (interface{}, error) {
+			return pages.NextPage(ctx)
+		})
 
 		if errs.IsA[*types.NoSuchOrganizationConfigRuleException](err) {
 			return nil, &retry.NotFoundError{
@@ -403,7 +413,7 @@ func findOrganizationConfigRuleStatuses(ctx context.Context, conn *configservice
 			return nil, err
 		}
 
-		output = append(output, page.OrganizationConfigRuleStatuses...)
+		output = append(output, outputRaw.(*configservice.DescribeOrganizationConfigRuleStatusesOutput).OrganizationConfigRuleStatuses...)
 	}
 
 	return output, nil

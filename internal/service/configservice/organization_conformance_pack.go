@@ -41,8 +41,8 @@ func resourceOrganizationConformancePack() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
-			Delete: schema.DefaultTimeout(20 * time.Minute),
 			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -250,9 +250,14 @@ func resourceOrganizationConformancePackDelete(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
+	const (
+		timeout = 5 * time.Minute
+	)
 	log.Printf("[DEBUG] Deleting ConfigService Organization Conformance Pack: %s", d.Id())
-	_, err := conn.DeleteOrganizationConformancePack(ctx, &configservice.DeleteOrganizationConformancePackInput{
-		OrganizationConformancePackName: aws.String(d.Id()),
+	_, err := tfresource.RetryWhenIsA[*types.ResourceInUseException](ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteOrganizationConformancePack(ctx, &configservice.DeleteOrganizationConformancePackInput{
+			OrganizationConformancePackName: aws.String(d.Id()),
+		})
 	})
 
 	if errs.IsA[*types.NoSuchOrganizationConformancePackException](err) || errs.IsA[*types.OrganizationAccessDeniedException](err) {
@@ -356,16 +361,14 @@ func findOrganizationConformancePackStatuses(ctx context.Context, conn *configse
 
 	pages := configservice.NewDescribeOrganizationConformancePackStatusesPaginator(conn, input)
 	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
+		const (
+			timeout = 15 * time.Second
+		)
+		outputRaw, err := tfresource.RetryWhenIsA[*types.OrganizationAccessDeniedException](ctx, timeout, func() (interface{}, error) {
+			return pages.NextPage(ctx)
+		})
 
 		if errs.IsA[*types.NoSuchOrganizationConformancePackException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
-		}
-
-		if errs.IsAErrorMessageContains[*types.OrganizationAccessDeniedException](err, "This action can only be made by accounts in an AWS Organization") {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
@@ -376,7 +379,7 @@ func findOrganizationConformancePackStatuses(ctx context.Context, conn *configse
 			return nil, err
 		}
 
-		output = append(output, page.OrganizationConformancePackStatuses...)
+		output = append(output, outputRaw.(*configservice.DescribeOrganizationConformancePackStatusesOutput).OrganizationConformancePackStatuses...)
 	}
 
 	return output, nil
