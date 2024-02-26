@@ -39,7 +39,7 @@ func ResourceConfigurationPolicyAssociation() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Read: schema.DefaultTimeout(180 * time.Second),
+			Read: schema.DefaultTimeout(90 * time.Second),
 		},
 
 		Schema: map[string]*schema.Schema{
