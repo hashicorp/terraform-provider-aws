@@ -129,8 +129,11 @@ func TestStringToFrameworkLegacy(t *testing.T) {
 func TestStringValueToFramework(t *testing.T) {
 	t.Parallel()
 
-	// AWS enums use custom types with an underlying string type
+	// AWS enums use custom types with an underlying string type.
 	type custom string
+	const (
+		test custom = "TEST"
+	)
 
 	type testCase struct {
 		input    custom
@@ -138,11 +141,11 @@ func TestStringValueToFramework(t *testing.T) {
 	}
 	tests := map[string]testCase{
 		"valid": {
-			input:    "TEST",
+			input:    test,
 			expected: types.StringValue("TEST"),
 		},
 		"empty": {
-			input:    "",
+			input:    custom(""),
 			expected: types.StringNull(),
 		},
 	}
