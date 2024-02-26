@@ -196,8 +196,8 @@ github.com/aws/aws-sdk-go-v2/service/lambda v1.53.1 h1:UP4ijiKqXUneKAHGd5Z8AnuFa
 github.com/aws/aws-sdk-go-v2/service/lambda v1.53.1/go.mod h1:j7LmUBmzv17DtxTqO7DQ/HTnyfFB9ouspZo5C9WWxzk=
 github.com/aws/aws-sdk-go-v2/service/launchwizard v1.3.1 h1:b84mUApg62PRZlBwviTB8PpIOzL3/IpsyCV616ioT2k=
 github.com/aws/aws-sdk-go-v2/service/launchwizard v1.3.1/go.mod h1:hVPifCKHPvmHYMM1fUSazJXxhLWVDm99L15zK9H7jHA=
-github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.41.2 h1:o4FDAnFBZuNWTanfPr3AEQJs2bDv3rplfllTP3AXkX8=
-github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.41.2/go.mod h1:rzfyXxHvbJKNHu99lZMH+v8cKAX0EI+TH7QMub2AtnQ=
+github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.42.1 h1:Jg8Zge9fyegG0G5CCHstZB8b6mBkkfX9jLjPULWnZr0=
+github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.42.1/go.mod h1:1fUBWUJXp1kkY8+SkW5BmtwTcUj7b/36ow+R1tLvX6k=
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.35.3 h1:8WgoxDYhRBDazd3sfUNULOJF7fhcJHRlXmV7oHN2/xw=
 github.com/aws/aws-sdk-go-v2/service/lightsail v1.35.3/go.mod h1:Wkz8IEqRo7YcqT3l5q1rIUetSZFIUTMkkgG0o7I3n/A=
 github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.26.2 h1:5+8MYCDkAXxNAGpMQsfRbvOwLvv6qHeqPow41obOLM8=
