@@ -244,7 +244,7 @@ func (r *automationRuleResource) Schema(ctx context.Context, request resource.Sc
 
 func dateFilterSchemaFramework(ctx context.Context) schema.SetNestedBlock {
 	return schema.SetNestedBlock{
-		CustomType: fwtypes.NewSetNestedObjectTypeOf[stringFilterModel](ctx),
+		CustomType: fwtypes.NewSetNestedObjectTypeOf[dateFilterModel](ctx),
 		Validators: []validator.Set{
 			setvalidator.SizeAtMost(20),
 		},
@@ -587,8 +587,8 @@ type automationRulesFindingFieldsUpdateModel struct {
 }
 
 type noteUpdateModel struct {
-	Label   fwtypes.StringEnum[awstypes.SeverityLabel] `tfsdk:"label"`
-	Product types.Float64                              `tfsdk:"product"`
+	Text      types.String `tfsdk:"text"`
+	UpdatedBy types.String `tfsdk:"updated_by"`
 }
 
 type relatedFindingModel struct {
@@ -597,8 +597,8 @@ type relatedFindingModel struct {
 }
 
 type severityUpdateModel struct {
-	ID         types.String `tfsdk:"id"`
-	ProductARN fwtypes.ARN  `tfsdk:"product_arn"`
+	Label   fwtypes.StringEnum[awstypes.SeverityLabel] `tfsdk:"label"`
+	Product types.Float64                              `tfsdk:"product"`
 }
 
 type workflowUpdateModel struct {
