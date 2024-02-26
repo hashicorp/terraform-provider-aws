@@ -97,6 +97,7 @@ func (t stringEnumType[T]) Equal(o attr.Type) bool {
 
 func (stringEnumType[T]) String() string {
 	var zero T
+	// The format of this returned value is used inside AutoFlEx.
 	return fmt.Sprintf("StringEnumType[%T]", zero)
 }
 
