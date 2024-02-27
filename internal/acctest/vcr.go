@@ -383,7 +383,7 @@ func writeSeedToFile(seed int64, fileName string) error {
 }
 
 // closeVCRRecorder closes the VCR recorder, saving the cassette and randomness seed.
-func closeVCRRecorder(t *testing.T) {
+func closeVCRRecorder(ctx context.Context, t *testing.T) {
 	t.Helper()
 
 	// Don't close the recorder if we're running because of a panic.
@@ -391,7 +391,6 @@ func closeVCRRecorder(t *testing.T) {
 		panic(p)
 	}
 
-	ctx := context.TODO() // nosemgrep:ci.semgrep.migrate.context-todo
 	testName := t.Name()
 	providerMetas.Lock()
 	meta, ok := providerMetas[testName]
@@ -428,24 +427,24 @@ func closeVCRRecorder(t *testing.T) {
 }
 
 // ParallelTest wraps resource.ParallelTest, initializing VCR if enabled.
-func ParallelTest(t *testing.T, c resource.TestCase) {
+func ParallelTest(ctx context.Context, t *testing.T, c resource.TestCase) {
 	t.Helper()
 
 	if isVCREnabled() {
 		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(t, c.ProtoV5ProviderFactories)
-		defer closeVCRRecorder(t)
+		defer closeVCRRecorder(ctx, t)
 	}
 
 	resource.ParallelTest(t, c)
 }
 
 // Test wraps resource.Test, initializing VCR if enabled.
-func Test(t *testing.T, c resource.TestCase) {
+func Test(ctx context.Context, t *testing.T, c resource.TestCase) {
 	t.Helper()
 
 	if isVCREnabled() {
 		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(t, c.ProtoV5ProviderFactories)
-		defer closeVCRRecorder(t)
+		defer closeVCRRecorder(ctx, t)
 	}
 
 	resource.Test(t, c)
