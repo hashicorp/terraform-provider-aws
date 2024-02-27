@@ -23,7 +23,7 @@ func TestAccConfigServiceAggregateAuthorization_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var aa types.AggregationAuthorization
 	accountID := sdkacctest.RandStringFromCharSet(12, "0123456789")
-	resourceName := "aws_config_aggregate_authorization.example"
+	resourceName := "aws_config_aggregate_authorization.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -53,7 +53,7 @@ func TestAccConfigServiceAggregateAuthorization_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var aa types.AggregationAuthorization
 	accountID := sdkacctest.RandStringFromCharSet(12, "0123456789")
-	resourceName := "aws_config_aggregate_authorization.example"
+	resourceName := "aws_config_aggregate_authorization.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -77,7 +77,7 @@ func TestAccConfigServiceAggregateAuthorization_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var aa types.AggregationAuthorization
 	accountID := sdkacctest.RandStringFromCharSet(12, "0123456789")
-	resourceName := "aws_config_aggregate_authorization.example"
+	resourceName := "aws_config_aggregate_authorization.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -168,7 +168,7 @@ func testAccCheckAggregateAuthorizationDestroy(ctx context.Context) resource.Tes
 
 func testAccAggregateAuthorizationConfig_basic(accountID string) string {
 	return fmt.Sprintf(`
-resource "aws_config_aggregate_authorization" "example" {
+resource "aws_config_aggregate_authorization" "test" {
   account_id = %[1]q
   region     = %[2]q
 }
@@ -177,7 +177,7 @@ resource "aws_config_aggregate_authorization" "example" {
 
 func testAccAggregateAuthorizationConfig_tags1(accountID, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
-resource "aws_config_aggregate_authorization" "example" {
+resource "aws_config_aggregate_authorization" "test" {
   account_id = %[1]q
   region     = %[2]q
 
@@ -190,7 +190,7 @@ resource "aws_config_aggregate_authorization" "example" {
 
 func testAccAggregateAuthorizationConfig_tags2(accountID, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
-resource "aws_config_aggregate_authorization" "example" {
+resource "aws_config_aggregate_authorization" "test" {
   account_id = %[1]q
   region     = %[2]q
 
