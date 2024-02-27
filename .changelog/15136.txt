@@ -11,7 +11,7 @@ resource/aws_config_rule: Change `name` to [ForceNew](https://developer.hashicor
 ```
 
 ```release-note:new-resource
-aws_config_remediation_configuration
+aws_config_retention_configuration
 ```
 
 ```release-note:bug
