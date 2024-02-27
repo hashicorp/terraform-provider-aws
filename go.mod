@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v0.0.0-20230923063757-afb1ddc0824c
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.50.25
+	github.com/aws/aws-sdk-go v1.50.26
 	github.com/aws/aws-sdk-go-v2 v1.25.2
 	github.com/aws/aws-sdk-go-v2/config v1.27.4
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.2
@@ -103,7 +103,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.4.1
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.16.1
-	github.com/aws/aws-sdk-go-v2/service/rds v1.73.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.74.0
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.17.1
