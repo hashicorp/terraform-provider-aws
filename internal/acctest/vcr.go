@@ -78,7 +78,7 @@ var (
 )
 
 // ProviderMeta returns the current provider's state (AKA "meta" or "conns.AWSClient").
-func ProviderMeta(t *testing.T) *conns.AWSClient {
+func ProviderMeta(_ context.Context, t *testing.T) *conns.AWSClient {
 	t.Helper()
 
 	providerMetas.Lock()
