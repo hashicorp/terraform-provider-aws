@@ -364,59 +364,10 @@ resource "aws_iam_role" "meta_store_manager" {
 POLICY
 }
 
-resource "aws_iam_role_policy" "meta_store_manager" {
-  name = "AmazonSecurityLakeMetaStoreManagerPolicy"
-  role = aws_iam_role.meta_store_manager.name
-
-  policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [{
-    "Sid": "AllowWriteLambdaLogs",
-    "Effect": "Allow",
-    "Action": [
-      "logs:CreateLogStream",
-      "logs:PutLogEvents"
-    ],
-    "Resource": [
-      "arn:${data.aws_partition.current.partition}:logs:*:${data.aws_caller_identity.current.account_id}:log-group:/aws/lambda/SecurityLake_Glue_Partition_Updater_Lambda*"
-    ]
-  }, {
-    "Sid": "AllowCreateAwsCloudWatchLogGroup",
-    "Effect": "Allow",
-    "Action": [
-      "logs:CreateLogGroup"
-    ],
-    "Resource": [
-      "arn:${data.aws_partition.current.partition}:logs:*:${data.aws_caller_identity.current.account_id}:/aws/lambda/SecurityLake_Glue_Partition_Updater_Lambda*"
-    ]
-  }, {
-    "Sid": "AllowGlueManage",
-    "Effect": "Allow",
-    "Action": [
-      "glue:CreatePartition",
-      "glue:BatchCreatePartition"
-    ],
-    "Resource": [
-      "arn:${data.aws_partition.current.partition}:glue:*:*:table/amazon_security_lake_glue_db*/*",
-      "arn:${data.aws_partition.current.partition}:glue:*:*:database/amazon_security_lake_glue_db*",
-      "arn:${data.aws_partition.current.partition}:glue:*:*:catalog"
-    ]
-  }, {
-    "Sid": "AllowToReadFromSqs",
-    "Effect": "Allow",
-    "Action": [
-      "sqs:ReceiveMessage",
-      "sqs:DeleteMessage",
-      "sqs:GetQueueAttributes"
-    ],
-    "Resource": [
-      "arn:${data.aws_partition.current.partition}:sqs:*:${data.aws_caller_identity.current.account_id}:SecurityLake*"
-    ]
-  }]
-}
-POLICY
-}
+resource "aws_iam_role_policy_attachment" "example_attach" {
+	role       = aws_iam_role.meta_store_manager.name
+	policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonSecurityLakeMetastoreManager"
+  }
 
 resource "aws_iam_role" "datalake_s3_replication" {
   name               = "AmazonSecurityLakeS3ReplicationRole"

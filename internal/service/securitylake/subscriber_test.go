@@ -93,7 +93,7 @@ func testAccSubscriber_customLogSource(t *testing.T) {
 		CheckDestroy:             testAccCheckSubscriberDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSubscriberCustomLogConfig_basic(rName),
+				Config: testAccSubscriberConfig_customLog(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
 				),
@@ -156,10 +156,10 @@ func testAccCheckSubscriberExists(ctx context.Context, n string, v *types.Subscr
 }
 
 func testAccSubscriberConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-	
+	return acctest.ConfigCompose(testAccAWSLogSourceConfig_basic(), fmt.Sprintf(`	
 resource "aws_securitylake_subscriber" "test" {
-	subscriber_name = %[1]q
+	subscriber_name = %[2]q
+	access_type 	= "S3"
 	sources {
 	aws_log_source_resource {
 			source_name    = "ROUTE53"
@@ -167,30 +167,33 @@ resource "aws_securitylake_subscriber" "test" {
 		}
 	}
 	subscriber_identity {
-		external_id = "windows-sysmon-test"
-		principal   = "568227374639"
+		external_id = "example"
+		principal   = data.aws_caller_identity.test.account_id
 	}
+
+	depends_on = [aws_securitylake_aws_log_source.test] 
 }
-`, rName)
+`, acctest.Region(), rName))
 }
 
-func testAccSubscriberCustomLogConfig_basic(rName string) string {
-	return fmt.Sprintf(`
+func testAccSubscriberConfig_customLog(rName string) string {
+	return acctest.ConfigCompose(testAccCustomLogSourceConfig_basic(), fmt.Sprintf(`
 	
 resource "aws_securitylake_subscriber" "test" {
 	subscriber_name = %[1]q
-	// access_types 	= ["LAKEFORMATION"]
-	subscriber_description = "Testing"
+	subscriber_description = "Example"
 	sources {
 		custom_log_source_resource {
-			source_name    = "windows-sysmon"
-			source_version = "1.0"
+			source_name    = aws_securitylake_custom_log_source.test.source_name
+			source_version = aws_securitylake_custom_log_source.test.source_version
 		}
 	}
 	subscriber_identity {
-		external_id = "windows-sysmon-test"
-		principal   = "568227374639"
+		external_id = "example"
+		principal   = data.aws_caller_identity.current.account_id
 	}
+
+	depends_on = [aws_securitylake_custom_log_source.test] 
 }
-`, rName)
+`, rName))
 }
