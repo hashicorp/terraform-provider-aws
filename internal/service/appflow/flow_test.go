@@ -803,7 +803,7 @@ resource "aws_appflow_flow" "test" {
   }
 
   task {
-    task_type         = "Map_all"
+    task_type = "Map_all"
 
     connector_operator {
       s3 = "NO_OP"
