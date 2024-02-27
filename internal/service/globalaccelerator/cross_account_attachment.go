@@ -171,7 +171,7 @@ func (r *resourceCrossAccountAttachment) Read(ctx context.Context, req resource.
 	if out.CrossAccountAttachment.LastModifiedTime != nil {
 		state.LastModifiedTime = types.StringValue(out.CrossAccountAttachment.LastModifiedTime.Format(time.RFC3339))
 	}
-	state.Principals = flex.FlattenFrameworkStringList(ctx, out.CrossAccountAttachment.Principals)
+	// state.Principals = flex.FlattenFrameworkStringList(ctx, out.CrossAccountAttachment.Principals)
 
 	resources, errDiags := flattenResources(ctx, out.CrossAccountAttachment.Resources)
 	resp.Diagnostics.Append(errDiags...)
@@ -331,7 +331,7 @@ func expandResources(tfList []ResourceData) []*globalaccelerator.Resource {
 func flattenResources(ctx context.Context, resources []*globalaccelerator.Resource) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	if resources == nil || len(resources) == 0 {
+	if len(resources) == 0 {
 		return types.ListNull(ResourceDataElementType), diags
 	}
 

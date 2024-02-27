@@ -37,6 +37,7 @@ func generateAccountID() string {
 }
 
 func TestExpandResources(t *testing.T) {
+	t.Parallel()
 	cases := []struct {
 		Input          []globalaccelerator_test.ResourceData
 		ExpectedOutput []*globalaccelerator.Resource
@@ -49,7 +50,7 @@ func TestExpandResources(t *testing.T) {
 			Input: []globalaccelerator_test.ResourceData{
 				{
 					EndpointID: types.StringValue("endpoint-1"),
-					Region:     types.StringValue("us-west-2"),
+					Region:     types.StringValue(acctest.Region()),
 				},
 				{
 					EndpointID: types.StringValue("endpoint-2"),
@@ -59,7 +60,7 @@ func TestExpandResources(t *testing.T) {
 			ExpectedOutput: []*globalaccelerator.Resource{
 				{
 					EndpointId: aws.String("endpoint-1"),
-					Region:     aws.String("us-west-2"),
+					Region:     aws.String(acctest.Region()),
 				},
 				{
 					EndpointId: aws.String("endpoint-2"),
@@ -77,11 +78,15 @@ func TestExpandResources(t *testing.T) {
 }
 
 func TestFlattenResources(t *testing.T) {
+	t.Parallel()
 	elem := globalaccelerator_test.ResourceDataElementType
+	partition := acctest.Partition()
+	region := acctest.Region()
+	endpointID := fmt.Sprintf("arn:%s:ec2:%s:171405876253:elastic-ip/eipalloc-1234567890abcdef0", partition, region)
 
 	endpoint1, _ := types.ObjectValue(elem.AttrTypes, map[string]attr.Value{
-		"endpoint_id": types.StringValue("arn:aws:ec2:us-west-2:171405876253:elastic-ip/eipalloc-1234567890abcdef0"),
-		"region":      types.StringValue("us-west-2"),
+		"endpoint_id": types.StringValue(endpointID),
+		"region":      types.StringValue(region),
 	})
 
 	expectedList, _ := types.ListValue(elem, []attr.Value{endpoint1})
@@ -100,8 +105,8 @@ func TestFlattenResources(t *testing.T) {
 			Name: "non-empty input",
 			Input: []*globalaccelerator.Resource{
 				{
-					EndpointId: aws.String("arn:aws:ec2:us-west-2:171405876253:elastic-ip/eipalloc-1234567890abcdef0"),
-					Region:     aws.String("us-west-2"),
+					EndpointId: aws.String(endpointID),
+					Region:     aws.String(region),
 				},
 			},
 			Expected: expectedList,
@@ -109,7 +114,9 @@ func TestFlattenResources(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
+		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
 			ctx := context.Background()
 			output, err := globalaccelerator_test.FlattenResources(ctx, tc.Input)
 
@@ -125,25 +132,32 @@ func TestFlattenResources(t *testing.T) {
 }
 
 func TestDiffResources(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 	elem := globalaccelerator_test.ResourceDataElementType
 
+	partition := acctest.Partition()
+	region := acctest.Region()
+	alternateRegion := acctest.AlternateRegion()
+	endpointID := fmt.Sprintf("arn:%s:ec2:%s:171405876253:elastic-ip/eipalloc-1234567890abcdef0", partition, region)
+	endpointID2 := fmt.Sprintf("arn:%s:ec2:%s:171405876253:elastic-ip/eipalloc-1234567890abcdef1", partition, alternateRegion)
+
 	endpoint1Object, _ := types.ObjectValue(elem.AttrTypes, map[string]attr.Value{
-		"endpoint_id": types.StringValue("endpoint-1"),
-		"region":      types.StringValue("us-west-2"),
+		"endpoint_id": types.StringValue(endpointID),
+		"region":      types.StringValue(region),
 	})
 	endpoint2Object, _ := types.ObjectValue(elem.AttrTypes, map[string]attr.Value{
-		"endpoint_id": types.StringValue("endpoint-2"),
-		"region":      types.StringValue("us-east-1"),
+		"endpoint_id": types.StringValue(endpointID2),
+		"region":      types.StringValue(alternateRegion),
 	})
 
 	expectedResource1 := &globalaccelerator.Resource{
-		EndpointId: aws.String("endpoint-1"),
-		Region:     aws.String("us-west-2"),
+		EndpointId: aws.String(endpointID),
+		Region:     aws.String(region),
 	}
 	expectedResource2 := &globalaccelerator.Resource{
-		EndpointId: aws.String("endpoint-2"),
-		Region:     aws.String("us-east-1"),
+		EndpointId: aws.String(endpointID2),
+		Region:     aws.String(alternateRegion),
 	}
 
 	cases := []struct {
@@ -192,7 +206,9 @@ func TestDiffResources(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
 			toAdd, toRemove, _ := globalaccelerator_test.DiffResources(ctx, tc.OldList, tc.NewList)
 
 			if !reflect.DeepEqual(toAdd, tc.ExpectedToAdd) {
@@ -207,6 +223,7 @@ func TestDiffResources(t *testing.T) {
 }
 
 func TestDiffPrincipals(t *testing.T) {
+	t.Parallel()
 	ctx := context.Background()
 
 	elemType := types.StringType
@@ -241,7 +258,9 @@ func TestDiffPrincipals(t *testing.T) {
 	}
 
 	for _, tc := range cases {
+		tc := tc
 		t.Run(tc.Name, func(t *testing.T) {
+			t.Parallel()
 			toAdd, toRemove, _ := globalaccelerator_test.DiffPrincipals(ctx, tc.OldList, tc.NewList)
 
 			if !reflect.DeepEqual(toAdd, tc.ExpectedToAdd) {
@@ -323,8 +342,12 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_resources(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_globalaccelerator_cross_account_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	endpoint1 := "arn:aws:ec2:us-west-2:171405876253:elastic-ip/eipalloc-1234567890abcdef0"
-	endpoint2 := "arn:aws:ec2:us-east-1:171405876253:elastic-ip/eipalloc-1234567890abcdef1"
+
+	partition := acctest.Partition()
+	region := acctest.Region()
+	alternateRegion := acctest.AlternateRegion()
+	endpointID := fmt.Sprintf("arn:%s:ec2:%s:171405876253:elastic-ip/eipalloc-1234567890abcdef0", partition, region)
+	endpointID2 := fmt.Sprintf("arn:%s:ec2:%s:171405876253:elastic-ip/eipalloc-1234567890abcdef1", partition, alternateRegion)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -337,28 +360,28 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_resources(t *testing.T) {
 			{
 
 				Config: testAccCrossAccountAttachmentConfig_resources(rName, []globalaccelerator_test.ResourceData{
-					{EndpointID: types.StringValue(endpoint1), Region: types.StringValue(acctest.Region())},
+					{EndpointID: types.StringValue(endpointID), Region: types.StringValue(region)},
 				}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "resources.*", map[string]string{
-						"endpoint_id": endpoint1,
-						"region":      acctest.Region(),
+						"endpoint_id": endpointID,
+						"region":      region,
 					}),
 				),
 			},
 			{
 				Config: testAccCrossAccountAttachmentConfig_resources(rName, []globalaccelerator_test.ResourceData{
-					{EndpointID: types.StringValue(endpoint1), Region: types.StringValue(acctest.Region())},
-					{EndpointID: types.StringValue(endpoint2), Region: types.StringValue(acctest.AlternateRegion())},
+					{EndpointID: types.StringValue(endpointID), Region: types.StringValue(region)},
+					{EndpointID: types.StringValue(endpointID2), Region: types.StringValue(alternateRegion)},
 				}),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "resources.*", map[string]string{
-						"endpoint_id": endpoint1,
-						"region":      acctest.Region(),
+						"endpoint_id": endpointID,
+						"region":      region,
 					}),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "resources.*", map[string]string{
-						"endpoint_id": endpoint2,
-						"region":      acctest.AlternateRegion(),
+						"endpoint_id": endpointID2,
+						"region":      alternateRegion,
 					}),
 				),
 			},
