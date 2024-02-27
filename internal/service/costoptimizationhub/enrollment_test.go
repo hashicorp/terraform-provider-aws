@@ -201,7 +201,6 @@ func testAccCheckEnrollmentDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 		}
-
 		return nil
 	}
 }

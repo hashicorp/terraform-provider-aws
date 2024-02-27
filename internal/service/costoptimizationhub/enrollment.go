@@ -159,7 +159,6 @@ func (r *resourceEnrollment) Create(ctx context.Context, req resource.CreateRequ
 }
 
 func (r *resourceEnrollment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-
 	conn := r.Meta().CostOptimizationHubClient(ctx)
 
 	var state resourceEnrollmentData
@@ -208,7 +207,6 @@ func (r *resourceEnrollment) Read(ctx context.Context, req resource.ReadRequest,
 }
 
 func (r *resourceEnrollment) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-
 	conn := r.Meta().CostOptimizationHubClient(ctx)
 
 	var plan, state resourceEnrollmentData
@@ -248,7 +246,6 @@ func (r *resourceEnrollment) Update(ctx context.Context, req resource.UpdateRequ
 
 	if !plan.MemberAccountDiscountVisibility.Equal(state.MemberAccountDiscountVisibility) ||
 		!plan.SavingsEstimationMode.Equal(state.SavingsEstimationMode) {
-
 		up_in := &costoptimizationhub.UpdatePreferencesInput{}
 
 		if !plan.MemberAccountDiscountVisibility.IsNull() {
@@ -284,7 +281,6 @@ func (r *resourceEnrollment) Update(ctx context.Context, req resource.UpdateRequ
 }
 
 func (r *resourceEnrollment) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-
 	conn := r.Meta().CostOptimizationHubClient(ctx)
 
 	var state resourceEnrollmentData
