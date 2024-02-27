@@ -263,7 +263,7 @@ func testAccCheckRemediationConfigurationDestroy(ctx context.Context) resource.T
 				continue
 			}
 
-			_, err := tfconfig.FindOrganizationCustomPolicyRuleByName(ctx, conn, rs.Primary.ID)
+			_, err := tfconfig.FindRemediationConfigurationByConfigRuleName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
