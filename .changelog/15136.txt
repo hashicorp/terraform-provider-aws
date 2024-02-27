@@ -9,3 +9,7 @@ resource/aws_config_configuration_recorder: Add plan-time validation of `aws_con
 ```release-note:bug
 resource/aws_config_rule: Change `name` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew)
 ```
+
+```release-note:new-resource
+aws_config_remediation_configuration
+```
