@@ -49,6 +49,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.22.1
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.31.1
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.33.1
+	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.1
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.15.1
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.1

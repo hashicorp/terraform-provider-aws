@@ -188,7 +188,7 @@ func TestAccSchedulerSchedule_basic(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -247,7 +247,7 @@ func TestAccSchedulerSchedule_disappears(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -279,7 +279,7 @@ func TestAccSchedulerSchedule_description(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -339,7 +339,7 @@ func TestAccSchedulerSchedule_endDate(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -399,7 +399,7 @@ func TestAccSchedulerSchedule_flexibleTimeWindow(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -462,7 +462,7 @@ func TestAccSchedulerSchedule_groupName(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -498,7 +498,7 @@ func TestAccSchedulerSchedule_kmsKeyARN(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -557,7 +557,7 @@ func TestAccSchedulerSchedule_nameGenerated(t *testing.T) {
 	var schedule scheduler.GetScheduleOutput
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -593,7 +593,7 @@ func TestAccSchedulerSchedule_namePrefix(t *testing.T) {
 	var schedule scheduler.GetScheduleOutput
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -630,7 +630,7 @@ func TestAccSchedulerSchedule_scheduleExpression(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -678,7 +678,7 @@ func TestAccSchedulerSchedule_scheduleExpressionTimezone(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -738,7 +738,7 @@ func TestAccSchedulerSchedule_startDate(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -798,7 +798,7 @@ func TestAccSchedulerSchedule_state(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -858,7 +858,7 @@ func TestAccSchedulerSchedule_targetARN(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -906,7 +906,7 @@ func TestAccSchedulerSchedule_targetDeadLetterConfig(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -966,7 +966,7 @@ func TestAccSchedulerSchedule_targetECSParameters(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -1142,7 +1142,7 @@ func TestAccSchedulerSchedule_targetEventBridgeParameters(t *testing.T) {
 	eventBusName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -1205,7 +1205,7 @@ func TestAccSchedulerSchedule_targetInput(t *testing.T) {
 	resourceName := "aws_scheduler_schedule.test"
 	var queueUrl string
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -1270,7 +1270,7 @@ func TestAccSchedulerSchedule_targetKinesisParameters(t *testing.T) {
 	streamName := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -1330,7 +1330,7 @@ func TestAccSchedulerSchedule_targetRetryPolicy(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -1393,7 +1393,7 @@ func TestAccSchedulerSchedule_targetRoleARN(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -1441,7 +1441,7 @@ func TestAccSchedulerSchedule_targetSageMakerPipelineParameters(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -1537,7 +1537,7 @@ func TestAccSchedulerSchedule_targetSQSParameters(t *testing.T) {
 	name := acctest.RandomWithPrefix(t, acctest.ResourcePrefix)
 	resourceName := "aws_scheduler_schedule.test"
 
-	acctest.ParallelTest(t, resource.TestCase{
+	acctest.ParallelTest(ctx, t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SchedulerEndpointID)
@@ -1589,7 +1589,7 @@ func TestAccSchedulerSchedule_targetSQSParameters(t *testing.T) {
 
 func testAccCheckScheduleDestroy(ctx context.Context, t *testing.T) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.ProviderMeta(t).SchedulerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SchedulerClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_scheduler_schedule" {
@@ -1636,7 +1636,7 @@ func testAccCheckScheduleExists(ctx context.Context, t *testing.T, name string, 
 			return err
 		}
 
-		conn := acctest.ProviderMeta(t).SchedulerClient(ctx)
+		conn := acctest.ProviderMeta(ctx, t).SchedulerClient(ctx)
 
 		output, err := tfscheduler.FindScheduleByTwoPartKey(ctx, conn, groupName, scheduleName)
 

@@ -42,6 +42,7 @@ import (
 	codestarnotifications_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarnotifications"
 	comprehend_sdkv2 "github.com/aws/aws-sdk-go-v2/service/comprehend"
 	computeoptimizer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	configservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/configservice"
 	connectcases_sdkv2 "github.com/aws/aws-sdk-go-v2/service/connectcases"
 	controltower_sdkv2 "github.com/aws/aws-sdk-go-v2/service/controltower"
 	costoptimizationhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
@@ -157,7 +158,6 @@ import (
 	cloudwatchrum_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	cognitoidentity_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentity"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	configservice_sdkv1 "github.com/aws/aws-sdk-go/service/configservice"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
 	costandusagereportservice_sdkv1 "github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	costexplorer_sdkv1 "github.com/aws/aws-sdk-go/service/costexplorer"
@@ -483,8 +483,8 @@ func (c *AWSClient) ComputeOptimizerClient(ctx context.Context) *computeoptimize
 	return errs.Must(client[*computeoptimizer_sdkv2.Client](ctx, c, names.ComputeOptimizer, make(map[string]any)))
 }
 
-func (c *AWSClient) ConfigServiceConn(ctx context.Context) *configservice_sdkv1.ConfigService {
-	return errs.Must(conn[*configservice_sdkv1.ConfigService](ctx, c, names.ConfigService, make(map[string]any)))
+func (c *AWSClient) ConfigServiceClient(ctx context.Context) *configservice_sdkv2.Client {
+	return errs.Must(client[*configservice_sdkv2.Client](ctx, c, names.ConfigService, make(map[string]any)))
 }
 
 func (c *AWSClient) ConnectConn(ctx context.Context) *connect_sdkv1.Connect {
