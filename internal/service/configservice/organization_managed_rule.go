@@ -374,7 +374,6 @@ func findOrganizationConfigRuleStatusByName(ctx context.Context, conn *configser
 			Message:     string(status),
 			LastRequest: input,
 		}
-
 	}
 
 	return output, nil

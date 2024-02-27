@@ -340,7 +340,6 @@ func findOrganizationConformancePackStatusByName(ctx context.Context, conn *conf
 			Message:     string(status),
 			LastRequest: input,
 		}
-
 	}
 
 	return output, nil
