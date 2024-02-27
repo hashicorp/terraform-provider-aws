@@ -131,28 +131,30 @@ func resourceConfigurationAggregatorPut(ctx context.Context, d *schema.ResourceD
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	name := d.Get("name").(string)
-	input := &configservice.PutConfigurationAggregatorInput{
-		ConfigurationAggregatorName: aws.String(name),
-		Tags:                        getTagsIn(ctx),
-	}
+	if d.IsNewResource() || d.HasChangesExcept("tags", "tags_all") {
+		name := d.Get("name").(string)
+		input := &configservice.PutConfigurationAggregatorInput{
+			ConfigurationAggregatorName: aws.String(name),
+			Tags:                        getTagsIn(ctx),
+		}
 
-	if v, ok := d.GetOk("account_aggregation_source"); ok && len(v.([]interface{})) > 0 {
-		input.AccountAggregationSources = expandAccountAggregationSources(v.([]interface{}))
-	}
+		if v, ok := d.GetOk("account_aggregation_source"); ok && len(v.([]interface{})) > 0 {
+			input.AccountAggregationSources = expandAccountAggregationSources(v.([]interface{}))
+		}
 
-	if v, ok := d.GetOk("organization_aggregation_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.OrganizationAggregationSource = expandOrganizationAggregationSource(v.([]interface{})[0].(map[string]interface{}))
-	}
+		if v, ok := d.GetOk("organization_aggregation_source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.OrganizationAggregationSource = expandOrganizationAggregationSource(v.([]interface{})[0].(map[string]interface{}))
+		}
 
-	output, err := conn.PutConfigurationAggregator(ctx, input)
+		output, err := conn.PutConfigurationAggregator(ctx, input)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "putting ConfigService Configuration Aggregator (%s): %s", name, err)
-	}
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "putting ConfigService Configuration Aggregator (%s): %s", name, err)
+		}
 
-	if d.IsNewResource() {
-		d.SetId(aws.ToString(output.ConfigurationAggregator.ConfigurationAggregatorName))
+		if d.IsNewResource() {
+			d.SetId(aws.ToString(output.ConfigurationAggregator.ConfigurationAggregatorName))
+		}
 	}
 
 	return append(diags, resourceConfigurationAggregatorRead(ctx, d, meta)...)
