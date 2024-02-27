@@ -51,6 +51,7 @@ This data source exports the following attributes in addition to the arguments a
     * `dedicated_master_enabled` - Indicates whether dedicated master nodes are enabled for the cluster.
     * `dedicated_master_type` - Instance type of the dedicated master nodes in the cluster.
     * `dedicated_master_count` - Number of dedicated master nodes in the cluster.
+    * `multi_az_with_standby_enabled` - Whether a multi-AZ domain is turned on with a standby AZ.
     * `zone_awareness_enabled` - Indicates whether zone awareness is enabled.
     * `zone_awareness_config` - Configuration block containing zone awareness settings.
         * `availability_zone_count` - Number of availability zones used.

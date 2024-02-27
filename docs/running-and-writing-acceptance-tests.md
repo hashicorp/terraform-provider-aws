@@ -206,7 +206,7 @@ func TestAccCloudWatchDashboard_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudWatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDashboardDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -533,7 +533,7 @@ func TestAccExampleThing_basic(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
     CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
     Steps: []resource.TestStep{
@@ -666,7 +666,7 @@ func TestAccExampleThing_basic(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     // PreCheck
-    ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
+    ErrorCheck:   acctest.ErrorCheck(t, names.ExampleServiceID),
     // ... additional checks follow ...
   })
 }
@@ -678,7 +678,7 @@ However, some services have special conditions that aren't caught by the common 
 
 To add a service-specific ErrorCheck, follow these steps:
 
-1. Make sure there is not already an ErrorCheck for the service you have in mind. For example, search the codebase for `acctest.RegisterServiceErrorCheckFunc(service.EndpointsID` replacing "service" with the package name of the service you're working on (e.g., `ec2`). If there is already an ErrorCheck for the service, add to the existing service-specific ErrorCheck.
+1. Make sure there is not already an ErrorCheck for the service you have in mind. For example, search the codebase for `acctest.RegisterServiceErrorCheckFunc(names.ExampleServiceID` replacing "service" with the package name of the service you're working on (e.g., `ec2`). If there is already an ErrorCheck for the service, add to the existing service-specific ErrorCheck.
 2. Create the service-specific ErrorCheck in an `_test.go` file for the service. See the example below.
 3. Register the new service-specific ErrorCheck in the `init()` at the top of the `_test.go` file. See the example below.
 
@@ -687,7 +687,7 @@ An example of adding a service-specific ErrorCheck:
 ```go
 // just after the imports, create or add to the init() function
 func init() {
-  acctest.RegisterServiceErrorCheck(service.EndpointsID, testAccErrorCheckSkipService)
+  acctest.RegisterServiceErrorCheck(names.ExampleServiceID, testAccErrorCheckSkipService)
 }
 
 // ... additional code and tests ...
@@ -740,7 +740,7 @@ func TestAccExampleThing_disappears(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
     CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
     Steps: []resource.TestStep{
@@ -784,7 +784,7 @@ func TestAccExampleChildThing_disappears_ParentThing(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
     CheckDestroy:             testAccCheckExampleChildThingDestroy(ctx),
     Steps: []resource.TestStep{
@@ -815,7 +815,7 @@ func TestAccExampleThing_Description(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
     CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
     Steps: []resource.TestStep{
@@ -875,7 +875,7 @@ func TestAccExample_basic(t *testing.T) {
       acctest.PreCheck(ctx, t)
       acctest.PreCheckOrganizationsAccount(ctx, t)
     },
-    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
     CheckDestroy:             testAccCheckExampleDestroy(ctx),
     Steps: []resource.TestStep{
@@ -939,7 +939,7 @@ func TestAccExample_basic(t *testing.T) {
       acctest.PreCheck(ctx, t)
       acctest.PreCheckMultipleRegion(t, 2)
     },
-    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
     CheckDestroy:             testAccCheckExampleDestroy(ctx),
     Steps: []resource.TestStep{
@@ -1038,7 +1038,7 @@ func TestAccExampleThingDataSource_Name(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-    ErrorCheck:               acctest.ErrorCheck(t, service.EndpointsID),
+    ErrorCheck:               acctest.ErrorCheck(t, names.ExampleServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
     CheckDestroy:             testAccCheckExampleThingDestroy(ctx),
     Steps: []resource.TestStep{
@@ -1279,7 +1279,7 @@ The below are required items that will be noted during submission review and pre
 - __Implements Exists Check Function__: Resource testing should include a `TestCheckFunc` function (typically named `testAccCheck{SERVICE}{RESOURCE}Exists`) that calls the API to verify that the Terraform resource has been created or associated as appropriate. Preferably, this function will also accept a pointer to an API object representing the Terraform resource from the API response that can be set for potential usage in later `TestCheckFunc`. More information about these functions can be found in the [SDKv2 Custom Check Functions documentation](https://www.terraform.io/plugin/sdkv2/testing/acceptance-tests/teststep#custom-check-functions).
 - __Excludes Provider Declarations__: Test configurations should not include `provider "aws" {...}` declarations. If necessary, only the provider declarations in `acctest.go` should be used for multiple account/region or otherwise specialized testing.
 - __Passes in us-west-2 Region__: Tests default to running in `us-west-2` and at a minimum should pass in that region or include necessary `PreCheck` functions to skip the test when ran outside an expected environment.
-- __Includes ErrorCheck__: All acceptance tests should include a call to the common ErrorCheck (`ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),`).
+- __Includes ErrorCheck__: All acceptance tests should include a call to the common ErrorCheck (`ErrorCheck:   acctest.ErrorCheck(t, names.ExampleServiceID),`).
 - __Uses resource.ParallelTest__: Tests should use [`resource.ParallelTest()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#ParallelTest) instead of [`resource.Test()`](https://godoc.org/github.com/hashicorp/terraform/helper/resource#Test) except where serialized testing is absolutely required.
 - [ ] __Uses fmt.Sprintf()__: Test configurations preferably should to be separated into their own functions (typically named `testAcc{SERVICE}{RESOURCE}Config{PURPOSE}`) that call [`fmt.Sprintf()`](https://golang.org/pkg/fmt/#Sprintf) for variable injection or a string `const` for completely static configurations. Test configurations should avoid `var` or other variable injection functionality such as [`text/template`](https://golang.org/pkg/text/template/).
 - __Uses Randomized Infrastructure Naming__: Test configurations that use resources where a unique name is required should generate a random name. Typically this is created via `rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)` in the acceptance test function before generating the configuration.

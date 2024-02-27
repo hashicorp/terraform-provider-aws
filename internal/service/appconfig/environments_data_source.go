@@ -41,12 +41,14 @@ const (
 )
 
 func dataSourceEnvironmentsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 	appID := d.Get("application_id").(string)
 
 	out, err := findEnvironmentsByApplication(ctx, conn, appID)
 	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionReading, DSNameEnvironments, appID, err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameEnvironments, appID, err)
 	}
 
 	d.SetId(appID)
@@ -57,7 +59,7 @@ func dataSourceEnvironmentsRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set("environment_ids", aws.StringValueSlice(environmentIds))
 
-	return nil
+	return diags
 }
 
 func findEnvironmentsByApplication(ctx context.Context, conn *appconfig.AppConfig, appId string) ([]*appconfig.Environment, error) {

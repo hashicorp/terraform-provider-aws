@@ -53,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 * `spec` - Gateway route specification. See the [`aws_appmesh_gateway_route`](/docs/providers/aws/r/appmesh_gateway_route.html#spec) resource for details.
 * `tags` - Map of tags.
 
-<!-- cache-key: cdktf-0.19.0 input-a279c1138eda25f1a8fb5b8ea47e76c0ee2a8f2f9f4074a26d68a453bf070c31 -->
+<!-- cache-key: cdktf-0.20.1 input-a279c1138eda25f1a8fb5b8ea47e76c0ee2a8f2f9f4074a26d68a453bf070c31 -->

@@ -16,10 +16,12 @@ go test \
     ./internal/flex/... \
     ./internal/framework/... \
     ./internal/generate/... \
+    ./internal/json/... \
     ./internal/logging/... \
     ./internal/maps/... \
     ./internal/provider/... \
-    ./internal/sdktypes/... \
+    ./internal/retry/... \
+    ./internal/sdkv2/... \
     ./internal/slices/... \
     ./internal/sweep/... \
     ./internal/tags/... \

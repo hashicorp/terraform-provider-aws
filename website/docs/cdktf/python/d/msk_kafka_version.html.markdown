@@ -47,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `status` - Status of the MSK Kafka version eg. `ACTIVE` or `DEPRECATED`.
 
-<!-- cache-key: cdktf-0.19.0 input-6852054bc10e6a7e97a90613e2c215b051bd57037bfb23fddf1aebb0c8d4f92d -->
+<!-- cache-key: cdktf-0.20.1 input-6852054bc10e6a7e97a90613e2c215b051bd57037bfb23fddf1aebb0c8d4f92d -->

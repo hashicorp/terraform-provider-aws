@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCTrafficMirrorTarget_nlb(t *testing.T) {
@@ -31,7 +32,7 @@ func TestAccVPCTrafficMirrorTarget_nlb(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTrafficMirrorTarget(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -67,7 +68,7 @@ func TestAccVPCTrafficMirrorTarget_eni(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTrafficMirrorTarget(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -100,7 +101,7 @@ func TestAccVPCTrafficMirrorTarget_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTrafficMirrorTarget(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -150,7 +151,7 @@ func TestAccVPCTrafficMirrorTarget_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTrafficMirrorTarget(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -177,7 +178,7 @@ func TestAccVPCTrafficMirrorTarget_gwlb(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckTrafficMirrorTarget(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrafficMirrorTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -269,10 +270,10 @@ resource "aws_ec2_traffic_mirror_target" "test" {
 func testAccVPCTrafficMirrorTargetConfig_eni(rName, description string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigVPCWithSubnets(rName, 1),
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
   subnet_id     = aws_subnet.test[0].id
 

@@ -9,7 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/shield"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/shield"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -98,7 +100,7 @@ func (r *resourceProactiveEngagementAssociation) Schema(ctx context.Context, req
 }
 
 func (r *resourceProactiveEngagementAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().ShieldConn(ctx)
+	conn := r.Meta().ShieldClient(ctx)
 
 	var plan resourceProactiveEngagementAssociationData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -106,7 +108,7 @@ func (r *resourceProactiveEngagementAssociation) Create(ctx context.Context, req
 		return
 	}
 
-	var emergencyContactsList []*shield.EmergencyContact
+	var emergencyContactsList []awstypes.EmergencyContact
 	if plan.Enabled.ValueBool() {
 		if !plan.EmergencyContacts.IsNull() {
 			var emergencyContacts []emergencyContactData
@@ -124,14 +126,14 @@ func (r *resourceProactiveEngagementAssociation) Create(ctx context.Context, req
 		}
 
 		describeIn := &shield.DescribeEmergencyContactSettingsInput{}
-		eContactSettings, err := conn.DescribeEmergencyContactSettingsWithContext(ctx, describeIn)
+		eContactSettings, err := conn.DescribeEmergencyContactSettings(ctx, describeIn)
 
 		if err == nil && len(eContactSettings.EmergencyContactList) == 0 {
 			r.executeUpdateExistingAssociation(ctx, resp, plan, conn, emergencyContactsList)
 		} else if err != nil {
-			var ioe *shield.InvalidOperationException
-			var nfe *shield.ResourceNotFoundException
-			if errors.As(err, &ioe) && strings.Contains(ioe.Message(), "Enable/DisableProactiveEngagement") {
+			var ioe *awstypes.InvalidOperationException
+			var nfe *awstypes.ResourceNotFoundException
+			if errors.As(err, &ioe) && strings.Contains(aws.ToString(ioe.Message), "Enable/DisableProactiveEngagement") {
 				r.executeUpdateExistingAssociation(ctx, resp, plan, conn, emergencyContactsList)
 			} else if errors.As(err, &nfe) {
 				r.executeCreateNewAssociation(ctx, resp, plan, conn, emergencyContactsList)
@@ -161,11 +163,11 @@ func (r *resourceProactiveEngagementAssociation) Create(ctx context.Context, req
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceProactiveEngagementAssociation) executeUpdateExistingAssociation(ctx context.Context, resp *resource.CreateResponse, plan resourceProactiveEngagementAssociationData, conn *shield.Shield, emergencyContactsList []*shield.EmergencyContact) {
+func (r *resourceProactiveEngagementAssociation) executeUpdateExistingAssociation(ctx context.Context, resp *resource.CreateResponse, plan resourceProactiveEngagementAssociationData, conn *shield.Client, emergencyContactsList []awstypes.EmergencyContact) {
 	in := &shield.UpdateEmergencyContactSettingsInput{
 		EmergencyContactList: emergencyContactsList,
 	}
-	_, err := conn.UpdateEmergencyContactSettingsWithContext(ctx, in)
+	_, err := conn.UpdateEmergencyContactSettings(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Shield, create.ErrActionCreating, ResNameProactiveEngagementAssociation, plan.ID.String(), err),
@@ -175,7 +177,7 @@ func (r *resourceProactiveEngagementAssociation) executeUpdateExistingAssociatio
 	}
 
 	enableIn := &shield.EnableProactiveEngagementInput{}
-	_, err = conn.EnableProactiveEngagementWithContext(ctx, enableIn)
+	_, err = conn.EnableProactiveEngagement(ctx, enableIn)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Shield, create.ErrActionCreating, ResNameProactiveEngagementAssociation, plan.ID.String(), err),
@@ -185,12 +187,12 @@ func (r *resourceProactiveEngagementAssociation) executeUpdateExistingAssociatio
 	}
 }
 
-func (r *resourceProactiveEngagementAssociation) executeCreateNewAssociation(ctx context.Context, resp *resource.CreateResponse, plan resourceProactiveEngagementAssociationData, conn *shield.Shield, emergencyContactsList []*shield.EmergencyContact) {
+func (r *resourceProactiveEngagementAssociation) executeCreateNewAssociation(ctx context.Context, resp *resource.CreateResponse, plan resourceProactiveEngagementAssociationData, conn *shield.Client, emergencyContactsList []awstypes.EmergencyContact) {
 	in := &shield.AssociateProactiveEngagementDetailsInput{
 		EmergencyContactList: emergencyContactsList,
 	}
 	in.EmergencyContactList = emergencyContactsList
-	_, err := conn.AssociateProactiveEngagementDetailsWithContext(ctx, in)
+	_, err := conn.AssociateProactiveEngagementDetails(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Shield, create.ErrActionCreating, ResNameProactiveEngagementAssociation, plan.ID.String(), err),
@@ -201,7 +203,7 @@ func (r *resourceProactiveEngagementAssociation) executeCreateNewAssociation(ctx
 }
 
 func (r *resourceProactiveEngagementAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().ShieldConn(ctx)
+	conn := r.Meta().ShieldClient(ctx)
 	var state resourceProactiveEngagementAssociationData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
@@ -210,7 +212,7 @@ func (r *resourceProactiveEngagementAssociation) Read(ctx context.Context, req r
 
 	in := &shield.DescribeEmergencyContactSettingsInput{}
 
-	out, err := conn.DescribeEmergencyContactSettingsWithContext(ctx, in)
+	out, err := conn.DescribeEmergencyContactSettings(ctx, in)
 
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
@@ -234,7 +236,7 @@ func (r *resourceProactiveEngagementAssociation) Read(ctx context.Context, req r
 }
 
 func (r *resourceProactiveEngagementAssociation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().ShieldConn(ctx)
+	conn := r.Meta().ShieldClient(ctx)
 
 	var plan, state resourceProactiveEngagementAssociationData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -244,7 +246,7 @@ func (r *resourceProactiveEngagementAssociation) Update(ctx context.Context, req
 	}
 
 	in := &shield.UpdateEmergencyContactSettingsInput{}
-	var emergencyContactsList []*shield.EmergencyContact
+	var emergencyContactsList []awstypes.EmergencyContact
 	if !plan.EmergencyContacts.IsNull() {
 		var emergencyContacts []emergencyContactData
 		resp.Diagnostics.Append(plan.EmergencyContacts.ElementsAs(ctx, &emergencyContacts, false)...)
@@ -261,7 +263,7 @@ func (r *resourceProactiveEngagementAssociation) Update(ctx context.Context, req
 	}
 	in.EmergencyContactList = emergencyContactsList
 
-	_, err := conn.UpdateEmergencyContactSettingsWithContext(ctx, in)
+	_, err := conn.UpdateEmergencyContactSettings(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.Shield, create.ErrActionUpdating, ResNameProactiveEngagementAssociation, plan.ID.String(), err),
@@ -271,7 +273,7 @@ func (r *resourceProactiveEngagementAssociation) Update(ctx context.Context, req
 	}
 
 	if plan.Enabled.ValueBool() && len(emergencyContactsList) > 0 {
-		_, err = conn.EnableProactiveEngagementWithContext(ctx, &shield.EnableProactiveEngagementInput{})
+		_, err = conn.EnableProactiveEngagement(ctx, &shield.EnableProactiveEngagementInput{})
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.Shield, create.ErrActionUpdating, ResNameProactiveEngagementAssociation, plan.ID.String(), err),
@@ -289,7 +291,7 @@ func (r *resourceProactiveEngagementAssociation) Update(ctx context.Context, req
 			return
 		}
 	} else {
-		_, err = conn.DisableProactiveEngagementWithContext(ctx, &shield.DisableProactiveEngagementInput{})
+		_, err = conn.DisableProactiveEngagement(ctx, &shield.DisableProactiveEngagementInput{})
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.Shield, create.ErrActionUpdating, ResNameProactiveEngagementAssociation, plan.ID.String(), err),
@@ -312,7 +314,7 @@ func (r *resourceProactiveEngagementAssociation) Update(ctx context.Context, req
 }
 
 func (r *resourceProactiveEngagementAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().ShieldConn(ctx)
+	conn := r.Meta().ShieldClient(ctx)
 
 	var state resourceProactiveEngagementAssociationData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -322,9 +324,9 @@ func (r *resourceProactiveEngagementAssociation) Delete(ctx context.Context, req
 
 	in := &shield.DisableProactiveEngagementInput{}
 
-	_, err := conn.DisableProactiveEngagementWithContext(ctx, in)
+	_, err := conn.DisableProactiveEngagement(ctx, in)
 	if err != nil {
-		var nfe *shield.ResourceNotFoundException
+		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
 			return
 		}
@@ -336,10 +338,10 @@ func (r *resourceProactiveEngagementAssociation) Delete(ctx context.Context, req
 	}
 
 	updateIn := &shield.UpdateEmergencyContactSettingsInput{}
-	updateIn.EmergencyContactList = []*shield.EmergencyContact{}
-	_, err = conn.UpdateEmergencyContactSettingsWithContext(ctx, updateIn)
+	updateIn.EmergencyContactList = []awstypes.EmergencyContact{}
+	_, err = conn.UpdateEmergencyContactSettings(ctx, updateIn)
 	if err != nil {
-		var nfe *shield.ResourceNotFoundException
+		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
 			return
 		}
@@ -361,7 +363,7 @@ func (r *resourceProactiveEngagementAssociation) Delete(ctx context.Context, req
 	}
 }
 
-func waitProactiveEngagementAssociationCreated(ctx context.Context, conn *shield.Shield, timeout time.Duration) (*shield.DescribeEmergencyContactSettingsOutput, error) {
+func waitProactiveEngagementAssociationCreated(ctx context.Context, conn *shield.Client, timeout time.Duration) (*shield.DescribeEmergencyContactSettingsOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    []string{statusNormal},
@@ -377,7 +379,7 @@ func waitProactiveEngagementAssociationCreated(ctx context.Context, conn *shield
 	return nil, err
 }
 
-func waitProactiveEngagementAssociationUpdated(ctx context.Context, conn *shield.Shield, timeout time.Duration) (*shield.DescribeEmergencyContactSettingsOutput, error) {
+func waitProactiveEngagementAssociationUpdated(ctx context.Context, conn *shield.Client, timeout time.Duration) (*shield.DescribeEmergencyContactSettingsOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{statusChangePending},
 		Target:                    []string{statusUpdated, statusNormal},
@@ -394,7 +396,7 @@ func waitProactiveEngagementAssociationUpdated(ctx context.Context, conn *shield
 	return nil, err
 }
 
-func waitProactiveEngagementAssociationDeleted(ctx context.Context, conn *shield.Shield, timeout time.Duration) (*shield.DescribeEmergencyContactSettingsOutput, error) { //nolint:unparam
+func waitProactiveEngagementAssociationDeleted(ctx context.Context, conn *shield.Client, timeout time.Duration) (*shield.DescribeEmergencyContactSettingsOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{statusDeleting, statusNormal},
 		Target:  []string{},
@@ -409,7 +411,7 @@ func waitProactiveEngagementAssociationDeleted(ctx context.Context, conn *shield
 	return nil, err
 }
 
-func statusProactiveEngagementAssociation(ctx context.Context, conn *shield.Shield) retry.StateRefreshFunc {
+func statusProactiveEngagementAssociation(ctx context.Context, conn *shield.Client) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := describeEmergencyContactSettings(ctx, conn)
 		if tfresource.NotFound(err) {
@@ -423,7 +425,7 @@ func statusProactiveEngagementAssociation(ctx context.Context, conn *shield.Shie
 	}
 }
 
-func statusProactiveEngagementAssociationDeleted(ctx context.Context, conn *shield.Shield) retry.StateRefreshFunc {
+func statusProactiveEngagementAssociationDeleted(ctx context.Context, conn *shield.Client) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := describeEmergencyContactSettings(ctx, conn)
 		if tfresource.NotFound(err) {
@@ -441,12 +443,12 @@ func statusProactiveEngagementAssociationDeleted(ctx context.Context, conn *shie
 	}
 }
 
-func describeEmergencyContactSettings(ctx context.Context, conn *shield.Shield) (*shield.DescribeEmergencyContactSettingsOutput, error) {
+func describeEmergencyContactSettings(ctx context.Context, conn *shield.Client) (*shield.DescribeEmergencyContactSettingsOutput, error) {
 	in := &shield.DescribeEmergencyContactSettingsInput{}
 
-	out, err := conn.DescribeEmergencyContactSettingsWithContext(ctx, in)
+	out, err := conn.DescribeEmergencyContactSettings(ctx, in)
 	if err != nil {
-		var nfe *shield.ResourceNotFoundException
+		var nfe *awstypes.ResourceNotFoundException
 		if errors.As(err, &nfe) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
@@ -493,14 +495,14 @@ func describeEmergencyContactSettings(ctx context.Context, conn *shield.Shield) 
 // 	return listVal, diags
 // }
 
-func expandEmergencyContacts(ctx context.Context, tfList []emergencyContactData) []*shield.EmergencyContact {
+func expandEmergencyContacts(ctx context.Context, tfList []emergencyContactData) []awstypes.EmergencyContact {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	apiList := []*shield.EmergencyContact{}
+	apiList := []awstypes.EmergencyContact{}
 	for _, tfObj := range tfList {
-		apiObject := &shield.EmergencyContact{}
+		apiObject := awstypes.EmergencyContact{}
 
 		if !tfObj.EmailAddress.IsNull() {
 			apiObject.EmailAddress = flex.StringFromFramework(ctx, tfObj.EmailAddress)
@@ -517,7 +519,7 @@ func expandEmergencyContacts(ctx context.Context, tfList []emergencyContactData)
 	return apiList
 }
 
-func flattenEmergencyContacts(ctx context.Context, apiObject []*shield.EmergencyContact) (types.List, diag.Diagnostics) {
+func flattenEmergencyContacts(ctx context.Context, apiObject []awstypes.EmergencyContact) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: emergencyContactsAttrTypes}
 

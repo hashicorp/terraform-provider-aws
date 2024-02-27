@@ -21,6 +21,18 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "InvalidAction", "is not supported") {
 		return true
 	}
+	// Example (GovCloud): AccessGrantsInstanceNotExistsError: Access Grants Instance does not exist
+	if tfawserr.ErrCodeEquals(err, "AccessGrantsInstanceNotExistsError") {
+		return true
+	}
+	// Example (GovCloud): AccessDeniedException: Unable to determine service/operation name to be authorized
+	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "Unable to determine service/operation name to be authorized") {
+		return true
+	}
+	// Example (ssmcontacts): ValidationException: Invalid value provided - Account not found for the request
+	if tfawserr.ErrMessageContains(err, "ValidationException", "Account not found for the request") {
+		return true
+	}
 
 	return false
 }

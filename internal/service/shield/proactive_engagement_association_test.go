@@ -9,7 +9,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/shield"
+	"github.com/aws/aws-sdk-go-v2/service/shield"
+	"github.com/aws/aws-sdk-go-v2/service/shield/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -121,7 +122,7 @@ func TestAccShieldProactiveEngagementAssociation_disappears(t *testing.T) {
 
 func testAccCheckProactiveEngagementAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_shield_proactive_engagement_association" {
@@ -129,9 +130,9 @@ func testAccCheckProactiveEngagementAssociationDestroy(ctx context.Context) reso
 			}
 
 			input := &shield.DescribeEmergencyContactSettingsInput{}
-			resp, err := conn.DescribeEmergencyContactSettingsWithContext(ctx, input)
+			resp, err := conn.DescribeEmergencyContactSettings(ctx, input)
 
-			if errs.IsA[*shield.ResourceNotFoundException](err) {
+			if errs.IsA[*types.ResourceNotFoundException](err) {
 				return nil
 			}
 			if err != nil {
@@ -160,8 +161,8 @@ func testAccCheckProactiveEngagementAssociationExists(ctx context.Context, name 
 			return create.Error(names.Shield, create.ErrActionCheckingExistence, tfshield.ResNameProactiveEngagementAssociation, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
-		resp, err := conn.DescribeEmergencyContactSettingsWithContext(ctx, &shield.DescribeEmergencyContactSettingsInput{})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
+		resp, err := conn.DescribeEmergencyContactSettings(ctx, &shield.DescribeEmergencyContactSettingsInput{})
 
 		if err != nil {
 			return create.Error(names.Shield, create.ErrActionCheckingExistence, tfshield.ResNameProactiveEngagementAssociation, rs.Primary.ID, err)
@@ -174,10 +175,10 @@ func testAccCheckProactiveEngagementAssociationExists(ctx context.Context, name 
 }
 
 func testAccPreCheckProactiveEngagement(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
 
 	input := &shield.DescribeEmergencyContactSettingsInput{}
-	_, err := conn.DescribeEmergencyContactSettingsWithContext(ctx, input)
+	_, err := conn.DescribeEmergencyContactSettings(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

@@ -6,13 +6,13 @@ package sagemaker_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(sagemaker.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.SageMakerServiceID, testAccErrorCheckSkip)
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -48,6 +48,8 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"kernelGatewayAppSettings_lifecycleConfig": testAccDomain_kernelGatewayAppSettings_lifecycleConfig,
 			"kernelGatewayAppSettings_defaultResourceAndCustomImage": testAccDomain_kernelGatewayAppSettings_defaultResourceSpecAndCustomImage,
 			"jupyterServerAppSettings":                               testAccDomain_jupyterServerAppSettings,
+			"codeEditorAppSettings":                                  testAccDomain_codeEditorAppSettings,
+			"jupyterLabAppSettings":                                  testAccDomain_jupyterLabAppSettings,
 			"kms":                                                    testAccDomain_kms,
 			"securityGroup":                                          testAccDomain_securityGroup,
 			"sharingSettings":                                        testAccDomain_sharingSettings,
@@ -63,6 +65,9 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"rStudioServerProAppSettings":                            testAccDomain_rStudioServerProAppSettings,
 			"spaceSettingsKernelGatewayAppSettings":                  testAccDomain_spaceSettingsKernelGatewayAppSettings,
 			"code":                                                   testAccDomain_jupyterServerAppSettings_code,
+			"efs":                                                    testAccDomain_efs,
+			"posix":                                                  testAccDomain_posix,
+			"spaceStorageSettings":                                   testAccDomain_spaceStorageSettings,
 		},
 		"FlowDefinition": {
 			"basic":                          testAccFlowDefinition_basic,
@@ -79,6 +84,10 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"kernelGatewayAppSettings_lifecycleConfig": testAccSpace_kernelGatewayAppSettings_lifecycleconfig,
 			"kernelGatewayAppSettings_imageConfig":     testAccSpace_kernelGatewayAppSettings_imageconfig,
 			"jupyterServerAppSettings":                 testAccSpace_jupyterServerAppSettings,
+			"jupyterLabAppSettings":                    testAccSpace_jupyterLabAppSettings,
+			"codeEditorAppSettings":                    testAccSpace_codeEditorAppSettings,
+			"storageSettings":                          testAccSpace_storageSettings,
+			"customFileSystem":                         testAccSpace_customFileSystem,
 		},
 		"UserProfile": {
 			"basic":                           testAccUserProfile_basic,

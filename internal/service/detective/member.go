@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -90,6 +91,8 @@ func ResourceMember() *schema.Resource {
 }
 
 func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	accountID := d.Get("account_id").(string)
@@ -116,24 +119,26 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}, detective.ErrCodeInternalServerException)
 
 	if err != nil {
-		return diag.Errorf("creating Detective Member (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Detective Member (%s): %s", id, err)
 	}
 
 	if _, err := waitMemberInvited(ctx, conn, graphARN, accountID); err != nil {
-		return diag.Errorf("waiting for Detective Member (%s) invited: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Detective Member (%s) invited: %s", d.Id(), err)
 	}
 
 	d.SetId(id)
 
-	return resourceMemberRead(ctx, d, meta)
+	return append(diags, resourceMemberRead(ctx, d, meta)...)
 }
 
 func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	graphARN, accountID, err := MemberParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	member, err := FindMemberByGraphByTwoPartKey(ctx, conn, graphARN, accountID)
@@ -141,11 +146,11 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Detective Member (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Detective Member (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Detective Member (%s): %s", d.Id(), err)
 	}
 
 	d.Set("account_id", member.AccountId)
@@ -158,15 +163,17 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("updated_time", aws.TimeValue(member.UpdatedTime).Format(time.RFC3339))
 	d.Set("volume_usage_in_bytes", member.VolumeUsageInBytes)
 
-	return nil
+	return diags
 }
 
 func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	graphARN, accountID, err := MemberParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting Detective Member: %s", d.Id())
@@ -176,14 +183,14 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Detective Member (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Detective Member (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 const memberResourceIDSeparator = "/"

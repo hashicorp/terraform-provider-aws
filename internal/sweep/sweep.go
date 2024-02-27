@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -63,6 +64,7 @@ func SharedRegionalSweepClient(ctx context.Context, region string) (*conns.AWSCl
 
 	conf := &conns.Config{
 		Region:           region,
+		RetryMode:        aws_sdkv2.RetryModeAdaptive,
 		SuppressDebugLog: true,
 	}
 
@@ -127,17 +129,11 @@ func SweepOrchestrator(ctx context.Context, sweepables []Sweepable, optFns ...tf
 var SkipSweepError = awsv1.SkipSweepError
 
 func Partition(region string) string {
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok {
-		return partition.ID()
-	}
-	return "aws"
+	return names.PartitionForRegion(region)
 }
 
 func PartitionDNSSuffix(region string) string {
-	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok {
-		return partition.DNSSuffix()
-	}
-	return "amazonaws.com"
+	return names.DNSSuffixForPartition(Partition(region))
 }
 
 type SweeperFn func(ctx context.Context, client *conns.AWSClient) ([]Sweepable, error)
@@ -147,7 +143,7 @@ func Register(name string, f SweeperFn, dependencies ...string) {
 		Name: name,
 		F: func(region string) error {
 			ctx := Context(region)
-			ctx = tflog.SetField(ctx, "sweeper_name", name)
+			ctx = logWithResourceType(ctx, name)
 
 			client, err := SharedRegionalSweepClient(ctx, region)
 			if err != nil {

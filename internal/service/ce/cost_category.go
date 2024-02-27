@@ -377,6 +377,8 @@ func schemaCostCategoryRuleExpression() *schema.Resource {
 }
 
 func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	input := &costexplorer.CreateCostCategoryDefinitionInput{
@@ -405,26 +407,28 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 		costexplorer.ErrCodeResourceNotFoundException)
 
 	if err != nil {
-		return create.DiagError(names.CE, create.ErrActionCreating, ResNameCostCategory, d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, create.ErrActionCreating, ResNameCostCategory, d.Id(), err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*costexplorer.CreateCostCategoryDefinitionOutput).CostCategoryArn))
 
-	return resourceCostCategoryRead(ctx, d, meta)
+	return append(diags, resourceCostCategoryRead(ctx, d, meta)...)
 }
 
 func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	costCategory, err := FindCostCategoryByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.CE, create.ErrActionReading, ResNameCostCategory, d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, create.ErrActionReading, ResNameCostCategory, d.Id(), err)
 	}
 
 	d.Set("arn", costCategory.CostCategoryArn)
@@ -433,17 +437,19 @@ func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("effective_start", costCategory.EffectiveStart)
 	d.Set("name", costCategory.Name)
 	if err = d.Set("rule", flattenCostCategoryRules(costCategory.Rules)); err != nil {
-		return create.DiagError(names.CE, "setting rule", ResNameCostCategory, d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, "setting rule", ResNameCostCategory, d.Id(), err)
 	}
 	d.Set("rule_version", costCategory.RuleVersion)
 	if err = d.Set("split_charge_rule", flattenCostCategorySplitChargeRules(costCategory.SplitChargeRules)); err != nil {
-		return create.DiagError(names.CE, "setting split_charge_rule", ResNameCostCategory, d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, "setting split_charge_rule", ResNameCostCategory, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -465,14 +471,16 @@ func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, met
 		_, err := conn.UpdateCostCategoryDefinitionWithContext(ctx, input)
 
 		if err != nil {
-			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameCostCategory, d.Id(), err)
+			return create.AppendDiagError(diags, names.CE, create.ErrActionUpdating, ResNameCostCategory, d.Id(), err)
 		}
 	}
 
-	return resourceCostCategoryRead(ctx, d, meta)
+	return append(diags, resourceCostCategoryRead(ctx, d, meta)...)
 }
 
 func resourceCostCategoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	_, err := conn.DeleteCostCategoryDefinitionWithContext(ctx, &costexplorer.DeleteCostCategoryDefinitionInput{
@@ -480,14 +488,14 @@ func resourceCostCategoryDelete(ctx context.Context, d *schema.ResourceData, met
 	})
 
 	if tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.CE, create.ErrActionDeleting, ResNameCostCategory, d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, create.ErrActionDeleting, ResNameCostCategory, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandCostCategoryRule(tfMap map[string]interface{}) *costexplorer.CostCategoryRule {

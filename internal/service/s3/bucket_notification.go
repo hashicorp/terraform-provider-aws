@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_s3_bucket_notification")
-func ResourceBucketNotification() *schema.Resource {
+// @SDKResource("aws_s3_bucket_notification", name="Bucket Notification")
+func resourceBucketNotification() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketNotificationPut,
 		ReadWithoutTimeout:   resourceBucketNotificationRead,
@@ -141,6 +141,9 @@ func ResourceBucketNotification() *schema.Resource {
 }
 
 func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	const (
+		filterRulesSliceStartLen = 2
+	)
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	bucket := d.Get("bucket").(string)
@@ -300,9 +303,13 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 		NotificationConfiguration: notificationConfiguration,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketNotificationConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "NotificationConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
 
 	if err != nil {
 		return diag.Errorf("creating S3 Bucket (%s) Notification: %s", bucket, err)
@@ -311,7 +318,7 @@ func resourceBucketNotificationPut(ctx context.Context, d *schema.ResourceData, 
 	if d.IsNewResource() {
 		d.SetId(bucket)
 
-		_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 			return findBucketNotificationConfiguration(ctx, conn, d.Id(), "")
 		})
 
@@ -377,6 +384,34 @@ func resourceBucketNotificationDelete(ctx context.Context, d *schema.ResourceDat
 	// Don't wait for the notification configuration to disappear as it still exists after update.
 
 	return diags
+}
+
+func findBucketNotificationConfiguration(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketNotificationConfigurationOutput, error) {
+	input := &s3.GetBucketNotificationConfigurationInput{
+		Bucket: aws.String(bucket),
+	}
+	if expectedBucketOwner != "" {
+		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
+	}
+
+	output, err := conn.GetBucketNotificationConfiguration(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func flattenNotificationConfigurationFilter(filter *types.NotificationConfigurationFilter) map[string]interface{} {
@@ -451,32 +486,4 @@ func flattenLambdaFunctionConfigurations(configs []types.LambdaFunctionConfigura
 	}
 
 	return lambdaFunctionNotifications
-}
-
-func findBucketNotificationConfiguration(ctx context.Context, conn *s3.Client, bucket, expectedBucketOwner string) (*s3.GetBucketNotificationConfigurationOutput, error) {
-	input := &s3.GetBucketNotificationConfigurationInput{
-		Bucket: aws.String(bucket),
-	}
-	if expectedBucketOwner != "" {
-		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
-	}
-
-	output, err := conn.GetBucketNotificationConfiguration(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
 }

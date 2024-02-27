@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/prometheusservice"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfamp "github.com/hashicorp/terraform-provider-aws/internal/service/amp"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAMPAlertManagerDefinition_basic(t *testing.T) {
@@ -24,9 +24,9 @@ func TestAccAMPAlertManagerDefinition_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, prometheusservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAlertManagerDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -66,9 +66,9 @@ func TestAccAMPAlertManagerDefinition_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, prometheusservice.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.AMPEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, prometheusservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AMPServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAlertManagerDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -91,11 +91,7 @@ func testAccCheckAlertManagerDefinitionExists(ctx context.Context, n string) res
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Prometheus Alert Manager Definition ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
 
 		_, err := tfamp.FindAlertManagerDefinitionByID(ctx, conn, rs.Primary.ID)
 
@@ -105,7 +101,7 @@ func testAccCheckAlertManagerDefinitionExists(ctx context.Context, n string) res
 
 func testAccCheckAlertManagerDefinitionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AMPClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_prometheus_alert_manager_definition" {
