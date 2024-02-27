@@ -108,14 +108,14 @@ func vcrMode() (recorder.Mode, error) {
 }
 
 // vcrEnabledProtoV5ProviderFactories returns ProtoV5ProviderFactories ready for use with VCR.
-func vcrEnabledProtoV5ProviderFactories(t *testing.T, input map[string]func() (tfprotov5.ProviderServer, error)) map[string]func() (tfprotov5.ProviderServer, error) {
+func vcrEnabledProtoV5ProviderFactories(ctx context.Context, t *testing.T, input map[string]func() (tfprotov5.ProviderServer, error)) map[string]func() (tfprotov5.ProviderServer, error) {
 	t.Helper()
 
 	output := make(map[string]func() (tfprotov5.ProviderServer, error), len(input))
 
 	for name := range input {
 		output[name] = func() (tfprotov5.ProviderServer, error) {
-			providerServerFactory, primary, err := provider.ProtoV5ProviderServerFactory(context.Background())
+			providerServerFactory, primary, err := provider.ProtoV5ProviderServerFactory(ctx)
 
 			if err != nil {
 				return nil, err
@@ -431,7 +431,7 @@ func ParallelTest(ctx context.Context, t *testing.T, c resource.TestCase) {
 	t.Helper()
 
 	if isVCREnabled() {
-		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(t, c.ProtoV5ProviderFactories)
+		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(ctx, t, c.ProtoV5ProviderFactories)
 		defer closeVCRRecorder(ctx, t)
 	}
 
@@ -443,7 +443,7 @@ func Test(ctx context.Context, t *testing.T, c resource.TestCase) {
 	t.Helper()
 
 	if isVCREnabled() {
-		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(t, c.ProtoV5ProviderFactories)
+		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(ctx, t, c.ProtoV5ProviderFactories)
 		defer closeVCRRecorder(ctx, t)
 	}
 
