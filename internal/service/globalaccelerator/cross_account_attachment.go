@@ -171,7 +171,8 @@ func (r *resourceCrossAccountAttachment) Read(ctx context.Context, req resource.
 	if out.CrossAccountAttachment.LastModifiedTime != nil {
 		state.LastModifiedTime = types.StringValue(out.CrossAccountAttachment.LastModifiedTime.Format(time.RFC3339))
 	}
-	// state.Principals = flex.FlattenFrameworkStringList(ctx, out.CrossAccountAttachment.Principals)
+
+	state.Principals = flex.FlattenFrameworkStringList(ctx, out.CrossAccountAttachment.Principals)
 
 	resources, errDiags := flattenResources(ctx, out.CrossAccountAttachment.Resources)
 	resp.Diagnostics.Append(errDiags...)

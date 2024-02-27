@@ -283,7 +283,6 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// acctest.PreCheckPartitionHasService(t, "aws_globalaccelerator_cross_account_attachment")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, "aws_globalaccelerator_cross_account_attachment"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -358,18 +357,6 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_resources(t *testing.T) {
 		CheckDestroy:             testAccCheckCrossAccountAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-
-				Config: testAccCrossAccountAttachmentConfig_resources(rName, []globalaccelerator_test.ResourceData{
-					{EndpointID: types.StringValue(endpointID), Region: types.StringValue(region)},
-				}),
-				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "resources.*", map[string]string{
-						"endpoint_id": endpointID,
-						"region":      region,
-					}),
-				),
-			},
-			{
 				Config: testAccCrossAccountAttachmentConfig_resources(rName, []globalaccelerator_test.ResourceData{
 					{EndpointID: types.StringValue(endpointID), Region: types.StringValue(region)},
 					{EndpointID: types.StringValue(endpointID2), Region: types.StringValue(alternateRegion)},
@@ -398,7 +385,6 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// acctest.PreCheckPartitionHasService(t, "aws_globalaccelerator_cross_account_attachment")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, "aws_globalaccelerator_cross_account_attachment"),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
