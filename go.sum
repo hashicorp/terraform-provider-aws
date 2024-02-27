@@ -22,8 +22,8 @@ github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.50.25 h1:vhiHtLYybv1Nhx3Kv18BBC6L0aPJHaG9aeEsr92W99c=
-github.com/aws/aws-sdk-go v1.50.25/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/aws/aws-sdk-go v1.50.26 h1:tuv8+dje59DBK1Pj65tSCdD36oamBxKYJgbng4bFylc=
+github.com/aws/aws-sdk-go v1.50.26/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/aws/aws-sdk-go-v2 v1.25.2 h1:/uiG1avJRgLGiQM9X3qJM8+Qa6KRGK5rRPuXE0HUM+w=
 github.com/aws/aws-sdk-go-v2 v1.25.2/go.mod h1:Evoc5AsmtveRt1komDwIsjHFyrP5tDuF1D1U+6z6pNo=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.1 h1:gTK2uhtAPtFcdRRJilZPx8uJLL2J85xK11nKtWL0wfU=
@@ -240,8 +240,8 @@ github.com/aws/aws-sdk-go-v2/service/qldb v1.21.1 h1:8OWFwEjuA+HoNE5dMOT9XasQXAs
 github.com/aws/aws-sdk-go-v2/service/qldb v1.21.1/go.mod h1:A58iKuKoJOym8KOUcCLx2koMxqUtVZ1Vm+kPu3daUPM=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.16.1 h1:VzDztKtis2k5aTmRMHTWQRZXepEMsQyzfnohlo6ANgU=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.16.1/go.mod h1:suUdD910DMRQAMY7+qhk5RUp+SIT7VYrzHIo1tX8D6Y=
-github.com/aws/aws-sdk-go-v2/service/rds v1.73.0 h1:Cq8KqaoLISfjtKBeaZY0rVmjb22J1j9N+M/BYGfXrXQ=
-github.com/aws/aws-sdk-go-v2/service/rds v1.73.0/go.mod h1:VwhpZOXYa/PPsZgcGpXFNe5bdL4Rlcv+1Z7nGKX8MVI=
+github.com/aws/aws-sdk-go-v2/service/rds v1.74.0 h1:gkhHVZ7DUu6I6tIezOMqcBHCq9iiYqNXL5avh0qmxP0=
+github.com/aws/aws-sdk-go-v2/service/rds v1.74.0/go.mod h1:VwhpZOXYa/PPsZgcGpXFNe5bdL4Rlcv+1Z7nGKX8MVI=
 github.com/aws/aws-sdk-go-v2/service/redshift v1.43.1 h1:y5IwD4qVQCveSEcWqMCc8F6ZNb3NxZ/O3IsfZyeaWSQ=
 github.com/aws/aws-sdk-go-v2/service/redshift v1.43.1/go.mod h1:lX3VXhDDYQEydE6EYdxV7eQx1NX9wOWVrj580fxu35s=
 github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.25.1 h1:cPo8YHy+37gfUHKUuBjJ6BMXTAsEtqZaBwoN4XkzrVQ=
