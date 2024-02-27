@@ -3,36 +3,7 @@
 
 package costoptimizationhub_test
 
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
-
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/costoptimizationhub/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// types.<Type Name>.
 	"context"
 	"errors"
 	"testing"
@@ -47,44 +18,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
 	tfcostoptimizationhub "github.com/hashicorp/terraform-provider-aws/internal/service/costoptimizationhub"
 )
 
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
-
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
-// Acceptance test access AWS and cost money to run.
 func TestAccCostOptimizationHubEnrollment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var les_out costoptimizationhub.ListEnrollmentStatusesOutput
-	//var es_in costoptimizationhub.ListEnrollmentStatusesInput
-	//var up_out costoptimizationhub.UpdateEnrollmentStatusOutput
-	//var up_in costoptimizationhub.UpdatePreferencesInput
 
 	resourceName := "aws_costoptimizationhub_enrollment.test"
 
@@ -116,16 +56,8 @@ func TestAccCostOptimizationHubEnrollment_basic(t *testing.T) {
 
 func TestAccCostOptimizationHubEnrollment_IncludeMemberAccounts(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var les_out costoptimizationhub.ListEnrollmentStatusesOutput
-	//var es_in costoptimizationhub.ListEnrollmentStatusesInput
-	//var up_out costoptimizationhub.UpdateEnrollmentStatusOutput
-	//var up_in costoptimizationhub.UpdatePreferencesInput
 
 	resourceName := "aws_costoptimizationhub_enrollment.test"
 
@@ -157,16 +89,8 @@ func TestAccCostOptimizationHubEnrollment_IncludeMemberAccounts(t *testing.T) {
 
 func TestAccCostOptimizationHubEnrollment_MemberAccountDiscountVisibility(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var les_out costoptimizationhub.ListEnrollmentStatusesOutput
-	//var es_in costoptimizationhub.ListEnrollmentStatusesInput
-	//var up_out costoptimizationhub.UpdateEnrollmentStatusOutput
-	//var up_in costoptimizationhub.UpdatePreferencesInput
 
 	resourceName := "aws_costoptimizationhub_enrollment.test"
 
@@ -197,16 +121,8 @@ func TestAccCostOptimizationHubEnrollment_MemberAccountDiscountVisibility(t *tes
 }
 func TestAccCostOptimizationHubEnrollment_SavingsEstimationMode(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var les_out costoptimizationhub.ListEnrollmentStatusesOutput
-	//var es_in costoptimizationhub.ListEnrollmentStatusesInput
-	//var up_out costoptimizationhub.UpdateEnrollmentStatusOutput
-	//var up_in costoptimizationhub.UpdatePreferencesInput
 
 	resourceName := "aws_costoptimizationhub_enrollment.test"
 
@@ -257,12 +173,6 @@ func TestAccCostOptimizationHubEnrollment_disappears(t *testing.T) {
 				Config: testAccEnrollmentConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnrollmentExists(ctx, resourceName, &enrollment),
-					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-					// but expects a new resource factory function as the third argument. To expose this
-					// private function to the testing package, you may need to add a line like the following
-					// to exports_test.go:
-					//
-					//   var ResourceEnrollment = newResourceEnrollment
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcostoptimizationhub.ResourceEnrollment, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -320,30 +230,6 @@ func testAccCheckEnrollmentExists(ctx context.Context, name string, enrollment *
 		return nil
 	}
 }
-
-// func testAccPreCheck(ctx context.Context, t *testing.T) {
-// 	conn := acctest.Provider.Meta().(*conns.AWSClient).CostOptimizationHubClient(ctx)
-
-// 	input := &costoptimizationhub.ListEnrollmentsInput{}
-// 	_, err := conn.ListEnrollments(ctx, input)
-
-// 	if acctest.PreCheckSkipError(err) {
-// 		t.Skipf("skipping acceptance testing: %s", err)
-// 	}
-// 	if err != nil {
-// 		t.Fatalf("unexpected PreCheck error: %s", err)
-// 	}
-// }
-
-// func testAccCheckEnrollmentNotRecreated(before, after *costoptimizationhub.DescribeEnrollmentResponse) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		if before, after := aws.ToString(before.EnrollmentId), aws.ToString(after.EnrollmentId); before != after {
-// 			return create.Error(names.CostOptimizationHub, create.ErrActionCheckingNotRecreated, tfcostoptimizationhub.ResNameEnrollment, aws.ToString(before.EnrollmentId), errors.New("recreated"))
-// 		}
-
-// 		return nil
-// 	}
-// }
 
 func testAccEnrollmentConfig_basic() string {
 	return `
