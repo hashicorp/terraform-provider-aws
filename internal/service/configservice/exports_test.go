@@ -16,6 +16,7 @@ var (
 	ResourceOrganizationCustomRule       = resourceOrganizationCustomRule
 	ResourceOrganizationManagedRule      = resourceOrganizationManagedRule
 	ResourceRemediationConfiguration     = resourceRemediationConfiguration
+	ResourceRetentionConfiguration       = newRetentionConfigurationResource
 
 	FindAggregateAuthorizationByTwoPartKey       = findAggregateAuthorizationByTwoPartKey
 	FindConfigRuleByName                         = findConfigRuleByName
@@ -29,4 +30,5 @@ var (
 	FindOrganizationCustomRuleByName             = findOrganizationCustomRuleByName
 	FindOrganizationManagedRuleByName            = findOrganizationManagedRuleByName
 	FindRemediationConfigurationByConfigRuleName = findRemediationConfigurationByConfigRuleName
+	FindRetentionConfigurationByName             = findRetentionConfigurationByName
 )

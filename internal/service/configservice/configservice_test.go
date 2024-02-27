@@ -109,6 +109,10 @@ func TestAccConfigService_serial(t *testing.T) {
 			"updates":       testAccRemediationConfiguration_updates,
 			"values":        testAccRemediationConfiguration_values,
 		},
+		"RetentionConfiguration": {
+			"basic":      testAccRetentionConfiguration_basic,
+			"disappears": testAccRetentionConfiguration_disappears,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 15*time.Second)
