@@ -199,26 +199,44 @@ func testAccConfigRule_ownerPolicy(t *testing.T) {
 		CheckDestroy:             testAccCheckConfigRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigRuleConfig_ownerPolicy(rName),
+				Config: testAccConfigRuleConfig_ownerPolicy(rName, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexache.MustCompile("config-rule/config-rule-[0-9a-z]+$")),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestMatchResourceAttr(resourceName, "rule_id", regexache.MustCompile("config-rule-[0-9a-z]+$")),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.owner", "CUSTOM_POLICY"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.0.message_type", "ConfigurationItemChangeNotification"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.custom_policy_details.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "source.0.custom_policy_details.0.policy_runtime", "guard-2.x.x"),
 					resource.TestCheckResourceAttr(resourceName, "source.0.custom_policy_details.0.enable_debug_log_delivery", "false"),
-					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.custom_policy_details.0.policy_runtime", "guard-2.x.x"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"source.0.custom_policy_details.0.policy_text"},
+			},
+			{
+				Config: testAccConfigRuleConfig_ownerPolicy(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigRuleExists(ctx, resourceName, &cr),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "config", regexache.MustCompile("config-rule/config-rule-[0-9a-z]+$")),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestMatchResourceAttr(resourceName, "rule_id", regexache.MustCompile("config-rule-[0-9a-z]+$")),
+					resource.TestCheckResourceAttr(resourceName, "scope.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.owner", "CUSTOM_POLICY"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.source_detail.0.message_type", "ConfigurationItemChangeNotification"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.custom_policy_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.custom_policy_details.0.enable_debug_log_delivery", "true"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.custom_policy_details.0.policy_runtime", "guard-2.x.x"),
+				),
 			},
 		},
 	})
@@ -506,7 +524,7 @@ PARAMS
 `, rName))
 }
 
-func testAccConfigRuleConfig_ownerPolicy(rName string) string {
+func testAccConfigRuleConfig_ownerPolicy(rName string, enableDebugLogDelivery bool) string {
 	return acctest.ConfigCompose(testAccConfigRuleConfig_base(rName), fmt.Sprintf(`
 resource "aws_config_config_rule" "test" {
   name = %[1]q
@@ -532,12 +550,14 @@ resource "aws_config_config_rule" "test" {
 			  supplementaryConfiguration.ContinuousBackupsDescription.pointInTimeRecoveryDescription.pointInTimeRecoveryStatus == "ENABLED"
 	  }
 EOF
+
+      enable_debug_log_delivery = %[2]t
     }
   }
 
   depends_on = [aws_config_configuration_recorder.test]
 }
-`, rName))
+`, rName, enableDebugLogDelivery))
 }
 
 func testAccConfigRuleConfig_customLambda(rName string) string {

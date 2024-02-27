@@ -13,3 +13,7 @@ resource/aws_config_rule: Change `name` to [ForceNew](https://developer.hashicor
 ```release-note:new-resource
 aws_config_remediation_configuration
 ```
+
+```release-note:bug
+resource/aws_config_rule: Fix `InvalidParameterValueException: PolicyText is required when Owner is CUSTOM_POLICY` errors on resource Update
+```

@@ -149,12 +149,6 @@ func resourceConfigRule() *schema.Resource {
 										Type:         schema.TypeString,
 										Required:     true,
 										ValidateFunc: validation.StringLenBetween(0, 10000),
-										DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool { // policy_text always returns empty
-											if d.Id() != "" && old == "" {
-												return true
-											}
-											return false
-										},
 									},
 								},
 							},
@@ -210,50 +204,52 @@ func resourceConfigRulePut(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	name := d.Get("name").(string)
-	configRule := &types.ConfigRule{
-		ConfigRuleName: aws.String(name),
-	}
+	if d.IsNewResource() || d.HasChangesExcept("tags", "tags_all") {
+		name := d.Get("name").(string)
+		configRule := &types.ConfigRule{
+			ConfigRuleName: aws.String(name),
+		}
 
-	if v, ok := d.GetOk("description"); ok {
-		configRule.Description = aws.String(v.(string))
-	}
+		if v, ok := d.GetOk("description"); ok {
+			configRule.Description = aws.String(v.(string))
+		}
 
-	if v, ok := d.Get("evaluation_mode").(*schema.Set); ok && v.Len() > 0 {
-		configRule.EvaluationModes = expandEvaluationModeConfigurations(v.List())
-	}
+		if v, ok := d.Get("evaluation_mode").(*schema.Set); ok && v.Len() > 0 {
+			configRule.EvaluationModes = expandEvaluationModeConfigurations(v.List())
+		}
 
-	if v, ok := d.GetOk("input_parameters"); ok {
-		configRule.InputParameters = aws.String(v.(string))
-	}
+		if v, ok := d.GetOk("input_parameters"); ok {
+			configRule.InputParameters = aws.String(v.(string))
+		}
 
-	if v, ok := d.GetOk("maximum_execution_frequency"); ok {
-		configRule.MaximumExecutionFrequency = types.MaximumExecutionFrequency(v.(string))
-	}
+		if v, ok := d.GetOk("maximum_execution_frequency"); ok {
+			configRule.MaximumExecutionFrequency = types.MaximumExecutionFrequency(v.(string))
+		}
 
-	if v, ok := d.GetOk("scope"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		configRule.Scope = expandScope(v.([]interface{})[0].(map[string]interface{}))
-	}
+		if v, ok := d.GetOk("scope"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			configRule.Scope = expandScope(v.([]interface{})[0].(map[string]interface{}))
+		}
 
-	if v, ok := d.GetOk("source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		configRule.Source = expandSource(v.([]interface{})[0].(map[string]interface{}))
-	}
+		if v, ok := d.GetOk("source"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			configRule.Source = expandSource(v.([]interface{})[0].(map[string]interface{}))
+		}
 
-	input := &configservice.PutConfigRuleInput{
-		ConfigRule: configRule,
-		Tags:       getTagsIn(ctx),
-	}
+		input := &configservice.PutConfigRuleInput{
+			ConfigRule: configRule,
+			Tags:       getTagsIn(ctx),
+		}
 
-	_, err := tfresource.RetryWhenIsA[*types.InsufficientPermissionsException](ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.PutConfigRule(ctx, input)
-	})
+		_, err := tfresource.RetryWhenIsA[*types.InsufficientPermissionsException](ctx, propagationTimeout, func() (interface{}, error) {
+			return conn.PutConfigRule(ctx, input)
+		})
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "putting ConfigService Config Rule (%s): %s", name, err)
-	}
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "putting ConfigService Config Rule (%s): %s", name, err)
+		}
 
-	if d.IsNewResource() {
-		d.SetId(name)
+		if d.IsNewResource() {
+			d.SetId(name)
+		}
 	}
 
 	return append(diags, resourceConfigRuleRead(ctx, d, meta)...)
@@ -287,6 +283,12 @@ func resourceConfigRuleRead(ctx context.Context, d *schema.ResourceData, meta in
 	if rule.Scope != nil {
 		if err := d.Set("scope", flattenScope(rule.Scope)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting scope: %s", err)
+		}
+	}
+	if rule.Source != nil && rule.Source.CustomPolicyDetails != nil && aws.ToString(rule.Source.CustomPolicyDetails.PolicyText) == "" {
+		// Source.CustomPolicyDetails.PolicyText is not returned by the API, so copy from state.
+		if v, ok := d.GetOk("source.0.custom_policy_details.0.policy_text"); ok {
+			rule.Source.CustomPolicyDetails.PolicyText = aws.String(v.(string))
 		}
 	}
 	if err := d.Set("source", flattenSource(rule.Source)); err != nil {
