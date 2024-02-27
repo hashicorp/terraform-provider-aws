@@ -469,7 +469,7 @@ func statusOrganizationConfigRule(ctx context.Context, conn *configservice.Clien
 	}
 }
 
-func waitOrganizationConfigRuleCreated(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConfigRuleStatus, error) {
+func waitOrganizationConfigRuleCreated(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConfigRuleStatus, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:        enum.Slice(types.OrganizationRuleStatusCreateInProgress),
 		Target:         enum.Slice(types.OrganizationRuleStatusCreateSuccessful),
@@ -490,7 +490,7 @@ func waitOrganizationConfigRuleCreated(ctx context.Context, conn *configservice.
 	return nil, err
 }
 
-func waitOrganizationConfigRuleUpdated(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConfigRuleStatus, error) {
+func waitOrganizationConfigRuleUpdated(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConfigRuleStatus, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(types.OrganizationRuleStatusUpdateInProgress),
 		Target:  enum.Slice(types.OrganizationRuleStatusUpdateSuccessful),
@@ -510,7 +510,7 @@ func waitOrganizationConfigRuleUpdated(ctx context.Context, conn *configservice.
 	return nil, err
 }
 
-func waitOrganizationConfigRuleDeleted(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConfigRuleStatus, error) {
+func waitOrganizationConfigRuleDeleted(ctx context.Context, conn *configservice.Client, name string, timeout time.Duration) (*types.OrganizationConfigRuleStatus, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.OrganizationRuleStatusDeleteInProgress),
 		Target:                    []string{},
