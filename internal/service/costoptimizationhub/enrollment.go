@@ -321,8 +321,7 @@ func getStringArray[T awstypes.MemberAccountDiscountVisibility | awstypes.Saving
 }
 
 type resourceEnrollmentData struct {
-	ID types.String `tfsdk:"id"`
-	//Status                          types.String `tfsdk:"status"`
+	ID                              types.String `tfsdk:"id"`
 	IncludeMemberAccounts           types.Bool   `tfsdk:"include_member_accounts"`
 	MemberAccountDiscountVisibility types.String `tfsdk:"member_account_discount_visibility"`
 	SavingsEstimationMode           types.String `tfsdk:"savings_estimation_mode"`
