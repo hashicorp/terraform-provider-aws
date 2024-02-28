@@ -199,7 +199,6 @@ func testAccCheckEnrollmentDestroy(ctx context.Context) resource.TestCheckFunc {
 			if les_out.Items[0].Status == "Active" {
 				return create.Error(names.CostOptimizationHub, create.ErrActionCheckingDestroyed, tfcostoptimizationhub.ResNameEnrollment, rs.Primary.ID, errors.New("not destroyed"))
 			}
-
 		}
 		return nil
 	}
