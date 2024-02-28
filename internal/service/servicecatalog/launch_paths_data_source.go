@@ -6,8 +6,8 @@ package servicecatalog
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -75,7 +75,7 @@ func DataSourceLaunchPaths() *schema.Resource {
 
 func dataSourceLaunchPathsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	summaries, err := WaitLaunchPathsReady(ctx, conn, d.Get("accept_language").(string), d.Get("product_id").(string), d.Timeout(schema.TimeoutRead))
@@ -93,7 +93,7 @@ func dataSourceLaunchPathsRead(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func flattenLaunchPathSummary(ctx context.Context, apiObject *servicecatalog.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
+func flattenLaunchPathSummary(ctx context.Context, apiObject *types.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -105,11 +105,11 @@ func flattenLaunchPathSummary(ctx context.Context, apiObject *servicecatalog.Lau
 	}
 
 	if apiObject.Id != nil {
-		tfMap["path_id"] = aws.StringValue(apiObject.Id)
+		tfMap["path_id"] = aws.ToString(apiObject.Id)
 	}
 
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.StringValue(apiObject.Name)
+		tfMap["name"] = aws.ToString(apiObject.Name)
 	}
 
 	tags := KeyValueTags(ctx, apiObject.Tags)
@@ -119,7 +119,7 @@ func flattenLaunchPathSummary(ctx context.Context, apiObject *servicecatalog.Lau
 	return tfMap
 }
 
-func flattenLaunchPathSummaries(ctx context.Context, apiObjects []*servicecatalog.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
+func flattenLaunchPathSummaries(ctx context.Context, apiObjects []*types.LaunchPathSummary, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -137,7 +137,7 @@ func flattenLaunchPathSummaries(ctx context.Context, apiObjects []*servicecatalo
 	return tfList
 }
 
-func flattenConstraintSummary(apiObject *servicecatalog.ConstraintSummary) map[string]interface{} {
+func flattenConstraintSummary(apiObject *types.ConstraintSummary) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -145,17 +145,17 @@ func flattenConstraintSummary(apiObject *servicecatalog.ConstraintSummary) map[s
 	tfMap := map[string]interface{}{}
 
 	if apiObject.Description != nil {
-		tfMap["description"] = aws.StringValue(apiObject.Description)
+		tfMap["description"] = aws.ToString(apiObject.Description)
 	}
 
 	if apiObject.Type != nil {
-		tfMap["type"] = aws.StringValue(apiObject.Type)
+		tfMap["type"] = aws.ToString(apiObject.Type)
 	}
 
 	return tfMap
 }
 
-func flattenConstraintSummaries(apiObjects []*servicecatalog.ConstraintSummary) []interface{} {
+func flattenConstraintSummaries(apiObjects []*types.ConstraintSummary) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}

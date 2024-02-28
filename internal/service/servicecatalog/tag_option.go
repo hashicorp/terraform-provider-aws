@@ -7,13 +7,14 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -61,7 +62,7 @@ func ResourceTagOption() *schema.Resource {
 
 func resourceTagOptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.CreateTagOptionInput{
 		Key:   aws.String(d.Get("key").(string)),
@@ -72,9 +73,9 @@ func resourceTagOptionCreate(ctx context.Context, d *schema.ResourceData, meta i
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var err error
 
-		output, err = conn.CreateTagOptionWithContext(ctx, input)
+		output, err = conn.CreateTagOption(ctx, input)
 
-		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
+		if errs.Contains(err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 
@@ -86,7 +87,7 @@ func resourceTagOptionCreate(ctx context.Context, d *schema.ResourceData, meta i
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.CreateTagOptionWithContext(ctx, input)
+		output, err = conn.CreateTagOption(ctx, input)
 	}
 
 	if err != nil {
@@ -97,13 +98,13 @@ func resourceTagOptionCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Tag Option: empty response")
 	}
 
-	d.SetId(aws.StringValue(output.TagOptionDetail.Id))
+	d.SetId(aws.ToString(output.TagOptionDetail.Id))
 
 	// Active is not a field of CreateTagOption but is a field of UpdateTagOption. In order to create an
 	// inactive Tag Option, you must create an active one and then update it (but calling this resource's
 	// Update will error with ErrCodeDuplicateResourceException because Value is unchanged).
 	if v, ok := d.GetOk("active"); !ok {
-		_, err = conn.UpdateTagOptionWithContext(ctx, &servicecatalog.UpdateTagOptionInput{
+		_, err = conn.UpdateTagOption(ctx, &servicecatalog.UpdateTagOptionInput{
 			Id:     aws.String(d.Id()),
 			Active: aws.Bool(v.(bool)),
 		})
@@ -118,11 +119,11 @@ func resourceTagOptionCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceTagOptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	output, err := WaitTagOptionReady(ctx, conn, d.Id(), d.Timeout(schema.TimeoutRead))
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Tag Option (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -146,7 +147,7 @@ func resourceTagOptionRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceTagOptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.UpdateTagOptionInput{
 		Id: aws.String(d.Id()),
@@ -164,9 +165,9 @@ func resourceTagOptionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate), func() *retry.RetryError {
-		_, err := conn.UpdateTagOptionWithContext(ctx, input)
+		_, err := conn.UpdateTagOption(ctx, input)
 
-		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
+		if errs.Contains(err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 
@@ -178,7 +179,7 @@ func resourceTagOptionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateTagOptionWithContext(ctx, input)
+		_, err = conn.UpdateTagOption(ctx, input)
 	}
 
 	if err != nil {
@@ -190,15 +191,15 @@ func resourceTagOptionUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceTagOptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.DeleteTagOptionInput{
 		Id: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteTagOptionWithContext(ctx, input)
+	_, err := conn.DeleteTagOption(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 

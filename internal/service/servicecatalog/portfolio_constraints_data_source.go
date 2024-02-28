@@ -6,8 +6,8 @@ package servicecatalog
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -77,7 +77,7 @@ func DataSourcePortfolioConstraints() *schema.Resource {
 
 func dataSourcePortfolioConstraintsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	output, err := WaitPortfolioConstraintsReady(ctx, conn, d.Get("accept_language").(string), d.Get("portfolio_id").(string), d.Get("product_id").(string), d.Timeout(schema.TimeoutRead))
 
@@ -108,7 +108,7 @@ func dataSourcePortfolioConstraintsRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func flattenConstraintDetail(apiObject *servicecatalog.ConstraintDetail) map[string]interface{} {
+func flattenConstraintDetail(apiObject *types.ConstraintDetail) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -116,33 +116,33 @@ func flattenConstraintDetail(apiObject *servicecatalog.ConstraintDetail) map[str
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ConstraintId; v != nil {
-		tfMap["constraint_id"] = aws.StringValue(v)
+		tfMap["constraint_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap["description"] = aws.StringValue(v)
+		tfMap["description"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Owner; v != nil {
-		tfMap["owner"] = aws.StringValue(v)
+		tfMap["owner"] = aws.ToString(v)
 	}
 
 	if v := apiObject.PortfolioId; v != nil {
-		tfMap["portfolio_id"] = aws.StringValue(v)
+		tfMap["portfolio_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.ProductId; v != nil {
-		tfMap["product_id"] = aws.StringValue(v)
+		tfMap["product_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
+		tfMap["type"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenConstraintDetails(apiObjects []*servicecatalog.ConstraintDetail) []interface{} {
+func flattenConstraintDetails(apiObjects []*types.ConstraintDetail) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}

@@ -10,14 +10,15 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -27,7 +28,7 @@ func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
-	var pprod servicecatalog.ProvisionedProductDetail
+	var pprod types.ProvisionedProductDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -60,7 +61,7 @@ func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "path_id", "data.aws_servicecatalog_launch_paths.test", "summaries.0.path_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_name", "aws_servicecatalog_product.test", "provisioning_artifact_parameters.0.name"),
-					resource.TestCheckResourceAttr(resourceName, "status", servicecatalog.StatusAvailable),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.StatusAvailable)),
 					resource.TestCheckResourceAttr(resourceName, "type", "CFN_STACK"),
 				),
 			},
@@ -88,7 +89,7 @@ func TestAccServiceCatalogProvisionedProduct_update(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
-	var pprod servicecatalog.ProvisionedProductDetail
+	var pprod types.ProvisionedProductDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -127,7 +128,7 @@ func TestAccServiceCatalogProvisionedProduct_update(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "path_id", "data.aws_servicecatalog_launch_paths.test", "summaries.0.path_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "product_id", "aws_servicecatalog_product.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_name", "aws_servicecatalog_product.test", "provisioning_artifact_parameters.0.name"),
-					resource.TestCheckResourceAttr(resourceName, "status", servicecatalog.StatusAvailable),
+					resource.TestCheckResourceAttr(resourceName, "status", string(types.StatusAvailable)),
 					resource.TestCheckResourceAttr(resourceName, "type", "CFN_STACK"),
 				),
 			},
@@ -152,7 +153,7 @@ func TestAccServiceCatalogProvisionedProduct_stackSetProvisioningPreferences(t *
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
-	var pprod servicecatalog.ProvisionedProductDetail
+	var pprod types.ProvisionedProductDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -217,7 +218,7 @@ func TestAccServiceCatalogProvisionedProduct_ProductName_update(t *testing.T) {
 	productName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	productNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
-	var pprod servicecatalog.ProvisionedProductDetail
+	var pprod types.ProvisionedProductDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -269,7 +270,7 @@ func TestAccServiceCatalogProvisionedProduct_ProvisioningArtifactName_update(t *
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	artifactName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
-	var pprod1, pprod2 servicecatalog.ProvisionedProductDetail
+	var pprod1, pprod2 types.ProvisionedProductDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -303,7 +304,7 @@ func TestAccServiceCatalogProvisionedProduct_computedOutputs(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
-	var pprod servicecatalog.ProvisionedProductDetail
+	var pprod types.ProvisionedProductDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -353,7 +354,7 @@ func TestAccServiceCatalogProvisionedProduct_disappears(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
-	var pprod servicecatalog.ProvisionedProductDetail
+	var pprod types.ProvisionedProductDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -379,7 +380,7 @@ func TestAccServiceCatalogProvisionedProduct_tags(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
-	var pprod servicecatalog.ProvisionedProductDetail
+	var pprod types.ProvisionedProductDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -432,7 +433,7 @@ func TestAccServiceCatalogProvisionedProduct_errorOnUpdate(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
-	var pprod servicecatalog.ProvisionedProductDetail
+	var pprod types.ProvisionedProductDetail
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -463,7 +464,7 @@ func TestAccServiceCatalogProvisionedProduct_errorOnUpdate(t *testing.T) {
 
 func testAccCheckProvisionedProductDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_servicecatalog_provisioned_product" {
@@ -474,9 +475,9 @@ func testAccCheckProvisionedProductDestroy(ctx context.Context) resource.TestChe
 				Id:             aws.String(rs.Primary.ID),
 				AcceptLanguage: aws.String(rs.Primary.Attributes["accept_language"]),
 			}
-			_, err := conn.DescribeProvisionedProductWithContext(ctx, input)
+			_, err := conn.DescribeProvisionedProduct(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*types.ResourceNotFoundException](err) {
 				continue
 			}
 
@@ -491,7 +492,7 @@ func testAccCheckProvisionedProductDestroy(ctx context.Context) resource.TestChe
 	}
 }
 
-func testAccCheckProvisionedProductExists(ctx context.Context, resourceName string, pprod *servicecatalog.ProvisionedProductDetail) resource.TestCheckFunc {
+func testAccCheckProvisionedProductExists(ctx context.Context, resourceName string, pprod *types.ProvisionedProductDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -499,7 +500,7 @@ func testAccCheckProvisionedProductExists(ctx context.Context, resourceName stri
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 		out, err := tfservicecatalog.WaitProvisionedProductReady(ctx, conn, tfservicecatalog.AcceptLanguageEnglish, rs.Primary.ID, "", tfservicecatalog.ProvisionedProductReadyTimeout)
 		if err != nil {
@@ -515,14 +516,14 @@ func testAccCheckProvisionedProductExists(ctx context.Context, resourceName stri
 // testAccCheckProvisionedProductProvisioningArtifactIDChanged verifies that the provisioned artifact
 // ID differs between two provisioned products. If either provisioned product details or the provisioned
 // artifact ID are null, the check will fail.
-func testAccCheckProvisionedProductProvisioningArtifactIDChanged(pprod1, pprod2 *servicecatalog.ProvisionedProductDetail) resource.TestCheckFunc {
+func testAccCheckProvisionedProductProvisioningArtifactIDChanged(pprod1, pprod2 *types.ProvisionedProductDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if pprod1 == nil || pprod2 == nil ||
 			pprod1.ProvisioningArtifactId == nil ||
 			pprod2.ProvisioningArtifactId == nil {
 			return fmt.Errorf("provisioned product provisioning artifact ID is nil")
 		}
-		if aws.StringValue(pprod1.ProvisioningArtifactId) == aws.StringValue(pprod2.ProvisioningArtifactId) {
+		if aws.ToString(pprod1.ProvisioningArtifactId) == aws.ToString(pprod2.ProvisioningArtifactId) {
 			return fmt.Errorf("provisioned product provisioning artifact ID has not changed")
 		}
 

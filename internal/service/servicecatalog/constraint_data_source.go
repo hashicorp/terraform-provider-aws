@@ -6,7 +6,7 @@ package servicecatalog
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -69,7 +69,7 @@ func DataSourceConstraint() *schema.Resource {
 
 func dataSourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	output, err := WaitConstraintReady(ctx, conn, d.Get("accept_language").(string), d.Get("id").(string), d.Timeout(schema.TimeoutRead))
 
@@ -100,7 +100,7 @@ func dataSourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("product_id", detail.ProductId)
 	d.Set("type", detail.Type)
 
-	d.SetId(aws.StringValue(detail.ConstraintId))
+	d.SetId(aws.ToString(detail.ConstraintId))
 
 	return diags
 }

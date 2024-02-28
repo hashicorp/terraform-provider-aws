@@ -8,15 +8,16 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -78,7 +79,7 @@ func ResourcePortfolio() *schema.Resource {
 }
 func resourcePortfolioCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &servicecatalog.CreatePortfolioInput{
@@ -96,20 +97,20 @@ func resourcePortfolioCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.ProviderName = aws.String(v.(string))
 	}
 
-	output, err := conn.CreatePortfolioWithContext(ctx, input)
+	output, err := conn.CreatePortfolio(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Portfolio (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.PortfolioDetail.Id))
+	d.SetId(aws.ToString(output.PortfolioDetail.Id))
 
 	return append(diags, resourcePortfolioRead(ctx, d, meta)...)
 }
 
 func resourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	output, err := FindPortfolioByID(ctx, conn, d.Id())
 
@@ -137,7 +138,7 @@ func resourcePortfolioRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourcePortfolioUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.UpdatePortfolioInput{
 		AcceptLanguage: aws.String(AcceptLanguageEnglish),
@@ -167,7 +168,7 @@ func resourcePortfolioUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		input.RemoveTags = aws.StringSlice(tftags.New(ctx, o).IgnoreAWS().Keys())
 	}
 
-	_, err := conn.UpdatePortfolioWithContext(ctx, input)
+	_, err := conn.UpdatePortfolio(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Service Catalog Portfolio (%s): %s", d.Id(), err)
@@ -178,10 +179,10 @@ func resourcePortfolioUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourcePortfolioDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Service Catalog Portfolio: %s", d.Id())
-	_, err := conn.DeletePortfolioWithContext(ctx, &servicecatalog.DeletePortfolioInput{
+	_, err := conn.DeletePortfolio(ctx, &servicecatalog.DeletePortfolioInput{
 		Id: aws.String(d.Id()),
 	})
 
@@ -192,15 +193,15 @@ func resourcePortfolioDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func FindPortfolioByID(ctx context.Context, conn *servicecatalog.ServiceCatalog, id string) (*servicecatalog.DescribePortfolioOutput, error) {
+func FindPortfolioByID(ctx context.Context, conn *servicecatalog.Client, id string) (*servicecatalog.DescribePortfolioOutput, error) {
 	input := &servicecatalog.DescribePortfolioInput{
 		AcceptLanguage: aws.String(AcceptLanguageEnglish),
 		Id:             aws.String(id),
 	}
 
-	output, err := conn.DescribePortfolioWithContext(ctx, input)
+	output, err := conn.DescribePortfolio(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

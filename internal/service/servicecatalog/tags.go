@@ -10,8 +10,8 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	"github.com/aws/aws-sdk-go/service/servicecatalog/servicecatalogiface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -36,7 +36,7 @@ func productUpdateTags(ctx context.Context, conn servicecatalogiface.ServiceCata
 		input.AddTags = Tags(updatedTags)
 	}
 
-	_, err := conn.UpdateProductWithContext(ctx, input)
+	_, err := conn.UpdateProduct(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("updating tags for Service Catalog Product (%s): %w", identifier, err)
@@ -58,5 +58,5 @@ func recordKeyValueTags(ctx context.Context, tags []*servicecatalog.RecordTag) t
 // UpdateTags updates servicecatalog service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return productUpdateTags(ctx, meta.(*conns.AWSClient).ServiceCatalogConn(ctx), identifier, oldTags, newTags)
+	return productUpdateTags(ctx, meta.(*conns.AWSClient).ServiceCatalogClient(ctx), identifier, oldTags, newTags)
 }

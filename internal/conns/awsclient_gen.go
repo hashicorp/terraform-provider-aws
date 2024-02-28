@@ -113,6 +113,7 @@ import (
 	secretsmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/secretsmanager"
 	securityhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securityhub"
 	securitylake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/securitylake"
+	servicecatalog_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	servicecatalogappregistry_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry"
 	servicequotas_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicequotas"
 	sesv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sesv2"
@@ -235,7 +236,6 @@ import (
 	sagemaker_sdkv1 "github.com/aws/aws-sdk-go/service/sagemaker"
 	schemas_sdkv1 "github.com/aws/aws-sdk-go/service/schemas"
 	serverlessapplicationrepository_sdkv1 "github.com/aws/aws-sdk-go/service/serverlessapplicationrepository"
-	servicecatalog_sdkv1 "github.com/aws/aws-sdk-go/service/servicecatalog"
 	servicediscovery_sdkv1 "github.com/aws/aws-sdk-go/service/servicediscovery"
 	ses_sdkv1 "github.com/aws/aws-sdk-go/service/ses"
 	sfn_sdkv1 "github.com/aws/aws-sdk-go/service/sfn"
@@ -1135,8 +1135,8 @@ func (c *AWSClient) ServerlessRepoConn(ctx context.Context) *serverlessapplicati
 	return errs.Must(conn[*serverlessapplicationrepository_sdkv1.ServerlessApplicationRepository](ctx, c, names.ServerlessRepo, make(map[string]any)))
 }
 
-func (c *AWSClient) ServiceCatalogConn(ctx context.Context) *servicecatalog_sdkv1.ServiceCatalog {
-	return errs.Must(conn[*servicecatalog_sdkv1.ServiceCatalog](ctx, c, names.ServiceCatalog, make(map[string]any)))
+func (c *AWSClient) ServiceCatalogClient(ctx context.Context) *servicecatalog_sdkv2.Client {
+	return errs.Must(client[*servicecatalog_sdkv2.Client](ctx, c, names.ServiceCatalog, make(map[string]any)))
 }
 
 func (c *AWSClient) ServiceCatalogAppRegistryClient(ctx context.Context) *servicecatalogappregistry_sdkv2.Client {

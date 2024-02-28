@@ -6,8 +6,9 @@ package servicecatalog
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -77,7 +78,7 @@ func DataSourceProvisioningArtifacts() *schema.Resource {
 
 func dataSourceProvisioningArtifactsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	productID := d.Get("product_id").(string)
 	input := &servicecatalog.ListProvisioningArtifactsInput{
@@ -85,7 +86,7 @@ func dataSourceProvisioningArtifactsRead(ctx context.Context, d *schema.Resource
 		ProductId:      aws.String(productID),
 	}
 
-	output, err := conn.ListProvisioningArtifactsWithContext(ctx, input)
+	output, err := conn.ListProvisioningArtifacts(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing Service Catalog Provisioning Artifacts: %s", err)
@@ -99,7 +100,7 @@ func dataSourceProvisioningArtifactsRead(ctx context.Context, d *schema.Resource
 	return nil
 }
 
-func flattenProvisioningArtifactDetails(apiObjects []*servicecatalog.ProvisioningArtifactDetail) []interface{} {
+func flattenProvisioningArtifactDetails(apiObjects []*types.ProvisioningArtifactDetail) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -116,7 +117,7 @@ func flattenProvisioningArtifactDetails(apiObjects []*servicecatalog.Provisionin
 	return tfList
 }
 
-func flattenProvisioningArtifactDetail(apiObject *servicecatalog.ProvisioningArtifactDetail) map[string]interface{} {
+func flattenProvisioningArtifactDetail(apiObject *types.ProvisioningArtifactDetail) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -124,25 +125,25 @@ func flattenProvisioningArtifactDetail(apiObject *servicecatalog.ProvisioningArt
 	tfMap := map[string]interface{}{}
 
 	if apiObject.Active != nil {
-		tfMap["active"] = aws.BoolValue(apiObject.Active)
+		tfMap["active"] = aws.ToBool(apiObject.Active)
 	}
 	if apiObject.CreatedTime != nil {
-		tfMap["created_time"] = aws.TimeValue(apiObject.CreatedTime).String()
+		tfMap["created_time"] = aws.ToTime(apiObject.CreatedTime).String()
 	}
 	if apiObject.Description != nil {
-		tfMap["description"] = aws.StringValue(apiObject.Description)
+		tfMap["description"] = aws.ToString(apiObject.Description)
 	}
 	if apiObject.Guidance != nil {
-		tfMap["guidance"] = aws.StringValue(apiObject.Guidance)
+		tfMap["guidance"] = aws.ToString(apiObject.Guidance)
 	}
 	if apiObject.Id != nil {
-		tfMap["id"] = aws.StringValue(apiObject.Id)
+		tfMap["id"] = aws.ToString(apiObject.Id)
 	}
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.StringValue(apiObject.Name)
+		tfMap["name"] = aws.ToString(apiObject.Name)
 	}
 	if apiObject.Type != nil {
-		tfMap["type"] = aws.StringValue(apiObject.Type)
+		tfMap["type"] = aws.ToString(apiObject.Type)
 	}
 
 	return tfMap

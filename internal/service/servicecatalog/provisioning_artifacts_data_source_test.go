@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -34,9 +34,9 @@ func TestAccServiceCatalogProvisioningArtifactsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.#", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.0.active", "true"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "provisioning_artifact_details.0.description"),
-					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.0.guidance", servicecatalog.ProvisioningArtifactGuidanceDefault),
+					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.0.guidance", string(types.ProvisioningArtifactGuidanceDefault)),
 					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.0.name", rName),
-					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.0.type", servicecatalog.ProductTypeCloudFormationTemplate),
+					resource.TestCheckResourceAttr(dataSourceName, "provisioning_artifact_details.0.type", string(types.ProductTypeCloudFormationTemplate)),
 				),
 			},
 		},

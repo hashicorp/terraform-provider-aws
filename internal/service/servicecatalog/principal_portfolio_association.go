@@ -10,14 +10,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -68,11 +70,11 @@ func ResourcePrincipalPortfolioAssociation() *schema.Resource {
 				ForceNew: true,
 			},
 			"principal_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				Default:      servicecatalog.PrincipalTypeIam,
-				ValidateFunc: validation.StringInSlice(servicecatalog.PrincipalType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				Default:          types.PrincipalTypeIam,
+				ValidateDiagFunc: enum.Validate[types.PrincipalType](),
 			},
 		},
 	}
@@ -80,7 +82,7 @@ func ResourcePrincipalPortfolioAssociation() *schema.Resource {
 
 func resourcePrincipalPortfolioAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	acceptLanguage, principalARN, portfolioID, principalType := d.Get("accept_language").(string), d.Get("principal_arn").(string), d.Get("portfolio_id").(string), d.Get("principal_type").(string)
 	id := PrincipalPortfolioAssociationCreateResourceID(acceptLanguage, principalARN, portfolioID, principalType)
@@ -92,7 +94,7 @@ func resourcePrincipalPortfolioAssociationCreate(ctx context.Context, d *schema.
 	}
 
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		return conn.AssociatePrincipalWithPortfolioWithContext(ctx, input)
+		return conn.AssociatePrincipalWithPortfolio(ctx, input)
 	}, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist")
 
 	if err != nil {
@@ -114,7 +116,7 @@ func resourcePrincipalPortfolioAssociationCreate(ctx context.Context, d *schema.
 
 func resourcePrincipalPortfolioAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	acceptLanguage, principalARN, portfolioID, principalType, err := PrincipalPortfolioAssociationParseResourceID(d.Id())
 	if err != nil {
@@ -143,7 +145,7 @@ func resourcePrincipalPortfolioAssociationRead(ctx context.Context, d *schema.Re
 
 func resourcePrincipalPortfolioAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	acceptLanguage, principalARN, portfolioID, principalType, err := PrincipalPortfolioAssociationParseResourceID(d.Id())
 	if err != nil {
@@ -158,9 +160,9 @@ func resourcePrincipalPortfolioAssociationDelete(ctx context.Context, d *schema.
 	}
 
 	log.Printf("[WARN] Deleting Service Catalog Principal Portfolio Association: %s", d.Id())
-	_, err = conn.DisassociatePrincipalFromPortfolioWithContext(ctx, input)
+	_, err = conn.DisassociatePrincipalFromPortfolio(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -195,7 +197,7 @@ func PrincipalPortfolioAssociationCreateResourceID(acceptLanguage, principalARN,
 	return strings.Join([]string{acceptLanguage, principalARN, portfolioID, principalType}, principalPortfolioAssociationResourceIDSeparator)
 }
 
-func findPrincipalForPortfolio(ctx context.Context, conn *servicecatalog.ServiceCatalog, input *servicecatalog.ListPrincipalsForPortfolioInput, filter tfslices.Predicate[*servicecatalog.Principal]) (*servicecatalog.Principal, error) {
+func findPrincipalForPortfolio(ctx context.Context, conn *servicecatalog.Client, input *servicecatalog.ListPrincipalsForPortfolioInput, filter tfslices.Predicate[*types.Principal]) (*servicecatalog.Principal, error) {
 	output, err := findPrincipalsForPortfolio(ctx, conn, input, filter)
 
 	if err != nil {
@@ -205,10 +207,10 @@ func findPrincipalForPortfolio(ctx context.Context, conn *servicecatalog.Service
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func findPrincipalsForPortfolio(ctx context.Context, conn *servicecatalog.ServiceCatalog, input *servicecatalog.ListPrincipalsForPortfolioInput, filter tfslices.Predicate[*servicecatalog.Principal]) ([]*servicecatalog.Principal, error) {
+func findPrincipalsForPortfolio(ctx context.Context, conn *servicecatalog.Client, input *servicecatalog.ListPrincipalsForPortfolioInput, filter tfslices.Predicate[*types.Principal]) ([]*servicecatalog.Principal, error) {
 	var output []*servicecatalog.Principal
 
-	err := conn.ListPrincipalsForPortfolioPagesWithContext(ctx, input, func(page *servicecatalog.ListPrincipalsForPortfolioOutput, lastPage bool) bool {
+	err := conn.ListPrincipalsForPortfolioPages(ctx, input, func(page *servicecatalog.ListPrincipalsForPortfolioOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -222,7 +224,7 @@ func findPrincipalsForPortfolio(ctx context.Context, conn *servicecatalog.Servic
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -236,13 +238,13 @@ func findPrincipalsForPortfolio(ctx context.Context, conn *servicecatalog.Servic
 	return output, nil
 }
 
-func FindPrincipalPortfolioAssociation(ctx context.Context, conn *servicecatalog.ServiceCatalog, acceptLanguage, principalARN, portfolioID, principalType string) (*servicecatalog.Principal, error) {
+func FindPrincipalPortfolioAssociation(ctx context.Context, conn *servicecatalog.Client, acceptLanguage, principalARN, portfolioID, principalType string) (*servicecatalog.Principal, error) {
 	input := &servicecatalog.ListPrincipalsForPortfolioInput{
 		AcceptLanguage: aws.String(acceptLanguage),
 		PortfolioId:    aws.String(portfolioID),
 	}
-	filter := func(v *servicecatalog.Principal) bool {
-		return aws.StringValue(v.PrincipalARN) == principalARN && aws.StringValue(v.PrincipalType) == principalType
+	filter := func(v *types.Principal) bool {
+		return aws.ToString(v.PrincipalARN) == principalARN && aws.ToString(v.PrincipalType) == principalType
 	}
 
 	return findPrincipalForPortfolio(ctx, conn, input, filter)
@@ -272,7 +274,7 @@ func resourcePrincipalPortfolioAssociationV0() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Default:  servicecatalog.PrincipalTypeIam,
+				Default:  types.PrincipalTypeIam,
 			},
 		},
 	}

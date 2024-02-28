@@ -7,13 +7,14 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -51,7 +52,7 @@ func ResourceBudgetResourceAssociation() *schema.Resource {
 
 func resourceBudgetResourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.AssociateBudgetWithResourceInput{
 		BudgetName: aws.String(d.Get("budget_name").(string)),
@@ -62,9 +63,9 @@ func resourceBudgetResourceAssociationCreate(ctx context.Context, d *schema.Reso
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var err error
 
-		output, err = conn.AssociateBudgetWithResourceWithContext(ctx, input)
+		output, err = conn.AssociateBudgetWithResource(ctx, input)
 
-		if tfawserr.ErrMessageContains(err, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist") {
+		if errs.Contains(err, "profile does not exist") {
 			return retry.RetryableError(err)
 		}
 
@@ -76,7 +77,7 @@ func resourceBudgetResourceAssociationCreate(ctx context.Context, d *schema.Reso
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.AssociateBudgetWithResourceWithContext(ctx, input)
+		output, err = conn.AssociateBudgetWithResource(ctx, input)
 	}
 
 	if err != nil {
@@ -94,7 +95,7 @@ func resourceBudgetResourceAssociationCreate(ctx context.Context, d *schema.Reso
 
 func resourceBudgetResourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	budgetName, resourceID, err := BudgetResourceAssociationParseID(d.Id())
 
@@ -126,7 +127,7 @@ func resourceBudgetResourceAssociationRead(ctx context.Context, d *schema.Resour
 
 func resourceBudgetResourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	budgetName, resourceID, err := BudgetResourceAssociationParseID(d.Id())
 
@@ -139,9 +140,9 @@ func resourceBudgetResourceAssociationDelete(ctx context.Context, d *schema.Reso
 		BudgetName: aws.String(budgetName),
 	}
 
-	_, err = conn.DisassociateBudgetFromResourceWithContext(ctx, input)
+	_, err = conn.DisassociateBudgetFromResource(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 

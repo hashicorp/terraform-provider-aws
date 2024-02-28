@@ -8,9 +8,10 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -90,13 +91,13 @@ func sweepBudgetResourceAssociations(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.ServiceCatalogConn(ctx)
+	conn := client.ServiceCatalogClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.ListPortfoliosInput{}
 
-	err = conn.ListPortfoliosPagesWithContext(ctx, input, func(page *servicecatalog.ListPortfoliosOutput, lastPage bool) bool {
+	err = conn.ListPortfoliosPages(ctx, input, func(page *servicecatalog.ListPortfoliosOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -110,7 +111,7 @@ func sweepBudgetResourceAssociations(region string) error {
 				ResourceId: port.Id,
 			}
 
-			err = conn.ListBudgetsForResourcePagesWithContext(ctx, resInput, func(page *servicecatalog.ListBudgetsForResourceOutput, lastPage bool) bool {
+			err = conn.ListBudgetsForResourcePages(ctx, resInput, func(page *servicecatalog.ListBudgetsForResourceOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -122,7 +123,7 @@ func sweepBudgetResourceAssociations(region string) error {
 
 					r := ResourceBudgetResourceAssociation()
 					d := r.Data(nil)
-					d.SetId(BudgetResourceAssociationID(aws.StringValue(budget.BudgetName), aws.StringValue(port.Id)))
+					d.SetId(BudgetResourceAssociationID(aws.ToString(budget.BudgetName), aws.ToString(port.Id)))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -140,7 +141,7 @@ func sweepBudgetResourceAssociations(region string) error {
 
 	prodInput := &servicecatalog.SearchProductsAsAdminInput{}
 
-	err = conn.SearchProductsAsAdminPagesWithContext(ctx, prodInput, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
+	err = conn.SearchProductsAsAdminPages(ctx, prodInput, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -154,7 +155,7 @@ func sweepBudgetResourceAssociations(region string) error {
 				ResourceId: pvd.ProductViewSummary.ProductId,
 			}
 
-			err = conn.ListBudgetsForResourcePagesWithContext(ctx, resInput, func(page *servicecatalog.ListBudgetsForResourceOutput, lastPage bool) bool {
+			err = conn.ListBudgetsForResourcePages(ctx, resInput, func(page *servicecatalog.ListBudgetsForResourceOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -166,7 +167,7 @@ func sweepBudgetResourceAssociations(region string) error {
 
 					r := ResourceBudgetResourceAssociation()
 					d := r.Data(nil)
-					d.SetId(BudgetResourceAssociationID(aws.StringValue(budget.BudgetName), aws.StringValue(pvd.ProductViewSummary.ProductId)))
+					d.SetId(BudgetResourceAssociationID(aws.ToString(budget.BudgetName), aws.ToString(pvd.ProductViewSummary.ProductId)))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -202,7 +203,7 @@ func sweepConstraints(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.ServiceCatalogConn(ctx)
+	conn := client.ServiceCatalogClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -210,7 +211,7 @@ func sweepConstraints(region string) error {
 
 	input := &servicecatalog.ListPortfoliosInput{}
 
-	err = conn.ListPortfoliosPagesWithContext(ctx, input, func(page *servicecatalog.ListPortfoliosOutput, lastPage bool) bool {
+	err = conn.ListPortfoliosPages(ctx, input, func(page *servicecatalog.ListPortfoliosOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -224,7 +225,7 @@ func sweepConstraints(region string) error {
 				PortfolioId: detail.Id,
 			}
 
-			err = conn.ListConstraintsForPortfolioPagesWithContext(ctx, constraintInput, func(page *servicecatalog.ListConstraintsForPortfolioOutput, lastPage bool) bool {
+			err = conn.ListConstraintsForPortfolioPages(ctx, constraintInput, func(page *servicecatalog.ListConstraintsForPortfolioOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -236,7 +237,7 @@ func sweepConstraints(region string) error {
 
 					r := ResourceConstraint()
 					d := r.Data(nil)
-					d.SetId(aws.StringValue(detail.ConstraintId))
+					d.SetId(aws.ToString(detail.ConstraintId))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -272,13 +273,13 @@ func sweepPrincipalPortfolioAssociations(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.ServiceCatalogConn(ctx)
+	conn := client.ServiceCatalogClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.ListPortfoliosInput{}
 
-	err = conn.ListPortfoliosPagesWithContext(ctx, input, func(page *servicecatalog.ListPortfoliosOutput, lastPage bool) bool {
+	err = conn.ListPortfoliosPages(ctx, input, func(page *servicecatalog.ListPortfoliosOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -292,7 +293,7 @@ func sweepPrincipalPortfolioAssociations(region string) error {
 				PortfolioId: detail.Id,
 			}
 
-			err = conn.ListPrincipalsForPortfolioPagesWithContext(ctx, pInput, func(page *servicecatalog.ListPrincipalsForPortfolioOutput, lastPage bool) bool {
+			err = conn.ListPrincipalsForPortfolioPages(ctx, pInput, func(page *servicecatalog.ListPrincipalsForPortfolioOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -304,7 +305,7 @@ func sweepPrincipalPortfolioAssociations(region string) error {
 
 					r := ResourcePrincipalPortfolioAssociation()
 					d := r.Data(nil)
-					d.SetId(PrincipalPortfolioAssociationCreateResourceID(AcceptLanguageEnglish, aws.StringValue(principal.PrincipalARN), aws.StringValue(detail.Id), aws.StringValue(principal.PrincipalType)))
+					d.SetId(PrincipalPortfolioAssociationCreateResourceID(AcceptLanguageEnglish, aws.ToString(principal.PrincipalARN), aws.ToString(detail.Id), aws.ToString(principal.PrincipalType)))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -345,7 +346,7 @@ func sweepProductPortfolioAssociations(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.ServiceCatalogConn(ctx)
+	conn := client.ServiceCatalogClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -353,7 +354,7 @@ func sweepProductPortfolioAssociations(region string) error {
 
 	input := &servicecatalog.SearchProductsAsAdminInput{}
 
-	err = conn.SearchProductsAsAdminPagesWithContext(ctx, input, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
+	err = conn.SearchProductsAsAdminPages(ctx, input, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -363,10 +364,10 @@ func sweepProductPortfolioAssociations(region string) error {
 				continue
 			}
 
-			productARN, err := arn.Parse(aws.StringValue(detail.ProductARN))
+			productARN, err := arn.Parse(aws.ToString(detail.ProductARN))
 
 			if err != nil {
-				errs = multierror.Append(errs, fmt.Errorf("error parsing Product ARN for %s: %w", aws.StringValue(detail.ProductARN), err))
+				errs = multierror.Append(errs, fmt.Errorf("error parsing Product ARN for %s: %w", aws.ToString(detail.ProductARN), err))
 				continue
 			}
 
@@ -375,7 +376,7 @@ func sweepProductPortfolioAssociations(region string) error {
 			resourceParts := strings.SplitN(productARN.Resource, "/", 2)
 
 			if len(resourceParts) != 2 {
-				errs = multierror.Append(errs, fmt.Errorf("error parsing Product ARN resource for %s: %w", aws.StringValue(detail.ProductARN), err))
+				errs = multierror.Append(errs, fmt.Errorf("error parsing Product ARN resource for %s: %w", aws.ToString(detail.ProductARN), err))
 				continue
 			}
 
@@ -385,7 +386,7 @@ func sweepProductPortfolioAssociations(region string) error {
 				ProductId: aws.String(productID),
 			}
 
-			err = conn.ListPortfoliosForProductPagesWithContext(ctx, assocInput, func(page *servicecatalog.ListPortfoliosForProductOutput, lastPage bool) bool {
+			err = conn.ListPortfoliosForProductPages(ctx, assocInput, func(page *servicecatalog.ListPortfoliosForProductOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -397,7 +398,7 @@ func sweepProductPortfolioAssociations(region string) error {
 
 					r := ResourceProductPortfolioAssociation()
 					d := r.Data(nil)
-					d.SetId(ProductPortfolioAssociationCreateID(AcceptLanguageEnglish, aws.StringValue(detail.Id), productID))
+					d.SetId(ProductPortfolioAssociationCreateID(AcceptLanguageEnglish, aws.ToString(detail.Id), productID))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -438,13 +439,13 @@ func sweepProducts(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.ServiceCatalogConn(ctx)
+	conn := client.ServiceCatalogClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.SearchProductsAsAdminInput{}
 
-	err = conn.SearchProductsAsAdminPagesWithContext(ctx, input, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
+	err = conn.SearchProductsAsAdminPages(ctx, input, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -454,7 +455,7 @@ func sweepProducts(region string) error {
 				continue
 			}
 
-			id := aws.StringValue(pvd.ProductViewSummary.ProductId)
+			id := aws.ToString(pvd.ProductViewSummary.ProductId)
 
 			r := ResourceProduct()
 			d := r.Data(nil)
@@ -490,18 +491,18 @@ func sweepProvisionedProducts(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.ServiceCatalogConn(ctx)
+	conn := client.ServiceCatalogClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.SearchProvisionedProductsInput{
-		AccessLevelFilter: &servicecatalog.AccessLevelFilter{
+		AccessLevelFilter: &types.AccessLevelFilter{
 			Key:   aws.String(servicecatalog.AccessLevelFilterKeyAccount),
 			Value: aws.String("self"), // only supported value
 		},
 	}
 
-	err = conn.SearchProvisionedProductsPagesWithContext(ctx, input, func(page *servicecatalog.SearchProvisionedProductsOutput, lastPage bool) bool {
+	err = conn.SearchProvisionedProductsPages(ctx, input, func(page *servicecatalog.SearchProvisionedProductsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -513,7 +514,7 @@ func sweepProvisionedProducts(region string) error {
 
 			r := ResourceProvisionedProduct()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(detail.Id))
+			d.SetId(aws.ToString(detail.Id))
 			d.Set("ignore_errors", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -546,13 +547,13 @@ func sweepProvisioningArtifacts(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.ServiceCatalogConn(ctx)
+	conn := client.ServiceCatalogClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.SearchProductsAsAdminInput{}
 
-	err = conn.SearchProductsAsAdminPagesWithContext(ctx, input, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
+	err = conn.SearchProductsAsAdminPages(ctx, input, func(page *servicecatalog.SearchProductsAsAdminOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -562,7 +563,7 @@ func sweepProvisioningArtifacts(region string) error {
 				continue
 			}
 
-			productID := aws.StringValue(pvd.ProductViewSummary.ProductId)
+			productID := aws.ToString(pvd.ProductViewSummary.ProductId)
 
 			artInput := &servicecatalog.ListProvisioningArtifactsInput{
 				ProductId: aws.String(productID),
@@ -570,7 +571,7 @@ func sweepProvisioningArtifacts(region string) error {
 
 			// there's no paginator for ListProvisioningArtifacts
 			for {
-				output, err := conn.ListProvisioningArtifactsWithContext(ctx, artInput)
+				output, err := conn.ListProvisioningArtifacts(ctx, artInput)
 
 				if err != nil {
 					errs = multierror.Append(errs, fmt.Errorf("error listing Service Catalog Provisioning Artifacts for product (%s): %w", productID, err))
@@ -581,14 +582,14 @@ func sweepProvisioningArtifacts(region string) error {
 					r := ResourceProvisioningArtifact()
 					d := r.Data(nil)
 
-					d.SetId(ProvisioningArtifactID(aws.StringValue(pad.Id), productID))
+					d.SetId(ProvisioningArtifactID(aws.ToString(pad.Id), productID))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
 
 				/*
 					// Currently, the API has no token field on input (AWS oops)
-					if aws.StringValue(output.NextPageToken) == "" {
+					if aws.ToString(output.NextPageToken) == "" {
 						break
 					}
 
@@ -625,13 +626,13 @@ func sweepServiceActions(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.ServiceCatalogConn(ctx)
+	conn := client.ServiceCatalogClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.ListServiceActionsInput{}
 
-	err = conn.ListServiceActionsPagesWithContext(ctx, input, func(page *servicecatalog.ListServiceActionsOutput, lastPage bool) bool {
+	err = conn.ListServiceActionsPages(ctx, input, func(page *servicecatalog.ListServiceActionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -641,7 +642,7 @@ func sweepServiceActions(region string) error {
 				continue
 			}
 
-			id := aws.StringValue(sas.Id)
+			id := aws.ToString(sas.Id)
 
 			r := ResourceServiceAction()
 			d := r.Data(nil)
@@ -677,13 +678,13 @@ func sweepTagOptionResourceAssociations(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.ServiceCatalogConn(ctx)
+	conn := client.ServiceCatalogClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.ListTagOptionsInput{}
 
-	err = conn.ListTagOptionsPagesWithContext(ctx, input, func(page *servicecatalog.ListTagOptionsOutput, lastPage bool) bool {
+	err = conn.ListTagOptionsPages(ctx, input, func(page *servicecatalog.ListTagOptionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -697,7 +698,7 @@ func sweepTagOptionResourceAssociations(region string) error {
 				TagOptionId: tag.Id,
 			}
 
-			err = conn.ListResourcesForTagOptionPagesWithContext(ctx, resInput, func(page *servicecatalog.ListResourcesForTagOptionOutput, lastPage bool) bool {
+			err = conn.ListResourcesForTagOptionPages(ctx, resInput, func(page *servicecatalog.ListResourcesForTagOptionOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -709,7 +710,7 @@ func sweepTagOptionResourceAssociations(region string) error {
 
 					r := ResourceTagOptionResourceAssociation()
 					d := r.Data(nil)
-					d.SetId(aws.StringValue(resource.Id))
+					d.SetId(aws.ToString(resource.Id))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -749,13 +750,13 @@ func sweepTagOptions(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.ServiceCatalogConn(ctx)
+	conn := client.ServiceCatalogClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
 	input := &servicecatalog.ListTagOptionsInput{}
 
-	err = conn.ListTagOptionsPagesWithContext(ctx, input, func(page *servicecatalog.ListTagOptionsOutput, lastPage bool) bool {
+	err = conn.ListTagOptionsPages(ctx, input, func(page *servicecatalog.ListTagOptionsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -765,7 +766,7 @@ func sweepTagOptions(region string) error {
 				continue
 			}
 
-			id := aws.StringValue(tod.Id)
+			id := aws.ToString(tod.Id)
 
 			r := ResourceTagOption()
 			d := r.Data(nil)

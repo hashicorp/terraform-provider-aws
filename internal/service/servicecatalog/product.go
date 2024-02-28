@@ -9,14 +9,16 @@ import (
 	"sort"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicecatalog"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -123,10 +125,10 @@ func ResourceProduct() *schema.Resource {
 							},
 						},
 						"type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(servicecatalog.ProvisioningArtifactType_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[types.ProvisioningArtifactType](),
 						},
 					},
 				},
@@ -165,7 +167,7 @@ func ResourceProduct() *schema.Resource {
 
 func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &servicecatalog.CreateProductInput{
@@ -204,16 +206,16 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		return conn.CreateProductWithContext(ctx, input)
+		return conn.CreateProduct(ctx, input)
 	}, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Product (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*servicecatalog.CreateProductOutput).ProductViewDetail.ProductViewSummary.ProductId))
+	d.SetId(aws.ToString(outputRaw.(*servicecatalog.CreateProductOutput).ProductViewDetail.ProductViewSummary.ProductId))
 
-	if _, err := waitProductReady(ctx, conn, aws.StringValue(input.AcceptLanguage), d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitProductReady(ctx, conn, aws.ToString(input.AcceptLanguage), d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for Service Catalog Product (%s) to be ready: %s", d.Id(), err)
 	}
 
@@ -222,11 +224,11 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceProductRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	output, err := waitProductReady(ctx, conn, d.Get("accept_language").(string), d.Id(), d.Timeout(schema.TimeoutRead))
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Service Catalog Product (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -264,7 +266,7 @@ func resourceProductRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceProductUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &servicecatalog.UpdateProductInput{
@@ -304,7 +306,7 @@ func resourceProductUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
-			return conn.UpdateProductWithContext(ctx, input)
+			return conn.UpdateProduct(ctx, input)
 		}, servicecatalog.ErrCodeInvalidParametersException, "profile does not exist")
 
 		if err != nil {
@@ -317,7 +319,7 @@ func resourceProductUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceProductDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	input := &servicecatalog.DeleteProductInput{
 		Id: aws.String(d.Id()),
@@ -327,9 +329,9 @@ func resourceProductDelete(ctx context.Context, d *schema.ResourceData, meta int
 		input.AcceptLanguage = aws.String(v.(string))
 	}
 
-	_, err := conn.DeleteProductWithContext(ctx, input)
+	_, err := conn.DeleteProduct(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -345,7 +347,7 @@ func resourceProductDelete(ctx context.Context, d *schema.ResourceData, meta int
 }
 
 func resourceProductImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceCatalogClient(ctx)
 
 	productData, err := findProductByID(ctx, conn, d.Id())
 
@@ -356,7 +358,7 @@ func resourceProductImport(ctx context.Context, d *schema.ResourceData, meta int
 	// import the last entry in the summary
 	if len(productData.ProvisioningArtifactSummaries) > 0 {
 		sort.Slice(productData.ProvisioningArtifactSummaries, func(i, j int) bool {
-			return aws.TimeValue(productData.ProvisioningArtifactSummaries[i].CreatedTime).Before(aws.TimeValue(productData.ProvisioningArtifactSummaries[j].CreatedTime))
+			return aws.ToTime(productData.ProvisioningArtifactSummaries[i].CreatedTime).Before(aws.TimeValue(productData.ProvisioningArtifactSummaries[j].CreatedTime))
 		})
 
 		provisioningArtifact := productData.ProvisioningArtifactSummaries[len(productData.ProvisioningArtifactSummaries)-1]
@@ -366,7 +368,7 @@ func resourceProductImport(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		// Find additional artifact details.
-		artifactData, err := conn.DescribeProvisioningArtifactWithContext(ctx, in)
+		artifactData, err := conn.DescribeProvisioningArtifact(ctx, in)
 
 		if err != nil {
 			return []*schema.ResourceData{d}, err
@@ -378,12 +380,12 @@ func resourceProductImport(ctx context.Context, d *schema.ResourceData, meta int
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandProvisioningArtifactParameters(tfMap map[string]interface{}) *servicecatalog.ProvisioningArtifactProperties {
+func expandProvisioningArtifactParameters(tfMap map[string]interface{}) *types.ProvisioningArtifactProperties {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &servicecatalog.ProvisioningArtifactProperties{}
+	apiObject := &types.ProvisioningArtifactProperties{}
 
 	if v, ok := tfMap["description"].(string); ok && v != "" {
 		apiObject.Description = aws.String(v)
@@ -423,19 +425,19 @@ func flattenProvisioningArtifactParameters(apiObject *servicecatalog.DescribePro
 	}
 
 	m := map[string]interface{}{
-		"description":                 aws.StringValue(apiObject.ProvisioningArtifactDetail.Description),
+		"description":                 aws.ToString(apiObject.ProvisioningArtifactDetail.Description),
 		"disable_template_validation": false, // set default because it cannot be read
-		"name":                        aws.StringValue(apiObject.ProvisioningArtifactDetail.Name),
-		"type":                        aws.StringValue(apiObject.ProvisioningArtifactDetail.Type),
+		"name":                        aws.ToString(apiObject.ProvisioningArtifactDetail.Name),
+		"type":                        aws.ToString(apiObject.ProvisioningArtifactDetail.Type),
 	}
 
 	if apiObject.Info != nil {
 		if v, ok := apiObject.Info["TemplateUrl"]; ok {
-			m["template_url"] = aws.StringValue(v)
+			m["template_url"] = aws.ToString(v)
 		}
 
 		if v, ok := apiObject.Info["PhysicalId"]; ok {
-			m["template_physical_id"] = aws.StringValue(v)
+			m["template_physical_id"] = aws.ToString(v)
 		}
 	}
 
