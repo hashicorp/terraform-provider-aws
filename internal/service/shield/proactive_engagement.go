@@ -200,12 +200,6 @@ func (r *proactiveEngagementResource) Update(ctx context.Context, request resour
 }
 
 func (r *proactiveEngagementResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data proactiveEngagementResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
 	conn := r.Meta().ShieldClient(ctx)
 
 	inputD := &shield.DisableProactiveEngagementInput{}
