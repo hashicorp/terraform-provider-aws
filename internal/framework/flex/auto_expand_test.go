@@ -258,13 +258,13 @@ func TestExpand(t *testing.T) {
 		},
 		{
 			TestName:   "single ARN Source and single string Target",
-			Source:     &TestFlexTF17{Field1: fwtypes.ARNValue(testARN)},
+			Source:     &TestFlexTF17{Field1: fwtypes.ARNValueMust(testARN)},
 			Target:     &TestFlexAWS01{},
 			WantTarget: &TestFlexAWS01{Field1: testARN},
 		},
 		{
 			TestName:   "single ARN Source and single *string Target",
-			Source:     &TestFlexTF17{Field1: fwtypes.ARNValue(testARN)},
+			Source:     &TestFlexTF17{Field1: fwtypes.ARNValueMust(testARN)},
 			Target:     &TestFlexAWS02{},
 			WantTarget: &TestFlexAWS02{Field1: aws.String(testARN)},
 		},

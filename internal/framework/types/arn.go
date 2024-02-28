@@ -61,7 +61,7 @@ func (t arnType) ValueFromString(_ context.Context, in types.String) (basetypes.
 		return ARNUnknown(), diags // Must not return validation errors.
 	}
 
-	return ARNValue(valueString), diags
+	return ARNValueMust(valueString), diags
 }
 
 func (t arnType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
@@ -128,7 +128,7 @@ func ARNUnknown() ARN {
 	return ARN{StringValue: basetypes.NewStringUnknown()}
 }
 
-func ARNValue(value string) ARN {
+func ARNValueMust(value string) ARN {
 	return ARN{
 		StringValue: basetypes.NewStringValue(value),
 		value:       errs.Must(arn.Parse(value)),
