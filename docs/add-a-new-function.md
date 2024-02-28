@@ -15,7 +15,7 @@ Functions must be reproducible across executions ("pure" functions), where the s
 This requirement precludes the use of network calls, so operations requiring an AWS API call should instead consider utilizing a [data source](add-a-new-datasource.md).
 Data manipulation tasks tend to be the most common use cases.
 
-## Steps to Add a Function
+## Steps to add a function
 
 ### Fork the provider and create a feature branch
 
@@ -57,12 +57,12 @@ This includes processing the arguments, setting the return value, and any data p
 func (f exampleFunction) Run(ctx context.Context, req function.RunRequest, resp *function.RunResponse) {
 	var data string
 
-	resp.Diagnostics.Append(req.Arguments.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+	resp.Error = function.ConcatFuncErrors(req.Arguments.Get(ctx, &data))
+	if resp.Error != nil {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.Result.Set(ctx, data)...)
+	resp.Error = function.ConcatFuncErrors(resp.Result.Set(ctx, data))
 }
 ```
 
@@ -81,7 +81,7 @@ func (p *fwprovider) Functions(_ context.Context) []func() function.Function {
 }
 ```
 
-### Write passing Acceptance Tests
+### Write passing acceptance tests
 
 All functions should have corresponding acceptance tests.
 For functions with variadic arguments, or which can potentially return an error, tests should be written to exercise those conditions.

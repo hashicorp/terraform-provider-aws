@@ -55,8 +55,8 @@ func (f arnBuildFunction) Definition(ctx context.Context, req function.Definitio
 func (f arnBuildFunction) Run(ctx context.Context, req function.RunRequest, resp *function.RunResponse) {
 	var partition, service, region, accountID, resource string
 
-	resp.Diagnostics.Append(req.Arguments.Get(ctx, &partition, &service, &region, &accountID, &resource)...)
-	if resp.Diagnostics.HasError() {
+	resp.Error = function.ConcatFuncErrors(req.Arguments.Get(ctx, &partition, &service, &region, &accountID, &resource))
+	if resp.Error != nil {
 		return
 	}
 
@@ -68,5 +68,5 @@ func (f arnBuildFunction) Run(ctx context.Context, req function.RunRequest, resp
 		Resource:  resource,
 	}
 
-	resp.Diagnostics.Append(resp.Result.Set(ctx, result.String())...)
+	resp.Error = function.ConcatFuncErrors(resp.Result.Set(ctx, result.String()))
 }

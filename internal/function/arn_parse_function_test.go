@@ -37,7 +37,7 @@ func TestARNParseFunction_invalid(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testARNParseFunctionConfig("invalid"),
-				ExpectError: regexache.MustCompile("arn parsing failed"),
+				ExpectError: regexache.MustCompile("arn: invalid prefix"),
 			},
 		},
 	})

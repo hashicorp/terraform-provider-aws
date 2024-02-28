@@ -51,14 +51,14 @@ func (f arnParseFunction) Definition(ctx context.Context, req function.Definitio
 func (f arnParseFunction) Run(ctx context.Context, req function.RunRequest, resp *function.RunResponse) {
 	var arg string
 
-	resp.Diagnostics.Append(req.Arguments.Get(ctx, &arg)...)
-	if resp.Diagnostics.HasError() {
+	resp.Error = function.ConcatFuncErrors(req.Arguments.Get(ctx, &arg))
+	if resp.Error != nil {
 		return
 	}
 
 	parts, err := arn.Parse(arg)
 	if err != nil {
-		resp.Diagnostics.AddError("arn parsing failed", err.Error())
+		resp.Error = function.ConcatFuncErrors(resp.Error, function.NewFuncError(err.Error()))
 		return
 	}
 
@@ -71,10 +71,10 @@ func (f arnParseFunction) Run(ctx context.Context, req function.RunRequest, resp
 	}
 
 	result, d := types.ObjectValue(arnParseResultAttrTypes, value)
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
+	if d.HasError() {
+		resp.Error = function.ConcatFuncErrors(resp.Error, function.FuncErrorFromDiags(ctx, d))
 		return
 	}
 
-	resp.Diagnostics.Append(resp.Result.Set(ctx, result)...)
+	resp.Error = function.ConcatFuncErrors(resp.Result.Set(ctx, result))
 }
