@@ -307,7 +307,7 @@ func TestExpandGeneric(t *testing.T) {
 		},
 		{
 			TestName:   "single set Source and *struct Target",
-			Source:     &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfPtr(ctx, &TestFlexTF01{Field1: types.StringValue("a")})},
+			Source:     &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfPtrMust(ctx, &TestFlexTF01{Field1: types.StringValue("a")})},
 			Target:     &TestFlexAWS06{},
 			WantTarget: &TestFlexAWS06{Field1: &TestFlexAWS01{Field1: "a"}},
 		},
@@ -367,13 +367,13 @@ func TestExpandGeneric(t *testing.T) {
 		},
 		{
 			TestName:   "empty set Source and empty []*struct Target",
-			Source:     &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfSlice(ctx, []*TestFlexTF01{})},
+			Source:     &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, []*TestFlexTF01{})},
 			Target:     &TestFlexAWS07{},
 			WantTarget: &TestFlexAWS07{Field1: []*TestFlexAWS01{}},
 		},
 		{
 			TestName: "non-empty set Source and non-empty []*struct Target",
-			Source: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfSlice(ctx, []*TestFlexTF01{
+			Source: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, []*TestFlexTF01{
 				{Field1: types.StringValue("a")},
 				{Field1: types.StringValue("b")},
 			})},
@@ -385,7 +385,7 @@ func TestExpandGeneric(t *testing.T) {
 		},
 		{
 			TestName: "non-empty set Source and non-empty []struct Target",
-			Source: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{
+			Source: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{
 				{Field1: types.StringValue("a")},
 				{Field1: types.StringValue("b")},
 			})},
@@ -408,7 +408,7 @@ func TestExpandGeneric(t *testing.T) {
 					"X": types.StringValue("x"),
 					"Y": types.StringValue("y"),
 				}),
-				Field4: fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, []TestFlexTF02{
+				Field4: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF02{
 					{Field1: types.Int64Value(100)},
 					{Field1: types.Int64Value(2000)},
 					{Field1: types.Int64Value(30000)},
@@ -487,7 +487,7 @@ func TestExpandGeneric(t *testing.T) {
 		{
 			TestName: "map block key set",
 			Source: &TestFlexMapBlockKeyTF03{
-				MapBlock: fwtypes.NewSetNestedObjectValueOfValueSlice[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
+				MapBlock: fwtypes.NewSetNestedObjectValueOfValueSliceMust[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
 					{
 						MapBlockKey: types.StringValue("x"),
 						Attr1:       types.StringValue("a"),

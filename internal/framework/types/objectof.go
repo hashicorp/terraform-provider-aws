@@ -26,8 +26,20 @@ var (
 	_ NestedObjectValue        = (*ObjectValueOf[struct{}])(nil)
 )
 
+func newObjectTypeOf[T any](ctx context.Context) (objectTypeOf[T], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	m, d := AttributeTypes[T](ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return objectTypeOf[T]{}, diags
+	}
+
+	return objectTypeOf[T]{basetypes.ObjectType{AttrTypes: m}}, diags
+}
+
 func NewObjectTypeOf[T any](ctx context.Context) objectTypeOf[T] {
-	return objectTypeOf[T]{basetypes.ObjectType{AttrTypes: AttributeTypesMust[T](ctx)}}
+	return fwdiag.Must(newObjectTypeOf[T](ctx))
 }
 
 func (t objectTypeOf[T]) Equal(o attr.Type) bool {
@@ -116,10 +128,6 @@ func (t objectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr any) (attr.
 	if v, ok := ptr.(*T); ok {
 		v, d := NewObjectValueOf(ctx, v)
 		diags.Append(d...)
-		if diags.HasError() {
-			return NewObjectValueOfUnknown[T](ctx), diags
-		}
-
 		return v, diags
 	}
 

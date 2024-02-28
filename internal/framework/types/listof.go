@@ -68,11 +68,7 @@ func (t listTypeOf[T]) ValueFromList(ctx context.Context, in basetypes.ListValue
 		return basetypes.NewListUnknown(types.StringType), diags
 	}
 
-	value := ListValueOf[T]{
-		ListValue: v,
-	}
-
-	return value, diags
+	return ListValueOf[T]{ListValue: v}, diags
 }
 
 func (t listTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {

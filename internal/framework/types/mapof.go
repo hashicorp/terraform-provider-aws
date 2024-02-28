@@ -69,11 +69,7 @@ func (t mapTypeOf[T]) ValueFromMap(ctx context.Context, in basetypes.MapValue) (
 		return basetypes.NewMapUnknown(types.StringType), diags
 	}
 
-	value := MapValueOf[T]{
-		MapValue: mapValue,
-	}
-
-	return value, diags
+	return MapValueOf[T]{MapValue: mapValue}, diags
 }
 
 func (t mapTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {

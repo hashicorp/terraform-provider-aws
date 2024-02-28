@@ -68,11 +68,7 @@ func (t setTypeOf[T]) ValueFromSet(ctx context.Context, in basetypes.SetValue) (
 		return NewSetValueOfUnknown[T](ctx), diags
 	}
 
-	value := SetValueOf[T]{
-		SetValue: v,
-	}
-
-	return value, diags
+	return SetValueOf[T]{SetValue: v}, diags
 }
 
 func (t setTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {

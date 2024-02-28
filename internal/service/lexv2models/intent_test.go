@@ -182,7 +182,7 @@ func TestIntentAutoFlex(t *testing.T) {
 
 	intentOverrideTF := tflexv2models.IntentOverride{
 		Name: types.StringValue(testString),
-		Slot: fwtypes.NewSetNestedObjectValueOfPtr(ctx, &slotValueOverrideMapTF),
+		Slot: fwtypes.NewSetNestedObjectValueOfPtrMust(ctx, &slotValueOverrideMapTF),
 	}
 	intentOverrideAWS := lextypes.IntentOverride{
 		Name:  aws.String(testString),
@@ -332,7 +332,7 @@ func TestIntentAutoFlex(t *testing.T) {
 		MessageGroup:                fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &messageGroupTF),
 		AllowInterrupt:              types.BoolValue(true),
 		MessageSelectionStrategy:    fwtypes.StringEnumValue(lextypes.MessageSelectionStrategyOrdered),
-		PromptAttemptsSpecification: fwtypes.NewSetNestedObjectValueOfPtr(ctx, &promptAttemptSpecificationTF),
+		PromptAttemptsSpecification: fwtypes.NewSetNestedObjectValueOfPtrMust(ctx, &promptAttemptSpecificationTF),
 	}
 	promptSpecificationAWS := lextypes.PromptSpecification{
 		MaxRetries:               aws.Int32(1),

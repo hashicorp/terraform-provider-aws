@@ -55,17 +55,19 @@ func (t listNestedObjectTypeOf[T]) ValueFromList(ctx context.Context, in basetyp
 		return NewListNestedObjectValueOfUnknown[T](ctx), diags
 	}
 
-	listValue, d := basetypes.NewListValue(NewObjectTypeOf[T](ctx), in.Elements())
+	typ, d := newObjectTypeOf[T](ctx)
 	diags.Append(d...)
 	if diags.HasError() {
 		return NewListNestedObjectValueOfUnknown[T](ctx), diags
 	}
 
-	value := ListNestedObjectValueOf[T]{
-		ListValue: listValue,
+	v, d := basetypes.NewListValue(typ, in.Elements())
+	diags.Append(d...)
+	if diags.HasError() {
+		return NewListNestedObjectValueOfUnknown[T](ctx), diags
 	}
 
-	return value, diags
+	return ListNestedObjectValueOf[T]{ListValue: v}, diags
 }
 
 func (t listNestedObjectTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
@@ -251,7 +253,13 @@ func NewListNestedObjectValueOfValueSliceMust[T any](ctx context.Context, ts []T
 func newListNestedObjectValueOf[T any](ctx context.Context, elements any) (ListNestedObjectValueOf[T], diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	v, d := basetypes.NewListValueFrom(ctx, NewObjectTypeOf[T](ctx), elements)
+	typ, d := newObjectTypeOf[T](ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return NewListNestedObjectValueOfUnknown[T](ctx), diags
+	}
+
+	v, d := basetypes.NewListValueFrom(ctx, typ, elements)
 	diags.Append(d...)
 	if diags.HasError() {
 		return NewListNestedObjectValueOfUnknown[T](ctx), diags
