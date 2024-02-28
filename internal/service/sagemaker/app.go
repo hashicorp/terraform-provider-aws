@@ -276,6 +276,10 @@ func decodeAppID(id string) (string, string, string, string, error) {
 		appType = sagemaker.AppTypeRstudioServerPro
 	} else if appType == "rsessiongateway" {
 		appType = sagemaker.AppTypeRsessionGateway
+	} else if appType == "codeeditor" {
+		appType = sagemaker.AppTypeCodeEditor
+	} else if appType == "jupyterlab" {
+		appType = sagemaker.AppTypeJupyterLab
 	}
 
 	appName := parts[3]
