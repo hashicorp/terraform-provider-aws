@@ -32,8 +32,10 @@ func TestAccSecurityLake_serial(t *testing.T) {
 		},
 		"Subscriber": {
 			"basic":      testAccSubscriber_basic,
-			"disappears": testAccSubscriber_disappears,
 			"customLogs": testAccSubscriber_customLogSource,
+			"disappears": testAccSubscriber_disappears,
+			"tags":       testAccSubscriber_tags,
+			"updated":    testAccSubscriber_update,
 		},
 	}
 

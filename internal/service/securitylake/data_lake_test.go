@@ -345,7 +345,7 @@ data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "meta_store_manager" {
-  name               = "AmazonSecurityLakeMetaStoreManager"
+  name               = "AmazonSecurityLakeMetaStoreManagerV2"
   path               = "/service-role/"
   assume_role_policy = <<POLICY
 {
@@ -364,10 +364,10 @@ resource "aws_iam_role" "meta_store_manager" {
 POLICY
 }
 
-resource "aws_iam_role_policy_attachment" "example_attach" {
-	role       = aws_iam_role.meta_store_manager.name
-	policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonSecurityLakeMetastoreManager"
-  }
+resource "aws_iam_role_policy_attachment" "datalake" {
+  role       = aws_iam_role.meta_store_manager.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonSecurityLakeMetastoreManager"
+}
 
 resource "aws_iam_role" "datalake_s3_replication" {
   name               = "AmazonSecurityLakeS3ReplicationRole"
