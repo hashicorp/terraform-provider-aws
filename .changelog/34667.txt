@@ -1,3 +1,3 @@
 ```release-note:new-resource
-aws_shield_proactive_engagement_association
+aws_shield_proactive_engagement
 ```

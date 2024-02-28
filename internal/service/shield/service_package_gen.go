@@ -19,6 +19,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
+			Factory: newProactiveEngagementResource,
+			Name:    "Proactive Engagement",
+		},
+		{
 			Factory: newResourceApplicationLayerAutomaticResponse,
 			Name:    "Application Layer Automatic Response",
 		},
@@ -29,10 +33,6 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newResourceDRTAccessRoleARNAssociation,
 			Name:    "DRT Access Role ARN Association",
-		},
-		{
-			Factory: newResourceProactiveEngagementAssociation,
-			Name:    "Proactive Engagement Association",
 		},
 	}
 }

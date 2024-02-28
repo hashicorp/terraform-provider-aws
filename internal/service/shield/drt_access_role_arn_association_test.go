@@ -23,7 +23,7 @@ import (
 )
 
 // Acceptance test access AWS and cost money to run.
-func testDRTAccessRoleARNAssociation_basic(t *testing.T) {
+func testAccDRTAccessRoleARNAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -52,7 +52,7 @@ func testDRTAccessRoleARNAssociation_basic(t *testing.T) {
 	})
 }
 
-func testDRTAccessRoleARNAssociation_disappears(t *testing.T) {
+func testAccDRTAccessRoleARNAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

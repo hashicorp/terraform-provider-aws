@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testDRTAccessLogBucketAssociation_basic(t *testing.T) {
+func testAccDRTAccessLogBucketAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -49,7 +49,7 @@ func testDRTAccessLogBucketAssociation_basic(t *testing.T) {
 	})
 }
 
-func testDRTAccessLogBucketAssociation_multibucket(t *testing.T) {
+func testAccDRTAccessLogBucketAssociation_multibucket(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	if testing.Short() {
@@ -83,7 +83,7 @@ func testDRTAccessLogBucketAssociation_multibucket(t *testing.T) {
 	})
 }
 
-func testDRTAccessLogBucketAssociation_disappears(t *testing.T) {
+func testAccDRTAccessLogBucketAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")

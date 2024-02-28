@@ -8,5 +8,7 @@ var (
 	ResourceDRTAccessRoleARNAssociation       = newResourceDRTAccessRoleARNAssociation
 	ResourceDRTAccessLogBucketAssociation     = newResourceDRTAccessLogBucketAssociation
 	ResourceApplicationLayerAutomaticResponse = newResourceApplicationLayerAutomaticResponse
-	ResourceProactiveEngagementAssociation    = newResourceProactiveEngagementAssociation
+	ResourceProactiveEngagement               = newProactiveEngagementResource
+
+	FindEmergencyContactSettings = findEmergencyContactSettings
 )
