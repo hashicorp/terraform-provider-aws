@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_redshiftserverless_workgroup: Fix base_capacity, max_capacity ordered updates and max_capacity limit removal
+```
