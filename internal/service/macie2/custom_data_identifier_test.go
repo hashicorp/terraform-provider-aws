@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmacie2 "github.com/hashicorp/terraform-provider-aws/internal/service/macie2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccCustomDataIdentifier_basic(t *testing.T) {
@@ -30,7 +31,7 @@ func testAccCustomDataIdentifier_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomDataIdentifierDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomDataIdentifierConfig_nameGenerated(regex),
@@ -62,7 +63,7 @@ func testAccCustomDataIdentifier_Name_Generated(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomDataIdentifierDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomDataIdentifierConfig_nameGenerated(regex),
@@ -91,7 +92,7 @@ func testAccCustomDataIdentifier_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomDataIdentifierDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomDataIdentifierConfig_nameGenerated(regex),
@@ -117,7 +118,7 @@ func testAccCustomDataIdentifier_NamePrefix(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomDataIdentifierDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomDataIdentifierConfig_namePrefix(namePrefix, regex),
@@ -150,7 +151,7 @@ func testAccCustomDataIdentifier_WithClassificationJob(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomDataIdentifierDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomDataIdentifierConfig_complete(bucketName, regex, description),
@@ -192,7 +193,7 @@ func testAccCustomDataIdentifier_WithTags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomDataIdentifierDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, macie2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Macie2ServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCustomDataIdentifierConfig_completeTags(bucketName, regex),

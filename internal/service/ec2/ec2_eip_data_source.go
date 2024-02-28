@@ -142,12 +142,12 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("private_ip", eip.PrivateIpAddress)
 	if v := aws.StringValue(eip.PrivateIpAddress); v != "" {
-		d.Set("private_dns", PrivateDNSNameForIP(meta.(*conns.AWSClient), v))
+		d.Set("private_dns", PrivateDNSNameForIP(ctx, meta.(*conns.AWSClient), v))
 	}
 
 	d.Set("public_ip", eip.PublicIp)
 	if v := aws.StringValue(eip.PublicIp); v != "" {
-		d.Set("public_dns", PublicDNSNameForIP(meta.(*conns.AWSClient), v))
+		d.Set("public_dns", PublicDNSNameForIP(ctx, meta.(*conns.AWSClient), v))
 	}
 
 	if err := d.Set("tags", KeyValueTags(ctx, eip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

@@ -152,6 +152,10 @@ func (p *fwprovider) Schema(ctx context.Context, req provider.SchemaRequest, res
 				Optional:    true,
 				Description: "session token. A session token is only required if you are\nusing temporary security credentials.",
 			},
+			"token_bucket_rate_limiter_capacity": schema.Int64Attribute{
+				Optional:    true,
+				Description: "The capacity of the AWS SDK's token bucket rate limiter.",
+			},
 			"use_dualstack_endpoint": schema.BoolAttribute{
 				Optional:    true,
 				Description: "Resolve an endpoint with DualStack capability",

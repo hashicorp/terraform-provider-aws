@@ -1,0 +1,6 @@
+```release-note:new-resource
+aws_redshift_data_share_consumer_association
+```
+```release-note:bug
+resource/aws_redshift_data_share_authorization: Fix read operation to properly handle shares in `ACTIVE` status
+```

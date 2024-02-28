@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRAMResourceShare_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccRAMResourceShare_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ram.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -59,7 +60,7 @@ func TestAccRAMResourceShare_permission(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ram.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -91,7 +92,7 @@ func TestAccRAMResourceShare_allowExternalPrincipals(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ram.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -127,7 +128,7 @@ func TestAccRAMResourceShare_name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ram.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -162,7 +163,7 @@ func TestAccRAMResourceShare_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ram.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceShareDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -208,7 +209,7 @@ func TestAccRAMResourceShare_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ram.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceShareDestroy(ctx),
 		Steps: []resource.TestStep{

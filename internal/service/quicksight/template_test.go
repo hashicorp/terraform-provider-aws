@@ -34,7 +34,7 @@ func TestAccQuickSightTemplate_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -68,7 +68,7 @@ func TestAccQuickSightTemplate_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -96,7 +96,7 @@ func TestAccQuickSightTemplate_barChart(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -130,7 +130,7 @@ func TestAccQuickSightTemplate_table(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -180,7 +180,7 @@ func TestAccQuickSightTemplate_sourceEntity(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -216,7 +216,7 @@ func TestAccQuickSightTemplate_tags(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -278,7 +278,7 @@ func TestAccQuickSightTemplate_update(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{

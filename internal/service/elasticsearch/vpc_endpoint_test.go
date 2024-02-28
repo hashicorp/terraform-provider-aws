@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticsearch "github.com/hashicorp/terraform-provider-aws/internal/service/elasticsearch"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestVPCEndpointErrorsNotFound(t *testing.T) {
@@ -109,7 +110,7 @@ func TestAccElasticsearchVPCEndpoint_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticsearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -147,7 +148,7 @@ func TestAccElasticsearchVPCEndpoint_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticsearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -176,7 +177,7 @@ func TestAccElasticsearchVPCEndpoint_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticsearchservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElasticsearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCEndpointDestroy(ctx),
 		Steps: []resource.TestStep{

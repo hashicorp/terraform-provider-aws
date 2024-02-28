@@ -101,6 +101,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceEmailIdentityMailFromAttributes,
 			TypeName: "aws_sesv2_email_identity_mail_from_attributes",
 		},
+		{
+			Factory:  ResourceEmailIdentityPolicy,
+			TypeName: "aws_sesv2_email_identity_policy",
+			Name:     "Email Identity Policy",
+		},
 	}
 }
 

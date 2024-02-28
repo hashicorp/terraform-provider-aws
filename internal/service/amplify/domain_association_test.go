@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccDomainAssociation_basic(t *testing.T) {
@@ -34,7 +35,7 @@ func testAccDomainAssociation_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -77,7 +78,7 @@ func testAccDomainAssociation_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -107,7 +108,7 @@ func testAccDomainAssociation_update(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainAssociationDestroy(ctx),
 		Steps: []resource.TestStep{

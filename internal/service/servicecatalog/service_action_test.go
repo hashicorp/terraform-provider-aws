@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfservicecatalog "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalog"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // add sweeper to delete known test servicecat service actions
@@ -28,7 +29,7 @@ func TestAccServiceCatalogServiceAction_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceActionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -62,7 +63,7 @@ func TestAccServiceCatalogServiceAction_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceActionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -86,7 +87,7 @@ func TestAccServiceCatalogServiceAction_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, servicecatalog.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceActionDestroy(ctx),
 		Steps: []resource.TestStep{

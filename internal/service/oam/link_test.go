@@ -40,7 +40,7 @@ func TestAccObservabilityAccessManagerLink_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ObservabilityAccessManagerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckLinkDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -84,7 +84,7 @@ func TestAccObservabilityAccessManagerLink_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ObservabilityAccessManagerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckLinkDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -117,7 +117,7 @@ func TestAccObservabilityAccessManagerLink_update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ObservabilityAccessManagerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckLinkDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -176,7 +176,7 @@ func TestAccObservabilityAccessManagerLink_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ObservabilityAccessManagerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckLinkDestroy(ctx),
 		Steps: []resource.TestStep{

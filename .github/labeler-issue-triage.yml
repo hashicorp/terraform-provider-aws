@@ -91,6 +91,8 @@ service/batch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_batch_'
 service/bedrock:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrock_'
+service/bedrockagent:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockagent_'
 service/billingconductor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_billingconductor_'
 service/braket:
@@ -123,6 +125,8 @@ service/cloudformation:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudformation_'
 service/cloudfront:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudfront_'
+service/cloudfrontkeyvaluestore:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudfrontkeyvaluestore_'
 service/cloudhsmv2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudhsm_v2_'
 service/cloudsearch:
@@ -177,6 +181,8 @@ service/connectparticipant:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connectparticipant_'
 service/controltower:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_controltower_'
+service/costoptimizationhub:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_costoptimizationhub_'
 service/cur:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cur_'
 service/customerprofiles:
@@ -405,6 +411,8 @@ service/lookoutmetrics:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lookoutmetrics_'
 service/lookoutvision:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lookoutvision_'
+service/m2:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_m2_'
 service/machinelearning:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_machinelearning_'
 service/macie:

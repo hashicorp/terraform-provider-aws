@@ -27,7 +27,7 @@ func TestAccSNSTopicDataProtectionPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicDataProtectionPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -56,7 +56,7 @@ func TestAccSNSTopicDataProtectionPolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTopicDataProtectionPolicyDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -28,7 +28,7 @@ func TestAccXRaySamplingRule_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.XRayEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSamplingRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -70,7 +70,7 @@ func TestAccXRaySamplingRule_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.XRayEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSamplingRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -127,7 +127,7 @@ func TestAccXRaySamplingRule_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.XRayEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSamplingRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -173,7 +173,7 @@ func TestAccXRaySamplingRule_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.XRayEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.XRayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSamplingRuleDestroy(ctx),
 		Steps: []resource.TestStep{

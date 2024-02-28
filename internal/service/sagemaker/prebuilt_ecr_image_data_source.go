@@ -422,7 +422,7 @@ func dataSourcePrebuiltECRImageRead(ctx context.Context, d *schema.ResourceData,
 		region = v.(string)
 	}
 
-	suffix := meta.(*conns.AWSClient).DNSSuffix
+	suffix := meta.(*conns.AWSClient).DNSSuffix(ctx)
 	if v, ok := d.GetOk("dns_suffix"); ok {
 		suffix = v.(string)
 	}

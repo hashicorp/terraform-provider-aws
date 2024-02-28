@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdlm "github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDLMLifecyclePolicy_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccDLMLifecyclePolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -70,7 +71,7 @@ func TestAccDLMLifecyclePolicy_event(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -119,7 +120,7 @@ func TestAccDLMLifecyclePolicy_cron(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -147,7 +148,7 @@ func TestAccDLMLifecyclePolicy_retainInterval(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -175,7 +176,7 @@ func TestAccDLMLifecyclePolicy_deprecate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -203,7 +204,7 @@ func TestAccDLMLifecyclePolicy_fastRestore(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -232,7 +233,7 @@ func TestAccDLMLifecyclePolicy_shareRule(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -260,7 +261,7 @@ func TestAccDLMLifecyclePolicy_parameters_instance(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -289,7 +290,7 @@ func TestAccDLMLifecyclePolicy_parameters_volume(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -318,7 +319,7 @@ func TestAccDLMLifecyclePolicy_variableTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -345,7 +346,7 @@ func TestAccDLMLifecyclePolicy_full(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -405,7 +406,7 @@ func TestAccDLMLifecyclePolicy_crossRegionCopyRule(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -461,7 +462,7 @@ func TestAccDLMLifecyclePolicy_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -506,7 +507,7 @@ func TestAccDLMLifecyclePolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DLMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{

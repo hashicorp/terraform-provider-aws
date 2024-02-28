@@ -112,7 +112,7 @@ func TestAccExampleResource_MigrateFromPluginSDK(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, service.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.ExampleServiceID),
 		CheckDestroy: testAccCheckExampleResourceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{

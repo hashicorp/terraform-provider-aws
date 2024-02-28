@@ -9,13 +9,13 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/fms"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tffms "github.com/hashicorp/terraform-provider-aws/internal/service/fms"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccAdminAccount_basic(t *testing.T) {
@@ -29,7 +29,7 @@ func testAccAdminAccount_basic(t *testing.T) {
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, fms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -54,7 +54,7 @@ func testAccAdminAccount_disappears(t *testing.T) {
 			acctest.PreCheckOrganizationsEnabled(ctx, t)
 			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, fms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{

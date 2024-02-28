@@ -34,7 +34,7 @@ func TestAccVerifiedPermissionsPolicyTemplate_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -69,7 +69,7 @@ func TestAccVerifiedPermissionsPolicyTemplate_update(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -107,7 +107,7 @@ func TestAccVerifiedPermissionsPolicyTemplate_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyTemplateDestroy(ctx),
 		Steps: []resource.TestStep{

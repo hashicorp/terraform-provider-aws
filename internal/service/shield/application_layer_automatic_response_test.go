@@ -9,8 +9,9 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/shield"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/shield"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -85,7 +86,7 @@ func TestAccShieldApplicationLayerAutomaticResponse_disappears(t *testing.T) {
 
 func testAccCheckApplicationLayerAutomaticResponseDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_shield_application_layer_automatic_response" {
@@ -95,8 +96,8 @@ func testAccCheckApplicationLayerAutomaticResponseDestroy(ctx context.Context) r
 			input := &shield.DescribeProtectionInput{
 				ResourceArn: aws.String(rs.Primary.ID),
 			}
-			resp, err := conn.DescribeProtectionWithContext(ctx, input)
-			if errs.IsA[*shield.ResourceNotFoundException](err) {
+			resp, err := conn.DescribeProtection(ctx, input)
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				return nil
 			}
 
@@ -104,9 +105,10 @@ func testAccCheckApplicationLayerAutomaticResponseDestroy(ctx context.Context) r
 				return err
 			}
 
-			if resp != nil && *resp.Protection.ApplicationLayerAutomaticResponseConfiguration.Status == "DISABLED" {
+			if resp != nil && resp.Protection.ApplicationLayerAutomaticResponseConfiguration.Status == awstypes.ApplicationLayerAutomaticResponseStatusDisabled {
 				return nil
 			}
+
 			return create.Error(names.Shield, create.ErrActionCheckingDestroyed, tfshield.ResNameApplicationLayerAutomaticResponse, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
@@ -125,8 +127,8 @@ func testAccCheckApplicationLayerAutomaticResponseExists(ctx context.Context, na
 			return create.Error(names.Shield, create.ErrActionCheckingExistence, tfshield.ResNameApplicationLayerAutomaticResponse, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldConn(ctx)
-		resp, err := conn.DescribeProtectionWithContext(ctx, &shield.DescribeProtectionInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
+		resp, err := conn.DescribeProtection(ctx, &shield.DescribeProtectionInput{
 			ResourceArn: aws.String(rs.Primary.ID),
 		})
 

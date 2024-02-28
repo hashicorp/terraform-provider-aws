@@ -216,12 +216,15 @@ func removeUserFromGroup(ctx context.Context, conn *iam.IAM, user, group string)
 		UserName:  aws.String(user),
 		GroupName: aws.String(group),
 	})
+
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("removing User (%s) from Group (%s): %w", user, group, err)
+		return fmt.Errorf("removing IAM User (%s) from group (%s): %w", user, group, err)
 	}
+
 	return nil
 }
 
