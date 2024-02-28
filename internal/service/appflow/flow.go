@@ -1153,7 +1153,7 @@ func resourceFlow() *schema.Resource {
 							DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
 								if v, ok := d.Get("task").(*schema.Set); ok && v.Len() == 1 {
 									if tl, ok := v.List()[0].(map[string]interface{}); ok && len(tl) > 0 {
-										if sf, ok := tl["source_fields"].([]interface{}); ok && len(sf) > 0 {
+										if sf, ok := tl["source_fields"].([]interface{}); ok && len(sf) == 1 {
 											if sf[0] == "" {
 												return oldValue == "0" && newValue == "1"
 											}
