@@ -13,20 +13,20 @@ Terraform resource for managing an AWS Security Lake Subscriber.
 ## Example Usage
 
 ```terraform
-resource "aws_securitylake_subscriber" "test" {
-  subscriber_name = "examble"
-  access_type 	  = "S3"
+resource "aws_securitylake_subscriber" "example" {
+  subscriber_name = "example-name"
+  source_version  = "1.0"
+  access_type     = "S3"
 
   sources {
     aws_log_source_resource {
-	  source_name    = "ROUTE53"
-	  source_version = "1.0"
-	}
+      source_name    = "ROUTE53"
+      source_version = "1.0"
+    }
   }
-  
   subscriber_identity {
-	  external_id = "example"
-	  principal   = "1234567890"
+    external_id = "example"
+    principal   = "1234567890"
   }
 }
 ```
