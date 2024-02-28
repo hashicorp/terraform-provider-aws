@@ -55,14 +55,20 @@ func (t objectTypeOf[T]) ValueFromObject(ctx context.Context, in basetypes.Objec
 		return NewObjectValueOfUnknown[T](ctx), diags
 	}
 
-	objectValue, d := basetypes.NewObjectValue(AttributeTypesMust[T](ctx), in.Attributes())
+	m, d := AttributeTypes[T](ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return NewObjectValueOfUnknown[T](ctx), diags
+	}
+
+	v, d := basetypes.NewObjectValue(m, in.Attributes())
 	diags.Append(d...)
 	if diags.HasError() {
 		return NewObjectValueOfUnknown[T](ctx), diags
 	}
 
 	value := ObjectValueOf[T]{
-		ObjectValue: objectValue,
+		ObjectValue: v,
 	}
 
 	return value, diags
@@ -108,7 +114,13 @@ func (t objectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr any) (attr.
 	var diags diag.Diagnostics
 
 	if v, ok := ptr.(*T); ok {
-		return NewObjectValueOf(ctx, v), diags
+		v, d := NewObjectValueOf(ctx, v)
+		diags.Append(d...)
+		if diags.HasError() {
+			return NewObjectValueOfUnknown[T](ctx), diags
+		}
+
+		return v, diags
 	}
 
 	diags.Append(diag.NewErrorDiagnostic("Invalid pointer value", fmt.Sprintf("incorrect type: want %T, got %T", (*T)(nil), ptr)))
@@ -168,6 +180,24 @@ func NewObjectValueOfUnknown[T any](ctx context.Context) ObjectValueOf[T] {
 	return ObjectValueOf[T]{ObjectValue: basetypes.NewObjectUnknown(AttributeTypesMust[T](ctx))}
 }
 
-func NewObjectValueOf[T any](ctx context.Context, t *T) ObjectValueOf[T] {
-	return ObjectValueOf[T]{ObjectValue: fwdiag.Must(basetypes.NewObjectValueFrom(ctx, AttributeTypesMust[T](ctx), t))}
+func NewObjectValueOf[T any](ctx context.Context, t *T) (ObjectValueOf[T], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	m, d := AttributeTypes[T](ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return NewObjectValueOfUnknown[T](ctx), diags
+	}
+
+	v, d := basetypes.NewObjectValueFrom(ctx, m, t)
+	diags.Append(d...)
+	if diags.HasError() {
+		return NewObjectValueOfUnknown[T](ctx), diags
+	}
+
+	return ObjectValueOf[T]{ObjectValue: v}, diags
+}
+
+func NewObjectValueOfMust[T any](ctx context.Context, t *T) ObjectValueOf[T] {
+	return fwdiag.Must(NewObjectValueOf[T](ctx, t))
 }

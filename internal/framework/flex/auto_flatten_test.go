@@ -819,7 +819,7 @@ func TestFlattenSimpleSingleNestedBlock(t *testing.T) {
 			TestName:   "single nested block pointer",
 			Source:     &aws02{Field1: &aws01{Field1: aws.String("a"), Field2: 1}},
 			Target:     &tf02{},
-			WantTarget: &tf02{Field1: fwtypes.NewObjectValueOf[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
+			WantTarget: &tf02{Field1: fwtypes.NewObjectValueOfMust[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
 		},
 		{
 			TestName:   "single nested block nil",
@@ -831,7 +831,7 @@ func TestFlattenSimpleSingleNestedBlock(t *testing.T) {
 			TestName:   "single nested block value",
 			Source:     &aws03{Field1: aws01{Field1: aws.String("a"), Field2: 1}},
 			Target:     &tf02{},
-			WantTarget: &tf02{Field1: fwtypes.NewObjectValueOf[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
+			WantTarget: &tf02{Field1: fwtypes.NewObjectValueOfMust[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
 		},
 	}
 	runAutoFlattenTestCases(ctx, t, testCases)
@@ -871,10 +871,10 @@ func TestFlattenComplexSingleNestedBlock(t *testing.T) {
 			Target:   &tf03{},
 
 			WantTarget: &tf03{
-				Field1: fwtypes.NewObjectValueOf[tf02](
+				Field1: fwtypes.NewObjectValueOfMust[tf02](
 					ctx,
 					&tf02{
-						Field1: fwtypes.NewObjectValueOf[tf01](
+						Field1: fwtypes.NewObjectValueOfMust[tf01](
 							ctx,
 							&tf01{
 								Field1: types.BoolValue(true),

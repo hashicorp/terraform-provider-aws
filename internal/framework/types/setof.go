@@ -62,14 +62,14 @@ func (t setTypeOf[T]) ValueFromSet(ctx context.Context, in basetypes.SetValue) (
 		return NewSetValueOfUnknown[T](ctx), diags
 	}
 
-	setValue, d := basetypes.NewSetValue(newAttrTypeOf[T](ctx), in.Elements())
+	v, d := basetypes.NewSetValue(newAttrTypeOf[T](ctx), in.Elements())
 	diags.Append(d...)
 	if diags.HasError() {
 		return NewSetValueOfUnknown[T](ctx), diags
 	}
 
 	value := SetValueOf[T]{
-		SetValue: setValue,
+		SetValue: v,
 	}
 
 	return value, diags
@@ -129,7 +129,10 @@ func NewSetValueOfUnknown[T attr.Value](ctx context.Context) SetValueOf[T] {
 }
 
 func NewSetValueOf[T attr.Value](ctx context.Context, elements []attr.Value) (SetValueOf[T], diag.Diagnostics) {
-	v, diags := basetypes.NewSetValue(newAttrTypeOf[T](ctx), elements)
+	var diags diag.Diagnostics
+
+	v, d := basetypes.NewSetValue(newAttrTypeOf[T](ctx), elements)
+	diags.Append(d...)
 	if diags.HasError() {
 		return NewSetValueOfUnknown[T](ctx), diags
 	}

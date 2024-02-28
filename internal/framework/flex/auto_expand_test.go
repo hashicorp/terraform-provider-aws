@@ -635,7 +635,7 @@ func TestExpandSimpleSingleNestedBlock(t *testing.T) {
 	testCases := autoFlexTestCases{
 		{
 			TestName:   "single nested block pointer",
-			Source:     &tf02{Field1: fwtypes.NewObjectValueOf[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
+			Source:     &tf02{Field1: fwtypes.NewObjectValueOfMust[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
 			Target:     &aws02{},
 			WantTarget: &aws02{Field1: &aws01{Field1: aws.String("a"), Field2: 1}},
 		},
@@ -647,7 +647,7 @@ func TestExpandSimpleSingleNestedBlock(t *testing.T) {
 		},
 		{
 			TestName:   "single nested block value",
-			Source:     &tf02{Field1: fwtypes.NewObjectValueOf[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
+			Source:     &tf02{Field1: fwtypes.NewObjectValueOfMust[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
 			Target:     &aws03{},
 			WantTarget: &aws03{Field1: aws01{Field1: aws.String("a"), Field2: 1}},
 		},
@@ -686,10 +686,10 @@ func TestExpandComplexSingleNestedBlock(t *testing.T) {
 		{
 			TestName: "single nested block pointer",
 			Source: &tf03{
-				Field1: fwtypes.NewObjectValueOf[tf02](
+				Field1: fwtypes.NewObjectValueOfMust[tf02](
 					ctx,
 					&tf02{
-						Field1: fwtypes.NewObjectValueOf[tf01](
+						Field1: fwtypes.NewObjectValueOfMust[tf01](
 							ctx,
 							&tf01{
 								Field1: types.BoolValue(true),
