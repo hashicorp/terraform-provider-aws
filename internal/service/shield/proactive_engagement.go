@@ -107,6 +107,7 @@ func (r *proactiveEngagementResource) Create(ctx context.Context, request resour
 		return
 	}
 
+	// Set values for unknowns.
 	data.ID = types.StringValue(r.Meta().AccountID)
 
 	response.Diagnostics.Append(updateEmergencyContactSettings(ctx, conn, &data)...)
@@ -146,6 +147,12 @@ func (r *proactiveEngagementResource) Read(ctx context.Context, request resource
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
+
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError("reading Shield Proactive Engagement", err.Error())
 
 		return
 	}

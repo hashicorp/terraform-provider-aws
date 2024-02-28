@@ -27,7 +27,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Application Layer Automatic Response",
 		},
 		{
-			Factory: newResourceDRTAccessLogBucketAssociation,
+			Factory: newDRTAccessLogBucketAssociationResource,
 			Name:    "DRT Access Log Bucket Association",
 		},
 		{
