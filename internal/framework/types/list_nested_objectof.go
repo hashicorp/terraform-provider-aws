@@ -112,7 +112,7 @@ func (t listNestedObjectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr a
 	var diags diag.Diagnostics
 
 	if v, ok := ptr.(*T); ok {
-		return NewListNestedObjectValueOfPtr(ctx, v), diags
+		return NewListNestedObjectValueOfPtrMust(ctx, v), diags
 	}
 
 	diags.Append(diag.NewErrorDiagnostic("Invalid pointer value", fmt.Sprintf("incorrect type: want %T, got %T", (*T)(nil), ptr)))
@@ -123,7 +123,7 @@ func (t listNestedObjectTypeOf[T]) ValueFromObjectSlice(ctx context.Context, sli
 	var diags diag.Diagnostics
 
 	if v, ok := slice.([]*T); ok {
-		return NewListNestedObjectValueOfSlice(ctx, v), diags
+		return NewListNestedObjectValueOfSliceMust(ctx, v), diags
 	}
 
 	diags.Append(diag.NewErrorDiagnostic("Invalid slice value", fmt.Sprintf("incorrect type: want %T, got %T", (*[]T)(nil), slice)))
@@ -220,18 +220,30 @@ func NewListNestedObjectValueOfUnknown[T any](ctx context.Context) ListNestedObj
 	return ListNestedObjectValueOf[T]{ListValue: basetypes.NewListUnknown(NewObjectTypeOf[T](ctx))}
 }
 
-func NewListNestedObjectValueOfPtr[T any](ctx context.Context, t *T) ListNestedObjectValueOf[T] {
-	return NewListNestedObjectValueOfSlice(ctx, []*T{t})
+func NewListNestedObjectValueOfPtrMust[T any](ctx context.Context, t *T) ListNestedObjectValueOf[T] {
+	return NewListNestedObjectValueOfSliceMust(ctx, []*T{t})
 }
 
-func NewListNestedObjectValueOfSlice[T any](ctx context.Context, ts []*T) ListNestedObjectValueOf[T] {
-	return newListNestedObjectValueOf[T](ctx, ts)
+func NewListNestedObjectValueOfSliceMust[T any](ctx context.Context, ts []*T) ListNestedObjectValueOf[T] {
+	return newListNestedObjectValueOfMust[T](ctx, ts)
 }
 
-func NewListNestedObjectValueOfValueSlice[T any](ctx context.Context, ts []T) ListNestedObjectValueOf[T] {
-	return newListNestedObjectValueOf[T](ctx, ts)
+func NewListNestedObjectValueOfValueSliceMust[T any](ctx context.Context, ts []T) ListNestedObjectValueOf[T] {
+	return newListNestedObjectValueOfMust[T](ctx, ts)
 }
 
-func newListNestedObjectValueOf[T any](ctx context.Context, elements any) ListNestedObjectValueOf[T] {
-	return ListNestedObjectValueOf[T]{ListValue: fwdiag.Must(basetypes.NewListValueFrom(ctx, NewObjectTypeOf[T](ctx), elements))}
+func newListNestedObjectValueOf[T any](ctx context.Context, elements any) (ListNestedObjectValueOf[T], diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	v, d := basetypes.NewListValueFrom(ctx, NewObjectTypeOf[T](ctx), elements)
+	diags.Append(d...)
+	if diags.HasError() {
+		return NewListNestedObjectValueOfUnknown[T](ctx), diags
+	}
+
+	return ListNestedObjectValueOf[T]{ListValue: v}, diags
+}
+
+func newListNestedObjectValueOfMust[T any](ctx context.Context, elements any) ListNestedObjectValueOf[T] {
+	return fwdiag.Must(newListNestedObjectValueOf[T](ctx, elements))
 }
