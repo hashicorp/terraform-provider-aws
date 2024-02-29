@@ -6,8 +6,8 @@ package imagebuilder
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -158,7 +158,7 @@ func DataSourceImageRecipe() *schema.Resource {
 
 func dataSourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetImageRecipeInput{}
@@ -167,19 +167,19 @@ func dataSourceImageRecipeRead(ctx context.Context, d *schema.ResourceData, meta
 		input.ImageRecipeArn = aws.String(v.(string))
 	}
 
-	output, err := conn.GetImageRecipeWithContext(ctx, input)
+	output, err := conn.GetImageRecipe(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Recipe (%s): %s", aws.StringValue(input.ImageRecipeArn), err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Recipe (%s): %s", aws.ToString(input.ImageRecipeArn), err)
 	}
 
 	if output == nil || output.ImageRecipe == nil {
-		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Recipe (%s): empty response", aws.StringValue(input.ImageRecipeArn))
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Recipe (%s): empty response", aws.ToString(input.ImageRecipeArn))
 	}
 
 	imageRecipe := output.ImageRecipe
 
-	d.SetId(aws.StringValue(imageRecipe.Arn))
+	d.SetId(aws.ToString(imageRecipe.Arn))
 	d.Set("arn", imageRecipe.Arn)
 	d.Set("block_device_mapping", flattenInstanceBlockDeviceMappings(imageRecipe.BlockDeviceMappings))
 	d.Set("component", flattenComponentConfigurations(imageRecipe.Components))

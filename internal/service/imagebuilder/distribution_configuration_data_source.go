@@ -6,8 +6,8 @@ package imagebuilder
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -240,7 +240,7 @@ func DataSourceDistributionConfiguration() *schema.Resource {
 
 func dataSourceDistributionConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetDistributionConfigurationInput{}
@@ -249,7 +249,7 @@ func dataSourceDistributionConfigurationRead(ctx context.Context, d *schema.Reso
 		input.DistributionConfigurationArn = aws.String(v.(string))
 	}
 
-	output, err := conn.GetDistributionConfigurationWithContext(ctx, input)
+	output, err := conn.GetDistributionConfiguration(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Image Builder Distribution Configuration (%s): %s", d.Id(), err)
@@ -261,7 +261,7 @@ func dataSourceDistributionConfigurationRead(ctx context.Context, d *schema.Reso
 
 	distributionConfiguration := output.DistributionConfiguration
 
-	d.SetId(aws.StringValue(distributionConfiguration.Arn))
+	d.SetId(aws.ToString(distributionConfiguration.Arn))
 	d.Set("arn", distributionConfiguration.Arn)
 	d.Set("date_created", distributionConfiguration.DateCreated)
 	d.Set("date_updated", distributionConfiguration.DateUpdated)

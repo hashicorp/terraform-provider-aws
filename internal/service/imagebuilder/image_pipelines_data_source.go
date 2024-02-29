@@ -6,8 +6,9 @@ package imagebuilder
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -37,7 +38,7 @@ func DataSourceImagePipelines() *schema.Resource {
 
 func dataSourceImagePipelinesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.ListImagePipelinesInput{}
 
@@ -45,9 +46,9 @@ func dataSourceImagePipelinesRead(ctx context.Context, d *schema.ResourceData, m
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImagebuilderFilters()
 	}
 
-	var results []*imagebuilder.ImagePipeline
+	var results []*awstypes.ImagePipeline
 
-	err := conn.ListImagePipelinesPagesWithContext(ctx, input, func(page *imagebuilder.ListImagePipelinesOutput, lastPage bool) bool {
+	err := conn.ListImagePipelinesPages(ctx, input, func(page *imagebuilder.ListImagePipelinesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -70,8 +71,8 @@ func dataSourceImagePipelinesRead(ctx context.Context, d *schema.ResourceData, m
 	var arns, names []string
 
 	for _, r := range results {
-		arns = append(arns, aws.StringValue(r.Arn))
-		names = append(names, aws.StringValue(r.Name))
+		arns = append(arns, aws.ToString(r.Arn))
+		names = append(names, aws.ToString(r.Name))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)

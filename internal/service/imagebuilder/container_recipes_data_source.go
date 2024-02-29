@@ -6,12 +6,13 @@ package imagebuilder
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 )
@@ -33,9 +34,9 @@ func DataSourceContainerRecipes() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"owner": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(imagebuilder.Ownership_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.Ownership](),
 			},
 		},
 	}
@@ -43,21 +44,21 @@ func DataSourceContainerRecipes() *schema.Resource {
 
 func dataSourceContainerRecipesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.ListContainerRecipesInput{}
 
 	if v, ok := d.GetOk("owner"); ok {
-		input.Owner = aws.String(v.(string))
+		input.Owner = awstypes.Ownership(v.(string))
 	}
 
 	if v, ok := d.GetOk("filter"); ok {
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImagebuilderFilters()
 	}
 
-	var results []*imagebuilder.ContainerRecipeSummary
+	var results []*awstypes.ContainerRecipeSummary
 
-	err := conn.ListContainerRecipesPagesWithContext(ctx, input, func(page *imagebuilder.ListContainerRecipesOutput, lastPage bool) bool {
+	err := conn.ListContainerRecipesPages(ctx, input, func(page *imagebuilder.ListContainerRecipesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -80,8 +81,8 @@ func dataSourceContainerRecipesRead(ctx context.Context, d *schema.ResourceData,
 	var arns, names []string
 
 	for _, r := range results {
-		arns = append(arns, aws.StringValue(r.Arn))
-		names = append(names, aws.StringValue(r.Name))
+		arns = append(arns, aws.ToString(r.Arn))
+		names = append(names, aws.ToString(r.Name))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)

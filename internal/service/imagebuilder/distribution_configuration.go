@@ -8,14 +8,16 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
+	"github.com/aws/aws-sdk-go-v2/service/m2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -294,7 +296,7 @@ func ResourceDistributionConfiguration() *schema.Resource {
 
 func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.CreateDistributionConfigurationInput{
 		ClientToken: aws.String(id.UniqueId()),
@@ -313,7 +315,7 @@ func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.Reso
 		input.Name = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateDistributionConfigurationWithContext(ctx, input)
+	output, err := conn.CreateDistributionConfiguration(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Image Builder Distribution Configuration: %s", err)
@@ -323,22 +325,22 @@ func resourceDistributionConfigurationCreate(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "creating Image Builder Distribution Configuration: empty response")
 	}
 
-	d.SetId(aws.StringValue(output.DistributionConfigurationArn))
+	d.SetId(aws.ToString(output.DistributionConfigurationArn))
 
 	return append(diags, resourceDistributionConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceDistributionConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.GetDistributionConfigurationInput{
 		DistributionConfigurationArn: aws.String(d.Id()),
 	}
 
-	output, err := conn.GetDistributionConfigurationWithContext(ctx, input)
+	output, err := conn.GetDistributionConfiguration(ctx, input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && errs.IsA[*types.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Image Builder Distribution Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -368,7 +370,7 @@ func resourceDistributionConfigurationRead(ctx context.Context, d *schema.Resour
 
 func resourceDistributionConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	if d.HasChanges("description", "distribution") {
 		input := &imagebuilder.UpdateDistributionConfigurationInput{
@@ -384,7 +386,7 @@ func resourceDistributionConfigurationUpdate(ctx context.Context, d *schema.Reso
 		}
 
 		log.Printf("[DEBUG] UpdateDistributionConfiguration: %#v", input)
-		_, err := conn.UpdateDistributionConfigurationWithContext(ctx, input)
+		_, err := conn.UpdateDistributionConfiguration(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Image Builder Distribution Configuration (%s): %s", d.Id(), err)
@@ -396,15 +398,15 @@ func resourceDistributionConfigurationUpdate(ctx context.Context, d *schema.Reso
 
 func resourceDistributionConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.DeleteDistributionConfigurationInput{
 		DistributionConfigurationArn: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteDistributionConfigurationWithContext(ctx, input)
+	_, err := conn.DeleteDistributionConfiguration(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -415,15 +417,15 @@ func resourceDistributionConfigurationDelete(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func expandAMIDistributionConfiguration(tfMap map[string]interface{}) *imagebuilder.AmiDistributionConfiguration {
+func expandAMIDistributionConfiguration(tfMap map[string]interface{}) *awstypes.AmiDistributionConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &imagebuilder.AmiDistributionConfiguration{}
+	apiObject := &awstypes.AmiDistributionConfiguration{}
 
 	if v, ok := tfMap["ami_tags"].(map[string]interface{}); ok && len(v) > 0 {
-		apiObject.AmiTags = flex.ExpandStringMap(v)
+		apiObject.AmiTags = flex.ExpandToStringMap(v)
 	}
 
 	if v, ok := tfMap["description"].(string); ok && v != "" {
@@ -443,21 +445,21 @@ func expandAMIDistributionConfiguration(tfMap map[string]interface{}) *imagebuil
 	}
 
 	if v, ok := tfMap["target_account_ids"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.TargetAccountIds = flex.ExpandStringSet(v)
+		apiObject.TargetAccountIds = flex.ExpandToStringSet(v)
 	}
 
 	return apiObject
 }
 
-func expandContainerDistributionConfiguration(tfMap map[string]interface{}) *imagebuilder.ContainerDistributionConfiguration {
+func expandContainerDistributionConfiguration(tfMap map[string]interface{}) *awstypes.ContainerDistributionConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &imagebuilder.ContainerDistributionConfiguration{}
+	apiObject := &awstypes.ContainerDistributionConfiguration{}
 
 	if v, ok := tfMap["container_tags"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.ContainerTags = flex.ExpandStringSet(v)
+		apiObject.ContainerTags = flex.ExpandToStringSet(v)
 	}
 
 	if v, ok := tfMap["description"].(string); ok && v != "" {
@@ -471,12 +473,12 @@ func expandContainerDistributionConfiguration(tfMap map[string]interface{}) *ima
 	return apiObject
 }
 
-func expandLaunchTemplateConfigurations(tfList []interface{}) []*imagebuilder.LaunchTemplateConfiguration {
+func expandLaunchTemplateConfigurations(tfList []interface{}) []*awstypes.LaunchTemplateConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*imagebuilder.LaunchTemplateConfiguration
+	var apiObjects []*awstypes.LaunchTemplateConfiguration
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -497,12 +499,12 @@ func expandLaunchTemplateConfigurations(tfList []interface{}) []*imagebuilder.La
 	return apiObjects
 }
 
-func expandDistribution(tfMap map[string]interface{}) *imagebuilder.Distribution {
+func expandDistribution(tfMap map[string]interface{}) *awstypes.Distribution {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &imagebuilder.Distribution{}
+	apiObject := &awstypes.Distribution{}
 
 	if v, ok := tfMap["ami_distribution_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.AmiDistributionConfiguration = expandAMIDistributionConfiguration(v[0].(map[string]interface{}))
@@ -521,7 +523,7 @@ func expandDistribution(tfMap map[string]interface{}) *imagebuilder.Distribution
 	}
 
 	if v, ok := tfMap["license_configuration_arns"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.LicenseConfigurationArns = flex.ExpandStringSet(v)
+		apiObject.LicenseConfigurationArns = flex.ExpandToStringSet(v)
 	}
 
 	if v, ok := tfMap["region"].(string); ok && v != "" {
@@ -531,12 +533,12 @@ func expandDistribution(tfMap map[string]interface{}) *imagebuilder.Distribution
 	return apiObject
 }
 
-func expandDistributions(tfList []interface{}) []*imagebuilder.Distribution {
+func expandDistributions(tfList []interface{}) []*awstypes.Distribution {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*imagebuilder.Distribution
+	var apiObjects []*awstypes.Distribution
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -564,56 +566,56 @@ func expandDistributions(tfList []interface{}) []*imagebuilder.Distribution {
 	return apiObjects
 }
 
-func expandLaunchPermissionConfiguration(tfMap map[string]interface{}) *imagebuilder.LaunchPermissionConfiguration {
+func expandLaunchPermissionConfiguration(tfMap map[string]interface{}) *awstypes.LaunchPermissionConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &imagebuilder.LaunchPermissionConfiguration{}
+	apiObject := &awstypes.LaunchPermissionConfiguration{}
 
 	if v, ok := tfMap["organization_arns"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.OrganizationArns = flex.ExpandStringSet(v)
+		apiObject.OrganizationArns = flex.ExpandToStringSet(v)
 	}
 
 	if v, ok := tfMap["organizational_unit_arns"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.OrganizationalUnitArns = flex.ExpandStringSet(v)
+		apiObject.OrganizationalUnitArns = flex.ExpandToStringSet(v)
 	}
 
 	if v, ok := tfMap["user_ids"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.UserIds = flex.ExpandStringSet(v)
+		apiObject.UserIds = flex.ExpandToStringSet(v)
 	}
 
 	if v, ok := tfMap["user_groups"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.UserGroups = flex.ExpandStringSet(v)
+		apiObject.UserGroups = flex.ExpandToStringSet(v)
 	}
 
 	return apiObject
 }
 
-func expandTargetContainerRepository(tfMap map[string]interface{}) *imagebuilder.TargetContainerRepository {
+func expandTargetContainerRepository(tfMap map[string]interface{}) *awstypes.TargetContainerRepository {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &imagebuilder.TargetContainerRepository{}
+	apiObject := &awstypes.TargetContainerRepository{}
 
 	if v, ok := tfMap["repository_name"].(string); ok && v != "" {
 		apiObject.RepositoryName = aws.String(v)
 	}
 
 	if v, ok := tfMap["service"].(string); ok && v != "" {
-		apiObject.Service = aws.String(v)
+		apiObject.Service = awstypes.ContainerRepositoryService(v)
 	}
 
 	return apiObject
 }
 
-func expandFastLaunchConfigurations(tfList []interface{}) []*imagebuilder.FastLaunchConfiguration {
+func expandFastLaunchConfigurations(tfList []interface{}) []*awstypes.FastLaunchConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*imagebuilder.FastLaunchConfiguration
+	var apiObjects []*awstypes.FastLaunchConfiguration
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -634,12 +636,12 @@ func expandFastLaunchConfigurations(tfList []interface{}) []*imagebuilder.FastLa
 	return apiObjects
 }
 
-func expandFastLaunchConfiguration(tfMap map[string]interface{}) *imagebuilder.FastLaunchConfiguration {
+func expandFastLaunchConfiguration(tfMap map[string]interface{}) *awstypes.FastLaunchConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &imagebuilder.FastLaunchConfiguration{}
+	apiObject := &awstypes.FastLaunchConfiguration{}
 
 	if v, ok := tfMap["account_id"].(string); ok && v != "" {
 		apiObject.AccountId = aws.String(v)
@@ -664,12 +666,12 @@ func expandFastLaunchConfiguration(tfMap map[string]interface{}) *imagebuilder.F
 	return apiObject
 }
 
-func expandFastLaunchLaunchTemplateSpecification(tfMap map[string]interface{}) *imagebuilder.FastLaunchLaunchTemplateSpecification {
+func expandFastLaunchLaunchTemplateSpecification(tfMap map[string]interface{}) *awstypes.FastLaunchLaunchTemplateSpecification {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &imagebuilder.FastLaunchLaunchTemplateSpecification{}
+	apiObject := &awstypes.FastLaunchLaunchTemplateSpecification{}
 
 	if v, ok := tfMap["launch_template_id"].(string); ok && v != "" {
 		apiObject.LaunchTemplateId = aws.String(v)
@@ -686,12 +688,12 @@ func expandFastLaunchLaunchTemplateSpecification(tfMap map[string]interface{}) *
 	return apiObject
 }
 
-func expandFastLaunchSnapshotConfiguration(tfMap map[string]interface{}) *imagebuilder.FastLaunchSnapshotConfiguration {
+func expandFastLaunchSnapshotConfiguration(tfMap map[string]interface{}) *awstypes.FastLaunchSnapshotConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &imagebuilder.FastLaunchSnapshotConfiguration{}
+	apiObject := &awstypes.FastLaunchSnapshotConfiguration{}
 
 	if v, ok := tfMap["target_resource_count"].(int); ok && v != 0 {
 		apiObject.TargetResourceCount = aws.Int64(int64(v))
@@ -700,12 +702,12 @@ func expandFastLaunchSnapshotConfiguration(tfMap map[string]interface{}) *imageb
 	return apiObject
 }
 
-func expandLaunchTemplateConfiguration(tfMap map[string]interface{}) *imagebuilder.LaunchTemplateConfiguration {
+func expandLaunchTemplateConfiguration(tfMap map[string]interface{}) *awstypes.LaunchTemplateConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &imagebuilder.LaunchTemplateConfiguration{}
+	apiObject := &awstypes.LaunchTemplateConfiguration{}
 
 	if v, ok := tfMap["launch_template_id"].(string); ok && v != "" {
 		apiObject.LaunchTemplateId = aws.String(v)
@@ -722,7 +724,7 @@ func expandLaunchTemplateConfiguration(tfMap map[string]interface{}) *imagebuild
 	return apiObject
 }
 
-func flattenAMIDistributionConfiguration(apiObject *imagebuilder.AmiDistributionConfiguration) map[string]interface{} {
+func flattenAMIDistributionConfiguration(apiObject *awstypes.AmiDistributionConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -730,15 +732,15 @@ func flattenAMIDistributionConfiguration(apiObject *imagebuilder.AmiDistribution
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AmiTags; v != nil {
-		tfMap["ami_tags"] = aws.StringValueMap(v)
+		tfMap["ami_tags"] = aws.ToStringMap(v)
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap["description"] = aws.StringValue(v)
+		tfMap["description"] = aws.ToString(v)
 	}
 
 	if v := apiObject.KmsKeyId; v != nil {
-		tfMap["kms_key_id"] = aws.StringValue(v)
+		tfMap["kms_key_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.LaunchPermission; v != nil {
@@ -746,17 +748,17 @@ func flattenAMIDistributionConfiguration(apiObject *imagebuilder.AmiDistribution
 	}
 
 	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap["name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.TargetAccountIds; v != nil {
-		tfMap["target_account_ids"] = aws.StringValueSlice(v)
+		tfMap["target_account_ids"] = aws.ToStringSlice(v)
 	}
 
 	return tfMap
 }
 
-func flattenContainerDistributionConfiguration(apiObject *imagebuilder.ContainerDistributionConfiguration) map[string]interface{} {
+func flattenContainerDistributionConfiguration(apiObject *awstypes.ContainerDistributionConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -764,11 +766,11 @@ func flattenContainerDistributionConfiguration(apiObject *imagebuilder.Container
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ContainerTags; v != nil {
-		tfMap["container_tags"] = aws.StringValueSlice(v)
+		tfMap["container_tags"] = aws.ToStringSlice(v)
 	}
 
 	if v := apiObject.Description; v != nil {
-		tfMap["description"] = aws.StringValue(v)
+		tfMap["description"] = aws.ToString(v)
 	}
 
 	if v := apiObject.TargetRepository; v != nil {
@@ -778,7 +780,7 @@ func flattenContainerDistributionConfiguration(apiObject *imagebuilder.Container
 	return tfMap
 }
 
-func flattenLaunchTemplateConfigurations(apiObjects []*imagebuilder.LaunchTemplateConfiguration) []interface{} {
+func flattenLaunchTemplateConfigurations(apiObjects []*awstypes.LaunchTemplateConfiguration) []interface{} {
 	if apiObjects == nil {
 		return nil
 	}
@@ -796,7 +798,7 @@ func flattenLaunchTemplateConfigurations(apiObjects []*imagebuilder.LaunchTempla
 	return tfList
 }
 
-func flattenDistribution(apiObject *imagebuilder.Distribution) map[string]interface{} {
+func flattenDistribution(apiObject *awstypes.Distribution) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -820,17 +822,17 @@ func flattenDistribution(apiObject *imagebuilder.Distribution) map[string]interf
 	}
 
 	if v := apiObject.LicenseConfigurationArns; v != nil {
-		tfMap["license_configuration_arns"] = aws.StringValueSlice(v)
+		tfMap["license_configuration_arns"] = aws.ToStringSlice(v)
 	}
 
 	if v := apiObject.Region; v != nil {
-		tfMap["region"] = aws.StringValue(v)
+		tfMap["region"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenDistributions(apiObjects []*imagebuilder.Distribution) []interface{} {
+func flattenDistributions(apiObjects []*awstypes.Distribution) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -848,7 +850,7 @@ func flattenDistributions(apiObjects []*imagebuilder.Distribution) []interface{}
 	return tfList
 }
 
-func flattenLaunchPermissionConfiguration(apiObject *imagebuilder.LaunchPermissionConfiguration) map[string]interface{} {
+func flattenLaunchPermissionConfiguration(apiObject *awstypes.LaunchPermissionConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -856,25 +858,25 @@ func flattenLaunchPermissionConfiguration(apiObject *imagebuilder.LaunchPermissi
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.OrganizationArns; v != nil {
-		tfMap["organization_arns"] = aws.StringValueSlice(v)
+		tfMap["organization_arns"] = aws.ToStringSlice(v)
 	}
 
 	if v := apiObject.OrganizationalUnitArns; v != nil {
-		tfMap["organizational_unit_arns"] = aws.StringValueSlice(v)
+		tfMap["organizational_unit_arns"] = aws.ToStringSlice(v)
 	}
 
 	if v := apiObject.UserGroups; v != nil {
-		tfMap["user_groups"] = aws.StringValueSlice(v)
+		tfMap["user_groups"] = aws.ToStringSlice(v)
 	}
 
 	if v := apiObject.UserIds; v != nil {
-		tfMap["user_ids"] = aws.StringValueSlice(v)
+		tfMap["user_ids"] = aws.ToStringSlice(v)
 	}
 
 	return tfMap
 }
 
-func flattenTargetContainerRepository(apiObject *imagebuilder.TargetContainerRepository) map[string]interface{} {
+func flattenTargetContainerRepository(apiObject *awstypes.TargetContainerRepository) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -882,17 +884,17 @@ func flattenTargetContainerRepository(apiObject *imagebuilder.TargetContainerRep
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.RepositoryName; v != nil {
-		tfMap["repository_name"] = aws.StringValue(v)
+		tfMap["repository_name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Service; v != nil {
-		tfMap["service"] = aws.StringValue(v)
+		tfMap["service"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenLaunchTemplateConfiguration(apiObject *imagebuilder.LaunchTemplateConfiguration) map[string]interface{} {
+func flattenLaunchTemplateConfiguration(apiObject *awstypes.LaunchTemplateConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -900,21 +902,21 @@ func flattenLaunchTemplateConfiguration(apiObject *imagebuilder.LaunchTemplateCo
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.LaunchTemplateId; v != nil {
-		tfMap["launch_template_id"] = aws.StringValue(v)
+		tfMap["launch_template_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.SetDefaultVersion; v != nil {
-		tfMap["default"] = aws.BoolValue(v)
+		tfMap["default"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.AccountId; v != nil {
-		tfMap["account_id"] = aws.StringValue(v)
+		tfMap["account_id"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenFastLaunchConfigurations(apiObjects []*imagebuilder.FastLaunchConfiguration) []interface{} {
+func flattenFastLaunchConfigurations(apiObjects []*awstypes.FastLaunchConfiguration) []interface{} {
 	if apiObjects == nil {
 		return nil
 	}
@@ -932,7 +934,7 @@ func flattenFastLaunchConfigurations(apiObjects []*imagebuilder.FastLaunchConfig
 	return tfList
 }
 
-func flattenFastLaunchConfiguration(apiObject *imagebuilder.FastLaunchConfiguration) map[string]interface{} {
+func flattenFastLaunchConfiguration(apiObject *awstypes.FastLaunchConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -940,11 +942,11 @@ func flattenFastLaunchConfiguration(apiObject *imagebuilder.FastLaunchConfigurat
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AccountId; v != nil {
-		tfMap["account_id"] = aws.StringValue(v)
+		tfMap["account_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.BoolValue(v)
+		tfMap["enabled"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.LaunchTemplate; v != nil {
@@ -952,7 +954,7 @@ func flattenFastLaunchConfiguration(apiObject *imagebuilder.FastLaunchConfigurat
 	}
 
 	if v := apiObject.MaxParallelLaunches; v != nil {
-		tfMap["max_parallel_launches"] = aws.Int64Value(v)
+		tfMap["max_parallel_launches"] = aws.ToInt64(v)
 	}
 
 	if v := apiObject.SnapshotConfiguration; v != nil {
@@ -962,7 +964,7 @@ func flattenFastLaunchConfiguration(apiObject *imagebuilder.FastLaunchConfigurat
 	return tfMap
 }
 
-func flattenFastLaunchLaunchTemplateSpecification(apiObject *imagebuilder.FastLaunchLaunchTemplateSpecification) map[string]interface{} {
+func flattenFastLaunchLaunchTemplateSpecification(apiObject *awstypes.FastLaunchLaunchTemplateSpecification) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -970,21 +972,21 @@ func flattenFastLaunchLaunchTemplateSpecification(apiObject *imagebuilder.FastLa
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.LaunchTemplateId; v != nil {
-		tfMap["launch_template_id"] = aws.StringValue(v)
+		tfMap["launch_template_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.LaunchTemplateName; v != nil {
-		tfMap["launch_template_name"] = aws.StringValue(v)
+		tfMap["launch_template_name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.LaunchTemplateVersion; v != nil {
-		tfMap["launch_template_version"] = aws.StringValue(v)
+		tfMap["launch_template_version"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenFastLaunchSnapshotConfiguration(apiObject *imagebuilder.FastLaunchSnapshotConfiguration) map[string]interface{} {
+func flattenFastLaunchSnapshotConfiguration(apiObject *awstypes.FastLaunchSnapshotConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -992,7 +994,7 @@ func flattenFastLaunchSnapshotConfiguration(apiObject *imagebuilder.FastLaunchSn
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.TargetResourceCount; v != nil {
-		tfMap["target_resource_count"] = aws.Int64Value(v)
+		tfMap["target_resource_count"] = aws.ToInt64(v)
 	}
 
 	return tfMap

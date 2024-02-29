@@ -7,14 +7,17 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
+	"github.com/aws/aws-sdk-go-v2/service/m2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -84,10 +87,10 @@ func ResourceComponent() *schema.Resource {
 				Computed: true,
 			},
 			"platform": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(imagebuilder.Platform_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.Platform](),
 			},
 			"skip_destroy": {
 				Type:     schema.TypeBool,
@@ -131,7 +134,7 @@ func ResourceComponent() *schema.Resource {
 
 func resourceComponentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.CreateComponentInput{
 		ClientToken: aws.String(id.UniqueId()),
@@ -159,11 +162,11 @@ func resourceComponentCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("platform"); ok {
-		input.Platform = aws.String(v.(string))
+		input.Platform = awstypes.Platform(v.(string))
 	}
 
 	if v, ok := d.GetOk("supported_os_versions"); ok && v.(*schema.Set).Len() > 0 {
-		input.SupportedOsVersions = flex.ExpandStringSet(v.(*schema.Set))
+		input.SupportedOsVersions = flex.ExpandToStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("uri"); ok {
@@ -174,7 +177,7 @@ func resourceComponentCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.SemanticVersion = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateComponentWithContext(ctx, input)
+	output, err := conn.CreateComponent(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Image Builder Component: %s", err)
@@ -184,22 +187,22 @@ func resourceComponentCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "creating Image Builder Component: empty result")
 	}
 
-	d.SetId(aws.StringValue(output.ComponentBuildVersionArn))
+	d.SetId(aws.ToString(output.ComponentBuildVersionArn))
 
 	return append(diags, resourceComponentRead(ctx, d, meta)...)
 }
 
 func resourceComponentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.GetComponentInput{
 		ComponentBuildVersionArn: aws.String(d.Id()),
 	}
 
-	output, err := conn.GetComponentWithContext(ctx, input)
+	output, err := conn.GetComponent(ctx, input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && errs.IsA[*types.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Image Builder Component (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -225,7 +228,7 @@ func resourceComponentRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("name", component.Name)
 	d.Set("owner", component.Owner)
 	d.Set("platform", component.Platform)
-	d.Set("supported_os_versions", aws.StringValueSlice(component.SupportedOsVersions))
+	d.Set("supported_os_versions", component.SupportedOsVersions)
 
 	setTagsOut(ctx, component.Tags)
 
@@ -251,15 +254,15 @@ func resourceComponentDelete(ctx context.Context, d *schema.ResourceData, meta i
 		return diags
 	}
 
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.DeleteComponentInput{
 		ComponentBuildVersionArn: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteComponentWithContext(ctx, input)
+	_, err := conn.DeleteComponent(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 

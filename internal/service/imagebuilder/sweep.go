@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -58,7 +58,7 @@ func sweepComponents(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.ImageBuilderConn(ctx)
+	conn := client.ImageBuilderClient(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -66,7 +66,7 @@ func sweepComponents(region string) error {
 	input := &imagebuilder.ListComponentsInput{
 		Owner: aws.String(imagebuilder.OwnershipSelf),
 	}
-	err = conn.ListComponentsPagesWithContext(ctx, input, func(page *imagebuilder.ListComponentsOutput, lastPage bool) bool {
+	err = conn.ListComponentsPages(ctx, input, func(page *imagebuilder.ListComponentsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -76,12 +76,12 @@ func sweepComponents(region string) error {
 				continue
 			}
 
-			arn := aws.StringValue(componentVersion.Arn)
+			arn := aws.ToString(componentVersion.Arn)
 			input := &imagebuilder.ListComponentBuildVersionsInput{
 				ComponentVersionArn: componentVersion.Arn,
 			}
 
-			err := conn.ListComponentBuildVersionsPagesWithContext(ctx, input, func(page *imagebuilder.ListComponentBuildVersionsOutput, lastPage bool) bool {
+			err := conn.ListComponentBuildVersionsPages(ctx, input, func(page *imagebuilder.ListComponentBuildVersionsOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -91,7 +91,7 @@ func sweepComponents(region string) error {
 						continue
 					}
 
-					arn := aws.StringValue(componentSummary.Arn)
+					arn := aws.ToString(componentSummary.Arn)
 
 					r := ResourceComponent()
 					d := r.Data(nil)
@@ -135,13 +135,13 @@ func sweepDistributionConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.ImageBuilderConn(ctx)
+	conn := client.ImageBuilderClient(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
 	input := &imagebuilder.ListDistributionConfigurationsInput{}
-	err = conn.ListDistributionConfigurationsPagesWithContext(ctx, input, func(page *imagebuilder.ListDistributionConfigurationsOutput, lastPage bool) bool {
+	err = conn.ListDistributionConfigurationsPages(ctx, input, func(page *imagebuilder.ListDistributionConfigurationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -151,7 +151,7 @@ func sweepDistributionConfigurations(region string) error {
 				continue
 			}
 
-			arn := aws.StringValue(distributionConfigurationSummary.Arn)
+			arn := aws.ToString(distributionConfigurationSummary.Arn)
 
 			r := ResourceDistributionConfiguration()
 			d := r.Data(nil)
@@ -184,13 +184,13 @@ func sweepImagePipelines(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.ImageBuilderConn(ctx)
+	conn := client.ImageBuilderClient(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
 	input := &imagebuilder.ListImagePipelinesInput{}
-	err = conn.ListImagePipelinesPagesWithContext(ctx, input, func(page *imagebuilder.ListImagePipelinesOutput, lastPage bool) bool {
+	err = conn.ListImagePipelinesPages(ctx, input, func(page *imagebuilder.ListImagePipelinesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -200,7 +200,7 @@ func sweepImagePipelines(region string) error {
 				continue
 			}
 
-			arn := aws.StringValue(imagePipeline.Arn)
+			arn := aws.ToString(imagePipeline.Arn)
 
 			r := ResourceImagePipeline()
 			d := r.Data(nil)
@@ -233,7 +233,7 @@ func sweepImageRecipes(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.ImageBuilderConn(ctx)
+	conn := client.ImageBuilderClient(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -241,7 +241,7 @@ func sweepImageRecipes(region string) error {
 	input := &imagebuilder.ListImageRecipesInput{
 		Owner: aws.String(imagebuilder.OwnershipSelf),
 	}
-	err = conn.ListImageRecipesPagesWithContext(ctx, input, func(page *imagebuilder.ListImageRecipesOutput, lastPage bool) bool {
+	err = conn.ListImageRecipesPages(ctx, input, func(page *imagebuilder.ListImageRecipesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -251,7 +251,7 @@ func sweepImageRecipes(region string) error {
 				continue
 			}
 
-			arn := aws.StringValue(imageRecipeSummary.Arn)
+			arn := aws.ToString(imageRecipeSummary.Arn)
 
 			r := ResourceImageRecipe()
 			d := r.Data(nil)
@@ -284,7 +284,7 @@ func sweepContainerRecipes(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.ImageBuilderConn(ctx)
+	conn := client.ImageBuilderClient(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
@@ -292,7 +292,7 @@ func sweepContainerRecipes(region string) error {
 	input := &imagebuilder.ListContainerRecipesInput{
 		Owner: aws.String(imagebuilder.OwnershipSelf),
 	}
-	err = conn.ListContainerRecipesPagesWithContext(ctx, input, func(page *imagebuilder.ListContainerRecipesOutput, lastPage bool) bool {
+	err = conn.ListContainerRecipesPages(ctx, input, func(page *imagebuilder.ListContainerRecipesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -302,7 +302,7 @@ func sweepContainerRecipes(region string) error {
 				continue
 			}
 
-			arn := aws.StringValue(containerRecipeSummary.Arn)
+			arn := aws.ToString(containerRecipeSummary.Arn)
 
 			r := ResourceContainerRecipe()
 			d := r.Data(nil)
@@ -337,7 +337,7 @@ func sweepImages(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.ImageBuilderConn(ctx)
+	conn := client.ImageBuilderClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 	var errs *multierror.Error
 
@@ -345,7 +345,7 @@ func sweepImages(region string) error {
 		Owner: aws.String(imagebuilder.OwnershipSelf),
 	}
 
-	err = conn.ListImagesPagesWithContext(ctx, input, func(page *imagebuilder.ListImagesOutput, lastPage bool) bool {
+	err = conn.ListImagesPages(ctx, input, func(page *imagebuilder.ListImagesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -358,13 +358,13 @@ func sweepImages(region string) error {
 			// Retrieve the Image's Build Version ARNs required as input
 			// to the ResourceImage()'s Delete operation
 			// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19851
-			imageVersionArn := aws.StringValue(imageVersion.Arn)
+			imageVersionArn := aws.ToString(imageVersion.Arn)
 
 			input := &imagebuilder.ListImageBuildVersionsInput{
 				ImageVersionArn: imageVersion.Arn,
 			}
 
-			err := conn.ListImageBuildVersionsPagesWithContext(ctx, input, func(page *imagebuilder.ListImageBuildVersionsOutput, lastPage bool) bool {
+			err := conn.ListImageBuildVersionsPages(ctx, input, func(page *imagebuilder.ListImageBuildVersionsOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
@@ -374,7 +374,7 @@ func sweepImages(region string) error {
 						continue
 					}
 
-					imageBuildVersionArn := aws.StringValue(imageSummary.Arn)
+					imageBuildVersionArn := aws.ToString(imageSummary.Arn)
 
 					r := ResourceImage()
 					d := r.Data(nil)
@@ -416,14 +416,14 @@ func sweepInfrastructureConfigurations(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.ImageBuilderConn(ctx)
+	conn := client.ImageBuilderClient(ctx)
 
 	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
 	input := &imagebuilder.ListInfrastructureConfigurationsInput{}
 
-	err = conn.ListInfrastructureConfigurationsPagesWithContext(ctx, input, func(page *imagebuilder.ListInfrastructureConfigurationsOutput, lastPage bool) bool {
+	err = conn.ListInfrastructureConfigurationsPages(ctx, input, func(page *imagebuilder.ListInfrastructureConfigurationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -433,7 +433,7 @@ func sweepInfrastructureConfigurations(region string) error {
 				continue
 			}
 
-			arn := aws.StringValue(infrastructureConfigurationSummary.Arn)
+			arn := aws.ToString(infrastructureConfigurationSummary.Arn)
 
 			r := ResourceInfrastructureConfiguration()
 			d := r.Data(nil)

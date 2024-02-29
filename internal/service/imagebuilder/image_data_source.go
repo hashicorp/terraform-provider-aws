@@ -6,8 +6,8 @@ package imagebuilder
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -178,7 +178,7 @@ func DataSourceImage() *schema.Resource {
 
 func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.GetImageInput{}
 
@@ -186,7 +186,7 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 		input.ImageBuildVersionArn = aws.String(v.(string))
 	}
 
-	output, err := conn.GetImageWithContext(ctx, input)
+	output, err := conn.GetImage(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image: %s", err)
@@ -198,7 +198,7 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	image := output.Image
 
-	d.SetId(aws.StringValue(image.Arn))
+	d.SetId(aws.ToString(image.Arn))
 
 	// To prevent Terraform errors, only reset arn if not configured.
 	// The configured ARN may contain x.x.x wildcards while the API returns

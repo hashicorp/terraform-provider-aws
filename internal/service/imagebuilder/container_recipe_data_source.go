@@ -6,8 +6,8 @@ package imagebuilder
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -197,7 +197,7 @@ func DataSourceContainerRecipe() *schema.Resource {
 
 func dataSourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetContainerRecipeInput{}
@@ -206,19 +206,19 @@ func dataSourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, 
 		input.ContainerRecipeArn = aws.String(v.(string))
 	}
 
-	output, err := conn.GetContainerRecipeWithContext(ctx, input)
+	output, err := conn.GetContainerRecipe(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Image Builder Container Recipe (%s): %s", aws.StringValue(input.ContainerRecipeArn), err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Container Recipe (%s): %s", aws.ToString(input.ContainerRecipeArn), err)
 	}
 
 	if output == nil || output.ContainerRecipe == nil {
-		return sdkdiag.AppendErrorf(diags, "reading Image Builder Container Recipe (%s): empty response", aws.StringValue(input.ContainerRecipeArn))
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Container Recipe (%s): empty response", aws.ToString(input.ContainerRecipeArn))
 	}
 
 	containerRecipe := output.ContainerRecipe
 
-	d.SetId(aws.StringValue(containerRecipe.Arn))
+	d.SetId(aws.ToString(containerRecipe.Arn))
 	d.Set("arn", containerRecipe.Arn)
 	d.Set("component", flattenComponentConfigurations(containerRecipe.Components))
 	d.Set("container_type", containerRecipe.ContainerType)
