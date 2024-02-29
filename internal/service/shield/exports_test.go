@@ -9,8 +9,10 @@ var (
 	ResourceDRTAccessLogBucketAssociation     = newDRTAccessLogBucketAssociationResource
 	ResourceApplicationLayerAutomaticResponse = newResourceApplicationLayerAutomaticResponse
 	ResourceProactiveEngagement               = newProactiveEngagementResource
+	ResourceProtection                        = resourceProtection
 
 	FindDRTLogBucketAssociation  = findDRTLogBucketAssociation
 	FindDRTRoleARNAssociation    = findDRTRoleARNAssociation
 	FindEmergencyContactSettings = findEmergencyContactSettings
+	FindProtectionByID           = findProtectionByID
 )
