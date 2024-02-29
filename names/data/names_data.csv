@@ -34,7 +34,7 @@ autoscaling-plans,autoscalingplans,autoscalingplans,autoscalingplans,,autoscalin
 ,,,,,,,,,,,,,,,,,Backint Agent for SAP HANA,AWS,x,,,,,,,,,No SDK support
 backup,backup,backup,backup,,backup,,,Backup,Backup,,1,,,aws_backup_,,backup_,Backup,AWS,,,,,,,Backup,ListBackupPlans,,
 backup-gateway,backupgateway,backupgateway,backupgateway,,backupgateway,,,BackupGateway,BackupGateway,,1,,,aws_backupgateway_,,backupgateway_,Backup Gateway,AWS,,x,,,,,Backup Gateway,,,
-batch,batch,batch,batch,,batch,,,Batch,Batch,,1,,,aws_batch_,,batch_,Batch,AWS,,,,,,,Batch,ListJobs,,
+batch,batch,batch,batch,,batch,,,Batch,Batch,,1,2,,aws_batch_,,batch_,Batch,AWS,,,,,,,Batch,ListJobs,,
 bedrock,bedrock,bedrock,bedrock,,bedrock,,,Bedrock,Bedrock,,,2,,aws_bedrock_,,bedrock_,Amazon Bedrock,Amazon,,,,,,,Bedrock,ListFoundationModels,,
 bedrock-agent,bedrockagent,bedrockagent,bedrockagent,,bedrockagent,,,BedrockAgent,BedrockAgent,,,2,,aws_bedrockagent_,,bedrock_agent_,Agents for Amazon Bedrock,Amazon,,,,,,,Bedrock Agent,ListAgents,,
 billingconductor,billingconductor,billingconductor,,,billingconductor,,,BillingConductor,BillingConductor,,1,,,aws_billingconductor_,,billingconductor_,Billing Conductor,AWS,,x,,,,,billingconductor,,,
@@ -59,12 +59,13 @@ cloudcontrol,cloudcontrol,cloudcontrolapi,cloudcontrol,,cloudcontrol,,cloudcontr
 ,,,,,,,,,,,,,,,,,Cloud Digital Interface SDK,AWS,x,,,,,,,,,No SDK support
 clouddirectory,clouddirectory,clouddirectory,clouddirectory,,clouddirectory,,,CloudDirectory,CloudDirectory,,1,,,aws_clouddirectory_,,clouddirectory_,Cloud Directory,Amazon,,x,,,,,CloudDirectory,,,
 servicediscovery,servicediscovery,servicediscovery,servicediscovery,,servicediscovery,,,ServiceDiscovery,ServiceDiscovery,,1,,aws_service_discovery_,aws_servicediscovery_,,service_discovery_,Cloud Map,AWS,,,,,,,ServiceDiscovery,ListNamespaces,,
-cloud9,cloud9,cloud9,cloud9,,cloud9,,,Cloud9,Cloud9,,1,,,aws_cloud9_,,cloud9_,Cloud9,AWS,,,,,,,Cloud9,ListEnvironments,,
+cloud9,cloud9,cloud9,cloud9,,cloud9,,,Cloud9,Cloud9,,,2,,aws_cloud9_,,cloud9_,Cloud9,AWS,,,,,,,Cloud9,ListEnvironments,,
 cloudformation,cloudformation,cloudformation,cloudformation,,cloudformation,,,CloudFormation,CloudFormation,,1,,,aws_cloudformation_,,cloudformation_,CloudFormation,AWS,,,,,,,CloudFormation,ListStackInstances,,
-cloudfront,cloudfront,cloudfront,cloudfront,,cloudfront,,,CloudFront,CloudFront,,1,,,aws_cloudfront_,,cloudfront_,CloudFront,Amazon,,,,,,,CloudFront,ListDistributions,,
+cloudfront,cloudfront,cloudfront,cloudfront,,cloudfront,,,CloudFront,CloudFront,,1,2,,aws_cloudfront_,,cloudfront_,CloudFront,Amazon,,,,,,,CloudFront,ListDistributions,,
+cloudfront-keyvaluestore,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,,CloudFrontKeyValueStore,CloudFrontKeyValueStore,,,2,,aws_cloudfrontkeyvaluestore_,,cloudfront_keyvaluestore_,CloudFront KeyValueStore,Amazon,,,,,,,CloudFront KeyValueStore,ListKeys,"KvsARN: aws_sdkv2.String(""arn:aws:cloudfront::111122223333:key-value-store/MaxAge"")",
 cloudhsm,cloudhsm,cloudhsm,cloudhsm,,,,,,,,,,,,,,CloudHSM,AWS,x,,,,,,,,,Legacy
-cloudhsmv2,cloudhsmv2,cloudhsmv2,cloudhsmv2,,cloudhsmv2,,cloudhsm,CloudHSMV2,CloudHSMV2,,1,,aws_cloudhsm_v2_,aws_cloudhsmv2_,,cloudhsm,CloudHSM,AWS,,,,,,,CloudHSM V2,DescribeClusters,,
-cloudsearch,cloudsearch,cloudsearch,cloudsearch,,cloudsearch,,,CloudSearch,CloudSearch,,1,,,aws_cloudsearch_,,cloudsearch_,CloudSearch,Amazon,,,,,,,CloudSearch,ListDomainNames,,
+cloudhsmv2,cloudhsmv2,cloudhsmv2,cloudhsmv2,,cloudhsmv2,,cloudhsm,CloudHSMV2,CloudHSMV2,x,,2,aws_cloudhsm_v2_,aws_cloudhsmv2_,,cloudhsm,CloudHSM,AWS,,,,,,,CloudHSM V2,DescribeClusters,,
+cloudsearch,cloudsearch,cloudsearch,cloudsearch,,cloudsearch,,,CloudSearch,CloudSearch,,,2,,aws_cloudsearch_,,cloudsearch_,CloudSearch,Amazon,,,,,,,CloudSearch,ListDomainNames,,
 cloudsearchdomain,cloudsearchdomain,cloudsearchdomain,cloudsearchdomain,,cloudsearchdomain,,,CloudSearchDomain,CloudSearchDomain,,1,,,aws_cloudsearchdomain_,,cloudsearchdomain_,CloudSearch Domain,Amazon,,x,,,,,CloudSearch Domain,,,
 ,,,,,,,,,,,,,,,,,CloudShell,AWS,x,,,,,,,,,No SDK support
 cloudtrail,cloudtrail,cloudtrail,cloudtrail,,cloudtrail,,,CloudTrail,CloudTrail,,,2,aws_cloudtrail,aws_cloudtrail_,,cloudtrail,CloudTrail,AWS,,,,,,,CloudTrail,ListChannels,,
@@ -91,7 +92,7 @@ cognito-sync,cognitosync,cognitosync,cognitosync,,cognitosync,,,CognitoSync,Cogn
 comprehend,comprehend,comprehend,comprehend,,comprehend,,,Comprehend,Comprehend,,,2,,aws_comprehend_,,comprehend_,Comprehend,Amazon,,,,,,,Comprehend,ListDocumentClassifiers,,
 comprehendmedical,comprehendmedical,comprehendmedical,comprehendmedical,,comprehendmedical,,,ComprehendMedical,ComprehendMedical,,1,,,aws_comprehendmedical_,,comprehendmedical_,Comprehend Medical,Amazon,,x,,,,,ComprehendMedical,,,
 compute-optimizer,computeoptimizer,computeoptimizer,computeoptimizer,,computeoptimizer,,,ComputeOptimizer,ComputeOptimizer,,,2,,aws_computeoptimizer_,,computeoptimizer_,Compute Optimizer,AWS,,,,,,,Compute Optimizer,GetEnrollmentStatus,,
-configservice,configservice,configservice,configservice,,configservice,,config,ConfigService,ConfigService,,1,,aws_config_,aws_configservice_,,config_,Config,AWS,,,,,,,Config Service,ListStoredQueries,,
+configservice,configservice,configservice,configservice,,configservice,,config,ConfigService,ConfigService,,,2,aws_config_,aws_configservice_,,config_,Config,AWS,,,,,,,Config Service,ListStoredQueries,,
 connect,connect,connect,connect,,connect,,,Connect,Connect,,1,,,aws_connect_,,connect_,Connect,Amazon,,,,,,,Connect,ListInstances,,
 connectcases,connectcases,connectcases,connectcases,,connectcases,,,ConnectCases,ConnectCases,,,2,,aws_connectcases_,,connectcases_,Connect Cases,Amazon,,,,,,,ConnectCases,ListDomains,,
 connect-contact-lens,connectcontactlens,connectcontactlens,connectcontactlens,,connectcontactlens,,,ConnectContactLens,ConnectContactLens,,1,,,aws_connectcontactlens_,,connectcontactlens_,Connect Contact Lens,Amazon,,x,,,,,Connect Contact Lens,,,
@@ -101,6 +102,7 @@ voice-id,voiceid,voiceid,voiceid,,voiceid,,,VoiceID,VoiceID,,1,,,aws_voiceid_,,v
 wisdom,wisdom,connectwisdomservice,wisdom,,wisdom,,connectwisdomservice,Wisdom,ConnectWisdomService,,1,,,aws_wisdom_,,wisdom_,Connect Wisdom,Amazon,,x,,,,,Wisdom,,,
 ,,,,,,,,,,,,,,,,,Console Mobile Application,AWS,x,,,,,,,,,No SDK support
 controltower,controltower,controltower,controltower,,controltower,,,ControlTower,ControlTower,,,2,,aws_controltower_,,controltower_,Control Tower,AWS,,,,,,,ControlTower,ListLandingZones,,
+cost-optimization-hub,costoptimizationhub,costoptimizationhub,costoptimizationhub,,costoptimizationhub,,,CostOptimizationHub,CostOptimizationHub,,,2,,aws_costoptimizationhub_,,costoptimizationhub_,Cost Optimization Hub,AWS,,,,,,,Cost Optimization Hub,GetPreferences,,
 cur,cur,costandusagereportservice,costandusagereportservice,,cur,,costandusagereportservice,CUR,CostandUsageReportService,,1,,,aws_cur_,,cur_,Cost and Usage Report,AWS,,,,,,,Cost and Usage Report Service,DescribeReportDefinitions,,
 ,,,,,,,,,,,,,,,,,Crypto Tools,AWS,x,,,,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,Cryptographic Services Overview,AWS,x,,,,,,,,,No SDK support
@@ -254,7 +256,7 @@ mobile,mobile,mobile,mobile,,mobile,,,Mobile,Mobile,,1,,,aws_mobile_,,mobile_,Mo
 ,,,,,,,,,,,,,,,,,Monitron,Amazon,x,,,,,,,,,No SDK support
 mq,mq,mq,mq,,mq,,,MQ,MQ,,,2,,aws_mq_,,mq_,MQ,Amazon,,,,,,,mq,ListBrokers,,
 mturk,mturk,mturk,mturk,,mturk,,,MTurk,MTurk,,1,,,aws_mturk_,,mturk_,MTurk (Mechanical Turk),Amazon,,x,,,,,MTurk,,,
-mwaa,mwaa,mwaa,mwaa,,mwaa,,,MWAA,MWAA,,1,,,aws_mwaa_,,mwaa_,MWAA (Managed Workflows for Apache Airflow),Amazon,,,,,,,MWAA,ListEnvironments,,
+mwaa,mwaa,mwaa,mwaa,,mwaa,,,MWAA,MWAA,,,2,,aws_mwaa_,,mwaa_,MWAA (Managed Workflows for Apache Airflow),Amazon,,,,,,,MWAA,ListEnvironments,,
 neptune,neptune,neptune,neptune,,neptune,,,Neptune,Neptune,,1,,,aws_neptune_,,neptune_,Neptune,Amazon,,,,,,,Neptune,DescribeDBClusters,,
 network-firewall,networkfirewall,networkfirewall,networkfirewall,,networkfirewall,,,NetworkFirewall,NetworkFirewall,,1,,,aws_networkfirewall_,,networkfirewall_,Network Firewall,AWS,,,,,,,Network Firewall,ListFirewalls,,
 networkmanager,networkmanager,networkmanager,networkmanager,,networkmanager,,,NetworkManager,NetworkManager,,1,,,aws_networkmanager_,,networkmanager_,Network Manager,AWS,,,,,,,NetworkManager,ListCoreNetworks,,
@@ -293,9 +295,9 @@ rds-data,rdsdata,rdsdataservice,rdsdata,,rdsdata,,rdsdataservice,RDSData,RDSData
 pi,pi,pi,pi,,pi,,,PI,PI,,1,,,aws_pi_,,pi_,RDS Performance Insights (PI),Amazon,,x,,,,,PI,,,
 rbin,rbin,recyclebin,rbin,,rbin,,recyclebin,RBin,RecycleBin,,,2,,aws_rbin_,,rbin_,Recycle Bin (RBin),Amazon,,,,,,,rbin,ListRules,ResourceType: awstypes.ResourceTypeEc2Image,
 ,,,,,,,,,,,,,,,,,Red Hat OpenShift Service on AWS (ROSA),AWS,x,,,,,,,,,No SDK support
-redshift,redshift,redshift,redshift,,redshift,,,Redshift,Redshift,,1,,,aws_redshift_,,redshift_,Redshift,Amazon,,,,,,,Redshift,DescribeClusters,,
+redshift,redshift,redshift,redshift,,redshift,,,Redshift,Redshift,,1,2,,aws_redshift_,,redshift_,Redshift,Amazon,,,,,,,Redshift,DescribeClusters,,
 redshift-data,redshiftdata,redshiftdataapiservice,redshiftdata,,redshiftdata,,redshiftdataapiservice,RedshiftData,RedshiftDataAPIService,,,2,,aws_redshiftdata_,,redshiftdata_,Redshift Data,Amazon,,,,,,,Redshift Data,ListDatabases,"Database: aws_sdkv2.String(""test"")",
-redshift-serverless,redshiftserverless,redshiftserverless,redshiftserverless,,redshiftserverless,,,RedshiftServerless,RedshiftServerless,,1,,,aws_redshiftserverless_,,redshiftserverless_,Redshift Serverless,Amazon,,,,,,,Redshift Serverless,ListNamespaces,,
+redshift-serverless,redshiftserverless,redshiftserverless,redshiftserverless,,redshiftserverless,,,RedshiftServerless,RedshiftServerless,,1,2,,aws_redshiftserverless_,,redshiftserverless_,Redshift Serverless,Amazon,,,,,,,Redshift Serverless,ListNamespaces,,
 rekognition,rekognition,rekognition,rekognition,,rekognition,,,Rekognition,Rekognition,,,2,,aws_rekognition_,,rekognition_,Rekognition,Amazon,,,,,,,Rekognition,ListCollections,,
 resiliencehub,resiliencehub,resiliencehub,resiliencehub,,resiliencehub,,,ResilienceHub,ResilienceHub,,1,,,aws_resiliencehub_,,resiliencehub_,Resilience Hub,AWS,,x,,,,,resiliencehub,,,
 resource-explorer-2,resourceexplorer2,resourceexplorer2,resourceexplorer2,,resourceexplorer2,,,ResourceExplorer2,ResourceExplorer2,,,2,,aws_resourceexplorer2_,,resourceexplorer2_,Resource Explorer,AWS,,,,,,,Resource Explorer 2,ListIndexes,,
@@ -333,7 +335,7 @@ service-quotas,servicequotas,servicequotas,servicequotas,,servicequotas,,,Servic
 ses,ses,ses,ses,,ses,,,SES,SES,,1,,,aws_ses_,,ses_,SES (Simple Email),Amazon,,,,,,,SES,ListIdentities,,
 sesv2,sesv2,sesv2,sesv2,,sesv2,,,SESV2,SESV2,,,2,,aws_sesv2_,,sesv2_,SESv2 (Simple Email V2),Amazon,,,,,,,SESv2,ListContactLists,,
 stepfunctions,stepfunctions,sfn,sfn,,sfn,,stepfunctions,SFN,SFN,,1,,,aws_sfn_,,sfn_,SFN (Step Functions),AWS,,,,,,,SFN,ListActivities,,
-shield,shield,shield,shield,,shield,,,Shield,Shield,x,1,,,aws_shield_,,shield_,Shield,AWS,,,,,,,Shield,ListProtectionGroups,,
+shield,shield,shield,shield,,shield,,,Shield,Shield,x,,2,,aws_shield_,,shield_,Shield,AWS,,,,,,,Shield,ListProtectionGroups,,
 signer,signer,signer,signer,,signer,,,Signer,Signer,,,2,,aws_signer_,,signer_,Signer,AWS,,,,,,,signer,ListSigningJobs,,
 sms,sms,sms,sms,,sms,,,SMS,SMS,,1,,,aws_sms_,,sms_,SMS (Server Migration),AWS,,x,,,,,SMS,,,
 snow-device-management,snowdevicemanagement,snowdevicemanagement,snowdevicemanagement,,snowdevicemanagement,,,SnowDeviceManagement,SnowDeviceManagement,,1,,,aws_snowdevicemanagement_,,snowdevicemanagement_,Snow Device Management,AWS,,x,,,,,Snow Device Management,,,

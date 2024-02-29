@@ -41,8 +41,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_ecr_image",
 		},
 		{
-			Factory:  DataSourcePullThroughCacheRule,
+			Factory:  dataSourcePullThroughCacheRule,
 			TypeName: "aws_ecr_pull_through_cache_rule",
+			Name:     "Pull Through Cache Rule",
 		},
 		{
 			Factory:  DataSourceRepository,
@@ -58,8 +59,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ecr_lifecycle_policy",
 		},
 		{
-			Factory:  ResourcePullThroughCacheRule,
+			Factory:  resourcePullThroughCacheRule,
 			TypeName: "aws_ecr_pull_through_cache_rule",
+			Name:     "Pull Through Cache Rule",
 		},
 		{
 			Factory:  ResourceRegistryPolicy,

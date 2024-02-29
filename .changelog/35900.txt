@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudsearch_domain: Prevent panic when reading nil `index_field` options response values
+```

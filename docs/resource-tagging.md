@@ -493,7 +493,7 @@ func TestAccEKSCluster_tags(t *testing.T) {
 
   resource.ParallelTest(t, resource.TestCase{
     PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-    ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+    ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
     ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
     CheckDestroy:             testAccCheckClusterDestroy(ctx),
     Steps: []resource.TestStep{

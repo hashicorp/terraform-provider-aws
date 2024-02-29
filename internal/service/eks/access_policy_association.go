@@ -111,7 +111,9 @@ func resourceAccessPolicyAssociationCreate(ctx context.Context, d *schema.Resour
 		PrincipalArn: aws.String(principalARN),
 	}
 
-	_, err := conn.AssociateAccessPolicy(ctx, input)
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.ResourceNotFoundException](ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.AssociateAccessPolicy(ctx, input)
+	}, "The specified principalArn could not be found")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EKS Access Policy Association (%s): %s", id, err)

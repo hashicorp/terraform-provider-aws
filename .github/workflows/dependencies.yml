@@ -22,7 +22,7 @@ jobs:
     outputs:
       changed: ${{ steps.filter.outputs.changed }}
     steps:
-      - uses: dorny/paths-filter@0bc4621a3135347011ad047f9ecf449bf72ce2bd # v3.0.0
+      - uses: dorny/paths-filter@ebc4d7e9ebcb0b1eb21480bb8f43113e996ac77a # v3.0.1
         if: needs.community_check.outputs.maintainer == 'false'
         id: filter
         with:
@@ -73,10 +73,11 @@ jobs:
       - uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11 # v4.1.1
       - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
-          go-version-file: go.mod
+          go-version-file: .go-version
       - name: go mod
         run: |
-          echo "==> Checking source code with go mod tidy..."
-          go mod tidy
-          git diff --exit-code -- go.mod go.sum || \
-            (echo; echo "Unexpected difference in go.mod/go.sum files. Run 'go mod tidy' command or revert any go.mod/go.sum changes and commit."; exit 1)
+          gover=go`cat .go-version | xargs`
+          go install golang.org/dl/${gover}@latest
+          ${gover} download
+          echo "Using make to check dependencies"
+          make depscheck

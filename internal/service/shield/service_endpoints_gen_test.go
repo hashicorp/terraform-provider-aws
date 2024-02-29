@@ -4,16 +4,17 @@ package shield_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"net/url"
+	"maps"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	shield_sdkv1 "github.com/aws/aws-sdk-go/service/shield"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	shield_sdkv2 "github.com/aws/aws-sdk-go-v2/service/shield"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -24,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
-	"golang.org/x/exp/maps"
 )
 
 type endpointTestCase struct {
@@ -212,32 +212,42 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 }
 
 func defaultEndpoint(region string) string {
-	r := endpoints.DefaultResolver()
+	r := shield_sdkv2.NewDefaultEndpointResolverV2()
 
-	ep, err := r.EndpointFor(shield_sdkv1.EndpointsID, region)
+	ep, err := r.ResolveEndpoint(context.Background(), shield_sdkv2.EndpointParameters{
+		Region: aws_sdkv2.String(region),
+	})
 	if err != nil {
 		return err.Error()
 	}
 
-	url, _ := url.Parse(ep.URL)
-
-	if url.Path == "" {
-		url.Path = "/"
+	if ep.URI.Path == "" {
+		ep.URI.Path = "/"
 	}
 
-	return url.String()
+	return ep.URI.String()
 }
 
 func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
 	t.Helper()
 
-	client := meta.ShieldConn(ctx)
+	var endpoint string
 
-	req, _ := client.ListProtectionGroupsRequest(&shield_sdkv1.ListProtectionGroupsInput{})
+	client := meta.ShieldClient(ctx)
 
-	req.HTTPRequest.URL.Path = "/"
-
-	endpoint := req.HTTPRequest.URL.String()
+	_, err := client.ListProtectionGroups(ctx, &shield_sdkv2.ListProtectionGroupsInput{},
+		func(opts *shield_sdkv2.Options) {
+			opts.APIOptions = append(opts.APIOptions,
+				addRetrieveEndpointURLMiddleware(t, &endpoint),
+				addCancelRequestMiddleware(),
+			)
+		},
+	)
+	if err == nil {
+		t.Fatal("Expected an error, got none")
+	} else if !errors.Is(err, errCancelOperation) {
+		t.Fatalf("Unexpected error: %s", err)
+	}
 
 	return endpoint
 }

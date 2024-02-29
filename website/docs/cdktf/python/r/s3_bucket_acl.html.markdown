@@ -164,8 +164,8 @@ class MyConvertedCode(TerraformStack):
 
 This resource supports the following arguments:
 
-* `acl` - (Optional, Conflicts with `access_control_policy`) Canned ACL to apply to the bucket.
-* `access_control_policy` - (Optional, Conflicts with `acl`) Configuration block that sets the ACL permissions for an object per grantee. [See below](#access_control_policy).
+* `acl` - (Optional, One of `acl` or `access_control_policy` is required) Canned ACL to apply to the bucket.
+* `access_control_policy` - (Optional, One of `access_control_policy` or `acl` is required) Configuration block that sets the ACL permissions for an object per grantee. [See below](#access_control_policy).
 * `bucket` - (Required, Forces new resource) Bucket to which to apply the ACL.
 * `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
 
@@ -309,4 +309,4 @@ If the owner (account ID) of the source bucket _differs_ from the account used t
 
 [1]: https://docs.aws.amazon.com/AmazonS3/latest/userguide/acl-overview.html#canned-acl
 
-<!-- cache-key: cdktf-0.20.1 input-6e85df38035944cb581b15759c2b6fd86b7bf937d52ffe8175ea539531910178 -->
+<!-- cache-key: cdktf-0.20.1 input-a74cfed677016b6dee67ab291665d4c69ce89eec54230b7148b7e9fbd18e1eea -->
