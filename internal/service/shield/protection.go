@@ -139,6 +139,14 @@ func findProtectionByID(ctx context.Context, conn *shield.Client, id string) (*t
 	return findProtection(ctx, conn, input)
 }
 
+func findProtectionByResourceARN(ctx context.Context, conn *shield.Client, arn string) (*types.Protection, error) {
+	input := &shield.DescribeProtectionInput{
+		ResourceArn: aws.String(arn),
+	}
+
+	return findProtection(ctx, conn, input)
+}
+
 func findProtection(ctx context.Context, conn *shield.Client, input *shield.DescribeProtectionInput) (*types.Protection, error) {
 	output, err := conn.DescribeProtection(ctx, input)
 

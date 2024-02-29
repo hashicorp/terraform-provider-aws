@@ -7,7 +7,7 @@ package shield
 var (
 	ResourceDRTAccessRoleARNAssociation       = newDRTAccessRoleARNAssociationResource
 	ResourceDRTAccessLogBucketAssociation     = newDRTAccessLogBucketAssociationResource
-	ResourceApplicationLayerAutomaticResponse = newResourceApplicationLayerAutomaticResponse
+	ResourceApplicationLayerAutomaticResponse = newApplicationLayerAutomaticResponseResource
 	ResourceProactiveEngagement               = newProactiveEngagementResource
 	ResourceProtection                        = resourceProtection
 

@@ -31,7 +31,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Proactive Engagement",
 		},
 		{
-			Factory: newResourceApplicationLayerAutomaticResponse,
+			Factory: newApplicationLayerAutomaticResponseResource,
 			Name:    "Application Layer Automatic Response",
 		},
 	}
