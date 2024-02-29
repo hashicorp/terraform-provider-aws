@@ -43,8 +43,9 @@ type taskSettings struct {
 		CommitRate                      int    `json:"CommitRate,omitempty"`
 	} `json:"FullLoadSettings,omitempty"`
 	TTSettings struct {
-		EnableTT     bool `json:"EnableTT,omitempty"`
-		TTS3Settings struct {
+		EnableTT            bool `json:"EnableTT,omitempty"`
+		FailTaskOnTTFailure bool `json:"FailTaskOnTTFailure,omitempty"`
+		TTS3Settings        struct {
 			EncryptionMode                   string `json:"EncryptionMode,omitempty"`
 			ServerSideEncryptionKmsKeyID     string `json:"ServerSideEncryptionKmsKeyId,omitempty"`
 			ServiceAccessRoleArn             string `json:"ServiceAccessRoleArn,omitempty"`
@@ -59,20 +60,29 @@ type taskSettings struct {
 		} `json:"TTRecordSettings,omitempty"`
 	} `json:"TTSettings,omitempty"`
 	Logging struct {
-		EnableLogging bool `json:"EnableLogging,omitempty"`
+		EnableLogging       bool     `json:"EnableLogging,omitempty"`
+		EnableLogContext    bool     `json:"EnableLogContext,omitempty"`
+		CloudWatchLogGroup  struct{} `json:"CloudWatchLogGroup,omitempty"`
+		CloudWatchLogStream struct{} `json:"CloudWatchLogStream,omitempty"`
 	} `json:"Logging,omitempty"`
 	ControlTablesSettings struct {
-		ControlSchema               string `json:"ControlSchema,omitempty"`
-		HistoryTimeslotInMinutes    int    `json:"HistoryTimeslotInMinutes,omitempty"`
-		HistoryTableEnabled         bool   `json:"HistoryTableEnabled,omitempty"`
-		SuspendedTablesTableEnabled bool   `json:"SuspendedTablesTableEnabled,omitempty"`
-		StatusTableEnabled          bool   `json:"StatusTableEnabled,omitempty"`
+		ControlSchema                 string `json:"ControlSchema,omitempty"`
+		CommitPositionTableEnabled    bool   `json:"CommitPositionTableEnabled,omitempty"`
+		FullLoadExceptionTableEnabled bool   `json:"FullLoadExceptionTableEnabled,omitempty"`
+		HistoryTimeslotInMinutes      int    `json:"HistoryTimeslotInMinutes,omitempty"`
+		HistoryTableEnabled           bool   `json:"HistoryTableEnabled,omitempty"`
+		SuspendedTablesTableEnabled   bool   `json:"SuspendedTablesTableEnabled,omitempty"`
+		StatusTableEnabled            bool   `json:"StatusTableEnabled,omitempty"`
+		historyTimeslotInMinutes      int    `json:"historyTimeslotInMinutes,omitempty"`
 	} `json:"ControlTablesSettings,omitempty"`
+	PostProcessingRules  struct{} `json:"PostProcessingRules,omitempty"`
 	StreamBufferSettings struct {
-		StreamBufferCount    int `json:"StreamBufferCount,omitempty"`
-		StreamBufferSizeInMB int `json:"StreamBufferSizeInMB,omitempty"`
+		CtrlStreamBufferSizeInMB int `json:"CtrlStreamBufferSizeInMB,omitempty"`
+		StreamBufferCount        int `json:"StreamBufferCount,omitempty"`
+		StreamBufferSizeInMB     int `json:"StreamBufferSizeInMB,omitempty"`
 	} `json:"StreamBufferSettings,omitempty"`
-	ChangeProcessingTuning struct {
+	FailTaskWhenCleanTaskResourceFailed bool `json:"FailTaskWhenCleanTaskResourceFailed,omitempty"`
+	ChangeProcessingTuning              struct {
 		BatchApplyPreserveTransaction bool `json:"BatchApplyPreserveTransaction,omitempty"`
 		BatchApplyTimeoutMin          int  `json:"BatchApplyTimeoutMin,omitempty"`
 		BatchApplyTimeoutMax          int  `json:"BatchApplyTimeoutMax,omitempty"`
@@ -110,23 +120,28 @@ type taskSettings struct {
 		ColumnFilter      string `json:"ColumnFilter,omitempty"`
 	} `json:"BeforeImageSettings,omitempty"`
 	ErrorBehavior struct {
-		DataErrorPolicy               string `json:"DataErrorPolicy,omitempty"`
-		DataTruncationErrorPolicy     string `json:"DataTruncationErrorPolicy,omitempty"`
-		DataErrorEscalationPolicy     string `json:"DataErrorEscalationPolicy,omitempty"`
-		DataErrorEscalationCount      int    `json:"DataErrorEscalationCount,omitempty"`
-		TableErrorPolicy              string `json:"TableErrorPolicy,omitempty"`
-		TableErrorEscalationPolicy    string `json:"TableErrorEscalationPolicy,omitempty"`
-		TableErrorEscalationCount     int    `json:"TableErrorEscalationCount,omitempty"`
-		RecoverableErrorCount         int    `json:"RecoverableErrorCount,omitempty"`
-		RecoverableErrorInterval      int    `json:"RecoverableErrorInterval,omitempty"`
-		RecoverableErrorThrottling    bool   `json:"RecoverableErrorThrottling,omitempty"`
-		RecoverableErrorThrottlingMax int    `json:"RecoverableErrorThrottlingMax,omitempty"`
-		ApplyErrorDeletePolicy        string `json:"ApplyErrorDeletePolicy,omitempty"`
-		ApplyErrorInsertPolicy        string `json:"ApplyErrorInsertPolicy,omitempty"`
-		ApplyErrorUpdatePolicy        string `json:"ApplyErrorUpdatePolicy,omitempty"`
-		ApplyErrorEscalationPolicy    string `json:"ApplyErrorEscalationPolicy,omitempty"`
-		ApplyErrorEscalationCount     int    `json:"ApplyErrorEscalationCount,omitempty"`
-		FullLoadIgnoreConflicts       bool   `json:"FullLoadIgnoreConflicts,omitempty"`
+		DataErrorPolicy                             string `json:"DataErrorPolicy,omitempty"`
+		DataTruncationErrorPolicy                   string `json:"DataTruncationErrorPolicy,omitempty"`
+		DataErrorEscalationPolicy                   string `json:"DataErrorEscalationPolicy,omitempty"`
+		DataErrorEscalationCount                    int    `json:"DataErrorEscalationCount,omitempty"`
+		EventErrorPolicy                            string `json:"EventErrorPolicy,omitempty"`
+		FailOnNoTablesCaptured                      bool   `json:"FailOnNoTablesCaptured,omitempty"`
+		FailOnTransactionConsistencyBreached        bool   `json:"FailOnTransactionConsistencyBreached,omitempty"`
+		TableErrorPolicy                            string `json:"TableErrorPolicy,omitempty"`
+		TableErrorEscalationPolicy                  string `json:"TableErrorEscalationPolicy,omitempty"`
+		TableErrorEscalationCount                   int    `json:"TableErrorEscalationCount,omitempty"`
+		RecoverableErrorCount                       int    `json:"RecoverableErrorCount,omitempty"`
+		RecoverableErrorInterval                    int    `json:"RecoverableErrorInterval,omitempty"`
+		RecoverableErrorThrottling                  bool   `json:"RecoverableErrorThrottling,omitempty"`
+		RecoverableErrorThrottlingMax               int    `json:"RecoverableErrorThrottlingMax,omitempty"`
+		RecoverableErrorStopRetryAfterThrottlingMax bool   `json:"RecoverableErrorStopRetryAfterThrottlingMax,omitempty"`
+		ApplyErrorDeletePolicy                      string `json:"ApplyErrorDeletePolicy,omitempty"`
+		ApplyErrorInsertPolicy                      string `json:"ApplyErrorInsertPolicy,omitempty"`
+		ApplyErrorUpdatePolicy                      string `json:"ApplyErrorUpdatePolicy,omitempty"`
+		ApplyErrorEscalationPolicy                  string `json:"ApplyErrorEscalationPolicy,omitempty"`
+		ApplyErrorEscalationCount                   int    `json:"ApplyErrorEscalationCount,omitempty"`
+		ApplyErrorFailOnTruncationDdl               bool   `json:"ApplyErrorFailOnTruncationDdl,omitempty"`
+		FullLoadIgnoreConflicts                     bool   `json:"FullLoadIgnoreConflicts,omitempty"`
 	} `json:"ErrorBehavior,omitempty"`
 	ValidationSettings struct {
 		EnableValidation                 bool   `json:"EnableValidation,omitempty"`
