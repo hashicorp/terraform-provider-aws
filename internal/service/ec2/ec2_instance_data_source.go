@@ -400,7 +400,6 @@ func DataSourceInstance() *schema.Resource {
 func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	// Build up search parameters
 	input := &ec2.DescribeInstancesInput{}
@@ -430,7 +429,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	log.Printf("[DEBUG] aws_instance - Single Instance ID found: %s", aws.StringValue(instance.InstanceId))
-	if err := instanceDescriptionAttributes(ctx, d, instance, conn, ignoreTagsConfig); err != nil {
+	if err := instanceDescriptionAttributes(ctx, d, meta, instance); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", aws.StringValue(instance.InstanceId), err)
 	}
 
@@ -456,8 +455,9 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 // Populate instance attribute fields with the returned instance
-func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2, ignoreTagsConfig *tftags.IgnoreConfig) error {
+func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, meta interface{}, instance *ec2.Instance) error {
 	d.SetId(aws.StringValue(instance.InstanceId))
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	instanceType := aws.StringValue(instance.InstanceType)
 	instanceTypeInfo, err := FindInstanceTypeByName(ctx, conn, instanceType)
@@ -538,6 +538,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 		d.Set("monitoring", monitoringState == "enabled" || monitoringState == "pending")
 	}
 
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	if err := d.Set("tags", KeyValueTags(ctx, instance.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("setting tags: %w", err)
 	}
@@ -548,7 +549,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Block devices
-	if err := readBlockDevices(ctx, d, instance, conn); err != nil {
+	if err := readBlockDevices(ctx, d, meta, instance); err != nil {
 		return fmt.Errorf("reading EC2 Instance (%s): %w", aws.StringValue(instance.InstanceId), err)
 	}
 	if _, ok := d.GetOk("ephemeral_block_device"); !ok {
