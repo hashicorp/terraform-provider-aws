@@ -1049,7 +1049,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				continue
 			}
 
-			volID := getRootVolumeId(instance)
+			volID := getRootVolID(instance)
 			if volID == "" {
 				continue
 			}
@@ -1068,12 +1068,12 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 				continue
 			}
 
-			volumeID := getVolumeIdByDeviceName(instance, bd["device_name"].(string))
-			if volumeID == "" {
+			volID := getVolIDByDeviceName(instance, bd["device_name"].(string))
+			if volID == "" {
 				continue
 			}
 
-			blockDeviceTagsToCreate[volumeID] = blockDeviceTags
+			blockDeviceTagsToCreate[volID] = blockDeviceTags
 		}
 	}
 
@@ -1485,16 +1485,16 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChange("volume_tags") && !d.IsNewResource() {
-		volumeIds, err := getInstanceVolumeIDs(ctx, conn, d.Id())
+		volIDs, err := getInstanceVolIDs(ctx, conn, d.Id())
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s): %s", d.Id(), err)
 		}
 
 		o, n := d.GetChange("volume_tags")
 
-		for _, volumeID := range volumeIds {
-			if err := updateTags(ctx, conn, volumeID, o, n); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating volume_tags (%s): %s", volumeID, err)
+		for _, volID := range volIDs {
+			if err := updateTags(ctx, conn, volID, o, n); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating volume_tags (%s): %s", volID, err)
 			}
 		}
 	}
@@ -1882,10 +1882,10 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if d.HasChange("root_block_device.0") && !d.IsNewResource() {
-		volumeID := d.Get("root_block_device.0.volume_id").(string)
+		volID := d.Get("root_block_device.0.volume_id").(string)
 
 		input := &ec2.ModifyVolumeInput{
-			VolumeId: aws.String(volumeID),
+			VolumeId: aws.String(volID),
 		}
 		modifyVolume := false
 
@@ -1931,11 +1931,11 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			_, err := conn.ModifyVolumeWithContext(ctx, input)
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) volume (%s): %s", d.Id(), volumeID, err)
+				return sdkdiag.AppendErrorf(diags, "updating EC2 Instance (%s) volume (%s): %s", d.Id(), volID, err)
 			}
 
-			if _, err := WaitVolumeModificationComplete(ctx, conn, volumeID, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) volume (%s) update: %s", d.Id(), volumeID, err)
+			if _, err := WaitVolumeModificationComplete(ctx, conn, volID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for EC2 Instance (%s) volume (%s) update: %s", d.Id(), volID, err)
 			}
 		}
 
@@ -1969,16 +1969,16 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChange("root_block_device.0.tags") {
 			o, n := d.GetChange("root_block_device.0.tags")
 
-			if err := updateTags(ctx, conn, volumeID, o, n); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating tags for volume (%s): %s", volumeID, err)
+			if err := updateTags(ctx, conn, volID, o, n); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating tags for volume (%s): %s", volID, err)
 			}
 		}
 
 		if d.HasChange("root_block_device.0.tags_all") && !d.HasChange("root_block_device.0.tags") {
 			o, n := d.GetChange("root_block_device.0.tags_all")
 
-			if err := updateTags(ctx, conn, volumeID, o, n); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating tags for volume (%s): %s", volumeID, err)
+			if err := updateTags(ctx, conn, volID, o, n); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating tags for volume (%s): %s", volID, err)
 			}
 		}
 	}
@@ -2636,18 +2636,18 @@ func readBlockDeviceMappingsFromConfig(ctx context.Context, d *schema.ResourceDa
 }
 
 func readVolumeTags(ctx context.Context, conn *ec2.EC2, instanceId string) ([]*ec2.Tag, error) {
-	volumeIds, err := getInstanceVolumeIDs(ctx, conn, instanceId)
+	volIDs, err := getInstanceVolIDs(ctx, conn, instanceId)
 	if err != nil {
-		return nil, fmt.Errorf("getting tags for volumes (%s): %s", volumeIds, err)
+		return nil, fmt.Errorf("getting tags for volumes (%s): %s", volIDs, err)
 	}
 
 	resp, err := conn.DescribeTagsWithContext(ctx, &ec2.DescribeTagsInput{
 		Filters: attributeFiltersFromMultimap(map[string][]string{
-			"resource-id": volumeIds,
+			"resource-id": volIDs,
 		}),
 	})
 	if err != nil {
-		return nil, fmt.Errorf("getting tags for volumes (%s): %s", volumeIds, err)
+		return nil, fmt.Errorf("getting tags for volumes (%s): %s", volIDs, err)
 	}
 
 	return tagsFromTagDescriptions(resp.Tags), nil
@@ -3254,8 +3254,8 @@ func userDataHashSum(user_data string) string {
 	return hex.EncodeToString(hash[:])
 }
 
-func getInstanceVolumeIDs(ctx context.Context, conn *ec2.EC2, instanceId string) ([]string, error) {
-	volumeIds := []string{}
+func getInstanceVolIDs(ctx context.Context, conn *ec2.EC2, instanceId string) ([]string, error) {
+	volIDs := []string{}
 
 	resp, err := conn.DescribeVolumesWithContext(ctx, &ec2.DescribeVolumesInput{
 		Filters: BuildAttributeFilterList(map[string]string{
@@ -3267,13 +3267,13 @@ func getInstanceVolumeIDs(ctx context.Context, conn *ec2.EC2, instanceId string)
 	}
 
 	for _, v := range resp.Volumes {
-		volumeIds = append(volumeIds, aws.StringValue(v.VolumeId))
+		volIDs = append(volIDs, aws.StringValue(v.VolumeId))
 	}
 
-	return volumeIds, nil
+	return volIDs, nil
 }
 
-func getRootVolumeId(instance *ec2.Instance) string {
+func getRootVolID(instance *ec2.Instance) string {
 	volID := ""
 	for _, bd := range instance.BlockDeviceMappings {
 		if bd.Ebs != nil && blockDeviceIsRoot(bd, instance) {
@@ -3287,18 +3287,18 @@ func getRootVolumeId(instance *ec2.Instance) string {
 	return volID
 }
 
-func getVolumeIdByDeviceName(instance *ec2.Instance, deviceName string) string {
-	volumeID := ""
+func getVolIDByDeviceName(instance *ec2.Instance, deviceName string) string {
+	volID := ""
 	for _, bd := range instance.BlockDeviceMappings {
 		if aws.StringValue(bd.DeviceName) == deviceName {
 			if bd.Ebs != nil {
-				volumeID = aws.StringValue(bd.Ebs.VolumeId)
+				volID = aws.StringValue(bd.Ebs.VolumeId)
 				break
 			}
 		}
 	}
 
-	return volumeID
+	return volID
 }
 
 func blockDeviceTagsDefined(d *schema.ResourceData) bool {

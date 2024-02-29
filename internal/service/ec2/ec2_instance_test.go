@@ -1604,40 +1604,6 @@ func TestAccEC2Instance_BlockDeviceTags_ebsAndRoot(t *testing.T) {
 	})
 }
 
-// Random Rules of EC2 Instance tags:
-// (there is certainly a better place for this but...)
-// 1. FIVE types of tags can be in play:
-//    - instance tags
-//    - default tags
-//    - volume tags
-//    - root block device tags
-//    - ebs block device tags
-// 2. Instance tags are not applied to the block devices
-// 2. EBS/root device tags conflict with volume tags
-// 3. Default tags are applied to the instance and all block devices
-// 4. Volume tags are applied at creation time to the root block device and ebs block devices
-// 5. Root block device tags behave as expected
-// 6. EBS block device tags cannot be updated
-
-// Not all possible combinations are possible such as vol tags with ebs tags
-// tags:	def vol rbd ebs
-//			0	0	0	0	// tested elsewhere
-//			0	0	0	1	// defaultTags1:step 1
-//			0	0	1	0	// defaultTags2:step 1
-//			0	0	1	1	// defaultTags1:step 2
-//			0	1	0	0	// defaultTags2:step 2
-//			0	1	0	1	// not possible, vol conflict
-//			0	1	1	0	// not possible, vol conflict
-//			0	1	1	1	// not possible, vol conflict
-//			1	0	0	0	// defaultTags2:step 3
-//			1	0	0	1	// defaultTags1:step 3
-//			1	0	1	0	// defaultTags2:step 4
-//			1	0	1	1	// defaultTags1:step 4
-//			1	1	0	0	// defaultTags2:step 5
-//			1	1	0	1	// not possible, vol conflict
-//			1	1	1	0	// not possible, vol conflict
-//			1	1	1	1	// not possible, vol conflict
-
 func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Instance
