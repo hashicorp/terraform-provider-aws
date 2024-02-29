@@ -51,6 +51,20 @@ func tagSpecificationsFromMap(ctx context.Context, m map[string]interface{}, t s
 	}
 }
 
+// tagSpecificationsFromMap returns the tag specifications for the given tag key/value map and resource type.
+func tagSpecificationsFromKeyValue(ctx context.Context, tags tftags.KeyValueTags, resourceType string) []*ec2.TagSpecification {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return []*ec2.TagSpecification{
+		{
+			ResourceType: aws.String(resourceType),
+			Tags:         Tags(tags.IgnoreAWS()),
+		},
+	}
+}
+
 // getTagSpecificationsIn returns AWS SDK for Go v1 EC2 service tags from Context.
 // nil is returned if there are no input tags.
 func getTagSpecificationsIn(ctx context.Context, resourceType string) []*ec2.TagSpecification {
@@ -91,4 +105,18 @@ func tagsSchemaConflictsWith(conflictsWith []string) *schema.Schema {
 	v.ConflictsWith = conflictsWith
 
 	return v
+}
+
+// tagSpecificationsFromMap returns the tag specifications for the given tag key/value map and resource type.
+func resolveDuplicate(ctx context.Context, m map[string]interface{}, t string) []*ec2.TagSpecification {
+	if len(m) == 0 {
+		return nil
+	}
+
+	return []*ec2.TagSpecification{
+		{
+			ResourceType: aws.String(t),
+			Tags:         Tags(tftags.New(ctx, m).IgnoreAWS()),
+		},
+	}
 }
