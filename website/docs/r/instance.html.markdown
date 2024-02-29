@@ -180,7 +180,7 @@ resource "aws_instance" "this" {
 
 ## Tag Guide
 
-Here's a breakdown of the five types of tags you might encounter relative to an `aws_instance`:
+These are the five types of tags you might encounter relative to an `aws_instance`:
 
 1. **Instance tags**: Applied to instances but not to `ebs_block_device` and `root_block_device` volumes.
 2. **Default tags**: Applied to the instance and to `ebs_block_device` and `root_block_device` volumes.

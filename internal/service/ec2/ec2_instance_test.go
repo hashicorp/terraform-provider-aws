@@ -1608,7 +1608,6 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	//rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	emptyMap := map[string]string{}
 	mapWithOneKey1 := map[string]string{"brodo": "baggins"}
@@ -1684,7 +1683,6 @@ func TestAccEC2Instance_BlockDeviceTags_defaultTagsEBSRoot(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Instance
 	resourceName := "aws_instance.test"
-	//rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	emptyMap := map[string]string{}
 	mapWithOneKey1 := map[string]string{"gigi": "kitty"}
