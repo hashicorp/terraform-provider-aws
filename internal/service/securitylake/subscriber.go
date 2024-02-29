@@ -399,12 +399,12 @@ func (r *subscriberResource) Delete(ctx context.Context, request resource.Delete
 	}
 }
 
-func (r *subscriberResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func (r *subscriberResource) ImportState(ctx context.Context, request resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, resp)
 }
 
-func (r *subscriberResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
+func (r *subscriberResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, resp)
 }
 
 func findSubscriberByID(ctx context.Context, conn *securitylake.Client, id string) (*awstypes.SubscriberResource, error) {
@@ -505,9 +505,9 @@ func expandSubscriptionValueSources(ctx context.Context, subscriberSourcesModels
 	var diags diag.Diagnostics
 
 	for _, item := range subscriberSourcesModels {
-		if !item.LogSourceResource.IsNull() && (len(item.LogSourceResource.Elements()) > 0) {
+		if !item.AwsLogSourceResource.IsNull() && (len(item.AwsLogSourceResource.Elements()) > 0) {
 			var awsLogSources []awsLogSubscriberSourceModel
-			diags.Append(item.LogSourceResource.ElementsAs(ctx, &awsLogSources, false)...)
+			diags.Append(item.AwsLogSourceResource.ElementsAs(ctx, &awsLogSources, false)...)
 			subscriberLogSource := expandSubscriberLogSourceSource(ctx, awsLogSources)
 			sources = append(sources, subscriberLogSource)
 		}
@@ -526,7 +526,7 @@ func expandSubscriberLogSourceSource(ctx context.Context, awsLogSources []awsLog
 	if len(awsLogSources) == 0 {
 		return nil
 	}
-	
+
 	sn := aws.ToString(fwflex.StringFromFramework(ctx, awsLogSources[0].SourceName))
 	return &awstypes.LogSourceResourceMemberAwsLogSource{
 		Value: awstypes.AwsLogSourceResource{
@@ -679,16 +679,16 @@ var (
 		"role_arn": types.StringType,
 	}
 
-	subscriberLogSourceResourceModelAttrTypes = map[string]attr.Type{
-		"source_name":    types.StringType,
-		"source_version": types.StringType,
-	}
-
 	subscriberCustomLogSourceResourceModelAttrTypes = map[string]attr.Type{
 		"source_name":    types.StringType,
 		"source_version": types.StringType,
 		"attributes":     types.ListType{ElemType: types.ObjectType{AttrTypes: subscriberCustomLogSourceAttributesModelAttrTypes}},
 		"provider":       types.ListType{ElemType: types.ObjectType{AttrTypes: subscriberCustomLogSourceProviderModelAttrTypes}},
+	}
+
+	subscriberLogSourceResourceModelAttrTypes = map[string]attr.Type{
+		"source_name":    types.StringType,
+		"source_version": types.StringType,
 	}
 
 	awsLogSubscriberSourcesModelAttrTypes   = types.ObjectType{AttrTypes: subscriberLogSourceResourceModelAttrTypes}
@@ -720,7 +720,7 @@ type subscriberResourceModel struct {
 }
 
 type subscriberSourcesModel struct {
-	LogSourceResource    types.List `tfsdk:"aws_log_source_resource"`
+	AwsLogSourceResource    types.List `tfsdk:"aws_log_source_resource"`
 	CustomLogSourceResource types.List `tfsdk:"custom_log_source_resource"`
 }
 
