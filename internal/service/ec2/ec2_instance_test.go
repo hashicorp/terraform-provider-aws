@@ -1604,6 +1604,194 @@ func TestAccEC2Instance_BlockDeviceTags_ebsAndRoot(t *testing.T) {
 	})
 }
 
+// Random Rules of EC2 Instance tags:
+// (there is certainly a better place for this but...)
+// 1. FIVE types of tags can be in play:
+//    - instance tags
+//    - default tags
+//    - volume tags
+//    - root block device tags
+//    - ebs block device tags
+// 2. Instance tags are not applied to the block devices
+// 2. EBS/root device tags conflict with volume tags
+// 3. Default tags are applied to the instance and all block devices
+// 4. Volume tags are applied at creation time to the root block device and ebs block devices
+// 5. Root block device tags behave as expected
+// 6. EBS block device tags cannot be updated
+
+// Not all possible combinations are possible such as vol tags with ebs tags
+// tags:	def vol rbd ebs
+//			0	0	0	0	// tested elsewhere
+//			0	0	0	1	// defaultTags1:step 1
+//			0	0	1	0	// defaultTags2:step 1
+//			0	0	1	1	// defaultTags1:step 2
+//			0	1	0	0	// defaultTags2:step 2
+//			0	1	0	1	// not possible, vol conflict
+//			0	1	1	0	// not possible, vol conflict
+//			0	1	1	1	// not possible, vol conflict
+//			1	0	0	0	// defaultTags2:step 3
+//			1	0	0	1	// defaultTags1:step 3
+//			1	0	1	0	// defaultTags2:step 4
+//			1	0	1	1	// defaultTags1:step 4
+//			1	1	0	0	// defaultTags2:step 5
+//			1	1	0	1	// not possible, vol conflict
+//			1	1	1	0	// not possible, vol conflict
+//			1	1	1	1	// not possible, vol conflict
+
+func TestAccEC2Instance_BlockDeviceTags_defaultTagsVolumeTags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	//rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	emptyMap := map[string]string{}
+	mapWithOneKey1 := map[string]string{"brodo": "baggins"}
+	mapWithOneKey2 := map[string]string{"every": "gnomes"}
+	mapWithTwoKeys := map[string]string{"brodo": "baggins", "jelly": "bean"}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{ // 1 defaultTags
+				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(mapWithOneKey2, emptyMap, emptyMap, emptyMap),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.every", "gnomes"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.every", "gnomes"),
+				),
+			},
+			{ // 1 defaultTags + 1 volumeTags
+				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(mapWithOneKey2, mapWithOneKey1, emptyMap, emptyMap),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.brodo", "baggins"),
+				),
+			},
+			{ // 1 defaultTags + 2 volumeTags
+				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(mapWithOneKey2, mapWithTwoKeys, emptyMap, emptyMap),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.brodo", "baggins"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.jelly", "bean"),
+				),
+			},
+			{ // 1 defaultTags
+				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(mapWithOneKey2, emptyMap, emptyMap, emptyMap),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "0"),
+				),
+			},
+			{ // no tags
+				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(emptyMap, emptyMap, emptyMap, emptyMap),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_BlockDeviceTags_defaultTagsEBSRoot(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v ec2.Instance
+	resourceName := "aws_instance.test"
+	//rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	emptyMap := map[string]string{}
+	mapWithOneKey1 := map[string]string{"gigi": "kitty"}
+	mapWithOneKey2 := map[string]string{"every": "gnomes"}
+	mapWithTwoKeys1 := map[string]string{"brodo": "baggins", "jelly": "bean"}
+	mapWithTwoKeys2 := map[string]string{"brodo": "baggins", "jelly": "andrew"}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{ // 1 defaultTags + 0 rootTags + 1 ebsTags
+				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(mapWithOneKey2, emptyMap, emptyMap, mapWithOneKey1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.gigi", "kitty"),
+					resource.TestCheckResourceAttr(resourceName, "ebs_block_device.0.tags_all.every", "gnomes"),
+				),
+			},
+			{ // 1 defaultTags + 2 rootTags + 1 ebsTags
+				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(mapWithOneKey2, emptyMap, mapWithTwoKeys1, mapWithOneKey1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.every", "gnomes"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.brodo", "baggins"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.jelly", "bean"),
+				),
+			},
+			{ // 1 defaultTags + 2 rootTags (1 update) + 1 ebsTags
+				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(mapWithOneKey2, emptyMap, mapWithTwoKeys2, mapWithOneKey1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.%", "3"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.every", "gnomes"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.brodo", "baggins"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.jelly", "andrew"),
+				),
+			},
+			{ // 0 defaultTags + 2 rootTags + 1 ebsTags
+				Config: testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(emptyMap, emptyMap, mapWithTwoKeys2, mapWithOneKey1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "volume_tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.brodo", "baggins"),
+					resource.TestCheckResourceAttr(resourceName, "root_block_device.0.tags_all.jelly", "andrew"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_instanceProfileChange(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Instance
@@ -6851,6 +7039,84 @@ resource "aws_instance" "test" {
 `, rName))
 }
 
+func mapToTagConfig(m map[string]string, indent int) string {
+	if len(m) == 0 {
+		return ""
+	}
+
+	var tags []string
+	for k, v := range m {
+		tags = append(tags, fmt.Sprintf("%q = %q", k, v))
+	}
+
+	return fmt.Sprintf("%s\n", strings.Join(tags, fmt.Sprintf("\n%s", strings.Repeat(" ", indent))))
+}
+
+func testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTg, volTg, rbdTg, ebsTg map[string]string) string {
+	defTgCfg := ""
+	if len(defTg) > 0 {
+		defTgCfg = fmt.Sprintf(`
+provider "aws" {
+  default_tags {
+    tags = {
+      %[1]s
+    }
+  }
+}`, mapToTagConfig(defTg, 6))
+	}
+
+	volTgCfg := ""
+	if len(volTg) > 0 {
+		volTgCfg = fmt.Sprintf(`
+  volume_tags = {
+    %[1]s
+  }`, mapToTagConfig(volTg, 4))
+	}
+
+	rbdTgCfg := ""
+	if len(rbdTg) > 0 {
+		rbdTgCfg = fmt.Sprintf(`
+    tags = {
+      %[1]s
+    }`, mapToTagConfig(rbdTg, 6))
+	}
+
+	ebsTgCfg := ""
+	if len(ebsTg) > 0 {
+		ebsTgCfg = fmt.Sprintf(`
+    tags = {
+      %[1]s
+    }`, mapToTagConfig(ebsTg, 6))
+	}
+
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		fmt.Sprintf(`
+%[1]s
+
+resource "aws_instance" "test" {
+  ami = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+
+  instance_type = "t2.medium"
+
+  %[2]s
+
+  root_block_device {
+    volume_type = "gp2"
+
+    %[3]s
+  }
+
+  ebs_block_device {
+    device_name = "/dev/sdb"
+    volume_size = 1
+
+    %[4]s
+  }
+}
+`, defTgCfg, volTgCfg, rbdTgCfg, ebsTgCfg))
+}
+
 func testAccInstanceConfig_blockDeviceTagsEBSTags(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_instance" "test" {
@@ -8497,7 +8763,7 @@ resource "aws_subnet" "test" {
   }
 }
 
-# must be >= m3 and have an encrypted root volume to eanble hibernation
+# must be >= m3 and have an encrypted root volume to enable hibernation
 resource "aws_instance" "test" {
   ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   hibernation   = %[2]t
