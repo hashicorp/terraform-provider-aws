@@ -101,7 +101,8 @@ func (r *proactiveEngagementResource) Create(ctx context.Context, request resour
 
 	_, err := conn.AssociateProactiveEngagementDetails(ctx, input)
 
-	if err != nil {
+	// "InvalidOperationException: Proactive engagement details are already associated with the subscription. Please use Enable/DisableProactiveEngagement APIs to update it's status".
+	if err != nil && !errs.IsA[*awstypes.InvalidOperationException](err) {
 		response.Diagnostics.AddError("creating Shield Proactive Engagement", err.Error())
 
 		return
