@@ -570,7 +570,7 @@ func flattenSubscriberSourcesModel(ctx context.Context, apiObject []awstypes.Log
 			subscriberLogSource, d := flattenSubscriberLogSourceResourceModel(ctx, nil, &v.Value, "custom")
 			diags.Append(d...)
 			obj = map[string]attr.Value{
-				"aws_log_source_resource":    types.ListNull(awsLogSubscriberSourcesModelAttrTypes),
+				"aws_log_source_resource":    types.ListNull(logSubscriberSourcesModelAttrTypes),
 				"custom_log_source_resource": subscriberLogSource,
 			}
 		}
@@ -691,11 +691,11 @@ var (
 		"source_version": types.StringType,
 	}
 
-	awsLogSubscriberSourcesModelAttrTypes   = types.ObjectType{AttrTypes: subscriberLogSourceResourceModelAttrTypes}
+	logSubscriberSourcesModelAttrTypes      = types.ObjectType{AttrTypes: subscriberLogSourceResourceModelAttrTypes}
 	customLogSubscriberSourceModelAttrTypes = types.ObjectType{AttrTypes: subscriberCustomLogSourceResourceModelAttrTypes}
 
 	subscriberSourcesModelAttrTypes = map[string]attr.Type{
-		"aws_log_source_resource":    types.ListType{ElemType: awsLogSubscriberSourcesModelAttrTypes},
+		"aws_log_source_resource":    types.ListType{ElemType: logSubscriberSourcesModelAttrTypes},
 		"custom_log_source_resource": types.ListType{ElemType: customLogSubscriberSourceModelAttrTypes},
 	}
 )
