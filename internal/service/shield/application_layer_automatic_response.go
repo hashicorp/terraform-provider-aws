@@ -287,7 +287,7 @@ func statusApplicationLayerAutomaticResponse(ctx context.Context, conn *shield.C
 	}
 }
 
-func waitApplicationLayerAutomaticResponseEnabled(ctx context.Context, conn *shield.Client, resourceARN string, timeout time.Duration) (*awstypes.ApplicationLayerAutomaticResponseConfiguration, error) {
+func waitApplicationLayerAutomaticResponseEnabled(ctx context.Context, conn *shield.Client, resourceARN string, timeout time.Duration) (*awstypes.ApplicationLayerAutomaticResponseConfiguration, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
 		Target:                    enum.Slice(awstypes.ApplicationLayerAutomaticResponseStatusEnabled),
