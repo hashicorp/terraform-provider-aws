@@ -11,7 +11,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
-	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -306,11 +305,11 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
-	checkCapacityChange := func(key string) (hasCapacityChange bool, oldCapacity int, newCapacity int) {
+	checkCapacityChange := func(key string) (bool, int, int) {
 		o, n := d.GetChange(key)
-		oldCapacity, newCapacity = o.(int), n.(int)
-		hasCapacityChange = !cmp.Equal(newCapacity, oldCapacity)
-		return
+		oldCapacity, newCapacity := o.(int), n.(int)
+		hasCapacityChange := newCapacity != oldCapacity
+		return hasCapacityChange, oldCapacity, newCapacity
 	}
 
 	// You can't update multiple workgroup parameters in one request.
