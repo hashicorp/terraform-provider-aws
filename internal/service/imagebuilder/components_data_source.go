@@ -15,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
-	"sigs.k8s.io/kustomize/api/types"
 )
 
 // @SDKDataSource("aws_imagebuilder_components", name="Components")
@@ -57,7 +56,7 @@ func dataSourceComponentsRead(ctx context.Context, d *schema.ResourceData, meta 
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImagebuilderFilters()
 	}
 
-	var results []*types.ComponentVersion
+	var results []*awstypes.ComponentVersion
 
 	err := conn.ListComponentsPages(ctx, input, func(page *imagebuilder.ListComponentsOutput, lastPage bool) bool {
 		if page == nil {
