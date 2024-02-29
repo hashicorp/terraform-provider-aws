@@ -166,7 +166,7 @@ func resourceComponentCreate(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if v, ok := d.GetOk("supported_os_versions"); ok && v.(*schema.Set).Len() > 0 {
-		input.SupportedOsVersions = flex.ExpandToStringSet(v.(*schema.Set))
+		input.SupportedOsVersions = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("uri"); ok {

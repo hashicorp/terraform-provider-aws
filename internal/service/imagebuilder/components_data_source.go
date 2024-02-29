@@ -56,23 +56,7 @@ func dataSourceComponentsRead(ctx context.Context, d *schema.ResourceData, meta 
 		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImagebuilderFilters()
 	}
 
-	var results []*awstypes.ComponentVersion
-
-	err := conn.ListComponentsPages(ctx, input, func(page *imagebuilder.ListComponentsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, componentVersion := range page.ComponentVersionList {
-			if componentVersion == nil {
-				continue
-			}
-
-			results = append(results, componentVersion)
-		}
-
-		return !lastPage
-	})
+	out, err := conn.ListComponents(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Components: %s", err)
@@ -80,7 +64,7 @@ func dataSourceComponentsRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	var arns, names []string
 
-	for _, r := range results {
+	for _, r := range out.ComponentVersionList {
 		arns = append(arns, aws.ToString(r.Arn))
 		names = append(names, aws.ToString(r.Name))
 	}

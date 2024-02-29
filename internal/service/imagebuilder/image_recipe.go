@@ -412,12 +412,12 @@ func expandComponentConfiguration(tfMap map[string]interface{}) *awstypes.Compon
 	return apiObject
 }
 
-func expandComponentParameters(tfList []interface{}) []*awstypes.ComponentParameter {
+func expandComponentParameters(tfList []interface{}) []awstypes.ComponentParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*awstypes.ComponentParameter
+	var apiObjects []awstypes.ComponentParameter
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -432,7 +432,7 @@ func expandComponentParameters(tfList []interface{}) []*awstypes.ComponentParame
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
@@ -452,18 +452,18 @@ func expandComponentParameter(tfMap map[string]interface{}) *awstypes.ComponentP
 	if v, ok := tfMap["value"].(string); ok && v != "" {
 		// ImageBuilder API quirk
 		// Even though Value is a slice, only one element is accepted.
-		apiObject.Value = aws.StringSlice([]string{v})
+		apiObject.Value = []string{v}
 	}
 
 	return apiObject
 }
 
-func expandComponentConfigurations(tfList []interface{}) []*awstypes.ComponentConfiguration {
+func expandComponentConfigurations(tfList []interface{}) []awstypes.ComponentConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*awstypes.ComponentConfiguration
+	var apiObjects []awstypes.ComponentConfiguration
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -478,7 +478,7 @@ func expandComponentConfigurations(tfList []interface{}) []*awstypes.ComponentCo
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
@@ -552,12 +552,12 @@ func expandInstanceBlockDeviceMapping(tfMap map[string]interface{}) *awstypes.In
 	return apiObject
 }
 
-func expandInstanceBlockDeviceMappings(tfList []interface{}) []*awstypes.InstanceBlockDeviceMapping {
+func expandInstanceBlockDeviceMappings(tfList []interface{}) []awstypes.InstanceBlockDeviceMapping {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*awstypes.InstanceBlockDeviceMapping
+	var apiObjects []awstypes.InstanceBlockDeviceMapping
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -572,7 +572,7 @@ func expandInstanceBlockDeviceMappings(tfList []interface{}) []*awstypes.Instanc
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
@@ -592,11 +592,7 @@ func expandSystemsManagerAgent(tfMap map[string]interface{}) *awstypes.SystemsMa
 	return apiObject
 }
 
-func flattenComponentConfiguration(apiObject *awstypes.ComponentConfiguration) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenComponentConfiguration(apiObject awstypes.ComponentConfiguration) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ComponentArn; v != nil {
@@ -610,7 +606,7 @@ func flattenComponentConfiguration(apiObject *awstypes.ComponentConfiguration) m
 	return tfMap
 }
 
-func flattenComponentParameters(apiObjects []*awstypes.ComponentParameter) []interface{} {
+func flattenComponentParameters(apiObjects []awstypes.ComponentParameter) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -618,21 +614,13 @@ func flattenComponentParameters(apiObjects []*awstypes.ComponentParameter) []int
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenComponentParameter(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenComponentParameter(apiObject *awstypes.ComponentParameter) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenComponentParameter(apiObject awstypes.ComponentParameter) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Name; v != nil {
@@ -642,13 +630,13 @@ func flattenComponentParameter(apiObject *awstypes.ComponentParameter) map[strin
 	if v := apiObject.Value; v != nil {
 		// ImageBuilder API quirk
 		// Even though Value is a slice, only one element is accepted.
-		tfMap["value"] = aws.ToStringSlice(v)[0]
+		tfMap["value"] = aws.StringSlice(v)[0]
 	}
 
 	return tfMap
 }
 
-func flattenComponentConfigurations(apiObjects []*awstypes.ComponentConfiguration) []interface{} {
+func flattenComponentConfigurations(apiObjects []awstypes.ComponentConfiguration) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -656,10 +644,6 @@ func flattenComponentConfigurations(apiObjects []*awstypes.ComponentConfiguratio
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenComponentConfiguration(apiObject))
 	}
 
@@ -682,7 +666,7 @@ func flattenEBSInstanceBlockDeviceSpecification(apiObject *awstypes.EbsInstanceB
 	}
 
 	if v := apiObject.Iops; v != nil {
-		tfMap["iops"] = aws.ToInt64(v)
+		tfMap["iops"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.KmsKeyId; v != nil {
@@ -701,18 +685,12 @@ func flattenEBSInstanceBlockDeviceSpecification(apiObject *awstypes.EbsInstanceB
 		tfMap["volume_size"] = aws.ToInt32(v)
 	}
 
-	if v := apiObject.VolumeType; v != nil {
-		tfMap["volume_type"] = awstypes.EbsVolumeType(v)
-	}
+	tfMap["volume_type"] = awstypes.EbsVolumeType(apiObject.VolumeType)
 
 	return tfMap
 }
 
-func flattenInstanceBlockDeviceMapping(apiObject *awstypes.InstanceBlockDeviceMapping) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenInstanceBlockDeviceMapping(apiObject awstypes.InstanceBlockDeviceMapping) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeviceName; v != nil {
@@ -734,7 +712,7 @@ func flattenInstanceBlockDeviceMapping(apiObject *awstypes.InstanceBlockDeviceMa
 	return tfMap
 }
 
-func flattenInstanceBlockDeviceMappings(apiObjects []*awstypes.InstanceBlockDeviceMapping) []interface{} {
+func flattenInstanceBlockDeviceMappings(apiObjects []awstypes.InstanceBlockDeviceMapping) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -742,10 +720,6 @@ func flattenInstanceBlockDeviceMappings(apiObjects []*awstypes.InstanceBlockDevi
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenInstanceBlockDeviceMapping(apiObject))
 	}
 

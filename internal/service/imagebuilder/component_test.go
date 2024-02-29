@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -314,13 +315,11 @@ func testAccCheckComponentDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			output, err := conn.GetComponent(ctx, input)
-
 			if errs.IsA[*types.ResourceNotFoundException](err) {
-				continue
+				return nil
 			}
-
 			if err != nil {
-				return fmt.Errorf("error getting Image Builder Component (%s): %w", rs.Primary.ID, err)
+				return create.Error(names.ImageBuilder, create.ErrActionCheckingDestroyed, "tfimagebuilder", rs.Primary.ID, err)
 			}
 
 			if output != nil {

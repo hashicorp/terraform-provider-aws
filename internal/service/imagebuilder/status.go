@@ -30,12 +30,12 @@ func statusImage(ctx context.Context, conn *imagebuilder.Client, imageBuildVersi
 			return nil, string(awstypes.ImageStatusPending), nil
 		}
 
-		status := aws.ToString(output.Image.State.Status)
+		status := output.Image.State.Status
 
-		if status == string(awstypes.ImageStatusFailed) {
-			return output.Image, status, fmt.Errorf("%s", aws.ToString(output.Image.State.Reason))
+		if status == awstypes.ImageStatusFailed {
+			return output.Image, string(status), fmt.Errorf("%s", aws.ToString(output.Image.State.Reason))
 		}
 
-		return output.Image, status, nil
+		return output.Image, string(status), nil
 	}
 }

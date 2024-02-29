@@ -374,8 +374,8 @@ func (r *resourceLifecyclePolicy) Read(ctx context.Context, req resource.ReadReq
 	resp.Diagnostics.Append(d...)
 	state.ResourceSelection = resourceSelection
 
-	state.ResourceType = flex.ToStringToFramework(ctx, out.ResourceType)
-	state.Status = flex.ToStringToFramework(ctx, out.Status)
+	state.ResourceType = flex.StringValueToFramework(ctx, out.ResourceType)
+	state.Status = flex.StringValueToFramework(ctx, out.Status)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -680,7 +680,7 @@ func expandPolicyDetailExclusionRules(ctx context.Context, tfList []resourceExcl
 	}
 
 	if !tfObj.TagMap.IsNull() {
-		apiObject.TagMap = flex.ExpandFrameworkToStringMap(ctx, tfObj.TagMap)
+		apiObject.TagMap = flex.ExpandFrameworkStringValueMap(ctx, tfObj.TagMap)
 	}
 
 	return &apiObject, diags
@@ -712,15 +712,15 @@ func expandPolicyDetailExclusionRulesAmis(ctx context.Context, tfList []resource
 	}
 
 	if !tfObj.Regions.IsNull() {
-		apiObject.Regions = flex.ExpandFrameworkToStringList(ctx, tfObj.LastLaunched)
+		apiObject.Regions = flex.ExpandFrameworkStringValueList(ctx, tfObj.LastLaunched)
 	}
 
 	if !tfObj.SharedAccounts.IsNull() {
-		apiObject.Regions = flex.ExpandFrameworkToStringList(ctx, tfObj.SharedAccounts)
+		apiObject.Regions = flex.ExpandFrameworkStringValueList(ctx, tfObj.SharedAccounts)
 	}
 
 	if !tfObj.TagMap.IsNull() {
-		apiObject.TagMap = flex.ExpandFrameworkToStringMap(ctx, tfObj.TagMap)
+		apiObject.TagMap = flex.ExpandFrameworkStringValueMap(ctx, tfObj.TagMap)
 	}
 
 	return &apiObject, diags
@@ -764,7 +764,7 @@ func expandResourceSelection(ctx context.Context, tfList []resourceResourceSelec
 	}
 
 	if !tfObj.TagMap.IsNull() {
-		apiObject.TagMap = flex.ExpandFrameworkToStringMap(ctx, tfObj.TagMap)
+		apiObject.TagMap = flex.ExpandFrameworkStringValueMap(ctx, tfObj.TagMap)
 	}
 
 	return &apiObject, diags
@@ -836,7 +836,7 @@ func flattenDetailAction(ctx context.Context, apiObject *awstypes.LifecyclePolic
 	}
 
 	obj := map[string]attr.Value{
-		"type": flex.ToStringToFramework(ctx, apiObject.Type),
+		"type": flex.StringValueToFramework(ctx, apiObject.Type),
 	}
 
 	if apiObject.IncludeResources != nil {
@@ -889,10 +889,10 @@ func flattenDetailFilter(ctx context.Context, apiObject *awstypes.LifecyclePolic
 	}
 
 	obj := map[string]attr.Value{
-		"type":            flex.ToStringToFramework(ctx, apiObject.Type),
+		"type":            flex.StringValueToFramework(ctx, apiObject.Type),
 		"value":           flex.Int32ToFramework(ctx, apiObject.Value),
 		"retain_at_least": flex.Int32ToFramework(ctx, apiObject.RetainAtLeast),
-		"unit":            flex.ToStringToFramework(ctx, apiObject.Unit),
+		"unit":            flex.StringValueToFramework(ctx, apiObject.Unit),
 	}
 
 	objVal, d := types.ObjectValue(resourceFilterAttrTypes, obj)
@@ -923,7 +923,7 @@ func flattenDetailExclusionRules(ctx context.Context, apiObject *awstypes.Lifecy
 	}
 
 	if apiObject.TagMap != nil {
-		obj["tag_map"] = flex.FlattenFrameworkToStringMap(ctx, apiObject.TagMap)
+		obj["tag_map"] = flex.FlattenFrameworkStringValueMap(ctx, apiObject.TagMap)
 	}
 
 	objVal, d := types.ObjectValue(resourceExclusionRulesAttrTypes, obj)
@@ -956,15 +956,15 @@ func flattenExclusionRulesAmis(ctx context.Context, apiObject *awstypes.Lifecycl
 	}
 
 	if apiObject.Regions != nil {
-		obj["regions"] = flex.FlattenFrameworkToStringList(ctx, apiObject.Regions)
+		obj["regions"] = flex.FlattenFrameworkStringValueList(ctx, apiObject.Regions)
 	}
 
 	if apiObject.SharedAccounts != nil {
-		obj["shared_accounts"] = flex.FlattenFrameworkToStringList(ctx, apiObject.SharedAccounts)
+		obj["shared_accounts"] = flex.FlattenFrameworkStringValueList(ctx, apiObject.SharedAccounts)
 	}
 
 	if apiObject.TagMap != nil {
-		obj["tag_map"] = flex.FlattenFrameworkToStringMap(ctx, apiObject.TagMap)
+		obj["tag_map"] = flex.FlattenFrameworkStringValueMap(ctx, apiObject.TagMap)
 	}
 
 	objVal, d := types.ObjectValue(resourceAmisAttrTypes, obj)
@@ -986,7 +986,7 @@ func flattenExclusionRulesAmisLastLaunched(ctx context.Context, apiObject *awsty
 	}
 
 	obj := map[string]attr.Value{
-		"unit":  flex.ToStringToFramework(ctx, apiObject.Unit),
+		"unit":  flex.StringValueToFramework(ctx, apiObject.Unit),
 		"value": flex.Int32ToFramework(ctx, apiObject.Value),
 	}
 
@@ -1018,7 +1018,7 @@ func flattenResourceSelection(ctx context.Context, apiObject *awstypes.Lifecycle
 	}
 
 	if apiObject.TagMap != nil {
-		obj["tag_map"] = flex.FlattenFrameworkToStringMap(ctx, apiObject.TagMap)
+		obj["tag_map"] = flex.FlattenFrameworkStringValueMap(ctx, apiObject.TagMap)
 	}
 
 	objVal, d := types.ObjectValue(resourceResourceSelectionAttrTypes, obj)

@@ -521,7 +521,7 @@ func flattenECRConfiguration(apiObject *awstypes.EcrConfiguration) map[string]in
 	}
 
 	if v := apiObject.ContainerTags; v != nil {
-		tfMap["container_tags"] = aws.ToStringSlice(v)
+		tfMap["container_tags"] = aws.StringSlice(v)
 	}
 
 	return tfMap
@@ -539,7 +539,7 @@ func flattenImageTestsConfiguration(apiObject *awstypes.ImageTestsConfiguration)
 	}
 
 	if v := apiObject.TimeoutMinutes; v != nil {
-		tfMap["timeout_minutes"] = aws.ToInt64(v)
+		tfMap["timeout_minutes"] = aws.ToInt32(v)
 	}
 
 	return tfMap
@@ -552,9 +552,7 @@ func flattenSchedule(apiObject *awstypes.Schedule) map[string]interface{} {
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.PipelineExecutionStartCondition; v != nil {
-		tfMap["pipeline_execution_start_condition"] = string(v)
-	}
+	tfMap["pipeline_execution_start_condition"] = string(apiObject.PipelineExecutionStartCondition)
 
 	if v := apiObject.ScheduleExpression; v != nil {
 		tfMap["schedule_expression"] = aws.ToString(v)
