@@ -184,7 +184,7 @@ func (r *resourceDRTAccessRoleARNAssociation) Delete(ctx context.Context, reques
 
 	conn := r.Meta().ShieldClient(ctx)
 
-	roleARN := data.RoleARN.ValueString()
+	roleARN := data.ID.ValueString()
 	input := &shield.DisassociateDRTRoleInput{}
 
 	_, err := conn.DisassociateDRTRole(ctx, input)
