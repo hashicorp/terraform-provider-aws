@@ -88,7 +88,7 @@ func testAccCheckDRTAccessRoleARNAssociationDestroy(ctx context.Context) resourc
 				continue
 			}
 
-			_, err := tfshield.FindDRTRoleARNAssociation(ctx, conn, rs.Primary.ID)
+			_, err := tfshield.FindDRTRoleARNAssociation(ctx, conn, rs.Primary.Attributes["role_arn"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -114,7 +114,7 @@ func testAccCheckDRTAccessRoleARNAssociationExists(ctx context.Context, n string
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
 
-		_, err := tfshield.FindDRTRoleARNAssociation(ctx, conn, rs.Primary.ID)
+		_, err := tfshield.FindDRTRoleARNAssociation(ctx, conn, rs.Primary.Attributes["role_arn"])
 
 		return err
 	}

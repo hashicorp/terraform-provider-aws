@@ -39,9 +39,10 @@ func testAccDRTAccessLogBucketAssociation_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"role_arn_association_id"},
 			},
 		},
 	})
