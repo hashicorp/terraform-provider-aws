@@ -323,7 +323,7 @@ func (r *resourceRotation) Read(ctx context.Context, request resource.ReadReques
 
 	state.ARN = flex.StringToFramework(ctx, output.RotationArn)
 	state.Name = flex.StringToFramework(ctx, output.Name)
-	state.Recurrence = fwtypes.NewListNestedObjectValueOfPtr(ctx, rc)
+	state.Recurrence = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, rc)
 	state.TimeZoneID = flex.StringToFramework(ctx, output.TimeZoneId)
 
 	if output.StartTime != nil {
@@ -554,23 +554,23 @@ func flattenShiftCoverages(ctx context.Context, object map[string][]awstypes.Cov
 		var coverageTimes []coverageTimesData
 		for _, v := range value {
 			ct := coverageTimesData{
-				End: fwtypes.NewListNestedObjectValueOfPtr(ctx, &handOffTime{
+				End: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &handOffTime{
 					HourOfDay:    flex.Int32ValueToFramework(ctx, v.End.HourOfDay),
 					MinuteOfHour: flex.Int32ValueToFramework(ctx, v.End.MinuteOfHour),
 				}),
-				Start: fwtypes.NewListNestedObjectValueOfPtr(ctx, &handOffTime{
+				Start: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &handOffTime{
 					HourOfDay:    flex.Int32ValueToFramework(ctx, v.Start.HourOfDay),
 					MinuteOfHour: flex.Int32ValueToFramework(ctx, v.End.MinuteOfHour),
 				}),
 			}
 			coverageTimes = append(coverageTimes, ct)
 		}
-		sc.CoverageTimes = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, coverageTimes)
+		sc.CoverageTimes = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, coverageTimes)
 
 		output = append(output, sc)
 	}
 
-	return fwtypes.NewListNestedObjectValueOfValueSlice[shiftCoveragesData](ctx, output)
+	return fwtypes.NewListNestedObjectValueOfValueSliceMust[shiftCoveragesData](ctx, output)
 }
 
 func findRotationByID(ctx context.Context, conn *ssmcontacts.Client, id string) (*ssmcontacts.GetRotationOutput, error) {

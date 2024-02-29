@@ -258,13 +258,13 @@ func TestExpand(t *testing.T) {
 		},
 		{
 			TestName:   "single ARN Source and single string Target",
-			Source:     &TestFlexTF17{Field1: fwtypes.ARNValue(testARN)},
+			Source:     &TestFlexTF17{Field1: fwtypes.ARNValueMust(testARN)},
 			Target:     &TestFlexAWS01{},
 			WantTarget: &TestFlexAWS01{Field1: testARN},
 		},
 		{
 			TestName:   "single ARN Source and single *string Target",
-			Source:     &TestFlexTF17{Field1: fwtypes.ARNValue(testARN)},
+			Source:     &TestFlexTF17{Field1: fwtypes.ARNValueMust(testARN)},
 			Target:     &TestFlexAWS02{},
 			WantTarget: &TestFlexAWS02{Field1: aws.String(testARN)},
 		},
@@ -301,25 +301,25 @@ func TestExpandGeneric(t *testing.T) {
 	testCases := autoFlexTestCases{
 		{
 			TestName:   "single list Source and *struct Target",
-			Source:     &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF01{Field1: types.StringValue("a")})},
+			Source:     &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &TestFlexTF01{Field1: types.StringValue("a")})},
 			Target:     &TestFlexAWS06{},
 			WantTarget: &TestFlexAWS06{Field1: &TestFlexAWS01{Field1: "a"}},
 		},
 		{
 			TestName:   "single set Source and *struct Target",
-			Source:     &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfPtr(ctx, &TestFlexTF01{Field1: types.StringValue("a")})},
+			Source:     &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfPtrMust(ctx, &TestFlexTF01{Field1: types.StringValue("a")})},
 			Target:     &TestFlexAWS06{},
 			WantTarget: &TestFlexAWS06{Field1: &TestFlexAWS01{Field1: "a"}},
 		},
 		{
 			TestName:   "empty list Source and empty []struct Target",
-			Source:     &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{})},
+			Source:     &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{})},
 			Target:     &TestFlexAWS08{},
 			WantTarget: &TestFlexAWS08{Field1: []TestFlexAWS01{}},
 		},
 		{
 			TestName: "non-empty list Source and non-empty []struct Target",
-			Source: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{
+			Source: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{
 				{Field1: types.StringValue("a")},
 				{Field1: types.StringValue("b")},
 			})},
@@ -331,13 +331,13 @@ func TestExpandGeneric(t *testing.T) {
 		},
 		{
 			TestName:   "empty list Source and empty []*struct Target",
-			Source:     &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexTF01{})},
+			Source:     &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*TestFlexTF01{})},
 			Target:     &TestFlexAWS07{},
 			WantTarget: &TestFlexAWS07{Field1: []*TestFlexAWS01{}},
 		},
 		{
 			TestName: "non-empty list Source and non-empty []*struct Target",
-			Source: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexTF01{
+			Source: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*TestFlexTF01{
 				{Field1: types.StringValue("a")},
 				{Field1: types.StringValue("b")},
 			})},
@@ -349,13 +349,13 @@ func TestExpandGeneric(t *testing.T) {
 		},
 		{
 			TestName:   "empty list Source and empty []struct Target",
-			Source:     &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{})},
+			Source:     &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{})},
 			Target:     &TestFlexAWS08{},
 			WantTarget: &TestFlexAWS08{Field1: []TestFlexAWS01{}},
 		},
 		{
 			TestName: "non-empty list Source and non-empty []struct Target",
-			Source: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{
+			Source: &TestFlexTF05{Field1: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{
 				{Field1: types.StringValue("a")},
 				{Field1: types.StringValue("b")},
 			})},
@@ -367,13 +367,13 @@ func TestExpandGeneric(t *testing.T) {
 		},
 		{
 			TestName:   "empty set Source and empty []*struct Target",
-			Source:     &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfSlice(ctx, []*TestFlexTF01{})},
+			Source:     &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, []*TestFlexTF01{})},
 			Target:     &TestFlexAWS07{},
 			WantTarget: &TestFlexAWS07{Field1: []*TestFlexAWS01{}},
 		},
 		{
 			TestName: "non-empty set Source and non-empty []*struct Target",
-			Source: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfSlice(ctx, []*TestFlexTF01{
+			Source: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfSliceMust(ctx, []*TestFlexTF01{
 				{Field1: types.StringValue("a")},
 				{Field1: types.StringValue("b")},
 			})},
@@ -385,7 +385,7 @@ func TestExpandGeneric(t *testing.T) {
 		},
 		{
 			TestName: "non-empty set Source and non-empty []struct Target",
-			Source: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, []TestFlexTF01{
+			Source: &TestFlexTF06{Field1: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF01{
 				{Field1: types.StringValue("a")},
 				{Field1: types.StringValue("b")},
 			})},
@@ -399,8 +399,8 @@ func TestExpandGeneric(t *testing.T) {
 			TestName: "complex Source and complex Target",
 			Source: &TestFlexTF07{
 				Field1: types.StringValue("m"),
-				Field2: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF05{
-					Field1: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF01{
+				Field2: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &TestFlexTF05{
+					Field1: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &TestFlexTF01{
 						Field1: types.StringValue("n"),
 					}),
 				}),
@@ -408,7 +408,7 @@ func TestExpandGeneric(t *testing.T) {
 					"X": types.StringValue("x"),
 					"Y": types.StringValue("y"),
 				}),
-				Field4: fwtypes.NewSetNestedObjectValueOfValueSlice(ctx, []TestFlexTF02{
+				Field4: fwtypes.NewSetNestedObjectValueOfValueSliceMust(ctx, []TestFlexTF02{
 					{Field1: types.Int64Value(100)},
 					{Field1: types.Int64Value(2000)},
 					{Field1: types.Int64Value(30000)},
@@ -439,7 +439,7 @@ func TestExpandGeneric(t *testing.T) {
 		{
 			TestName: "nested string map",
 			Source: &TestFlexTF14{
-				FieldOuter: fwtypes.NewListNestedObjectValueOfPtr(ctx, &TestFlexTF11{
+				FieldOuter: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &TestFlexTF11{
 					FieldInner: fwtypes.NewMapValueOfMust[basetypes.StringValue](ctx, map[string]attr.Value{
 						"x": types.StringValue("y"),
 					}),
@@ -457,7 +457,7 @@ func TestExpandGeneric(t *testing.T) {
 		{
 			TestName: "map block key list",
 			Source: &TestFlexMapBlockKeyTF01{
-				MapBlock: fwtypes.NewListNestedObjectValueOfValueSlice[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
+				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
 					{
 						MapBlockKey: types.StringValue("x"),
 						Attr1:       types.StringValue("a"),
@@ -487,7 +487,7 @@ func TestExpandGeneric(t *testing.T) {
 		{
 			TestName: "map block key set",
 			Source: &TestFlexMapBlockKeyTF03{
-				MapBlock: fwtypes.NewSetNestedObjectValueOfValueSlice[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
+				MapBlock: fwtypes.NewSetNestedObjectValueOfValueSliceMust[TestFlexMapBlockKeyTF02](ctx, []TestFlexMapBlockKeyTF02{
 					{
 						MapBlockKey: types.StringValue("x"),
 						Attr1:       types.StringValue("a"),
@@ -517,7 +517,7 @@ func TestExpandGeneric(t *testing.T) {
 		{
 			TestName: "map block key ptr source",
 			Source: &TestFlexMapBlockKeyTF01{
-				MapBlock: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexMapBlockKeyTF02{
+				MapBlock: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*TestFlexMapBlockKeyTF02{
 					{
 						MapBlockKey: types.StringValue("x"),
 						Attr1:       types.StringValue("a"),
@@ -547,7 +547,7 @@ func TestExpandGeneric(t *testing.T) {
 		{
 			TestName: "map block key ptr both",
 			Source: &TestFlexMapBlockKeyTF01{
-				MapBlock: fwtypes.NewListNestedObjectValueOfSlice(ctx, []*TestFlexMapBlockKeyTF02{
+				MapBlock: fwtypes.NewListNestedObjectValueOfSliceMust(ctx, []*TestFlexMapBlockKeyTF02{
 					{
 						MapBlockKey: types.StringValue("x"),
 						Attr1:       types.StringValue("a"),
@@ -577,7 +577,7 @@ func TestExpandGeneric(t *testing.T) {
 		{
 			TestName: "map block enum key",
 			Source: &TestFlexMapBlockKeyTF04{
-				MapBlock: fwtypes.NewListNestedObjectValueOfValueSlice[TestFlexMapBlockKeyTF05](ctx, []TestFlexMapBlockKeyTF05{
+				MapBlock: fwtypes.NewListNestedObjectValueOfValueSliceMust[TestFlexMapBlockKeyTF05](ctx, []TestFlexMapBlockKeyTF05{
 					{
 						MapBlockKey: fwtypes.StringEnumValue(TestEnumList),
 						Attr1:       types.StringValue("a"),
@@ -635,7 +635,7 @@ func TestExpandSimpleSingleNestedBlock(t *testing.T) {
 	testCases := autoFlexTestCases{
 		{
 			TestName:   "single nested block pointer",
-			Source:     &tf02{Field1: fwtypes.NewObjectValueOf[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
+			Source:     &tf02{Field1: fwtypes.NewObjectValueOfMust[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
 			Target:     &aws02{},
 			WantTarget: &aws02{Field1: &aws01{Field1: aws.String("a"), Field2: 1}},
 		},
@@ -647,7 +647,7 @@ func TestExpandSimpleSingleNestedBlock(t *testing.T) {
 		},
 		{
 			TestName:   "single nested block value",
-			Source:     &tf02{Field1: fwtypes.NewObjectValueOf[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
+			Source:     &tf02{Field1: fwtypes.NewObjectValueOfMust[tf01](ctx, &tf01{Field1: types.StringValue("a"), Field2: types.Int64Value(1)})},
 			Target:     &aws03{},
 			WantTarget: &aws03{Field1: aws01{Field1: aws.String("a"), Field2: 1}},
 		},
@@ -686,10 +686,10 @@ func TestExpandComplexSingleNestedBlock(t *testing.T) {
 		{
 			TestName: "single nested block pointer",
 			Source: &tf03{
-				Field1: fwtypes.NewObjectValueOf[tf02](
+				Field1: fwtypes.NewObjectValueOfMust[tf02](
 					ctx,
 					&tf02{
-						Field1: fwtypes.NewObjectValueOf[tf01](
+						Field1: fwtypes.NewObjectValueOfMust[tf01](
 							ctx,
 							&tf01{
 								Field1: types.BoolValue(true),
@@ -782,13 +782,13 @@ func TestExpandComplexNestedBlockWithStringEnum(t *testing.T) {
 	testCases := autoFlexTestCases{
 		{
 			TestName:   "single nested valid value",
-			Source:     &tf02{Field1: types.Int64Value(1), Field2: fwtypes.NewListNestedObjectValueOfPtr(ctx, &tf01{Field2: fwtypes.StringEnumValue(TestEnumList)})},
+			Source:     &tf02{Field1: types.Int64Value(1), Field2: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tf01{Field2: fwtypes.StringEnumValue(TestEnumList)})},
 			Target:     &aws01{},
 			WantTarget: &aws01{Field1: 1, Field2: &aws02{Field2: TestEnumList}},
 		},
 		{
 			TestName:   "single nested empty value",
-			Source:     &tf02{Field1: types.Int64Value(1), Field2: fwtypes.NewListNestedObjectValueOfPtr(ctx, &tf01{Field2: fwtypes.StringEnumNull[TestEnum]()})},
+			Source:     &tf02{Field1: types.Int64Value(1), Field2: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tf01{Field2: fwtypes.StringEnumNull[TestEnum]()})},
 			Target:     &aws01{},
 			WantTarget: &aws01{Field1: 1, Field2: &aws02{Field2: ""}},
 		},

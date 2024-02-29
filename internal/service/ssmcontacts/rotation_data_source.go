@@ -114,7 +114,7 @@ func (d *dataSourceRotation) Read(ctx context.Context, request datasource.ReadRe
 	rc.ShiftCoverages = flattenShiftCoveragesDataSource(ctx, output.Recurrence.ShiftCoverages)
 
 	data.Name = flex.StringToFramework(ctx, output.Name)
-	data.Recurrence = fwtypes.NewListNestedObjectValueOfPtr(ctx, rc)
+	data.Recurrence = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, rc)
 	data.TimeZoneID = flex.StringToFramework(ctx, output.TimeZoneId)
 	data.ID = flex.StringToFramework(ctx, output.RotationArn)
 
@@ -195,21 +195,21 @@ func flattenShiftCoveragesDataSource(ctx context.Context, object map[string][]aw
 		var coverageTimes []dsCoverageTimesData
 		for _, v := range value {
 			ct := dsCoverageTimesData{
-				End: fwtypes.NewListNestedObjectValueOfPtr(ctx, &dsHandOffTime{
+				End: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dsHandOffTime{
 					HourOfDay:    flex.Int32ValueToFramework(ctx, v.End.HourOfDay),
 					MinuteOfHour: flex.Int32ValueToFramework(ctx, v.End.MinuteOfHour),
 				}),
-				Start: fwtypes.NewListNestedObjectValueOfPtr(ctx, &dsHandOffTime{
+				Start: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dsHandOffTime{
 					HourOfDay:    flex.Int32ValueToFramework(ctx, v.Start.HourOfDay),
 					MinuteOfHour: flex.Int32ValueToFramework(ctx, v.End.MinuteOfHour),
 				}),
 			}
 			coverageTimes = append(coverageTimes, ct)
 		}
-		sc.CoverageTimes = fwtypes.NewListNestedObjectValueOfValueSlice(ctx, coverageTimes)
+		sc.CoverageTimes = fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, coverageTimes)
 
 		output = append(output, sc)
 	}
 
-	return fwtypes.NewListNestedObjectValueOfValueSlice[dsShiftCoveragesData](ctx, output)
+	return fwtypes.NewListNestedObjectValueOfValueSliceMust[dsShiftCoveragesData](ctx, output)
 }
