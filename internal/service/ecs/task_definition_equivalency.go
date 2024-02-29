@@ -124,9 +124,7 @@ func (cd containerDefinitions) OrderSecrets() {
 }
 
 func (cd containerDefinitions) OrderContainers() {
-
 	sort.Slice(cd, func(i, j int) bool {
 		return aws.StringValue(cd[i].Name) < aws.StringValue(cd[j].Name)
 	})
-
 }
