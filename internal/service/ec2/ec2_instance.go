@@ -946,7 +946,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	tagSpecifications = append(tagSpecifications,
 		tagSpecificationsFromKeyValue(
-			ctx,
 			defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("volume_tags").(map[string]interface{}))),
 			ec2.ResourceTypeVolume)...)
 

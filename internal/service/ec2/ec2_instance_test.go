@@ -7021,6 +7021,7 @@ func mapToTagConfig(m map[string]string, indent int) string {
 func testAccInstanceConfig_blockDeviceTagsDefaultVolumeRBDEBS(defTg, volTg, rbdTg, ebsTg map[string]string) string {
 	defTgCfg := ""
 	if len(defTg) > 0 {
+		//lintignore:AT004
 		defTgCfg = fmt.Sprintf(`
 provider "aws" {
   default_tags {
