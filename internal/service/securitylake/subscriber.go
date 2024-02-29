@@ -505,10 +505,10 @@ func expandSubscriptionValueSources(ctx context.Context, subscriberSourcesModels
 	var diags diag.Diagnostics
 
 	for _, item := range subscriberSourcesModels {
-		if !item.AwsLogSourceResource.IsNull() && (len(item.AwsLogSourceResource.Elements()) > 0) {
+		if !item.LogSourceResource.IsNull() && (len(item.LogSourceResource.Elements()) > 0) {
 			var awsLogSources []awsLogSubscriberSourceModel
-			diags.Append(item.AwsLogSourceResource.ElementsAs(ctx, &awsLogSources, false)...)
-			subscriberLogSource := expandSubscriberAwsLogSourceSource(ctx, awsLogSources)
+			diags.Append(item.LogSourceResource.ElementsAs(ctx, &awsLogSources, false)...)
+			subscriberLogSource := expandSubscriberLogSourceSource(ctx, awsLogSources)
 			sources = append(sources, subscriberLogSource)
 		}
 		if (!item.CustomLogSourceResource.IsNull()) && (len(item.CustomLogSourceResource.Elements()) > 0) {
@@ -522,13 +522,15 @@ func expandSubscriptionValueSources(ctx context.Context, subscriberSourcesModels
 	return sources, diags
 }
 
-func expandSubscriberAwsLogSourceSource(ctx context.Context, awsLogSources []awsLogSubscriberSourceModel) *awstypes.LogSourceResourceMemberAwsLogSource {
+func expandSubscriberLogSourceSource(ctx context.Context, awsLogSources []awsLogSubscriberSourceModel) *awstypes.LogSourceResourceMemberAwsLogSource {
 	if len(awsLogSources) == 0 {
 		return nil
 	}
+	
+	sn := aws.ToString(fwflex.StringFromFramework(ctx, awsLogSources[0].SourceName))
 	return &awstypes.LogSourceResourceMemberAwsLogSource{
 		Value: awstypes.AwsLogSourceResource{
-			SourceName:    awstypes.AwsLogSourceName(*fwflex.StringFromFramework(ctx, awsLogSources[0].SourceName)),
+			SourceName:    awstypes.AwsLogSourceName(sn),
 			SourceVersion: fwflex.StringFromFramework(ctx, awsLogSources[0].SourceVersion),
 		},
 	}
@@ -591,12 +593,12 @@ func flattenSubscriberLogSourceResourceModel(ctx context.Context, awsLogApiObjec
 
 	if logSourceType == "aws" {
 		var d diag.Diagnostics
-		elemType = types.ObjectType{AttrTypes: subscriberAwsLogSourceResourceModelAttrTypes}
+		elemType = types.ObjectType{AttrTypes: subscriberLogSourceResourceModelAttrTypes}
 		obj = map[string]attr.Value{
 			"source_name":    fwflex.StringValueToFramework(ctx, awsLogApiObject.SourceName),
 			"source_version": fwflex.StringToFramework(ctx, awsLogApiObject.SourceVersion),
 		}
-		objVal, d = types.ObjectValue(subscriberAwsLogSourceResourceModelAttrTypes, obj)
+		objVal, d = types.ObjectValue(subscriberLogSourceResourceModelAttrTypes, obj)
 		diags.Append(d...)
 	} else if logSourceType == "custom" {
 		elemType = types.ObjectType{AttrTypes: subscriberCustomLogSourceResourceModelAttrTypes}
@@ -677,7 +679,7 @@ var (
 		"role_arn": types.StringType,
 	}
 
-	subscriberAwsLogSourceResourceModelAttrTypes = map[string]attr.Type{
+	subscriberLogSourceResourceModelAttrTypes = map[string]attr.Type{
 		"source_name":    types.StringType,
 		"source_version": types.StringType,
 	}
@@ -689,7 +691,7 @@ var (
 		"provider":       types.ListType{ElemType: types.ObjectType{AttrTypes: subscriberCustomLogSourceProviderModelAttrTypes}},
 	}
 
-	awsLogSubscriberSourcesModelAttrTypes   = types.ObjectType{AttrTypes: subscriberAwsLogSourceResourceModelAttrTypes}
+	awsLogSubscriberSourcesModelAttrTypes   = types.ObjectType{AttrTypes: subscriberLogSourceResourceModelAttrTypes}
 	customLogSubscriberSourceModelAttrTypes = types.ObjectType{AttrTypes: subscriberCustomLogSourceResourceModelAttrTypes}
 
 	subscriberSourcesModelAttrTypes = map[string]attr.Type{
@@ -718,7 +720,7 @@ type subscriberResourceModel struct {
 }
 
 type subscriberSourcesModel struct {
-	AwsLogSourceResource    types.List `tfsdk:"aws_log_source_resource"`
+	LogSourceResource    types.List `tfsdk:"aws_log_source_resource"`
 	CustomLogSourceResource types.List `tfsdk:"custom_log_source_resource"`
 }
 
