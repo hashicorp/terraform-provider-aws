@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
 type arnType struct {
@@ -128,11 +128,23 @@ func ARNUnknown() ARN {
 	return ARN{StringValue: basetypes.NewStringUnknown()}
 }
 
-func ARNValueMust(value string) ARN {
+func ARNValue(value string) (ARN, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	v, err := arn.Parse(value)
+	if err != nil {
+		diags.Append(diag.NewErrorDiagnostic("Invalid ARN", err.Error()))
+		return ARNUnknown(), diags
+	}
+
 	return ARN{
 		StringValue: basetypes.NewStringValue(value),
-		value:       errs.Must(arn.Parse(value)),
-	}
+		value:       v,
+	}, diags
+}
+
+func ARNValueMust(value string) ARN {
+	return fwdiag.Must(ARNValue(value))
 }
 
 type ARN struct {
