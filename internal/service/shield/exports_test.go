@@ -11,8 +11,9 @@ var (
 	ResourceProactiveEngagement               = newProactiveEngagementResource
 	ResourceProtection                        = resourceProtection
 
-	FindDRTLogBucketAssociation  = findDRTLogBucketAssociation
-	FindDRTRoleARNAssociation    = findDRTRoleARNAssociation
-	FindEmergencyContactSettings = findEmergencyContactSettings
-	FindProtectionByID           = findProtectionByID
+	FindApplicationLayerAutomaticResponseByResourceARN = findApplicationLayerAutomaticResponseByResourceARN
+	FindDRTLogBucketAssociation                        = findDRTLogBucketAssociation
+	FindDRTRoleARNAssociation                          = findDRTRoleARNAssociation
+	FindEmergencyContactSettings                       = findEmergencyContactSettings
+	FindProtectionByID                                 = findProtectionByID
 )
