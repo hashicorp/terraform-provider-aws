@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.0
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.50.27
+	github.com/aws/aws-sdk-go v1.50.28
 	github.com/aws/aws-sdk-go-v2 v1.25.2
 	github.com/aws/aws-sdk-go-v2/config v1.27.4
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.2
@@ -21,7 +21,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/athena v1.40.1
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.32.1
-	github.com/aws/aws-sdk-go-v2/service/batch v1.33.1
+	github.com/aws/aws-sdk-go-v2/service/batch v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.7.1
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.4.1
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.22.1
