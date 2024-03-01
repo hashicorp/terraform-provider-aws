@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_instance")
@@ -98,7 +99,8 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"tags": tftags.TagsSchemaComputed(),
+						names.AttrTags:    tftags.TagsSchemaComputed(),
+						names.AttrTagsAll: tftags.TagsSchemaComputed(),
 						"throughput": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -332,7 +334,8 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"tags": tftags.TagsSchemaComputed(),
+						names.AttrTags:    tftags.TagsSchemaComputed(),
+						names.AttrTagsAll: tftags.TagsSchemaComputed(),
 						"throughput": {
 							Type:     schema.TypeInt,
 							Computed: true,
