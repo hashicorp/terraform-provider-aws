@@ -1,4 +1,9 @@
 ## 5.39.1 (Unreleased)
+
+BUG FIXES:
+
+* data-source/aws_instance: Fix `panic: Invalid address to set` related to `root_block_device.0.tags_all` ([#36054](https://github.com/hashicorp/terraform-provider-aws/issues/36054))
+
 ## 5.39.0 (February 29, 2024)
 
 FEATURES:
