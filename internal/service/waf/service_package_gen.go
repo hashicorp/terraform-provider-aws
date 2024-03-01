@@ -34,6 +34,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_waf_rate_based_rule",
 		},
 		{
+			Factory:  DataSourceRegexPatternSet,
+			TypeName: "aws_waf_regex_pattern_set",
+		},
+		{
 			Factory:  DataSourceRule,
 			TypeName: "aws_waf_rule",
 		},
