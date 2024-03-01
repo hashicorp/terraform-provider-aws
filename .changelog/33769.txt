@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_instance: Apply default tags to volumes/block devices managed through an `aws_instance`, add `ebs_block_device.*.tags_all` and `root_block_device.*.tags_all` attributes which include default tags
+```

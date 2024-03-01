@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.0
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.50.28
+	github.com/aws/aws-sdk-go v1.50.29
 	github.com/aws/aws-sdk-go-v2 v1.25.2
 	github.com/aws/aws-sdk-go-v2/config v1.27.4
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.2
@@ -36,7 +36,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.22.1
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.36.1
-	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.34.1
+	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.34.2
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.12.1
@@ -55,16 +55,16 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.1
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.1
-	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.8.1
+	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.9.0
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.149.1
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.1
-	github.com/aws/aws-sdk-go-v2/service/eks v1.40.1
+	github.com/aws/aws-sdk-go-v2/service/eks v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.30.1
 	github.com/aws/aws-sdk-go-v2/service/emr v1.39.1
-	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.17.1
+	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.17.2
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.19.1
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.22.1
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.28.1
@@ -82,7 +82,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.53.1
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.3.1
-	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.42.1
+	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.43.0
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.12.1
@@ -119,7 +119,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.1
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.46.1
-	github.com/aws/aws-sdk-go-v2/service/securitylake v1.12.1
+	github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.26.1
