@@ -1,0 +1,7 @@
+```release-note:enhancement
+data/aws_ssoadmin_instances: Return arn + id of an instance as a single object
+```
+
+```release-note:bug
+resource/aws_ssoadmin_instance_access_control_attributes: Fix to catch ResourceNotFoundException error in resourceAccessControlAttributesDelete
+```
