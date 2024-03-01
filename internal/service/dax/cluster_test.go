@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dax"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dax/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -310,7 +311,7 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.Cluste
 		}
 
 		for _, c := range resp.Clusters {
-			if *c.ClusterName == rs.Primary.ID {
+			if aws.ToString(c.ClusterName) == rs.Primary.ID {
 				*v = c
 			}
 		}
