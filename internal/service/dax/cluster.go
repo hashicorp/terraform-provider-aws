@@ -14,7 +14,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dax"
-	"github.com/aws/aws-sdk-go-v2/service/dax/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dax/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -242,7 +241,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("cluster_endpoint_encryption_type"); ok {
-		input.ClusterEndpointEncryptionType = types.ClusterEndpointEncryptionType(v.(string))
+		input.ClusterEndpointEncryptionType = awstypes.ClusterEndpointEncryptionType(v.(string))
 	}
 
 	if v, ok := d.GetOk("parameter_group_name"); ok {
