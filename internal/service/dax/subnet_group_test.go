@@ -8,14 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dax"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/dax"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/dax/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -58,18 +58,18 @@ func TestAccDAXSubnetGroup_basic(t *testing.T) {
 
 func testAccCheckSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dax_subnet_group" {
 				continue
 			}
 
-			_, err := conn.DescribeSubnetGroupsWithContext(ctx, &dax.DescribeSubnetGroupsInput{
-				SubnetGroupNames: []*string{aws.String(rs.Primary.ID)},
+			_, err := conn.DescribeSubnetGroups(ctx, &dax.DescribeSubnetGroupsInput{
+				SubnetGroupNames: []string{rs.Primary.ID},
 			})
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, dax.ErrCodeSubnetGroupNotFoundFault) {
+				if errs.IsA[*awstypes.SubnetGroupNotFoundFault](err) {
 					return nil
 				}
 				return err
@@ -86,10 +86,10 @@ func testAccCheckSubnetGroupExists(ctx context.Context, name string) resource.Te
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXClient(ctx)
 
-		_, err := conn.DescribeSubnetGroupsWithContext(ctx, &dax.DescribeSubnetGroupsInput{
-			SubnetGroupNames: []*string{aws.String(rs.Primary.ID)},
+		_, err := conn.DescribeSubnetGroups(ctx, &dax.DescribeSubnetGroupsInput{
+			SubnetGroupNames: []string{rs.Primary.ID},
 		})
 
 		return err

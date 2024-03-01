@@ -130,6 +130,8 @@ github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.1 h1:CBh0CI9D73QnG
 github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.1/go.mod h1:zwMr7HbCFo7yMDo3HtrAKj7LLW942cc3/wV559Mhx9M=
 github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.1 h1:fuoX8H3zlFFbXvuDG0/jBoE4HcrbBTANgYzmpNLEs6s=
 github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.1/go.mod h1:4NqexR3UzSSCVJYyxqkEeWvGuHcSudqwdnzJCCC+NvQ=
+github.com/aws/aws-sdk-go-v2/service/dax v1.19.1 h1:m3o6QYXv4zFXTTbSPlMGhGyrJySmGg5ejbrAA9NRrcI=
+github.com/aws/aws-sdk-go-v2/service/dax v1.19.1/go.mod h1:QJzqcWGkvfcpDWQI7S0MkQuESisgPaoVRaONToDvwyo=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.1 h1:4zKDWmYwlhvwY0r0n++ZJkyHjW4y+ESPSjnJ0iuDGSU=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.1/go.mod h1:q89pJPdvEFMk5PbnXO4wA/grZlmtYhHNwXnIbH0zQLA=
 github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.8.1 h1:oKgRGsaZWfirqGRdD4dVbiV63qThGNqwjhdbUT1/Lno=

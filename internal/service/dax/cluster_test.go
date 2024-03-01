@@ -9,20 +9,21 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dax"
+	"github.com/aws/aws-sdk-go-v2/service/dax"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/dax/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDAXCluster_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dc dax.Cluster
+	var dc awstypes.Cluster
 	rString := sdkacctest.RandString(10)
 	iamRoleResourceName := "aws_iam_role.test"
 	resourceName := "aws_dax_cluster.test"
@@ -44,7 +45,7 @@ func TestAccDAXCluster_basic(t *testing.T) {
 						resourceName, "cluster_name", regexache.MustCompile(`^tf-\w+$`)),
 					resource.TestCheckResourceAttrPair(resourceName, "iam_role_arn", iamRoleResourceName, "arn"),
 					resource.TestCheckResourceAttr(
-						resourceName, "node_type", "dax.t2.small"),
+						resourceName, "node_type", "dax.t3.small"),
 					resource.TestCheckResourceAttr(
 						resourceName, "replication_factor", "1"),
 					resource.TestCheckResourceAttr(
@@ -80,7 +81,7 @@ func TestAccDAXCluster_basic(t *testing.T) {
 
 func TestAccDAXCluster_resize(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dc dax.Cluster
+	var dc awstypes.Cluster
 	rString := sdkacctest.RandString(10)
 	resourceName := "aws_dax_cluster.test"
 
@@ -125,7 +126,7 @@ func TestAccDAXCluster_resize(t *testing.T) {
 
 func TestAccDAXCluster_Encryption_disabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dc dax.Cluster
+	var dc awstypes.Cluster
 	rString := sdkacctest.RandString(10)
 	resourceName := "aws_dax_cluster.test"
 
@@ -160,7 +161,7 @@ func TestAccDAXCluster_Encryption_disabled(t *testing.T) {
 
 func TestAccDAXCluster_Encryption_enabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dc dax.Cluster
+	var dc awstypes.Cluster
 	rString := sdkacctest.RandString(10)
 	resourceName := "aws_dax_cluster.test"
 
@@ -195,7 +196,7 @@ func TestAccDAXCluster_Encryption_enabled(t *testing.T) {
 
 func TestAccDAXCluster_EndpointEncryption_disabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dc dax.Cluster
+	var dc awstypes.Cluster
 	rString := sdkacctest.RandString(10)
 	resourceName := "aws_dax_cluster.test"
 	clusterEndpointEncryptionType := "NONE"
@@ -230,7 +231,7 @@ func TestAccDAXCluster_EndpointEncryption_disabled(t *testing.T) {
 
 func TestAccDAXCluster_EndpointEncryption_enabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var dc dax.Cluster
+	var dc awstypes.Cluster
 	rString := sdkacctest.RandString(10)
 	resourceName := "aws_dax_cluster.test"
 	clusterEndpointEncryptionType := "TLS"
@@ -265,18 +266,18 @@ func TestAccDAXCluster_EndpointEncryption_enabled(t *testing.T) {
 
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dax_cluster" {
 				continue
 			}
-			res, err := conn.DescribeClustersWithContext(ctx, &dax.DescribeClustersInput{
-				ClusterNames: []*string{aws.String(rs.Primary.ID)},
+			res, err := conn.DescribeClusters(ctx, &dax.DescribeClustersInput{
+				ClusterNames: []string{rs.Primary.ID},
 			})
 			if err != nil {
 				// Verify the error is what we want
-				if tfawserr.ErrCodeEquals(err, dax.ErrCodeClusterNotFoundFault) {
+				if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
 					continue
 				}
 				return err
@@ -289,7 +290,7 @@ func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckClusterExists(ctx context.Context, n string, v *dax.Cluster) resource.TestCheckFunc {
+func testAccCheckClusterExists(ctx context.Context, n string, v *awstypes.Cluster) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -300,9 +301,9 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *dax.Cluster) re
 			return fmt.Errorf("No DAX cluster ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn(ctx)
-		resp, err := conn.DescribeClustersWithContext(ctx, &dax.DescribeClustersInput{
-			ClusterNames: []*string{aws.String(rs.Primary.ID)},
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DAXClient(ctx)
+		resp, err := conn.DescribeClusters(ctx, &dax.DescribeClustersInput{
+			ClusterNames: []string{rs.Primary.ID},
 		})
 		if err != nil {
 			return fmt.Errorf("DAX error: %v", err)
@@ -310,7 +311,7 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *dax.Cluster) re
 
 		for _, c := range resp.Clusters {
 			if *c.ClusterName == rs.Primary.ID {
-				*v = *c
+				*v = c
 			}
 		}
 
@@ -319,12 +320,11 @@ func testAccCheckClusterExists(ctx context.Context, n string, v *dax.Cluster) re
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DAXClient(ctx)
 
 	input := &dax.DescribeClustersInput{}
 
-	_, err := conn.DescribeClustersWithContext(ctx, input)
-
+	_, err := conn.DescribeClusters(ctx, input)
 	if acctest.PreCheckSkipError(err) || tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version: DAX_V3") {
 		t.Skipf("skipping acceptance testing: %s", err)
 	}
@@ -375,7 +375,7 @@ func testAccClusterConfig_basic(rString string) string {
 resource "aws_dax_cluster" "test" {
   cluster_name       = "tf-%s"
   iam_role_arn       = aws_iam_role.test.arn
-  node_type          = "dax.t2.small"
+  node_type          = "dax.t3.small"
   replication_factor = 1
   description        = "test cluster"
 
@@ -391,7 +391,7 @@ func testAccClusterConfig_encryption(rString string, enabled bool) string {
 resource "aws_dax_cluster" "test" {
   cluster_name       = "tf-%s"
   iam_role_arn       = aws_iam_role.test.arn
-  node_type          = "dax.t2.small"
+  node_type          = "dax.t3.small"
   replication_factor = 1
   description        = "test cluster"
 
@@ -412,7 +412,7 @@ resource "aws_dax_cluster" "test" {
   cluster_name                     = "tf-%s"
   cluster_endpoint_encryption_type = "%s"
   iam_role_arn                     = aws_iam_role.test.arn
-  node_type                        = "dax.t2.small"
+  node_type                        = "dax.t3.small"
   replication_factor               = 1
   description                      = "test cluster"
 
@@ -428,7 +428,7 @@ func testAccClusterConfig_resizeSingleNode(rString string) string {
 resource "aws_dax_cluster" "test" {
   cluster_name       = "tf-%s"
   iam_role_arn       = aws_iam_role.test.arn
-  node_type          = "dax.r3.large"
+  node_type          = "dax.r5.large"
   replication_factor = 1
 }
 `, baseConfig, rString)
@@ -439,7 +439,7 @@ func testAccClusterConfig_resizeMultiNode(rString string) string {
 resource "aws_dax_cluster" "test" {
   cluster_name       = "tf-%s"
   iam_role_arn       = aws_iam_role.test.arn
-  node_type          = "dax.r3.large"
+  node_type          = "dax.r5.large"
   replication_factor = 2
 }
 `, baseConfig, rString)

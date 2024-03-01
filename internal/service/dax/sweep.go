@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/service/dax"
+	"github.com/aws/aws-sdk-go-v2/service/dax"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -25,11 +25,11 @@ func sweepClusters(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err)
+		return fmt.Errorf("Error getting client: %s", err.Error())
 	}
-	conn := client.DAXConn(ctx)
+	conn := client.DAXClient(ctx)
 
-	resp, err := conn.DescribeClustersWithContext(ctx, &dax.DescribeClustersInput{})
+	resp, err := conn.DescribeClusters(ctx, &dax.DescribeClustersInput{})
 	if err != nil {
 		// GovCloud (with no DAX support) has an endpoint that responds with:
 		// InvalidParameterValueException: Access Denied to API Version: DAX_V3
@@ -37,7 +37,7 @@ func sweepClusters(region string) error {
 			log.Printf("[WARN] Skipping DAX Cluster sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("Error retrieving DAX clusters: %s", err)
+		return fmt.Errorf("Error retrieving DAX clusters: %s", err.Error())
 	}
 
 	if len(resp.Clusters) == 0 {
@@ -49,7 +49,7 @@ func sweepClusters(region string) error {
 
 	for _, cluster := range resp.Clusters {
 		log.Printf("[INFO] Deleting DAX cluster %s", *cluster.ClusterName)
-		_, err := conn.DeleteClusterWithContext(ctx, &dax.DeleteClusterInput{
+		_, err := conn.DeleteCluster(ctx, &dax.DeleteClusterInput{
 			ClusterName: cluster.ClusterName,
 		})
 		if err != nil {
