@@ -39,7 +39,7 @@ The following arguments are optional:
 
 ## Attribute Reference
 
-This resource exports the following attribute in addition to the arguments above:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique identifier for the enrollment. Since enrollment is for the entire account, this will be the 12-digit account id.
 
