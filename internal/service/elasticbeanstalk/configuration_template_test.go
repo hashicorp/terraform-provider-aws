@@ -188,8 +188,17 @@ func testAccCheckConfigurationTemplateExists(ctx context.Context, n string, v *e
 	}
 }
 
+const testAccConfigurationTemplateConfig_base = `
+data "aws_elastic_beanstalk_solution_stack" "test" {
+  most_recent = true
+  name_regex  = "64bit Amazon Linux .* running Python .*"
+}
+`
+
 func testAccConfigurationTemplateConfig_basic(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccConfigurationTemplateConfig_base,
+		fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "test" {
   name        = %[1]q
   description = "testing"
@@ -198,13 +207,16 @@ resource "aws_elastic_beanstalk_application" "test" {
 resource "aws_elastic_beanstalk_configuration_template" "test" {
   name                = %[1]q
   application         = aws_elastic_beanstalk_application.test.name
-  solution_stack_name = "64bit Amazon Linux running Python"
+  solution_stack_name = data.aws_elastic_beanstalk_solution_stack.test.name
 }
-`, rName)
+`, rName))
 }
 
 func testAccConfigurationTemplateConfig_vpc(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccConfigurationTemplateConfig_base,
+		acctest.ConfigVPCWithSubnets(rName, 1),
+		fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "test" {
   name        = %[1]q
   description = "testing"
@@ -214,7 +226,7 @@ resource "aws_elastic_beanstalk_configuration_template" "test" {
   name        = %[1]q
   application = aws_elastic_beanstalk_application.test.name
 
-  solution_stack_name = "64bit Amazon Linux running Python"
+  solution_stack_name = data.aws_elastic_beanstalk_solution_stack.test.name
 
   setting {
     namespace = "aws:ec2:vpc"
@@ -232,7 +244,9 @@ resource "aws_elastic_beanstalk_configuration_template" "test" {
 }
 
 func testAccConfigurationTemplateConfig_setting(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccConfigurationTemplateConfig_base,
+		fmt.Sprintf(`
 resource "aws_elastic_beanstalk_application" "test" {
   name        = %[1]q
   description = "testing"
@@ -242,7 +256,7 @@ resource "aws_elastic_beanstalk_configuration_template" "test" {
   name        = %[1]q
   application = aws_elastic_beanstalk_application.test.name
 
-  solution_stack_name = "64bit Amazon Linux running Python"
+  solution_stack_name = data.aws_elastic_beanstalk_solution_stack.test.name
 
   setting {
     namespace = "aws:autoscaling:launchconfiguration"
@@ -250,5 +264,5 @@ resource "aws_elastic_beanstalk_configuration_template" "test" {
     value     = "m1.small"
   }
 }
-`, rName)
+`, rName))
 }
