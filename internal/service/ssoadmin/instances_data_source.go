@@ -20,18 +20,6 @@ func DataSourceInstances() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstancesRead,
 
-		// Schema: map[string]*schema.Schema{
-		// 	"arns": {
-		// 		Type:     schema.TypeList,
-		// 		Computed: true,
-		// 		Elem:     &schema.Schema{Type: schema.TypeString},
-		// 	},
-		// 	"identity_store_ids": {
-		// 		Type:     schema.TypeList,
-		// 		Computed: true,
-		// 		Elem:     &schema.Schema{Type: schema.TypeString},
-		// 	},
-		// },
 		Schema: map[string]*schema.Schema{
 			"instances": {
 				Type:     schema.TypeList,
@@ -72,14 +60,10 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 			"arn":               aws.ToString(v.InstanceArn),
 			"identity_store_id": aws.ToString(v.IdentityStoreId),
 		})
-		// identityStoreIDs = append(identityStoreIDs, aws.ToString(v.IdentityStoreId))
-		// arns = append(arns, aws.ToString(v.InstanceArn))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("instances", instances)
-	// d.Set("arns", arns)
-	// d.Set("identity_store_ids", identityStoreIDs)
 
 	return diags
 }
