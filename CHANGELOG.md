@@ -1,4 +1,5 @@
-## 5.39.1 (Unreleased)
+## 5.40.0 (Unreleased)
+## 5.39.1 (March  1, 2024)
 
 BUG FIXES:
 
