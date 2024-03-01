@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -25,11 +26,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"golang.org/x/exp/slices"
 )
 
-// @SDKResource("aws_s3_bucket_lifecycle_configuration")
-func ResourceBucketLifecycleConfiguration() *schema.Resource {
+// @SDKResource("aws_s3_bucket_lifecycle_configuration", name="Bucket Lifecycle Configuration")
+func resourceBucketLifecycleConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketLifecycleConfigurationCreate,
 		ReadWithoutTimeout:   resourceBucketLifecycleConfigurationRead,
@@ -270,7 +270,7 @@ func resourceBucketLifecycleConfigurationCreate(ctx context.Context, d *schema.R
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -372,7 +372,7 @@ func resourceBucketLifecycleConfigurationUpdate(ctx context.Context, d *schema.R
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketLifecycleConfiguration(ctx, input)
 	}, errCodeNoSuchLifecycleConfiguration)
 
@@ -414,7 +414,7 @@ func resourceBucketLifecycleConfigurationDelete(ctx context.Context, d *schema.R
 		return diag.Errorf("deleting S3 Bucket Lifecycle Configuration (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findLifecycleRules(ctx, conn, bucket, expectedBucketOwner)
 	})
 
@@ -557,11 +557,11 @@ func expandLifecycleRules(ctx context.Context, l []interface{}) []types.Lifecycl
 		result := types.LifecycleRule{}
 
 		if v, ok := tfMap["abort_incomplete_multipart_upload"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			result.AbortIncompleteMultipartUpload = expandLifecycleRuleAbortIncompleteMultipartUpload(v[0].(map[string]interface{}))
+			result.AbortIncompleteMultipartUpload = expandAbortIncompleteMultipartUpload(v[0].(map[string]interface{}))
 		}
 
 		if v, ok := tfMap["expiration"].([]interface{}); ok && len(v) > 0 {
-			result.Expiration = expandLifecycleRuleExpiration(v)
+			result.Expiration = expandLifecycleExpiration(v)
 		}
 
 		if v, ok := tfMap["filter"].([]interface{}); ok && len(v) > 0 {
@@ -586,11 +586,11 @@ func expandLifecycleRules(ctx context.Context, l []interface{}) []types.Lifecycl
 		}
 
 		if v, ok := tfMap["noncurrent_version_expiration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-			result.NoncurrentVersionExpiration = expandLifecycleRuleNoncurrentVersionExpiration(v[0].(map[string]interface{}))
+			result.NoncurrentVersionExpiration = expandNoncurrentVersionExpiration(v[0].(map[string]interface{}))
 		}
 
 		if v, ok := tfMap["noncurrent_version_transition"].(*schema.Set); ok && v.Len() > 0 {
-			result.NoncurrentVersionTransitions = expandLifecycleRuleNoncurrentVersionTransitions(v.List())
+			result.NoncurrentVersionTransitions = expandNoncurrentVersionTransitions(v.List())
 		}
 
 		if v, ok := tfMap["status"].(string); ok && v != "" {
@@ -598,7 +598,7 @@ func expandLifecycleRules(ctx context.Context, l []interface{}) []types.Lifecycl
 		}
 
 		if v, ok := tfMap["transition"].(*schema.Set); ok && v.Len() > 0 {
-			result.Transitions = expandLifecycleRuleTransitions(v.List())
+			result.Transitions = expandTransitions(v.List())
 		}
 
 		results = append(results, result)
@@ -607,7 +607,7 @@ func expandLifecycleRules(ctx context.Context, l []interface{}) []types.Lifecycl
 	return results
 }
 
-func expandLifecycleRuleAbortIncompleteMultipartUpload(m map[string]interface{}) *types.AbortIncompleteMultipartUpload {
+func expandAbortIncompleteMultipartUpload(m map[string]interface{}) *types.AbortIncompleteMultipartUpload {
 	if len(m) == 0 {
 		return nil
 	}
@@ -621,7 +621,7 @@ func expandLifecycleRuleAbortIncompleteMultipartUpload(m map[string]interface{})
 	return result
 }
 
-func expandLifecycleRuleExpiration(l []interface{}) *types.LifecycleExpiration {
+func expandLifecycleExpiration(l []interface{}) *types.LifecycleExpiration {
 	if len(l) == 0 {
 		return nil
 	}
@@ -718,7 +718,7 @@ func expandLifecycleRuleFilterMemberAnd(ctx context.Context, m map[string]interf
 	}
 
 	if v, ok := m["tags"].(map[string]interface{}); ok && len(v) > 0 {
-		tags := tagsV2(tftags.New(ctx, v).IgnoreAWS())
+		tags := Tags(tftags.New(ctx, v).IgnoreAWS())
 		if len(tags) > 0 {
 			result.Value.Tags = tags
 		}
@@ -747,7 +747,7 @@ func expandLifecycleRuleFilterMemberTag(m map[string]interface{}) *types.Lifecyc
 	return result
 }
 
-func expandLifecycleRuleNoncurrentVersionExpiration(m map[string]interface{}) *types.NoncurrentVersionExpiration {
+func expandNoncurrentVersionExpiration(m map[string]interface{}) *types.NoncurrentVersionExpiration {
 	if len(m) == 0 {
 		return nil
 	}
@@ -765,7 +765,7 @@ func expandLifecycleRuleNoncurrentVersionExpiration(m map[string]interface{}) *t
 	return result
 }
 
-func expandLifecycleRuleNoncurrentVersionTransitions(l []interface{}) []types.NoncurrentVersionTransition {
+func expandNoncurrentVersionTransitions(l []interface{}) []types.NoncurrentVersionTransition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -799,7 +799,7 @@ func expandLifecycleRuleNoncurrentVersionTransitions(l []interface{}) []types.No
 	return results
 }
 
-func expandLifecycleRuleTransitions(l []interface{}) []types.Transition {
+func expandTransitions(l []interface{}) []types.Transition {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -850,11 +850,11 @@ func flattenLifecycleRules(ctx context.Context, rules []types.LifecycleRule) []i
 		}
 
 		if rule.AbortIncompleteMultipartUpload != nil {
-			m["abort_incomplete_multipart_upload"] = flattenLifecycleRuleAbortIncompleteMultipartUpload(rule.AbortIncompleteMultipartUpload)
+			m["abort_incomplete_multipart_upload"] = flattenAbortIncompleteMultipartUpload(rule.AbortIncompleteMultipartUpload)
 		}
 
 		if rule.Expiration != nil {
-			m["expiration"] = flattenLifecycleRuleExpiration(rule.Expiration)
+			m["expiration"] = flattenLifecycleExpiration(rule.Expiration)
 		}
 
 		if rule.Filter != nil {
@@ -866,11 +866,11 @@ func flattenLifecycleRules(ctx context.Context, rules []types.LifecycleRule) []i
 		}
 
 		if rule.NoncurrentVersionExpiration != nil {
-			m["noncurrent_version_expiration"] = flattenLifecycleRuleNoncurrentVersionExpiration(rule.NoncurrentVersionExpiration)
+			m["noncurrent_version_expiration"] = flattenNoncurrentVersionExpiration(rule.NoncurrentVersionExpiration)
 		}
 
 		if rule.NoncurrentVersionTransitions != nil {
-			m["noncurrent_version_transition"] = flattenLifecycleRuleNoncurrentVersionTransitions(rule.NoncurrentVersionTransitions)
+			m["noncurrent_version_transition"] = flattenNoncurrentVersionTransitions(rule.NoncurrentVersionTransitions)
 		}
 
 		if rule.Prefix != nil {
@@ -878,7 +878,7 @@ func flattenLifecycleRules(ctx context.Context, rules []types.LifecycleRule) []i
 		}
 
 		if rule.Transitions != nil {
-			m["transition"] = flattenLifecycleRuleTransitions(rule.Transitions)
+			m["transition"] = flattenTransitions(rule.Transitions)
 		}
 
 		results = append(results, m)
@@ -887,7 +887,7 @@ func flattenLifecycleRules(ctx context.Context, rules []types.LifecycleRule) []i
 	return results
 }
 
-func flattenLifecycleRuleAbortIncompleteMultipartUpload(u *types.AbortIncompleteMultipartUpload) []interface{} {
+func flattenAbortIncompleteMultipartUpload(u *types.AbortIncompleteMultipartUpload) []interface{} {
 	if u == nil {
 		return []interface{}{}
 	}
@@ -895,13 +895,13 @@ func flattenLifecycleRuleAbortIncompleteMultipartUpload(u *types.AbortIncomplete
 	m := make(map[string]interface{})
 
 	if u.DaysAfterInitiation != nil {
-		m["days_after_initiation"] = int(aws.ToInt32(u.DaysAfterInitiation))
+		m["days_after_initiation"] = aws.ToInt32(u.DaysAfterInitiation)
 	}
 
 	return []interface{}{m}
 }
 
-func flattenLifecycleRuleExpiration(expiration *types.LifecycleExpiration) []interface{} {
+func flattenLifecycleExpiration(expiration *types.LifecycleExpiration) []interface{} {
 	if expiration == nil {
 		return []interface{}{}
 	}
@@ -913,7 +913,7 @@ func flattenLifecycleRuleExpiration(expiration *types.LifecycleExpiration) []int
 	}
 
 	if expiration.Days != nil {
-		m["days"] = int(aws.ToInt32(expiration.Days))
+		m["days"] = aws.ToInt32(expiration.Days)
 	}
 
 	if expiration.ExpiredObjectDeleteMarker != nil {
@@ -963,7 +963,7 @@ func flattenLifecycleRuleFilterMemberAnd(ctx context.Context, andOp *types.Lifec
 	}
 
 	if v := andOp.Value.Tags; v != nil {
-		m["tags"] = keyValueTagsV2(ctx, v).IgnoreAWS().Map()
+		m["tags"] = keyValueTags(ctx, v).IgnoreAWS().Map()
 	}
 
 	return []interface{}{m}
@@ -987,7 +987,7 @@ func flattenLifecycleRuleFilterMemberTag(op *types.LifecycleRuleFilterMemberTag)
 	return []interface{}{m}
 }
 
-func flattenLifecycleRuleNoncurrentVersionExpiration(expiration *types.NoncurrentVersionExpiration) []interface{} {
+func flattenNoncurrentVersionExpiration(expiration *types.NoncurrentVersionExpiration) []interface{} {
 	if expiration == nil {
 		return []interface{}{}
 	}
@@ -999,13 +999,13 @@ func flattenLifecycleRuleNoncurrentVersionExpiration(expiration *types.Noncurren
 	}
 
 	if expiration.NoncurrentDays != nil {
-		m["noncurrent_days"] = int(aws.ToInt32(expiration.NoncurrentDays))
+		m["noncurrent_days"] = aws.ToInt32(expiration.NoncurrentDays)
 	}
 
 	return []interface{}{m}
 }
 
-func flattenLifecycleRuleNoncurrentVersionTransitions(transitions []types.NoncurrentVersionTransition) []interface{} {
+func flattenNoncurrentVersionTransitions(transitions []types.NoncurrentVersionTransition) []interface{} {
 	if len(transitions) == 0 {
 		return []interface{}{}
 	}
@@ -1022,7 +1022,7 @@ func flattenLifecycleRuleNoncurrentVersionTransitions(transitions []types.Noncur
 		}
 
 		if transition.NoncurrentDays != nil {
-			m["noncurrent_days"] = int(aws.ToInt32(transition.NoncurrentDays))
+			m["noncurrent_days"] = aws.ToInt32(transition.NoncurrentDays)
 		}
 
 		results = append(results, m)
@@ -1031,7 +1031,7 @@ func flattenLifecycleRuleNoncurrentVersionTransitions(transitions []types.Noncur
 	return results
 }
 
-func flattenLifecycleRuleTransitions(transitions []types.Transition) []interface{} {
+func flattenTransitions(transitions []types.Transition) []interface{} {
 	if len(transitions) == 0 {
 		return []interface{}{}
 	}
@@ -1040,12 +1040,15 @@ func flattenLifecycleRuleTransitions(transitions []types.Transition) []interface
 
 	for _, transition := range transitions {
 		m := map[string]interface{}{
-			"days":          transition.Days,
 			"storage_class": transition.StorageClass,
 		}
 
 		if transition.Date != nil {
 			m["date"] = transition.Date.Format(time.RFC3339)
+		}
+
+		if transition.Days != nil {
+			m["days"] = aws.ToInt32(transition.Days)
 		}
 
 		results = append(results, m)

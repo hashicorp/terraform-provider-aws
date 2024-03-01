@@ -29,7 +29,7 @@ func TestAccLocationGeofenceCollection_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGeofenceCollectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -62,7 +62,7 @@ func TestAccLocationGeofenceCollection_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGeofenceCollectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -85,7 +85,7 @@ func TestAccLocationGeofenceCollection_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGeofenceCollectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -119,7 +119,7 @@ func TestAccLocationGeofenceCollection_kmsKeyID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGeofenceCollectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -146,7 +146,7 @@ func TestAccLocationGeofenceCollection_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGeofenceCollectionDestroy(ctx),
 		Steps: []resource.TestStep{

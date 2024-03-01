@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/directoryservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDSDirectoryDataSource_simpleAD(t *testing.T) {
@@ -23,7 +23,7 @@ func TestAccDSDirectoryDataSource_simpleAD(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -64,7 +64,7 @@ func TestAccDSDirectoryDataSource_microsoftAD(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -108,7 +108,7 @@ func TestAccDSDirectoryDataSource_connector(t *testing.T) {
 			acctest.PreCheckDirectoryService(ctx, t)
 			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -155,7 +155,7 @@ func TestAccDSDirectoryDataSource_sharedMicrosoftAD(t *testing.T) {
 			acctest.PreCheckDirectoryService(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{

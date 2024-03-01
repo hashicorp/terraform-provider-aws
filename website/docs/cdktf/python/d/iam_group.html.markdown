@@ -54,4 +54,4 @@ This data source exports the following attributes in addition to the arguments a
 * `user_id` - Stable and unique string identifying the IAM user.
 * `user_name` - Name of the IAM user.
 
-<!-- cache-key: cdktf-0.19.0 input-77c0dae2fedddf6268bb8efcac752894f2507bca79a4d6c27fcd4c551d06b60e -->
+<!-- cache-key: cdktf-0.20.1 input-77c0dae2fedddf6268bb8efcac752894f2507bca79a4d6c27fcd4c551d06b60e -->

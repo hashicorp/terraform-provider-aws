@@ -76,6 +76,24 @@ func ExpandStringyValueList[E ~string](configured []any) []E {
 	return vs
 }
 
+// ExpandStringValueList takes the result of flatmap.Expand for an array of strings
+// and returns a []string
+func ExpandStringValueListEmpty(configured []interface{}) []string {
+	return ExpandStringyValueListEmpty[string](configured)
+}
+
+func ExpandStringyValueListEmpty[E ~string](configured []any) []E {
+	vs := make([]E, 0, len(configured))
+	for _, v := range configured {
+		if val, ok := v.(string); ok { // empty string in config turns into nil in []interface{} so !ok
+			vs = append(vs, E(val))
+		} else {
+			vs = append(vs, E(""))
+		}
+	}
+	return vs
+}
+
 // Takes list of pointers to strings. Expand to an array
 // of raw strings and returns a []interface{}
 // to keep compatibility w/ schema.NewSetschema.NewSet
@@ -289,6 +307,11 @@ func FlattenResourceId(idParts []string, partCount int, allowEmptyPart bool) (st
 	return strings.Join(idParts, ResourceIdSeparator), nil
 }
 
+// BoolToStringValue converts a bool pointer to a Go string value.
+func BoolToStringValue(v *bool) string {
+	return strconv.FormatBool(aws.BoolValue(v))
+}
+
 // BoolValueToString converts a Go bool value to a string pointer.
 func BoolValueToString(v bool) *string {
 	return aws.String(strconv.FormatBool(v))
@@ -300,15 +323,43 @@ func StringToBoolValue(v *string) bool {
 	return aws.StringValue(v) == strconv.FormatBool(true)
 }
 
+// Float64ToStringValue converts a float64 pointer to a Go string value.
+func Float64ToStringValue(v *float64) string {
+	return strconv.FormatFloat(aws.Float64Value(v), 'f', -1, 64)
+}
+
 // IntValueToString converts a Go int value to a string pointer.
 func IntValueToString(v int) *string {
 	return aws.String(strconv.Itoa(v))
+}
+
+// Int64ToStringValue converts an int64 pointer to a Go string value.
+func Int64ToStringValue(v *int64) string {
+	return strconv.FormatInt(aws.Int64Value(v), 10)
+}
+
+// Int64ValueToString converts a Go int64 value to a string pointer.
+func Int64ValueToString(v int64) *string {
+	return aws.String(strconv.FormatInt(v, 10))
 }
 
 // StringToIntValue converts a string pointer to a Go int value.
 // Invalid integer strings are converted to 0.
 func StringToIntValue(v *string) int {
 	i, _ := strconv.Atoi(aws.StringValue(v))
+	return i
+}
+
+// StringValueToInt64 converts a string to a Go int64 pointer.
+// Invalid integer strings are converted to 0.
+func StringValueToInt64(v string) *int64 {
+	return aws.Int64(StringValueToInt64Value(v))
+}
+
+// StringValueToInt64Value converts a string to a Go int64 value.
+// Invalid integer strings are converted to 0.
+func StringValueToInt64Value(v string) int64 {
+	i, _ := strconv.ParseInt(v, 0, 64)
 	return i
 }
 

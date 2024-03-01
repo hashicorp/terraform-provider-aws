@@ -6,6 +6,7 @@ package ec2
 import (
 	"context"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -17,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"golang.org/x/exp/slices"
 )
 
 // @SDKResource("aws_ec2_image_block_public_access", name="Image Block Public Access")

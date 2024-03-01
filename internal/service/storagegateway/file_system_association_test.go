@@ -18,6 +18,7 @@ import (
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 	tfstoragegateway "github.com/hashicorp/terraform-provider-aws/internal/service/storagegateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccStorageGatewayFileSystemAssociation_basic(t *testing.T) {
@@ -32,7 +33,7 @@ func TestAccStorageGatewayFileSystemAssociation_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, storagegateway.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileSystemAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -68,7 +69,7 @@ func TestAccStorageGatewayFileSystemAssociation_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, storagegateway.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileSystemAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -120,7 +121,7 @@ func TestAccStorageGatewayFileSystemAssociation_cacheAttributes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, storagegateway.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileSystemAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -160,7 +161,7 @@ func TestAccStorageGatewayFileSystemAssociation_auditDestination(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, storagegateway.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileSystemAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -204,7 +205,7 @@ func TestAccStorageGatewayFileSystemAssociation_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, storagegateway.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileSystemAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -230,7 +231,7 @@ func TestAccStorageGatewayFileSystemAssociation_Disappears_storageGateway(t *tes
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, storagegateway.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileSystemAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -258,7 +259,7 @@ func TestAccStorageGatewayFileSystemAssociation_Disappears_fsxFileSystem(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, storagegateway.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, storagegateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.StorageGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFileSystemAssociationDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -29,7 +29,7 @@ func TestAccDeployApp_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -70,7 +70,7 @@ func TestAccDeployApp_computePlatform(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -101,7 +101,7 @@ func TestAccDeployApp_ComputePlatform_ecs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -129,7 +129,7 @@ func TestAccDeployApp_ComputePlatform_lambda(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -158,7 +158,7 @@ func TestAccDeployApp_name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -193,7 +193,7 @@ func TestAccDeployApp_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -239,7 +239,7 @@ func TestAccDeployApp_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeDeployEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{

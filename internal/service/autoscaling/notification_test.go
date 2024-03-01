@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAutoScalingNotification_ASG_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccAutoScalingNotification_ASG_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckASGNDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -49,7 +50,7 @@ func TestAccAutoScalingNotification_ASG_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckASGNDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -80,7 +81,7 @@ func TestAccAutoScalingNotification_ASG_pagination(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, autoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckASGNDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -226,14 +227,14 @@ func testAccCheckASGNotificationAttributes(n string, asgn *autoscaling.DescribeN
 }
 
 func testAccNotificationConfig_basic(rName string) string {
-	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_sns_topic" "topic_example" {
   name = "user-updates-topic-%s"
 }
 
 resource "aws_launch_configuration" "foobar" {
   name          = "foobarautoscaling-terraform-test-%s"
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 }
 
@@ -269,18 +270,18 @@ resource "aws_autoscaling_notification" "example" {
 
   topic_arn = aws_sns_topic.topic_example.arn
 }
-`, rName, rName, rName)
+`, rName, rName, rName))
 }
 
 func testAccNotificationConfig_update(rName string) string {
-	return acctest.ConfigLatestAmazonLinuxHVMEBSAMI() + fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_sns_topic" "topic_example" {
   name = "user-updates-topic-%s"
 }
 
 resource "aws_launch_configuration" "foobar" {
   name          = "foobarautoscaling-terraform-test-%s"
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 }
 
@@ -333,17 +334,17 @@ resource "aws_autoscaling_notification" "example" {
 
   topic_arn = aws_sns_topic.topic_example.arn
 }
-`, rName, rName, rName, rName)
+`, rName, rName, rName, rName))
 }
 
 func testAccNotificationConfig_pagination() string {
-	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinuxHVMEBSAMI(), `
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), `
 resource "aws_sns_topic" "user_updates" {
   name = "user-updates-topic"
 }
 
 resource "aws_launch_configuration" "foobar" {
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 }
 

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfgrafana "github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccRoleAssociation_usersAdmin(t *testing.T) {
@@ -39,7 +40,7 @@ func testAccRoleAssociation_usersAdmin(t *testing.T) {
 				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
 				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
-			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+			ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
 			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
@@ -77,7 +78,7 @@ func testAccRoleAssociation_usersEditor(t *testing.T) {
 				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
 				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
-			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+			ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
 			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
@@ -115,7 +116,7 @@ func testAccRoleAssociation_groupsAdmin(t *testing.T) {
 				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
 				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
-			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+			ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
 			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
@@ -153,7 +154,7 @@ func testAccRoleAssociation_groupsEditor(t *testing.T) {
 				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
 				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
-			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+			ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
 			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
@@ -196,7 +197,7 @@ func testAccRoleAssociation_usersAndGroupsAdmin(t *testing.T) {
 				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
 				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
-			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+			ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
 			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 			Steps: []resource.TestStep{
@@ -241,7 +242,7 @@ func testAccRoleAssociation_usersAndGroupsEditor(t *testing.T) {
 				acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID)
 				acctest.PreCheckSSOAdminInstances(ctx, t)
 			},
-			ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+			ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
 			CheckDestroy:             testAccCheckRoleAssociationDestroy(ctx),
 			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 			Steps: []resource.TestStep{

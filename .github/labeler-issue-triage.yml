@@ -91,6 +91,8 @@ service/batch:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_batch_'
 service/bedrock:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrock_'
+service/bedrockagent:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_bedrockagent_'
 service/billingconductor:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_billingconductor_'
 service/braket:
@@ -123,6 +125,8 @@ service/cloudformation:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudformation_'
 service/cloudfront:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudfront_'
+service/cloudfrontkeyvaluestore:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudfrontkeyvaluestore_'
 service/cloudhsmv2:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cloudhsm_v2_'
 service/cloudsearch:
@@ -177,6 +181,8 @@ service/connectparticipant:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_connectparticipant_'
 service/controltower:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_controltower_'
+service/costoptimizationhub:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_costoptimizationhub_'
 service/cur:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_cur_'
 service/customerprofiles:
@@ -381,6 +387,8 @@ service/lakeformation:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lakeformation_'
 service/lambda:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lambda_'
+service/launchwizard:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_launchwizard_'
 service/lexmodels:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lex_'
 service/lexruntime:
@@ -403,6 +411,8 @@ service/lookoutmetrics:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lookoutmetrics_'
 service/lookoutvision:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_lookoutvision_'
+service/m2:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_m2_'
 service/machinelearning:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_machinelearning_'
 service/macie:
@@ -485,6 +495,8 @@ service/outposts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_outposts_'
 service/panorama:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_panorama_'
+service/pcaconnectorad:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pcaconnectorad_'
 service/personalize:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_personalize_'
 service/personalizeevents:
@@ -507,6 +519,8 @@ service/pricing:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pricing_'
 service/proton:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_proton_'
+service/qbusiness:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_qbusiness_'
 service/qldb:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_qldb_'
 service/qldbsession:
@@ -621,6 +635,8 @@ service/ssmcontacts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmcontacts_'
 service/ssmincidents:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmincidents_'
+service/ssmsap:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_ssmsap_'
 service/sso:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_sso_'
 service/ssoadmin:

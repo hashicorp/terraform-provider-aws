@@ -86,7 +86,7 @@ The following arguments are optional:
 * `sourceCustomerKeyMd5` - (Optional) Specifies the 128-bit MD5 digest of the encryption key according to RFC 1321. Amazon S3 uses this header for a message integrity check to ensure that the encryption key was transmitted without error.
 * `storageClass` - (Optional) Specifies the desired [storage class](https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html#AmazonS3-CopyObject-request-header-StorageClass) for the object. Defaults to `STANDARD`.
 * `taggingDirective` - (Optional) Specifies whether the object tag-set are copied from the source object or replaced with tag-set provided in the request. Valid values are `COPY` and `REPLACE`.
-* `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Map of tags to assign to the object. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `websiteRedirect` - (Optional) Specifies a target URL for [website redirect](http://docs.aws.amazon.com/AmazonS3/latest/dev/how-to-page-redirect.html).
 
 ### grant
@@ -104,7 +104,7 @@ This configuration block has the following optional arguments (one of the three 
 * `id` - (Optional) Canonical user ID of the grantee. Used only when `type` is `CanonicalUser`.  
 * `uri` - (Optional) URI of the grantee group. Used only when `type` is `Group`.
 
--> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/indexHtml` and `indexHtml` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.
+-> **Note:** Terraform ignores all leading `/`s in the object's `key` and treats multiple `/`s in the rest of the object's `key` as a single `/`, so values of `/index.html` and `index.html` correspond to the same S3 object as do `first//second///third//` and `first/second/third/`.
 
 ## Attribute Reference
 
@@ -120,7 +120,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `lastModified` - Returns the date that the object was last modified, in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 * `requestCharged` - If present, indicates that the requester was successfully charged for the request.
 * `sourceVersionId` - Version of the copied object in the source bucket.
-* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `versionId` - Version ID of the newly created copy.
 
-<!-- cache-key: cdktf-0.19.0 input-a85f1ab646454d1b2a5db0ee8a76202e123a448298b840089b1ec7bd23a4c87c -->
+<!-- cache-key: cdktf-0.20.1 input-a85f1ab646454d1b2a5db0ee8a76202e123a448298b840089b1ec7bd23a4c87c -->

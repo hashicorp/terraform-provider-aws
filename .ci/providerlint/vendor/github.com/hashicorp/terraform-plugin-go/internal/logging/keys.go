@@ -29,6 +29,15 @@ const (
 	// Underlying error string
 	KeyError = "error"
 
+	// Argument position of the function error.
+	KeyFunctionErrorArgument = "function_error_argument"
+
+	// Boolean indicating presence of function error
+	KeyFunctionErrorExists = "function_error_exists"
+
+	// Message of the function error.
+	KeyFunctionErrorText = "function_error_text"
+
 	// Duration in milliseconds for the RPC request
 	KeyRequestDurationMs = "tf_req_duration_ms"
 

@@ -23,6 +23,9 @@ var (
 var (
 	// ListOfStringType is a custom type used for defining a List of strings.
 	ListOfStringType = listTypeOf[basetypes.StringValue]{basetypes.ListType{ElemType: basetypes.StringType{}}}
+
+	// ListOfARNType is a custom type used for defining a List of ARNs.
+	ListOfARNType = listTypeOf[ARN]{basetypes.ListType{ElemType: ARNType}}
 )
 
 type listTypeOf[T attr.Value] struct {
@@ -30,8 +33,7 @@ type listTypeOf[T attr.Value] struct {
 }
 
 func newListTypeOf[T attr.Value](ctx context.Context) listTypeOf[T] {
-	var zero T
-	return listTypeOf[T]{basetypes.ListType{ElemType: zero.Type(ctx)}}
+	return listTypeOf[T]{basetypes.ListType{ElemType: newAttrTypeOf[T](ctx)}}
 }
 
 func (t listTypeOf[T]) Equal(o attr.Type) bool {
@@ -51,7 +53,6 @@ func (t listTypeOf[T]) String() string {
 
 func (t listTypeOf[T]) ValueFromList(ctx context.Context, in basetypes.ListValue) (basetypes.ListValuable, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	var zero T
 
 	if in.IsNull() {
 		return NewListValueOfNull[T](ctx), diags
@@ -61,17 +62,13 @@ func (t listTypeOf[T]) ValueFromList(ctx context.Context, in basetypes.ListValue
 		return NewListValueOfUnknown[T](ctx), diags
 	}
 
-	listValue, d := basetypes.NewListValue(zero.Type(ctx), in.Elements())
+	v, d := basetypes.NewListValue(newAttrTypeOf[T](ctx), in.Elements())
 	diags.Append(d...)
 	if diags.HasError() {
 		return basetypes.NewListUnknown(types.StringType), diags
 	}
 
-	value := ListValueOf[T]{
-		ListValue: listValue,
-	}
-
-	return value, diags
+	return ListValueOf[T]{ListValue: v}, diags
 }
 
 func (t listTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
@@ -118,24 +115,24 @@ func (v ListValueOf[T]) Type(ctx context.Context) attr.Type {
 	return newListTypeOf[T](ctx)
 }
 
+func NewListValueOfNull[T attr.Value](ctx context.Context) ListValueOf[T] {
+	return ListValueOf[T]{ListValue: basetypes.NewListNull(newAttrTypeOf[T](ctx))}
+}
+
+func NewListValueOfUnknown[T attr.Value](ctx context.Context) ListValueOf[T] {
+	return ListValueOf[T]{ListValue: basetypes.NewListUnknown(newAttrTypeOf[T](ctx))}
+}
+
 func NewListValueOf[T attr.Value](ctx context.Context, elements []attr.Value) (ListValueOf[T], diag.Diagnostics) {
-	var zero T
-	val, diags := basetypes.NewListValue(zero.Type(ctx), elements)
+	var diags diag.Diagnostics
+
+	v, d := basetypes.NewListValue(newAttrTypeOf[T](ctx), elements)
+	diags.Append(d...)
 	if diags.HasError() {
 		return NewListValueOfUnknown[T](ctx), diags
 	}
 
-	return ListValueOf[T]{ListValue: val}, diags
-}
-
-func NewListValueOfNull[T attr.Value](ctx context.Context) ListValueOf[T] {
-	var zero T
-	return ListValueOf[T]{ListValue: basetypes.NewListNull(zero.Type(ctx))}
-}
-
-func NewListValueOfUnknown[T attr.Value](ctx context.Context) ListValueOf[T] {
-	var zero T
-	return ListValueOf[T]{ListValue: basetypes.NewListUnknown(zero.Type(ctx))}
+	return ListValueOf[T]{ListValue: v}, diags
 }
 
 func NewListValueOfMust[T attr.Value](ctx context.Context, elements []attr.Value) ListValueOf[T] {

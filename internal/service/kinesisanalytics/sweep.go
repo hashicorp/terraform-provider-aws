@@ -36,7 +36,7 @@ func sweepApplications(region string) error {
 	var sweeperErrs *multierror.Error
 
 	input := &kinesisanalytics.ListApplicationsInput{}
-	err = ListApplicationsPages(ctx, conn, input, func(page *kinesisanalytics.ListApplicationsOutput, lastPage bool) bool {
+	err = listApplicationsPages(ctx, conn, input, func(page *kinesisanalytics.ListApplicationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}

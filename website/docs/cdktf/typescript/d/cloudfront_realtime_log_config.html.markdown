@@ -60,4 +60,4 @@ The `kinesisStreamConfig` object supports the following:
 See the [AWS documentation](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/real-time-logs.html#understand-real-time-log-config-iam-role) for more information.
 * `streamArn` - (Required) ARN of the [Kinesis data stream](kinesis_stream.html).
 
-<!-- cache-key: cdktf-0.19.0 input-6e46dcbfc5e16d8ff6f2789ee3bd99879502463156b4531588dacfee314c12ca -->
+<!-- cache-key: cdktf-0.20.1 input-6e46dcbfc5e16d8ff6f2789ee3bd99879502463156b4531588dacfee314c12ca -->

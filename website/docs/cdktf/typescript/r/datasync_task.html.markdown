@@ -110,12 +110,12 @@ This resource supports the following arguments:
 * `name` - (Optional) Name of the DataSync Task.
 * `options` - (Optional) Configuration block containing option that controls the default behavior when you start an execution of this DataSync Task. For each individual task execution, you can override these options by specifying an overriding configuration in those executions.
 * `schedule` - (Optional) Specifies a schedule used to periodically transfer files from a source to a destination location.
-* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Task. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `taskReportConfig` - (Optional) Configuration block containing the configuration of a DataSync Task Report. See [`task_report_config`](#task_report_config-argument-reference) below.
+* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Task. If configured with a provider [`defaultTags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `taskReportConfig` - (Optional) Configuration block containing the configuration of a DataSync Task Report. See [`taskReportConfig`](#task_report_config-argument-reference) below.
 
 ### options Argument Reference
 
-~> **NOTE:** If `atime` is set to `bestEffort`, `mtime` must be set to `preserve`. If `atime` is set to `none`, `mtime` must be set to `none`.
+~> **NOTE:** If `atime` is set to `BEST_EFFORT`, `mtime` must be set to `PRESERVE`. If `atime` is set to `NONE`, `mtime` must be set to `NONE`.
 
 The `options` configuration block supports the following arguments:
 
@@ -139,10 +139,10 @@ The `options` configuration block supports the following arguments:
 
 The following arguments are supported inside the `taskReportConfig` configuration block:
 
-* `s3Destination` - (Required) Configuration block containing the configuration for the Amazon S3 bucket where DataSync uploads your task report. See [`s3_destination`](#s3_destination-argument-reference) below.
+* `s3Destination` - (Required) Configuration block containing the configuration for the Amazon S3 bucket where DataSync uploads your task report. See [`s3Destination`](#s3_destination-argument-reference) below.
 * `s3ObjectVersioning` - (Optional) Specifies whether your task report includes the new version of each object transferred into an S3 bucket. This only applies if you enable versioning on your bucket. Keep in mind that setting this to INCLUDE can increase the duration of your task execution. Valid values: `INCLUDE` and `NONE`.
 * `outputType` - (Optional) Specifies the type of task report you'd like. Valid values: `SUMMARY_ONLY` and `STANDARD`.
-* `reportOverrides` - (Optional) Configuration block containing the configuration of the reporting level for aspects of your task report. See [`report_overrides`](#report_overrides-argument-reference) below.
+* `reportOverrides` - (Optional) Configuration block containing the configuration of the reporting level for aspects of your task report. See [`reportOverrides`](#report_overrides-argument-reference) below.
 * `reportLevel` - Specifies whether you want your task report to include only what went wrong with your transfer or a list of what succeeded and didn't. Valid values: `ERRORS_ONLY` and `SUCCESSES_AND_ERRORS`.
 
 ### `s3Destination` Argument Reference
@@ -161,6 +161,8 @@ The following arguments are supported inside the `reportOverrides` configuration
 * `skippedOverride` - (Optional) Specifies the level of reporting for the files, objects, and directories that DataSync attempted to skip during your transfer. Valid values: `ERRORS_ONLY` and `SUCCESSES_AND_ERRORS`.
 * `transferredOverride` - (Optional) Specifies the level of reporting for the files, objects, and directories that DataSync attempted to transfer. Valid values: `ERRORS_ONLY` and `SUCCESSES_AND_ERRORS`.
 * `verifiedOverride` - (Optional) Specifies the level of reporting for the files, objects, and directories that DataSync attempted to verify at the end of your transfer. Valid values: `ERRORS_ONLY` and `SUCCESSES_AND_ERRORS`.
+
+~> **NOTE:** If any `reportOverrides` are set to the same value as `task_report_config.report_level`, they will always be flagged as changed. Only set overrides to a value that differs from `task_report_config.report_level`.
 
 ### Schedule
 
@@ -182,7 +184,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Amazon Resource Name (ARN) of the DataSync Task.
 * `arn` - Amazon Resource Name (ARN) of the DataSync Task.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -192,24 +194,34 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `awsDatasyncTask` using the DataSync Task Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_datasync_task` using the DataSync Task Amazon Resource Name (ARN). For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { DatasyncTask } from "./.gen/providers/aws/datasync-task";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    DatasyncTask.generateConfigForImport(
+      this,
+      "example",
+      "arn:aws:datasync:us-east-1:123456789012:task/task-12345678901234567"
+    );
   }
 }
 
 ```
 
-Using `terraform import`, import `awsDatasyncTask` using the DataSync Task Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_datasync_task` using the DataSync Task Amazon Resource Name (ARN). For example:
 
 ```console
 % terraform import aws_datasync_task.example arn:aws:datasync:us-east-1:123456789012:task/task-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-a9b1e645629a52a15aec012195e559eac62da9c511b83c6c57412c96d99cca4a -->
+<!-- cache-key: cdktf-0.20.1 input-31b892fb93faa525a767449c304854f23fafedbe0997378add704550c2fb2682 -->
