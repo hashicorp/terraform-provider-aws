@@ -1319,7 +1319,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
 	}
 
-	if err := readBlockDevices(ctx, d, meta, instance); err != nil {
+	if err := readBlockDevices(ctx, d, meta, instance, false); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
 	}
 
@@ -2161,8 +2161,8 @@ func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.EC2, in
 	return nil
 }
 
-func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta interface{}, instance *ec2.Instance) error {
-	ibds, err := readBlockDevicesFromInstance(ctx, d, meta, instance)
+func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta interface{}, instance *ec2.Instance, ds bool) error {
+	ibds, err := readBlockDevicesFromInstance(ctx, d, meta, instance, ds)
 	if err != nil {
 		return fmt.Errorf("reading block devices: %w", err)
 	}
@@ -2213,7 +2213,7 @@ func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, meta interface{}, instance *ec2.Instance) (map[string]interface{}, error) {
+func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, meta interface{}, instance *ec2.Instance, ds bool) (map[string]interface{}, error) {
 	blockDevices := make(map[string]interface{})
 	blockDevices["ebs"] = make([]map[string]interface{}, 0)
 	blockDevices["root"] = nil
@@ -2279,9 +2279,13 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 			bd["device_name"] = aws.StringValue(instanceBd.DeviceName)
 		}
 		if v, ok := d.GetOk("volume_tags"); !ok || v == nil || len(v.(map[string]interface{})) == 0 {
-			tags := KeyValueTags(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-			bd[names.AttrTags] = tags.RemoveDefaultConfig(defaultTagsConfig).Map()
-			bd[names.AttrTagsAll] = tags.Map()
+			if ds {
+				bd[names.AttrTags] = KeyValueTags(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
+			} else {
+				tags := KeyValueTags(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+				bd[names.AttrTags] = tags.RemoveDefaultConfig(defaultTagsConfig).Map()
+				bd[names.AttrTagsAll] = tags.Map()
+			}
 		}
 
 		if blockDeviceIsRoot(instanceBd, instance) {

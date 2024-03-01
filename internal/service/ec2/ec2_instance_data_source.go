@@ -99,8 +99,7 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrTags:    tftags.TagsSchemaComputed(),
-						names.AttrTagsAll: tftags.TagsSchemaComputed(),
+						names.AttrTags: tftags.TagsSchemaComputed(),
 						"throughput": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -334,8 +333,7 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						names.AttrTags:    tftags.TagsSchemaComputed(),
-						names.AttrTagsAll: tftags.TagsSchemaComputed(),
+						names.AttrTags: tftags.TagsSchemaComputed(),
 						"throughput": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -552,7 +550,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Block devices
-	if err := readBlockDevices(ctx, d, meta, instance); err != nil {
+	if err := readBlockDevices(ctx, d, meta, instance, true); err != nil {
 		return fmt.Errorf("reading EC2 Instance (%s): %w", aws.StringValue(instance.InstanceId), err)
 	}
 	if _, ok := d.GetOk("ephemeral_block_device"); !ok {
