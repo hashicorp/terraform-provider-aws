@@ -161,7 +161,7 @@ func (r *resourceDataShareAuthorization) Read(ctx context.Context, req resource.
 		return
 	}
 	// split ID and write constituent parts to state to support import
-	state.DataShareARN = fwtypes.ARNValue(parts[0])
+	state.DataShareARN = fwtypes.ARNValueMust(parts[0])
 	state.ConsumerIdentifier = types.StringValue(parts[1])
 
 	out, err := findDataShareAuthorizationByID(ctx, conn, state.ID.ValueString())

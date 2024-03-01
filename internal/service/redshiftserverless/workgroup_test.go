@@ -50,6 +50,8 @@ func TestAccRedshiftServerlessWorkgroup_basic(t *testing.T) {
 	})
 }
 
+// Tests the complex logic involved in updating 'base_capacity' and 'max_capacity'.
+// The order of updates is crucial and is determined by their current state values.
 func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_redshiftserverless_workgroup.test"
@@ -62,26 +64,55 @@ func TestAccRedshiftServerlessWorkgroup_baseAndMaxCapacityAndPubliclyAccessible(
 		CheckDestroy:             testAccCheckWorkgroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWorkgroupConfig_baseAndMaxCapacityAndPubliclyAccessible(rName, 64, 128, true),
+				Config: testAccWorkgroupConfig_baseCapacity(rName, 128),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWorkgroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
+					resource.TestCheckResourceAttr(resourceName, "max_capacity", "0"),
+				),
+			},
+			{
+				Config: testAccWorkgroupConfig_baseCapacity(rName, 256),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "256"),
+					resource.TestCheckResourceAttr(resourceName, "max_capacity", "0"),
+				),
+			},
+			{
+				Config: testAccWorkgroupConfig_baseAndMaxCapacityAndPubliclyAccessible(rName, 64, 128, false),
+				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "64"),
 					resource.TestCheckResourceAttr(resourceName, "max_capacity", "128"),
+				),
+			},
+			{
+				Config: testAccWorkgroupConfig_baseAndMaxCapacityAndPubliclyAccessible(rName, 128, 256, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
+					resource.TestCheckResourceAttr(resourceName, "max_capacity", "256"),
+				),
+			},
+			{
+				Config: testAccWorkgroupConfig_baseAndMaxCapacityAndPubliclyAccessible(rName, 512, 5632, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "512"),
+					resource.TestCheckResourceAttr(resourceName, "max_capacity", "5632"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+				),
+			},
+			{
+				Config: testAccWorkgroupConfig_baseAndMaxCapacityAndPubliclyAccessible(rName, 128, 256, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
+					resource.TestCheckResourceAttr(resourceName, "max_capacity", "256"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccWorkgroupConfig_baseAndMaxCapacityAndPubliclyAccessible(rName, 128, 5632, false),
+				Config: testAccWorkgroupConfig_baseCapacity(rName, 128),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWorkgroupExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "base_capacity", "128"),
-					resource.TestCheckResourceAttr(resourceName, "max_capacity", "5632"),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+					resource.TestCheckResourceAttr(resourceName, "max_capacity", "0"),
 				),
 			},
 		},
@@ -359,6 +390,20 @@ resource "aws_redshiftserverless_workgroup" "test" {
   publicly_accessible = %[4]t
 }
 `, rName, baseCapacity, maxCapacity, publiclyAccessible)
+}
+
+func testAccWorkgroupConfig_baseCapacity(rName string, baseCapacity int) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name = %[1]q
+}
+
+resource "aws_redshiftserverless_workgroup" "test" {
+  namespace_name = aws_redshiftserverless_namespace.test.namespace_name
+  workgroup_name = %[1]q
+  base_capacity  = %[2]d
+}
+`, rName, baseCapacity)
 }
 
 func testAccWorkgroupConfig_configParameters(rName, maxQueryExecutionTime string) string {
