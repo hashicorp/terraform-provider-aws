@@ -51,11 +51,9 @@ func dataSourceInstancesRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading SSO Instances: %s", err)
 	}
 
-	// var identityStoreIDs, arns []string
 	var instances []map[string]interface{}
 
 	for _, v := range output {
-
 		instances = append(instances, map[string]interface{}{
 			"arn":               aws.ToString(v.InstanceArn),
 			"identity_store_id": aws.ToString(v.IdentityStoreId),
