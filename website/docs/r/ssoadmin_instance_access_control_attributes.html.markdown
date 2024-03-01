@@ -16,7 +16,7 @@ Provides a Single Sign-On (SSO) ABAC Resource: https://docs.aws.amazon.com/singl
 data "aws_ssoadmin_instances" "example" {}
 
 resource "aws_ssoadmin_instance_access_control_attributes" "example" {
-  instance_arn = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+  instance_arn = data.aws_ssoadmin_instances.example.instances[0].arn
   attribute {
     key = "name"
     value {

@@ -21,11 +21,11 @@ data "aws_ssoadmin_instances" "example" {}
 
 resource "aws_ssoadmin_permission_set" "example" {
   name         = "Example"
-  instance_arn = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+  instance_arn = data.aws_ssoadmin_instances.example.instances[0].arn
 }
 
 resource "aws_ssoadmin_managed_policy_attachment" "example" {
-  instance_arn       = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+  instance_arn       = data.aws_ssoadmin_instances.example.instances[0].arn
   managed_policy_arn = "arn:aws:iam::aws:policy/AlexaForBusinessDeviceSetup"
   permission_set_arn = aws_ssoadmin_permission_set.example.arn
 }
@@ -40,17 +40,17 @@ data "aws_ssoadmin_instances" "example" {}
 
 resource "aws_ssoadmin_permission_set" "example" {
   name         = "Example"
-  instance_arn = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+  instance_arn = data.aws_ssoadmin_instances.example.instances[0].arn
 }
 
 resource "aws_identitystore_group" "example" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.sso_instance.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.example.instances[0].identity_store_id
   display_name      = "Admin"
   description       = "Admin Group"
 }
 
 resource "aws_ssoadmin_account_assignment" "account_assignment" {
-  instance_arn       = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+  instance_arn       = data.aws_ssoadmin_instances.example.instances[0].arn
   permission_set_arn = aws_ssoadmin_permission_set.example.arn
 
   principal_id   = aws_identitystore_group.example.group_id
@@ -66,7 +66,7 @@ resource "aws_ssoadmin_managed_policy_attachment" "example" {
   # of the account assignment.
   depends_on = [aws_ssoadmin_account_assignment.example]
 
-  instance_arn       = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+  instance_arn       = data.aws_ssoadmin_instances.example.instances[0].arn
   managed_policy_arn = "arn:aws:iam::aws:policy/AlexaForBusinessDeviceSetup"
   permission_set_arn = aws_ssoadmin_permission_set.example.arn
 }

@@ -1032,7 +1032,7 @@ func testAccUserConfig_basic(rName string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1050,7 +1050,7 @@ func testAccUserConfig_addresses1(rName string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1073,7 +1073,7 @@ func testAccUserConfig_addresses2(rName string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1102,7 +1102,7 @@ func testAccUserConfig_addresses3(rName string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1131,7 +1131,7 @@ func testAccUserConfig_emails1(rName, email string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1155,7 +1155,7 @@ func testAccUserConfig_emails2(rName, email string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1179,7 +1179,7 @@ func testAccUserConfig_emails3(rName, email string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1199,7 +1199,7 @@ func testAccUserConfig_locale(rName, locale string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1219,7 +1219,7 @@ func testAccUserConfig_nameFamilyName(rName, familyName string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1237,7 +1237,7 @@ func testAccUserConfig_nameFormatted(rName, formatted string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1256,7 +1256,7 @@ func testAccUserConfig_nameGivenName(rName, givenName string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1274,7 +1274,7 @@ func testAccUserConfig_nameHonorificPrefix(rName, honorificPrefix string) string
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1293,7 +1293,7 @@ func testAccUserConfig_nameHonorificSuffix(rName, honorificSuffix string) string
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1312,7 +1312,7 @@ func testAccUserConfig_nameMiddleName(rName, middleName string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1331,7 +1331,7 @@ func testAccUserConfig_nickName(rName, nickName string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1351,7 +1351,7 @@ func testAccUserConfig_phoneNumbers1(rName string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1375,7 +1375,7 @@ func testAccUserConfig_phoneNumbers2(rName string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1399,7 +1399,7 @@ func testAccUserConfig_phoneNumbers3(rName string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1421,7 +1421,7 @@ func testAccUserConfig_preferredLanguage(rName, preferredLanguage string) string
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1441,7 +1441,7 @@ func testAccUserConfig_profileURL(rName, profileUrl string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1461,7 +1461,7 @@ func testAccUserConfig_timezone(rName, timezone string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1481,7 +1481,7 @@ func testAccUserConfig_title(rName, title string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q
@@ -1501,7 +1501,7 @@ func testAccUserConfig_userType(rName, userType string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q

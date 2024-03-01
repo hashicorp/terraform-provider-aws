@@ -51,11 +51,11 @@ data "aws_ssoadmin_instances" "test" {}
 resource "aws_ssoadmin_application" "test" {
   name                     = %[1]q
   application_provider_arn = %[2]q
-  instance_arn             = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn             = data.aws_ssoadmin_instances.test.instances[0].arn
 }
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   display_name = "Acceptance Test"
   user_name    = %[1]q

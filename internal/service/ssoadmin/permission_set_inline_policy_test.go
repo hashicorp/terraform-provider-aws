@@ -204,7 +204,7 @@ data "aws_iam_policy_document" "test" {
 
 resource "aws_ssoadmin_permission_set" "test" {
   name         = %[1]q
-  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn = data.aws_ssoadmin_instances.test.instances[0].arn
 }
 
 resource "aws_ssoadmin_permission_set_inline_policy" "test" {
@@ -237,7 +237,7 @@ data "aws_iam_policy_document" "test" {
 
 resource "aws_ssoadmin_permission_set" "test" {
   name         = %[1]q
-  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn = data.aws_ssoadmin_instances.test.instances[0].arn
 }
 
 resource "aws_ssoadmin_permission_set_inline_policy" "test" {

@@ -168,7 +168,7 @@ func testAccUserDataSourceConfig_base(name, email string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
   display_name      = "Acceptance Test"
   user_name         = %[1]q
 
@@ -189,7 +189,7 @@ func testAccUserDataSourceConfig_basic(name, email string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
   display_name      = %[1]q
   user_name         = %[1]q
 
@@ -237,7 +237,7 @@ resource "aws_identitystore_user" "test" {
 }
 
 data "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
   user_id           = aws_identitystore_user.test.user_id
 }
 `, name, email)
@@ -246,7 +246,7 @@ data "aws_identitystore_user" "test" {
 func testAccUserDataSourceConfig_filterUserName(name, email string) string {
 	return acctest.ConfigCompose(testAccUserDataSourceConfig_base(name, email), `
 data "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   filter {
     attribute_path  = "UserName"
@@ -259,7 +259,7 @@ data "aws_identitystore_user" "test" {
 func testAccUserDataSourceConfig_uniqueAttributeUserName(name, email string) string {
 	return acctest.ConfigCompose(testAccUserDataSourceConfig_base(name, email), `
 data "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   alternate_identifier {
     unique_attribute {
@@ -274,7 +274,7 @@ data "aws_identitystore_user" "test" {
 func testAccUserDataSourceConfig_email(name, email string) string {
 	return acctest.ConfigCompose(testAccUserDataSourceConfig_base(name, email), `
 data "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   alternate_identifier {
     unique_attribute {
@@ -289,7 +289,7 @@ data "aws_identitystore_user" "test" {
 func testAccUserDataSourceConfig_id(name, email string) string {
 	return acctest.ConfigCompose(testAccUserDataSourceConfig_base(name, email), `
 data "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   filter {
     attribute_path  = "UserName"

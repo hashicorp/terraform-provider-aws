@@ -16,11 +16,11 @@ Use this data source to get ARNs and Identity Store IDs of Single Sign-On (SSO) 
 data "aws_ssoadmin_instances" "example" {}
 
 output "arn" {
-  value = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+  value = data.aws_ssoadmin_instances.example.instances[0].arn
 }
 
 output "identity_store_id" {
-  value = tolist(data.aws_ssoadmin_instances.example.identity_store_ids)[0]
+  value = data.aws_ssoadmin_instances.example.instances[0].identity_store_id
 }
 ```
 

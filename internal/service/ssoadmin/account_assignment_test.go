@@ -211,7 +211,7 @@ data "aws_caller_identity" "current" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
   name         = %[1]q
-  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn = data.aws_ssoadmin_instances.test.instances[0].arn
 }
 `, rName)
 }
@@ -219,7 +219,7 @@ resource "aws_ssoadmin_permission_set" "test" {
 func testAccAccountAssignmentConfig_basicGroup(groupName, rName string) string {
 	return acctest.ConfigCompose(testAccAccountAssignmentConfig_base(rName), fmt.Sprintf(`
 data "aws_identitystore_group" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   alternate_identifier {
     unique_attribute {
@@ -243,7 +243,7 @@ resource "aws_ssoadmin_account_assignment" "test" {
 func testAccAccountAssignmentConfig_basicUser(userName, rName string) string {
 	return acctest.ConfigCompose(testAccAccountAssignmentConfig_base(rName), fmt.Sprintf(`
 data "aws_identitystore_user" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
 
   alternate_identifier {
     unique_attribute {

@@ -235,7 +235,7 @@ data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
   name         = %[1]q
-  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn = data.aws_ssoadmin_instances.test.instances[0].arn
 }
 `, rName)
 }
@@ -263,7 +263,7 @@ resource "aws_ssoadmin_managed_policy_attachment" "test" {
 func testAccManagedPolicyAttachmentConfig_multiple(rName string) string {
 	return acctest.ConfigCompose(testAccManagedPolicyAttachmentConfig_basic(rName), `
 resource "aws_ssoadmin_managed_policy_attachment" "other" {
-  instance_arn       = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn       = data.aws_ssoadmin_instances.test.instances[0].arn
   managed_policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonDynamoDBReadOnlyAccess"
   permission_set_arn = aws_ssoadmin_permission_set.test.arn
 }
