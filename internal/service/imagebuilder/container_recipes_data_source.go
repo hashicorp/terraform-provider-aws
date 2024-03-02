@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfiltersv2"
 )
 
@@ -28,7 +27,7 @@ func DataSourceContainerRecipes() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": namevaluesfilters.Schema(),
+			"filter": namevaluesfiltersv2.Schema(),
 			"names": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -54,26 +53,10 @@ func dataSourceContainerRecipesRead(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).ImageBuilderFilters()
+		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).ImagebuilderFilters()
 	}
 
-	var results []*awstypes.ContainerRecipeSummary
-
-	err := conn.ListContainerRecipesPages(ctx, input, func(page *imagebuilder.ListContainerRecipesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, containerRecipeSummary := range page.ContainerRecipeSummaryList {
-			if containerRecipeSummary == nil {
-				continue
-			}
-
-			results = append(results, containerRecipeSummary)
-		}
-
-		return !lastPage
-	})
+	out, err := conn.ListContainerRecipes(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Container Recipes: %s", err)
@@ -81,7 +64,7 @@ func dataSourceContainerRecipesRead(ctx context.Context, d *schema.ResourceData,
 
 	var arns, names []string
 
-	for _, r := range results {
+	for _, r := range out.ContainerRecipeSummaryList {
 		arns = append(arns, aws.ToString(r.Arn))
 		names = append(names, aws.ToString(r.Name))
 	}

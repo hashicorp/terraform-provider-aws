@@ -8,12 +8,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfiltersv2"
 )
 
@@ -27,7 +25,7 @@ func DataSourceInfrastructureConfigurations() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": namevaluesfilters.Schema(),
+			"filter": namevaluesfiltersv2.Schema(),
 			"names": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -44,26 +42,10 @@ func dataSourceInfrastructureConfigurationsRead(ctx context.Context, d *schema.R
 	input := &imagebuilder.ListInfrastructureConfigurationsInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).ImageBuilderFilters()
+		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).ImagebuilderFilters()
 	}
 
-	var results []*awstypes.InfrastructureConfigurationSummary
-
-	err := conn.ListInfrastructureConfigurationsPages(ctx, input, func(page *imagebuilder.ListInfrastructureConfigurationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, infrastructureConfigurationSummary := range page.InfrastructureConfigurationSummaryList {
-			if infrastructureConfigurationSummary == nil {
-				continue
-			}
-
-			results = append(results, infrastructureConfigurationSummary)
-		}
-
-		return !lastPage
-	})
+	out, err := conn.ListInfrastructureConfigurations(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Infrastructure Configurations: %s", err)
@@ -71,7 +53,7 @@ func dataSourceInfrastructureConfigurationsRead(ctx context.Context, d *schema.R
 
 	var arns, names []string
 
-	for _, r := range results {
+	for _, r := range out.InfrastructureConfigurationSummaryList {
 		arns = append(arns, aws.ToString(r.Arn))
 		names = append(names, aws.ToString(r.Name))
 	}

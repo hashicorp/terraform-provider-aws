@@ -54,26 +54,10 @@ func dataSourceImageRecipesRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).ImageBuilderFilters()
+		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).ImagebuilderFilters()
 	}
 
-	var results []*awstypes.ImageRecipeSummary
-
-	err := conn.ListImageRecipesPages(ctx, input, func(page *imagebuilder.ListImageRecipesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, imageRecipeSummary := range page.ImageRecipeSummaryList {
-			if imageRecipeSummary == nil {
-				continue
-			}
-
-			results = append(results, imageRecipeSummary)
-		}
-
-		return !lastPage
-	})
+	out, err := conn.ListImageRecipes(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Recipes: %s", err)
@@ -81,7 +65,7 @@ func dataSourceImageRecipesRead(ctx context.Context, d *schema.ResourceData, met
 
 	var arns, names []string
 
-	for _, r := range results {
+	for _, r := range out.ImageRecipeSummaryList {
 		arns = append(arns, aws.ToString(r.Arn))
 		names = append(names, aws.ToString(r.Name))
 	}

@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -44,26 +43,10 @@ func dataSourceImagePipelinesRead(ctx context.Context, d *schema.ResourceData, m
 	input := &imagebuilder.ListImagePipelinesInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).ImageBuilderFilters()
+		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).ImagebuilderFilters()
 	}
 
-	var results []*awstypes.ImagePipeline
-
-	err := conn.ListImagePipelinesPages(ctx, input, func(page *imagebuilder.ListImagePipelinesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, imagePipeline := range page.ImagePipelineList {
-			if imagePipeline == nil {
-				continue
-			}
-
-			results = append(results, imagePipeline)
-		}
-
-		return !lastPage
-	})
+	out, err := conn.ListImagePipelines(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Pipelines: %s", err)
@@ -71,7 +54,7 @@ func dataSourceImagePipelinesRead(ctx context.Context, d *schema.ResourceData, m
 
 	var arns, names []string
 
-	for _, r := range results {
+	for _, r := range out.ImagePipelineList {
 		arns = append(arns, aws.ToString(r.Arn))
 		names = append(names, aws.ToString(r.Name))
 	}

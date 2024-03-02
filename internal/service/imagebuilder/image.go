@@ -396,11 +396,7 @@ func flattenOutputResources(apiObject *awstypes.OutputResources) map[string]inte
 	return tfMap
 }
 
-func flattenAMI(apiObject *awstypes.Ami) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenAMI(apiObject awstypes.Ami) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.AccountId; v != nil {
@@ -426,7 +422,7 @@ func flattenAMI(apiObject *awstypes.Ami) map[string]interface{} {
 	return tfMap
 }
 
-func flattenAMIs(apiObjects []*awstypes.Ami) []interface{} {
+func flattenAMIs(apiObjects []awstypes.Ami) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -434,25 +430,17 @@ func flattenAMIs(apiObjects []*awstypes.Ami) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenAMI(apiObject))
 	}
 
 	return tfList
 }
 
-func flattenContainer(apiObject *awstypes.Container) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenContainer(apiObject awstypes.Container) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ImageUris; v != nil {
-		tfMap["image_uris"] = aws.ToStringSlice(v)
+		tfMap["image_uris"] = aws.StringSlice(v)
 	}
 
 	if v := apiObject.Region; v != nil {
@@ -462,7 +450,7 @@ func flattenContainer(apiObject *awstypes.Container) map[string]interface{} {
 	return tfMap
 }
 
-func flattenContainers(apiObjects []*awstypes.Container) []interface{} {
+func flattenContainers(apiObjects []awstypes.Container) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -470,10 +458,6 @@ func flattenContainers(apiObjects []*awstypes.Container) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenContainer(apiObject))
 	}
 
