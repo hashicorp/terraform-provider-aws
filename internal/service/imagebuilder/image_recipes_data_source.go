@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfiltersv2"
 )
 
 // @SDKDataSource("aws_imagebuilder_image_recipes", name="Image Recipes")
@@ -53,7 +54,7 @@ func dataSourceImageRecipesRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImagebuilderFilters()
+		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).ImageBuilderFilters()
 	}
 
 	var results []*awstypes.ImageRecipeSummary

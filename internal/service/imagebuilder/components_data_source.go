@@ -14,7 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfiltersv2"
 )
 
 // @SDKDataSource("aws_imagebuilder_components", name="Components")
@@ -27,7 +27,7 @@ func DataSourceComponents() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": namevaluesfilters.Schema(),
+			"filter": namevaluesfiltersv2.Schema(),
 			"names": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -53,7 +53,7 @@ func dataSourceComponentsRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = namevaluesfilters.New(v.(*schema.Set)).ImagebuilderFilters()
+		input.Filters = namevaluesfiltersv2.New(v.(*schema.Set)).ImageBuilderFilters()
 	}
 
 	out, err := conn.ListComponents(ctx, input)

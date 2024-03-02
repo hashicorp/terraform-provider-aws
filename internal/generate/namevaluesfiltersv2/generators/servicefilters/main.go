@@ -20,6 +20,7 @@ const filename = `service_filters_v2_gen.go`
 // Representing types such as []*ec2.Filter, []*rds.Filter, ...
 var sliceServiceNames = []string{
 	"secretsmanager",
+	"imagebuilder",
 }
 
 type TemplateData struct {
