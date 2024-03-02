@@ -302,8 +302,8 @@ func resourceFunctionURLDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	if v := d.Get("authorization_type").(string); v == lambda.FunctionUrlAuthTypeNone {
 		input := &lambda.RemovePermissionInput{
-			FunctionName:        aws.String(name),
-			StatementId: 	   aws.String("FunctionURLAllowPublicAccess"),
+			FunctionName: aws.String(name),
+			StatementId:  aws.String("FunctionURLAllowPublicAccess"),
 		}
 
 		if qualifier != "" {
