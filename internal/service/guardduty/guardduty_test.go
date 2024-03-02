@@ -59,6 +59,11 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"kubernetes":                    testAccOrganizationConfiguration_kubernetes,
 			"malwareProtection":             testAccOrganizationConfiguration_malwareprotection,
 		},
+		"OrganizationConfigurationFeature": {
+			"basic":                    testAccOrganizationConfigurationFeature_basic,
+			"additional_configuration": testAccOrganizationConfigurationFeature_additionalConfiguration,
+			"multiple":                 testAccOrganizationConfigurationFeature_multiple,
+		},
 		"ThreatIntelSet": {
 			"basic": testAccThreatIntelSet_basic,
 			"tags":  testAccThreatIntelSet_tags,

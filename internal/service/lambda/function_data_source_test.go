@@ -8,10 +8,10 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/lambda"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLambdaFunctionDataSource_basic(t *testing.T) {
@@ -22,7 +22,7 @@ func TestAccLambdaFunctionDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -38,6 +38,11 @@ func TestAccLambdaFunctionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "handler", resourceName, "handler"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "invoke_arn", resourceName, "invoke_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "last_modified", resourceName, "last_modified"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "logging_config.#", resourceName, "logging_config.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "logging_config.0.application_log_level", resourceName, "logging_config.0.application_log_level"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "logging_config.0.log_format", resourceName, "logging_config.0.log_format"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "logging_config.0.log_group", resourceName, "logging_config.0.log_group"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "logging_config.0.system_log_level", resourceName, "logging_config.0.system_log_level"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "memory_size", resourceName, "memory_size"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_arn", resourceName, "qualified_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "qualified_invoke_arn", resourceName, "qualified_invoke_arn"),
@@ -67,7 +72,7 @@ func TestAccLambdaFunctionDataSource_version(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -93,7 +98,7 @@ func TestAccLambdaFunctionDataSource_latestVersion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -118,7 +123,7 @@ func TestAccLambdaFunctionDataSource_unpublishedVersion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -144,7 +149,7 @@ func TestAccLambdaFunctionDataSource_alias(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -168,7 +173,7 @@ func TestAccLambdaFunctionDataSource_layers(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -194,7 +199,7 @@ func TestAccLambdaFunctionDataSource_vpc(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -202,8 +207,10 @@ func TestAccLambdaFunctionDataSource_vpc(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_config.#", resourceName, "vpc_config.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_config.0.ipv6_allowed_for_dual_stack", resourceName, "vpc_config.0.ipv6_allowed_for_dual_stack"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_config.0.security_group_ids.#", resourceName, "vpc_config.0.security_group_ids.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_config.0.subnet_ids.#", resourceName, "vpc_config.0.subnet_ids.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "vpc_config.0.vpc_id", resourceName, "vpc_config.0.vpc_id"),
 				),
 			},
 		},
@@ -218,7 +225,7 @@ func TestAccLambdaFunctionDataSource_environment(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -247,7 +254,7 @@ func TestAccLambdaFunctionDataSource_fileSystem(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -273,7 +280,7 @@ func TestAccLambdaFunctionDataSource_image(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccImageLatestPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -295,7 +302,7 @@ func TestAccLambdaFunctionDataSource_architectures(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -316,7 +323,7 @@ func TestAccLambdaFunctionDataSource_ephemeralStorage(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -326,6 +333,37 @@ func TestAccLambdaFunctionDataSource_ephemeralStorage(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "ephemeral_storage.#", resourceName, "ephemeral_storage.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "ephemeral_storage.0.size", resourceName, "ephemeral_storage.0.size"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccLambdaFunctionDataSource_loggingConfig(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_lambda_function.test"
+	resourceName := "aws_lambda_function.test"
+	checkFunc := resource.ComposeAggregateTestCheckFunc(
+		resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+		resource.TestCheckResourceAttrPair(dataSourceName, "logging_config.#", resourceName, "logging_config.#"),
+		resource.TestCheckResourceAttrPair(dataSourceName, "logging_config.0.application_log_level", resourceName, "logging_config.0.application_log_level"),
+		resource.TestCheckResourceAttrPair(dataSourceName, "logging_config.0.log_format", resourceName, "logging_config.0.log_format"),
+		resource.TestCheckResourceAttrPair(dataSourceName, "logging_config.0.log_group", resourceName, "logging_config.0.log_group"),
+		resource.TestCheckResourceAttrPair(dataSourceName, "logging_config.0.system_log_level", resourceName, "logging_config.0.system_log_level"),
+	)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionDataSourceConfig_loggingConfigStructured(rName),
+				Check:  checkFunc,
+			},
+			{
+				Config: testAccFunctionDataSourceConfig_loggingConfigText(rName),
+				Check:  checkFunc,
 			},
 		},
 	})
@@ -720,4 +758,47 @@ data "aws_lambda_function" "test" {
   function_name = aws_lambda_function.test.function_name
 }
 `, rName))
+}
+
+func testAccFunctionDataSourceConfig_loggingConfigStructured(rName string) string {
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  role          = aws_iam_role.lambda.arn
+  runtime       = "nodejs16.x"
+
+  logging_config {
+    log_format            = "JSON"
+    application_log_level = "DEBUG"
+    system_log_level      = "WARN"
+  }
+}
+
+data "aws_lambda_function" "test" {
+  function_name = aws_lambda_function.test.function_name
+}
+`, rName))
+}
+
+func testAccFunctionDataSourceConfig_loggingConfigText(rName string) string {
+	return acctest.ConfigCompose(testAccFunctionDataSourceConfig_base(rName), fmt.Sprintf(`
+resource "aws_lambda_function" "test" {
+  filename      = "test-fixtures/lambdatest.zip"
+  function_name = %[1]q
+  handler       = "exports.example"
+  role          = aws_iam_role.lambda.arn
+  runtime       = "nodejs16.x"
+
+  logging_config {
+    log_format = "Text"
+    log_group  = %[2]q
+  }
+}
+
+data "aws_lambda_function" "test" {
+  function_name = aws_lambda_function.test.function_name
+}
+`, rName, rName+"_custom"))
 }

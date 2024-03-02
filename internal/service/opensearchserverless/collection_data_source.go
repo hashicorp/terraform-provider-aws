@@ -82,6 +82,9 @@ func (d *dataSourceCollection) Schema(_ context.Context, _ datasource.SchemaRequ
 					),
 				},
 			},
+			"standby_replicas": schema.StringAttribute{
+				Computed: true,
+			},
 			names.AttrTags: tftags.TagsAttributeComputedOnly(),
 			"type": schema.StringAttribute{
 				Computed: true,
@@ -133,6 +136,7 @@ func (d *dataSourceCollection) Read(ctx context.Context, req datasource.ReadRequ
 	data.ID = flex.StringToFramework(ctx, out.Id)
 	data.KmsKeyARN = flex.StringToFramework(ctx, out.KmsKeyArn)
 	data.Name = flex.StringToFramework(ctx, out.Name)
+	data.StandbyReplicas = flex.StringValueToFramework(ctx, out.StandbyReplicas)
 	data.Type = flex.StringValueToFramework(ctx, out.Type)
 
 	createdDate := time.UnixMilli(aws.ToInt64(out.CreatedDate))
@@ -168,6 +172,7 @@ type dataSourceCollectionData struct {
 	KmsKeyARN          types.String `tfsdk:"kms_key_arn"`
 	LastModifiedDate   types.String `tfsdk:"last_modified_date"`
 	Name               types.String `tfsdk:"name"`
+	StandbyReplicas    types.String `tfsdk:"standby_replicas"`
 	Tags               types.Map    `tfsdk:"tags"`
 	Type               types.String `tfsdk:"type"`
 }

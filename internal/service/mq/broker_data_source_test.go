@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/mq"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMQBrokerDataSource_basic(t *testing.T) {
@@ -26,8 +26,8 @@ func TestAccMQBrokerDataSource_basic(t *testing.T) {
 	dataSourceByNameName := "data.aws_mq_broker.by_name"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, mq.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.MQEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -71,7 +71,7 @@ func testAccBrokerDataSourceConfig_base(rName string) string {
 resource "aws_mq_configuration" "test" {
   name           = %[1]q
   engine_type    = "ActiveMQ"
-  engine_version = "5.15.12"
+  engine_version = "5.17.6"
 
   data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -92,7 +92,7 @@ resource "aws_mq_broker" "test" {
 
   deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
   engine_type        = "ActiveMQ"
-  engine_version     = "5.15.12"
+  engine_version     = "5.17.6"
   host_instance_type = "mq.t2.micro"
 
   maintenance_window_start_time {

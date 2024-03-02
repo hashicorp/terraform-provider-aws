@@ -9,9 +9,9 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/mwaa"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/mwaa"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/mwaa/types"
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
@@ -19,6 +19,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -72,6 +75,13 @@ func ResourceEnvironment() *schema.Resource {
 			"dag_s3_path": {
 				Type:     schema.TypeString,
 				Required: true,
+			},
+			"endpoint_management": {
+				Type:             schema.TypeString,
+				ForceNew:         true,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.EndpointManagement](),
 			},
 			"environment_class": {
 				Type:     schema.TypeString,
@@ -253,10 +263,10 @@ func ResourceEnvironment() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"webserver_access_mode": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(mwaa.WebserverAccessMode_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.WebserverAccessMode](),
 			},
 			"webserver_url": {
 				Type:     schema.TypeString,
@@ -292,7 +302,9 @@ func ResourceEnvironment() *schema.Resource {
 }
 
 func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MWAAConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).MWAAClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &mwaa.CreateEnvironmentInput{
@@ -305,11 +317,15 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("airflow_configuration_options"); ok {
-		input.AirflowConfigurationOptions = flex.ExpandStringMap(v.(map[string]interface{}))
+		input.AirflowConfigurationOptions = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("airflow_version"); ok {
 		input.AirflowVersion = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("endpoint_management"); ok {
+		input.EndpointManagement = awstypes.EndpointManagement(v.(string))
 	}
 
 	if v, ok := d.GetOk("environment_class"); ok {
@@ -324,13 +340,13 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.LoggingConfiguration = expandEnvironmentLoggingConfiguration(v.([]interface{}))
 	}
 
-	// input.MaxWorkers = aws.Int64(int64(90))
+	// input.MaxWorkers = aws.Int32(int32(90))
 	if v, ok := d.GetOk("max_workers"); ok {
-		input.MaxWorkers = aws.Int64(int64(v.(int)))
+		input.MaxWorkers = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("min_workers"); ok {
-		input.MinWorkers = aws.Int64(int64(v.(int)))
+		input.MinWorkers = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("plugins_s3_object_version"); ok {
@@ -350,7 +366,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("schedulers"); ok {
-		input.Schedulers = aws.Int64(int64(v.(int)))
+		input.Schedulers = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("startup_script_s3_object_version"); ok {
@@ -362,7 +378,7 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("webserver_access_mode"); ok {
-		input.WebserverAccessMode = aws.String(v.(string))
+		input.WebserverAccessMode = awstypes.WebserverAccessMode(v.(string))
 	}
 
 	if v, ok := d.GetOk("weekly_maintenance_window_start"); ok {
@@ -373,57 +389,62 @@ func resourceEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta
 		Execution roles created just before the MWAA Environment may result in ValidationExceptions
 		due to IAM permission propagation delays.
 	*/
+
+	var validationException, internalServerException = &awstypes.ValidationException{}, &awstypes.InternalServerException{}
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.CreateEnvironmentWithContext(ctx, input)
-	}, mwaa.ErrCodeValidationException, mwaa.ErrCodeInternalServerException)
+		return conn.CreateEnvironment(ctx, input)
+	}, validationException.ErrorCode(), internalServerException.ErrorCode())
 
 	if err != nil {
-		return diag.Errorf("creating MWAA Environment (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating MWAA Environment (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
 	if _, err := waitEnvironmentCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for MWAA Environment (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MWAA Environment (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceEnvironmentRead(ctx, d, meta)
+	return append(diags, resourceEnvironmentRead(ctx, d, meta)...)
 }
 
 func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MWAAConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).MWAAClient(ctx)
 
 	environment, err := FindEnvironmentByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MWAA Environment %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading MWAA Environment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MWAA Environment (%s): %s", d.Id(), err)
 	}
 
-	d.Set("airflow_configuration_options", aws.StringValueMap(environment.AirflowConfigurationOptions))
+	d.Set("airflow_configuration_options", environment.AirflowConfigurationOptions)
 	d.Set("airflow_version", environment.AirflowVersion)
 	d.Set("arn", environment.Arn)
-	d.Set("created_at", aws.TimeValue(environment.CreatedAt).String())
+	d.Set("created_at", aws.ToTime(environment.CreatedAt).String())
 	d.Set("dag_s3_path", environment.DagS3Path)
+	d.Set("endpoint_management", environment.EndpointManagement)
 	d.Set("environment_class", environment.EnvironmentClass)
 	d.Set("execution_role_arn", environment.ExecutionRoleArn)
 	d.Set("kms_key", environment.KmsKey)
 	if err := d.Set("last_updated", flattenLastUpdate(environment.LastUpdate)); err != nil {
-		return diag.Errorf("setting last_updated: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting last_updated: %s", err)
 	}
 	if err := d.Set("logging_configuration", flattenLoggingConfiguration(environment.LoggingConfiguration)); err != nil {
-		return diag.Errorf("setting logging_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting logging_configuration: %s", err)
 	}
 	d.Set("max_workers", environment.MaxWorkers)
 	d.Set("min_workers", environment.MinWorkers)
 	d.Set("name", environment.Name)
 	if err := d.Set("network_configuration", flattenNetworkConfiguration(environment.NetworkConfiguration)); err != nil {
-		return diag.Errorf("setting network_configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 	d.Set("plugins_s3_object_version", environment.PluginsS3ObjectVersion)
 	d.Set("plugins_s3_path", environment.PluginsS3Path)
@@ -441,11 +462,13 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	setTagsOut(ctx, environment.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MWAAConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).MWAAClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &mwaa.UpdateEnvironmentInput{
@@ -458,7 +481,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 				options = map[string]interface{}{}
 			}
 
-			input.AirflowConfigurationOptions = flex.ExpandStringMap(options.(map[string]interface{}))
+			input.AirflowConfigurationOptions = flex.ExpandStringValueMap(options.(map[string]interface{}))
 		}
 
 		if d.HasChange("airflow_version") {
@@ -482,11 +505,11 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange("max_workers") {
-			input.MaxWorkers = aws.Int64(int64(d.Get("max_workers").(int)))
+			input.MaxWorkers = aws.Int32(int32(d.Get("max_workers").(int)))
 		}
 
 		if d.HasChange("min_workers") {
-			input.MinWorkers = aws.Int64(int64(d.Get("min_workers").(int)))
+			input.MinWorkers = aws.Int32(int32(d.Get("min_workers").(int)))
 		}
 
 		if d.HasChange("network_configuration") {
@@ -510,7 +533,7 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange("schedulers") {
-			input.Schedulers = aws.Int64(int64(d.Get("schedulers").(int)))
+			input.Schedulers = aws.Int32(int32(d.Get("schedulers").(int)))
 		}
 
 		if d.HasChange("source_bucket_arn") {
@@ -526,48 +549,54 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		if d.HasChange("webserver_access_mode") {
-			input.WebserverAccessMode = aws.String(d.Get("webserver_access_mode").(string))
+			input.WebserverAccessMode = awstypes.WebserverAccessMode(d.Get("webserver_access_mode").(string))
 		}
 
 		if d.HasChange("weekly_maintenance_window_start") {
 			input.WeeklyMaintenanceWindowStart = aws.String(d.Get("weekly_maintenance_window_start").(string))
 		}
 
-		_, err := conn.UpdateEnvironmentWithContext(ctx, input)
+		_, err := conn.UpdateEnvironment(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating MWAA Environment (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MWAA Environment (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitEnvironmentUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for MWAA Environment (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for MWAA Environment (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceEnvironmentRead(ctx, d, meta)
+	return append(diags, resourceEnvironmentRead(ctx, d, meta)...)
 }
 
 func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).MWAAConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).MWAAClient(ctx)
 
 	log.Printf("[INFO] Deleting MWAA Environment: %s", d.Id())
-	_, err := conn.DeleteEnvironmentWithContext(ctx, &mwaa.DeleteEnvironmentInput{
+	_, err := conn.DeleteEnvironment(ctx, &mwaa.DeleteEnvironmentInput{
 		Name: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, mwaa.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
+	if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "DELETED status cannot be deleted") {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting MWAA Environment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting MWAA Environment (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitEnvironmentDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for MWAA Environment (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MWAA Environment (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func environmentModuleLoggingConfigurationSchema() *schema.Resource {
@@ -583,23 +612,23 @@ func environmentModuleLoggingConfigurationSchema() *schema.Resource {
 				Computed: true,
 			},
 			"log_level": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(mwaa.LoggingLevel_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.LoggingLevel](),
 			},
 		},
 	}
 }
 
-func FindEnvironmentByName(ctx context.Context, conn *mwaa.MWAA, name string) (*mwaa.Environment, error) {
+func FindEnvironmentByName(ctx context.Context, conn *mwaa.Client, name string) (*awstypes.Environment, error) {
 	input := &mwaa.GetEnvironmentInput{
 		Name: aws.String(name),
 	}
 
-	output, err := conn.GetEnvironmentWithContext(ctx, input)
+	output, err := conn.GetEnvironment(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, mwaa.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -617,7 +646,7 @@ func FindEnvironmentByName(ctx context.Context, conn *mwaa.MWAA, name string) (*
 	return output.Environment, nil
 }
 
-func statusEnvironment(ctx context.Context, conn *mwaa.MWAA, name string) retry.StateRefreshFunc {
+func statusEnvironment(ctx context.Context, conn *mwaa.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		environment, err := FindEnvironmentByName(ctx, conn, name)
 
@@ -629,23 +658,23 @@ func statusEnvironment(ctx context.Context, conn *mwaa.MWAA, name string) retry.
 			return nil, "", err
 		}
 
-		return environment, aws.StringValue(environment.Status), nil
+		return environment, string(environment.Status), nil
 	}
 }
 
-func waitEnvironmentCreated(ctx context.Context, conn *mwaa.MWAA, name string, timeout time.Duration) (*mwaa.Environment, error) {
+func waitEnvironmentCreated(ctx context.Context, conn *mwaa.Client, name string, timeout time.Duration) (*awstypes.Environment, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{mwaa.EnvironmentStatusCreating},
-		Target:  []string{mwaa.EnvironmentStatusAvailable},
+		Pending: enum.Slice(awstypes.EnvironmentStatusCreating),
+		Target:  enum.Slice(awstypes.EnvironmentStatusAvailable),
 		Refresh: statusEnvironment(ctx, conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*mwaa.Environment); ok {
+	if v, ok := outputRaw.(*awstypes.Environment); ok {
 		if v.LastUpdate != nil && v.LastUpdate.Error != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(v.LastUpdate.Error.ErrorCode), aws.StringValue(v.LastUpdate.Error.ErrorMessage)))
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.LastUpdate.Error.ErrorCode), aws.ToString(v.LastUpdate.Error.ErrorMessage)))
 		}
 
 		return v, err
@@ -654,19 +683,19 @@ func waitEnvironmentCreated(ctx context.Context, conn *mwaa.MWAA, name string, t
 	return nil, err
 }
 
-func waitEnvironmentUpdated(ctx context.Context, conn *mwaa.MWAA, name string, timeout time.Duration) (*mwaa.Environment, error) {
+func waitEnvironmentUpdated(ctx context.Context, conn *mwaa.Client, name string, timeout time.Duration) (*awstypes.Environment, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{mwaa.EnvironmentStatusUpdating, mwaa.EnvironmentStatusCreatingSnapshot},
-		Target:  []string{mwaa.EnvironmentStatusAvailable},
+		Pending: enum.Slice(awstypes.EnvironmentStatusUpdating, awstypes.EnvironmentStatusCreatingSnapshot),
+		Target:  enum.Slice(awstypes.EnvironmentStatusAvailable),
 		Refresh: statusEnvironment(ctx, conn, name),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*mwaa.Environment); ok {
+	if v, ok := outputRaw.(*awstypes.Environment); ok {
 		if v.LastUpdate != nil && v.LastUpdate.Error != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(v.LastUpdate.Error.ErrorCode), aws.StringValue(v.LastUpdate.Error.ErrorMessage)))
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.LastUpdate.Error.ErrorCode), aws.ToString(v.LastUpdate.Error.ErrorMessage)))
 		}
 
 		return v, err
@@ -675,9 +704,9 @@ func waitEnvironmentUpdated(ctx context.Context, conn *mwaa.MWAA, name string, t
 	return nil, err
 }
 
-func waitEnvironmentDeleted(ctx context.Context, conn *mwaa.MWAA, name string, timeout time.Duration) (*mwaa.Environment, error) {
+func waitEnvironmentDeleted(ctx context.Context, conn *mwaa.Client, name string, timeout time.Duration) (*awstypes.Environment, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{mwaa.EnvironmentStatusDeleting},
+		Pending: enum.Slice(awstypes.EnvironmentStatusDeleting),
 		Target:  []string{},
 		Refresh: statusEnvironment(ctx, conn, name),
 		Timeout: timeout,
@@ -685,9 +714,9 @@ func waitEnvironmentDeleted(ctx context.Context, conn *mwaa.MWAA, name string, t
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*mwaa.Environment); ok {
+	if v, ok := outputRaw.(*awstypes.Environment); ok {
 		if v.LastUpdate != nil && v.LastUpdate.Error != nil {
-			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(v.LastUpdate.Error.ErrorCode), aws.StringValue(v.LastUpdate.Error.ErrorMessage)))
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(v.LastUpdate.Error.ErrorCode), aws.ToString(v.LastUpdate.Error.ErrorMessage)))
 		}
 
 		return v, err
@@ -696,12 +725,12 @@ func waitEnvironmentDeleted(ctx context.Context, conn *mwaa.MWAA, name string, t
 	return nil, err
 }
 
-func expandEnvironmentLoggingConfiguration(l []interface{}) *mwaa.LoggingConfigurationInput {
+func expandEnvironmentLoggingConfiguration(l []interface{}) *awstypes.LoggingConfigurationInput {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	input := &mwaa.LoggingConfigurationInput{}
+	input := &awstypes.LoggingConfigurationInput{}
 
 	m := l[0].(map[string]interface{})
 
@@ -728,38 +757,38 @@ func expandEnvironmentLoggingConfiguration(l []interface{}) *mwaa.LoggingConfigu
 	return input
 }
 
-func expandEnvironmentModuleLoggingConfiguration(l []interface{}) *mwaa.ModuleLoggingConfigurationInput {
+func expandEnvironmentModuleLoggingConfiguration(l []interface{}) *awstypes.ModuleLoggingConfigurationInput {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	input := &mwaa.ModuleLoggingConfigurationInput{}
+	input := &awstypes.ModuleLoggingConfigurationInput{}
 	m := l[0].(map[string]interface{})
 
 	input.Enabled = aws.Bool(m["enabled"].(bool))
-	input.LogLevel = aws.String(m["log_level"].(string))
+	input.LogLevel = awstypes.LoggingLevel(m["log_level"].(string))
 
 	return input
 }
 
-func expandEnvironmentNetworkConfigurationCreate(l []interface{}) *mwaa.NetworkConfiguration {
+func expandEnvironmentNetworkConfigurationCreate(l []interface{}) *awstypes.NetworkConfiguration {
 	m := l[0].(map[string]interface{})
 
-	return &mwaa.NetworkConfiguration{
-		SecurityGroupIds: flex.ExpandStringSet(m["security_group_ids"].(*schema.Set)),
-		SubnetIds:        flex.ExpandStringSet(m["subnet_ids"].(*schema.Set)),
+	return &awstypes.NetworkConfiguration{
+		SecurityGroupIds: flex.ExpandStringValueSet(m["security_group_ids"].(*schema.Set)),
+		SubnetIds:        flex.ExpandStringValueSet(m["subnet_ids"].(*schema.Set)),
 	}
 }
 
-func expandEnvironmentNetworkConfigurationUpdate(l []interface{}) *mwaa.UpdateNetworkConfigurationInput {
+func expandEnvironmentNetworkConfigurationUpdate(l []interface{}) *awstypes.UpdateNetworkConfigurationInput {
 	m := l[0].(map[string]interface{})
 
-	return &mwaa.UpdateNetworkConfigurationInput{
-		SecurityGroupIds: flex.ExpandStringSet(m["security_group_ids"].(*schema.Set)),
+	return &awstypes.UpdateNetworkConfigurationInput{
+		SecurityGroupIds: flex.ExpandStringValueSet(m["security_group_ids"].(*schema.Set)),
 	}
 }
 
-func flattenLastUpdate(lastUpdate *mwaa.LastUpdate) []interface{} {
+func flattenLastUpdate(lastUpdate *awstypes.LastUpdate) []interface{} {
 	if lastUpdate == nil {
 		return []interface{}{}
 	}
@@ -767,21 +796,21 @@ func flattenLastUpdate(lastUpdate *mwaa.LastUpdate) []interface{} {
 	m := map[string]interface{}{}
 
 	if lastUpdate.CreatedAt != nil {
-		m["created_at"] = aws.TimeValue(lastUpdate.CreatedAt).String()
+		m["created_at"] = aws.ToTime(lastUpdate.CreatedAt).String()
 	}
 
 	if lastUpdate.Error != nil {
 		m["error"] = flattenLastUpdateError(lastUpdate.Error)
 	}
 
-	if lastUpdate.Status != nil {
+	if lastUpdate.Status != "" {
 		m["status"] = lastUpdate.Status
 	}
 
 	return []interface{}{m}
 }
 
-func flattenLastUpdateError(apiObject *mwaa.UpdateError) []interface{} {
+func flattenLastUpdateError(apiObject *awstypes.UpdateError) []interface{} {
 	if apiObject == nil {
 		return []interface{}{}
 	}
@@ -799,7 +828,7 @@ func flattenLastUpdateError(apiObject *mwaa.UpdateError) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenLoggingConfiguration(loggingConfiguration *mwaa.LoggingConfiguration) []interface{} {
+func flattenLoggingConfiguration(loggingConfiguration *awstypes.LoggingConfiguration) []interface{} {
 	if loggingConfiguration == nil {
 		return []interface{}{}
 	}
@@ -829,28 +858,28 @@ func flattenLoggingConfiguration(loggingConfiguration *mwaa.LoggingConfiguration
 	return []interface{}{m}
 }
 
-func flattenModuleLoggingConfiguration(moduleLoggingConfiguration *mwaa.ModuleLoggingConfiguration) []interface{} {
+func flattenModuleLoggingConfiguration(moduleLoggingConfiguration *awstypes.ModuleLoggingConfiguration) []interface{} {
 	if moduleLoggingConfiguration == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"cloud_watch_log_group_arn": aws.StringValue(moduleLoggingConfiguration.CloudWatchLogGroupArn),
-		"enabled":                   aws.BoolValue(moduleLoggingConfiguration.Enabled),
-		"log_level":                 aws.StringValue(moduleLoggingConfiguration.LogLevel),
+		"cloud_watch_log_group_arn": aws.ToString(moduleLoggingConfiguration.CloudWatchLogGroupArn),
+		"enabled":                   aws.ToBool(moduleLoggingConfiguration.Enabled),
+		"log_level":                 string(moduleLoggingConfiguration.LogLevel),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenNetworkConfiguration(networkConfiguration *mwaa.NetworkConfiguration) []interface{} {
+func flattenNetworkConfiguration(networkConfiguration *awstypes.NetworkConfiguration) []interface{} {
 	if networkConfiguration == nil {
 		return []interface{}{}
 	}
 
 	m := map[string]interface{}{
-		"security_group_ids": flex.FlattenStringSet(networkConfiguration.SecurityGroupIds),
-		"subnet_ids":         flex.FlattenStringSet(networkConfiguration.SubnetIds),
+		"security_group_ids": flex.FlattenStringValueSet(networkConfiguration.SecurityGroupIds),
+		"subnet_ids":         flex.FlattenStringValueSet(networkConfiguration.SubnetIds),
 	}
 
 	return []interface{}{m}

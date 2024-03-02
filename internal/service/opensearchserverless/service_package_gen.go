@@ -25,6 +25,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Name:    "Collection",
 		},
 		{
+			Factory: newDataSourceLifecyclePolicy,
+			Name:    "Lifecycle Policy",
+		},
+		{
 			Factory: newDataSourceSecurityConfig,
 			Name:    "Security Config",
 		},
@@ -42,6 +46,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
+		},
+		{
+			Factory: newResourceLifecyclePolicy,
+			Name:    "Lifecycle Policy",
 		},
 		{
 			Factory: newResourceSecurityConfig,

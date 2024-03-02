@@ -18,29 +18,33 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_iam_user_policy_attachment")
-func ResourceUserPolicyAttachment() *schema.Resource {
+// @SDKResource("aws_iam_user_policy_attachment", name="User Policy Attachment")
+func resourceUserPolicyAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserPolicyAttachmentCreate,
 		ReadWithoutTimeout:   resourceUserPolicyAttachmentRead,
 		DeleteWithoutTimeout: resourceUserPolicyAttachmentDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceUserPolicyAttachmentImport,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"policy_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
 			"user": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
-			},
-			"policy_arn": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
 			},
 		},
 	}
@@ -51,11 +55,10 @@ func resourceUserPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceD
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	user := d.Get("user").(string)
-	arn := d.Get("policy_arn").(string)
+	policyARN := d.Get("policy_arn").(string)
 
-	err := attachPolicyToUser(ctx, conn, user, arn)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "attaching policy %s to IAM User %s: %v", arn, user, err)
+	if err := attachPolicyToUser(ctx, conn, user, policyARN); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	//lintignore:R016 // Allow legacy unstable ID usage in managed resource
@@ -67,57 +70,24 @@ func resourceUserPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceD
 func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+
 	user := d.Get("user").(string)
-	arn := d.Get("policy_arn").(string)
-	// Human friendly ID for error messages since d.Id() is non-descriptive
-	id := fmt.Sprintf("%s:%s", user, arn)
+	policyARN := d.Get("policy_arn").(string)
+	// Human friendly ID for error messages since d.Id() is non-descriptive.
+	id := fmt.Sprintf("%s:%s", user, policyARN)
 
-	var attachedPolicy *iam.AttachedPolicy
+	_, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+		return findAttachedUserPolicyByTwoPartKey(ctx, conn, user, policyARN)
+	}, d.IsNewResource())
 
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		var err error
-
-		attachedPolicy, err = FindUserAttachedPolicy(ctx, conn, user, arn)
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		if d.IsNewResource() && attachedPolicy == nil {
-			return retry.RetryableError(&retry.NotFoundError{
-				LastError: fmt.Errorf("IAM User Managed Policy Attachment (%s) not found", id),
-			})
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		attachedPolicy, err = FindUserAttachedPolicy(ctx, conn, user, arn)
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		log.Printf("[WARN] IAM User Managed Policy Attachment (%s) not found, removing from state", id)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] IAM User Policy Attachment (%s) not found, removing from state", id)
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM User Managed Policy Attachment (%s): %s", id, err)
-	}
-
-	if attachedPolicy == nil {
-		if d.IsNewResource() {
-			return sdkdiag.AppendErrorf(diags, "reading IAM User Managed Policy Attachment (%s): not found after creation", id)
-		}
-
-		log.Printf("[WARN] IAM User Managed Policy Attachment (%s) not found, removing from state", id)
-		d.SetId("")
-		return diags
+		return sdkdiag.AppendErrorf(diags, "reading IAM User Policy Attachment (%s): %s", id, err)
 	}
 
 	return diags
@@ -126,13 +96,11 @@ func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 func resourceUserPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
-	user := d.Get("user").(string)
-	arn := d.Get("policy_arn").(string)
 
-	err := DetachPolicyFromUser(ctx, conn, user, arn)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "removing policy %s from IAM User %s: %v", arn, user, err)
+	if err := detachPolicyFromUser(ctx, conn, d.Get("user").(string), d.Get("policy_arn").(string)); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
+
 	return diags
 }
 
@@ -152,18 +120,87 @@ func resourceUserPolicyAttachmentImport(ctx context.Context, d *schema.ResourceD
 	return []*schema.ResourceData{d}, nil
 }
 
-func attachPolicyToUser(ctx context.Context, conn *iam.IAM, user string, arn string) error {
-	_, err := conn.AttachUserPolicyWithContext(ctx, &iam.AttachUserPolicyInput{
-		UserName:  aws.String(user),
-		PolicyArn: aws.String(arn),
-	})
-	return err
+func attachPolicyToUser(ctx context.Context, conn *iam.IAM, user, policyARN string) error {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.AttachUserPolicyWithContext(ctx, &iam.AttachUserPolicyInput{
+			PolicyArn: aws.String(policyARN),
+			UserName:  aws.String(user),
+		})
+	}, iam.ErrCodeConcurrentModificationException)
+
+	if err != nil {
+		return fmt.Errorf("attaching IAM Policy (%s) to IAM User (%s): %w", policyARN, user, err)
+	}
+
+	return nil
 }
 
-func DetachPolicyFromUser(ctx context.Context, conn *iam.IAM, user string, arn string) error {
-	_, err := conn.DetachUserPolicyWithContext(ctx, &iam.DetachUserPolicyInput{
-		UserName:  aws.String(user),
-		PolicyArn: aws.String(arn),
+func detachPolicyFromUser(ctx context.Context, conn *iam.IAM, user, policyARN string) error {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.DetachUserPolicyWithContext(ctx, &iam.DetachUserPolicyInput{
+			PolicyArn: aws.String(policyARN),
+			UserName:  aws.String(user),
+		})
+	}, iam.ErrCodeConcurrentModificationException)
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("detaching IAM Policy (%s) from IAM User (%s): %w", policyARN, user, err)
+	}
+
+	return nil
+}
+
+func findAttachedUserPolicyByTwoPartKey(ctx context.Context, conn *iam.IAM, userName, policyARN string) (*iam.AttachedPolicy, error) {
+	input := &iam.ListAttachedUserPoliciesInput{
+		UserName: aws.String(userName),
+	}
+
+	return findAttachedUserPolicy(ctx, conn, input, func(v *iam.AttachedPolicy) bool {
+		return aws.StringValue(v.PolicyArn) == policyARN
 	})
-	return err
+}
+
+func findAttachedUserPolicy(ctx context.Context, conn *iam.IAM, input *iam.ListAttachedUserPoliciesInput, filter tfslices.Predicate[*iam.AttachedPolicy]) (*iam.AttachedPolicy, error) {
+	output, err := findAttachedUserPolicies(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findAttachedUserPolicies(ctx context.Context, conn *iam.IAM, input *iam.ListAttachedUserPoliciesInput, filter tfslices.Predicate[*iam.AttachedPolicy]) ([]*iam.AttachedPolicy, error) {
+	var output []*iam.AttachedPolicy
+
+	err := conn.ListAttachedUserPoliciesPagesWithContext(ctx, input, func(page *iam.ListAttachedUserPoliciesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.AttachedPolicies {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
 }

@@ -179,7 +179,9 @@ func (lv *LatestVersion) findLatestMatchingVersion(pvs rjson.ProductVersionsMap,
 			continue
 		}
 
-		versions = append(versions, pv.Version)
+		if vc.Check(pv.Version) {
+			versions = append(versions, pv.Version)
+		}
 	}
 
 	if len(versions) == 0 {

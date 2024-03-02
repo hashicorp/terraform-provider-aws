@@ -107,12 +107,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iam_account_alias",
 		},
 		{
-			Factory:  ResourceAccountPasswordPolicy,
+			Factory:  resourceAccountPasswordPolicy,
 			TypeName: "aws_iam_account_password_policy",
+			Name:     "Account Password Policy",
 		},
 		{
-			Factory:  ResourceGroup,
+			Factory:  resourceGroup,
 			TypeName: "aws_iam_group",
+			Name:     "Group",
 		},
 		{
 			Factory:  ResourceGroupMembership,
@@ -123,50 +125,68 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iam_group_policy",
 		},
 		{
-			Factory:  ResourceGroupPolicyAttachment,
+			Factory:  resourceGroupPolicyAttachment,
 			TypeName: "aws_iam_group_policy_attachment",
+			Name:     "Group Policy Attachment",
 		},
 		{
-			Factory:  ResourceInstanceProfile,
+			Factory:  resourceInstanceProfile,
 			TypeName: "aws_iam_instance_profile",
 			Name:     "Instance Profile",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "InstanceProfile",
+			},
 		},
 		{
-			Factory:  ResourceOpenIDConnectProvider,
+			Factory:  resourceOpenIDConnectProvider,
 			TypeName: "aws_iam_openid_connect_provider",
 			Name:     "OIDC Provider",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "OIDCProvider",
+			},
 		},
 		{
-			Factory:  ResourcePolicy,
+			Factory:  resourcePolicy,
 			TypeName: "aws_iam_policy",
 			Name:     "Policy",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "Policy",
+			},
 		},
 		{
-			Factory:  ResourcePolicyAttachment,
+			Factory:  resourcePolicyAttachment,
 			TypeName: "aws_iam_policy_attachment",
+			Name:     "Policy Attachment",
 		},
 		{
-			Factory:  ResourceRole,
+			Factory:  resourceRole,
 			TypeName: "aws_iam_role",
 			Name:     "Role",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "Role",
+			},
 		},
 		{
 			Factory:  ResourceRolePolicy,
 			TypeName: "aws_iam_role_policy",
 		},
 		{
-			Factory:  ResourceRolePolicyAttachment,
+			Factory:  resourceRolePolicyAttachment,
 			TypeName: "aws_iam_role_policy_attachment",
+			Name:     "Role Policy Attachment",
 		},
 		{
-			Factory:  ResourceSAMLProvider,
+			Factory:  resourceSAMLProvider,
 			TypeName: "aws_iam_saml_provider",
 			Name:     "SAML Provider",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "SAMLProvider",
+			},
 		},
 		{
 			Factory:  ResourceSecurityTokenServicePreferences,
@@ -174,16 +194,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Security Token Service Preferences",
 		},
 		{
-			Factory:  ResourceServerCertificate,
+			Factory:  resourceServerCertificate,
 			TypeName: "aws_iam_server_certificate",
 			Name:     "Server Certificate",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "name",
+				ResourceType:        "ServerCertificate",
+			},
 		},
 		{
-			Factory:  ResourceServiceLinkedRole,
+			Factory:  resourceServiceLinkedRole,
 			TypeName: "aws_iam_service_linked_role",
 			Name:     "Service Linked Role",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "ServiceLinkedRole",
+			},
 		},
 		{
 			Factory:  ResourceServiceSpecificCredential,
@@ -194,36 +220,45 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iam_signing_certificate",
 		},
 		{
-			Factory:  ResourceUser,
+			Factory:  resourceUser,
 			TypeName: "aws_iam_user",
 			Name:     "User",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "User",
+			},
 		},
 		{
 			Factory:  ResourceUserGroupMembership,
 			TypeName: "aws_iam_user_group_membership",
 		},
 		{
-			Factory:  ResourceUserLoginProfile,
+			Factory:  resourceUserLoginProfile,
 			TypeName: "aws_iam_user_login_profile",
+			Name:     "User Login Profile",
 		},
 		{
 			Factory:  ResourceUserPolicy,
 			TypeName: "aws_iam_user_policy",
 		},
 		{
-			Factory:  ResourceUserPolicyAttachment,
+			Factory:  resourceUserPolicyAttachment,
 			TypeName: "aws_iam_user_policy_attachment",
+			Name:     "User Policy Attachment",
 		},
 		{
-			Factory:  ResourceUserSSHKey,
+			Factory:  resourceUserSSHKey,
 			TypeName: "aws_iam_user_ssh_key",
+			Name:     "User SSH Key",
 		},
 		{
-			Factory:  ResourceVirtualMFADevice,
+			Factory:  resourceVirtualMFADevice,
 			TypeName: "aws_iam_virtual_mfa_device",
 			Name:     "Virtual MFA Device",
-			Tags:     &types.ServicePackageResourceTags{},
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "VirtualMFADevice",
+			},
 		},
 	}
 }

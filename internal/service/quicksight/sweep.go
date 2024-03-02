@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package quicksight
 
 import (
@@ -16,10 +13,11 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_quicksight_dashboard", &resource.Sweeper{
 		Name: "aws_quicksight_dashboard",
 		F:    sweepDashboards,
@@ -463,7 +461,7 @@ func skipSweepError(err error) bool {
 		return true
 	}
 
-	return sweep.SkipSweepError(err)
+	return awsv1.SkipSweepError(err)
 }
 
 // skipSweepUserError adds an additional skippable error code for listing QuickSight User resources
@@ -475,6 +473,5 @@ func skipSweepUserError(err error) bool {
 		return true
 	}
 
-	return sweep.SkipSweepError(err)
-
+	return awsv1.SkipSweepError(err)
 }

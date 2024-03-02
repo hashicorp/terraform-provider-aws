@@ -7,7 +7,6 @@ import (
 	"context"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
@@ -31,7 +30,7 @@ func TestRegexpTypeValueFromTerraform(t *testing.T) {
 		},
 		"valid Regexp": {
 			val:      tftypes.NewValue(tftypes.String, `\w+`),
-			expected: fwtypes.RegexpValue(regexache.MustCompile(`\w+`)),
+			expected: fwtypes.RegexpValueMust(`\w+`),
 		},
 		"invalid Regexp": {
 			val:      tftypes.NewValue(tftypes.String, `(`),
@@ -113,7 +112,7 @@ func TestRegexpToStringValue(t *testing.T) {
 		expected types.String
 	}{
 		"value": {
-			regexp:   fwtypes.RegexpValue(regexache.MustCompile(`\w+`)),
+			regexp:   fwtypes.RegexpValueMust(`\w+`),
 			expected: types.StringValue(`\w+`),
 		},
 		"null": {

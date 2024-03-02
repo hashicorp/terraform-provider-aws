@@ -50,7 +50,7 @@ func testAccCustomKeyStore_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, kms.EndpointsID)
 			testAccCustomKeyStoresPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomKeyStoreDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -98,7 +98,7 @@ func testAccCustomKeyStore_update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, kms.EndpointsID)
 			testAccCustomKeyStoresPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomKeyStoreDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -141,7 +141,7 @@ func testAccCustomKeyStore_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, kms.EndpointsID)
 			testAccCustomKeyStoresPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomKeyStoreDestroy(ctx),
 		Steps: []resource.TestStep{

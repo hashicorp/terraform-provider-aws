@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_s3_bucket_analytics_configuration")
-func ResourceBucketAnalyticsConfiguration() *schema.Resource {
+// @SDKResource("aws_s3_bucket_analytics_configuration", name="Bucket Analytics Configuration")
+func resourceBucketAnalyticsConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketAnalyticsConfigurationPut,
 		ReadWithoutTimeout:   resourceBucketAnalyticsConfigurationRead,
@@ -154,9 +154,13 @@ func resourceBucketAnalyticsConfigurationPut(ctx context.Context, d *schema.Reso
 		AnalyticsConfiguration: analyticsConfiguration,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketAnalyticsConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "AnalyticsConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
 
 	if err != nil {
 		return diag.Errorf("creating S3 Bucket (%s) Analytics Configuration (%s): %s", bucket, name, err)
@@ -165,7 +169,7 @@ func resourceBucketAnalyticsConfigurationPut(ctx context.Context, d *schema.Reso
 	if d.IsNewResource() {
 		d.SetId(fmt.Sprintf("%s:%s", bucket, name))
 
-		_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 			return findAnalyticsConfiguration(ctx, conn, bucket, name)
 		})
 
@@ -233,7 +237,7 @@ func resourceBucketAnalyticsConfigurationDelete(ctx context.Context, d *schema.R
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Analytics Configuration (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findAnalyticsConfiguration(ctx, conn, bucket, name)
 	})
 
@@ -262,7 +266,7 @@ func expandAnalyticsFilter(ctx context.Context, m map[string]interface{}) types.
 
 	var tags []types.Tag
 	if v, ok := m["tags"]; ok {
-		tags = tagsV2(tftags.New(ctx, v).IgnoreAWS())
+		tags = Tags(tftags.New(ctx, v).IgnoreAWS())
 	}
 
 	if prefix == "" && len(tags) == 0 {
@@ -327,12 +331,12 @@ func expandAnalyticsExportDestination(edl []interface{}) *types.AnalyticsExportD
 
 	if len(edl) != 0 && edl[0] != nil {
 		edm := edl[0].(map[string]interface{})
-		result.S3BucketDestination = expandAnalyticsBucketDestination(edm["s3_bucket_destination"].([]interface{}))
+		result.S3BucketDestination = expandAnalyticsS3BucketDestination(edm["s3_bucket_destination"].([]interface{}))
 	}
 	return result
 }
 
-func expandAnalyticsBucketDestination(bdl []interface{}) *types.AnalyticsS3BucketDestination {
+func expandAnalyticsS3BucketDestination(bdl []interface{}) *types.AnalyticsS3BucketDestination { // nosemgrep:ci.s3-in-func-name
 	result := &types.AnalyticsS3BucketDestination{}
 
 	if len(bdl) != 0 && bdl[0] != nil {
@@ -361,7 +365,7 @@ func flattenAnalyticsFilter(ctx context.Context, analyticsFilter types.Analytics
 			result["prefix"] = aws.ToString(v)
 		}
 		if v := v.Value.Tags; v != nil {
-			result["tags"] = keyValueTagsV2(ctx, v).IgnoreAWS().Map()
+			result["tags"] = keyValueTags(ctx, v).IgnoreAWS().Map()
 		}
 	case *types.AnalyticsFilterMemberPrefix:
 		result["prefix"] = v.Value
@@ -369,7 +373,7 @@ func flattenAnalyticsFilter(ctx context.Context, analyticsFilter types.Analytics
 		tags := []types.Tag{
 			v.Value,
 		}
-		result["tags"] = keyValueTagsV2(ctx, tags).IgnoreAWS().Map()
+		result["tags"] = keyValueTags(ctx, tags).IgnoreAWS().Map()
 	default:
 		return nil
 	}
@@ -403,12 +407,12 @@ func flattenAnalyticsExportDestination(destination *types.AnalyticsExportDestina
 
 	return []interface{}{
 		map[string]interface{}{
-			"s3_bucket_destination": flattenAnalyticsBucketDestination(destination.S3BucketDestination),
+			"s3_bucket_destination": flattenAnalyticsS3BucketDestination(destination.S3BucketDestination),
 		},
 	}
 }
 
-func flattenAnalyticsBucketDestination(bucketDestination *types.AnalyticsS3BucketDestination) []interface{} {
+func flattenAnalyticsS3BucketDestination(bucketDestination *types.AnalyticsS3BucketDestination) []interface{} { // nosemgrep:ci.s3-in-func-name
 	if bucketDestination == nil {
 		return nil
 	}

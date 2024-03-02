@@ -69,15 +69,21 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-This data source supports the following arguments:
+The following arguments are required:
 
-* `engine` - (Required) DB engine. Engine values include `aurora`, `auroraMysql`, `auroraPostgresql`, `docdb`, `mariadb`, `mysql`, `neptune`, `oracleEe`, `oracleSe`, `oracleSe1`, `oracleSe2`, `postgres`, `sqlserverEe`, `sqlserverEx`, `sqlserverSe`, and `sqlserverWeb`.
+* `engine` - (Required) Database engine. Engine values include `aurora`, `aurora-mysql`, `aurora-postgresql`, `docdb`, `mariadb`, `mysql`, `neptune`, `oracle-ee`, `oracle-se`, `oracle-se1`, `oracle-se2`, `postgres`, `sqlserver-ee`, `sqlserver-ex`, `sqlserver-se`, and `sqlserver-web`.
+
+The following arguments are optional:
+
 * `defaultOnly` - (Optional) When set to `true`, the default version for the specified `engine` or combination of `engine` and major `version` will be returned. Can be used to limit responses to a single version when they would otherwise fail for returning multiple versions.
 * `filter` - (Optional) One or more name/value pairs to filter off of. There are several valid keys; for a full reference, check out [describe-db-engine-versions in the AWS CLI reference](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/describe-db-engine-versions.html).
 * `includeAll` - (Optional) When set to `true`, the specified `version` or member of `preferredVersions` will be returned even if it is `deprecated`. Otherwise, only `available` versions will be returned.
-* `parameterGroupFamily` - (Optional) Name of a specific DB parameter group family. Examples of parameter group families are `mysql80`, `mariadb104`, and `postgres12`.
-* `preferredVersions` - (Optional) Ordered list of preferred engine versions. The first match in this list will be returned. If no preferred matches are found and the original search returned more than one result, an error is returned. If both the `version` and `preferredVersions` arguments are not configured, the data source will return the default version for the engine.
-* `version` - (Optional) Version of the DB engine. For example, `5722`, `10134`, and `123`. If both the `version` and `preferredVersions` arguments are not configured, the data source will return the default version for the engine.
+* `latest` - (Optional) When set to `true`, the data source attempts to return the most recent version matching the other criteria you provide. This differs from `defaultOnly`. For example, the latest version is not always the default. In addition, AWS may return multiple defaults depending on the criteria. Using `latest` will avoid `multiple RDS engine versions` errors. **Note:** The data source uses a best-effort approach at selecting the latest version but due to the complexity of version identifiers across engines and incomplete version date information provided by AWS, using `latest` may _not_ return the latest version in every situation.
+* `parameterGroupFamily` - (Optional) Name of a specific database parameter group family. Examples of parameter group families are `mysql8.0`, `mariadb10.4`, and `postgres12`.
+* `preferredMajorTargets` - (Optional) Ordered list of preferred major version upgrade targets. The version corresponding to the first match in this list will be returned unless the `latest` parameter is set to `true`. If you don't configure `version`, `preferredMajorTargets`, `preferredUpgradeTargets`, and `preferredVersions`, the data source will return the default version for the engine. You can use this with other version criteria.
+* `preferredUpgradeTargets` - (Optional) Ordered list of preferred version upgrade targets. The version corresponding to the first match in this list will be returned unless the `latest` parameter is set to `true`. If you don't configure `version`, `preferredMajorTargets`, `preferredUpgradeTargets`, and `preferredVersions`, the data source will return the default version for the engine. You can use this with other version criteria.
+* `preferredVersions` - (Optional) Ordered list of preferred versions. The first match in this list that matches any other criteria will be returned unless the `latest` parameter is set to `true`. If you don't configure `version`, `preferredMajorTargets`, `preferredUpgradeTargets`, and `preferredVersions`, the data source will return the default version for the engine. You can use this with other version criteria.
+* `version` - (Optional) Version of the database engine. For example, `5.7.22`, `10.1.34`, or `12.3`. `version` can be a major version which may result in the data source finding multiple versions and returning an error unless the `latest` parameter is set to `true`. If you don't configure `version`, `preferredMajorTargets`, `preferredUpgradeTargets`, and `preferredVersions`, the data source will return the default version for the engine. You can use this with other version criteria. **NOTE:** In a future Terraform AWS provider version, `version` will only contain the version information you configure and not the complete version information that the data source gets from AWS. Instead, that version information will be available in the `versionActual` attribute.
 
 ## Attribute Reference
 
@@ -86,16 +92,17 @@ This data source exports the following attributes in addition to the arguments a
 * `defaultCharacterSet` - The default character set for new instances of this engine version.
 * `engineDescription` - Description of the database engine.
 * `exportableLogTypes` - Set of log types that the database engine has available for export to CloudWatch Logs.
-* `status` - Status of the DB engine version, either available or deprecated.
+* `status` - Status of the database engine version, either available or deprecated.
 * `supportedCharacterSets` - Set of the character sets supported by this engine.
-* `supportedFeatureNames` - Set of features supported by the DB engine.
-* `supportedModes` - Set of the supported DB engine modes.
+* `supportedFeatureNames` - Set of features supported by the database engine.
+* `supportedModes` - Set of the supported database engine modes.
 * `supportedTimezones` - Set of the time zones supported by this engine.
-* `supportsGlobalDatabases` - Indicates whether you can use Aurora global databases with a specific DB engine version.
+* `supportsGlobalDatabases` - Indicates whether you can use Aurora global databases with a specific database engine version.
 * `supportsLogExportsToCloudwatch` - Indicates whether the engine version supports exporting the log types specified by `exportableLogTypes` to CloudWatch Logs.
-* `supportsParallelQuery` - Indicates whether you can use Aurora parallel query with a specific DB engine version.
+* `supportsParallelQuery` - Indicates whether you can use Aurora parallel query with a specific database engine version.
 * `supportsReadReplica` - Indicates whether the database engine version supports read replicas.
 * `validUpgradeTargets` - Set of engine versions that this database engine version can be upgraded to.
+* `versionActual` - Version of the database engine.
 * `versionDescription` - Description of the database engine version.
 
-<!-- cache-key: cdktf-0.18.0 input-fa55a0405ca9fc58a5c4381651f7bc42f18362fa5a2253efb0a727fa8fb51c93 -->
+<!-- cache-key: cdktf-0.20.1 input-2e6272592fe84f95a18ec0cd2286adf4d74c11e49965cd9826406beef116b37f -->

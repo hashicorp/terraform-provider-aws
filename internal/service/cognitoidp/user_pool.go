@@ -862,7 +862,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameUserPool, d.Id(), err)
+		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameUserPool, d.Id(), err)
 	}
 
 	userPool := resp.UserPool
@@ -878,7 +878,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("custom_domain", userPool.CustomDomain)
 	d.Set("domain", userPool.Domain)
 	d.Set("estimated_number_of_users", userPool.EstimatedNumberOfUsers)
-	d.Set("endpoint", fmt.Sprintf("%s/%s", meta.(*conns.AWSClient).RegionalHostname("cognito-idp"), d.Id()))
+	d.Set("endpoint", fmt.Sprintf("%s/%s", meta.(*conns.AWSClient).RegionalHostname(ctx, "cognito-idp"), d.Id()))
 	d.Set("auto_verified_attributes", flex.FlattenStringSet(userPool.AutoVerifiedAttributes))
 
 	d.Set("email_verification_subject", userPool.EmailVerificationSubject)
@@ -955,7 +955,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameUserPool, d.Id(), err)
+		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameUserPool, d.Id(), err)
 	}
 
 	d.Set("mfa_configuration", output.MfaConfiguration)

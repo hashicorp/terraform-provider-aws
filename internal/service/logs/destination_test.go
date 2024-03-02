@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -17,11 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLogsDestination_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var destination cloudwatchlogs.Destination
+	var destination types.Destination
 	resourceName := "aws_cloudwatch_log_destination.test"
 	streamResourceName := "aws_kinesis_stream.test.0"
 	roleResourceName := "aws_iam_role.test.0"
@@ -29,7 +30,7 @@ func TestAccLogsDestination_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -54,13 +55,13 @@ func TestAccLogsDestination_basic(t *testing.T) {
 
 func TestAccLogsDestination_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var destination cloudwatchlogs.Destination
+	var destination types.Destination
 	resourceName := "aws_cloudwatch_log_destination.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -78,13 +79,13 @@ func TestAccLogsDestination_disappears(t *testing.T) {
 
 func TestAccLogsDestination_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var destination cloudwatchlogs.Destination
+	var destination types.Destination
 	resourceName := "aws_cloudwatch_log_destination.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -124,7 +125,7 @@ func TestAccLogsDestination_tags(t *testing.T) {
 
 func TestAccLogsDestination_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var destination cloudwatchlogs.Destination
+	var destination types.Destination
 	resourceName := "aws_cloudwatch_log_destination.test"
 	streamResource1Name := "aws_kinesis_stream.test.0"
 	roleResource1Name := "aws_iam_role.test.0"
@@ -134,7 +135,7 @@ func TestAccLogsDestination_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -197,7 +198,7 @@ func TestAccLogsDestination_update(t *testing.T) {
 
 func testAccCheckDestinationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_log_destination" {
@@ -220,18 +221,14 @@ func testAccCheckDestinationDestroy(ctx context.Context) resource.TestCheckFunc 
 	}
 }
 
-func testAccCheckDestinationExists(ctx context.Context, n string, v *cloudwatchlogs.Destination) resource.TestCheckFunc {
+func testAccCheckDestinationExists(ctx context.Context, n string, v *types.Destination) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No CloudWatch Logs Destination ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
 		output, err := tflogs.FindDestinationByName(ctx, conn, rs.Primary.ID)
 

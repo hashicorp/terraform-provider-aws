@@ -6,14 +6,14 @@ package sts
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/service/sts"
+	"github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindCallerIdentity(ctx context.Context, conn *sts.STS) (*sts.GetCallerIdentityOutput, error) {
+func FindCallerIdentity(ctx context.Context, conn *sts.Client) (*sts.GetCallerIdentityOutput, error) {
 	input := &sts.GetCallerIdentityInput{}
 
-	output, err := conn.GetCallerIdentityWithContext(ctx, input)
+	output, err := conn.GetCallerIdentity(ctx, input)
 
 	if err != nil {
 		return nil, err

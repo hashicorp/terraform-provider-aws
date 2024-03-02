@@ -263,7 +263,7 @@ to attach.
 
 The `iam_instance_profile` block supports the following:
 
-* `arn` - The Amazon Resource Name (ARN) of the instance profile.
+* `arn` - The Amazon Resource Name (ARN) of the instance profile. Conflicts with `name`.
 * `name` - The name of the instance profile.
 
 ### Instance Requirements

@@ -30,7 +30,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 
 // @SDKResource("aws_transfer_server", name="Server")
 // @Tags(identifierAttribute="arn")
-func ResourceServer() *schema.Resource {
+func resourceServer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServerCreate,
 		ReadWithoutTimeout:   resourceServerRead,
@@ -165,13 +165,13 @@ func ResourceServer() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
+				ValidateFunc: validation.StringLenBetween(0, 4096),
 			},
 			"pre_authentication_login_banner": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
-				ValidateFunc: validation.StringLenBetween(0, 512),
+				ValidateFunc: validation.StringLenBetween(0, 4096),
 			},
 			"protocol_details": {
 				Type:     schema.TypeList,
@@ -457,7 +457,7 @@ func resourceServerRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("directory_id", "")
 	}
 	d.Set("domain", output.Domain)
-	d.Set("endpoint", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.server.transfer", d.Id())))
+	d.Set("endpoint", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.server.transfer", d.Id())))
 	if output.EndpointDetails != nil {
 		securityGroupIDs := make([]*string, 0)
 

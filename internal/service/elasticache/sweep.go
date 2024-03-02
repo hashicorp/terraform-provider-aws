@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package elasticache
 
 import (
@@ -18,6 +15,7 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
 // These timeouts are lower to fail faster during sweepers
@@ -26,7 +24,7 @@ const (
 	sweeperGlobalReplicationGroupDefaultUpdatedTimeout      = 10 * time.Minute
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_elasticache_cluster", &resource.Sweeper{
 		Name: "aws_elasticache_cluster",
 		F:    sweepClusters,
@@ -64,6 +62,19 @@ func init() {
 			"aws_elasticache_cluster",
 			"aws_elasticache_replication_group",
 		},
+	})
+
+	resource.AddTestSweepers("aws_elasticache_user", &resource.Sweeper{
+		Name: "aws_elasticache_user",
+		F:    sweepUsers,
+		Dependencies: []string{
+			"aws_elasticache_user_group",
+		},
+	})
+
+	resource.AddTestSweepers("aws_elasticache_user_group", &resource.Sweeper{
+		Name: "aws_elasticache_user_group",
+		F:    sweepUserGroups,
 	})
 }
 
@@ -103,7 +114,7 @@ func sweepClusters(region string) error {
 		}
 		return !lastPage
 	})
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping ElastiCache Cluster sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -157,7 +168,7 @@ func sweepGlobalReplicationGroups(region string) error {
 
 	grgErrs := grgGroup.Wait()
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping ElastiCache Global Replication Group sweep for %q: %s", region, err)
 		return grgErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -202,7 +213,7 @@ func sweepParameterGroups(region string) error {
 		return !lastPage
 	})
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping ElastiCache Parameter Group sweep for %s: %s", region, err)
 			return nil
 		}
@@ -255,7 +266,7 @@ func sweepReplicationGroups(region string) error {
 
 	// waiting for deletion is not necessary in the sweeper since the resource's delete waits
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping ElastiCache Replication Group sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -270,38 +281,142 @@ func sweepSubnetGroups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.ElastiCacheConn(ctx)
+	input := &elasticache.DescribeCacheSubnetGroupsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeCacheSubnetGroupsPagesWithContext(ctx, &elasticache.DescribeCacheSubnetGroupsInput{}, func(page *elasticache.DescribeCacheSubnetGroupsOutput, lastPage bool) bool {
-		if len(page.CacheSubnetGroups) == 0 {
-			log.Print("[DEBUG] No ElastiCache Subnet Groups to sweep")
-			return false
+	err = conn.DescribeCacheSubnetGroupsPagesWithContext(ctx, input, func(page *elasticache.DescribeCacheSubnetGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		for _, subnetGroup := range page.CacheSubnetGroups {
-			name := aws.StringValue(subnetGroup.CacheSubnetGroupName)
+		for _, v := range page.CacheSubnetGroups {
+			name := aws.StringValue(v.CacheSubnetGroupName)
 
 			if name == "default" {
 				log.Printf("[INFO] Skipping ElastiCache Subnet Group: %s", name)
 				continue
 			}
 
-			log.Printf("[INFO] Deleting ElastiCache Subnet Group: %s", name)
-			_, err := conn.DeleteCacheSubnetGroupWithContext(ctx, &elasticache.DeleteCacheSubnetGroupInput{
-				CacheSubnetGroupName: aws.String(name),
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete ElastiCache Subnet Group (%s): %s", name, err)
-			}
+			r := resourceSubnetGroup()
+			d := r.Data(nil)
+			d.SetId(name)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+
 		return !lastPage
 	})
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping ElastiCache Subnet Group sweep for %s: %s", region, err)
-			return nil
-		}
-		return fmt.Errorf("Error retrieving ElastiCache Subnet Groups: %w", err)
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping ElastiCache Subnet Group sweep for %s: %s", region, err)
+		return nil
 	}
+
+	if err != nil {
+		return fmt.Errorf("error listing ElastiCache Subnet Groups (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping ElastiCache Subnet Groups (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepUsers(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.ElastiCacheConn(ctx)
+	input := &elasticache.DescribeUsersInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeUsersPagesWithContext(ctx, input, func(page *elasticache.DescribeUsersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Users {
+			id := aws.StringValue(v.UserId)
+
+			if id == "default" {
+				log.Printf("[INFO] Skipping ElastiCache User: %s", id)
+				continue
+			}
+
+			r := ResourceUser()
+			d := r.Data(nil)
+			d.SetId(id)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping ElastiCache User sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("listing ElastiCache Users (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("sweeping ElastiCache Users (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepUserGroups(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.ElastiCacheConn(ctx)
+	input := &elasticache.DescribeUserGroupsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeUserGroupsPagesWithContext(ctx, input, func(page *elasticache.DescribeUserGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.UserGroups {
+			r := ResourceUserGroup()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.UserGroupId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping ElastiCache User Group sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("listing ElastiCache User Groups (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("sweeping ElastiCache User Groups (%s): %w", region, err)
+	}
+
 	return nil
 }
 

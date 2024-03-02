@@ -119,7 +119,7 @@ func resourceAssessmentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 		input := expandEventSubscriptions(v.(*schema.Set).List(), output.AssessmentTemplateArn)
 
 		if err := subscribeToEvents(ctx, conn, input); err != nil {
-			return create.DiagError(names.Inspector, create.ErrActionCreating, ResNameAssessmentTemplate, d.Id(), err)
+			return create.AppendDiagError(diags, names.Inspector, create.ErrActionCreating, ResNameAssessmentTemplate, d.Id(), err)
 		}
 	}
 
@@ -155,11 +155,11 @@ func resourceAssessmentTemplateRead(ctx context.Context, d *schema.ResourceData,
 	output, err := findSubscriptionsByAssessmentTemplateARN(ctx, conn, arn)
 
 	if err != nil {
-		return create.DiagError(names.Inspector, create.ErrActionReading, ResNameAssessmentTemplate, d.Id(), err)
+		return create.AppendDiagError(diags, names.Inspector, create.ErrActionReading, ResNameAssessmentTemplate, d.Id(), err)
 	}
 
 	if err := d.Set("event_subscription", flattenSubscriptions(output)); err != nil {
-		return create.DiagError(names.Inspector, create.ErrActionSetting, ResNameAssessmentTemplate, d.Id(), err)
+		return create.AppendDiagError(diags, names.Inspector, create.ErrActionSetting, ResNameAssessmentTemplate, d.Id(), err)
 	}
 
 	return diags
@@ -183,11 +183,11 @@ func resourceAssessmentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 		removeEventSubscriptionsInput := expandEventSubscriptions(eventSubscriptionsToRemove.List(), templateId)
 
 		if err := subscribeToEvents(ctx, conn, addEventSubscriptionsInput); err != nil {
-			return create.DiagError(names.Inspector, create.ErrActionUpdating, ResNameAssessmentTemplate, d.Id(), err)
+			return create.AppendDiagError(diags, names.Inspector, create.ErrActionUpdating, ResNameAssessmentTemplate, d.Id(), err)
 		}
 
 		if err := unsubscribeFromEvents(ctx, conn, removeEventSubscriptionsInput); err != nil {
-			return create.DiagError(names.Inspector, create.ErrActionUpdating, ResNameAssessmentTemplate, d.Id(), err)
+			return create.AppendDiagError(diags, names.Inspector, create.ErrActionUpdating, ResNameAssessmentTemplate, d.Id(), err)
 		}
 	}
 

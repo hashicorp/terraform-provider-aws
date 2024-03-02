@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccBranch_basic(t *testing.T) {
@@ -28,7 +29,7 @@ func testAccBranch_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -76,7 +77,7 @@ func testAccBranch_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -100,7 +101,7 @@ func testAccBranch_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -149,7 +150,7 @@ func testAccBranch_BasicAuthCredentials(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -195,7 +196,7 @@ func testAccBranch_EnvironmentVariables(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -243,7 +244,7 @@ func testAccBranch_OptionalArguments(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBranchDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -278,7 +279,7 @@ func testAccBranch_OptionalArguments(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "display_name", "testdisplayname2"),
 					resource.TestCheckResourceAttr(resourceName, "enable_auto_build", "true"),
 					resource.TestCheckResourceAttr(resourceName, "enable_notification", "false"),
-					resource.TestCheckResourceAttr(resourceName, "enable_performance_mode", "true"),
+					resource.TestCheckResourceAttr(resourceName, "enable_performance_mode", "false"),
 					resource.TestCheckResourceAttr(resourceName, "enable_pull_request_preview", "true"),
 					resource.TestCheckResourceAttr(resourceName, "framework", "Angular"),
 					resource.TestCheckResourceAttr(resourceName, "pull_request_environment_name", "testpr2"),
@@ -512,7 +513,7 @@ resource "aws_amplify_branch" "test" {
   display_name                  = "testdisplayname2"
   enable_auto_build             = true
   enable_notification           = false
-  enable_performance_mode       = true
+  enable_performance_mode       = false
   enable_pull_request_preview   = true
   framework                     = "Angular"
   pull_request_environment_name = "testpr2"

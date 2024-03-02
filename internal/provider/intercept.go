@@ -17,6 +17,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -241,13 +242,13 @@ func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, 
 			// Remove system tags.
 			tags = tags.IgnoreSystem(inContext.ServicePackageName)
 
-			tagsInContext.TagsIn = types.Some(tags)
+			tagsInContext.TagsIn = option.Some(tags)
 
 			if why == Create {
 				break
 			}
 
-			if d.GetRawPlan().GetAttr("tags_all").IsWhollyKnown() {
+			if d.GetRawPlan().GetAttr(names.AttrTagsAll).IsWhollyKnown() {
 				if d.HasChange(names.AttrTagsAll) {
 					if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
 						var identifier string
@@ -413,7 +414,7 @@ func (r tagsDataSourceInterceptor) run(ctx context.Context, d schemaResourceData
 		case Read:
 			// Get the data source's configured tags.
 			tags := tftags.New(ctx, d.Get(names.AttrTags).(map[string]interface{}))
-			tagsInContext.TagsIn = types.Some(tags)
+			tagsInContext.TagsIn = option.Some(tags)
 		}
 	case After:
 		// Set tags and tags_all in state after CRU.

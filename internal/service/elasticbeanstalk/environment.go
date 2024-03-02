@@ -7,6 +7,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -25,13 +26,12 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdktypes"
+	sdktypes "github.com/hashicorp/terraform-provider-aws/internal/sdkv2/types"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"golang.org/x/exp/slices"
 )
 
 func settingSchema() *schema.Resource {
@@ -314,7 +314,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Elastic Beanstalk Environment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -595,7 +595,7 @@ func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if tfawserr.ErrMessageContains(err, "InvalidParameterValue", "No Environment found") {
-		return nil
+		return diags
 	}
 
 	if err != nil {

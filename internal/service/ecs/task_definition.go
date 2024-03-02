@@ -83,7 +83,9 @@ func ResourceTaskDefinition() *schema.Resource {
 					// spurious reorderings in plans (diff is suppressed if the environment variables haven't changed,
 					// but they still show in the plan if some other property changes).
 					orderedCDs, _ := expandContainerDefinitions(v.(string))
+					containerDefinitions(orderedCDs).OrderContainers()
 					containerDefinitions(orderedCDs).OrderEnvironmentVariables()
+					containerDefinitions(orderedCDs).OrderSecrets()
 					unnormalizedJson, _ := flattenContainerDefinitions(orderedCDs)
 					json, _ := structure.NormalizeJsonString(unnormalizedJson)
 					return json
@@ -276,6 +278,11 @@ func ResourceTaskDefinition() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
+			"track_latest": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				Optional: true,
+			},
 			"volume": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -371,7 +378,8 @@ func ResourceTaskDefinition() *schema.Resource {
 										Type:         schema.TypeInt,
 										ForceNew:     true,
 										Optional:     true,
-										ValidateFunc: validation.IsPortNumber,
+										ValidateFunc: validation.IsPortNumberOrZero,
+										Default:      0,
 									},
 								},
 							},
@@ -561,15 +569,20 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
+	trackedTaskDefinition := d.Get("arn").(string)
+	if _, ok := d.GetOk("track_latest"); ok {
+		trackedTaskDefinition = d.Get("family").(string)
+	}
+
 	input := ecs.DescribeTaskDefinitionInput{
-		TaskDefinition: aws.String(d.Get("arn").(string)),
-		Include:        []*string{aws.String(ecs.TaskDefinitionFieldTags)},
+		Include:        aws.StringSlice([]string{ecs.TaskDefinitionFieldTags}),
+		TaskDefinition: aws.String(trackedTaskDefinition),
 	}
 
 	out, err := conn.DescribeTaskDefinitionWithContext(ctx, &input)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if verify.ErrorISOUnsupported(conn.PartitionID, err) {
+	if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		log.Printf("[WARN] ECS tagging failed describing Task Definition (%s) with tags: %s; retrying without tags", d.Id(), err)
 
 		input.Include = nil
@@ -596,11 +609,14 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("arn_without_revision", StripRevision(aws.StringValue(taskDefinition.TaskDefinitionArn)))
 	d.Set("family", taskDefinition.Family)
 	d.Set("revision", taskDefinition.Revision)
+	d.Set("track_latest", d.Get("track_latest"))
 
 	// Sort the lists of environment variables as they come in, so we won't get spurious reorderings in plans
 	// (diff is suppressed if the environment variables haven't changed, but they still show in the plan if
 	// some other property changes).
+	containerDefinitions(taskDefinition.ContainerDefinitions).OrderContainers()
 	containerDefinitions(taskDefinition.ContainerDefinitions).OrderEnvironmentVariables()
+	containerDefinitions(taskDefinition.ContainerDefinitions).OrderSecrets()
 
 	defs, err := flattenContainerDefinitions(taskDefinition.ContainerDefinitions)
 	if err != nil {
@@ -1074,11 +1090,11 @@ func flattenDockerVolumeConfiguration(config *ecs.DockerVolumeConfiguration) []i
 	}
 
 	if config.DriverOpts != nil {
-		m["driver_opts"] = flex.PointersMapToStringList(config.DriverOpts)
+		m["driver_opts"] = flex.FlattenStringMap(config.DriverOpts)
 	}
 
 	if v := config.Labels; v != nil {
-		m["labels"] = flex.PointersMapToStringList(v)
+		m["labels"] = flex.FlattenStringMap(v)
 	}
 
 	items = append(items, m)

@@ -31,7 +31,7 @@ func TestAccOpenSearchServerlessCollectionDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -46,6 +46,7 @@ func TestAccOpenSearchServerlessCollectionDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "dashboard_endpoint", resourceName, "dashboard_endpoint"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "description", resourceName, "description"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "kms_key_arn", resourceName, "kms_key_arn"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "standby_replicas", resourceName, "standby_replicas"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "type", resourceName, "type"),
 				),
 			},
@@ -70,7 +71,7 @@ func TestAccOpenSearchServerlessCollectionDataSource_name(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCollectionDestroy(ctx),
 		Steps: []resource.TestStep{
