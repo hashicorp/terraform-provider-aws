@@ -323,7 +323,7 @@ func resourceFunctionURLDelete(ctx context.Context, d *schema.ResourceData, meta
 		_, err = conn.RemovePermissionWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("removing Lambda Function URL (%s) permission %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "removing Lambda Function URL (%s) permission %s", d.Id(), err)
 		}
 	}
 
