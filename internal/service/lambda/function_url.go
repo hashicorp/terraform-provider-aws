@@ -309,7 +309,6 @@ func resourceFunctionURLDelete(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "deleting Lambda Function URL (%s): %s", d.Id(), err)
 	}
 
-<<<<<<< HEAD
 	if v := d.Get("authorization_type").(string); v == lambda.FunctionUrlAuthTypeNone {
 		input := &lambda.RemovePermissionInput{
 			FunctionName: aws.String(name),
