@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -46,7 +47,7 @@ func TestAccImageBuilderImageRecipe_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
 					acctest.CheckResourceAttrRegionalARNAccountID(resourceName, "parent_image", "imagebuilder", "aws", "image/amazon-linux-2-x86/x.x.x"),
-					resource.TestCheckResourceAttr(resourceName, "platform", imagebuilder.PlatformLinux),
+					resource.TestCheckResourceAttr(resourceName, "platform", string(awstypes.PlatformLinux)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "version", "1.0.0"),
 				),
@@ -338,7 +339,7 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_volumeTypeGP2(t *testi
 					testAccCheckImageRecipeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mapping.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "block_device_mapping.*", map[string]string{
-						"ebs.0.volume_type": string(types.EbsVolumeTypeGp2)),
+						"ebs.0.volume_type": string(types.EbsVolumeTypeGp2),
 					}),
 				),
 			},

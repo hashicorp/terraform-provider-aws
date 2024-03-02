@@ -13,7 +13,7 @@ import (
 )
 
 // waitImageStatusAvailable waits for an Image to return Available
-func waitImageStatusAvailable(ctx context.Context, conn *imagebuilder.Client, imageBuildVersionArn string, timeout time.Duration) (*imagebuilder.Image, error) {
+func waitImageStatusAvailable(ctx context.Context, conn *imagebuilder.Client, imageBuildVersionArn string, timeout time.Duration) (*awstypes.Image, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			string(awstypes.ImageStatusBuilding),

@@ -88,7 +88,7 @@ func ResourceWorkflow() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.Workflow](),
+				ValidateDiagFunc: enum.Validate[awstypes.WorkflowType](),
 			},
 			"uri": {
 				Type:         schema.TypeString,
@@ -116,7 +116,7 @@ func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta in
 		ClientToken:     aws.String(id.UniqueId()),
 		Name:            aws.String(d.Get("name").(string)),
 		SemanticVersion: aws.String(d.Get("version").(string)),
-		Type:            aws.String(d.Get("type").(string)),
+		Type:            awstypes.WorkflowType(d.Get("type").(string)),
 		Tags:            getTagsIn(ctx),
 	}
 
