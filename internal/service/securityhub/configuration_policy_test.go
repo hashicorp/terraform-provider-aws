@@ -27,7 +27,7 @@ func testAccConfigurationPolicy_basic(t *testing.T) {
 			acctest.PreCheckAlternateRegionIs(t, acctest.Region())
 			acctest.PreCheckOrganizationMemberAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -77,7 +77,7 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 			acctest.PreCheckAlternateRegionIs(t, acctest.Region())
 			acctest.PreCheckOrganizationMemberAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -219,7 +219,7 @@ func testAccConfigurationPolicy_specificControlIdentifiers(t *testing.T) {
 			acctest.PreCheckAlternateRegionIs(t, acctest.Region())
 			acctest.PreCheckOrganizationMemberAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
