@@ -8,23 +8,24 @@ import (
 	"errors"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/configservice"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/configservice"
+	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_config_configuration_recorder")
-func ResourceConfigurationRecorder() *schema.Resource {
+// @SDKResource("aws_config_configuration_recorder", name="Configuration Recorder")
+func resourceConfigurationRecorder() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationRecorderPut,
 		ReadWithoutTimeout:   resourceConfigurationRecorderRead,
@@ -35,16 +36,14 @@ func ResourceConfigurationRecorder() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		CustomizeDiff: customdiff.All(
-			resourceConfigCustomizeDiff,
-		),
+		CustomizeDiff: resourceConfigurationRecorderCustomizeDiff,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				Default:      "default",
+				Default:      defaultConfigurationRecorderName,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
 			"recording_group": {
@@ -84,9 +83,9 @@ func ResourceConfigurationRecorder() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"use_only": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: validation.StringInSlice(configservice.RecordingStrategyType_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										ValidateDiagFunc: enum.Validate[types.RecordingStrategyType](),
 									},
 								},
 							},
@@ -107,10 +106,10 @@ func ResourceConfigurationRecorder() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"recording_frequency": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      configservice.RecordingFrequencyContinuous,
-							ValidateFunc: validation.StringInSlice(configservice.RecordingFrequency_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          types.RecordingFrequencyContinuous,
+							ValidateDiagFunc: enum.Validate[types.RecordingFrequency](),
 						},
 						"recording_mode_override": {
 							Type:     schema.TypeList,
@@ -125,9 +124,9 @@ func ResourceConfigurationRecorder() *schema.Resource {
 										Optional: true,
 									},
 									"recording_frequency": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(configservice.RecordingFrequency_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[types.RecordingFrequency](),
 									},
 									"resource_types": {
 										Type:     schema.TypeSet,
@@ -152,11 +151,11 @@ func ResourceConfigurationRecorder() *schema.Resource {
 
 func resourceConfigurationRecorderPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &configservice.PutConfigurationRecorderInput{
-		ConfigurationRecorder: &configservice.ConfigurationRecorder{
+		ConfigurationRecorder: &types.ConfigurationRecorder{
 			Name:    aws.String(name),
 			RoleARN: aws.String(d.Get("role_arn").(string)),
 		},
@@ -170,7 +169,8 @@ func resourceConfigurationRecorderPut(ctx context.Context, d *schema.ResourceDat
 		input.ConfigurationRecorder.RecordingMode = expandRecordingMode(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	_, err := conn.PutConfigurationRecorderWithContext(ctx, input)
+	_, err := conn.PutConfigurationRecorder(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting ConfigService Configuration Recorder (%s): %s", name, err)
 	}
@@ -184,9 +184,9 @@ func resourceConfigurationRecorderPut(ctx context.Context, d *schema.ResourceDat
 
 func resourceConfigurationRecorderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
-	recorder, err := FindConfigurationRecorderByName(ctx, conn, d.Id())
+	recorder, err := findConfigurationRecorderByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ConfigService Configuration Recorder (%s) not found, removing from state", d.Id())
@@ -199,33 +199,31 @@ func resourceConfigurationRecorderRead(ctx context.Context, d *schema.ResourceDa
 	}
 
 	d.Set("name", recorder.Name)
-	d.Set("role_arn", recorder.RoleARN)
-
 	if recorder.RecordingGroup != nil {
 		if err := d.Set("recording_group", flattenRecordingGroup(recorder.RecordingGroup)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting recording_group: %s", err)
 		}
 	}
-
 	if recorder.RecordingMode != nil {
 		if err := d.Set("recording_mode", flattenRecordingMode(recorder.RecordingMode)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting recording_mode: %s", err)
 		}
 	}
+	d.Set("role_arn", recorder.RoleARN)
 
 	return diags
 }
 
 func resourceConfigurationRecorderDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ConfigServiceConn(ctx)
+	conn := meta.(*conns.AWSClient).ConfigServiceClient(ctx)
 
 	log.Printf("[DEBUG] Deleting ConfigService Configuration Recorder: %s", d.Id())
-	_, err := conn.DeleteConfigurationRecorderWithContext(ctx, &configservice.DeleteConfigurationRecorderInput{
+	_, err := conn.DeleteConfigurationRecorder(ctx, &configservice.DeleteConfigurationRecorderInput{
 		ConfigurationRecorderName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationRecorderException) {
+	if errs.IsA[*types.NoSuchConfigurationRecorderException](err) {
 		return diags
 	}
 
@@ -236,14 +234,84 @@ func resourceConfigurationRecorderDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func FindConfigurationRecorderByName(ctx context.Context, conn *configservice.ConfigService, name string) (*configservice.ConfigurationRecorder, error) {
-	input := &configservice.DescribeConfigurationRecordersInput{
-		ConfigurationRecorderNames: aws.StringSlice([]string{name}),
+func resourceConfigurationRecorderCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if diff.Id() == "" { // New resource.
+		if v, ok := diff.GetOk("recording_group"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			tfMap := v.([]interface{})[0].(map[string]interface{})
+
+			if h, ok := tfMap["all_supported"]; ok {
+				if i, ok := tfMap["recording_strategy"]; ok && len(i.([]interface{})) > 0 && i.([]interface{})[0] != nil {
+					strategy := i.([]interface{})[0].(map[string]interface{})
+
+					if j, ok := strategy["use_only"].(string); ok {
+						if h.(bool) && j != string(types.RecordingStrategyTypeAllSupportedResourceTypes) {
+							return errors.New(` Invalid record group strategy  , all_supported must be set to true  `)
+						}
+
+						if k, ok := tfMap["exclusion_by_resource_types"]; ok && len(k.([]interface{})) > 0 && k.([]interface{})[0] != nil {
+							if h.(bool) {
+								return errors.New(` Invalid record group , all_supported must be set to false when exclusion_by_resource_types is set `)
+							}
+
+							if j != string(types.RecordingStrategyTypeExclusionByResourceTypes) {
+								return errors.New(` Invalid record group strategy ,  use only must be set to EXCLUSION_BY_RESOURCE_TYPES`)
+							}
+
+							if l, ok := tfMap["resource_types"]; ok {
+								resourceTypes := flex.ExpandStringSet(l.(*schema.Set))
+								if len(resourceTypes) > 0 {
+									return errors.New(` Invalid record group , resource_types must not be set when exclusion_by_resource_types is set `)
+								}
+							}
+						}
+
+						if l, ok := tfMap["resource_types"]; ok {
+							resourceTypes := flex.ExpandStringSet(l.(*schema.Set))
+							if len(resourceTypes) > 0 {
+								if h.(bool) {
+									return errors.New(` Invalid record group , all_supported must be set to false when resource_types is set `)
+								}
+
+								if j != string(types.RecordingStrategyTypeInclusionByResourceTypes) {
+									return errors.New(` Invalid record group strategy ,  use only must be set to INCLUSION_BY_RESOURCE_TYPES`)
+								}
+
+								if m, ok := tfMap["exclusion_by_resource_types"]; ok && len(m.([]interface{})) > 0 && i.([]interface{})[0] != nil {
+									return errors.New(` Invalid record group , exclusion_by_resource_types must not be set when resource_types is set `)
+								}
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 
-	output, err := conn.DescribeConfigurationRecordersWithContext(ctx, input)
+	return nil
+}
 
-	if tfawserr.ErrCodeEquals(err, configservice.ErrCodeNoSuchConfigurationRecorderException) {
+func findConfigurationRecorderByName(ctx context.Context, conn *configservice.Client, name string) (*types.ConfigurationRecorder, error) {
+	input := &configservice.DescribeConfigurationRecordersInput{
+		ConfigurationRecorderNames: []string{name},
+	}
+
+	return findConfigurationRecorder(ctx, conn, input)
+}
+
+func findConfigurationRecorder(ctx context.Context, conn *configservice.Client, input *configservice.DescribeConfigurationRecordersInput) (*types.ConfigurationRecorder, error) {
+	output, err := findConfigurationRecorders(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findConfigurationRecorders(ctx context.Context, conn *configservice.Client, input *configservice.DescribeConfigurationRecordersInput) ([]types.ConfigurationRecorder, error) {
+	output, err := conn.DescribeConfigurationRecorders(ctx, input)
+
+	if errs.IsA[*types.NoSuchConfigurationRecorderException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -258,70 +326,211 @@ func FindConfigurationRecorderByName(ctx context.Context, conn *configservice.Co
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return tfresource.AssertSinglePtrResult(output.ConfigurationRecorders)
+	return output.ConfigurationRecorders, nil
 }
 
-func resourceConfigCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
-	if diff.Id() == "" { // New resource.
-		if g, ok := diff.GetOk("recording_group"); ok {
-			group := g.([]interface{})[0].(map[string]interface{})
+func expandRecordingGroup(tfMap map[string]interface{}) *types.RecordingGroup {
+	if tfMap == nil {
+		return nil
+	}
 
-			if h, ok := group["all_supported"]; ok {
-				if i, ok := group["recording_strategy"]; ok && len(i.([]interface{})) > 0 && i.([]interface{})[0] != nil {
-					strategy := i.([]interface{})[0].(map[string]interface{})
+	apiObject := &types.RecordingGroup{}
 
-					if j, ok := strategy["use_only"].(string); ok {
-						if h.(bool) && j != configservice.RecordingStrategyTypeAllSupportedResourceTypes {
-							return errors.New(` Invalid record group strategy  , all_supported must be set to true  `)
-						}
+	if v, ok := tfMap["all_supported"]; ok {
+		apiObject.AllSupported = v.(bool)
+	}
 
-						if k, ok := group["exclusion_by_resource_types"]; ok && len(k.([]interface{})) > 0 && k.([]interface{})[0] != nil {
-							if h.(bool) {
-								return errors.New(` Invalid record group , all_supported must be set to false when exclusion_by_resource_types is set `)
-							}
+	if v, ok := tfMap["exclusion_by_resource_types"]; ok && len(v.([]interface{})) > 0 {
+		apiObject.ExclusionByResourceTypes = expandExclusionByResourceTypes(v.([]interface{}))
+	}
 
-							if j != configservice.RecordingStrategyTypeExclusionByResourceTypes {
-								return errors.New(` Invalid record group strategy ,  use only must be set to EXCLUSION_BY_RESOURCE_TYPES`)
-							}
+	if v, ok := tfMap["include_global_resource_types"]; ok {
+		apiObject.IncludeGlobalResourceTypes = v.(bool)
+	}
 
-							if l, ok := group["resource_types"]; ok {
-								resourceTypes := flex.ExpandStringSet(l.(*schema.Set))
-								if len(resourceTypes) > 0 {
-									return errors.New(` Invalid record group , resource_types must not be set when exclusion_by_resource_types is set `)
-								}
-							}
-						}
+	if v, ok := tfMap["recording_strategy"]; ok && len(v.([]interface{})) > 0 {
+		apiObject.RecordingStrategy = expandRecordingStrategy(v.([]interface{}))
+	}
 
-						if l, ok := group["resource_types"]; ok {
-							resourceTypes := flex.ExpandStringSet(l.(*schema.Set))
-							if len(resourceTypes) > 0 {
-								if h.(bool) {
-									return errors.New(` Invalid record group , all_supported must be set to false when resource_types is set `)
-								}
+	if v, ok := tfMap["resource_types"]; ok && v.(*schema.Set).Len() > 0 {
+		apiObject.ResourceTypes = flex.ExpandStringyValueSet[types.ResourceType](v.(*schema.Set))
+	}
 
-								if j != configservice.RecordingStrategyTypeInclusionByResourceTypes {
-									return errors.New(` Invalid record group strategy ,  use only must be set to INCLUSION_BY_RESOURCE_TYPES`)
-								}
+	return apiObject
+}
 
-								if m, ok := group["exclusion_by_resource_types"]; ok && len(m.([]interface{})) > 0 && i.([]interface{})[0] != nil {
-									return errors.New(` Invalid record group , exclusion_by_resource_types must not be set when resource_types is set `)
-								}
-							}
-						}
-					}
-				}
-			}
+func expandExclusionByResourceTypes(tfList []interface{}) *types.ExclusionByResourceTypes {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.ExclusionByResourceTypes{}
+
+	if v, ok := tfMap["resource_types"]; ok && v.(*schema.Set).Len() > 0 {
+		apiObject.ResourceTypes = flex.ExpandStringyValueSet[types.ResourceType](v.(*schema.Set))
+	}
+
+	return apiObject
+}
+
+func expandRecordingStrategy(tfList []interface{}) *types.RecordingStrategy {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	apiObject := &types.RecordingStrategy{}
+
+	if v, ok := tfMap["use_only"].(string); ok {
+		apiObject.UseOnly = types.RecordingStrategyType(v)
+	}
+
+	return apiObject
+}
+
+func expandRecordingMode(tfMap map[string]interface{}) *types.RecordingMode {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.RecordingMode{}
+
+	if v, ok := tfMap["recording_frequency"].(string); ok {
+		apiObject.RecordingFrequency = types.RecordingFrequency(v)
+	}
+
+	if v, ok := tfMap["recording_mode_override"]; ok && len(v.([]interface{})) > 0 {
+		apiObject.RecordingModeOverrides = expandRecordingModeOverride(v.([]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandRecordingModeOverride(tfList []interface{}) []types.RecordingModeOverride {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []types.RecordingModeOverride
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
 		}
 
-		/*
-					if g, ok := diff.GetOk("recording_mode"); ok {
-						mode := g.([]interface{})[0].(map[string]interface{})
+		apiObject := types.RecordingModeOverride{}
 
-						if f, ok := mode["recording_frequency"]; ok {
-			                if f.(string) != configservice.RecordingFrequencyOneHour && f.(string) != configservice.RecordingFrequencyThreeHours && f.(string) != configservice.RecordingFrequencySixHours && f.(string) != configservice.RecordingFrequencyTwelveHours && f.(string) != configservice.RecordingFrequencyTwentyFourHours {
-						}
-					}
-		*/
+		if v, ok := tfMap["description"].(string); ok && v != "" {
+			apiObject.Description = aws.String(v)
+		}
+
+		if v, ok := tfMap["recording_frequency"].(string); ok {
+			apiObject.RecordingFrequency = types.RecordingFrequency(v)
+		}
+
+		if v, ok := tfMap["resource_types"]; ok && v.(*schema.Set).Len() > 0 {
+			apiObject.ResourceTypes = flex.ExpandStringyValueSet[types.ResourceType](v.(*schema.Set))
+		}
+
+		apiObjects = append(apiObjects, apiObject)
 	}
-	return nil
+
+	return apiObjects
+}
+
+func flattenRecordingGroup(apiObject *types.RecordingGroup) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"all_supported":                 apiObject.AllSupported,
+		"include_global_resource_types": apiObject.IncludeGlobalResourceTypes,
+	}
+
+	if apiObject.ExclusionByResourceTypes != nil {
+		tfMap["exclusion_by_resource_types"] = flattenExclusionByResourceTypes(apiObject.ExclusionByResourceTypes)
+	}
+
+	if apiObject.RecordingStrategy != nil {
+		tfMap["recording_strategy"] = flattenRecordingStrategy(apiObject.RecordingStrategy)
+	}
+
+	if apiObject.ResourceTypes != nil {
+		tfMap["resource_types"] = apiObject.ResourceTypes
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenExclusionByResourceTypes(apiObject *types.ExclusionByResourceTypes) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if apiObject.ResourceTypes != nil {
+		tfMap["resource_types"] = apiObject.ResourceTypes
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenRecordingStrategy(apiObject *types.RecordingStrategy) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"use_only": apiObject.UseOnly,
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenRecordingMode(apiObject *types.RecordingMode) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{
+		"recording_frequency": apiObject.RecordingFrequency,
+	}
+
+	if apiObject.RecordingModeOverrides != nil && len(apiObject.RecordingModeOverrides) > 0 {
+		tfMap["recording_mode_override"] = flattenRecordingModeOverrides(apiObject.RecordingModeOverrides)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenRecordingModeOverrides(apiObjects []types.RecordingModeOverride) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		m := map[string]interface{}{
+			"description":         aws.ToString(apiObject.Description),
+			"recording_frequency": apiObject.RecordingFrequency,
+			"resource_types":      apiObject.ResourceTypes,
+		}
+
+		tfList = append(tfList, m)
+	}
+
+	return tfList
 }

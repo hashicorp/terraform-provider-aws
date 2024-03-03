@@ -388,6 +388,10 @@ func resourceOrganizationDelete(ctx context.Context, d *schema.ResourceData, met
 	log.Printf("[INFO] Deleting Organization: %s", d.Id())
 	_, err := conn.DeleteOrganizationWithContext(ctx, &organizations.DeleteOrganizationInput{})
 
+	if tfawserr.ErrCodeEquals(err, organizations.ErrCodeAWSOrganizationsNotInUseException) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Organization (%s): %s", d.Id(), err)
 	}

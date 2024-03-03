@@ -64,7 +64,7 @@ cloudformation,cloudformation,cloudformation,cloudformation,,cloudformation,,,Cl
 cloudfront,cloudfront,cloudfront,cloudfront,,cloudfront,,,CloudFront,CloudFront,,1,2,,aws_cloudfront_,,cloudfront_,CloudFront,Amazon,,,,,,,CloudFront,ListDistributions,,
 cloudfront-keyvaluestore,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,,CloudFrontKeyValueStore,CloudFrontKeyValueStore,,,2,,aws_cloudfrontkeyvaluestore_,,cloudfront_keyvaluestore_,CloudFront KeyValueStore,Amazon,,,,,,,CloudFront KeyValueStore,ListKeys,"KvsARN: aws_sdkv2.String(""arn:aws:cloudfront::111122223333:key-value-store/MaxAge"")",
 cloudhsm,cloudhsm,cloudhsm,cloudhsm,,,,,,,,,,,,,,CloudHSM,AWS,x,,,,,,,,,Legacy
-cloudhsmv2,cloudhsmv2,cloudhsmv2,cloudhsmv2,,cloudhsmv2,,cloudhsm,CloudHSMV2,CloudHSMV2,,,2,aws_cloudhsm_v2_,aws_cloudhsmv2_,,cloudhsm,CloudHSM,AWS,,,,,,,CloudHSM V2,DescribeClusters,,
+cloudhsmv2,cloudhsmv2,cloudhsmv2,cloudhsmv2,,cloudhsmv2,,cloudhsm,CloudHSMV2,CloudHSMV2,x,,2,aws_cloudhsm_v2_,aws_cloudhsmv2_,,cloudhsm,CloudHSM,AWS,,,,,,,CloudHSM V2,DescribeClusters,,
 cloudsearch,cloudsearch,cloudsearch,cloudsearch,,cloudsearch,,,CloudSearch,CloudSearch,,,2,,aws_cloudsearch_,,cloudsearch_,CloudSearch,Amazon,,,,,,,CloudSearch,ListDomainNames,,
 cloudsearchdomain,cloudsearchdomain,cloudsearchdomain,cloudsearchdomain,,cloudsearchdomain,,,CloudSearchDomain,CloudSearchDomain,,1,,,aws_cloudsearchdomain_,,cloudsearchdomain_,CloudSearch Domain,Amazon,,x,,,,,CloudSearch Domain,,,
 ,,,,,,,,,,,,,,,,,CloudShell,AWS,x,,,,,,,,,No SDK support
@@ -92,7 +92,7 @@ cognito-sync,cognitosync,cognitosync,cognitosync,,cognitosync,,,CognitoSync,Cogn
 comprehend,comprehend,comprehend,comprehend,,comprehend,,,Comprehend,Comprehend,,,2,,aws_comprehend_,,comprehend_,Comprehend,Amazon,,,,,,,Comprehend,ListDocumentClassifiers,,
 comprehendmedical,comprehendmedical,comprehendmedical,comprehendmedical,,comprehendmedical,,,ComprehendMedical,ComprehendMedical,,1,,,aws_comprehendmedical_,,comprehendmedical_,Comprehend Medical,Amazon,,x,,,,,ComprehendMedical,,,
 compute-optimizer,computeoptimizer,computeoptimizer,computeoptimizer,,computeoptimizer,,,ComputeOptimizer,ComputeOptimizer,,,2,,aws_computeoptimizer_,,computeoptimizer_,Compute Optimizer,AWS,,,,,,,Compute Optimizer,GetEnrollmentStatus,,
-configservice,configservice,configservice,configservice,,configservice,,config,ConfigService,ConfigService,,1,,aws_config_,aws_configservice_,,config_,Config,AWS,,,,,,,Config Service,ListStoredQueries,,
+configservice,configservice,configservice,configservice,,configservice,,config,ConfigService,ConfigService,,,2,aws_config_,aws_configservice_,,config_,Config,AWS,,,,,,,Config Service,ListStoredQueries,,
 connect,connect,connect,connect,,connect,,,Connect,Connect,,1,,,aws_connect_,,connect_,Connect,Amazon,,,,,,,Connect,ListInstances,,
 connectcases,connectcases,connectcases,connectcases,,connectcases,,,ConnectCases,ConnectCases,,,2,,aws_connectcases_,,connectcases_,Connect Cases,Amazon,,,,,,,ConnectCases,ListDomains,,
 connect-contact-lens,connectcontactlens,connectcontactlens,connectcontactlens,,connectcontactlens,,,ConnectContactLens,ConnectContactLens,,1,,,aws_connectcontactlens_,,connectcontactlens_,Connect Contact Lens,Amazon,,x,,,,,Connect Contact Lens,,,
@@ -102,7 +102,7 @@ voice-id,voiceid,voiceid,voiceid,,voiceid,,,VoiceID,VoiceID,,1,,,aws_voiceid_,,v
 wisdom,wisdom,connectwisdomservice,wisdom,,wisdom,,connectwisdomservice,Wisdom,ConnectWisdomService,,1,,,aws_wisdom_,,wisdom_,Connect Wisdom,Amazon,,x,,,,,Wisdom,,,
 ,,,,,,,,,,,,,,,,,Console Mobile Application,AWS,x,,,,,,,,,No SDK support
 controltower,controltower,controltower,controltower,,controltower,,,ControlTower,ControlTower,,,2,,aws_controltower_,,controltower_,Control Tower,AWS,,,,,,,ControlTower,ListLandingZones,,
-cost-optimization-hub,costoptimizationhub,costoptimizationhub,costoptimizationhub,,costoptimizationhub,,,CostOptimizationHub,CostOptimizationHub,,,2,,aws_costoptimizationhub_,,costoptimizationhub_,Cost Optimization Hub,AWS,,,,,,,Cost Optimization Hub,GetPreferences,,
+cost-optimization-hub,costoptimizationhub,costoptimizationhub,costoptimizationhub,,costoptimizationhub,,,CostOptimizationHub,CostOptimizationHub,x,,2,,aws_costoptimizationhub_,,costoptimizationhub_,Cost Optimization Hub,AWS,,,,,,,Cost Optimization Hub,GetPreferences,,
 cur,cur,costandusagereportservice,costandusagereportservice,,cur,,costandusagereportservice,CUR,CostandUsageReportService,,1,,,aws_cur_,,cur_,Cost and Usage Report,AWS,,,,,,,Cost and Usage Report Service,DescribeReportDefinitions,,
 ,,,,,,,,,,,,,,,,,Crypto Tools,AWS,x,,,,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,Cryptographic Services Overview,AWS,x,,,,,,,,,No SDK support
@@ -256,7 +256,7 @@ mobile,mobile,mobile,mobile,,mobile,,,Mobile,Mobile,,1,,,aws_mobile_,,mobile_,Mo
 ,,,,,,,,,,,,,,,,,Monitron,Amazon,x,,,,,,,,,No SDK support
 mq,mq,mq,mq,,mq,,,MQ,MQ,,,2,,aws_mq_,,mq_,MQ,Amazon,,,,,,,mq,ListBrokers,,
 mturk,mturk,mturk,mturk,,mturk,,,MTurk,MTurk,,1,,,aws_mturk_,,mturk_,MTurk (Mechanical Turk),Amazon,,x,,,,,MTurk,,,
-mwaa,mwaa,mwaa,mwaa,,mwaa,,,MWAA,MWAA,,1,,,aws_mwaa_,,mwaa_,MWAA (Managed Workflows for Apache Airflow),Amazon,,,,,,,MWAA,ListEnvironments,,
+mwaa,mwaa,mwaa,mwaa,,mwaa,,,MWAA,MWAA,,,2,,aws_mwaa_,,mwaa_,MWAA (Managed Workflows for Apache Airflow),Amazon,,,,,,,MWAA,ListEnvironments,,
 neptune,neptune,neptune,neptune,,neptune,,,Neptune,Neptune,,1,,,aws_neptune_,,neptune_,Neptune,Amazon,,,,,,,Neptune,DescribeDBClusters,,
 network-firewall,networkfirewall,networkfirewall,networkfirewall,,networkfirewall,,,NetworkFirewall,NetworkFirewall,,1,,,aws_networkfirewall_,,networkfirewall_,Network Firewall,AWS,,,,,,,Network Firewall,ListFirewalls,,
 networkmanager,networkmanager,networkmanager,networkmanager,,networkmanager,,,NetworkManager,NetworkManager,,1,,,aws_networkmanager_,,networkmanager_,Network Manager,AWS,,,,,,,NetworkManager,ListCoreNetworks,,
