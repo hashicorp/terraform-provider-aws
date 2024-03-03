@@ -95,9 +95,8 @@ func ResourceConfigurationPolicy() *schema.Resource {
 										},
 									},
 									"control_custom_parameter": {
-										Type:        schema.TypeList,
-										Optional:    true,
-										Description: "https://docs.aws.amazon.com/securityhub/latest/userguide/securityhub-controls-reference.html",
+										Type:     schema.TypeList,
+										Optional: true,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"control_identifier": {
