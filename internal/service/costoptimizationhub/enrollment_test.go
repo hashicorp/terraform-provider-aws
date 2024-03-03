@@ -230,29 +230,29 @@ func testAccCheckEnrollmentExists(ctx context.Context, name string, enrollment *
 
 func testAccEnrollmentConfig_basic() string {
 	return `
-	resource "aws_costoptimizationhub_enrollment" "test" {
-	}	
+resource "aws_costoptimizationhub_enrollment" "test" {
+}
 `
 }
 
 func testAccEnrollmentConfig_IncludeMemberAccounts() string {
 	return `
-	resource "aws_costoptimizationhub_enrollment" "test" {
-		include_member_accounts = true
-	}	
+resource "aws_costoptimizationhub_enrollment" "test" {
+  include_member_accounts = true
+}
 `
 }
 func testAccEnrollmentConfig_MemberAccountDiscountVisibility() string {
 	return `
-	resource "aws_costoptimizationhub_enrollment" "test" {
-		member_account_discount_visibility = "None"
-	}	
+resource "aws_costoptimizationhub_enrollment" "test" {
+  member_account_discount_visibility = "None"
+}
 `
 }
 func testAccEnrollmentConfig_SavingsEstimationMode() string {
 	return `
-	resource "aws_costoptimizationhub_enrollment" "test" {
-		savings_estimation_mode = "AfterDiscounts"
-	}	
+resource "aws_costoptimizationhub_enrollment" "test" {
+  savings_estimation_mode = "AfterDiscounts"
+}
 `
 }

@@ -23,9 +23,9 @@ resource "aws_costoptimizationhub_enrollment" "example" {
 
 ```terraform
 resource "aws_costoptimizationhub_enrollment" "example" {
-  include_member_accounts = true
+  include_member_accounts            = true
   member_account_discount_visibility = "None"
-  savings_estimation_mode = "AfterDiscounts"
+  savings_estimation_mode            = "AfterDiscounts"
 }
 ```
 
