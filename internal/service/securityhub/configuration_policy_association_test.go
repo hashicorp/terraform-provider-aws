@@ -38,10 +38,10 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationPolicyAssociationConfig_base(accountTarget, policy1),
+				Config: testAccConfigurationPolicyAssociationConfig_base(ouTarget, policy1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "target_id", "data.aws_caller_identity.member", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_id", "aws_organizations_organizational_unit.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", "aws_securityhub_configuration_policy.test_1", "id"),
 				),
 			},
@@ -51,10 +51,10 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigurationPolicyAssociationConfig_base(accountTarget, policy2),
+				Config: testAccConfigurationPolicyAssociationConfig_base(ouTarget, policy2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "target_id", "data.aws_caller_identity.member", "account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_id", "aws_organizations_organizational_unit.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", "aws_securityhub_configuration_policy.test_2", "id"),
 				),
 			},
@@ -67,10 +67,10 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfigurationPolicyAssociationConfig_base(ouTarget, policy2),
+				Config: testAccConfigurationPolicyAssociationConfig_base(accountTarget, policy2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
-					resource.TestCheckResourceAttrPair(resourceName, "target_id", "aws_organizations_organizational_unit.test", "id"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_id", "data.aws_caller_identity.member", "account_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", "aws_securityhub_configuration_policy.test_2", "id"),
 				),
 			},
