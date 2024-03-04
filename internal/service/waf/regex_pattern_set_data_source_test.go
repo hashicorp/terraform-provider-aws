@@ -45,13 +45,13 @@ func TestAccWAFRegexPatternSetDataSource_basic(t *testing.T) {
 func testAccRegexPatternSetDataSourceConfig_name(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_regex_pattern_set" "test" {
-  name  = "%s"
+  name = "%s"
 
   regex_pattern_strings = ["one"]
 }
 
 data "aws_waf_regex_pattern_set" "test" {
-  name  = aws_waf_regex_pattern_set.test.name
+  name = aws_waf_regex_pattern_set.test.name
 }
 `, name)
 }
@@ -59,13 +59,13 @@ data "aws_waf_regex_pattern_set" "test" {
 func testAccRegexPatternSetDataSourceConfig_nonExistent(name string) string {
 	return fmt.Sprintf(`
 resource "aws_waf_regex_pattern_set" "test" {
-  name  = "%s"
+  name = "%s"
 
   regex_pattern_strings = ["one"]
 }
 
 data "aws_waf_regex_pattern_set" "test" {
-  name  = "tf-acc-test-does-not-exist"
+  name = "tf-acc-test-does-not-exist"
 }
 `, name)
 }
