@@ -13,6 +13,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"time"
 
 	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
@@ -817,12 +818,12 @@ func sortValues(v string) string {
 	return strings.Join(values, ",")
 }
 
-func extractOptionSettings(s *schema.Set) []*elasticbeanstalk.ConfigurationOptionSetting {
-	settings := []*elasticbeanstalk.ConfigurationOptionSetting{}
+func extractOptionSettings(s *schema.Set) []awstypes.ConfigurationOptionSetting {
+	settings := []awstypes.ConfigurationOptionSetting{}
 
 	if s != nil {
 		for _, setting := range s.List() {
-			optionSetting := elasticbeanstalk.ConfigurationOptionSetting{
+			optionSetting := awstypes.ConfigurationOptionSetting{
 				Namespace:  aws.String(setting.(map[string]interface{})["namespace"].(string)),
 				OptionName: aws.String(setting.(map[string]interface{})["name"].(string)),
 				Value:      aws.String(setting.(map[string]interface{})["value"].(string)),
@@ -832,7 +833,7 @@ func extractOptionSettings(s *schema.Set) []*elasticbeanstalk.ConfigurationOptio
 					optionSetting.ResourceName = aws.String(v)
 				}
 			}
-			settings = append(settings, &optionSetting)
+			settings = append(settings, optionSetting)
 		}
 	}
 
