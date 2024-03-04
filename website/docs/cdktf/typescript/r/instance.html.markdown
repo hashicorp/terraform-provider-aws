@@ -253,6 +253,18 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
+## Tag Guide
+
+These are the five types of tags you might encounter relative to an `aws_instance`:
+
+1. **Instance tags**: Applied to instances but not to `ebsBlockDevice` and `rootBlockDevice` volumes.
+2. **Default tags**: Applied to the instance and to `ebsBlockDevice` and `rootBlockDevice` volumes.
+3. **Volume tags**: Applied during creation to `ebsBlockDevice` and `rootBlockDevice` volumes.
+4. **Root block device tags**: Applied only to the `rootBlockDevice` volume. These conflict with `volumeTags`.
+5. **EBS block device tags**: Applied only to the specific `ebsBlockDevice` volume you configure them for and cannot be updated. These conflict with `volumeTags`.
+
+Do not use `volumeTags` if you plan to manage block device tags outside the `aws_instance` configuration, such as using `tags` in an [`aws_ebs_volume`](/docs/providers/aws/r/ebs_volume.html) resource attached via [`aws_volume_attachment`](/docs/providers/aws/r/volume_attachment.html). Doing so will result in resource cycling and inconsistent behavior.
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -499,11 +511,13 @@ This resource exports the following attributes in addition to the arguments abov
 For `ebsBlockDevice`, in addition to the arguments above, the following attribute is exported:
 
 * `volumeId` - ID of the volume. For example, the ID can be accessed like this, `aws_instance.web.ebs_block_device.2.volume_id`.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 For `rootBlockDevice`, in addition to the arguments above, the following attributes are exported:
 
 * `volumeId` - ID of the volume. For example, the ID can be accessed like this, `aws_instance.web.root_block_device.0.volume_id`.
 * `deviceName` - Device name, e.g., `/dev/sdh` or `xvdh`.
+* `tagsAll` - Map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 For `instanceMarketOptions`, in addition to the arguments above, the following attributes are exported:
 
@@ -547,4 +561,4 @@ Using `terraform import`, import instances using the `id`. For example:
 % terraform import aws_instance.web i-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-318cfccfb4c0a27f772116054dc74518d4f5bcde10e933a76b38c940d6a15d97 -->
+<!-- cache-key: cdktf-0.20.1 input-67ef2c8ff896e0ca74cabe3df836f7f729bff46945ada7b8471c2e4bdf0cc046 -->
