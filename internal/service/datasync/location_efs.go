@@ -5,10 +5,12 @@ package datasync
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -170,10 +172,22 @@ func resourceLocationEFSRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	uri := aws.StringValue(output.LocationUri)
+	globalId, err := globalIdFromLocationURI(uri)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 	subdirectory, err := subdirectoryFromLocationURI(uri)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+
+	locationArn, err := arn.Parse(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	globalIdParts := strings.Split(globalId, ".") // Global ID format for EFS location is <region>.<efs_file_system_id>
+	efsFileSystemArn := fmt.Sprintf("arn:%s:elasticfilesystem:%s:%s:file-system/%s", locationArn.Partition, globalIdParts[0], locationArn.AccountID, globalIdParts[1])
+	d.Set("efs_file_system_arn", efsFileSystemArn)
 
 	d.Set("access_point_arn", output.AccessPointArn)
 	d.Set("arn", output.LocationArn)

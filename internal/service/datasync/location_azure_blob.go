@@ -5,6 +5,7 @@ package datasync
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 
@@ -167,10 +168,18 @@ func resourceLocationAzureBlobRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	uri := aws.StringValue(output.LocationUri)
+	accountHostName, err := globalIdFromLocationURI(aws.StringValue(output.LocationUri))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 	subdirectory, err := subdirectoryFromLocationURI(uri)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+
+	containerName := subdirectory[:strings.IndexAny(subdirectory[1:], "/")+1]
+	containerUrl := fmt.Sprintf("https://%s%s", accountHostName, containerName)
+	d.Set("container_url", containerUrl)
 
 	d.Set("access_tier", output.AccessTier)
 	d.Set("agent_arns", aws.StringValueSlice(output.AgentArns))
@@ -179,7 +188,7 @@ func resourceLocationAzureBlobRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("blob_type", output.BlobType)
 	d.Set("container_url", d.Get("container_url"))
 	d.Set("sas_configuration", d.Get("sas_configuration"))
-	d.Set("subdirectory", subdirectory)
+	d.Set("subdirectory", subdirectory[strings.IndexAny(subdirectory[1:], "/")+1:])
 	d.Set("uri", uri)
 
 	return diags

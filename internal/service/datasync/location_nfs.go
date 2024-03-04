@@ -153,6 +153,10 @@ func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	uri := aws.StringValue(output.LocationUri)
+	serverHostName, err := globalIdFromLocationURI(uri)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 	subdirectory, err := subdirectoryFromLocationURI(uri)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -165,6 +169,7 @@ func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("on_prem_config", flattenOnPremConfig(output.OnPremConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting on_prem_config: %s", err)
 	}
+	d.Set("server_hostname", serverHostName)
 	d.Set("subdirectory", subdirectory)
 	d.Set("uri", uri)
 

@@ -5,10 +5,12 @@ package datasync
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -172,10 +174,21 @@ func resourceLocationS3Read(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	uri := aws.StringValue(output.LocationUri)
+	s3BucketName, err := globalIdFromLocationURI(aws.StringValue(output.LocationUri))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 	subdirectory, err := subdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+
+	locationArn, err := arn.Parse(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	s3BucketArn := fmt.Sprintf("arn:%s:s3:::%s", locationArn.Partition, s3BucketName)
+	d.Set("s3_bucket_arn", s3BucketArn)
 
 	d.Set("agent_arns", aws.StringValueSlice(output.AgentArns))
 	d.Set("arn", output.LocationArn)

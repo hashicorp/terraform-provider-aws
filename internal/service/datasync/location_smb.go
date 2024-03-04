@@ -162,6 +162,10 @@ func resourceLocationSMBRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	uri := aws.StringValue(output.LocationUri)
+	serverHostName, err := globalIdFromLocationURI(uri)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 	subdirectory, err := subdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -173,6 +177,7 @@ func resourceLocationSMBRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("mount_options", flattenSMBMountOptions(output.MountOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting mount_options: %s", err)
 	}
+	d.Set("server_hostname", serverHostName)
 	d.Set("subdirectory", subdirectory)
 	d.Set("uri", uri)
 	d.Set("user", output.User)

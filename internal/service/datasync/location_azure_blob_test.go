@@ -41,10 +41,10 @@ func TestAccDataSyncLocationAzureBlob_basic(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "SAS"),
 					resource.TestCheckResourceAttr(resourceName, "blob_type", "BLOCK"),
-					resource.TestCheckResourceAttr(resourceName, "container_url", "https://example.com/path"),
+					resource.TestCheckResourceAttr(resourceName, "container_url", "https://myaccount.blob.core.windows.net/mycontainer"),
 					resource.TestCheckResourceAttr(resourceName, "sas_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "sas_configuration.0.token"),
-					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/path/"),
+					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/myvdir1/myvdir2/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^azure-blob://.+/`)),
 				),
@@ -53,7 +53,7 @@ func TestAccDataSyncLocationAzureBlob_basic(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"container_url", "sas_configuration"},
+				ImportStateVerifyIgnore: []string{"sas_configuration"},
 			},
 		},
 	})
@@ -107,7 +107,7 @@ func TestAccDataSyncLocationAzureBlob_tags(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"container_url", "sas_configuration"},
+				ImportStateVerifyIgnore: []string{"sas_configuration"},
 			},
 			{
 				Config: testAccLocationAzureBlobConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -151,10 +151,10 @@ func TestAccDataSyncLocationAzureBlob_update(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "SAS"),
 					resource.TestCheckResourceAttr(resourceName, "blob_type", "BLOCK"),
-					resource.TestCheckResourceAttr(resourceName, "container_url", "https://example.com/path"),
+					resource.TestCheckResourceAttr(resourceName, "container_url", "https://myaccount.blob.core.windows.net/mycontainer"),
 					resource.TestCheckResourceAttr(resourceName, "sas_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "sas_configuration.0.token"),
-					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/path/"),
+					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/myvdir1/myvdir2/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^azure-blob://.+/`)),
 				),
@@ -168,10 +168,10 @@ func TestAccDataSyncLocationAzureBlob_update(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_type", "SAS"),
 					resource.TestCheckResourceAttr(resourceName, "blob_type", "BLOCK"),
-					resource.TestCheckResourceAttr(resourceName, "container_url", "https://example.com/path"),
+					resource.TestCheckResourceAttr(resourceName, "container_url", "https://myaccount.blob.core.windows.net/mycontainer"),
 					resource.TestCheckResourceAttr(resourceName, "sas_configuration.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "sas_configuration.0.token"),
-					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/path/"),
+					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^azure-blob://.+/`)),
 				),
@@ -241,7 +241,8 @@ func testAccLocationAzureBlobConfig_basic(rName string) string {
 resource "aws_datasync_location_azure_blob" "test" {
   agent_arns          = [aws_datasync_agent.test.arn]
   authentication_type = "SAS"
-  container_url       = "https://example.com/path"
+  container_url       = "https://myaccount.blob.core.windows.net/mycontainer"
+  subdirectory        = "/myvdir1/myvdir2"
 
   sas_configuration {
     token = "sp=r&st=2023-12-20T14:54:52Z&se=2023-12-20T22:54:52Z&spr=https&sv=2021-06-08&sr=c&sig=aBBKDWQvyuVcTPH9EBp%%2FXTI9E%%2F%%2Fmq171%%2BZU178wcwqU%%3D"
@@ -255,7 +256,7 @@ func testAccLocationAzureBlobConfig_tags1(rName, key1, value1 string) string {
 resource "aws_datasync_location_azure_blob" "test" {
   agent_arns          = [aws_datasync_agent.test.arn]
   authentication_type = "SAS"
-  container_url       = "https://example.com/path"
+  container_url       = "https://myaccount.blob.core.windows.net/mycontainer"
 
   sas_configuration {
     token = "sp=r&st=2023-12-20T14:54:52Z&se=2023-12-20T22:54:52Z&spr=https&sv=2021-06-08&sr=c&sig=aBBKDWQvyuVcTPH9EBp%%2FXTI9E%%2F%%2Fmq171%%2BZU178wcwqU%%3D"
@@ -273,7 +274,7 @@ func testAccLocationAzureBlobConfig_tags2(rName, key1, value1, key2, value2 stri
 resource "aws_datasync_location_azure_blob" "test" {
   agent_arns          = [aws_datasync_agent.test.arn]
   authentication_type = "SAS"
-  container_url       = "https://example.com/path"
+  container_url       = "https://myaccount.blob.core.windows.net/mycontainer"
 
   sas_configuration {
     token = "sp=r&st=2023-12-20T14:54:52Z&se=2023-12-20T22:54:52Z&spr=https&sv=2021-06-08&sr=c&sig=aBBKDWQvyuVcTPH9EBp%%2FXTI9E%%2F%%2Fmq171%%2BZU178wcwqU%%3D"
@@ -293,7 +294,8 @@ resource "aws_datasync_location_azure_blob" "test" {
   access_tier         = "COOL"
   agent_arns          = [aws_datasync_agent.test.arn]
   authentication_type = "SAS"
-  container_url       = "https://example.com/path"
+  container_url       = "https://myaccount.blob.core.windows.net/mycontainer"
+  subdirectory        = "/"
 
   sas_configuration {
     token = "sp=r&st=2023-12-20T14:54:52Z&se=2023-12-20T22:54:52Z&spr=https&sv=2021-06-08&sr=c&sig=aBBKDWQvyuVcTPH9EBp%%2FXTI9E%%2F%%2Fmq171%%2BZU178wcwqU%%3D"

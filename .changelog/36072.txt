@@ -1,0 +1,19 @@
+```release-note:bug
+resource/aws_datasync_location_azure_blob: Fix missing `container_url` attribute value and bad `subdirectory` attribute value from state read/refresh
+```
+
+```release-note:bug
+resource/aws_datasync_location_efs: Fix missing `efs_file_system_arn` attribute value from state read/refresh
+```
+
+```release-note:bug
+resource/aws_datasync_location_nfs: Fix missing `server_hostname` attribute value from state read/refresh
+```
+
+```release-note:bug
+resource/aws_datasync_location_s3: Fix missing `s3_bucket_arn` attribute value from state read/refresh
+```
+
+```release-note:bug
+resource/aws_datasync_location_smb: Fix missing `server_hostname` attribute value from state read/refresh
+```
