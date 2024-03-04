@@ -109,15 +109,11 @@ func TestAccSecurityHub_centralConfiguration(t *testing.T) {
 }
 
 const testAccMemberAccountDelegatedAdminConfig_base = `
-resource "aws_securityhub_account" "test" {}
-
 data "aws_caller_identity" "member" {}
 
 resource "aws_securityhub_organization_admin_account" "test" {
   provider = awsalternate
 
   admin_account_id = data.aws_caller_identity.member.account_id
-
-  depends_on = [aws_securityhub_account.test]
 }
 `
