@@ -451,9 +451,16 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	opTime := time.Now()
 
-	if d.HasChangesExcept("tags", "tags_all", "wait_for_ready_timeout", "poll_interval") {
+	if d.HasChangesExcept("wait_for_ready_timeout", "poll_interval") {
 		input := elasticbeanstalk.UpdateEnvironmentInput{
 			EnvironmentId: aws.String(d.Id()),
+		}
+
+		if d.HasChange("tags_all") {
+			log.Printf("[DEBUG] Waiting for Elastic Beanstalk environment %s to become ready after updating tags", d.Id())
+			if _, err := waitEnvironmentReady(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Environment (%s) tag update: %s", d.Id(), err)
+			}
 		}
 
 		if d.HasChange("description") {
