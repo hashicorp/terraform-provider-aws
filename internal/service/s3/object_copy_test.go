@@ -571,7 +571,7 @@ func TestAccS3ObjectCopy_basicViaAccessPoint(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "source_customer_algorithm"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_customer_key"),
 					resource.TestCheckNoResourceAttr(resourceName, "source_customer_key_md5"),
-					resource.TestCheckResourceAttrSet(resourceName, "source_version_id"),
+					resource.TestCheckResourceAttr(resourceName, "source_version_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "storage_class", "STANDARD"),
 					resource.TestCheckNoResourceAttr(resourceName, "tagging_directive"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
