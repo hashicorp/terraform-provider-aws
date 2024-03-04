@@ -8,7 +8,9 @@ import (
 	"time"
 
 	"github.com/hashicorp/terraform-plugin-go/internal/logging"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/diag"
+	"github.com/hashicorp/terraform-plugin-go/tfprotov6/internal/funcerr"
 )
 
 // DownstreamRequest sets a request duration start time context key and
@@ -39,4 +41,24 @@ func DownstreamResponse(ctx context.Context, diagnostics diag.Diagnostics) {
 
 	logging.ProtocolTrace(ctx, "Received downstream response", responseFields)
 	diagnostics.Log(ctx)
+}
+
+// DownstreamResponseWithError generates the following logging:
+//
+//   - TRACE "Received downstream response" log with request duration and
+//     whether a function error is present
+//   - Log with function error details
+func DownstreamResponseWithError(ctx context.Context, funcErr *tfprotov6.FunctionError) {
+	fe := (*funcerr.FunctionError)(funcErr)
+
+	responseFields := map[string]interface{}{
+		logging.KeyFunctionErrorExists: fe.HasError(),
+	}
+
+	if requestStart, ok := ctx.Value(ContextKeyDownstreamRequestStartTime{}).(time.Time); ok {
+		responseFields[logging.KeyRequestDurationMs] = time.Since(requestStart).Milliseconds()
+	}
+
+	logging.ProtocolTrace(ctx, "Received downstream response", responseFields)
+	fe.Log(ctx)
 }

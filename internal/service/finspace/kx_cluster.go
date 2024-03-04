@@ -171,7 +171,7 @@ func ResourceKxCluster() *schema.Resource {
 						"s3_object_version": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(3, 63),
+							ValidateFunc: validation.StringLenBetween(3, 1024),
 						},
 					},
 				},
@@ -181,8 +181,8 @@ func ResourceKxCluster() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				ValidateDiagFunc: validation.AllDiag(
-					validation.MapKeyLenBetween(1, 50),
-					validation.MapValueLenBetween(1, 50),
+					validation.MapKeyLenBetween(1, 1024),
+					validation.MapValueLenBetween(1, 1024),
 				),
 			},
 			"created_timestamp": {

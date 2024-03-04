@@ -283,7 +283,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("account_id", accountID)
 	d.Set("alias", output.Alias)
 	d.Set("bucket_account_id", output.BucketAccountId)
-	d.Set("domain_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s-%s.s3-accesspoint", aws.ToString(output.Name), accountID)))
+	d.Set("domain_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s-%s.s3-accesspoint", aws.ToString(output.Name), accountID)))
 	d.Set("endpoints", output.Endpoints)
 	d.Set("name", output.Name)
 	d.Set("network_origin", output.NetworkOrigin)

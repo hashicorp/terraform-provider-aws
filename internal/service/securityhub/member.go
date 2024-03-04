@@ -186,7 +186,7 @@ func FindMemberByAccountID(ctx context.Context, conn *securityhub.Client, accoun
 
 	output, err := conn.GetMembers(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "The request is rejected since no such resource found") {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "The request is rejected since no such resource found") || tfawserr.ErrMessageContains(err, errCodeBadRequestException, "The request is rejected since no such resource found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

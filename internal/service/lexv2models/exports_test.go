@@ -9,4 +9,8 @@ var (
 	ResourceBotLocale  = newResourceBotLocale
 	ResourceBotVersion = newResourceBotVersion
 	ResourceIntent     = newResourceIntent
+	ResourceSlot       = newResourceSlot
+	ResourceSlotType   = newResourceSlotType
+
+	FindSlotByID = findSlotByID
 )

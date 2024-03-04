@@ -33,7 +33,7 @@ func TestAccEKSPodIdentityAssociation_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.EKSEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -70,7 +70,7 @@ func TestAccEKSPodIdentityAssociation_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.EKSEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -98,7 +98,7 @@ func TestAccEKSPodIdentityAssociation_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.EKSEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -149,7 +149,7 @@ func TestAccEKSPodIdentityAssociation_updateRoleARN(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.EKSEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPodIdentityAssociationDestroy(ctx),
 		Steps: []resource.TestStep{

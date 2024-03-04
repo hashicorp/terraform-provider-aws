@@ -151,6 +151,9 @@ class MyConvertedCode(TerraformStack):
 
 -> More information about RDS Serverless v2 Clusters can be found in the [RDS User Guide](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-serverless-v2.html).
 
+~> **Note:** Unlike Serverless v1, in Serverless v2 the `storage_encrypted` value is set to `false` by default.
+This is because Serverless v1 uses the `serverless` `engine_mode`, but Serverless v2 uses the `provisioned` `engine_mode`.
+
 To create a Serverless v2 RDS cluster, you must additionally specify the `engine_mode` and `serverlessv2_scaling_configuration` attributes. An `aws_rds_cluster_instance` resource must also be added to the cluster with the `instance_class` attribute specified.
 
 ```python
@@ -177,7 +180,8 @@ class MyConvertedCode(TerraformStack):
             serverlessv2_scaling_configuration=RdsClusterServerlessv2ScalingConfiguration(
                 max_capacity=1,
                 min_capacity=0.5
-            )
+            ),
+            storage_encrypted=True
         )
         aws_rds_cluster_instance_example = RdsClusterInstance(self, "example_1",
             cluster_identifier=example.id,
@@ -322,6 +326,8 @@ This argument supports the following arguments:
 * `deletion_protection` - (Optional) If the DB cluster should have deletion protection enabled.
   The database can't be deleted when this value is set to `true`.
   The default is `false`.
+* `domain` - (Optional) The ID of the Directory Service Active Directory domain to create the cluster in.
+* `domain_iam_role_name` - (Optional, but required if `domain` is provided) The name of the IAM role to be used when making API calls to the Directory Service.
 * `enable_global_write_forwarding` - (Optional) Whether cluster should forward writes to an associated global cluster. Applied to secondary clusters to enable them to forward writes to an [`aws_rds_global_cluster`](/docs/providers/aws/r/rds_global_cluster.html)'s primary cluster. See the [Aurora Userguide documentation](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/aurora-global-database-write-forwarding.html) for more information.
 * `enable_http_endpoint` - (Optional) Enable HTTP endpoint (data API). Only valid when `engine_mode` is set to `serverless`.
 * `enabled_cloudwatch_logs_exports` - (Optional) Set of log types to export to cloudwatch. If omitted, no logs will be exported. The following log types are supported: `audit`, `error`, `general`, `slowquery`, `postgresql` (PostgreSQL).
@@ -568,4 +574,4 @@ Using `terraform import`, import RDS Clusters using the `cluster_identifier`. Fo
 % terraform import aws_rds_cluster.aurora_cluster aurora-prod-cluster
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-56e3cd15ab5874108e89fa2a156fd6216384947b47fe548382d9fdb5ef543131 -->
+<!-- cache-key: cdktf-0.20.1 input-be6fdb637233b904c12147e2d23100f3d31c2d7db5ba8cbe2d53e3050418fdbb -->

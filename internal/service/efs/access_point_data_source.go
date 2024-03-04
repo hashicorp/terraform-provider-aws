@@ -5,7 +5,6 @@ package efs
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -123,28 +122,24 @@ func dataSourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta
 	log.Printf("[DEBUG] Found EFS access point: %#v", ap)
 
 	d.SetId(aws.StringValue(ap.AccessPointId))
-
+	d.Set("arn", ap.AccessPointArn)
+	fsID := aws.StringValue(ap.FileSystemId)
 	fsARN := arn.ARN{
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("file-system/%s", aws.StringValue(ap.FileSystemId)),
+		Resource:  "file-system/" + fsID,
 		Service:   "elasticfilesystem",
 	}.String()
-
 	d.Set("file_system_arn", fsARN)
-	d.Set("file_system_id", ap.FileSystemId)
-	d.Set("arn", ap.AccessPointArn)
+	d.Set("file_system_id", fsID)
 	d.Set("owner_id", ap.OwnerId)
-
 	if err := d.Set("posix_user", flattenAccessPointPOSIXUser(ap.PosixUser)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting posix user: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting posix_user: %s", err)
 	}
-
 	if err := d.Set("root_directory", flattenAccessPointRootDirectory(ap.RootDirectory)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting root directory: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting root_directory: %s", err)
 	}
-
 	if err := d.Set("tags", KeyValueTags(ctx, ap.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
