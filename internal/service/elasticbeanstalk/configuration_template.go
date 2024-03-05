@@ -206,7 +206,7 @@ func resourceConfigurationTemplateDelete(ctx context.Context, d *schema.Resource
 		TemplateName:    aws.String(d.Id()),
 	})
 
-	errInvalidParameter := &invalidParameterValueError{err: err}
+	errInvalidParameter := &invalidParameterValueError{err}
 
 	if errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Configuration Template named") ||
 		errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Application named") ||
@@ -229,7 +229,7 @@ func FindConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbea
 
 	output, err := conn.DescribeConfigurationSettings(ctx, input)
 
-	errInvalidParameter := &invalidParameterValueError{err: err}
+	errInvalidParameter := &invalidParameterValueError{err}
 
 	if errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Configuration Template named") ||
 		errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Application named") ||
@@ -265,16 +265,12 @@ func gatherOptionSettings(d *schema.ResourceData) []awstypes.ConfigurationOption
 }
 
 type invalidParameterValueError struct {
-	err error
-}
-
-func (e *invalidParameterValueError) Error() string {
-	if e == nil || e.err == nil {
-		return ""
-	}
-	return e.err.Error()
+	error
 }
 
 func (e *invalidParameterValueError) ErrorMessage() string {
+	if e == nil || e.error == nil {
+		return ""
+	}
 	return e.Error()
 }
