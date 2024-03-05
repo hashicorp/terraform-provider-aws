@@ -37,6 +37,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "The subscription does not exist") {
 		return true
 	}
+	// Example (GovCloud): InvalidParameterValueException: Access Denied to API Version: CORNERSTONE_V1
+	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version") {
+		return true
+	}
 
 	return false
 }
