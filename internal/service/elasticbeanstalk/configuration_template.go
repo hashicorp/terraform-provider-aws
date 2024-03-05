@@ -205,6 +205,10 @@ func resourceConfigurationTemplateDelete(ctx context.Context, d *schema.Resource
 		TemplateName:    aws.String(d.Id()),
 	})
 
+	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Configuration Template named") || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Application named") || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Platform named") {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Elastic Beanstalk Configuration Template (%s): %s", d.Id(), err)
 	}

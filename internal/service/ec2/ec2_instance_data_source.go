@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_instance")
@@ -98,7 +99,7 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"tags": tftags.TagsSchemaComputed(),
+						names.AttrTags: tftags.TagsSchemaComputed(),
 						"throughput": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -332,7 +333,7 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"tags": tftags.TagsSchemaComputed(),
+						names.AttrTags: tftags.TagsSchemaComputed(),
 						"throughput": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -549,7 +550,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	// Block devices
-	if err := readBlockDevices(ctx, d, meta, instance); err != nil {
+	if err := readBlockDevices(ctx, d, meta, instance, true); err != nil {
 		return fmt.Errorf("reading EC2 Instance (%s): %w", aws.StringValue(instance.InstanceId), err)
 	}
 	if _, ok := d.GetOk("ephemeral_block_device"); !ok {

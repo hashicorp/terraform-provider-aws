@@ -454,7 +454,7 @@ func TestAccElasticBeanstalkEnvironment_platformARN(t *testing.T) {
 				Config: testAccEnvironmentConfig_platformARN(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
-					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, "platform_arn", "elasticbeanstalk", "platform/Python 3.6 running on 64bit Amazon Linux/2.9.6"),
+					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, "platform_arn", "elasticbeanstalk", "platform/Python 3.9 running on 64bit Amazon Linux 2023/4.0.9"),
 				),
 			},
 			{
@@ -778,7 +778,7 @@ func testAccEnvironmentConfig_platformARN(rName string) string {
 resource "aws_elastic_beanstalk_environment" "test" {
   application  = aws_elastic_beanstalk_application.test.name
   name         = %[1]q
-  platform_arn = "arn:${data.aws_partition.current.partition}:elasticbeanstalk:${data.aws_region.current.name}::platform/Python 3.6 running on 64bit Amazon Linux/2.9.6"
+  platform_arn = "arn:${data.aws_partition.current.partition}:elasticbeanstalk:${data.aws_region.current.name}::platform/Python 3.9 running on 64bit Amazon Linux 2023/4.0.9"
 
   setting {
     namespace = "aws:ec2:vpc"

@@ -585,6 +585,10 @@ func resourceEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	// Environment must be Ready before it can be deleted.
 	if _, err := waitEnvironmentReady(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut); err != nil {
+		if tfresource.NotFound(err) {
+			return diags
+		}
+
 		return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Environment (%s) update: %s", d.Id(), err)
 	}
 
