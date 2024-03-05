@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -251,11 +252,11 @@ func dateFilterSchemaFramework(ctx context.Context) schema.SetNestedBlock {
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"end": schema.StringAttribute{
-					CustomType: fwtypes.TimestampType,
+					CustomType: timetypes.RFC3339Type{},
 					Optional:   true,
 				},
 				"start": schema.StringAttribute{
-					CustomType: fwtypes.TimestampType,
+					CustomType: timetypes.RFC3339Type{},
 					Optional:   true,
 				},
 			},
@@ -648,8 +649,8 @@ type automationRulesFindingFiltersModel struct {
 
 type dateFilterModel struct {
 	DateRange fwtypes.ListNestedObjectValueOf[dateRangeModel] `tfsdk:"date_range"`
-	End       fwtypes.Timestamp                               `tfsdk:"end"`
-	Start     fwtypes.Timestamp                               `tfsdk:"start"`
+	End       timetypes.RFC3339                               `tfsdk:"end"`
+	Start     timetypes.RFC3339                               `tfsdk:"start"`
 }
 
 type dateRangeModel struct {
