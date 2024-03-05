@@ -346,13 +346,13 @@ EOF
 func testAccPolicyConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_policy" "test" {
-	name = %[1]q
+  name = %[1]q
 
-	tags = {
-		%[2]q = %[3]q
-	  }
-	
-	policy = <<EOF
+  tags = {
+    %[2]q = %[3]q
+  }
+
+  policy = <<EOF
   {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -375,14 +375,14 @@ resource "aws_iot_policy" "test" {
 func testAccPolicyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iot_policy" "test" {
-	name = %[1]q
+  name = %[1]q
 
-	tags = {
-		%[2]q = %[3]q
-		%[4]q = %[5]q
-    }
-	
-	policy = <<EOF
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+
+  policy = <<EOF
   {
 	"Version": "2012-10-17",
 	"Statement": [
