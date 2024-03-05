@@ -8,7 +8,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -22,7 +21,7 @@ func TestAccCognitoIdentityPoolDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var ip awstypes.DescribeIdentityPoolOutput
+	var ip cognitoidentity.DescribeIdentityPoolOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_cognito_identity_pool.test"
 	resourceName := "aws_cognito_identity_pool.test"
