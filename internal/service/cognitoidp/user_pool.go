@@ -878,7 +878,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("custom_domain", userPool.CustomDomain)
 	d.Set("domain", userPool.Domain)
 	d.Set("estimated_number_of_users", userPool.EstimatedNumberOfUsers)
-	d.Set("endpoint", fmt.Sprintf("%s/%s", meta.(*conns.AWSClient).RegionalHostname("cognito-idp"), d.Id()))
+	d.Set("endpoint", fmt.Sprintf("%s/%s", meta.(*conns.AWSClient).RegionalHostname(ctx, "cognito-idp"), d.Id()))
 	d.Set("auto_verified_attributes", flex.FlattenStringSet(userPool.AutoVerifiedAttributes))
 
 	d.Set("email_verification_subject", userPool.EmailVerificationSubject)

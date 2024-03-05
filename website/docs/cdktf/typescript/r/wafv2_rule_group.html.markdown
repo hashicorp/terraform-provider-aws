@@ -583,12 +583,13 @@ The part of a web request that you want AWS WAF to inspect. Include the single `
 
 The `fieldToMatch` block supports the following arguments:
 
-~> **NOTE:** Only one of `allQueryArguments`, `body`, `cookies`, `headers`, `jsonBody`, `method`, `queryString`, `singleHeader`, `singleQueryArgument`, or `uriPath` can be specified.
+~> **NOTE:** Only one of `allQueryArguments`, `body`, `cookies`, `headerOrder`, `headers`, `jsonBody`, `method`, `queryString`, `singleHeader`, `singleQueryArgument`, or `uriPath` can be specified.
 An empty configuration block `{}` should be used when specifying `allQueryArguments`, `body`, `method`, or `queryString` attributes.
 
 * `allQueryArguments` - (Optional) Inspect all query arguments.
 * `body` - (Optional) Inspect the request body, which immediately follows the request headers.
 * `cookies` - (Optional) Inspect the cookies in the web request. See [Cookies](#cookies) below for details.
+* `headerOrder` - (Optional) Inspect the request headers. See [Header Order](#header-order) below for details.
 * `headers` - (Optional) Inspect the request headers. See [Headers](#headers) below for details.
 * `jsonBody` - (Optional) Inspect the request body as JSON. See [JSON Body](#json-body) for details.
 * `method` - (Optional) Inspect the HTTP method. The method indicates the type of operation that the request is asking the origin to perform.
@@ -617,6 +618,14 @@ The `ipSetForwardedIpConfig` block supports the following arguments:
 * `fallbackBehavior` - (Required) - The match status to assign to the web request if the request doesn't have a valid IP address in the specified position. Valid values include: `MATCH` or `NO_MATCH`.
 * `headerName` - (Required) - The name of the HTTP header to use for the IP address.
 * `position` - (Required) - The position in the header to search for the IP address. Valid values include: `FIRST`, `LAST`, or `ANY`. If `ANY` is specified and the header contains more than 10 IP addresses, AWS WAFv2 inspects the last 10.
+
+### Header Order
+
+Inspect a string containing the list of the request's header names, ordered as they appear in the web request that AWS WAF receives for inspection. AWS WAF generates the string and then uses that as the field to match component in its inspection. AWS WAF separates the header names in the string using colons and no added spaces, for example `host:user-agent:accept:authorization:referer`.
+
+The `headerOrder` block supports the following arguments:
+
+* `oversizeHandling` - (Required) Oversize handling tells AWS WAF what to do with a web request when the request component that the rule inspects is over the limits. Valid values include the following: `CONTINUE`, `MATCH`, `NO_MATCH`. See the AWS [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-rule-statement-oversize-handling.html) for more information.
 
 ### Headers
 
@@ -819,4 +828,4 @@ Using `terraform import`, import WAFv2 Rule Group using `ID/name/scope`. For exa
 % terraform import aws_wafv2_rule_group.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5ad818d569e90a291b2931bc9f839421af7a5d4bbec442c14b320a69e106236c -->
+<!-- cache-key: cdktf-0.20.1 input-1b2f2718990fd3f91eddb931da80b2438e53412e1c197089a1ede5ad799824de -->

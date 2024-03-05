@@ -327,6 +327,7 @@ func ResourceGroup() *schema.Resource {
 						"version": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
 					},
@@ -444,7 +445,7 @@ func ResourceGroup() *schema.Resource {
 												"version": {
 													Type:     schema.TypeString,
 													Optional: true,
-													Default:  "$Default",
+													Computed: true,
 												},
 											},
 										},
@@ -748,7 +749,7 @@ func ResourceGroup() *schema.Resource {
 															"version": {
 																Type:     schema.TypeString,
 																Optional: true,
-																Default:  "$Default",
+																Computed: true,
 															},
 														},
 													},
@@ -1079,7 +1080,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		createInput.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}))
+		createInput.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}), false)
 	}
 
 	if v, ok := d.GetOk("load_balancers"); ok && v.(*schema.Set).Len() > 0 {
@@ -1091,7 +1092,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("mixed_instances_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		createInput.MixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}))
+		createInput.MixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}), true)
 	}
 
 	if v, ok := d.GetOk("placement_group"); ok {
@@ -1403,7 +1404,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if d.HasChange("launch_template") {
 			if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}))
+				input.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}), false)
 			}
 			shouldRefreshInstances = true
 		}
@@ -1423,7 +1424,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if d.HasChange("mixed_instances_policy") {
 			if v, ok := d.GetOk("mixed_instances_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.MixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}))
+				input.MixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}), true)
 			}
 			shouldRefreshInstances = true
 		}
@@ -1622,13 +1623,13 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			var launchTemplate *autoscaling.LaunchTemplateSpecification
 
 			if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				launchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}))
+				launchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}), false)
 			}
 
 			var mixedInstancesPolicy *autoscaling.MixedInstancesPolicy
 
 			if v, ok := d.GetOk("mixed_instances_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				mixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}))
+				mixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}), true)
 			}
 
 			if err := startInstanceRefresh(ctx, conn, expandStartInstanceRefreshInput(d.Id(), tfMap, launchTemplate, mixedInstancesPolicy)); err != nil {
@@ -2802,7 +2803,7 @@ func expandInstancesDistribution(tfMap map[string]interface{}) *autoscaling.Inst
 	return apiObject
 }
 
-func expandLaunchTemplate(tfMap map[string]interface{}) *autoscaling.LaunchTemplate {
+func expandLaunchTemplate(tfMap map[string]interface{}, hasDefaultVersion bool) *autoscaling.LaunchTemplate {
 	if tfMap == nil {
 		return nil
 	}
@@ -2810,17 +2811,17 @@ func expandLaunchTemplate(tfMap map[string]interface{}) *autoscaling.LaunchTempl
 	apiObject := &autoscaling.LaunchTemplate{}
 
 	if v, ok := tfMap["launch_template_specification"].([]interface{}); ok && len(v) > 0 {
-		apiObject.LaunchTemplateSpecification = expandLaunchTemplateSpecificationForMixedInstancesPolicy(v[0].(map[string]interface{}))
+		apiObject.LaunchTemplateSpecification = expandLaunchTemplateSpecificationForMixedInstancesPolicy(v[0].(map[string]interface{}), hasDefaultVersion)
 	}
 
 	if v, ok := tfMap["override"].([]interface{}); ok && len(v) > 0 {
-		apiObject.Overrides = expandLaunchTemplateOverrideses(v)
+		apiObject.Overrides = expandLaunchTemplateOverrideses(v, hasDefaultVersion)
 	}
 
 	return apiObject
 }
 
-func expandLaunchTemplateOverrides(tfMap map[string]interface{}) *autoscaling.LaunchTemplateOverrides {
+func expandLaunchTemplateOverrides(tfMap map[string]interface{}, hasDefaultVersion bool) *autoscaling.LaunchTemplateOverrides {
 	if tfMap == nil {
 		return nil
 	}
@@ -2832,7 +2833,7 @@ func expandLaunchTemplateOverrides(tfMap map[string]interface{}) *autoscaling.La
 	}
 
 	if v, ok := tfMap["launch_template_specification"].([]interface{}); ok && len(v) > 0 {
-		apiObject.LaunchTemplateSpecification = expandLaunchTemplateSpecificationForMixedInstancesPolicy(v[0].(map[string]interface{}))
+		apiObject.LaunchTemplateSpecification = expandLaunchTemplateSpecificationForMixedInstancesPolicy(v[0].(map[string]interface{}), hasDefaultVersion)
 	}
 
 	if v, ok := tfMap["instance_type"].(string); ok && v != "" {
@@ -2846,7 +2847,7 @@ func expandLaunchTemplateOverrides(tfMap map[string]interface{}) *autoscaling.La
 	return apiObject
 }
 
-func expandLaunchTemplateOverrideses(tfList []interface{}) []*autoscaling.LaunchTemplateOverrides {
+func expandLaunchTemplateOverrideses(tfList []interface{}, hasDefaultVersion bool) []*autoscaling.LaunchTemplateOverrides {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -2860,7 +2861,7 @@ func expandLaunchTemplateOverrideses(tfList []interface{}) []*autoscaling.Launch
 			continue
 		}
 
-		apiObject := expandLaunchTemplateOverrides(tfMap)
+		apiObject := expandLaunchTemplateOverrides(tfMap, hasDefaultVersion)
 
 		if apiObject == nil {
 			continue
@@ -3154,7 +3155,7 @@ func expandVCPUCountRequest(tfMap map[string]interface{}) *autoscaling.VCpuCount
 	return apiObject
 }
 
-func expandLaunchTemplateSpecificationForMixedInstancesPolicy(tfMap map[string]interface{}) *autoscaling.LaunchTemplateSpecification {
+func expandLaunchTemplateSpecificationForMixedInstancesPolicy(tfMap map[string]interface{}, hasDefaultVersion bool) *autoscaling.LaunchTemplateSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -3170,6 +3171,10 @@ func expandLaunchTemplateSpecificationForMixedInstancesPolicy(tfMap map[string]i
 		apiObject.LaunchTemplateName = aws.String(v.(string))
 	}
 
+	if hasDefaultVersion {
+		apiObject.Version = aws.String("$Default")
+	}
+
 	if v, ok := tfMap["version"].(string); ok && v != "" {
 		apiObject.Version = aws.String(v)
 	}
@@ -3177,7 +3182,7 @@ func expandLaunchTemplateSpecificationForMixedInstancesPolicy(tfMap map[string]i
 	return apiObject
 }
 
-func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *autoscaling.LaunchTemplateSpecification {
+func expandLaunchTemplateSpecification(tfMap map[string]interface{}, hasDefaultVersion bool) *autoscaling.LaunchTemplateSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -3192,6 +3197,10 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *autoscalin
 		apiObject.LaunchTemplateName = aws.String(v.(string))
 	}
 
+	if hasDefaultVersion {
+		apiObject.Version = aws.String("$Default")
+	}
+
 	if v, ok := tfMap["version"].(string); ok && v != "" {
 		apiObject.Version = aws.String(v)
 	}
@@ -3199,7 +3208,7 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *autoscalin
 	return apiObject
 }
 
-func expandMixedInstancesPolicy(tfMap map[string]interface{}) *autoscaling.MixedInstancesPolicy {
+func expandMixedInstancesPolicy(tfMap map[string]interface{}, hasDefaultVersion bool) *autoscaling.MixedInstancesPolicy {
 	if tfMap == nil {
 		return nil
 	}
@@ -3211,7 +3220,7 @@ func expandMixedInstancesPolicy(tfMap map[string]interface{}) *autoscaling.Mixed
 	}
 
 	if v, ok := tfMap["launch_template"].([]interface{}); ok && len(v) > 0 {
-		apiObject.LaunchTemplate = expandLaunchTemplate(v[0].(map[string]interface{}))
+		apiObject.LaunchTemplate = expandLaunchTemplate(v[0].(map[string]interface{}), hasDefaultVersion)
 	}
 
 	return apiObject

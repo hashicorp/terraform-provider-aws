@@ -5,7 +5,9 @@ package redshift
 
 // Exports for use in tests only.
 var (
-	ResourceDataShareAuthorization = newResourceDataShareAuthorization
+	ResourceDataShareAuthorization       = newResourceDataShareAuthorization
+	ResourceDataShareConsumerAssociation = newResourceDataShareConsumerAssociation
 
-	FindDataShareAuthorizationByID = findDataShareAuthorizationByID
+	FindDataShareAuthorizationByID       = findDataShareAuthorizationByID
+	FindDataShareConsumerAssociationByID = findDataShareConsumerAssociationByID
 )

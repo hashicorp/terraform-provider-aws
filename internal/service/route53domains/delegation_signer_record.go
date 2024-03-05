@@ -191,7 +191,7 @@ func (r *delegationSignerRecordResource) Read(ctx context.Context, request resou
 		return
 	}
 
-	data.SigningAttributes = fwtypes.NewListNestedObjectValueOfPtr(ctx, &signingAttributes)
+	data.SigningAttributes = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &signingAttributes)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

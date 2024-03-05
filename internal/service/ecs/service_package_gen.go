@@ -55,6 +55,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAccountSettingDefault,
 			TypeName: "aws_ecs_account_setting_default",
+			Name:     "Account Setting Defauilt",
 		},
 		{
 			Factory:  ResourceCapacityProvider,

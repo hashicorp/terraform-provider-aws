@@ -21,7 +21,7 @@ go test \
     ./internal/maps/... \
     ./internal/provider/... \
     ./internal/retry/... \
-    ./internal/sdktypes/... \
+    ./internal/sdkv2/... \
     ./internal/slices/... \
     ./internal/sweep/... \
     ./internal/tags/... \

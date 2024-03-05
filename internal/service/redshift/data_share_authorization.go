@@ -161,7 +161,7 @@ func (r *resourceDataShareAuthorization) Read(ctx context.Context, req resource.
 		return
 	}
 	// split ID and write constituent parts to state to support import
-	state.DataShareARN = fwtypes.ARNValue(parts[0])
+	state.DataShareARN = fwtypes.ARNValueMust(parts[0])
 	state.ConsumerIdentifier = types.StringValue(parts[1])
 
 	out, err := findDataShareAuthorizationByID(ctx, conn, state.ID.ValueString())
@@ -250,12 +250,12 @@ func findDataShareAuthorizationByID(ctx context.Context, conn *redshift.Redshift
 	}
 
 	// Verify a share with the expected consumer identifier is present and the
-	// status is "AUTHORIZED" or "PENDING_AUTHORIZATION"
+	// status is one of "AUTHORIZED" or "ACTIVE".
 	share := out.DataShares[0]
 	for _, assoc := range share.DataShareAssociations {
 		if aws.StringValue(assoc.ConsumerIdentifier) == parts[1] {
 			switch aws.StringValue(assoc.Status) {
-			case redshift.DataShareStatusAuthorized, redshift.DataShareStatusPendingAuthorization:
+			case redshift.DataShareStatusAuthorized, redshift.DataShareStatusActive:
 				return share, nil
 			}
 		}
