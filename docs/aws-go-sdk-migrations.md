@@ -232,7 +232,8 @@ Any `List*Pages` methods called with V1 of the SDK will need to replace the pagi
 
 ## Acceptance Testing `ErrorCheck`
 
-In V1, this check relies on the endpoint values included in the SDK. These are not included in the V2 SDK, and therefore are managed in the names package instead.
+With V1, this check relies on the endpoint ID constant included in the SDK.
+These are not included in the V2 SDK, but can be replaced with a generated constant from the `names` package.
 
 ```go
 // Remove
@@ -241,7 +242,7 @@ ErrorCheck: acctest.ErrorCheck(t, <service>.EndpointsID),
 
 ```go
 // Add
-ErrorCheck: acctest.ErrorCheck(t, names.<service>EndpointID),
+ErrorCheck: acctest.ErrorCheck(t, names.<service>ServiceID),
 ```
 
 For example,
@@ -253,5 +254,5 @@ ErrorCheck: acctest.ErrorCheck(t, ssoadmin.EndpointsID),
 becomes:
 
 ```go
-ErrorCheck: acctest.ErrorCheck(t, names.SSOAdminEndpointID),
+ErrorCheck: acctest.ErrorCheck(t, names.SSOAdminServiceID),
 ```
