@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -331,7 +332,6 @@ func (r *resourceJobQueue) Delete(ctx context.Context, request resource.DeleteRe
 	found, err := disableJobQueue(ctx, conn, data.ID.ValueString(), deleteTimeout)
 
 	if !found {
-		response.State.RemoveResource(ctx)
 		return
 	}
 
@@ -469,8 +469,7 @@ func disableJobQueue(ctx context.Context, conn *batch.Batch, id string, timeout 
 	})
 
 	if err != nil {
-		notFound := regexache.MustCompile(queueNotFound)
-		if notFound.MatchString(err.Error()) {
+		if strings.Contains(err.Error(), queueNotFound) {
 			return false, nil
 		}
 		return true, err
