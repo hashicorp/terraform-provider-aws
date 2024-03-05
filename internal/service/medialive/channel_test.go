@@ -1904,8 +1904,8 @@ resource "aws_medialive_channel" "test" {
       }
 
       outputs {
-        output_name             = "test-output-name"
-        video_description_name  = "test-video-name"
+        output_name            = "test-output-name"
+        video_description_name = "test-video-name"
         output_settings {
           archive_output_settings {
             name_modifier = "_1"
