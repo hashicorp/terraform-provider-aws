@@ -254,6 +254,11 @@ func resourcePoolDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		IdentityPoolId: aws.String(d.Id()),
 	})
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		log.Printf("[DEBUG] Resource Pool already deleted: %s", d.Id())
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Cognito identity pool (%s): %s", d.Id(), err)
 	}
