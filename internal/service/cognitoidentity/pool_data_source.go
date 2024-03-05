@@ -7,15 +7,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -101,7 +100,7 @@ const (
 
 func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIdentityConn(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
 
 	name := d.Get("identity_pool_name").(string)
 
@@ -110,7 +109,7 @@ func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return create.AppendDiagError(diags, names.CognitoIdentity, create.ErrActionReading, DSNamePool, name, err)
 	}
 
-	d.SetId(aws.StringValue(ip.IdentityPoolId))
+	d.SetId(aws.ToString(ip.IdentityPoolId))
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -131,58 +130,54 @@ func dataSourcePoolRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "setting cognito_identity_providers error: %s", err)
 	}
 
-	if err := d.Set("openid_connect_provider_arns", flex.FlattenStringList(ip.OpenIdConnectProviderARNs)); err != nil {
+	if err := d.Set("openid_connect_provider_arns", ip.OpenIdConnectProviderARNs); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting openid_connect_provider_arns error: %s", err)
 	}
 
-	if err := d.Set("saml_provider_arns", flex.FlattenStringList(ip.SamlProviderARNs)); err != nil {
+	if err := d.Set("saml_provider_arns", ip.SamlProviderARNs); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting saml_provider_arns error: %s", err)
 	}
 
-	if err := d.Set("supported_login_providers", aws.StringValueMap(ip.SupportedLoginProviders)); err != nil {
+	if err := d.Set("supported_login_providers", ip.SupportedLoginProviders); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting supported_login_providers error: %s", err)
 	}
 
 	return diags
 }
 
-func findPoolByName(ctx context.Context, conn *cognitoidentity.CognitoIdentity, name string) (*cognitoidentity.IdentityPool, error) {
+func findPoolByName(ctx context.Context, conn *cognitoidentity.Client, name string) (*cognitoidentity.DescribeIdentityPoolOutput, error) {
 	var poolID string
 	input := &cognitoidentity.ListIdentityPoolsInput{
-		MaxResults: aws.Int64(ListPoolMaxResults),
+		MaxResults: aws.Int32(ListPoolMaxResults),
 	}
 
-	err := conn.ListIdentityPoolsPagesWithContext(ctx, input, func(page *cognitoidentity.ListIdentityPoolsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	for {
+		pools, err := conn.ListIdentityPools(ctx, input)
+		if err != nil {
+			return nil, err
 		}
-
-		for _, p := range page.IdentityPools {
-			if p == nil {
-				continue
-			}
-			if aws.StringValue(p.IdentityPoolName) == name {
-				poolID = aws.StringValue(p.IdentityPoolId)
-				return false
+		for p := range pools.IdentityPools {
+			if aws.ToString(pools.IdentityPools[p].IdentityPoolName) == name {
+				poolID = aws.ToString(pools.IdentityPools[p].IdentityPoolId)
+				break
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	pool, err := conn.DescribeIdentityPoolWithContext(ctx, &cognitoidentity.DescribeIdentityPoolInput{
-		IdentityPoolId: aws.String(poolID),
-	})
-	if err != nil {
-		return nil, err
+		if pools.NextToken == nil {
+			break
+		}
+		input.NextToken = pools.NextToken
 	}
 
 	if poolID == "" {
 		return nil, fmt.Errorf("no identity pool found with name %q", name)
+	}
+
+	pool, err := conn.DescribeIdentityPool(ctx, &cognitoidentity.DescribeIdentityPoolInput{
+		IdentityPoolId: aws.String(poolID),
+	})
+
+	if err != nil {
+		return nil, err
 	}
 
 	return pool, nil
