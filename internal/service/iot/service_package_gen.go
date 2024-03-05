@@ -88,6 +88,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePolicy,
 			TypeName: "aws_iot_policy",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourcePolicyAttachment,
