@@ -42,6 +42,7 @@ The following arguments are optional:
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Unique identifier for the enrollment. Since enrollment is for the entire account, this will be the 12-digit account id.
+* `status` - Status of enrollment. When the resource is present in Terraform, it's status will always be `Active`
 
 ## Import
 
