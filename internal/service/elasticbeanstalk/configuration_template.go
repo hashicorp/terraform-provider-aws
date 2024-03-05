@@ -206,11 +206,11 @@ func resourceConfigurationTemplateDelete(ctx context.Context, d *schema.Resource
 		TemplateName:    aws.String(d.Id()),
 	})
 
-	errInvalidParameter := &errInvalidParameterValue{err: err}
+	errInvalidParameter := &invalidParameterValueError{err: err}
 
-	if errs.IsAErrorMessageContains[*errInvalidParameterValue](errInvalidParameter, "No Configuration Template named") ||
-		errs.IsAErrorMessageContains[*errInvalidParameterValue](errInvalidParameter, "No Application named") ||
-		errs.IsAErrorMessageContains[*errInvalidParameterValue](errInvalidParameter, "No Platform named") {
+	if errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Configuration Template named") ||
+		errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Application named") ||
+		errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Platform named") {
 		return diags
 	}
 
@@ -229,11 +229,11 @@ func FindConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbea
 
 	output, err := conn.DescribeConfigurationSettings(ctx, input)
 
-	errInvalidParameter := &errInvalidParameterValue{err: err}
+	errInvalidParameter := &invalidParameterValueError{err: err}
 
-	if errs.IsAErrorMessageContains[*errInvalidParameterValue](errInvalidParameter, "No Configuration Template named") ||
-		errs.IsAErrorMessageContains[*errInvalidParameterValue](errInvalidParameter, "No Application named") ||
-		errs.IsAErrorMessageContains[*errInvalidParameterValue](errInvalidParameter, "No Platform named") {
+	if errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Configuration Template named") ||
+		errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Application named") ||
+		errs.IsAErrorMessageContains[*invalidParameterValueError](errInvalidParameter, "No Platform named") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -264,18 +264,18 @@ func gatherOptionSettings(d *schema.ResourceData) []awstypes.ConfigurationOption
 	return extractOptionSettings(optionSettingsSet)
 }
 
-type errInvalidParameterValue struct {
+type invalidParameterValueError struct {
 	err error
 }
 
-func (e *errInvalidParameterValue) Error() string {
+func (e *invalidParameterValueError) Error() string {
 	if e == nil || e.err == nil {
 		return ""
 	}
 	return e.err.Error()
 }
 
-func (e *errInvalidParameterValue) ErrorMessage() string {
+func (e *invalidParameterValueError) ErrorMessage() string {
 	if e == nil || e.err == nil {
 		return ""
 	}
