@@ -1,6 +1,6 @@
 # AWS SDK For Go Migration Guide
 
-AWS has [announced](https://aws.amazon.com/blogs/developer/announcing-end-of-support-for-aws-sdk-for-go-v1-on-july-31-2025/) that the V1 of the SDK for Go will enter maintenance mode on July 31, 2024 and reach end-of-life July 31, 2025.
+AWS has [announced](https://aws.amazon.com/blogs/developer/announcing-end-of-support-for-aws-sdk-for-go-v1-on-july-31-2025/) that V1 of the SDK for Go will enter maintenance mode on July 31, 2024 and reach end-of-life July 31, 2025.
 While the AWS Terraform provider already [requires all net-new services](./aws-go-sdk-versions.md) to use AWS SDK V2 service clients, there remains a substantial number of existing services utilizing V1.
 
 Over time maintainers will be migrating impacted services to adopt AWS SDK for Go V2.
