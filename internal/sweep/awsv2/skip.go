@@ -33,6 +33,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "ValidationException", "Account not found for the request") {
 		return true
 	}
+	// Example (shield): ResourceNotFoundException: The subscription does not exist
+	if tfawserr.ErrMessageContains(err, "ResourceNotFoundException", "The subscription does not exist") {
+		return true
+	}
 
 	return false
 }
