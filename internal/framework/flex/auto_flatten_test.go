@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -30,6 +31,7 @@ func TestFlatten(t *testing.T) {
 
 	testTimeStr := "2013-09-25T09:34:01Z"
 	testTimeTime := errs.Must(time.Parse(time.RFC3339, testTimeStr))
+	var zeroTime time.Time
 
 	testCases := autoFlexTestCases{
 		{
@@ -395,7 +397,7 @@ func TestFlatten(t *testing.T) {
 			},
 			Target: &TestFlexTimeTF01{},
 			WantTarget: &TestFlexTimeTF01{
-				CreationDateTime: fwtypes.TimestampValue(testTimeStr),
+				CreationDateTime: timetypes.NewRFC3339ValueMust(testTimeStr),
 			},
 		},
 		{
@@ -405,7 +407,7 @@ func TestFlatten(t *testing.T) {
 			},
 			Target: &TestFlexTimeTF01{},
 			WantTarget: &TestFlexTimeTF01{
-				CreationDateTime: fwtypes.TimestampValue(testTimeStr),
+				CreationDateTime: timetypes.NewRFC3339ValueMust(testTimeStr),
 			},
 		},
 		{
@@ -413,7 +415,7 @@ func TestFlatten(t *testing.T) {
 			Source:   &TestFlexTimeAWS01{},
 			Target:   &TestFlexTimeTF01{},
 			WantTarget: &TestFlexTimeTF01{
-				CreationDateTime: fwtypes.TimestampNull(),
+				CreationDateTime: timetypes.NewRFC3339Null(),
 			},
 		},
 		{
@@ -421,7 +423,7 @@ func TestFlatten(t *testing.T) {
 			Source:   &TestFlexTimeAWS02{},
 			Target:   &TestFlexTimeTF01{},
 			WantTarget: &TestFlexTimeTF01{
-				CreationDateTime: fwtypes.TimestampZero(),
+				CreationDateTime: timetypes.NewRFC3339TimeValue(zeroTime),
 			},
 		},
 	}

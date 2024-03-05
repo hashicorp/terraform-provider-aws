@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/elasticache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -63,7 +64,7 @@ func (r *resourceServerlessCache) Schema(ctx context.Context, request resource.S
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
 			"create_time": schema.StringAttribute{
-				CustomType: fwtypes.TimestampType,
+				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
@@ -451,7 +452,7 @@ func (r *resourceServerlessCache) ModifyPlan(ctx context.Context, request resour
 type resourceServerlessData struct {
 	ARN                    types.String                                      `tfsdk:"arn"`
 	CacheUsageLimits       fwtypes.ListNestedObjectValueOf[cacheUsageLimits] `tfsdk:"cache_usage_limits"`
-	CreateTime             fwtypes.Timestamp                                 `tfsdk:"create_time"`
+	CreateTime             timetypes.RFC3339                                 `tfsdk:"create_time"`
 	DailySnapshotTime      types.String                                      `tfsdk:"daily_snapshot_time"`
 	Description            types.String                                      `tfsdk:"description"`
 	Endpoint               fwtypes.ListNestedObjectValueOf[endpoint]         `tfsdk:"endpoint"`
