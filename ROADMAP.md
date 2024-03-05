@@ -14,12 +14,11 @@ In the period spanning Nov to Jan 2024 the AWS Provider added support for the fo
 - Amazon S3 Access Controls
 - Amazon DocDB Elastic Cluster
 - Amazon EBS Fast Snapshot Restore
-- Amazon Bedrock 
-
+- Amazon Bedrock
 
 From Feb - April 2024, we will be prioritizing the following areas of work:
 
-## New Services  
+## New Services
 
 ### AWS Resource Explorer Search
 
@@ -37,7 +36,7 @@ New Resource(s):
 
 Issue: [#32158](https://github.com/hashicorp/terraform-provider-aws/issues/32158)
 
-[Amazon Verified Permissions](https://aws.amazon.com/verified-permissions/) helps developers build more secure applications faster by externalizing authorization and centralizing policy management. They can also align application access with Zero Trust principles. 
+[Amazon Verified Permissions](https://aws.amazon.com/verified-permissions/) helps developers build more secure applications faster by externalizing authorization and centralizing policy management. They can also align application access with Zero Trust principles.
 
 Support for Amazon Verified Permissions may include:
 
@@ -65,7 +64,6 @@ New Resource(s):
 Issue: [#17919](https://github.com/hashicorp/terraform-provider-aws/issues/17919)
 
 [Amazon DevOps Guru](https://aws.amazon.com/security-lake/) uses ML to detect abnormal operating patterns so you can identify operational issues before they impact your customers.
-
 
 Support for Amazon DevOps Guru may include:
 
