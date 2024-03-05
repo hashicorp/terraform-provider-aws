@@ -2,6 +2,7 @@
 
 ENHANCEMENTS:
 
+* resource/aws_cloudfront_distribution: Remove the upper limit on `origin.custom_origin_config.origin_read_timeout` ([#36088](https://github.com/hashicorp/terraform-provider-aws/issues/36088))
 * resource/aws_opensearch_domain: Add `use_off_peak_window` argument to the `auto_tune_options` configuration block ([#36067](https://github.com/hashicorp/terraform-provider-aws/issues/36067))
 * resource/aws_s3_bucket_object: Adds attribute `arn`. ([#35710](https://github.com/hashicorp/terraform-provider-aws/issues/35710))
 * resource/aws_s3_object: Adds attribute `arn`. ([#35710](https://github.com/hashicorp/terraform-provider-aws/issues/35710))
@@ -16,6 +17,7 @@ BUG FIXES:
 * resource/aws_s3_bucket_object: Tags with empty values no longer remove all tags. ([#35710](https://github.com/hashicorp/terraform-provider-aws/issues/35710))
 * resource/aws_s3_object: Tags with empty values no longer remove all tags. ([#35710](https://github.com/hashicorp/terraform-provider-aws/issues/35710))
 * resource/aws_s3_object_copy: Tags with empty values no longer remove all tags. ([#35710](https://github.com/hashicorp/terraform-provider-aws/issues/35710))
+* resource/aws_vpclattice_listener_rule: Remove `action.forward.target_groups` maximum item limit ([#36095](https://github.com/hashicorp/terraform-provider-aws/issues/36095))
 
 ## 5.39.1 (March  1, 2024)
 
