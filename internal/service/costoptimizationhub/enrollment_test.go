@@ -39,6 +39,7 @@ func TestAccCostOptimizationHubEnrollment_basic(t *testing.T) {
 				Config: testAccEnrollmentConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnrollmentExists(ctx, resourceName, &les_out),
+					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
 					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", "false"),
 					resource.TestCheckResourceAttr(resourceName, "member_account_discount_visibility", "All"),
 					resource.TestCheckResourceAttr(resourceName, "savings_estimation_mode", "BeforeDiscounts"),
@@ -72,6 +73,7 @@ func TestAccCostOptimizationHubEnrollment_IncludeMemberAccounts(t *testing.T) {
 				Config: testAccEnrollmentConfig_IncludeMemberAccounts(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnrollmentExists(ctx, resourceName, &les_out),
+					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
 					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", "true"),
 					resource.TestCheckResourceAttr(resourceName, "member_account_discount_visibility", "All"),
 					resource.TestCheckResourceAttr(resourceName, "savings_estimation_mode", "BeforeDiscounts"),
@@ -105,6 +107,7 @@ func TestAccCostOptimizationHubEnrollment_MemberAccountDiscountVisibility(t *tes
 				Config: testAccEnrollmentConfig_MemberAccountDiscountVisibility(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnrollmentExists(ctx, resourceName, &les_out),
+					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
 					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", "false"),
 					resource.TestCheckResourceAttr(resourceName, "member_account_discount_visibility", "None"),
 					resource.TestCheckResourceAttr(resourceName, "savings_estimation_mode", "BeforeDiscounts"),
@@ -137,6 +140,7 @@ func TestAccCostOptimizationHubEnrollment_SavingsEstimationMode(t *testing.T) {
 				Config: testAccEnrollmentConfig_SavingsEstimationMode(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnrollmentExists(ctx, resourceName, &les_out),
+					resource.TestCheckResourceAttr(resourceName, "status", "Active"),
 					resource.TestCheckResourceAttr(resourceName, "include_member_accounts", "false"),
 					resource.TestCheckResourceAttr(resourceName, "member_account_discount_visibility", "All"),
 					resource.TestCheckResourceAttr(resourceName, "savings_estimation_mode", "AfterDiscounts"),

@@ -64,6 +64,12 @@ func (r *resourceEnrollment) Schema(ctx context.Context, req resource.SchemaRequ
 			"If set to `true` on a management account, the member accounts (current and any added later) will also be enrolled into Cost Optimization Hub and cannot unenroll by themselves.",
 		Attributes: map[string]schema.Attribute{
 			"id": framework.IDAttribute(),
+			"status": schema.StringAttribute{
+				Computed: true,
+				Validators: []validator.String{
+					stringvalidator.OneOf(getStringArray(awstypes.EnrollmentStatusActive.Values())...),
+				},
+			},
 			"include_member_accounts": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -152,6 +158,7 @@ func (r *resourceEnrollment) Create(ctx context.Context, req resource.CreateRequ
 	}
 
 	plan.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
+	plan.Status = flex.StringValueToFramework(ctx, *ues_out.Status)
 	plan.MemberAccountDiscountVisibility = flex.StringValueToFramework(ctx, up_out.MemberAccountDiscountVisibility)
 	plan.SavingsEstimationMode = flex.StringValueToFramework(ctx, up_out.SavingsEstimationMode)
 
@@ -199,6 +206,7 @@ func (r *resourceEnrollment) Read(ctx context.Context, req resource.ReadRequest,
 	}
 
 	state.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
+	state.Status = flex.StringValueToFramework(ctx, les_out.Items[0].Status)
 	state.IncludeMemberAccounts = flex.BoolToFramework(ctx, les_out.IncludeMemberAccounts)
 	state.MemberAccountDiscountVisibility = flex.StringValueToFramework(ctx, gp_out.MemberAccountDiscountVisibility)
 	state.SavingsEstimationMode = flex.StringValueToFramework(ctx, gp_out.SavingsEstimationMode)
@@ -240,6 +248,7 @@ func (r *resourceEnrollment) Update(ctx context.Context, req resource.UpdateRequ
 			return
 		}
 		plan.ID = state.ID
+		plan.Status = flex.StringValueToFramework(ctx, *ues_out.Status)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
@@ -308,7 +317,7 @@ func (r *resourceEnrollment) ImportState(ctx context.Context, req resource.Impor
 }
 
 // Helper function to convert an array of types from the Go SDK to an array of strings.
-func getStringArray[T awstypes.MemberAccountDiscountVisibility | awstypes.SavingsEstimationMode](attrValArray []T) []string {
+func getStringArray[T awstypes.MemberAccountDiscountVisibility | awstypes.SavingsEstimationMode | awstypes.EnrollmentStatus](attrValArray []T) []string {
 	results := make([]string, 0, len(attrValArray))
 	for _, value := range attrValArray {
 		results = append(results, string(value))
@@ -318,6 +327,7 @@ func getStringArray[T awstypes.MemberAccountDiscountVisibility | awstypes.Saving
 
 type resourceEnrollmentData struct {
 	ID                              types.String `tfsdk:"id"`
+	Status                          types.String `tfsdk:"status"`
 	IncludeMemberAccounts           types.Bool   `tfsdk:"include_member_accounts"`
 	MemberAccountDiscountVisibility types.String `tfsdk:"member_account_discount_visibility"`
 	SavingsEstimationMode           types.String `tfsdk:"savings_estimation_mode"`
