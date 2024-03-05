@@ -453,13 +453,25 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 	opTime := time.Now()
 
-	if d.HasChangesExcept("tags", "tags_all", "wait_for_ready_timeout", "poll_interval") {
+	if d.HasChangesExcept("tags", "tags_all", "poll_interval", "wait_for_ready_timeout") {
+		if d.HasChange("tags_all") {
+			if _, err := waitEnvironmentReady(ctx, conn, d.Id(), pollInterval, waitForReadyTimeOut); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for Elastic Beanstalk Environment (%s) tags update: %s", d.Id(), err)
+			}
+		}
+
 		input := elasticbeanstalk.UpdateEnvironmentInput{
 			EnvironmentId: aws.String(d.Id()),
 		}
 
 		if d.HasChange("description") {
 			input.Description = aws.String(d.Get("description").(string))
+		}
+
+		if d.HasChange("platform_arn") {
+			if v, ok := d.GetOk("platform_arn"); ok {
+				input.PlatformArn = aws.String(v.(string))
+			}
 		}
 
 		if d.HasChange("setting") {
@@ -525,12 +537,6 @@ func resourceEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, meta
 			}
 
 			input.OptionSettings = add
-		}
-
-		if d.HasChange("platform_arn") {
-			if v, ok := d.GetOk("platform_arn"); ok {
-				input.PlatformArn = aws.String(v.(string))
-			}
 		}
 
 		if d.HasChange("solution_stack_name") {
