@@ -234,7 +234,7 @@ func (g *Generator) generateFunction(functionName, awsService, awsServiceUpper s
 	recvType := fmt.Sprintf("%[1]siface.%[2]sAPI", awsService, awsServiceUpper)
 
 	if sdkVersion == sdkV2 {
-		recvType = fmt.Sprintf("%[1]s.%[2]s", awsService, awsServiceUpper)
+		recvType = fmt.Sprintf("*%[1]s.%[2]s", awsService, awsServiceUpper)
 	}
 
 	funcSpec := FuncSpec{

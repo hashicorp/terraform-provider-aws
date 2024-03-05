@@ -10,11 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -206,7 +206,11 @@ func resourceConfigurationTemplateDelete(ctx context.Context, d *schema.Resource
 		TemplateName:    aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Configuration Template named") || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Application named") || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Platform named") {
+	errInvalidParameter := &errInvalidParameterValue{err: err}
+
+	if errs.IsAErrorMessageContains[*errInvalidParameterValue](errInvalidParameter, "No Configuration Template named") ||
+		errs.IsAErrorMessageContains[*errInvalidParameterValue](errInvalidParameter, "No Application named") ||
+		errs.IsAErrorMessageContains[*errInvalidParameterValue](errInvalidParameter, "No Platform named") {
 		return diags
 	}
 
@@ -217,10 +221,6 @@ func resourceConfigurationTemplateDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-const (
-	errCodeInvalidParameterValue = "InvalidParameterValue"
-)
-
 func FindConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbeanstalk.Client, applicationName, templateName string) (*awstypes.ConfigurationSettingsDescription, error) {
 	input := &elasticbeanstalk.DescribeConfigurationSettingsInput{
 		ApplicationName: aws.String(applicationName),
@@ -229,7 +229,11 @@ func FindConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbea
 
 	output, err := conn.DescribeConfigurationSettings(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Configuration Template named") || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Application named") || tfawserr.ErrMessageContains(err, errCodeInvalidParameterValue, "No Platform named") {
+	errInvalidParameter := &errInvalidParameterValue{err: err}
+
+	if errs.IsAErrorMessageContains[*errInvalidParameterValue](errInvalidParameter, "No Configuration Template named") ||
+		errs.IsAErrorMessageContains[*errInvalidParameterValue](errInvalidParameter, "No Application named") ||
+		errs.IsAErrorMessageContains[*errInvalidParameterValue](errInvalidParameter, "No Platform named") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -258,4 +262,22 @@ func gatherOptionSettings(d *schema.ResourceData) []awstypes.ConfigurationOption
 	}
 
 	return extractOptionSettings(optionSettingsSet)
+}
+
+type errInvalidParameterValue struct {
+	err error
+}
+
+func (e *errInvalidParameterValue) Error() string {
+	if e == nil || e.err == nil {
+		return ""
+	}
+	return e.err.Error()
+}
+
+func (e *errInvalidParameterValue) ErrorMessage() string {
+	if e == nil || e.err == nil {
+		return ""
+	}
+	return e.err.Error()
 }

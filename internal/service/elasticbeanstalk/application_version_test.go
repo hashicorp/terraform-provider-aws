@@ -162,7 +162,7 @@ func testAccCheckApplicationVersionExists(ctx context.Context, n string, app *aw
 			VersionLabels:   []string{rs.Primary.ID},
 		}
 
-		log.Printf("[DEBUG] Elastic Beanstalk Application Version TEST describe opts: %s", describeApplicationVersionOpts)
+		log.Printf("[DEBUG] Elastic Beanstalk Application Version TEST describe opts: %v", describeApplicationVersionOpts)
 
 		resp, err := conn.DescribeApplicationVersions(ctx, describeApplicationVersionOpts)
 		if err != nil {
