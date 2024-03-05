@@ -124,7 +124,7 @@ The following arguments are optional:
 
 ### Encoder Settings
 
-* `audio_descriptions` - (Required) Audio descriptions for the channel. See [Audio Descriptions](#audio-descriptions) for more details.
+* `audio_descriptions` - (Optional) Audio descriptions for the channel. See [Audio Descriptions](#audio-descriptions) for more details.
 * `output_groups` - (Required) Output groups for the channel. See [Output Groups](#output-groups) for more details.
 * `timecode_config` - (Required) Contains settings used to acquire and adjust timecode information from inputs. See [Timecode Config](#timecode-config) for more details.
 * `video_descriptions` - (Required) Video Descriptions. See [Video Descriptions](#video-descriptions) for more details.
