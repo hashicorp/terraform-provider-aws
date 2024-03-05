@@ -9,6 +9,7 @@ import (
 	"log"
 	"reflect"
 	"sort"
+	"strconv"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -444,6 +445,12 @@ func TestAccElasticBeanstalkEnvironment_platformARN(t *testing.T) {
 	var app awstypes.EnvironmentDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elastic_beanstalk_environment.test"
+	platformNameWithVersion1 := "Python 3.8 running on 64bit Amazon Linux 2/3.5.12"
+	rValue1 := sdkacctest.RandIntRange(1000, 2000)
+	rValue1Str := strconv.Itoa(rValue1)
+	platformNameWithVersion2 := "Python 3.9 running on 64bit Amazon Linux 2023/4.0.9"
+	rValue2 := sdkacctest.RandIntRange(3000, 4000)
+	rValue2Str := strconv.Itoa(rValue2)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -452,10 +459,16 @@ func TestAccElasticBeanstalkEnvironment_platformARN(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_platformARN(rName),
+				Config: testAccEnvironmentConfig_platformARN(rName, platformNameWithVersion1, rValue1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &app),
-					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, "platform_arn", "elasticbeanstalk", "platform/Python 3.9 running on 64bit Amazon Linux 2023/4.0.9"),
+					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, "platform_arn", "elasticbeanstalk", "platform/"+platformNameWithVersion1),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "5"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", rValue1Str),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", rValue1Str),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", rValue1Str),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key4", rValue1Str),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key5", rValue1Str),
 				),
 			},
 			{
@@ -466,6 +479,19 @@ func TestAccElasticBeanstalkEnvironment_platformARN(t *testing.T) {
 					"setting",
 					"wait_for_ready_timeout",
 				},
+			},
+			{
+				Config: testAccEnvironmentConfig_platformARN(rName, platformNameWithVersion2, rValue2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnvironmentExists(ctx, resourceName, &app),
+					acctest.CheckResourceAttrRegionalARNNoAccount(resourceName, "platform_arn", "elasticbeanstalk", "platform/"+platformNameWithVersion2),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "5"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key1", rValue2Str),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key2", rValue2Str),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key3", rValue2Str),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key4", rValue2Str),
+					resource.TestCheckResourceAttr(resourceName, "tags.Key5", rValue2Str),
+				),
 			},
 		},
 	})
@@ -774,12 +800,12 @@ resource "aws_elastic_beanstalk_environment" "test" {
 `, rName))
 }
 
-func testAccEnvironmentConfig_platformARN(rName string) string {
+func testAccEnvironmentConfig_platformARN(rName, platformNameWithVersion string, rValue int) string {
 	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_elastic_beanstalk_environment" "test" {
   application  = aws_elastic_beanstalk_application.test.name
   name         = %[1]q
-  platform_arn = "arn:${data.aws_partition.current.partition}:elasticbeanstalk:${data.aws_region.current.name}::platform/Python 3.9 running on 64bit Amazon Linux 2023/4.0.9"
+  platform_arn = "arn:${data.aws_partition.current.partition}:elasticbeanstalk:${data.aws_region.current.name}::platform/%[2]s"
 
   setting {
     namespace = "aws:ec2:vpc"
@@ -816,8 +842,16 @@ resource "aws_elastic_beanstalk_environment" "test" {
     name      = "ServiceRole"
     value     = aws_iam_role.service_role.name
   }
+
+  tags = {
+    Key1 = "%[3]d"
+    Key2 = "%[3]d"
+    Key3 = "%[3]d"
+    Key4 = "%[3]d"
+    Key5 = "%[3]d"
+  }
 }
-`, rName))
+`, rName, platformNameWithVersion, rValue))
 }
 
 func testAccEnvironmentConfig_settings(rName string) string {
