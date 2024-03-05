@@ -133,7 +133,7 @@ go test -run='^TestExample' -v ./internal/function/
 
 ### Create documentation for the resource
 
-Add a file covering the use of the new function in `website/docs/f/<function name>.html.markdown`.
+Add a file covering the use of the new function in `website/docs/functions/<function name>.html.markdown`.
 This documentation will appear on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) when the function is made available in a provider release.
 
 ### Raise a pull request
