@@ -79,28 +79,28 @@ If an AWS service must be created in a non-standard way, for example the service
 === "AWS Go SDK V2 (Preferred)"
 
     ```go
-    package route53domains
-    
+    package costoptimizationhub
+
     import (
-    	"context"
-    
-    	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-    	route53domains_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53domains"
-    	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
+        "context"
+
+        "github.com/aws/aws-sdk-go-v2/aws"
+        "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
+        "github.com/hashicorp/terraform-provider-aws/names"
     )
-    
+
     // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-    func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*route53domains_sdkv2.Client, error) {
-    	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
-    
-    	return route53domains_sdkv2.NewFromConfig(cfg, func(o *route53domains_sdkv2.Options) {
-    		if endpoint := config["endpoint"].(string); endpoint != "" {
-    			o.BaseEndpoint = aws_sdkv2.String(endpoint)
-    		} else if config["partition"].(string) == endpoints_sdkv1.AwsPartitionID {
-    			// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
-    			o.Region = endpoints_sdkv1.UsEast1RegionID
-    		}
-    	}), nil
+    func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*costoptimizationhub.Client, error) {
+        cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+
+        return costoptimizationhub.NewFromConfig(cfg, func(o *costoptimizationhub.Options) {
+            if endpoint := config["endpoint"].(string); endpoint != "" {
+                o.BaseEndpoint = aws.String(endpoint)
+            } else if config["partition"].(string) == names.StandardPartitionID {
+                // Cost Optimization Hub endpoint is available only in us-east-1 Region.
+                o.Region = names.USEast1RegionID
+            }
+        }), nil
     }
     ```
 
