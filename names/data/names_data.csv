@@ -137,7 +137,7 @@ ecr-public,ecrpublic,ecrpublic,ecrpublic,,ecrpublic,,,ECRPublic,ECRPublic,,1,,,a
 ecs,ecs,ecs,ecs,,ecs,,,ECS,ECS,,1,2,,aws_ecs_,,ecs_,ECS (Elastic Container),Amazon,,,,,,,ECS,ListClusters,,
 efs,efs,efs,efs,,efs,,,EFS,EFS,,1,,,aws_efs_,,efs_,EFS (Elastic File System),Amazon,,,,,,,EFS,DescribeFileSystems,,
 eks,eks,eks,eks,,eks,,,EKS,EKS,,,2,,aws_eks_,,eks_,EKS (Elastic Kubernetes),Amazon,,,,,,,EKS,ListClusters,,
-elasticbeanstalk,elasticbeanstalk,elasticbeanstalk,elasticbeanstalk,,elasticbeanstalk,,beanstalk,ElasticBeanstalk,ElasticBeanstalk,,1,2,aws_elastic_beanstalk_,aws_elasticbeanstalk_,,elastic_beanstalk_,Elastic Beanstalk,AWS,,,,,,,Elastic Beanstalk,ListAvailableSolutionStacks,,
+elasticbeanstalk,elasticbeanstalk,elasticbeanstalk,elasticbeanstalk,,elasticbeanstalk,,beanstalk,ElasticBeanstalk,ElasticBeanstalk,,,2,aws_elastic_beanstalk_,aws_elasticbeanstalk_,,elastic_beanstalk_,Elastic Beanstalk,AWS,,,,,,,Elastic Beanstalk,ListAvailableSolutionStacks,,
 elastic-inference,elasticinference,elasticinference,elasticinference,,elasticinference,,,ElasticInference,ElasticInference,,1,,,aws_elasticinference_,,elasticinference_,Elastic Inference,Amazon,,x,,,,,Elastic Inference,,,
 elastictranscoder,elastictranscoder,elastictranscoder,elastictranscoder,,elastictranscoder,,,ElasticTranscoder,ElasticTranscoder,,1,,,aws_elastictranscoder_,,elastictranscoder_,Elastic Transcoder,Amazon,,,,,,,Elastic Transcoder,ListPipelines,,
 elasticache,elasticache,elasticache,elasticache,,elasticache,,,ElastiCache,ElastiCache,,1,2,,aws_elasticache_,,elasticache_,ElastiCache,Amazon,,,,,,,ElastiCache,DescribeCacheClusters,,
