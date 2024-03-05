@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -52,10 +53,10 @@ func ResourcePoolRolesAttachment() *schema.Resource {
 						"ambiguous_role_resolution": {
 							Type:     schema.TypeString,
 							Optional: true, // Required if Type equals Token or Rules.
-							ValidateFunc: validation.StringInSlice([]string{
-								string(awstypes.AmbiguousRoleResolutionTypeAuthenticatedRole),
-								string(awstypes.AmbiguousRoleResolutionTypeDeny),
-							}, false),
+							ValidateFunc: validation.StringInSlice(
+								enum.Slice(awstypes.AmbiguousRoleResolutionTypeAuthenticatedRole, awstypes.AmbiguousRoleResolutionTypeDeny),
+								false,
+							),
 						},
 						"mapping_rule": {
 							Type:     schema.TypeList,
@@ -91,10 +92,10 @@ func ResourcePoolRolesAttachment() *schema.Resource {
 						"type": {
 							Type:     schema.TypeString,
 							Required: true,
-							ValidateFunc: validation.StringInSlice([]string{
-								string(awstypes.RoleMappingTypeToken),
-								string(awstypes.RoleMappingTypeRules),
-							}, false),
+							ValidateFunc: validation.StringInSlice(
+								enum.Slice(awstypes.RoleMappingTypeToken, awstypes.RoleMappingTypeRules),
+								false,
+							),
 						},
 					},
 				},
