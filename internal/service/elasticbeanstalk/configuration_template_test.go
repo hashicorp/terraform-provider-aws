@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccElasticBeanstalkConfigurationTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config elasticbeanstalk.ConfigurationSettingsDescription
+	var config awstypes.ConfigurationSettingsDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elastic_beanstalk_configuration_template.test"
 
@@ -43,7 +43,7 @@ func TestAccElasticBeanstalkConfigurationTemplate_basic(t *testing.T) {
 
 func TestAccElasticBeanstalkConfigurationTemplate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config elasticbeanstalk.ConfigurationSettingsDescription
+	var config awstypes.ConfigurationSettingsDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elastic_beanstalk_configuration_template.test"
 
@@ -67,7 +67,7 @@ func TestAccElasticBeanstalkConfigurationTemplate_disappears(t *testing.T) {
 
 func TestAccElasticBeanstalkConfigurationTemplate_Disappears_application(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config elasticbeanstalk.ConfigurationSettingsDescription
+	var config awstypes.ConfigurationSettingsDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elastic_beanstalk_configuration_template.test"
 
@@ -91,7 +91,7 @@ func TestAccElasticBeanstalkConfigurationTemplate_Disappears_application(t *test
 
 func TestAccElasticBeanstalkConfigurationTemplate_vpc(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config elasticbeanstalk.ConfigurationSettingsDescription
+	var config awstypes.ConfigurationSettingsDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elastic_beanstalk_configuration_template.test"
 
@@ -113,7 +113,7 @@ func TestAccElasticBeanstalkConfigurationTemplate_vpc(t *testing.T) {
 
 func TestAccElasticBeanstalkConfigurationTemplate_settings(t *testing.T) {
 	ctx := acctest.Context(t)
-	var config elasticbeanstalk.ConfigurationSettingsDescription
+	var config awstypes.ConfigurationSettingsDescription
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_elastic_beanstalk_configuration_template.test"
 
@@ -139,7 +139,7 @@ func TestAccElasticBeanstalkConfigurationTemplate_settings(t *testing.T) {
 
 func testAccCheckConfigurationTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_elastic_beanstalk_configuration_template" {
@@ -163,7 +163,7 @@ func testAccCheckConfigurationTemplateDestroy(ctx context.Context) resource.Test
 	}
 }
 
-func testAccCheckConfigurationTemplateExists(ctx context.Context, n string, v *elasticbeanstalk.ConfigurationSettingsDescription) resource.TestCheckFunc {
+func testAccCheckConfigurationTemplateExists(ctx context.Context, n string, v *awstypes.ConfigurationSettingsDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -174,7 +174,7 @@ func testAccCheckConfigurationTemplateExists(ctx context.Context, n string, v *e
 			return fmt.Errorf("No Elastic Beanstalk Configuration Template ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
 		output, err := tfelasticbeanstalk.FindConfigurationSettingsByTwoPartKey(ctx, conn, rs.Primary.Attributes["application"], rs.Primary.ID)
 

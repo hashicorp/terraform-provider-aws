@@ -1,4 +1,22 @@
 ## 5.40.0 (Unreleased)
+
+ENHANCEMENTS:
+
+* resource/aws_opensearch_domain: Add `use_off_peak_window` argument to the `auto_tune_options` configuration block ([#36067](https://github.com/hashicorp/terraform-provider-aws/issues/36067))
+* resource/aws_s3_bucket_object: Adds attribute `arn`. ([#35710](https://github.com/hashicorp/terraform-provider-aws/issues/35710))
+* resource/aws_s3_object: Adds attribute `arn`. ([#35710](https://github.com/hashicorp/terraform-provider-aws/issues/35710))
+* resource/aws_s3_object_copy: Adds attribute `arn`. ([#35710](https://github.com/hashicorp/terraform-provider-aws/issues/35710))
+* resource/aws_wafv2_rule_group: Add `evaluation_window_sec` argument to the `rate_based_statement` configuration block ([#36045](https://github.com/hashicorp/terraform-provider-aws/issues/36045))
+* resource/aws_wafv2_web_acl: Add `evaluation_window_sec` argument to the `rate_based_statement` configuration block ([#36045](https://github.com/hashicorp/terraform-provider-aws/issues/36045))
+
+BUG FIXES:
+
+* resource/aws_db_instance: Correctly sets `parameter_group_name` when `replicate_source_db` is in different region. ([#36080](https://github.com/hashicorp/terraform-provider-aws/issues/36080))
+* resource/aws_s3_bucket: Tags with empty values no longer remove all tags. ([#35710](https://github.com/hashicorp/terraform-provider-aws/issues/35710))
+* resource/aws_s3_bucket_object: Tags with empty values no longer remove all tags. ([#35710](https://github.com/hashicorp/terraform-provider-aws/issues/35710))
+* resource/aws_s3_object: Tags with empty values no longer remove all tags. ([#35710](https://github.com/hashicorp/terraform-provider-aws/issues/35710))
+* resource/aws_s3_object_copy: Tags with empty values no longer remove all tags. ([#35710](https://github.com/hashicorp/terraform-provider-aws/issues/35710))
+
 ## 5.39.1 (March  1, 2024)
 
 BUG FIXES:
