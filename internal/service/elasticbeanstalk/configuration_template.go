@@ -276,8 +276,5 @@ func (e *invalidParameterValueError) Error() string {
 }
 
 func (e *invalidParameterValueError) ErrorMessage() string {
-	if e == nil || e.err == nil {
-		return ""
-	}
-	return e.err.Error()
+	return e.Error()
 }
