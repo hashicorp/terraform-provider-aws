@@ -13,10 +13,10 @@ In the period spanning Nov to Jan 2024 the AWS Provider added support for the fo
 - Amazon S3 Express
 - Amazon S3 Access Controls
 - Amazon DocDB Elastic Cluster
-- Amazon EBS Fast Snapshot Restore 
+- Amazon EBS Fast Snapshot Restore
+- Amazon Bedrock 
 
-- AWS Security Lake
-- AWS DevOps Guru
+
 From Feb - April 2024, we will be prioritizing the following areas of work:
 
 ## New Services  
