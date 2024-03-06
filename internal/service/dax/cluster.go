@@ -566,7 +566,6 @@ func clusterStateRefreshFunc(ctx context.Context, conn *dax.Client, clusterID, g
 		for _, cluster := range resp.Clusters {
 			if aws.ToString(cluster.ClusterName) == clusterID {
 				log.Printf("[DEBUG] Found matching DAX cluster: %s", *cluster.ClusterName)
-				//nolint:exportloopref // its possible that the lookup doesnt match the clusterID, therefore null is possible.
 				c = cluster
 			}
 		}

@@ -234,7 +234,7 @@ func TestAccDAXCluster_EndpointEncryption_enabled(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	
+
 	ctx := acctest.Context(t)
 	var dc awstypes.Cluster
 	rString := sdkacctest.RandString(10)
