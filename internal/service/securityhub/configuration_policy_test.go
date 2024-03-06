@@ -19,7 +19,7 @@ import (
 func testAccConfigurationPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_configuration_policy.test"
-	const exampleStandardsArn = "arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"
+	const exampleStandardsARN = "arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -49,7 +49,7 @@ func testAccConfigurationPolicy_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigurationPolicyConfig_baseEnabled("TestPolicy", "This is an enabled policy", exampleStandardsArn),
+				Config: testAccConfigurationPolicyConfig_baseEnabled("TestPolicy", "This is an enabled policy", exampleStandardsARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", "TestPolicy"),
@@ -57,7 +57,7 @@ func testAccConfigurationPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.service_enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.enabled_standard_arns.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.enabled_standard_arns.0", exampleStandardsArn),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.enabled_standard_arns.0", exampleStandardsARN),
 					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.security_controls_configuration.#", "1"),
 				),
 			},
