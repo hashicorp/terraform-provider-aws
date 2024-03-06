@@ -782,7 +782,7 @@ func TestAccOpenSearchDomain_autoTuneOptions(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_autoTuneOptions(rName, autoTuneStartAtTime),
+				Config: testAccDomainConfig_autoTuneOptionsMaintenanceSchedule(rName, autoTuneStartAtTime),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", "Elasticsearch_6.7"),
@@ -796,6 +796,26 @@ func TestAccOpenSearchDomain_autoTuneOptions(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.duration.0.unit", "HOURS"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.0.cron_expression_for_recurrence", "cron(0 0 ? * 1 *)"),
 					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.rollback_on_disable", "NO_ROLLBACK"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.use_off_peak_window", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_autoTuneOptionsUseOffPeakWindow(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "Elasticsearch_6.7"),
+					resource.TestMatchResourceAttr(resourceName, "kibana_endpoint", regexache.MustCompile(`.*(opensearch|es)\..*/_plugin/kibana/`)),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.desired_state", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.maintenance_schedule.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.rollback_on_disable", "NO_ROLLBACK"),
+					resource.TestCheckResourceAttr(resourceName, "auto_tune_options.0.use_off_peak_window", "true"),
 				),
 			},
 			{
@@ -2183,7 +2203,7 @@ resource "aws_opensearch_domain" "test" {
 `, rName)
 }
 
-func testAccDomainConfig_autoTuneOptions(rName, autoTuneStartAtTime string) string {
+func testAccDomainConfig_autoTuneOptionsMaintenanceSchedule(rName, autoTuneStartAtTime string) string {
 	return fmt.Sprintf(`
 resource "aws_opensearch_domain" "test" {
   domain_name    = %[1]q
@@ -2207,10 +2227,29 @@ resource "aws_opensearch_domain" "test" {
     }
 
     rollback_on_disable = "NO_ROLLBACK"
-
   }
 }
 `, rName, autoTuneStartAtTime)
+}
+
+func testAccDomainConfig_autoTuneOptionsUseOffPeakWindow(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_opensearch_domain" "test" {
+  domain_name    = %[1]q
+  engine_version = "Elasticsearch_6.7"
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  auto_tune_options {
+    desired_state       = "ENABLED"
+    rollback_on_disable = "NO_ROLLBACK"
+    use_off_peak_window = true
+  }
+}
+`, rName)
 }
 
 func testAccDomainConfig_disabledEBSNullVolume(rName string) string {

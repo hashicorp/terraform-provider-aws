@@ -1084,7 +1084,7 @@ func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
 func PreCheckRegionOptIn(ctx context.Context, t *testing.T, region string) {
 	t.Helper()
 
-	output, err := tfaccount.FindRegionOptInStatus(ctx, Provider.Meta().(*conns.AWSClient).AccountClient(ctx), "", region)
+	output, err := tfaccount.FindRegionOptStatus(ctx, Provider.Meta().(*conns.AWSClient).AccountClient(ctx), "", region)
 
 	if err != nil {
 		t.Fatalf("reading Region (%s) opt-in status: %s", region, err)

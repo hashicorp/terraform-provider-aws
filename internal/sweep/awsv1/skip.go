@@ -78,6 +78,10 @@ func SkipSweepError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "UnauthorizedException", "API is not available in") {
 		return true
 	}
+	// For example from us-gov-west-1 MemoryDB cluster
+	if tfawserr.ErrMessageContains(err, "InvalidParameterValueException", "Access Denied to API Version") {
+		return true
+	}
 
 	return false
 }

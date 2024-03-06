@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -26,7 +27,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -62,7 +62,7 @@ func (r *keyValueStoreResource) Schema(ctx context.Context, request resource.Sch
 			},
 			names.AttrID: framework.IDAttribute(),
 			"last_modified_time": schema.StringAttribute{
-				CustomType: fwtypes.TimestampType,
+				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
 			names.AttrName: schema.StringAttribute{
@@ -305,7 +305,7 @@ type keyValueStoreResourceModel struct {
 	Comment          types.String      `tfsdk:"comment"`
 	ETag             types.String      `tfsdk:"etag"`
 	ID               types.String      `tfsdk:"id"`
-	LastModifiedTime fwtypes.Timestamp `tfsdk:"last_modified_time"`
+	LastModifiedTime timetypes.RFC3339 `tfsdk:"last_modified_time"`
 	Name             types.String      `tfsdk:"name"`
 	Timeouts         timeouts.Value    `tfsdk:"timeouts"`
 }
