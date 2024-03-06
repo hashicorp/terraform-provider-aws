@@ -39,6 +39,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceRegion,
 			TypeName: "aws_account_region",
+			Name:     "Region",
 		},
 	}
 }
