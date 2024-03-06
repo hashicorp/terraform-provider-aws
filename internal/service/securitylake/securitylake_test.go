@@ -30,6 +30,13 @@ func TestAccSecurityLake_serial(t *testing.T) {
 			"lifecycleUpdate": testAccDataLake_lifeCycleUpdate,
 			"replication":     testAccDataLake_replication,
 		},
+		"Subscriber": {
+			"basic":      testAccSubscriber_basic,
+			"customLogs": testAccSubscriber_customLogSource,
+			"disappears": testAccSubscriber_disappears,
+			"tags":       testAccSubscriber_tags,
+			"updated":    testAccSubscriber_update,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

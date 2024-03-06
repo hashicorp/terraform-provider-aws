@@ -90,7 +90,6 @@ func ResourceListenerRule() *schema.Resource {
 										Type:     schema.TypeList,
 										Required: true,
 										MinItems: 1,
-										MaxItems: 2,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"target_group_identifier": {

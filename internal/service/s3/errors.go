@@ -29,7 +29,6 @@ const (
 	errCodeNoSuchKey                            = "NoSuchKey"
 	errCodeNoSuchPublicAccessBlockConfiguration = "NoSuchPublicAccessBlockConfiguration"
 	errCodeNoSuchTagSet                         = "NoSuchTagSet"
-	errCodeNoSuchTagSetError                    = "NoSuchTagSetError"
 	errCodeNoSuchWebsiteConfiguration           = "NoSuchWebsiteConfiguration"
 	errCodeNotImplemented                       = "NotImplemented"
 	// errCodeObjectLockConfigurationNotFound should be used with tfawserr.ErrCodeContains, not tfawserr.ErrCodeEquals.
