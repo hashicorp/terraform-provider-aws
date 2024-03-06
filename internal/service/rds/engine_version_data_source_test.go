@@ -321,7 +321,7 @@ func TestAccRDSEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEngineVersionDataSourceConfig_hasMajorTarget(tfrds.InstanceEngineAuroraPostgreSQL),
+				Config: testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(tfrds.InstanceEngineAuroraPostgreSQL, true, false),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrWith(dataSourceName, "valid_major_targets.#", func(value string) error {
 						intValue, err := strconv.Atoi(value)
@@ -338,8 +338,37 @@ func TestAccRDSEngineVersionDataSource_hasMinorMajor(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEngineVersionDataSourceConfig_hasMinorTarget(tfrds.InstanceEngineAuroraPostgreSQL),
+				Config: testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(tfrds.InstanceEngineAuroraPostgreSQL, false, true),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrWith(dataSourceName, "valid_minor_targets.#", func(value string) error {
+						intValue, err := strconv.Atoi(value)
+						if err != nil {
+							return fmt.Errorf("could not convert string to int: %v", err)
+						}
+
+						if intValue <= 0 {
+							return fmt.Errorf("value is not greater than 0: %d", intValue)
+						}
+
+						return nil
+					}),
+				),
+			},
+			{
+				Config: testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(tfrds.InstanceEngineAuroraPostgreSQL, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrWith(dataSourceName, "valid_major_targets.#", func(value string) error {
+						intValue, err := strconv.Atoi(value)
+						if err != nil {
+							return fmt.Errorf("could not convert string to int: %v", err)
+						}
+
+						if intValue <= 0 {
+							return fmt.Errorf("value is not greater than 0: %d", intValue)
+						}
+
+						return nil
+					}),
 					resource.TestCheckResourceAttrWith(dataSourceName, "valid_minor_targets.#", func(value string) error {
 						intValue, err := strconv.Atoi(value)
 						if err != nil {
@@ -514,22 +543,13 @@ data "aws_rds_engine_version" "test" {
 `, engine, majorVersion)
 }
 
-func testAccEngineVersionDataSourceConfig_hasMajorTarget(engine string) string {
+func testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(engine string, major, minor bool) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "test" {
   engine           = %[1]q
-  has_major_target = true
+  has_major_target = %[2]t
+  has_minor_target = %[3]t
   latest           = true
 }
-`, engine)
-}
-
-func testAccEngineVersionDataSourceConfig_hasMinorTarget(engine string) string {
-	return fmt.Sprintf(`
-data "aws_rds_engine_version" "test" {
-  engine           = %[1]q
-  has_minor_target = true
-  latest           = true
-}
-`, engine)
+`, engine, major, minor)
 }

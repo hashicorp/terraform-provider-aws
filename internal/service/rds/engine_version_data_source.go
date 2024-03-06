@@ -357,16 +357,18 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	if v, ok := d.GetOk("has_minor_target"); ok && v.(bool) {
 		var wMinor []*rds.DBEngineVersion
 
+	hasMinorLoop:
 		for _, engineVersion := range engineVersions {
 			for _, upgradeTarget := range engineVersion.ValidUpgradeTarget {
 				if !aws.BoolValue(upgradeTarget.IsMajorVersionUpgrade) {
 					wMinor = append(wMinor, engineVersion)
+					continue hasMinorLoop
 				}
 			}
 		}
 
 		if len(wMinor) == 0 {
-			return sdkdiag.AppendErrorf(diags, "no RDS engine versions match the criteria and has a minor target: %+v", input)
+			return sdkdiag.AppendErrorf(diags, "no RDS engine versions match the criteria and have a minor target: %+v", input)
 		}
 
 		engineVersions = wMinor
@@ -375,16 +377,18 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	if v, ok := d.GetOk("has_major_target"); ok && v.(bool) {
 		var wMajor []*rds.DBEngineVersion
 
+	hasMajorLoop:
 		for _, engineVersion := range engineVersions {
 			for _, upgradeTarget := range engineVersion.ValidUpgradeTarget {
 				if aws.BoolValue(upgradeTarget.IsMajorVersionUpgrade) {
 					wMajor = append(wMajor, engineVersion)
+					continue hasMajorLoop
 				}
 			}
 		}
 
 		if len(wMajor) == 0 {
-			return sdkdiag.AppendErrorf(diags, "no RDS engine versions match the criteria and has a major target: %+v", input)
+			return sdkdiag.AppendErrorf(diags, "no RDS engine versions match the criteria and have a major target: %+v", input)
 		}
 
 		engineVersions = wMajor
@@ -450,11 +454,13 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	var majorTargets []string
 	for _, ut := range found.ValidUpgradeTarget {
 		upgradeTargets = append(upgradeTargets, aws.StringValue(ut.EngineVersion))
+
 		if aws.BoolValue(ut.IsMajorVersionUpgrade) {
 			majorTargets = append(majorTargets, aws.StringValue(ut.EngineVersion))
-		} else {
-			minorTargets = append(minorTargets, aws.StringValue(ut.EngineVersion))
+			continue
 		}
+
+		minorTargets = append(minorTargets, aws.StringValue(ut.EngineVersion))
 	}
 	d.Set("valid_upgrade_targets", upgradeTargets)
 	d.Set("valid_minor_targets", minorTargets)
