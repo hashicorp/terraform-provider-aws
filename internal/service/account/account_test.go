@@ -22,7 +22,8 @@ func TestAccAccount_serial(t *testing.T) {
 			"basic": testAccPrimaryContact_basic,
 		},
 		"Region": {
-			"basic": testAccRegion_basic,
+			"basic":     testAccRegion_basic,
+			"AccountID": testAccRegion_accountID,
 		},
 	}
 

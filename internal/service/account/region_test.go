@@ -22,7 +22,10 @@ func testAccRegion_basic(t *testing.T) {
 	regionName := names.APSoutheast3RegionID
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckRegionDisabled(ctx, t, "", regionName) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckRegionDisabled(ctx, t, regionName)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccountServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
@@ -55,12 +58,55 @@ func testAccRegion_basic(t *testing.T) {
 	})
 }
 
-func testAccPreCheckRegionDisabled(ctx context.Context, t *testing.T, accountID, region string) {
+func testAccRegion_accountID(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_account_region.test"
+	regionName := names.APSoutheast3RegionID
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.AccountServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				PreConfig: func() {},
+				Config:    testAccRegionConfig_organization(regionName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "opt_status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "region_name", regionName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccRegionConfig_organization(regionName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttrSet(resourceName, "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "opt_status", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "region_name", regionName),
+				),
+			},
+		},
+	})
+}
+
+func testAccPreCheckRegionDisabled(ctx context.Context, t *testing.T, region string) {
 	t.Helper()
 
 	conn := acctest.Provider.Meta().(*conns.AWSClient).AccountClient(ctx)
 
-	output, err := tfaccount.FindRegionOptStatus(ctx, conn, accountID, region)
+	output, err := tfaccount.FindRegionOptStatus(ctx, conn, "", region)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -82,4 +128,18 @@ resource "aws_account_region" "test" {
   enabled     = %[2]t
 }
 `, region, enabled)
+}
+
+func testAccRegionConfig_organization(region string, enabled bool) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
+data "aws_caller_identity" "test" {
+  provider = "awsalternate"
+}
+
+resource "aws_account_region" "test" {
+  account_id  = data.aws_caller_identity.test.account_id
+  region_name = %[1]q
+  enabled     = %[2]t
+}
+`, region, enabled))
 }
