@@ -225,11 +225,6 @@ ValidateFunc: validation.StringInSlice(<service>.Thing_Values(), false),
 ValidateDiagFunc: enum.Validate[awstypes.Thing](),
 ```
 
-## Pagination
-
-V2 of the AWS SDK introduces new [paginator](https://aws.github.io/aws-sdk-go-v2/docs/making-requests/#using-paginators) helpers.
-Any `List*Pages` methods called with V1 of the SDK will need to replace the pagination function argument with the syntax documented in the AWS SDK for Go V2 documentation.
-
 ## Acceptance Testing `ErrorCheck`
 
 With V1, this check relies on the endpoint ID constant included in the SDK.
@@ -256,3 +251,13 @@ becomes:
 ```go
 ErrorCheck: acctest.ErrorCheck(t, names.SSOAdminServiceID),
 ```
+
+## Pagination
+
+V2 of the AWS SDK introduces new [paginator](https://aws.github.io/aws-sdk-go-v2/docs/making-requests/#using-paginators) helpers.
+Any `List*Pages` methods called with V1 of the SDK will need to replace the pagination function argument with the syntax documented in the AWS SDK for Go V2 documentation.
+
+## Sweepers
+
+All [sweepers](./running-and-writing-acceptance-tests.md#sweeper-checklists) should be updated to use the V2 SDK.
+This should be similar to updating the resources themselves with steps like [updating imports](#Imports), swapping the [service client](#Client), adjusting [error handling](#Errors), and adopting the appropriate [AWS `types` subpackage](#AWS-types).
