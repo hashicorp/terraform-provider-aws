@@ -151,21 +151,18 @@ func findPoolByName(ctx context.Context, conn *cognitoidentity.Client, name stri
 		MaxResults: aws.Int32(ListPoolMaxResults),
 	}
 
-	for {
-		pools, err := conn.ListIdentityPools(ctx, input)
+	p := cognitoidentity.NewListIdentityPoolsPaginator(conn, input)
+	for p.HasMorePages() {
+		pools, err := p.NextPage(ctx)
 		if err != nil {
 			return nil, err
 		}
-		for p := range pools.IdentityPools {
-			if aws.ToString(pools.IdentityPools[p].IdentityPoolName) == name {
-				poolID = aws.ToString(pools.IdentityPools[p].IdentityPoolId)
+		for _, pool := range pools.IdentityPools {
+			if aws.ToString(pool.IdentityPoolName) == name {
+				poolID = aws.ToString(pool.IdentityPoolId)
 				break
 			}
 		}
-		if pools.NextToken == nil {
-			break
-		}
-		input.NextToken = pools.NextToken
 	}
 
 	if poolID == "" {
