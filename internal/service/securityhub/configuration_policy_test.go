@@ -54,11 +54,11 @@ func testAccConfigurationPolicy_basic(t *testing.T) {
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", "TestPolicy"),
 					resource.TestCheckResourceAttr(resourceName, "description", "This is an enabled policy"),
-					resource.TestCheckResourceAttr(resourceName, "policy_member.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "policy_member.0.service_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "policy_member.0.enabled_standard_arns.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "policy_member.0.enabled_standard_arns.0", exampleStandardsARN),
-					resource.TestCheckResourceAttr(resourceName, "policy_member.0.security_controls_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.service_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.enabled_standard_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.enabled_standard_arns.0", exampleStandardsARN),
+					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.security_controls_configuration.#", "1"),
 				),
 			},
 		},
@@ -69,7 +69,7 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_configuration_policy.test"
 	foundationalStandardsARN := fmt.Sprintf("arn:aws:securityhub:%s::standards/aws-foundational-security-best-practices/v/1.0.0", acctest.Region()) //lintignore:AWSAT005
-	nistStandardsARN := fmt.Sprintf("arn:aws:securityhub:%s::standards/nist-800-53/v/5.0.0", acctest.Region()) //lintignore:AWSAT005
+	nistStandardsARN := fmt.Sprintf("arn:aws:securityhub:%s::standards/nist-800-53/v/5.0.0", acctest.Region())                                      //lintignore:AWSAT005
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)

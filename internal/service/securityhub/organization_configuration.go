@@ -183,12 +183,9 @@ func findOrganizationConfiguration(ctx context.Context, conn *securityhub.Client
 				statusErr = fmt.Errorf("StatusMessage: %s", *msg)
 			}
 			return nil, "", &retry.UnexpectedStateError{
-				LastError: statusErr,
-				State:     string(output.OrganizationConfiguration.Status),
-				ExpectedState: enum.Slice(
-					types.OrganizationConfigurationStatusEnabled, 
-					types.OrganizationConfigurationStatusPending,
-				),
+				LastError:     statusErr,
+				State:         string(output.OrganizationConfiguration.Status),
+				ExpectedState: enum.Slice(types.OrganizationConfigurationStatusEnabled, types.OrganizationConfigurationStatusPending),
 			}
 		}
 	}

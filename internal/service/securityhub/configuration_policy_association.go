@@ -198,12 +198,9 @@ func getConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.Cl
 				statusErr = fmt.Errorf("StatusMessage: %s", *msg)
 			}
 			return nil, "", &retry.UnexpectedStateError{
-				LastError: statusErr,
-				State:     string(output.AssociationStatus),
-				ExpectedState: enum.Slice(
-					types.ConfigurationPolicyAssociationStatusPending,
-					types.ConfigurationPolicyAssociationStatusSuccess,
-				),
+				LastError:     statusErr,
+				State:         string(output.AssociationStatus),
+				ExpectedState: enum.Slice(types.ConfigurationPolicyAssociationStatusPending, types.ConfigurationPolicyAssociationStatusSuccess),
 			}
 		}
 	}
