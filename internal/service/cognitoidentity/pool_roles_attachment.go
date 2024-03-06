@@ -69,9 +69,7 @@ func ResourcePoolRolesAttachment() *schema.Resource {
 									"match_type": {
 										Type:     schema.TypeString,
 										Required: true,
-										ValidateFunc: validation.StringInSlice(expandMappingRulesType(
-											awstypes.MappingRuleMatchTypeContains.Values(),
-										), false),
+										ValidateDiagFunc: enum.Validate[awstypes.MappingRuleMatchType](),
 									},
 									"role_arn": {
 										Type:         schema.TypeString,
