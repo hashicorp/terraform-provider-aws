@@ -182,7 +182,6 @@ func ResourceDomain() *schema.Resource {
 						"maintenance_schedule": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cron_expression_for_recurrence": {
@@ -220,6 +219,11 @@ func ResourceDomain() *schema.Resource {
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice(opensearchservice.RollbackOnDisable_Values(), false),
+						},
+						"use_off_peak_window": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 					},
 				},

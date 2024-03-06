@@ -6,6 +6,7 @@ package flex
 import (
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -164,7 +165,7 @@ type TestFlexAWS18 struct {
 }
 
 type TestFlexTimeTF01 struct {
-	CreationDateTime fwtypes.Timestamp `tfsdk:"creation_date_time"`
+	CreationDateTime timetypes.RFC3339 `tfsdk:"creation_date_time"`
 }
 type TestFlexTimeAWS01 struct {
 	CreationDateTime *time.Time

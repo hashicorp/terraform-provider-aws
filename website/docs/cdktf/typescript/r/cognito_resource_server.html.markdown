@@ -83,6 +83,7 @@ This resource supports the following arguments:
 
 * `identifier` - (Required) An identifier for the resource server.
 * `name` - (Required) A name for the resource server.
+* `userPoolId` - (Required) User pool the client belongs to.
 * `scope` - (Optional) A list of [Authorization Scope](#authorization-scope).
 
 ### Authorization Scope
@@ -128,4 +129,4 @@ Using `terraform import`, import `aws_cognito_resource_server` using their User 
 % terraform import aws_cognito_resource_server.example "us-west-2_abc123|https://example.com"
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-de46a7a41e5a457b2e40bf3acab26f989ff8b0291a8fbbdd80d28397469c06a7 -->
+<!-- cache-key: cdktf-0.20.1 input-856d9cab649aaa6104183bfcc330f7d63dfc6e10b98ba89d9fd544f7fa7fecb6 -->

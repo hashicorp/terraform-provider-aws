@@ -129,8 +129,11 @@ func TestStringToFrameworkLegacy(t *testing.T) {
 func TestStringValueToFramework(t *testing.T) {
 	t.Parallel()
 
-	// AWS enums use custom types with an underlying string type
+	// AWS enums use custom types with an underlying string type.
 	type custom string
+	const (
+		test custom = "TEST"
+	)
 
 	type testCase struct {
 		input    custom
@@ -138,11 +141,11 @@ func TestStringValueToFramework(t *testing.T) {
 	}
 	tests := map[string]testCase{
 		"valid": {
-			input:    "TEST",
+			input:    test,
 			expected: types.StringValue("TEST"),
 		},
 		"empty": {
-			input:    "",
+			input:    custom(""),
 			expected: types.StringNull(),
 		},
 	}
@@ -205,7 +208,7 @@ func TestARNStringFromFramework(t *testing.T) {
 	}
 	tests := map[string]testCase{
 		"valid ARN": {
-			input:    fwtypes.ARNValue("arn:aws:iam::123456789012:user/David"),
+			input:    fwtypes.ARNValueMust("arn:aws:iam::123456789012:user/David"),
 			expected: aws.String("arn:aws:iam::123456789012:user/David"),
 		},
 		"null ARN": {
@@ -242,7 +245,7 @@ func TestStringToFrameworkARN(t *testing.T) {
 	tests := map[string]testCase{
 		"valid ARN": {
 			input:    aws.String("arn:aws:iam::123456789012:user/David"),
-			expected: fwtypes.ARNValue("arn:aws:iam::123456789012:user/David"),
+			expected: fwtypes.ARNValueMust("arn:aws:iam::123456789012:user/David"),
 		},
 		"null ARN": {
 			input:    nil,

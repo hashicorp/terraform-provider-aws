@@ -40,6 +40,7 @@ func ResourceSpotInstanceRequest() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
+			Read:   schema.DefaultTimeout(15 * time.Minute),
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
@@ -316,7 +317,7 @@ func readInstance(ctx context.Context, d *schema.ResourceData, meta interface{})
 			"host": *instance.PrivateIpAddress,
 		})
 	}
-	if err := readBlockDevices(ctx, d, instance, conn); err != nil {
+	if err := readBlockDevices(ctx, d, meta, instance, false); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -348,7 +349,7 @@ func readInstance(ctx context.Context, d *schema.ResourceData, meta interface{})
 	}
 
 	if d.Get("get_password_data").(bool) {
-		passwordData, err := getInstancePasswordData(ctx, *instance.InstanceId, conn)
+		passwordData, err := getInstancePasswordData(ctx, *instance.InstanceId, conn, d.Timeout(schema.TimeoutRead))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}

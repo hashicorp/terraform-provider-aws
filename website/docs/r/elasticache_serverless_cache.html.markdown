@@ -94,7 +94,7 @@ The following arguments are optional:
 
 ### ECPUPerSecond Configuration
 
-* `maximum` - The upper limit for data storage the cache is set to use. Set as Integer.
+* `maximum` - The maximum number of ECPUs the cache can consume per second. Set as Integer.
 
 ## Attribute Reference
 

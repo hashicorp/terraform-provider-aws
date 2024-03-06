@@ -216,7 +216,7 @@ The following arguments are optional:
 * `encryption_key` - (Optional) AWS Key Management Service (AWS KMS) customer master key (CMK) to be used for encrypting the build project's build output artifacts.
 * `logs_config` - (Optional) Configuration block. Detailed below.
 * `project_visibility` - (Optional) Specifies the visibility of the project's builds. Possible values are: `PUBLIC_READ` and `PRIVATE`. Default value is `PRIVATE`.
-* `resource_access_role` - The ARN of the IAM role that enables CodeBuild to access the CloudWatch Logs and Amazon S3 artifacts for the project's builds.
+* `resource_access_role` - (Optional) The ARN of the IAM role that enables CodeBuild to access the CloudWatch Logs and Amazon S3 artifacts for the project's builds in order to display them publicly. Only applicable if `project_visibility` is `PUBLIC_READ`.
 * `queued_timeout` - (Optional) Number of minutes, from 5 to 480 (8 hours), a build is allowed to be queued before it times out. The default is 8 hours. The `queued_timeout` property is not available on the `Lambda` compute type.
 * `secondary_artifacts` - (Optional) Configuration block. Detailed below.
 * `secondary_sources` - (Optional) Configuration block. Detailed below.
@@ -299,7 +299,7 @@ See [ProjectFileSystemLocation](https://docs.aws.amazon.com/codebuild/latest/API
 
 * `group_name` - (Optional) Group name of the logs in CloudWatch Logs.
 * `status` - (Optional) Current status of logs in CloudWatch Logs for a build project. Valid values: `ENABLED`, `DISABLED`. Defaults to `ENABLED`.
-* `stream_name` - (Optional) Stream name of the logs in CloudWatch Logs.
+* `stream_name` - (Optional) Prefix of the log stream name of the logs in CloudWatch Logs.
 
 #### logs_config: s3_logs
 
@@ -351,7 +351,7 @@ This block is only valid when the `type` is `CODECOMMIT`, `GITHUB` or `GITHUB_EN
 
 ### source
 
-* `buildspec` - (Optional) Build specification to use for this build project's related builds. This must be set when `type` is `NO_SOURCE`.
+* `buildspec` - (Optional) Build specification to use for this build project's related builds. This must be set when `type` is `NO_SOURCE`. Also, if a non-default buildspec file name or file path aside from the root is used, it must be specified.
 * `git_clone_depth` - (Optional) Truncate git history to this many commits. Use `0` for a `Full` checkout which you need to run commands like `git branch --show-current`. See [AWS CodePipeline User Guide: Tutorial: Use full clone with a GitHub pipeline source](https://docs.aws.amazon.com/codepipeline/latest/userguide/tutorials-github-gitclone.html) for details.
 * `git_submodules_config` - (Optional) Configuration block. Detailed below.
 * `insecure_ssl` - (Optional) Ignore SSL warnings when connecting to source control.
@@ -412,4 +412,4 @@ Using `terraform import`, import CodeBuild Project using the `name`. For example
 % terraform import aws_codebuild_project.name project-name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-649a67d6ab00b1b53b75762fbfff89f5c85947aa2e52d3d5fcf8e6a2aad99189 -->
+<!-- cache-key: cdktf-0.20.1 input-9408d46dafdd1238b0c08ffc98bfeb1718f425ca25af7c76a088a12255646436 -->

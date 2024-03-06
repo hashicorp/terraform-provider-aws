@@ -479,7 +479,7 @@ func TestProxyConfig(t *testing.T) {
 
 			meta := p.Meta().(*conns.AWSClient)
 
-			client := meta.AwsConfig().HTTPClient
+			client := meta.AwsConfig(ctx).HTTPClient
 			bClient, ok := client.(*awshttp.BuildableClient)
 			if !ok {
 				t.Fatalf("expected awshttp.BuildableClient, got %T", client)

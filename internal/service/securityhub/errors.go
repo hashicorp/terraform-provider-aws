@@ -13,4 +13,5 @@ var (
 	errCodeInvalidInputException     = (*types.InvalidInputException)(nil).ErrorCode()
 	errCodeResourceConflictException = (*types.ResourceConflictException)(nil).ErrorCode()
 	errCodeResourceNotFoundException = (*types.ResourceNotFoundException)(nil).ErrorCode()
+	errCodeBadRequestException       = "BadRequestException"
 )

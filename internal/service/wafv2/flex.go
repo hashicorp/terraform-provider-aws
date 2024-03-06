@@ -1505,8 +1505,9 @@ func expandRateBasedStatement(l []interface{}) *wafv2.RateBasedStatement {
 
 	m := l[0].(map[string]interface{})
 	r := &wafv2.RateBasedStatement{
-		AggregateKeyType: aws.String(m["aggregate_key_type"].(string)),
-		Limit:            aws.Int64(int64(m["limit"].(int))),
+		AggregateKeyType:    aws.String(m["aggregate_key_type"].(string)),
+		EvaluationWindowSec: aws.Int64(int64(m["evaluation_window_sec"].(int))),
+		Limit:               aws.Int64(int64(m["limit"].(int))),
 	}
 
 	if v, ok := m["forwarded_ip_config"]; ok {
@@ -2882,6 +2883,10 @@ func flattenRateBasedStatement(apiObject *wafv2.RateBasedStatement) interface{} 
 
 	if apiObject.CustomKeys != nil {
 		tfMap["custom_key"] = flattenRateBasedStatementCustomKeys(apiObject.CustomKeys)
+	}
+
+	if apiObject.EvaluationWindowSec != nil {
+		tfMap["evaluation_window_sec"] = int(aws.Int64Value(apiObject.EvaluationWindowSec))
 	}
 
 	if apiObject.Limit != nil {
