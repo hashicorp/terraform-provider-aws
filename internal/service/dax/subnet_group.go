@@ -60,7 +60,7 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	input := &dax.CreateSubnetGroupInput{
 		SubnetGroupName: aws.String(d.Get("name").(string)),
-		SubnetIds:       aws.ToStringSlice(flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set))),
+		SubnetIds:       flex.ExpandStringValueSet(d.Get("subnet_ids").(*schema.Set)),
 	}
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
@@ -82,12 +82,14 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	resp, err := conn.DescribeSubnetGroups(ctx, &dax.DescribeSubnetGroupsInput{
 		SubnetGroupNames: []string{d.Id()},
 	})
+
+	if errs.IsA[*awstypes.SubnetGroupNotFoundFault](err) {
+		log.Printf("[WARN] DAX Subnet Group %q not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.SubnetGroupNotFoundFault](err) {
-			log.Printf("[WARN] DAX Subnet Group %q not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "reading DAX Subnet Group (%s): %s", d.Id(), err)
 	}
 	sg := resp.SubnetGroups[0]
@@ -100,6 +102,7 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("subnet_ids", flex.FlattenStringList(subnetIDs))
 	d.Set("vpc_id", sg.VpcId)
+
 	return diags
 }
 
@@ -116,7 +119,7 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChange("subnet_ids") {
-		input.SubnetIds = aws.ToStringSlice(flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)))
+		input.SubnetIds = flex.ExpandStringValueSet(d.Get("subnet_ids").(*schema.Set))
 	}
 
 	_, err := conn.UpdateSubnetGroup(ctx, input)
@@ -136,10 +139,12 @@ func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	_, err := conn.DeleteSubnetGroup(ctx, input)
+
+	if errs.IsA[*awstypes.SubnetGroupNotFoundFault](err) {
+		return diags
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.SubnetGroupNotFoundFault](err) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting DAX Subnet Group (%s): %s", d.Id(), err)
 	}
 

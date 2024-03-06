@@ -92,12 +92,14 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	resp, err := conn.DescribeParameterGroups(ctx, &dax.DescribeParameterGroupsInput{
 		ParameterGroupNames: []string{d.Id()},
 	})
+
+	if errs.IsA[*awstypes.ParameterGroupNotFoundFault](err) {
+		log.Printf("[WARN] DAX ParameterGroup %q not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.ParameterGroupNotFoundFault](err) {
-			log.Printf("[WARN] DAX ParameterGroup %q not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "reading DAX Parameter Group (%s): %s", d.Id(), err)
 	}
 
@@ -112,12 +114,14 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	paramresp, err := conn.DescribeParameters(ctx, &dax.DescribeParametersInput{
 		ParameterGroupName: aws.String(d.Id()),
 	})
+
+	if errs.IsA[*awstypes.ParameterGroupNotFoundFault](err) {
+		log.Printf("[WARN] DAX ParameterGroup %q not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.ParameterGroupNotFoundFault](err) {
-			log.Printf("[WARN] DAX ParameterGroup %q not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "reading DAX Parameter Group (%s): %s", d.Id(), err)
 	}
 
@@ -163,10 +167,12 @@ func resourceParameterGroupDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	_, err := conn.DeleteParameterGroup(ctx, input)
+
+	if errs.IsA[*awstypes.ParameterGroupNotFoundFault](err) {
+		return diags
+	}
+
 	if err != nil {
-		if errs.IsA[*awstypes.ParameterGroupNotFoundFault](err) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting DAX Parameter Group (%s): %s", d.Id(), err)
 	}
 
