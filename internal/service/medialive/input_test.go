@@ -7,8 +7,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -49,6 +51,48 @@ func TestAccMediaLiveInput_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "input_class"),
 					resource.TestCheckResourceAttr(resourceName, "type", "UDP_PUSH"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccMediaLiveInput_destinations(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var input medialive.DescribeInputOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_medialive_input.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
+			testAccInputsPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInputDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInputConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInputExists(ctx, resourceName, &input),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestMatchTypeSetElemNestedAttrs(resourceName, "destinations.*", map[string]*regexp.Regexp{
+						"ip":   regexache.MustCompile("^[0-9]+\\.[0-9:]+\\.[0-9:]+\\.[0-9:]+$"),
+						"port": regexache.MustCompile("^[0-9]{4,}$"),
+						"url":  regexache.MustCompile("^udp://"),
+					}),
 				),
 			},
 			{

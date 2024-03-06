@@ -60,11 +60,24 @@ func ResourceInput() *schema.Resource {
 			"destinations": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				Computed: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"stream_name": {
 							Type:     schema.TypeString,
 							Required: true,
+						},
+						"ip": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"port": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"url": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
 					},
 				},
@@ -282,6 +295,7 @@ func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("input_partner_ids", out.InputPartnerIds)
 	d.Set("input_security_groups", out.SecurityGroups)
 	d.Set("input_source_type", out.InputSourceType)
+	d.Set("destinations", flattenInputDestinations(out.Destinations))
 	d.Set("role_arn", out.RoleArn)
 	d.Set("sources", flattenSources(out.Sources))
 	d.Set("type", out.Type)
@@ -565,6 +579,43 @@ func flattenSources(apiObjects []types.InputSource) []interface{} {
 		}
 
 		l = append(l, flattenSource(apiObject))
+	}
+
+	return l
+}
+
+func flattenInputDestination(apiObject types.InputDestination) map[string]interface{} {
+	if apiObject == (types.InputDestination{}) {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.Ip; v != nil {
+		m["ip"] = aws.ToString(v)
+	}
+	if v := apiObject.Port; v != nil {
+		m["port"] = aws.ToString(v)
+	}
+	if v := apiObject.Url; v != nil {
+		m["url"] = aws.ToString(v)
+	}
+	return m
+}
+
+func flattenInputDestinations(apiObjects []types.InputDestination) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var l []interface{}
+
+	for _, apiObject := range apiObjects {
+		if apiObject == (types.InputDestination{}) {
+			continue
+		}
+
+		l = append(l, flattenInputDestination(apiObject))
 	}
 
 	return l
