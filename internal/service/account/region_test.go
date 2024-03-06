@@ -58,7 +58,7 @@ func testAccRegion_basic(t *testing.T) {
 	})
 }
 
-func testAccRegion_accountID(t *testing.T) {
+func testAccRegion_accountID(t *testing.T) { // nosemgrep:ci.account-in-func-name
 	ctx := acctest.Context(t)
 	resourceName := "aws_account_region.test"
 	regionName := names.APSoutheast3RegionID
