@@ -34,8 +34,8 @@ resource "aws_securityhub_organization_configuration" "example" {
 resource "aws_securityhub_configuration_policy" "example" {
   name        = "Example"
   description = "This is an example configuration policy"
-  security_hub_policy {
-    service_enabled       = true
+  policy_member {
+    service_enabled = true
     enabled_standard_arns = [
       "arn:aws:securityhub:us-east-1::standards/aws-foundational-security-best-practices/v/1.0.0",
       "arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0",
@@ -44,7 +44,7 @@ resource "aws_securityhub_configuration_policy" "example" {
       disabled_control_identifiers = []
     }
   }
-  
+
   depends_on = [aws_securityhub_organization_configuration.example]
 }
 ```
@@ -55,11 +55,11 @@ resource "aws_securityhub_configuration_policy" "example" {
 resource "aws_securityhub_configuration_policy" "disabled" {
   name        = "Disabled"
   description = "This is an example of disabled configuration policy"
-  security_hub_policy {
+  policy_member {
     service_enabled       = false
     enabled_standard_arns = []
   }
-  
+
   depends_on = [aws_securityhub_organization_configuration.example]
 }
 ```
@@ -70,8 +70,8 @@ resource "aws_securityhub_configuration_policy" "disabled" {
 resource "aws_securityhub_configuration_policy" "disabled" {
   name        = "Custom Controls"
   description = "This is an example of configuration policy with custom control settings"
-  security_hub_policy {
-    service_enabled       = true
+  policy_member {
+    service_enabled = true
     enabled_standard_arns = [
       "arn:aws:securityhub:us-east-1::standards/aws-foundational-security-best-practices/v/1.0.0",
       "arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0",
@@ -110,7 +110,7 @@ resource "aws_securityhub_configuration_policy" "disabled" {
       }
     }
   }
-  
+
   depends_on = [aws_securityhub_organization_configuration.example]
 }
 ```
@@ -121,11 +121,11 @@ This resource supports the following arguments:
 
 * `name` - (Required) The name of the configuration policy.
 * `description` - (Optional) The description of the configuration policy.
-* `security_hub_policy` - (Required) Defines how Security Hub is configured. See [below](#security_hub_policy).
+* `policy_member` - (Required) Defines how Security Hub is configured. See [below](#policy_member).
 
-### security_hub_policy
+### policy_member
 
-The `security_hub_policy` block supports the following:
+The `policy_member` block supports the following:
 
 * `service_enabled` - (Required) Indicates whether Security Hub is enabled in the policy.
 * `enabled_standard_arns` - (Required) A list that defines which security standards are enabled in the configuration policy.

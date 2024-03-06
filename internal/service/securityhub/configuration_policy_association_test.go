@@ -103,42 +103,43 @@ func testAccCheckConfigurationPolicyAssociationExists(ctx context.Context, n str
 
 const testAccOrganizationalUnitConfig_base = `
 data "aws_organizations_organization" "test" {
-	provider = awsalternate
+  provider = awsalternate
 }
 
 resource "aws_organizations_organizational_unit" "test" {
-	provider  = awsalternate
+  provider  = awsalternate
 
-	name      = "testAccConfigurationPolicyOrgUnitConfig_base"
-	parent_id = data.aws_organizations_organization.test.roots[0].id
+  name      = "testAccConfigurationPolicyOrgUnitConfig_base"
+  parent_id = data.aws_organizations_organization.test.roots[0].id
 }
 `
 
+//lintignore:AWSAT005
 const testAccConfigurationPoliciesConfig_base = `
 resource "aws_securityhub_configuration_policy" "test_1" {
-	name = "test1"
-	security_hub_policy {
-		service_enabled       = true
-		enabled_standard_arns = ["arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"]
-		security_controls_configuration {
-			disabled_control_identifiers = []
-		}
-	}
-	
-	depends_on = [aws_securityhub_organization_configuration.test]
+  name = "test1"
+  policy_member {
+    service_enabled       = true
+    enabled_standard_arns = ["arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"]
+    security_controls_configuration {
+      disabled_control_identifiers = []
+    }
+  }
+  
+  depends_on = [aws_securityhub_organization_configuration.test]
 }
 
 resource "aws_securityhub_configuration_policy" "test_2" {
-	name = "test2"
-	security_hub_policy {
-		service_enabled       = true
-		enabled_standard_arns = ["arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"]
-		security_controls_configuration {
-			enabled_control_identifiers = ["CloudTrail.1"]
-		}
-	}
-	
-	depends_on = [aws_securityhub_organization_configuration.test]
+  name = "test2"
+  policy_member {
+    service_enabled       = true
+    enabled_standard_arns = ["arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"]
+    security_controls_configuration {
+      enabled_control_identifiers = ["CloudTrail.1"]
+    }
+  }
+  
+  depends_on = [aws_securityhub_organization_configuration.test]
 }
 `
 
@@ -150,9 +151,9 @@ func testAccConfigurationPolicyAssociationConfig_base(targetID, policyID string)
 		testAccCentralConfigurationEnabledConfig_base,
 		testAccConfigurationPoliciesConfig_base,
 		fmt.Sprintf(`
-			resource "aws_securityhub_configuration_policy_association" "test" {
-				target_id = %[1]s
-				policy_id = %[2]s
-			}
-			`, targetID, policyID))
+resource "aws_securityhub_configuration_policy_association" "test" {
+  target_id = %[1]s
+  policy_id = %[2]s
+}
+`, targetID, policyID))
 }

@@ -48,7 +48,7 @@ func ResourceConfigurationPolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"security_hub_policy": {
+			"policy_member": {
 				Type:     schema.TypeList,
 				Required: true,
 				MaxItems: 1,
@@ -80,7 +80,7 @@ func ResourceConfigurationPolicy() *schema.Resource {
 											ValidateFunc: validation.StringIsNotEmpty,
 										},
 										ConflictsWith: []string{
-											"security_hub_policy.0.security_controls_configuration.0.enabled_control_identifiers",
+											"policy_member.0.security_controls_configuration.0.enabled_control_identifiers",
 										},
 									},
 									"enabled_control_identifiers": {
@@ -91,7 +91,7 @@ func ResourceConfigurationPolicy() *schema.Resource {
 											ValidateFunc: validation.StringIsNotEmpty,
 										},
 										ConflictsWith: []string{
-											"security_hub_policy.0.security_controls_configuration.0.disabled_control_identifiers",
+											"policy_member.0.security_controls_configuration.0.disabled_control_identifiers",
 										},
 									},
 									"control_custom_parameter": {
@@ -271,9 +271,9 @@ func resourceConfigurationPolicyCreate(ctx context.Context, d *schema.ResourceDa
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.Get("security_hub_policy").([]interface{}); ok && len(v) > 0 {
+	if v, ok := d.Get("policy_member").([]interface{}); ok && len(v) > 0 {
 		policy := expandSecurityHubPolicy(v[0].(map[string]interface{}))
-		if err := validateSecurityHubPolicy(policy); err != nil {
+		if err := validatePolicyMember(policy); err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating Security Hub Configuration Policy (%s): %s", *input.Name, err)
 		}
 		input.ConfigurationPolicy = policy
@@ -285,7 +285,7 @@ func resourceConfigurationPolicyCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if d.IsNewResource() {
-		d.SetId(*out.Id)
+		d.SetId(aws.ToString(out.Id))
 	}
 
 	return append(diags, resourceConfigurationPolicyRead(ctx, d, meta)...)
@@ -304,9 +304,9 @@ func resourceConfigurationPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 		input.Description = aws.String(v.(string))
 	}
 
-	if v, ok := d.Get("security_hub_policy").([]interface{}); ok && len(v) > 0 {
+	if v, ok := d.Get("policy_member").([]interface{}); ok && len(v) > 0 {
 		policy := expandSecurityHubPolicy(v[0].(map[string]interface{}))
-		if err := validateSecurityHubPolicy(policy); err != nil {
+		if err := validatePolicyMember(policy); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Security Hub Configuration Policy (%s): %s", d.Id(), err)
 		}
 		input.ConfigurationPolicy = policy
@@ -342,8 +342,8 @@ func resourceConfigurationPolicyRead(ctx context.Context, d *schema.ResourceData
 	d.Set("name", out.Name)
 	d.Set("description", out.Description)
 	d.Set("arn", out.Arn)
-	if err := d.Set("security_hub_policy", []interface{}{flattenSecurityHubPolicy(out.ConfigurationPolicy)}); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting security_hub_policy: %s", err)
+	if err := d.Set("policy_member", []interface{}{flattenSecurityHubPolicy(out.ConfigurationPolicy)}); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting policy_member: %s", err)
 	}
 
 	return diags
@@ -365,8 +365,8 @@ func resourceConfigurationPolicyDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-// validateSecurityHubPolicy performs validation before running creates/updates to prevent certain issues with state.
-func validateSecurityHubPolicy(apiPolicy *types.PolicyMemberSecurityHub) error {
+// validatePolicyMember performs validation before running creates/updates to prevent certain issues with state.
+func validatePolicyMember(apiPolicy *types.PolicyMemberSecurityHub) error {
 	// security_controls_configuration can be specified in Creates/Updates and accepted by the APIs,
 	// but the resources returned by subsequent Get API call will be nil instead of non-nil.
 	// This leaves terraform in perpetual drift and so we prevent this case explicitly.

@@ -200,10 +200,10 @@ func getConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.Cl
 			return nil, "", &retry.UnexpectedStateError{
 				LastError: statusErr,
 				State:     string(output.AssociationStatus),
-				ExpectedState: []string{
-					string(types.ConfigurationPolicyAssociationStatusPending),
-					string(types.ConfigurationPolicyAssociationStatusSuccess),
-				},
+				ExpectedState: enum.Slice(
+					types.ConfigurationPolicyAssociationStatusPending,
+					types.ConfigurationPolicyAssociationStatusSuccess,
+				),
 			}
 		}
 	}
