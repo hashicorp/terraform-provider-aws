@@ -58,8 +58,8 @@ func resourceRegion() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
-			Update: schema.DefaultTimeout(30 * time.Minute),
+			Create: schema.DefaultTimeout(60 * time.Minute),
+			Update: schema.DefaultTimeout(60 * time.Minute),
 		},
 	}
 }
@@ -155,7 +155,7 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("account_id", accountID)
-	d.Set("enabled", output.RegionOptStatus == types.RegionOptStatusEnabled)
+	d.Set("enabled", output.RegionOptStatus == types.RegionOptStatusEnabled || output.RegionOptStatus == types.RegionOptStatusEnabledByDefault)
 	d.Set("opt_status", string(output.RegionOptStatus))
 	d.Set("region_name", output.RegionName)
 
@@ -201,8 +201,8 @@ func statusRegionOptStatus(ctx context.Context, conn *account.Client, accountID,
 
 func waitRegionEnabled(ctx context.Context, conn *account.Client, accountID, region string, timeout time.Duration) (*account.GetRegionOptStatusOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:      enum.Slice(types.RegionOptStatusEnabled),
-		Target:       enum.Slice(types.RegionOptStatusEnabling),
+		Pending:      enum.Slice(types.RegionOptStatusEnabling),
+		Target:       enum.Slice(types.RegionOptStatusEnabled),
 		Refresh:      statusRegionOptStatus(ctx, conn, accountID, region),
 		Timeout:      timeout,
 		Delay:        1 * time.Minute,
@@ -220,8 +220,8 @@ func waitRegionEnabled(ctx context.Context, conn *account.Client, accountID, reg
 
 func waitRegionDisabled(ctx context.Context, conn *account.Client, accountID, region string, timeout time.Duration) (*account.GetRegionOptStatusOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:      enum.Slice(types.RegionOptStatusDisabled),
-		Target:       enum.Slice(types.RegionOptStatusDisabling),
+		Pending:      enum.Slice(types.RegionOptStatusDisabling),
+		Target:       enum.Slice(types.RegionOptStatusDisabled),
 		Refresh:      statusRegionOptStatus(ctx, conn, accountID, region),
 		Timeout:      timeout,
 		Delay:        1 * time.Minute,

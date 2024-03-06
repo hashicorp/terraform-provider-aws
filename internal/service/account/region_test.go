@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/account/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfaccount "github.com/hashicorp/terraform-provider-aws/internal/service/account"
@@ -22,15 +22,15 @@ func testAccRegion_basic(t *testing.T) {
 	regionName := names.APSoutheast3RegionID
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckRegionDisabled(ctx, t, "", regionName) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AccountServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegionConfig_basic(regionName, true),
+				PreConfig: func() {},
+				Config:    testAccRegionConfig_basic(regionName, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccRegionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "opt_status", "ENABLED"),
@@ -45,10 +45,9 @@ func testAccRegion_basic(t *testing.T) {
 			{
 				Config: testAccRegionConfig_basic(regionName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccRegionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "account_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "opt_status", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "opt_status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "region_name", regionName),
 				),
 			},
@@ -56,18 +55,23 @@ func testAccRegion_basic(t *testing.T) {
 	})
 }
 
-func testAccRegionExists(ctx context.Context, n string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[n]
-		if !ok {
-			return fmt.Errorf("Not found: %s", n)
-		}
+func testAccPreCheckRegionDisabled(ctx context.Context, t *testing.T, accountID, region string) {
+	t.Helper()
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AccountClient(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).AccountClient(ctx)
 
-		_, err := tfaccount.FindRegionOptStatus(ctx, conn, rs.Primary.Attributes["account_id"], rs.Primary.Attributes["region_name"])
+	output, err := tfaccount.FindRegionOptStatus(ctx, conn, accountID, region)
 
-		return err
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+
+	if status := output.RegionOptStatus; status != types.RegionOptStatusDisabled {
+		t.Skipf("unexpected status (%s): %s", region, status)
 	}
 }
 
