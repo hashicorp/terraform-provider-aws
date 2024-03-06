@@ -86,7 +86,7 @@ func testAccRegionExists(ctx context.Context, n string) resource.TestCheckFunc {
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AccountClient(ctx)
 
-		_, err := tfaccount.FindRegionOptInStatus(ctx, conn, rs.Primary.Attributes["account_id"], rs.Primary.Attributes["region_name"])
+		_, err := tfaccount.FindRegionOptStatus(ctx, conn, rs.Primary.Attributes["account_id"], rs.Primary.Attributes["region_name"])
 
 		return err
 	}

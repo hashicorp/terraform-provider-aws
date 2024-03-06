@@ -5,16 +5,18 @@ package account
 
 import (
 	"context"
-	"fmt"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/account"
-	accounttypes "github.com/aws/aws-sdk-go-v2/service/account/types"
+	"github.com/aws/aws-sdk-go-v2/service/account/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -28,7 +30,7 @@ func resourceRegion() *schema.Resource {
 		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: resourceRegionImport,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -37,11 +39,6 @@ func resourceRegion() *schema.Resource {
 				Optional:     true,
 				ForceNew:     true,
 				ValidateFunc: verify.ValidAccountID,
-			},
-			"region_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
 			},
 			"enabled": {
 				Type:     schema.TypeBool,
@@ -52,32 +49,46 @@ func resourceRegion() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"region_name": {
+				Type:     schema.TypeString,
+				Required: true,
+				ForceNew: true,
+			},
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
 		},
 	}
 }
 
+const (
+	regionResourceIDPartCount = 2
+)
+
 func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
+	var id string
+	region := d.Get("region_name").(string)
 	accountID := ""
 	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
+		id = errs.Must(flex.FlattenResourceId([]string{accountID, region}, regionResourceIDPartCount, false))
+	} else {
+		id = region
 	}
 
-	region := d.Get("region_name").(string)
-
-	id := RegionResourceID(accountID, region)
-
-	output, err := FindRegionOptInStatus(ctx, conn, accountID, region)
+	output, err := findRegionOptStatus(ctx, conn, accountID, region)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Account Region (%s): %s", d.Id(), err)
 	}
 
 	if v := d.Get("enabled").(bool); v {
-		if output.RegionOptStatus == accounttypes.RegionOptStatusDisabled {
+		if output.RegionOptStatus == types.RegionOptStatusDisabled {
 			input := &account.EnableRegionInput{
 				RegionName: aws.String(region),
 			}
@@ -91,7 +102,7 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		}
 	} else {
-		if output.RegionOptStatus == accounttypes.RegionOptStatusEnabledByDefault {
+		if output.RegionOptStatus == types.RegionOptStatusEnabledByDefault {
 			return sdkdiag.AppendErrorf(diags, "cannot disable region (%s) that is enabled by default", id)
 		}
 		input := &account.DisableRegionInput{
@@ -107,6 +118,8 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
+	// TODO Wait for the region to be enabled/disabled.
+
 	if d.IsNewResource() {
 		d.SetId(id)
 	}
@@ -116,62 +129,36 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).AccountClient(ctx)
 
-	accountID := ""
-	if v, ok := d.GetOk("account_id"); ok {
-		accountID = v.(string)
+	var accountID, region string
+	if strings.Contains(d.Id(), flex.ResourceIdSeparator) {
+		parts, err := flex.ExpandResourceId(d.Id(), regionResourceIDPartCount, false)
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+
+		accountID = parts[0]
+		region = parts[1]
+	} else {
+		region = d.Id()
 	}
 
-	region := d.Get("region_name").(string)
-
-	output, err := FindRegionOptInStatus(ctx, conn, accountID, region)
+	output, err := FindRegionOptStatus(ctx, conn, accountID, region)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Account Region (%s): %s", d.Id(), err)
 	}
 
-	if status := output.RegionOptStatus; status == accounttypes.RegionOptStatusEnabled || status == accounttypes.RegionOptStatusEnabling || status == accounttypes.RegionOptStatusEnabledByDefault {
-		d.Set("enabled", true)
-	} else {
-		d.Set("enabled", false)
-	}
-
+	d.Set("account_id", accountID)
+	d.Set("enabled", output.RegionOptStatus == types.RegionOptStatusEnabled)
 	d.Set("opt_status", string(output.RegionOptStatus))
-	d.Set("account_id", d.Get("account_id"))
+	d.Set("region_name", region)
 
 	return diags
 }
 
-const RegionResourceIDSeparator = ","
-
-func RegionResourceID(accountID string, region string) string {
-	if accountID != "" {
-		parts := []string{accountID, region}
-		return strings.Join(parts, RegionResourceIDSeparator)
-	} else {
-		return region
-	}
-}
-
-func resourceRegionImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-	switch parts := strings.Split(d.Id(), RegionResourceIDSeparator); len(parts) {
-	case 1:
-		d.Set("region_name", parts[0])
-		d.SetId(RegionResourceID("", parts[0]))
-	case 2:
-		d.Set("account_id", parts[0])
-		d.Set("region_name", parts[1])
-		d.SetId(RegionResourceID(parts[0], parts[1]))
-	default:
-		return []*schema.ResourceData{}, fmt.Errorf("unexpected format for import ID (%[1]s), use: region_name or account_id%[2]sregion_name", d.Id(), RegionResourceIDSeparator)
-	}
-
-	return []*schema.ResourceData{d}, nil
-}
-
-func FindRegionOptInStatus(ctx context.Context, conn *account.Client, accountID, region string) (*account.GetRegionOptStatusOutput, error) {
+func findRegionOptStatus(ctx context.Context, conn *account.Client, accountID, region string) (*account.GetRegionOptStatusOutput, error) {
 	input := &account.GetRegionOptStatusInput{
 		RegionName: aws.String(region),
 	}
