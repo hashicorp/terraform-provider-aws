@@ -467,7 +467,6 @@ func ResourceInstance() *schema.Resource {
 			"ipv6_address_count": {
 				Type:          schema.TypeInt,
 				Optional:      true,
-				ForceNew:      true,
 				Computed:      true,
 				ConflictsWith: []string{"ipv6_addresses"},
 			},
