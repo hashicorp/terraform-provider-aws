@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_cloudfront_function")
@@ -69,6 +70,15 @@ func ResourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"key_value_store_associations": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					// Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			},
 		},
 	}
 }
@@ -85,6 +95,10 @@ func resourceFunctionCreate(ctx context.Context, d *schema.ResourceData, meta in
 			Runtime: aws.String(d.Get("runtime").(string)),
 		},
 		Name: aws.String(functionName),
+	}
+
+	if v, ok := d.GetOk("key_value_store_associations"); ok {
+		input.FunctionConfig.KeyValueStoreAssociations = expandKeyValueStoreAssociations(v.(*schema.Set).List())
 	}
 
 	log.Printf("[DEBUG] Creating CloudFront Function: %s", functionName)
@@ -146,6 +160,10 @@ func resourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	d.Set("code", string(getFunctionOutput.FunctionCode))
+
+	if err := d.Set("key_value_store_associations", flattenKeyValueStoreAssociations(describeFunctionOutput.FunctionSummary.FunctionConfig.KeyValueStoreAssociations)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading CloudFront Function (%s) DEVELOPMENT stage code: %s", d.Id(), err)
+	}
 
 	describeFunctionOutput, err = FindFunctionByNameAndStage(ctx, conn, d.Id(), cloudfront.FunctionStageLive)
 
@@ -222,4 +240,38 @@ func resourceFunctionDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	return diags
+}
+
+func expandKeyValueStoreAssociations(tfList []interface{}) *cloudfront.KeyValueStoreAssociations {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var items []*cloudfront.KeyValueStoreAssociation
+
+	for _, tfItem := range tfList {
+		item := tfItem.(string)
+
+		items = append(items, &cloudfront.KeyValueStoreAssociation{
+			KeyValueStoreARN: aws.String(item),
+		})
+	}
+
+	return &cloudfront.KeyValueStoreAssociations{
+		Items:    items,
+		Quantity: aws.Int64(int64(len(items))),
+	}
+}
+
+func flattenKeyValueStoreAssociations(input *cloudfront.KeyValueStoreAssociations) []string {
+	if input == nil {
+		return nil
+	}
+
+	var items []string
+
+	for _, item := range input.Items {
+		items = append(items, aws.StringValue(item.KeyValueStoreARN))
+	}
+	return items
 }

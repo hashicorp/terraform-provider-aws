@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKDataSource("aws_cloudfront_function")
@@ -67,6 +68,15 @@ func DataSourceFunction() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"key_value_store_associations": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+					// Required:     true,
+					ValidateFunc: verify.ValidARN,
+				},
+			},
 		},
 	}
 }
@@ -96,6 +106,8 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 		Name:  aws.String(name),
 		Stage: aws.String(stage),
 	})
+
+	d.Set("key_value_store_associations", flattenKeyValueStoreAssociations(describeFunctionOutput.FunctionSummary.FunctionConfig.KeyValueStoreAssociations))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting CloudFront Function (%s): %s", d.Id(), err)

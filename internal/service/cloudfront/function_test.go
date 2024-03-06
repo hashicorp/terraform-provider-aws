@@ -290,6 +290,35 @@ func TestAccCloudFrontFunction_Update_comment(t *testing.T) {
 	})
 }
 
+func TestAccCloudFrontFunction_KeyValueStoreAssociations(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf cloudfront.DescribeFunctionOutput
+	resourceName := "aws_cloudfront_function.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFunctionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFunctionConfig_KeyValueStoreAssociation(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_associations.0", "aws_cloudfront_key_value_store.test", "arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"publish"},
+			},
+		},
+	})
+}
+
 func testAccCheckFunctionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
@@ -576,4 +605,29 @@ function handler(event) {
 EOT
 }
 `, rName, comment)
+}
+
+func testAccFunctionConfig_KeyValueStoreAssociation(rName string) string {
+	return acctest.ConfigCompose(
+		testAccKeyValueStoreConfig_basic(rName),
+		fmt.Sprintf(`
+resource "aws_cloudfront_function" "test" {
+  name                         = %[1]q
+  runtime                      = "cloudfront-js-2.0"
+  key_value_store_associations = [aws_cloudfront_key_value_store.test.arn]
+  code                         = <<-EOT
+function handler(event) {
+	var response = {
+		statusCode: 302,
+		statusDescription: 'Found',
+		headers: {
+			'cloudfront-functions': { value: 'generated-by-CloudFront-Functions' },
+			'location': { value: 'https://aws.amazon.com/cloudfront/' }
+		}
+	};
+	return response;
+}
+EOT
+}
+`, rName))
 }
