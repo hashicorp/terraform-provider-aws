@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/google/go-cmp/cmp"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -271,7 +272,7 @@ func TestExpand(t *testing.T) {
 		{
 			TestName: "timestamp pointer",
 			Source: &TestFlexTimeTF01{
-				CreationDateTime: fwtypes.TimestampValue(testTimeStr),
+				CreationDateTime: timetypes.NewRFC3339ValueMust(testTimeStr),
 			},
 			Target: &TestFlexTimeAWS01{},
 			WantTarget: &TestFlexTimeAWS01{
@@ -281,7 +282,7 @@ func TestExpand(t *testing.T) {
 		{
 			TestName: "timestamp",
 			Source: &TestFlexTimeTF01{
-				CreationDateTime: fwtypes.TimestampValue(testTimeStr),
+				CreationDateTime: timetypes.NewRFC3339ValueMust(testTimeStr),
 			},
 			Target: &TestFlexTimeAWS02{},
 			WantTarget: &TestFlexTimeAWS02{
