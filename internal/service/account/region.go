@@ -12,8 +12,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/account"
 	"github.com/aws/aws-sdk-go-v2/service/account/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -81,44 +83,47 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		id = region
 	}
 
-	output, err := findRegionOptStatus(ctx, conn, accountID, region)
+	timeout := d.Timeout(schema.TimeoutCreate)
+	if !d.IsNewResource() {
+		timeout = d.Timeout(schema.TimeoutUpdate)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Account Region (%s): %s", d.Id(), err)
 	}
 
 	if v := d.Get("enabled").(bool); v {
-		if output.RegionOptStatus == types.RegionOptStatusDisabled {
-			input := &account.EnableRegionInput{
-				RegionName: aws.String(region),
-			}
-			if accountID != "" {
-				input.AccountId = aws.String(accountID)
-			}
-			_, err := conn.EnableRegion(ctx, input)
+		input := &account.EnableRegionInput{
+			RegionName: aws.String(region),
+		}
+		if accountID != "" {
+			input.AccountId = aws.String(accountID)
+		}
 
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "Enabling account region (%s): %s", id, err)
-			}
+		_, err := conn.EnableRegion(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "enabling Account Region (%s): %s", id, err)
+		}
+
+		if _, err := waitRegionEnabled(ctx, conn, accountID, region, timeout); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Account Region (%s) enable: %s", d.Id(), err)
 		}
 	} else {
-		if output.RegionOptStatus == types.RegionOptStatusEnabledByDefault {
-			return sdkdiag.AppendErrorf(diags, "cannot disable region (%s) that is enabled by default", id)
-		}
 		input := &account.DisableRegionInput{
 			RegionName: aws.String(region),
 		}
 		if accountID != "" {
 			input.AccountId = aws.String(accountID)
 		}
-		_, err = conn.DisableRegion(ctx, input)
+
+		_, err := conn.DisableRegion(ctx, input)
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Disabling account region (%s): %s", id, err)
+			return sdkdiag.AppendErrorf(diags, "enabling Account Region (%s): %s", id, err)
+		}
+
+		if _, err := waitRegionDisabled(ctx, conn, accountID, region, timeout); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Account Region (%s) disable: %s", d.Id(), err)
 		}
 	}
-
-	// TODO Wait for the region to be enabled/disabled.
 
 	if d.IsNewResource() {
 		d.SetId(id)
@@ -144,7 +149,7 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 		region = d.Id()
 	}
 
-	output, err := FindRegionOptStatus(ctx, conn, accountID, region)
+	output, err := findRegionOptStatus(ctx, conn, accountID, region)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Account Region (%s): %s", d.Id(), err)
@@ -153,7 +158,7 @@ func resourceRegionRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("account_id", accountID)
 	d.Set("enabled", output.RegionOptStatus == types.RegionOptStatusEnabled)
 	d.Set("opt_status", string(output.RegionOptStatus))
-	d.Set("region_name", region)
+	d.Set("region_name", output.RegionName)
 
 	return diags
 }
@@ -177,4 +182,58 @@ func findRegionOptStatus(ctx context.Context, conn *account.Client, accountID, r
 	}
 
 	return output, nil
+}
+
+func statusRegionOptStatus(ctx context.Context, conn *account.Client, accountID, region string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findRegionOptStatus(ctx, conn, accountID, region)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.RegionOptStatus), nil
+	}
+}
+
+func waitRegionEnabled(ctx context.Context, conn *account.Client, accountID, region string, timeout time.Duration) (*account.GetRegionOptStatusOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:      enum.Slice(types.RegionOptStatusEnabled),
+		Target:       enum.Slice(types.RegionOptStatusEnabling),
+		Refresh:      statusRegionOptStatus(ctx, conn, accountID, region),
+		Timeout:      timeout,
+		Delay:        1 * time.Minute,
+		PollInterval: 30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*account.GetRegionOptStatusOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitRegionDisabled(ctx context.Context, conn *account.Client, accountID, region string, timeout time.Duration) (*account.GetRegionOptStatusOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:      enum.Slice(types.RegionOptStatusDisabled),
+		Target:       enum.Slice(types.RegionOptStatusDisabling),
+		Refresh:      statusRegionOptStatus(ctx, conn, accountID, region),
+		Timeout:      timeout,
+		Delay:        1 * time.Minute,
+		PollInterval: 30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*account.GetRegionOptStatusOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }

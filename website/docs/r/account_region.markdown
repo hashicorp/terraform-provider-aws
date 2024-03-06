@@ -23,7 +23,7 @@ resource "aws_account_region" "test" {
 
 This resource supports the following arguments:
 
-* `account_id` - (Optional) The ID of the target account when managing member accounts. Will manage current user's account by default if omitted. To use this parameter, the caller must be an identity in the organization's management account or a delegated administrator account. The specified account ID must also be a member account in the same organization. The organization must have all features enabled , and the organization must have trusted access enabled for the Account Management service, and optionally a delegated admin account assigned.
+* `account_id` - (Optional) The ID of the target account when managing member accounts. Will manage current user's account by default if omitted. To use this parameter, the caller must be an identity in the organization's management account or a delegated administrator account. The specified account ID must also be a member account in the same organization. The organization must have all features enabled, and the organization must have trusted access enabled for the Account Management service, and optionally a delegated admin account assigned.
 * `region_name` - (Required) The region name to manage.
 * `enabled` - (Optional) Whether the region is enabled.  Defaults to `true`.
 
@@ -32,6 +32,13 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `opt_status` - The region opt status.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
 
 ## Import
 
