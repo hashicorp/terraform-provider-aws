@@ -86,6 +86,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `input_class` - The input class.
 * `input_partner_ids` - A list of IDs for all Inputs which are partners of this one.
 * `input_source_type` - Source type of the input.
+* `destinations` - Destination settings for PUSH type inputs.
 
 ## Timeouts
 
