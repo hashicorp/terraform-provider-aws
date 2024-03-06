@@ -427,7 +427,7 @@ func testAccConfigurationPolicyConfig_specifcControlIdentifiers(standardsARN, co
 resource "aws_securityhub_configuration_policy" "test" {
   name = "ControlIdentifiersPolicy"
   policy_member {
-    service_enabled = true
+    service_enabled       = true
     enabled_standard_arns = [%[1]q]
 
     security_controls_configuration {
