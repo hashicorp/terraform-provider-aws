@@ -51,9 +51,9 @@ func ResourcePoolRolesAttachment() *schema.Resource {
 							Required: true,
 						},
 						"ambiguous_role_resolution": {
-							Type:     schema.TypeString,
-							Optional: true, // Required if Type equals Token or Rules.
-							ValidateDiagFunc: enum.Validate[awstypes.AmbiguousRoleResolutionType](), 
+							Type:             schema.TypeString,
+							Optional:         true, // Required if Type equals Token or Rules.
+							ValidateDiagFunc: enum.Validate[awstypes.AmbiguousRoleResolutionType](),
 						},
 						"mapping_rule": {
 							Type:     schema.TypeList,
@@ -67,8 +67,8 @@ func ResourcePoolRolesAttachment() *schema.Resource {
 										ValidateFunc: validRoleMappingsRulesClaim,
 									},
 									"match_type": {
-										Type:     schema.TypeString,
-										Required: true,
+										Type:             schema.TypeString,
+										Required:         true,
 										ValidateDiagFunc: enum.Validate[awstypes.MappingRuleMatchType](),
 									},
 									"role_arn": {
@@ -85,8 +85,8 @@ func ResourcePoolRolesAttachment() *schema.Resource {
 							},
 						},
 						"type": {
-							Type:     schema.TypeString,
-							Required: true,
+							Type:             schema.TypeString,
+							Required:         true,
 							ValidateDiagFunc: enum.Validate[awstypes.RoleMappingType](),
 						},
 					},
