@@ -279,16 +279,17 @@ func testAccConfigurationPolicyConfig_baseDisabled(name, description string) str
 		testAccMemberAccountDelegatedAdminConfig_base,
 		testAccCentralConfigurationEnabledConfig_base,
 		fmt.Sprintf(`
-			resource "aws_securityhub_configuration_policy" "test" {
-				name        = %[1]q
-				description = %[2]q
-				policy_member {
-					service_enabled       = false
-					enabled_standard_arns = []
-				}
-				
-				depends_on = [aws_securityhub_organization_configuration.test]
-			}`, name, description))
+resource "aws_securityhub_configuration_policy" "test" {
+  name        = %[1]q
+  description = %[2]q
+
+  policy_member {
+    service_enabled       = false
+    enabled_standard_arns = []
+  }
+
+  depends_on = [aws_securityhub_organization_configuration.test]
+}`, name, description))
 }
 
 func testAccConfigurationPolicyConfig_baseEnabled(name, description string, enabledStandard string) string {
@@ -298,10 +299,11 @@ func testAccConfigurationPolicyConfig_baseEnabled(name, description string, enab
 		testAccCentralConfigurationEnabledConfig_base,
 		fmt.Sprintf(`
 resource "aws_securityhub_configuration_policy" "test" {
-	name        = %[1]q
+  name        = %[1]q
   description = %[2]q
+
   policy_member {
-    service_enabled       = true
+    service_enabled = true
     enabled_standard_arns = [
       %[3]q
     ]
@@ -309,7 +311,7 @@ resource "aws_securityhub_configuration_policy" "test" {
       disabled_control_identifiers = []
     }
   }
-  
+
   depends_on = [aws_securityhub_organization_configuration.test]
 }`, name, description, enabledStandard))
 }
@@ -322,15 +324,19 @@ func testAccConfigurationPolicyConfig_controlCustomParametersMulti(standardsARN 
 		fmt.Sprintf(`
 resource "aws_securityhub_configuration_policy" "test" {
   name = "MultipleControlCustomParametersPolicy"
+
   policy_member {
-    service_enabled       = true
+    service_enabled = true
     enabled_standard_arns = [
       %[1]q
     ]
+
     security_controls_configuration {
       disabled_control_identifiers = []
+
       control_custom_parameter {
         control_identifier = "APIGateway.1"
+
         parameter {
           name       = "loggingLevel"
           value_type = "CUSTOM"
@@ -339,12 +345,15 @@ resource "aws_securityhub_configuration_policy" "test" {
           }
         }
       }
+
       control_custom_parameter {
         control_identifier = "IAM.7"
+
         parameter {
           name       = "RequireUppercaseCharacters"
           value_type = "DEFAULT"
         }
+
         parameter {
           name       = "RequireLowercaseCharacters"
           value_type = "CUSTOM"
@@ -352,6 +361,7 @@ resource "aws_securityhub_configuration_policy" "test" {
             value = false
           }
         }
+
         parameter {
           name       = "MaxPasswordAge"
           value_type = "CUSTOM"
@@ -375,15 +385,19 @@ func testAccConfigurationPolicyConfig_controlCustomParametersSingle(standardsARN
 		fmt.Sprintf(`
 resource "aws_securityhub_configuration_policy" "test" {
   name = "ControlCustomParametersPolicy"
+
   policy_member {
-    service_enabled       = true
+    service_enabled = true
     enabled_standard_arns = [
       %[1]q
     ]
+
     security_controls_configuration {
       disabled_control_identifiers = []
+
       control_custom_parameter {
         control_identifier = %[2]q
+
         parameter {
           name       = %[3]q
           value_type = "CUSTOM"
@@ -413,15 +427,17 @@ func testAccConfigurationPolicyConfig_specifcControlIdentifiers(standardsARN, co
 resource "aws_securityhub_configuration_policy" "test" {
   name = "ControlIdentifiersPolicy"
   policy_member {
-  service_enabled       = true
-  enabled_standard_arns = [%[1]q]
-  security_controls_configuration {
-    %[2]s = [
-      %[3]q,
-    %[4]q
-    ]
+    service_enabled = true
+    enabled_standard_arns = [%[1]q]
+
+    security_controls_configuration {
+      %[2]s = [
+        %[3]q,
+        %[4]q
+      ]
     }
   }
+
   depends_on = [aws_securityhub_organization_configuration.test]
 }`, standardsARN, controlIDAttr, control1, control2))
 }
@@ -429,7 +445,7 @@ resource "aws_securityhub_configuration_policy" "test" {
 const testAccCentralConfigurationEnabledConfig_base = `
 resource "aws_securityhub_finding_aggregator" "test" {
   linking_mode = "ALL_REGIONS"
-  
+
   depends_on = [aws_securityhub_organization_admin_account.test]
 }
 
@@ -439,7 +455,7 @@ resource "aws_securityhub_organization_configuration" "test" {
   organization_configuration {
     configuration_type = "CENTRAL"
   }
-  
+
   depends_on = [aws_securityhub_finding_aggregator.test]
 }
 `

@@ -107,7 +107,7 @@ data "aws_organizations_organization" "test" {
 }
 
 resource "aws_organizations_organizational_unit" "test" {
-  provider  = awsalternate
+  provider = awsalternate
 
   name      = "testAccConfigurationPolicyOrgUnitConfig_base"
   parent_id = data.aws_organizations_organization.test.roots[0].id
@@ -118,27 +118,31 @@ resource "aws_organizations_organizational_unit" "test" {
 const testAccConfigurationPoliciesConfig_base = `
 resource "aws_securityhub_configuration_policy" "test_1" {
   name = "test1"
+
   policy_member {
     service_enabled       = true
     enabled_standard_arns = ["arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"]
+
     security_controls_configuration {
       disabled_control_identifiers = []
     }
   }
-  
+
   depends_on = [aws_securityhub_organization_configuration.test]
 }
 
 resource "aws_securityhub_configuration_policy" "test_2" {
   name = "test2"
+
   policy_member {
     service_enabled       = true
     enabled_standard_arns = ["arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"]
+
     security_controls_configuration {
       enabled_control_identifiers = ["CloudTrail.1"]
     }
   }
-  
+
   depends_on = [aws_securityhub_organization_configuration.test]
 }
 `
