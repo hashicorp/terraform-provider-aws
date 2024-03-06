@@ -368,7 +368,7 @@ func resourceConfigurationPolicyDelete(ctx context.Context, d *schema.ResourceDa
 }
 
 // validatePolicyMemberSecurityHub performs validation before running creates/updates to prevent certain issues with state.
-func validatePolicyMemberSecurityHub(apiPolicy *types.PolicyMemberSecurityHub) error {
+func validatePolicyMemberSecurityHub(apiPolicy *types.PolicyMemberSecurityHub) error { // nosemgrep:ci.securityhub-in-func-name
 	// security_controls_configuration can be specified in Creates/Updates and accepted by the APIs,
 	// but the resources returned by subsequent Get API call will be nil instead of non-nil.
 	// This leaves terraform in perpetual drift and so we prevent this case explicitly.
@@ -389,7 +389,7 @@ func validatePolicyMemberSecurityHub(apiPolicy *types.PolicyMemberSecurityHub) e
 	return nil
 }
 
-func expandPolicyMemberSecurityHub(tfMap map[string]interface{}) *types.PolicyMemberSecurityHub {
+func expandPolicyMemberSecurityHub(tfMap map[string]interface{}) *types.PolicyMemberSecurityHub { // nosemgrep:ci.securityhub-in-func-name
 	if tfMap == nil {
 		return nil
 	}
