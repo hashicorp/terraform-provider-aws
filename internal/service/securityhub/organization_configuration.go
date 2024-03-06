@@ -123,7 +123,6 @@ func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "deleting Security Hub Organization Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.SetId("")
 	return diags
 }
 
@@ -184,12 +183,9 @@ func findOrganizationConfiguration(ctx context.Context, conn *securityhub.Client
 				statusErr = fmt.Errorf("StatusMessage: %s", *msg)
 			}
 			return nil, "", &retry.UnexpectedStateError{
-				LastError: statusErr,
-				State:     string(output.OrganizationConfiguration.Status),
-				ExpectedState: []string{
-					string(types.OrganizationConfigurationStatusEnabled),
-					string(types.OrganizationConfigurationStatusPending),
-				},
+				LastError:     statusErr,
+				State:         string(output.OrganizationConfiguration.Status),
+				ExpectedState: enum.Slice(types.OrganizationConfigurationStatusEnabled, types.OrganizationConfigurationStatusPending),
 			}
 		}
 	}
