@@ -114,7 +114,7 @@ resource "aws_organizations_organizational_unit" "test" {
 }
 `
 
-//lintignore:AWSAT005
+// lintignore:AWSAT005
 const testAccConfigurationPoliciesConfig_base = `
 resource "aws_securityhub_configuration_policy" "test_1" {
   name = "test1"
