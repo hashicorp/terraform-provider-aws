@@ -23,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_account_region")
+// @SDKResource("aws_account_region", name="Region")
 func resourceRegion() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegionUpdate,
@@ -44,8 +44,7 @@ func resourceRegion() *schema.Resource {
 			},
 			"enabled": {
 				Type:     schema.TypeBool,
-				Default:  true,
-				Optional: true,
+				Required: true,
 			},
 			"opt_status": {
 				Type:     schema.TypeString,

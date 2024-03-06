@@ -13,9 +13,9 @@ Enable (Opt-In) or Disable (Opt-Out) a particular Region for an AWS account.
 ## Example Usage
 
 ```terraform
-resource "aws_account_region" "test" {
+resource "aws_account_region" "example" {
   region_name = "ap-southeast-3"
-  enabled     = "true"
+  enabled     = true
 }
 ```
 
@@ -24,8 +24,8 @@ resource "aws_account_region" "test" {
 This resource supports the following arguments:
 
 * `account_id` - (Optional) The ID of the target account when managing member accounts. Will manage current user's account by default if omitted. To use this parameter, the caller must be an identity in the organization's management account or a delegated administrator account. The specified account ID must also be a member account in the same organization. The organization must have all features enabled, and the organization must have trusted access enabled for the Account Management service, and optionally a delegated admin account assigned.
+* `enabled` - (Required) Whether the region is enabled.
 * `region_name` - (Required) The region name to manage.
-* `enabled` - (Optional) Whether the region is enabled.  Defaults to `true`.
 
 ## Attribute Reference
 
@@ -46,7 +46,7 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_account_region.test
+  to = aws_account_region.example
   id = "ap-southeast-3"
 }
 ```
@@ -54,5 +54,5 @@ import {
 Using `terraform import`. For example:
 
 ```console
-% terraform import aws_account_region.test ap-southeast-3
+% terraform import aws_account_region.example ap-southeast-3
 ```
