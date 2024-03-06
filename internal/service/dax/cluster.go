@@ -515,11 +515,18 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 		if err != nil {
 			return retry.NonRetryableError(err)
 		}
+
 		return nil
 	})
+
 	if tfresource.TimedOut(err) {
 		_, err = conn.DeleteCluster(ctx, req)
 	}
+
+	if errs.IsA[*awstypes.ClusterNotFoundFault](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting DAX cluster: %s", err)
 	}

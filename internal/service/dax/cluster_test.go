@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfdax "github.com/hashicorp/terraform-provider-aws/internal/service/dax"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -263,6 +264,30 @@ func TestAccDAXCluster_EndpointEncryption_enabled(t *testing.T) {
 			{
 				Config:             testAccClusterConfig_basic(rString),
 				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccDAXCluster_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dc awstypes.Cluster
+	rString := sdkacctest.RandString(10)
+	resourceName := "aws_dax_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DAXServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_basic(rString),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dc),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdax.ResourceCluster(), resourceName),
+				),
 				ExpectNonEmptyPlan: true,
 			},
 		},
