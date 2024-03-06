@@ -263,4 +263,4 @@ Any `List*Pages` methods called with V1 of the SDK will need to replace the pagi
 ## Sweepers
 
 All [sweepers](./running-and-writing-acceptance-tests.md#sweeper-checklists) should be updated to use the V2 SDK.
-This should be similar to updating the resources themselves with steps like [updating imports](#Imports), swapping the [service client](#Client), adjusting [error handling](#Errors), and adopting the appropriate [AWS `types` subpackage](#AWS-types).
+This should be similar to updating the resources themselves with steps like [updating imports](#imports), swapping the [service client](#client), adjusting [error handling](#errors), and adopting the appropriate [AWS `types` subpackage](#aws-types).
