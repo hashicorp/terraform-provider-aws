@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_redshiftserverless_workgroup: Fix ability to remove query monitoring rules
+```
