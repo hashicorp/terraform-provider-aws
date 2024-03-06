@@ -85,7 +85,6 @@ func resourceRegionUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	timeout := d.Timeout(schema.TimeoutCreate)
 	if !d.IsNewResource() {
 		timeout = d.Timeout(schema.TimeoutUpdate)
-
 	}
 
 	if v := d.Get("enabled").(bool); v {
