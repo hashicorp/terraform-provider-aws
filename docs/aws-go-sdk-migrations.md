@@ -26,7 +26,7 @@ When a service is first migrated, a `{ServiceName}EndpointID` constant must be a
 Be sure to preseve alphabetical order.
 
 The AWS SDK for Go V1 previously exposed these as constants, but V2 does not.
-This constant is used in acceptance testing pre-checks.
+This constant is used in common acceptance testing pre-checks, such as `acctest.PreCheckPartitionHasService`.
 
 ## Imports
 
