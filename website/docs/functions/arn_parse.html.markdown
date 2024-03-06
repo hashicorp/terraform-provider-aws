@@ -25,7 +25,9 @@ See the [AWS documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/ref
 #   "account_id": "444455556666",
 #   "resource": "role/example",
 # }
-provider::aws::arn_parse("arn:aws:iam::444455556666:role/example")
+output "example" {
+  value = provider::aws::arn_parse("arn:aws:iam::444455556666:role/example")
+}
 ```
 
 ## Signature

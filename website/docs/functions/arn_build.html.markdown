@@ -18,7 +18,9 @@ See the [AWS documentation](https://docs.aws.amazon.com/IAM/latest/UserGuide/ref
 
 ```terraform
 # result: arn:aws:iam::444455556666:role/example
-provider::aws::arn_build("aws","iam", "", "444455556666", "role/example")
+output "example" {
+  value = provider::aws::arn_build("aws", "iam", "", "444455556666", "role/example")
+}
 ```
 
 ## Signature
