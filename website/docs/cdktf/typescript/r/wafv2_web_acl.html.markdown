@@ -451,9 +451,9 @@ This resource supports the following arguments:
 * `customResponseBody` - (Optional) Defines custom response bodies that can be referenced by `customResponse` actions. See [`customResponseBody`](#custom_response_body-block) below for details.
 * `defaultAction` - (Required) Action to perform if none of the `rules` contained in the WebACL match. See [`defaultAction`](#default_action-block) below for details.
 * `description` - (Optional) Friendly description of the WebACL.
-* `name` - (Required) Friendly name of the WebACL.
+* `name` - (Required, Forces new resource) Friendly name of the WebACL.
 * `rule` - (Optional) Rule blocks used to identify the web requests that you want to `allow`, `block`, or `count`. See [`rule`](#rule-block) below for details.
-* `scope` - (Required) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
+* `scope` - (Required, Forces new resource) Specifies whether this is for an AWS CloudFront distribution or for a regional application. Valid values are `CLOUDFRONT` or `REGIONAL`. To work with CloudFront, you must also specify the region `us-east-1` (N. Virginia) on the AWS provider.
 * `tags` - (Optional) Map of key-value pairs to associate with the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `tokenDomains` - (Optional) Specifies the domains that AWS WAF should accept in a web request token. This enables the use of tokens across multiple protected websites. When AWS WAF provides a token, it uses the domain of the AWS resource that the web ACL is protecting. If you don't specify a list of token domains, AWS WAF accepts tokens only for the domain of the protected resource. With a token domain list, AWS WAF accepts the resource's host domain plus all domains in the token domain list, including their prefixed subdomains.
 * `visibilityConfig` - (Required) Defines and enables Amazon CloudWatch metrics and web request sample collection. See [`visibilityConfig`](#visibility_config-block) below for details.
@@ -1076,6 +1076,7 @@ The `uriPath` block supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `applicationIntegrationUrl` - The URL to use in SDK integrations with managed rule groups.
 * `arn` - The ARN of the WAF WebACL.
 * `capacity` - Web ACL capacity units (WCUs) currently being used by this web ACL.
 * `id` - The ID of the WAF WebACL.
@@ -1113,4 +1114,4 @@ Using `terraform import`, import WAFv2 Web ACLs using `ID/Name/Scope`. For examp
 % terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-47e2c1120b00bc2c5089718bae9616b54e0d14e3f52f1d5f06e55ff0bc7b6314 -->
+<!-- cache-key: cdktf-0.20.1 input-ee72dd1c3082d58b9cc191279c4ee365ed1e5a7cb9e849d37c14c434ecbc744e -->

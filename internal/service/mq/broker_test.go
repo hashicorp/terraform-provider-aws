@@ -8,10 +8,12 @@ import (
 	"fmt"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/mq"
+	"github.com/aws/aws-sdk-go-v2/service/mq/types"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -1369,6 +1371,72 @@ func TestAccMQBroker_ldap(t *testing.T) {
 	})
 }
 
+func TestAccMQBroker_dataReplicationMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var broker mq.DescribeBrokerOutput
+	var brokerAlternate mq.DescribeBrokerOutput
+	var providers []*schema.Provider
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mq_broker.test"
+	primaryBrokerResourceName := "aws_mq_broker.primary"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrokerConfig_dataReplicationMode(rName, testAccBrokerVersionNewer, string(types.DataReplicationModeCrdr)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(ctx, resourceName, &broker),
+					testAccCheckBrokerExistsWithProvider(ctx, primaryBrokerResourceName, &brokerAlternate, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_mode", string(types.DeploymentModeActiveStandbyMultiAz)),
+					// data_replication_mode is not returned until after reboot
+					resource.TestCheckResourceAttr(resourceName, "data_replication_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "pending_data_replication_mode", string(types.DataReplicationModeCrdr)),
+					resource.TestCheckResourceAttrPair(resourceName, "data_replication_primary_broker_arn", primaryBrokerResourceName, "arn"),
+				),
+			},
+			{
+				Config:                  testAccBrokerConfig_dataReplicationMode(rName, testAccBrokerVersionNewer, string(types.DataReplicationModeCrdr)),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user", "data_replication_primary_broker_arn"},
+			},
+			{
+				// Preparation for destruction would require multiple configuration changes
+				// and applies to unpair brokers. Instead, complete the necessary update, reboot,
+				// and delete opreations on the primary cluster out-of-band to ensure remaining
+				// resources will be freed for clean up.
+				PreConfig: func() {
+					// In order to delete, replicated brokers must first be unpaired by setting
+					// data replication mode on the primary broker to "NONE".
+					testAccUnpairBrokerWithProvider(ctx, t, &brokerAlternate, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers))
+					// The primary broker must be deleted before replica broker. The direct
+					// dependency in the Terraform configuration would cause this to happen
+					// in the opposite order, so delete the primary out of band instead.
+					testAccDeleteBrokerWithProvider(ctx, t, &brokerAlternate, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers))
+				},
+				Config:             testAccBrokerConfig_dataReplicationMode(rName, testAccBrokerVersionNewer, string(types.DataReplicationModeNone)),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckBrokerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).MQClient(ctx)
@@ -1416,6 +1484,27 @@ func testAccCheckBrokerExists(ctx context.Context, n string, v *mq.DescribeBroke
 	}
 }
 
+func testAccCheckBrokerExistsWithProvider(ctx context.Context, n string, v *mq.DescribeBrokerOutput, providerF func() *schema.Provider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := providerF().Meta().(*conns.AWSClient).MQClient(ctx)
+
+		output, err := tfmq.FindBrokerByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).MQClient(ctx)
 
@@ -1429,6 +1518,46 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
+func testAccUnpairBrokerWithProvider(ctx context.Context, t *testing.T, broker *mq.DescribeBrokerOutput, providerF func() *schema.Provider) {
+	brokerID := aws.ToString(broker.BrokerId)
+	deadline := tfresource.NewDeadline(30 * time.Minute)
+	conn := providerF().Meta().(*conns.AWSClient).MQClient(ctx)
+
+	_, err := conn.UpdateBroker(ctx, &mq.UpdateBrokerInput{
+		BrokerId:            aws.String(brokerID),
+		DataReplicationMode: types.DataReplicationModeNone,
+	})
+	if err != nil {
+		t.Fatalf("updating broker (%s): %s", brokerID, err)
+	}
+
+	_, err = conn.RebootBroker(ctx, &mq.RebootBrokerInput{BrokerId: aws.String(brokerID)})
+	if err != nil {
+		t.Fatalf("rebooting broker (%s): %s", brokerID, err)
+	}
+
+	_, err = tfmq.WaitBrokerRebooted(ctx, conn, brokerID, deadline.Remaining())
+	if err != nil {
+		t.Fatalf("waiting for broker (%s) reboot: %s", brokerID, err)
+	}
+}
+
+func testAccDeleteBrokerWithProvider(ctx context.Context, t *testing.T, broker *mq.DescribeBrokerOutput, providerF func() *schema.Provider) {
+	brokerID := aws.ToString(broker.BrokerId)
+	deadline := tfresource.NewDeadline(30 * time.Minute)
+	conn := providerF().Meta().(*conns.AWSClient).MQClient(ctx)
+
+	_, err := conn.DeleteBroker(ctx, &mq.DeleteBrokerInput{BrokerId: aws.String(brokerID)})
+	if err != nil {
+		t.Fatalf("deleting broker (%s): %s", brokerID, err)
+	}
+
+	_, err = tfmq.WaitBrokerDeleted(ctx, conn, brokerID, deadline.Remaining())
+	if err != nil {
+		t.Fatalf("waiting for broker (%s) deletion: %s", brokerID, err)
 	}
 }
 
@@ -2230,4 +2359,83 @@ resource "aws_mq_broker" "test" {
   }
 }
 `, rName, version, instanceType)
+}
+
+// testAccBrokerConfig_dataReplicationMode creates a primary and replica broker
+// in different regions, linking the former using the data replication arguments
+func testAccBrokerConfig_dataReplicationMode(rName, version, dataReplicationMode string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		fmt.Sprintf(`
+resource "aws_security_group" "primary" {
+  provider = awsalternate
+
+  name = "%[1]s-primary"
+
+  tags = {
+    Name = "%[1]s-primary"
+  }
+}
+
+resource "aws_mq_broker" "primary" {
+  provider = awsalternate
+
+  apply_immediately  = true
+  broker_name        = "%[1]s-primary"
+  engine_type        = "ActiveMQ"
+  engine_version     = %[2]q
+  host_instance_type = "mq.m5.large"
+  security_groups    = [aws_security_group.primary.id]
+  deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
+
+  logs {
+    general = true
+  }
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+  user {
+    username         = "Test-ReplicationUser"
+    password         = "TestTest1234"
+    replication_user = true
+  }
+}
+
+resource "aws_security_group" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_mq_broker" "test" {
+  apply_immediately  = true
+  broker_name        = %[1]q
+  engine_type        = "ActiveMQ"
+  engine_version     = %[2]q
+  host_instance_type = "mq.m5.large"
+  security_groups    = [aws_security_group.test.id]
+  deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
+
+  data_replication_mode               = %[3]q
+  data_replication_primary_broker_arn = aws_mq_broker.primary.arn
+
+  logs {
+    general = true
+  }
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+  user {
+    username         = "Test-ReplicationUser"
+    password         = "TestTest1234"
+    replication_user = true
+  }
+}
+`, rName, version, dataReplicationMode))
 }

@@ -761,7 +761,7 @@ func (rd *subscriberResourceModel) refreshFromOutput(ctx context.Context, subscr
 	}
 
 	rd.AccessTypes = fwflex.StringValueToFramework(ctx, subscriber.AccessTypes[0])
-	rd.SubscriberIdentity = fwtypes.NewListNestedObjectValueOfPtr(ctx, &subscriberIdentity)
+	rd.SubscriberIdentity = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &subscriberIdentity)
 	sourcesOutput, d := flattenSubscriberSourcesModel(ctx, subscriber.Sources)
 	diags.Append(d...)
 	rd.ResourceShareArn = fwflex.StringToFrameworkLegacy(ctx, subscriber.ResourceShareArn)

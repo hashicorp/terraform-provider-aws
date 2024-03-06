@@ -15,7 +15,7 @@ import (
 func ExpandFrameworkStringSet(ctx context.Context, v basetypes.SetValuable) []*string {
 	var output []*string
 
-	panicOnError(Expand(ctx, v, &output))
+	must(Expand(ctx, v, &output))
 
 	return output
 }
@@ -23,7 +23,7 @@ func ExpandFrameworkStringSet(ctx context.Context, v basetypes.SetValuable) []*s
 func ExpandFrameworkStringValueSet(ctx context.Context, v basetypes.SetValuable) Set[string] {
 	var output []string
 
-	panicOnError(Expand(ctx, v, &output))
+	must(Expand(ctx, v, &output))
 
 	return output
 }
@@ -39,7 +39,7 @@ func FlattenFrameworkStringSet(ctx context.Context, v []*string) types.Set {
 
 	var output types.Set
 
-	panicOnError(Flatten(ctx, v, &output))
+	must(Flatten(ctx, v, &output))
 
 	return output
 }
@@ -68,7 +68,7 @@ func FlattenFrameworkStringValueSet[T ~string](ctx context.Context, v []T) types
 
 	var output types.Set
 
-	panicOnError(Flatten(ctx, v, &output))
+	must(Flatten(ctx, v, &output))
 
 	return output
 }

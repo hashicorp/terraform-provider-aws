@@ -179,7 +179,7 @@ func (r *awsLogSourceResource) Read(ctx context.Context, request resource.ReadRe
 		return
 	}
 
-	data.Source = fwtypes.NewListNestedObjectValueOfPtr(ctx, &sourceData)
+	data.Source = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &sourceData)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

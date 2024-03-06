@@ -148,6 +148,8 @@ func ClusterInstanceEngine_Values() []string {
 	return []string{
 		ClusterEngineAuroraMySQL,
 		ClusterEngineAuroraPostgreSQL,
+		ClusterEngineMySQL,
+		ClusterEnginePostgres,
 	}
 }
 
