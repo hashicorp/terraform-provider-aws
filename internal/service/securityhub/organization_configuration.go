@@ -123,7 +123,6 @@ func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "deleting Security Hub Organization Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.SetId("")
 	return diags
 }
 
