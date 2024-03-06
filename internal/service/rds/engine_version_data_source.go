@@ -52,6 +52,16 @@ func DataSourceEngineVersion() *schema.Resource {
 
 			"filter": namevaluesfilters.Schema(),
 
+			"has_major_target": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
+			"has_minor_target": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
+
 			"include_all": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -137,6 +147,20 @@ func DataSourceEngineVersion() *schema.Resource {
 			"supports_read_replica": {
 				Type:     schema.TypeBool,
 				Computed: true,
+			},
+
+			"valid_major_targets": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+				Set:      schema.HashString,
+			},
+
+			"valid_minor_targets": {
+				Type:     schema.TypeSet,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+				Set:      schema.HashString,
 			},
 
 			"valid_upgrade_targets": {
@@ -330,6 +354,42 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		engineVersions = prefMTs
 	}
 
+	if v, ok := d.GetOk("has_minor_target"); ok && v.(bool) {
+		var wMinor []*rds.DBEngineVersion
+
+		for _, engineVersion := range engineVersions {
+			for _, upgradeTarget := range engineVersion.ValidUpgradeTarget {
+				if !aws.BoolValue(upgradeTarget.IsMajorVersionUpgrade) {
+					wMinor = append(wMinor, engineVersion)
+				}
+			}
+		}
+
+		if len(wMinor) == 0 {
+			return sdkdiag.AppendErrorf(diags, "no RDS engine versions match the criteria and has a minor target: %+v", input)
+		}
+
+		engineVersions = wMinor
+	}
+
+	if v, ok := d.GetOk("has_major_target"); ok && v.(bool) {
+		var wMajor []*rds.DBEngineVersion
+
+		for _, engineVersion := range engineVersions {
+			for _, upgradeTarget := range engineVersion.ValidUpgradeTarget {
+				if aws.BoolValue(upgradeTarget.IsMajorVersionUpgrade) {
+					wMajor = append(wMajor, engineVersion)
+				}
+			}
+		}
+
+		if len(wMajor) == 0 {
+			return sdkdiag.AppendErrorf(diags, "no RDS engine versions match the criteria and has a major target: %+v", input)
+		}
+
+		engineVersions = wMajor
+	}
+
 	var found *rds.DBEngineVersion
 
 	if v, ok := d.GetOk("latest"); ok && v.(bool) {
@@ -386,10 +446,19 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("supports_read_replica", found.SupportsReadReplica)
 
 	var upgradeTargets []string
+	var minorTargets []string
+	var majorTargets []string
 	for _, ut := range found.ValidUpgradeTarget {
 		upgradeTargets = append(upgradeTargets, aws.StringValue(ut.EngineVersion))
+		if aws.BoolValue(ut.IsMajorVersionUpgrade) {
+			majorTargets = append(majorTargets, aws.StringValue(ut.EngineVersion))
+		} else {
+			minorTargets = append(minorTargets, aws.StringValue(ut.EngineVersion))
+		}
 	}
 	d.Set("valid_upgrade_targets", upgradeTargets)
+	d.Set("valid_minor_targets", minorTargets)
+	d.Set("valid_major_targets", majorTargets)
 
 	d.Set("version", found.EngineVersion)
 	d.Set("version_actual", found.EngineVersion)
