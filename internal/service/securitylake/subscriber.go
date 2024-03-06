@@ -99,7 +99,7 @@ func (r *subscriberResource) Schema(ctx context.Context, request resource.Schema
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"sources": schema.ListNestedBlock{
+			"source": schema.ListNestedBlock{
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
@@ -704,7 +704,7 @@ type subscriberResourceModel struct {
 	AccessTypes           types.String                                             `tfsdk:"access_type"`
 	SubscriberArn         types.String                                             `tfsdk:"arn"`
 	ID                    types.String                                             `tfsdk:"id"`
-	Sources               types.List                                               `tfsdk:"sources"`
+	Sources               types.List                                               `tfsdk:"source"`
 	SubscriberDescription types.String                                             `tfsdk:"subscriber_description"`
 	SubscriberIdentity    fwtypes.ListNestedObjectValueOf[subscriberIdentityModel] `tfsdk:"subscriber_identity"`
 	SubscriberName        types.String                                             `tfsdk:"subscriber_name"`

@@ -41,10 +41,10 @@ func testAccSubscriber_basic(t *testing.T) {
 					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "access_type", "S3"),
-					resource.TestCheckResourceAttr(resourceName, "sources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "sources.0.aws_log_source_resource.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "sources.0.aws_log_source_resource.0.source_name", "ROUTE53"),
-					resource.TestCheckResourceAttr(resourceName, "sources.0.aws_log_source_resource.0.source_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.0.source_name", "ROUTE53"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.0.source_version", "1.0"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.0.external_id", "example"),
 				),
@@ -82,10 +82,10 @@ func testAccSubscriber_disappears(t *testing.T) {
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceSubscriber, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "access_type", "S3"),
-					resource.TestCheckResourceAttr(resourceName, "sources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "sources.0.aws_log_source_resource.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "sources.0.aws_log_source_resource.0.source_name", "ROUTE53"),
-					resource.TestCheckResourceAttr(resourceName, "sources.0.aws_log_source_resource.0.source_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.0.source_name", "ROUTE53"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.0.source_version", "1.0"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.0.external_id", "example"),
 				),
@@ -116,10 +116,10 @@ func testAccSubscriber_customLogSource(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "sources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "sources.0.custom_log_source_resource.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "sources.0.custom_log_source_resource.0.source_name", "aws_securitylake_custom_log_source.test", "source_name"),
-					resource.TestCheckResourceAttrPair(resourceName, "sources.0.custom_log_source_resource.0.source_version", "aws_securitylake_custom_log_source.test", "source_version"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.custom_log_source_resource.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "source.0.custom_log_source_resource.0.source_name", "aws_securitylake_custom_log_source.test", "source_name"),
+					resource.TestCheckResourceAttrPair(resourceName, "source.0.custom_log_source_resource.0.source_version", "aws_securitylake_custom_log_source.test", "source_version"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.0.external_id", "example"),
 				),
@@ -207,10 +207,10 @@ func testAccSubscriber_update(t *testing.T) {
 					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "access_type", "S3"),
-					resource.TestCheckResourceAttr(resourceName, "sources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "sources.0.aws_log_source_resource.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "sources.0.aws_log_source_resource.0.source_name", "ROUTE53"),
-					resource.TestCheckResourceAttr(resourceName, "sources.0.aws_log_source_resource.0.source_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.0.source_name", "ROUTE53"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.0.source_version", "1.0"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.0.external_id", "example"),
 				),
@@ -227,10 +227,10 @@ func testAccSubscriber_update(t *testing.T) {
 					testAccCheckSubscriberExists(ctx, resourceName, &subscriber),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "access_type", "S3"),
-					resource.TestCheckResourceAttr(resourceName, "sources.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "sources.0.aws_log_source_resource.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "sources.0.aws_log_source_resource.0.source_name", "VPC_FLOW"),
-					resource.TestCheckResourceAttr(resourceName, "sources.0.aws_log_source_resource.0.source_version", "1.0"),
+					resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.0.source_name", "VPC_FLOW"),
+					resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.0.source_version", "1.0"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subscriber_identity.0.external_id", "updated"),
 				),
@@ -309,7 +309,7 @@ resource "aws_securitylake_aws_log_source" "test" {
 resource "aws_securitylake_subscriber" "test" {
   subscriber_name = %[2]q
   access_type     = "S3"
-  sources {
+  source {
     aws_log_source_resource {
       source_name    = "ROUTE53"
       source_version = "1.0"
@@ -393,7 +393,7 @@ resource "aws_securitylake_custom_log_source" "test" {
 resource "aws_securitylake_subscriber" "test" {
   subscriber_name        = %[1]q
   subscriber_description = "Example"
-  sources {
+  source {
     custom_log_source_resource {
       source_name    = aws_securitylake_custom_log_source.test.source_name
       source_version = aws_securitylake_custom_log_source.test.source_version
@@ -477,7 +477,7 @@ resource "aws_securitylake_custom_log_source" "test" {
 resource "aws_securitylake_subscriber" "test" {
   subscriber_name        = %[1]q
   subscriber_description = "Example"
-  sources {
+  source {
     custom_log_source_resource {
       source_name    = aws_securitylake_custom_log_source.test.source_name
       source_version = aws_securitylake_custom_log_source.test.source_version
@@ -565,7 +565,7 @@ resource "aws_securitylake_custom_log_source" "test" {
 resource "aws_securitylake_subscriber" "test" {
   subscriber_name        = %[1]q
   subscriber_description = "Example"
-  sources {
+  source {
     custom_log_source_resource {
       source_name    = aws_securitylake_custom_log_source.test.source_name
       source_version = aws_securitylake_custom_log_source.test.source_version
@@ -603,7 +603,7 @@ resource "aws_securitylake_aws_log_source" "test" {
 resource "aws_securitylake_subscriber" "test" {
   subscriber_name = %[2]q
   access_type     = "S3"
-  sources {
+  source {
     aws_log_source_resource {
       source_name    = "VPC_FLOW"
       source_version = "1.0"

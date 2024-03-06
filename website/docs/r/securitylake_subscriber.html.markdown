@@ -18,7 +18,7 @@ resource "aws_securitylake_subscriber" "example" {
   source_version  = "1.0"
   access_type     = "S3"
 
-  sources {
+  source {
     aws_log_source_resource {
       source_name    = "ROUTE53"
       source_version = "1.0"
@@ -35,7 +35,7 @@ resource "aws_securitylake_subscriber" "example" {
 
 This resource supports the following arguments:
 
-* `sources` - (Required) The supported AWS services from which logs and events are collected. Security Lake supports log and event collection for natively supported AWS services.
+* `source` - (Required) The supported AWS services from which logs and events are collected. Security Lake supports log and event collection for natively supported AWS services.
 * `subscriber_identity` - (Required) The AWS identity used to access your data.
 * `subscriber_description` - (Optional) The description for your subscriber account in Security Lake.
 * `subscriber_name` - (Optional) The name of your Security Lake subscriber account.
