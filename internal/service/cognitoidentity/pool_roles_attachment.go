@@ -53,10 +53,7 @@ func ResourcePoolRolesAttachment() *schema.Resource {
 						"ambiguous_role_resolution": {
 							Type:     schema.TypeString,
 							Optional: true, // Required if Type equals Token or Rules.
-							ValidateFunc: validation.StringInSlice(
-								enum.Slice(awstypes.AmbiguousRoleResolutionTypeAuthenticatedRole, awstypes.AmbiguousRoleResolutionTypeDeny),
-								false,
-							),
+							ValidateDiagFunc: enum.Validate[awstypes.AmbiguousRoleResolutionType](), 
 						},
 						"mapping_rule": {
 							Type:     schema.TypeList,
