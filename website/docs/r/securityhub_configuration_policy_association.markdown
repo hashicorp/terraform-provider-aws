@@ -6,7 +6,7 @@ description: |-
   Provides a resource to associate Security Hub configuration policy to a target.
 ---
 
-# Resource: aws_securityhub_configuration_policy
+# Resource: aws_securityhub_configuration_policy_association
 
 Manages Security Hub configuration policy associations.
 
