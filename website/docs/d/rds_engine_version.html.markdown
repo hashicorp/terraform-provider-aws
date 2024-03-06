@@ -72,8 +72,8 @@ This data source exports the following attributes in addition to the arguments a
 * `supports_log_exports_to_cloudwatch` - Indicates whether the engine version supports exporting the log types specified by `exportable_log_types` to CloudWatch Logs.
 * `supports_parallel_query` - Indicates whether you can use Aurora parallel query with a specific database engine version.
 * `supports_read_replica` - Indicates whether the database engine version supports read replicas.
-* `valid_major_targets` - Set of major engine version upgrades that this database engine version can be upgraded to.
-* `valid_minor_targets` - Set of minor engine version upgrades that this database engine version can be upgraded to.
+* `valid_major_targets` - Set of major engine versions that this database engine version can be upgraded to.
+* `valid_minor_targets` - Set of minor engine versions that this database engine version can be upgraded to.
 * `valid_upgrade_targets` - Set of engine versions that this database engine version can be upgraded to.
 * `version_actual` - Version of the database engine.
 * `version_description` - Description of the database engine version.
