@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dax"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dax/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -26,37 +27,43 @@ func sweepClusters(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %s", err.Error())
+		return fmt.Errorf("error getting client: %s", err.Error())
 	}
 	conn := client.DAXClient(ctx)
 
-	resp, err := conn.DescribeClusters(ctx, &dax.DescribeClustersInput{})
-	if err != nil {
-		// GovCloud (with no DAX support) has an endpoint that responds with:
-		// InvalidParameterValueException: Access Denied to API Version: DAX_V3
+	sweepResources := make([]sweep.Sweepable, 0)
 
-		if awsv2.SkipSweepError(err) || errs.IsA[*awstypes.InvalidParameterValueException](err) {
-			log.Printf("[WARN] Skipping DAX Cluster sweep for %s: %s", region, err)
-			return nil
+	err = describeClustersPages(ctx, conn, &dax.DescribeClustersInput{}, func(page *dax.DescribeClustersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		return fmt.Errorf("Error retrieving DAX clusters: %s", err.Error())
-	}
 
-	if len(resp.Clusters) == 0 {
-		log.Print("[DEBUG] No DAX clusters to sweep")
+		for _, cluster := range page.Clusters {
+			r := ResourceCluster()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(cluster.ClusterName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	// GovCloud (with no DAX support) has an endpoint that responds with:
+	// InvalidParameterValueException: Access Denied to API Version: DAX_V3
+	if awsv2.SkipSweepError(err) || errs.IsAErrorMessageContains[*awstypes.InvalidParameterValueException](err, "Access Denied to API Version: DAX_V3") {
+		log.Printf("[WARN] Skipping DAX Cluster sweep for %s: %s", region, err)
 		return nil
 	}
 
-	log.Printf("[INFO] Found %d DAX clusters", len(resp.Clusters))
+	if err != nil {
+		return fmt.Errorf("listing DAX Clusters (%s): %w", region, err)
+	}
 
-	for _, cluster := range resp.Clusters {
-		log.Printf("[INFO] Deleting DAX cluster %s", *cluster.ClusterName)
-		_, err := conn.DeleteCluster(ctx, &dax.DeleteClusterInput{
-			ClusterName: cluster.ClusterName,
-		})
-		if err != nil {
-			return fmt.Errorf("Error deleting DAX cluster %s: %s", *cluster.ClusterName, err)
-		}
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("sweeping DAX Clusters (%s): %w", region, err)
 	}
 
 	return nil
