@@ -273,8 +273,8 @@ func resourceConfigurationPolicyCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if v, ok := d.Get("security_hub_policy").([]interface{}); ok && len(v) > 0 {
-		policy := expandSecurityHubPolicy(v[0].(map[string]interface{}))
-		if err := validateSecurityHubPolicy(policy); err != nil {
+		policy := expandPolicyMemberSecurityHub(v[0].(map[string]interface{}))
+		if err := validatePolicyMemberSecurityHub(policy); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 		input.ConfigurationPolicy = policy
@@ -307,8 +307,8 @@ func resourceConfigurationPolicyUpdate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if v, ok := d.Get("security_hub_policy").([]interface{}); ok && len(v) > 0 {
-		policy := expandSecurityHubPolicy(v[0].(map[string]interface{}))
-		if err := validateSecurityHubPolicy(policy); err != nil {
+		policy := expandPolicyMemberSecurityHub(v[0].(map[string]interface{}))
+		if err := validatePolicyMemberSecurityHub(policy); err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Security Hub Configuration Policy (%s): %s", d.Id(), err)
 		}
 		input.ConfigurationPolicy = policy
@@ -344,7 +344,7 @@ func resourceConfigurationPolicyRead(ctx context.Context, d *schema.ResourceData
 	d.Set("name", out.Name)
 	d.Set("description", out.Description)
 	d.Set("arn", out.Arn)
-	if err := d.Set("security_hub_policy", []interface{}{flattenSecurityHubPolicy(out.ConfigurationPolicy)}); err != nil {
+	if err := d.Set("security_hub_policy", []interface{}{flattenPolicy(out.ConfigurationPolicy)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting security_hub_policy: %s", err)
 	}
 
@@ -367,8 +367,8 @@ func resourceConfigurationPolicyDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-// validateSecurityHubPolicy performs validation before running creates/updates to prevent certain issues with state.
-func validateSecurityHubPolicy(apiPolicy *types.PolicyMemberSecurityHub) error {
+// validatePolicyMemberSecurityHub performs validation before running creates/updates to prevent certain issues with state.
+func validatePolicyMemberSecurityHub(apiPolicy *types.PolicyMemberSecurityHub) error {
 	// security_controls_configuration can be specified in Creates/Updates and accepted by the APIs,
 	// but the resources returned by subsequent Get API call will be nil instead of non-nil.
 	// This leaves terraform in perpetual drift and so we prevent this case explicitly.
@@ -389,7 +389,7 @@ func validateSecurityHubPolicy(apiPolicy *types.PolicyMemberSecurityHub) error {
 	return nil
 }
 
-func expandSecurityHubPolicy(tfMap map[string]interface{}) *types.PolicyMemberSecurityHub {
+func expandPolicyMemberSecurityHub(tfMap map[string]interface{}) *types.PolicyMemberSecurityHub {
 	if tfMap == nil {
 		return nil
 	}
@@ -523,7 +523,7 @@ func expandControlCustomParameter(tfCustomParam map[string]interface{}) types.Se
 	return apiCustomParam
 }
 
-func flattenSecurityHubPolicy(policy types.Policy) map[string]interface{} {
+func flattenPolicy(policy types.Policy) map[string]interface{} {
 	apiObject, ok := policy.(*types.PolicyMemberSecurityHub)
 	if !ok || apiObject == nil {
 		return nil
