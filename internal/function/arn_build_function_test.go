@@ -6,7 +6,9 @@ package function_test
 import (
 	"testing"
 
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -15,6 +17,9 @@ func TestARNBuildFunction_known(t *testing.T) {
 
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0-beta1"))),
+		},
 		Steps: []resource.TestStep{
 			{
 				Config: testARNBuildFunctionConfig(),
