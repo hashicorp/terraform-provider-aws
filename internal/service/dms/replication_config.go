@@ -114,11 +114,14 @@ func ResourceReplicationConfig() *schema.Resource {
 				ForceNew: true,
 			},
 			"replication_settings": {
-				Type:                  schema.TypeString,
-				Optional:              true,
-				Computed:              true,
-				ValidateFunc:          validation.StringIsJSON,
-				DiffSuppressFunc:      suppressEquivalentTaskSettings,
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateFunc:     validation.StringIsJSON,
+				DiffSuppressFunc: suppressEquivalentTaskSettings,
+				// StateFunc: func(i interface{}) string {
+				// 	return normalizeTaskSettings(i.(string))
+				// },
 				DiffSuppressOnRefresh: true,
 			},
 			"replication_type": {

@@ -5,6 +5,7 @@ package dms
 
 import (
 	"encoding/json"
+	"log"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
@@ -15,74 +16,12 @@ import (
 // https://mholt.github.io/json-to-go/
 
 type taskSettings struct {
-	TargetMetadata struct {
-		TargetSchema                 string `json:"TargetSchema,omitempty"`
-		SupportLobs                  bool   `json:"SupportLobs,omitempty"`
-		FullLobMode                  bool   `json:"FullLobMode,omitempty"`
-		LobChunkSize                 int    `json:"LobChunkSize,omitempty"`
-		LimitedSizeLobMode           bool   `json:"LimitedSizeLobMode,omitempty"`
-		LobMaxSize                   int    `json:"LobMaxSize,omitempty"`
-		InlineLobMaxSize             int    `json:"InlineLobMaxSize,omitempty"`
-		LoadMaxFileSize              int    `json:"LoadMaxFileSize,omitempty"`
-		ParallelLoadThreads          int    `json:"ParallelLoadThreads,omitempty"`
-		ParallelLoadBufferSize       int    `json:"ParallelLoadBufferSize,omitempty"`
-		ParallelLoadQueuesPerThread  int    `json:"ParallelLoadQueuesPerThread,omitempty"`
-		ParallelApplyThreads         int    `json:"ParallelApplyThreads,omitempty"`
-		ParallelApplyBufferSize      int    `json:"ParallelApplyBufferSize,omitempty"`
-		ParallelApplyQueuesPerThread int    `json:"ParallelApplyQueuesPerThread,omitempty"`
-		BatchApplyEnabled            bool   `json:"BatchApplyEnabled,omitempty"`
-		TaskRecoveryTableEnabled     bool   `json:"TaskRecoveryTableEnabled,omitempty"`
-	} `json:"TargetMetadata,omitempty"`
-	FullLoadSettings struct {
-		TargetTablePrepMode             string `json:"TargetTablePrepMode,omitempty"`
-		CreatePkAfterFullLoad           bool   `json:"CreatePkAfterFullLoad,omitempty"`
-		StopTaskCachedChangesApplied    bool   `json:"StopTaskCachedChangesApplied,omitempty"`
-		StopTaskCachedChangesNotApplied bool   `json:"StopTaskCachedChangesNotApplied,omitempty"`
-		MaxFullLoadSubTasks             int    `json:"MaxFullLoadSubTasks,omitempty"`
-		TransactionConsistencyTimeout   int    `json:"TransactionConsistencyTimeout,omitempty"`
-		CommitRate                      int    `json:"CommitRate,omitempty"`
-	} `json:"FullLoadSettings,omitempty"`
-	TTSettings struct {
-		EnableTT            bool `json:"EnableTT,omitempty"`
-		FailTaskOnTTFailure bool `json:"FailTaskOnTTFailure,omitempty"`
-		TTS3Settings        struct {
-			EncryptionMode                   string `json:"EncryptionMode,omitempty"`
-			ServerSideEncryptionKmsKeyID     string `json:"ServerSideEncryptionKmsKeyId,omitempty"`
-			ServiceAccessRoleArn             string `json:"ServiceAccessRoleArn,omitempty"`
-			BucketName                       string `json:"BucketName,omitempty"`
-			BucketFolder                     string `json:"BucketFolder,omitempty"`
-			EnableDeletingFromS3OnTaskDelete bool   `json:"EnableDeletingFromS3OnTaskDelete,omitempty"`
-		} `json:"TTS3Settings,omitempty"`
-		TTRecordSettings struct {
-			EnableRawData   bool   `json:"EnableRawData,omitempty"`
-			OperationsToLog string `json:"OperationsToLog,omitempty"`
-			MaxRecordSize   int    `json:"MaxRecordSize,omitempty"`
-		} `json:"TTRecordSettings,omitempty"`
-	} `json:"TTSettings,omitempty"`
-	Logging struct {
-		EnableLogging       bool     `json:"EnableLogging,omitempty"`
-		EnableLogContext    bool     `json:"EnableLogContext,omitempty"`
-		CloudWatchLogGroup  struct{} `json:"CloudWatchLogGroup,omitempty"`
-		CloudWatchLogStream struct{} `json:"CloudWatchLogStream,omitempty"`
-	} `json:"Logging,omitempty"`
-	ControlTablesSettings struct {
-		ControlSchema                 string `json:"ControlSchema,omitempty"`
-		CommitPositionTableEnabled    bool   `json:"CommitPositionTableEnabled,omitempty"`
-		FullLoadExceptionTableEnabled bool   `json:"FullLoadExceptionTableEnabled,omitempty"`
-		HistoryTimeslotInMinutes      int    `json:"HistoryTimeslotInMinutes,omitempty"`
-		HistoryTableEnabled           bool   `json:"HistoryTableEnabled,omitempty"`
-		SuspendedTablesTableEnabled   bool   `json:"SuspendedTablesTableEnabled,omitempty"`
-		StatusTableEnabled            bool   `json:"StatusTableEnabled,omitempty"`
-		historyTimeslotInMinutes      int    `json:"historyTimeslotInMinutes,omitempty"`
-	} `json:"ControlTablesSettings,omitempty"`
-	PostProcessingRules  struct{} `json:"PostProcessingRules,omitempty"`
-	StreamBufferSettings struct {
-		CtrlStreamBufferSizeInMB int `json:"CtrlStreamBufferSizeInMB,omitempty"`
-		StreamBufferCount        int `json:"StreamBufferCount,omitempty"`
-		StreamBufferSizeInMB     int `json:"StreamBufferSizeInMB,omitempty"`
-	} `json:"StreamBufferSettings,omitempty"`
-	FailTaskWhenCleanTaskResourceFailed bool `json:"FailTaskWhenCleanTaskResourceFailed,omitempty"`
-	ChangeProcessingTuning              struct {
+	BeforeImageSettings struct {
+		EnableBeforeImage bool   `json:"EnableBeforeImage,omitempty"`
+		FieldName         string `json:"FieldName,omitempty"`
+		ColumnFilter      string `json:"ColumnFilter,omitempty"`
+	} `json:"BeforeImageSettings,omitempty"`
+	ChangeProcessingTuning struct {
 		BatchApplyPreserveTransaction bool `json:"BatchApplyPreserveTransaction,omitempty"`
 		BatchApplyTimeoutMin          int  `json:"BatchApplyTimeoutMin,omitempty"`
 		BatchApplyTimeoutMax          int  `json:"BatchApplyTimeoutMax,omitempty"`
@@ -94,16 +33,6 @@ type taskSettings struct {
 		MemoryKeepTime                int  `json:"MemoryKeepTime,omitempty"`
 		StatementCacheSize            int  `json:"StatementCacheSize,omitempty"`
 	} `json:"ChangeProcessingTuning,omitempty"`
-	ChangeProcessingDdlHandlingPolicy struct {
-		HandleSourceTableDropped   bool `json:"HandleSourceTableDropped,omitempty"`
-		HandleSourceTableTruncated bool `json:"HandleSourceTableTruncated,omitempty"`
-		HandleSourceTableAltered   bool `json:"HandleSourceTableAltered,omitempty"`
-	} `json:"ChangeProcessingDdlHandlingPolicy,omitempty"`
-	LoopbackPreventionSettings struct {
-		EnableLoopbackPrevention bool   `json:"EnableLoopbackPrevention,omitempty"`
-		SourceSchema             string `json:"SourceSchema,omitempty"`
-		TargetSchema             string `json:"TargetSchema,omitempty"`
-	} `json:"LoopbackPreventionSettings,omitempty"`
 	CharacterSetSettings struct {
 		CharacterReplacements []struct {
 			SourceCharacterCodePoint int `json:"SourceCharacterCodePoint,omitempty"`
@@ -114,11 +43,16 @@ type taskSettings struct {
 			ReplaceWithCharacterCodePoint int    `json:"ReplaceWithCharacterCodePoint,omitempty"`
 		} `json:"CharacterSetSupport,omitempty"`
 	} `json:"CharacterSetSettings,omitempty"`
-	BeforeImageSettings struct {
-		EnableBeforeImage bool   `json:"EnableBeforeImage,omitempty"`
-		FieldName         string `json:"FieldName,omitempty"`
-		ColumnFilter      string `json:"ColumnFilter,omitempty"`
-	} `json:"BeforeImageSettings,omitempty"`
+	ControlTablesSettings struct {
+		ControlSchema                 string `json:"ControlSchema,omitempty"`
+		CommitPositionTableEnabled    bool   `json:"CommitPositionTableEnabled,omitempty"`
+		FullLoadExceptionTableEnabled bool   `json:"FullLoadExceptionTableEnabled,omitempty"`
+		HistoryTimeslotInMinutes      int    `json:"HistoryTimeslotInMinutes,omitempty"`
+		HistoryTableEnabled           bool   `json:"HistoryTableEnabled,omitempty"`
+		SuspendedTablesTableEnabled   bool   `json:"SuspendedTablesTableEnabled,omitempty"`
+		StatusTableEnabled            bool   `json:"StatusTableEnabled,omitempty"`
+		historyTimeslotInMinutes      int    `json:"historyTimeslotInMinutes,omitempty"`
+	} `json:"ControlTablesSettings,omitempty"`
 	ErrorBehavior struct {
 		DataErrorPolicy                             string `json:"DataErrorPolicy,omitempty"`
 		DataTruncationErrorPolicy                   string `json:"DataTruncationErrorPolicy,omitempty"`
@@ -143,6 +77,73 @@ type taskSettings struct {
 		ApplyErrorFailOnTruncationDdl               bool   `json:"ApplyErrorFailOnTruncationDdl,omitempty"`
 		FullLoadIgnoreConflicts                     bool   `json:"FullLoadIgnoreConflicts,omitempty"`
 	} `json:"ErrorBehavior,omitempty"`
+	FailTaskWhenCleanTaskResourceFailed bool `json:"FailTaskWhenCleanTaskResourceFailed,omitempty"`
+	FullLoadSettings                    struct {
+		TargetTablePrepMode             string `json:"TargetTablePrepMode,omitempty"`
+		CreatePkAfterFullLoad           bool   `json:"CreatePkAfterFullLoad,omitempty"`
+		StopTaskCachedChangesApplied    bool   `json:"StopTaskCachedChangesApplied,omitempty"`
+		StopTaskCachedChangesNotApplied bool   `json:"StopTaskCachedChangesNotApplied,omitempty"`
+		MaxFullLoadSubTasks             int    `json:"MaxFullLoadSubTasks,omitempty"`
+		TransactionConsistencyTimeout   int    `json:"TransactionConsistencyTimeout,omitempty"`
+		CommitRate                      int    `json:"CommitRate,omitempty"`
+	} `json:"FullLoadSettings,omitempty"`
+	Logging struct {
+		EnableLogging    bool `json:"EnableLogging,omitempty"`
+		EnableLogContext bool `json:"EnableLogContext,omitempty"`
+		// CloudWatchLogGroup  struct{} `json:"CloudWatchLogGroup,omitempty"`
+		// CloudWatchLogStream struct{} `json:"CloudWatchLogStream,omitempty"`
+	} `json:"Logging,omitempty"`
+	LoopbackPreventionSettings struct {
+		EnableLoopbackPrevention bool   `json:"EnableLoopbackPrevention,omitempty"`
+		SourceSchema             string `json:"SourceSchema,omitempty"`
+		TargetSchema             string `json:"TargetSchema,omitempty"`
+	} `json:"LoopbackPreventionSettings,omitempty"`
+	PostProcessingRules  struct{} `json:"PostProcessingRules,omitempty"`
+	StreamBufferSettings struct {
+		CtrlStreamBufferSizeInMB int `json:"CtrlStreamBufferSizeInMB,omitempty"`
+		StreamBufferCount        int `json:"StreamBufferCount,omitempty"`
+		StreamBufferSizeInMB     int `json:"StreamBufferSizeInMB,omitempty"`
+	} `json:"StreamBufferSettings,omitempty"`
+	TTSettings struct {
+		EnableTT            bool `json:"EnableTT,omitempty"`
+		FailTaskOnTTFailure bool `json:"FailTaskOnTTFailure,omitempty"`
+		TTS3Settings        struct {
+			EncryptionMode                   string `json:"EncryptionMode,omitempty"`
+			ServerSideEncryptionKmsKeyID     string `json:"ServerSideEncryptionKmsKeyId,omitempty"`
+			ServiceAccessRoleArn             string `json:"ServiceAccessRoleArn,omitempty"`
+			BucketName                       string `json:"BucketName,omitempty"`
+			BucketFolder                     string `json:"BucketFolder,omitempty"`
+			EnableDeletingFromS3OnTaskDelete bool   `json:"EnableDeletingFromS3OnTaskDelete,omitempty"`
+		} `json:"TTS3Settings,omitempty"`
+		TTRecordSettings struct {
+			EnableRawData   bool   `json:"EnableRawData,omitempty"`
+			OperationsToLog string `json:"OperationsToLog,omitempty"`
+			MaxRecordSize   int    `json:"MaxRecordSize,omitempty"`
+		} `json:"TTRecordSettings,omitempty"`
+	} `json:"TTSettings,omitempty"`
+	TargetMetadata struct {
+		TargetSchema                 string `json:"TargetSchema,omitempty"`
+		SupportLobs                  bool   `json:"SupportLobs,omitempty"`
+		FullLobMode                  bool   `json:"FullLobMode,omitempty"`
+		LobChunkSize                 int    `json:"LobChunkSize,omitempty"`
+		LimitedSizeLobMode           bool   `json:"LimitedSizeLobMode,omitempty"`
+		LobMaxSize                   int    `json:"LobMaxSize,omitempty"`
+		InlineLobMaxSize             int    `json:"InlineLobMaxSize,omitempty"`
+		LoadMaxFileSize              int    `json:"LoadMaxFileSize,omitempty"`
+		ParallelLoadThreads          int    `json:"ParallelLoadThreads,omitempty"`
+		ParallelLoadBufferSize       int    `json:"ParallelLoadBufferSize,omitempty"`
+		ParallelLoadQueuesPerThread  int    `json:"ParallelLoadQueuesPerThread,omitempty"`
+		ParallelApplyThreads         int    `json:"ParallelApplyThreads,omitempty"`
+		ParallelApplyBufferSize      int    `json:"ParallelApplyBufferSize,omitempty"`
+		ParallelApplyQueuesPerThread int    `json:"ParallelApplyQueuesPerThread,omitempty"`
+		BatchApplyEnabled            bool   `json:"BatchApplyEnabled,omitempty"`
+		TaskRecoveryTableEnabled     bool   `json:"TaskRecoveryTableEnabled,omitempty"`
+	} `json:"TargetMetadata,omitempty"`
+	ChangeProcessingDdlHandlingPolicy struct {
+		HandleSourceTableDropped   bool `json:"HandleSourceTableDropped,omitempty"`
+		HandleSourceTableTruncated bool `json:"HandleSourceTableTruncated,omitempty"`
+		HandleSourceTableAltered   bool `json:"HandleSourceTableAltered,omitempty"`
+	} `json:"ChangeProcessingDdlHandlingPolicy,omitempty"`
 	ValidationSettings struct {
 		EnableValidation                 bool   `json:"EnableValidation,omitempty"`
 		ValidationMode                   string `json:"ValidationMode,omitempty"`
@@ -168,11 +169,14 @@ type taskSettings struct {
 func normalizeTaskSettings(apiObject string) string {
 	var taskSettings taskSettings
 
+	log.Printf("[WARN] BEFORE MARSHALS: %v", taskSettings)
 	if err := json.Unmarshal([]byte(apiObject), &taskSettings); err != nil {
+		log.Printf("[WARN] failed to unmarshal task settings JSON: %v", err)
 		return apiObject
 	}
 
 	if b, err := json.Marshal(&taskSettings); err != nil {
+		log.Printf("[WARN] failed to marshal task settings JSON: %v", err)
 		return apiObject
 	} else {
 		return string(tfjson.RemoveEmptyFields(b))
@@ -185,7 +189,9 @@ func suppressEquivalentTaskSettings(k, old, new string, d *schema.ResourceData) 
 		return old == new
 	}
 
+	log.Printf("[WARN] before suppressEquivalentTaskSettings: old=%s, new=%s", old, new)
 	old, new = normalizeTaskSettings(old), normalizeTaskSettings(new)
+	log.Printf("[WARN] suppressEquivalentTaskSettings: old=%s, new=%s", old, new)
 
 	return verify.JSONStringsEqual(old, new)
 }
