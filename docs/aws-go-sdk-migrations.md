@@ -6,6 +6,9 @@ While the AWS Terraform provider already [requires all net-new services](./aws-g
 Over time maintainers will be migrating impacted services to adopt AWS SDK for Go V2.
 For community members interested in contributoring to this effort, this guide documents the common patterns required to migrate a service.
 
+!!! tip
+    The list of remaining services which require migration can be found in [this meta issue](https://github.com/hashicorp/terraform-provider-aws/issues/32976).
+
 ## Pre-Requisites
 
 ### Re-generate Service Client
