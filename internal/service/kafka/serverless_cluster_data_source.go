@@ -42,10 +42,6 @@ func dataSourceServerlessCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"kafka_version": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
