@@ -263,8 +263,9 @@ func resourceConfigurationPolicyCreate(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
+	name := d.Get("name").(string)
 	input := &securityhub.CreateConfigurationPolicyInput{
-		Name: aws.String(d.Get("name").(string)),
+		Name: aws.String(name),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -274,18 +275,19 @@ func resourceConfigurationPolicyCreate(ctx context.Context, d *schema.ResourceDa
 	if v, ok := d.Get("security_hub_policy").([]interface{}); ok && len(v) > 0 {
 		policy := expandSecurityHubPolicy(v[0].(map[string]interface{}))
 		if err := validateSecurityHubPolicy(policy); err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating Security Hub Configuration Policy (%s): %s", *input.Name, err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 		input.ConfigurationPolicy = policy
 	}
 
-	out, err := conn.CreateConfigurationPolicy(ctx, input)
+	output, err := conn.CreateConfigurationPolicy(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Security Hub Configuration Policy (%s): %s", *input.Name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Security Hub Configuration Policy (%s): %s", name, err)
 	}
 
 	if d.IsNewResource() {
-		d.SetId(*out.Id)
+		d.SetId(aws.ToString(output.Id))
 	}
 
 	return append(diags, resourceConfigurationPolicyRead(ctx, d, meta)...)
