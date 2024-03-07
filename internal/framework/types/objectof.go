@@ -14,17 +14,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
-// objectTypeOf is the attribute type of an ObjectValueOf.
-type objectTypeOf[T any] struct {
-	basetypes.ObjectType
-}
-
 var (
 	_ basetypes.ObjectTypable  = (*objectTypeOf[struct{}])(nil)
 	_ NestedObjectType         = (*objectTypeOf[struct{}])(nil)
 	_ basetypes.ObjectValuable = (*ObjectValueOf[struct{}])(nil)
 	_ NestedObjectValue        = (*ObjectValueOf[struct{}])(nil)
 )
+
+// objectTypeOf is the attribute type of an ObjectValueOf.
+type objectTypeOf[T any] struct {
+	basetypes.ObjectType
+}
 
 func newObjectTypeOf[T any](ctx context.Context) (objectTypeOf[T], diag.Diagnostics) {
 	var diags diag.Diagnostics

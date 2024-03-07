@@ -16,8 +16,8 @@ import (
 )
 
 var (
-	_ basetypes.ListValuable = (*ListValueOf[basetypes.StringValue])(nil)
 	_ basetypes.ListTypable  = (*listTypeOf[basetypes.StringValue])(nil)
+	_ basetypes.ListValuable = (*ListValueOf[basetypes.StringValue])(nil)
 )
 
 var (

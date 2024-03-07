@@ -18,18 +18,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
+var (
+	_ xattr.TypeWithValidate   = (*arnType)(nil)
+	_ basetypes.StringTypable  = (*arnType)(nil)
+	_ basetypes.StringValuable = (*ARN)(nil)
+)
+
 type arnType struct {
 	basetypes.StringType
 }
 
 var (
 	ARNType = arnType{}
-)
-
-var (
-	_ xattr.TypeWithValidate   = (*arnType)(nil)
-	_ basetypes.StringTypable  = (*arnType)(nil)
-	_ basetypes.StringValuable = (*ARN)(nil)
 )
 
 func (t arnType) Equal(o attr.Type) bool {
