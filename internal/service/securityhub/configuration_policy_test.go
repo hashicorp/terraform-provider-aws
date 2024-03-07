@@ -67,6 +67,33 @@ func testAccConfigurationPolicy_basic(t *testing.T) {
 	})
 }
 
+func testAccConfigurationPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_securityhub_configuration_policy.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckAlternateRegionIs(t, acctest.Region())
+			acctest.PreCheckOrganizationMemberAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckConfigurationPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationPolicyConfig_baseDisabled("TestPolicy", "This is a disabled policy"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationPolicyExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecurityhub.ResourceConfigurationPolicy(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_configuration_policy.test"

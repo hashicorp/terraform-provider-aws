@@ -98,6 +98,7 @@ func TestAccSecurityHub_centralConfiguration(t *testing.T) {
 		},
 		"ConfigurationPolicy": {
 			"basic":              testAccConfigurationPolicy_basic,
+			"disappears":         testAccConfigurationPolicy_disappears,
 			"customParameters":   testAccConfigurationPolicy_controlCustomParameters,
 			"controlIdentifiers": testAccConfigurationPolicy_specificControlIdentifiers,
 		},
