@@ -48,7 +48,7 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 	return nil
 }
 
-// map[string]*string handling
+// map[string]string handling
 
 // Tags returns cognitoidentity service tags.
 func Tags(tags tftags.KeyValueTags) map[string]string {
