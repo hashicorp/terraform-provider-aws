@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -66,7 +65,7 @@ func (t mapTypeOf[T]) ValueFromMap(ctx context.Context, in basetypes.MapValue) (
 	mapValue, d := basetypes.NewMapValue(newAttrTypeOf[T](ctx), in.Elements())
 	diags.Append(d...)
 	if diags.HasError() {
-		return basetypes.NewMapUnknown(types.StringType), diags
+		return NewMapValueOfUnknown[T](ctx), diags
 	}
 
 	return MapValueOf[T]{MapValue: mapValue}, diags

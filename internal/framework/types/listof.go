@@ -9,7 +9,6 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -65,7 +64,7 @@ func (t listTypeOf[T]) ValueFromList(ctx context.Context, in basetypes.ListValue
 	v, d := basetypes.NewListValue(newAttrTypeOf[T](ctx), in.Elements())
 	diags.Append(d...)
 	if diags.HasError() {
-		return basetypes.NewListUnknown(types.StringType), diags
+		return NewListValueOfUnknown[T](ctx), diags
 	}
 
 	return ListValueOf[T]{ListValue: v}, diags
