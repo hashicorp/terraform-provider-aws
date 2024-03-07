@@ -2492,7 +2492,40 @@ func TestAccRDSInstance_SnapshotIdentifier_io1Storage(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_SnapshotID_io1Storage(rName, 1000),
+				Config: testAccInstanceConfig_SnapshotID_ioStorage(rName, "io1", 1000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
+					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "iops", "1000"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_SnapshotIdentifier_io2Storage(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance, sourceDbInstance rds.DBInstance
+	var dbSnapshot rds.DBSnapshot
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceDbResourceName := "aws_db_instance.source"
+	snapshotResourceName := "aws_db_snapshot.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_SnapshotID_ioStorage(rName, "io2", 1000),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
@@ -3467,7 +3500,7 @@ func TestAccRDSInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) {
 // Regression test for https://github.com/hashicorp/terraform/issues/3760 .
 // We apply a plan, then change just the iops. If the apply succeeds, we
 // consider this a pass, as before in 3760 the request would fail
-func TestAccRDSInstance_Storage_separateIOPSUpdate(t *testing.T) {
+func TestAccRDSInstance_Storage_separateIOPSUpdate_Io1(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -3484,7 +3517,7 @@ func TestAccRDSInstance_Storage_separateIOPSUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_iopsUpdate(rName, 1000),
+				Config: testAccInstanceConfig_iopsUpdate(rName, "io1", 1000),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
@@ -3492,7 +3525,42 @@ func TestAccRDSInstance_Storage_separateIOPSUpdate(t *testing.T) {
 			},
 
 			{
-				Config: testAccInstanceConfig_iopsUpdate(rName, 2000),
+				Config: testAccInstanceConfig_iopsUpdate(rName, "io1", 2000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceAttributes(&v),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_Storage_separateIOPSUpdate_Io2(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_iopsUpdate(rName, "io2", 1000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceAttributes(&v),
+				),
+			},
+
+			{
+				Config: testAccInstanceConfig_iopsUpdate(rName, "io2", 2000),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
@@ -7188,7 +7256,7 @@ resource "aws_db_instance" "restore" {
 `, rName))
 }
 
-func testAccInstanceConfig_iopsUpdate(rName string, iops int) string {
+func testAccInstanceConfig_iopsUpdate(rName string, sType string, iops int) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
@@ -7200,7 +7268,7 @@ data "aws_rds_orderable_db_instance" "test" {
   license_model              = "general-public-license"
   preferred_instance_classes = [%[2]s]
 
-  storage_type  = "io1"
+  storage_type  = %[4]q
   supports_iops = true
 }
 
@@ -7219,9 +7287,9 @@ resource "aws_db_instance" "test" {
 
   storage_type      = data.aws_rds_orderable_db_instance.test.storage_type
   allocated_storage = 200
-  iops              = %[4]d
+  iops              = %[5]d
 }
-`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName, iops)
+`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName, sType, iops)
 }
 
 func testAccInstanceConfig_mySQLPort(rName string) string {
@@ -9932,13 +10000,13 @@ resource "aws_db_instance" "test" {
 `, rName, allocatedStorage))
 }
 
-func testAccInstanceConfig_SnapshotID_io1Storage(rName string, iops int) string {
+func testAccInstanceConfig_SnapshotID_ioStorage(rName string, sType string, iops int) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                = %[1]q
   engine_latest_version = true
   license_model         = "general-public-license"
-  storage_type          = "io1"
+  storage_type          = %[4]q
 
   preferred_instance_classes = [%[2]s]
 }
@@ -9964,10 +10032,10 @@ resource "aws_db_instance" "test" {
   snapshot_identifier = aws_db_snapshot.test.id
   skip_final_snapshot = true
   allocated_storage   = 200
-  iops                = %[4]d
+  iops                = %[5]d
   storage_type        = data.aws_rds_orderable_db_instance.test.storage_type
 }
-`, tfrds.InstanceEngineMariaDB, mainInstanceClasses, rName, iops)
+`, tfrds.InstanceEngineMariaDB, mainInstanceClasses, rName, sType, iops)
 }
 
 func testAccInstanceConfig_SnapshotID_allowMajorVersionUpgrade(rName string, allowMajorVersionUpgrade bool) string {

@@ -496,10 +496,37 @@ func TestAccRDSCluster_storageTypeIo1(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_storageTypeIo1(rName),
+				Config: testAccClusterConfig_storageType(rName, "io1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", "io1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSCluster_storageTypeIo2(t *testing.T) {
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	ctx := acctest.Context(t)
+	var dbCluster rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_storageType(rName, "io2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					resource.TestCheckResourceAttr(resourceName, "storage_type", "io2"),
 				),
 			},
 		},
@@ -3029,7 +3056,7 @@ resource "aws_rds_cluster" "test" {
 `, rName, tfrds.ClusterEngineAuroraMySQL))
 }
 
-func testAccClusterConfig_storageTypeIo1(rName string) string {
+func testAccClusterConfig_storageType(rName string, sType string) string {
 	return acctest.ConfigCompose(
 		testAccConfig_ClusterSubnetGroup(rName),
 		fmt.Sprintf(`
@@ -3037,7 +3064,7 @@ data "aws_rds_orderable_db_instance" "test" {
   engine                     = %[1]q
   engine_latest_version      = true
   preferred_instance_classes = [%[2]s]
-  storage_type               = "io1"
+  storage_type               = %[4]q
   supports_iops              = true
   supports_clusters          = true
 }
@@ -3056,7 +3083,7 @@ resource "aws_rds_cluster" "test" {
   master_username           = "test"
   skip_final_snapshot       = true
 }
-`, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName))
+`, tfrds.ClusterEngineMySQL, mainInstanceClasses, rName, sType))
 }
 
 func testAccClusterConfig_allocatedStorage(rName string) string {
