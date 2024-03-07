@@ -47,6 +47,7 @@ import (
 	controltower_sdkv2 "github.com/aws/aws-sdk-go-v2/service/controltower"
 	costoptimizationhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	customerprofiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/customerprofiles"
+	dax_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dax"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	dynamodb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -55,6 +56,7 @@ import (
 	ecs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecs"
 	eks_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eks"
 	elasticache_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticache"
+	elasticbeanstalk_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
 	elasticloadbalancingv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	emr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emr"
 	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
@@ -165,7 +167,6 @@ import (
 	dataexchange_sdkv1 "github.com/aws/aws-sdk-go/service/dataexchange"
 	datapipeline_sdkv1 "github.com/aws/aws-sdk-go/service/datapipeline"
 	datasync_sdkv1 "github.com/aws/aws-sdk-go/service/datasync"
-	dax_sdkv1 "github.com/aws/aws-sdk-go/service/dax"
 	detective_sdkv1 "github.com/aws/aws-sdk-go/service/detective"
 	devicefarm_sdkv1 "github.com/aws/aws-sdk-go/service/devicefarm"
 	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
@@ -179,7 +180,6 @@ import (
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
 	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
 	elasticache_sdkv1 "github.com/aws/aws-sdk-go/service/elasticache"
-	elasticbeanstalk_sdkv1 "github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	elastictranscoder_sdkv1 "github.com/aws/aws-sdk-go/service/elastictranscoder"
 	elb_sdkv1 "github.com/aws/aws-sdk-go/service/elb"
@@ -507,8 +507,8 @@ func (c *AWSClient) CustomerProfilesClient(ctx context.Context) *customerprofile
 	return errs.Must(client[*customerprofiles_sdkv2.Client](ctx, c, names.CustomerProfiles, make(map[string]any)))
 }
 
-func (c *AWSClient) DAXConn(ctx context.Context) *dax_sdkv1.DAX {
-	return errs.Must(conn[*dax_sdkv1.DAX](ctx, c, names.DAX, make(map[string]any)))
+func (c *AWSClient) DAXClient(ctx context.Context) *dax_sdkv2.Client {
+	return errs.Must(client[*dax_sdkv2.Client](ctx, c, names.DAX, make(map[string]any)))
 }
 
 func (c *AWSClient) DLMConn(ctx context.Context) *dlm_sdkv1.DLM {
@@ -643,8 +643,8 @@ func (c *AWSClient) ElastiCacheClient(ctx context.Context) *elasticache_sdkv2.Cl
 	return errs.Must(client[*elasticache_sdkv2.Client](ctx, c, names.ElastiCache, make(map[string]any)))
 }
 
-func (c *AWSClient) ElasticBeanstalkConn(ctx context.Context) *elasticbeanstalk_sdkv1.ElasticBeanstalk {
-	return errs.Must(conn[*elasticbeanstalk_sdkv1.ElasticBeanstalk](ctx, c, names.ElasticBeanstalk, make(map[string]any)))
+func (c *AWSClient) ElasticBeanstalkClient(ctx context.Context) *elasticbeanstalk_sdkv2.Client {
+	return errs.Must(client[*elasticbeanstalk_sdkv2.Client](ctx, c, names.ElasticBeanstalk, make(map[string]any)))
 }
 
 func (c *AWSClient) ElasticTranscoderConn(ctx context.Context) *elastictranscoder_sdkv1.ElasticTranscoder {

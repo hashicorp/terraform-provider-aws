@@ -768,6 +768,20 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.OptionGroupName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("parameter_group_name"); ok {
+			crossRegion := false
+			if arn.IsARN(sourceDBInstanceID) {
+				sourceARN, err := arn.Parse(sourceDBInstanceID)
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (read replica) (%s): %s", identifier, err)
+				}
+				crossRegion = sourceARN.Region != meta.(*conns.AWSClient).Region
+			}
+			if crossRegion {
+				input.DBParameterGroupName = aws.String(v.(string))
+			}
+		}
+
 		if v, ok := d.GetOk("performance_insights_enabled"); ok {
 			input.EnablePerformanceInsights = aws.Bool(v.(bool))
 		}
