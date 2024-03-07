@@ -2,10 +2,12 @@
 
 FEATURES:
 
+* **New Resource:** `aws_account_region` ([#35739](https://github.com/hashicorp/terraform-provider-aws/issues/35739))
 * **New Resource:** `aws_securitylake_subscriber` ([#35981](https://github.com/hashicorp/terraform-provider-aws/issues/35981))
 
 ENHANCEMENTS:
 
+* data-source/aws_rds_engine_version: Add `has_major_target` and `has_minor_target` optional arguments and `valid_major_targets` and `valid_minor_targets` attributes ([#36246](https://github.com/hashicorp/terraform-provider-aws/issues/36246))
 * resource/aws_batch_job_queue: added parameter `compute_environment_order` which conflicts with `compute_environments` but aligns with AWS API. `compute_environments` has been deprecated. ([#34750](https://github.com/hashicorp/terraform-provider-aws/issues/34750))
 * resource/aws_cloudfront_distribution: Remove the upper limit on `origin.custom_origin_config.origin_read_timeout` ([#36088](https://github.com/hashicorp/terraform-provider-aws/issues/36088))
 * resource/aws_elasticache_serverless_cache: Add plan-time validation of `cache_usage_limits.ecpu_per_second.maximum` ([#35927](https://github.com/hashicorp/terraform-provider-aws/issues/35927))
@@ -19,10 +21,12 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_rds_engine_version: Fix bugs that could limit engine version to a default version even when not appropriate ([#36246](https://github.com/hashicorp/terraform-provider-aws/issues/36246))
 * resource/aws_db_instance: Correctly sets `parameter_group_name` when `replicate_source_db` is in different region. ([#36080](https://github.com/hashicorp/terraform-provider-aws/issues/36080))
 * resource/aws_elastic_beanstalk_environment: Fix `InvalidParameterValue: Environment named ... is in an invalid state for this operation. Must be Ready` errors when `tags` are updated along with other attributes ([#36074](https://github.com/hashicorp/terraform-provider-aws/issues/36074))
 * resource/aws_elasticache_serverless_cache: Change `cache_usage_limits.data_storage.maximum` and `cache_usage_limits.ecpu_per_second.maximum` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#35927](https://github.com/hashicorp/terraform-provider-aws/issues/35927))
 * resource/aws_medialive_channel: Fix handling of optional `encoder_settings.audio_descriptions` arguments ([#36097](https://github.com/hashicorp/terraform-provider-aws/issues/36097))
+* resource/aws_rds_global_cluster: Fix bugs and delays that could occur when performing major or minor version upgrades ([#36246](https://github.com/hashicorp/terraform-provider-aws/issues/36246))
 * resource/aws_s3_bucket: Tags with empty values no longer remove all tags. ([#35710](https://github.com/hashicorp/terraform-provider-aws/issues/35710))
 * resource/aws_s3_bucket_object: Tags with empty values no longer remove all tags. ([#35710](https://github.com/hashicorp/terraform-provider-aws/issues/35710))
 * resource/aws_s3_object: Tags with empty values no longer remove all tags. ([#35710](https://github.com/hashicorp/terraform-provider-aws/issues/35710))
