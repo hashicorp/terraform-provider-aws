@@ -3266,6 +3266,50 @@ func TestAccEC2Instance_NewNetworkInterface_privateIPAndSecondaryPrivateIPsUpdat
 	})
 }
 
+func TestAccEC2Instance_IPv6AddressCount(t *testing.T) {
+	ctx := acctest.Context(t)
+	var original ec2.Instance
+	var updated ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	originalCount := 0
+	updatedCount := 2
+	shrunkenCount := 1
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstance_IPv6AddressCount(rName, originalCount),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &original),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", fmt.Sprint(originalCount)),
+				),
+			},
+			{
+				Config: testAccInstance_IPv6AddressCount(rName, updatedCount),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &updated),
+					testAccCheckInstanceNotRecreated(&original, &updated),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", fmt.Sprint(updatedCount)),
+				),
+			},
+			{
+				Config: testAccInstance_IPv6AddressCount(rName, shrunkenCount),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &updated),
+					testAccCheckInstanceNotRecreated(&original, &updated),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", fmt.Sprint(shrunkenCount)),
+				),
+			},
+		},
+	})
+}
+
 // https://github.com/hashicorp/terraform-provider-aws/issues/227
 func TestAccEC2Instance_AssociatePublic_defaultPrivate(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -6326,7 +6370,24 @@ resource "aws_instance" "test" {
 }
 
 func testAccInstanceConfig_rootBlockDevice(rName, size, delete, volumeType string) string {
-	return testAccInstanceConfig_rootBlockDeviceIOPS(rName, size, delete, volumeType, "")
+       return testAccInstanceConfig_rootBlockDeviceIOPS(rName, size, delete, volumeType, "")
+}
+
+func testAccInstance_IPv6AddressCount(rName string, ipv6_address_count int) string {
+	return acctest.ConfigCompose(
+		testAccInstanceAMIWithEBSRootVolume,
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami           = data.aws_ami.ami.id
+  instance_type = "t2.medium"
+
+  ipv6_address_count = %[2]d
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, ipv6_address_count))
 }
 
 func testAccInstanceConfig_rootBlockDeviceIOPS(rName, size, delete, volumeType, iops string) string {
