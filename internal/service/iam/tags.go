@@ -64,6 +64,15 @@ func instanceProfileCreateTags(ctx context.Context, conn iamiface.IAMAPI, identi
 	return instanceProfileUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
 }
 
+func instanceProfileListTags(ctx context.Context, conn *iam.IAM, identifier string) (tftags.KeyValueTags, error) {
+	role, err := findInstanceProfileByName(ctx, conn, identifier)
+	if err != nil {
+		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
+	}
+
+	return KeyValueTags(ctx, role.Tags), nil
+}
+
 // openIDConnectProviderUpdateTags updates IAM OpenID Connect Provider tags.
 // The identifier is the OpenID Connect Provider ARN.
 func openIDConnectProviderUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
@@ -414,6 +423,9 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 		err  error
 	)
 	switch resourceType {
+	case "InstanceProfile":
+		tags, err = instanceProfileListTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
+
 	case "Role":
 		tags, err = roleListTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
 
