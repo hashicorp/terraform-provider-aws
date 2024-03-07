@@ -32,7 +32,8 @@ resource "aws_securityhub_organization_configuration" "example" {
 resource "aws_securityhub_configuration_policy" "example" {
   name        = "Example"
   description = "This is an example configuration policy"
-  policy_member {
+
+  configuration_policy {
     service_enabled = true
     enabled_standard_arns = [
       "arn:aws:securityhub:us-east-1::standards/aws-foundational-security-best-practices/v/1.0.0",
@@ -66,14 +67,21 @@ resource "aws_securityhub_configuration_policy_association" "ou_example" {
 
 This resource supports the following arguments:
 
-* `target_id` - (Required, Forces new resource) The identifier of the target account, organizational unit, or the root to associate with the specified configuration.
 * `policy_id` - (Required) The universally unique identifier (UUID) of the configuration policy.
+* `target_id` - (Required, Forces new resource) The identifier of the target account, organizational unit, or the root to associate with the specified configuration.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The identifier of the target account, organizational unit, or the root that is associated with the configuration.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `90s`)
+* `update` - (Default `90s`)
 
 ## Import
 

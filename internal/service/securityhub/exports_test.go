@@ -5,9 +5,11 @@ package securityhub
 
 // Exports for use in tests only.
 var (
-	ResourceAutomationRule      = newAutomationRuleResource
-	ResourceConfigurationPolicy = resourceConfigurationPolicy
+	ResourceAutomationRule                 = newAutomationRuleResource
+	ResourceConfigurationPolicy            = resourceConfigurationPolicy
+	ResourceConfigurationPolicyAssociation = resourceConfigurationPolicyAssociation
 
-	FindAutomationRuleByARN     = findAutomationRuleByARN
-	FindConfigurationPolicyByID = findConfigurationPolicyByID
+	FindAutomationRuleByARN                = findAutomationRuleByARN
+	FindConfigurationPolicyAssociationByID = findConfigurationPolicyAssociationByID
+	FindConfigurationPolicyByID            = findConfigurationPolicyByID
 )
