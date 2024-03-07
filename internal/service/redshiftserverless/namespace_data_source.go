@@ -82,7 +82,7 @@ func dataSourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("arn", resource.NamespaceArn)
 	d.Set("db_name", resource.DbName)
 	d.Set("default_iam_role_arn", resource.DefaultIamRoleArn)
-	d.Set("iam_roles", resource.IamRoles)
+	d.Set("iam_roles", flattenNamespaceIAMRoles(resource.IamRoles))
 	d.Set("kms_key_id", resource.KmsKeyId)
 	d.Set("log_exports", resource.LogExports)
 

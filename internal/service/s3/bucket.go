@@ -44,11 +44,11 @@ import (
 const (
 	// General timeout for S3 bucket changes to propagate.
 	// See https://docs.aws.amazon.com/AmazonS3/latest/userguide/Welcome.html#ConsistencyModel.
-	bucketPropagationTimeout = 2 * time.Minute // nosemgrep:ci.s3-in-const-name, ci.s3-in-var-name
+	bucketPropagationTimeout = 2 * time.Minute
 )
 
 // @SDKResource("aws_s3_bucket", name="Bucket")
-// @Tags
+// @Tags(identifierAttribute="bucket", resourceType="Bucket")
 func resourceBucket() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketCreate,
@@ -773,6 +773,10 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "waiting for S3 Bucket (%s) create: %s", d.Id(), err)
 	}
 
+	if err := bucketCreateTags(ctx, conn, d.Id(), getTagsIn(ctx)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting S3 Bucket (%s) tags: %s", d.Id(), err)
+	}
+
 	return append(diags, resourceBucketUpdate(ctx, d, meta)...)
 }
 
@@ -799,7 +803,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}.String()
 	d.Set("arn", arn)
 	d.Set("bucket", d.Id())
-	d.Set("bucket_domain_name", meta.(*conns.AWSClient).PartitionHostname(d.Id()+".s3"))
+	d.Set("bucket_domain_name", meta.(*conns.AWSClient).PartitionHostname(ctx, d.Id()+".s3"))
 	d.Set("bucket_prefix", create.NamePrefixFromName(d.Id()))
 
 	//
@@ -1108,7 +1112,7 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	// Bucket Region etc.
 	//
 	region, err := manager.GetBucketRegion(ctx, conn, d.Id(), func(o *s3.Options) {
-		o.UsePathStyle = meta.(*conns.AWSClient).S3UsePathStyle()
+		o.UsePathStyle = meta.(*conns.AWSClient).S3UsePathStyle(ctx)
 	})
 
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
@@ -1135,27 +1139,6 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 		endpoint, domain := bucketWebsiteEndpointAndDomain(d.Id(), region)
 		d.Set("website_domain", domain)
 		d.Set("website_endpoint", endpoint)
-	}
-
-	//
-	// Bucket Tags.
-	//
-	tags, err := retryWhenNoSuchBucketError(ctx, d.Timeout(schema.TimeoutRead), func() (tftags.KeyValueTags, error) {
-		return bucketListTags(ctx, conn, d.Id())
-	})
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, errCodeNoSuchBucket) {
-		log.Printf("[WARN] S3 Bucket (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return diags
-	}
-
-	switch {
-	case err == nil:
-		setTagsOut(ctx, Tags(tags))
-	case tfawserr.ErrCodeEquals(err, errCodeMethodNotAllowed, errCodeNotImplemented, errCodeXNotImplemented):
-	default:
-		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s): %s", d.Id(), err)
 	}
 
 	return diags
@@ -1556,23 +1539,6 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	//
-	// Bucket Tags.
-	//
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		// Retry due to S3 eventual consistency.
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutUpdate), func() (interface{}, error) {
-			terr := bucketUpdateTags(ctx, conn, d.Id(), o, n)
-			return nil, terr
-		}, errCodeNoSuchBucket)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating S3 Bucket (%s) tags: %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceBucketRead(ctx, d, meta)...)
 }
 
@@ -1650,14 +1616,14 @@ func findBucketRegion(ctx context.Context, awsClient *conns.AWSClient, bucket st
 			// is not compatible with many non-AWS implementations. Instead, pass
 			// the provider s3_force_path_style configuration, which defaults to
 			// false, but allows override.
-			o.UsePathStyle = awsClient.S3UsePathStyle()
+			o.UsePathStyle = awsClient.S3UsePathStyle(ctx)
 		},
 		func(o *s3.Options) {
 			// By default, GetBucketRegion uses anonymous credentials when doing
 			// a HEAD request to get the bucket region. This breaks in aws-cn regions
 			// when the account doesn't have an ICP license to host public content.
 			// Use the current credentials when getting the bucket region.
-			o.Credentials = awsClient.CredentialsProvider()
+			o.Credentials = awsClient.CredentialsProvider(ctx)
 		})
 
 	region, err := manager.GetBucketRegion(ctx, awsClient.S3Client(ctx), bucket, optFns...)

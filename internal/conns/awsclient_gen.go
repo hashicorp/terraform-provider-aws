@@ -42,10 +42,12 @@ import (
 	codestarnotifications_sdkv2 "github.com/aws/aws-sdk-go-v2/service/codestarnotifications"
 	comprehend_sdkv2 "github.com/aws/aws-sdk-go-v2/service/comprehend"
 	computeoptimizer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
+	configservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/configservice"
 	connectcases_sdkv2 "github.com/aws/aws-sdk-go-v2/service/connectcases"
 	controltower_sdkv2 "github.com/aws/aws-sdk-go-v2/service/controltower"
 	costoptimizationhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	customerprofiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/customerprofiles"
+	dax_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dax"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	dynamodb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -54,6 +56,7 @@ import (
 	ecs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecs"
 	eks_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eks"
 	elasticache_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticache"
+	elasticbeanstalk_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
 	elasticloadbalancingv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	emr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emr"
 	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
@@ -86,6 +89,7 @@ import (
 	mediapackagev2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediapackagev2"
 	mediastore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediastore"
 	mq_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mq"
+	mwaa_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mwaa"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	osis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/osis"
@@ -97,6 +101,7 @@ import (
 	qldb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qldb"
 	rbin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
+	redshift_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshift"
 	redshiftdata_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshiftdata"
 	redshiftserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	rekognition_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rekognition"
@@ -156,7 +161,6 @@ import (
 	cloudwatchrum_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	cognitoidentity_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentity"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	configservice_sdkv1 "github.com/aws/aws-sdk-go/service/configservice"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
 	costandusagereportservice_sdkv1 "github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	costexplorer_sdkv1 "github.com/aws/aws-sdk-go/service/costexplorer"
@@ -164,7 +168,6 @@ import (
 	dataexchange_sdkv1 "github.com/aws/aws-sdk-go/service/dataexchange"
 	datapipeline_sdkv1 "github.com/aws/aws-sdk-go/service/datapipeline"
 	datasync_sdkv1 "github.com/aws/aws-sdk-go/service/datasync"
-	dax_sdkv1 "github.com/aws/aws-sdk-go/service/dax"
 	detective_sdkv1 "github.com/aws/aws-sdk-go/service/detective"
 	devicefarm_sdkv1 "github.com/aws/aws-sdk-go/service/devicefarm"
 	directconnect_sdkv1 "github.com/aws/aws-sdk-go/service/directconnect"
@@ -178,7 +181,6 @@ import (
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
 	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
 	elasticache_sdkv1 "github.com/aws/aws-sdk-go/service/elasticache"
-	elasticbeanstalk_sdkv1 "github.com/aws/aws-sdk-go/service/elasticbeanstalk"
 	elasticsearchservice_sdkv1 "github.com/aws/aws-sdk-go/service/elasticsearchservice"
 	elastictranscoder_sdkv1 "github.com/aws/aws-sdk-go/service/elastictranscoder"
 	elb_sdkv1 "github.com/aws/aws-sdk-go/service/elb"
@@ -213,7 +215,6 @@ import (
 	macie2_sdkv1 "github.com/aws/aws-sdk-go/service/macie2"
 	managedgrafana_sdkv1 "github.com/aws/aws-sdk-go/service/managedgrafana"
 	memorydb_sdkv1 "github.com/aws/aws-sdk-go/service/memorydb"
-	mwaa_sdkv1 "github.com/aws/aws-sdk-go/service/mwaa"
 	neptune_sdkv1 "github.com/aws/aws-sdk-go/service/neptune"
 	networkfirewall_sdkv1 "github.com/aws/aws-sdk-go/service/networkfirewall"
 	networkmanager_sdkv1 "github.com/aws/aws-sdk-go/service/networkmanager"
@@ -483,8 +484,8 @@ func (c *AWSClient) ComputeOptimizerClient(ctx context.Context) *computeoptimize
 	return errs.Must(client[*computeoptimizer_sdkv2.Client](ctx, c, names.ComputeOptimizer, make(map[string]any)))
 }
 
-func (c *AWSClient) ConfigServiceConn(ctx context.Context) *configservice_sdkv1.ConfigService {
-	return errs.Must(conn[*configservice_sdkv1.ConfigService](ctx, c, names.ConfigService, make(map[string]any)))
+func (c *AWSClient) ConfigServiceClient(ctx context.Context) *configservice_sdkv2.Client {
+	return errs.Must(client[*configservice_sdkv2.Client](ctx, c, names.ConfigService, make(map[string]any)))
 }
 
 func (c *AWSClient) ConnectConn(ctx context.Context) *connect_sdkv1.Connect {
@@ -507,8 +508,8 @@ func (c *AWSClient) CustomerProfilesClient(ctx context.Context) *customerprofile
 	return errs.Must(client[*customerprofiles_sdkv2.Client](ctx, c, names.CustomerProfiles, make(map[string]any)))
 }
 
-func (c *AWSClient) DAXConn(ctx context.Context) *dax_sdkv1.DAX {
-	return errs.Must(conn[*dax_sdkv1.DAX](ctx, c, names.DAX, make(map[string]any)))
+func (c *AWSClient) DAXClient(ctx context.Context) *dax_sdkv2.Client {
+	return errs.Must(client[*dax_sdkv2.Client](ctx, c, names.DAX, make(map[string]any)))
 }
 
 func (c *AWSClient) DLMConn(ctx context.Context) *dlm_sdkv1.DLM {
@@ -643,8 +644,8 @@ func (c *AWSClient) ElastiCacheClient(ctx context.Context) *elasticache_sdkv2.Cl
 	return errs.Must(client[*elasticache_sdkv2.Client](ctx, c, names.ElastiCache, make(map[string]any)))
 }
 
-func (c *AWSClient) ElasticBeanstalkConn(ctx context.Context) *elasticbeanstalk_sdkv1.ElasticBeanstalk {
-	return errs.Must(conn[*elasticbeanstalk_sdkv1.ElasticBeanstalk](ctx, c, names.ElasticBeanstalk, make(map[string]any)))
+func (c *AWSClient) ElasticBeanstalkClient(ctx context.Context) *elasticbeanstalk_sdkv2.Client {
+	return errs.Must(client[*elasticbeanstalk_sdkv2.Client](ctx, c, names.ElasticBeanstalk, make(map[string]any)))
 }
 
 func (c *AWSClient) ElasticTranscoderConn(ctx context.Context) *elastictranscoder_sdkv1.ElasticTranscoder {
@@ -855,8 +856,8 @@ func (c *AWSClient) MQClient(ctx context.Context) *mq_sdkv2.Client {
 	return errs.Must(client[*mq_sdkv2.Client](ctx, c, names.MQ, make(map[string]any)))
 }
 
-func (c *AWSClient) MWAAConn(ctx context.Context) *mwaa_sdkv1.MWAA {
-	return errs.Must(conn[*mwaa_sdkv1.MWAA](ctx, c, names.MWAA, make(map[string]any)))
+func (c *AWSClient) MWAAClient(ctx context.Context) *mwaa_sdkv2.Client {
+	return errs.Must(client[*mwaa_sdkv2.Client](ctx, c, names.MWAA, make(map[string]any)))
 }
 
 func (c *AWSClient) Macie2Conn(ctx context.Context) *macie2_sdkv1.Macie2 {
@@ -985,6 +986,10 @@ func (c *AWSClient) RUMConn(ctx context.Context) *cloudwatchrum_sdkv1.CloudWatch
 
 func (c *AWSClient) RedshiftConn(ctx context.Context) *redshift_sdkv1.Redshift {
 	return errs.Must(conn[*redshift_sdkv1.Redshift](ctx, c, names.Redshift, make(map[string]any)))
+}
+
+func (c *AWSClient) RedshiftClient(ctx context.Context) *redshift_sdkv2.Client {
+	return errs.Must(client[*redshift_sdkv2.Client](ctx, c, names.Redshift, make(map[string]any)))
 }
 
 func (c *AWSClient) RedshiftDataClient(ctx context.Context) *redshiftdata_sdkv2.Client {

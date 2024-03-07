@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/configservice"
+	"github.com/aws/aws-sdk-go-v2/service/configservice/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func testAccConfigurationRecorder_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cr configservice.ConfigurationRecorder
+	var cr types.ConfigurationRecorder
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_configuration_recorder.test"
 
@@ -50,7 +50,7 @@ func testAccConfigurationRecorder_basic(t *testing.T) {
 
 func testAccConfigurationRecorder_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cr configservice.ConfigurationRecorder
+	var cr types.ConfigurationRecorder
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_configuration_recorder.test"
 
@@ -74,7 +74,7 @@ func testAccConfigurationRecorder_disappears(t *testing.T) {
 
 func testAccConfigurationRecorder_allParams(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cr configservice.ConfigurationRecorder
+	var cr types.ConfigurationRecorder
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_configuration_recorder.test"
 
@@ -108,7 +108,7 @@ func testAccConfigurationRecorder_allParams(t *testing.T) {
 
 func testAccConfigurationRecorder_recordStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var cr configservice.ConfigurationRecorder
+	var cr types.ConfigurationRecorder
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_config_configuration_recorder.test"
 
@@ -134,20 +134,17 @@ func testAccConfigurationRecorder_recordStrategy(t *testing.T) {
 	})
 }
 
-func testAccCheckConfigurationRecorderExists(ctx context.Context, n string, v *configservice.ConfigurationRecorder) resource.TestCheckFunc {
+func testAccCheckConfigurationRecorderExists(ctx context.Context, n string, v *types.ConfigurationRecorder) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ConfigService Configuration Recorder ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
 
 		output, err := tfconfig.FindConfigurationRecorderByName(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
@@ -160,7 +157,7 @@ func testAccCheckConfigurationRecorderExists(ctx context.Context, n string, v *c
 
 func testAccCheckConfigurationRecorderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConfigServiceClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_config_configuration_recorder_status" {

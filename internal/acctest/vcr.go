@@ -78,7 +78,7 @@ var (
 )
 
 // ProviderMeta returns the current provider's state (AKA "meta" or "conns.AWSClient").
-func ProviderMeta(t *testing.T) *conns.AWSClient {
+func ProviderMeta(_ context.Context, t *testing.T) *conns.AWSClient {
 	t.Helper()
 
 	providerMetas.Lock()
@@ -108,14 +108,14 @@ func vcrMode() (recorder.Mode, error) {
 }
 
 // vcrEnabledProtoV5ProviderFactories returns ProtoV5ProviderFactories ready for use with VCR.
-func vcrEnabledProtoV5ProviderFactories(t *testing.T, input map[string]func() (tfprotov5.ProviderServer, error)) map[string]func() (tfprotov5.ProviderServer, error) {
+func vcrEnabledProtoV5ProviderFactories(ctx context.Context, t *testing.T, input map[string]func() (tfprotov5.ProviderServer, error)) map[string]func() (tfprotov5.ProviderServer, error) {
 	t.Helper()
 
 	output := make(map[string]func() (tfprotov5.ProviderServer, error), len(input))
 
 	for name := range input {
 		output[name] = func() (tfprotov5.ProviderServer, error) {
-			providerServerFactory, primary, err := provider.ProtoV5ProviderServerFactory(context.Background())
+			providerServerFactory, primary, err := provider.ProtoV5ProviderServerFactory(ctx)
 
 			if err != nil {
 				return nil, err
@@ -264,7 +264,7 @@ func vcrProviderConfigureContextFunc(provider *schema.Provider, configureContext
 		} else {
 			meta = new(conns.AWSClient)
 		}
-		meta.SetHTTPClient(httpClient)
+		meta.SetHTTPClient(ctx, httpClient)
 		provider.SetMeta(meta)
 
 		if v, ds := configureContextFunc(ctx, d); ds.HasError() {
@@ -383,7 +383,7 @@ func writeSeedToFile(seed int64, fileName string) error {
 }
 
 // closeVCRRecorder closes the VCR recorder, saving the cassette and randomness seed.
-func closeVCRRecorder(t *testing.T) {
+func closeVCRRecorder(ctx context.Context, t *testing.T) {
 	t.Helper()
 
 	// Don't close the recorder if we're running because of a panic.
@@ -398,7 +398,7 @@ func closeVCRRecorder(t *testing.T) {
 
 	if ok {
 		if !t.Failed() {
-			if v, ok := meta.HTTPClient().Transport.(*recorder.Recorder); ok {
+			if v, ok := meta.HTTPClient(ctx).Transport.(*recorder.Recorder); ok {
 				t.Log("stopping VCR recorder")
 				if err := v.Stop(); err != nil {
 					t.Error(err)
@@ -427,24 +427,24 @@ func closeVCRRecorder(t *testing.T) {
 }
 
 // ParallelTest wraps resource.ParallelTest, initializing VCR if enabled.
-func ParallelTest(t *testing.T, c resource.TestCase) {
+func ParallelTest(ctx context.Context, t *testing.T, c resource.TestCase) {
 	t.Helper()
 
 	if isVCREnabled() {
-		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(t, c.ProtoV5ProviderFactories)
-		defer closeVCRRecorder(t)
+		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(ctx, t, c.ProtoV5ProviderFactories)
+		defer closeVCRRecorder(ctx, t)
 	}
 
 	resource.ParallelTest(t, c)
 }
 
 // Test wraps resource.Test, initializing VCR if enabled.
-func Test(t *testing.T, c resource.TestCase) {
+func Test(ctx context.Context, t *testing.T, c resource.TestCase) {
 	t.Helper()
 
 	if isVCREnabled() {
-		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(t, c.ProtoV5ProviderFactories)
-		defer closeVCRRecorder(t)
+		c.ProtoV5ProviderFactories = vcrEnabledProtoV5ProviderFactories(ctx, t, c.ProtoV5ProviderFactories)
+		defer closeVCRRecorder(ctx, t)
 	}
 
 	resource.Test(t, c)

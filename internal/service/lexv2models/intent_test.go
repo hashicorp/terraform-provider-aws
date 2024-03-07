@@ -16,6 +16,7 @@ import (
 	"github.com/aws/smithy-go/middleware"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -82,7 +83,7 @@ func TestIntentAutoFlex(t *testing.T) {
 
 	imageResponseCardTF := tflexv2models.ImageResponseCard{
 		Title:    types.StringValue(testString),
-		Button:   fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.Button](ctx, buttonsTF),
+		Button:   fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.Button](ctx, buttonsTF),
 		ImageURL: types.StringValue(testString),
 		Subtitle: types.StringValue(testString),
 	}
@@ -101,10 +102,10 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	messageTF := tflexv2models.Message{
-		CustomPayload:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &customPayloadTF),
-		ImageResponseCard: fwtypes.NewListNestedObjectValueOfPtr(ctx, &imageResponseCardTF),
-		PlainTextMessage:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &plainTextMessageTF),
-		SSMLMessage:       fwtypes.NewListNestedObjectValueOfPtr(ctx, &ssmlMessageTF),
+		CustomPayload:     fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &customPayloadTF),
+		ImageResponseCard: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &imageResponseCardTF),
+		PlainTextMessage:  fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &plainTextMessageTF),
+		SSMLMessage:       fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &ssmlMessageTF),
 	}
 	messageAWS := lextypes.Message{
 		CustomPayload:     &customPayloadAWS,
@@ -121,8 +122,8 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	messageGroupTF := tflexv2models.MessageGroup{
-		Message:   fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageTF),
-		Variation: fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.Message](ctx, messagesTF),
+		Message:   fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &messageTF),
+		Variation: fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.Message](ctx, messagesTF),
 	}
 	messageGroupAWS := []lextypes.MessageGroup{
 		{
@@ -132,7 +133,7 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	responseSpecificationTF := tflexv2models.ResponseSpecification{
-		MessageGroup:   fwtypes.NewListNestedObjectValueOfPtr[tflexv2models.MessageGroup](ctx, &messageGroupTF),
+		MessageGroup:   fwtypes.NewListNestedObjectValueOfPtrMust[tflexv2models.MessageGroup](ctx, &messageGroupTF),
 		AllowInterrupt: types.BoolValue(true),
 	}
 	responseSpecificationAWS := lextypes.ResponseSpecification{
@@ -168,7 +169,7 @@ func TestIntentAutoFlex(t *testing.T) {
 	slotValueOverrideMapTF := tflexv2models.SlotValueOverride{
 		MapBlockKey: types.StringValue(testString),
 		Shape:       fwtypes.StringEnumValue(lextypes.SlotShapeList),
-		Value:       fwtypes.NewListNestedObjectValueOfPtr(ctx, &slotValueTF),
+		Value:       fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &slotValueTF),
 		//Values: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []tflexv2models.SlotValueOverride{ // recursive so must be defined in line instead of in variable
 		//	{
 		//		Shape: types.StringValue(testString),
@@ -182,7 +183,7 @@ func TestIntentAutoFlex(t *testing.T) {
 
 	intentOverrideTF := tflexv2models.IntentOverride{
 		Name: types.StringValue(testString),
-		Slot: fwtypes.NewSetNestedObjectValueOfPtr(ctx, &slotValueOverrideMapTF),
+		Slot: fwtypes.NewSetNestedObjectValueOfPtrMust(ctx, &slotValueOverrideMapTF),
 	}
 	intentOverrideAWS := lextypes.IntentOverride{
 		Name:  aws.String(testString),
@@ -201,8 +202,8 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	dialogStateTF := tflexv2models.DialogState{
-		DialogAction: fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogActionTF),
-		Intent:       fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentOverrideTF),
+		DialogAction: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogActionTF),
+		Intent:       fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &intentOverrideTF),
 		SessionAttributes: fwtypes.NewMapValueOfMust[basetypes.StringValue](ctx, map[string]attr.Value{
 			testString: types.StringValue(testString2),
 		}),
@@ -220,20 +221,20 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	defaultConditionalBranchTF := tflexv2models.DefaultConditionalBranch{
-		NextStep: fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
-		Response: fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
+		NextStep: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogStateTF),
+		Response: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &responseSpecificationTF),
 	}
 
 	conditionalSpecificationTF := tflexv2models.ConditionalSpecification{
 		Active: types.BoolValue(true),
-		ConditionalBranch: fwtypes.NewListNestedObjectValueOfValueSlice(ctx, []tflexv2models.ConditionalBranch{{
-			Condition: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionTF),
+		ConditionalBranch: fwtypes.NewListNestedObjectValueOfValueSliceMust(ctx, []tflexv2models.ConditionalBranch{{
+			Condition: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &conditionTF),
 			Name:      types.StringValue(testString),
-			NextStep:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
-			Response:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
+			NextStep:  fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogStateTF),
+			Response:  fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &responseSpecificationTF),
 		}}),
 
-		DefaultBranch: fwtypes.NewListNestedObjectValueOfPtr(ctx, &defaultConditionalBranchTF),
+		DefaultBranch: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &defaultConditionalBranchTF),
 	}
 	conditionalSpecificationAWS := lextypes.ConditionalSpecification{
 		Active: aws.Bool(true),
@@ -253,9 +254,9 @@ func TestIntentAutoFlex(t *testing.T) {
 
 	intentClosingSettingTF := tflexv2models.IntentClosingSetting{
 		Active:          types.BoolValue(true),
-		ClosingResponse: fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
-		Conditional:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
-		NextStep:        fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
+		ClosingResponse: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &responseSpecificationTF),
+		Conditional:     fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &conditionalSpecificationTF),
+		NextStep:        fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogStateTF),
 	}
 	intentClosingSettingAWS := lextypes.IntentClosingSetting{
 		Active:          aws.Bool(true),
@@ -297,8 +298,8 @@ func TestIntentAutoFlex(t *testing.T) {
 
 	audioAndDTMFInputSpecificationTF := tflexv2models.AudioAndDTMFInputSpecification{
 		StartTimeoutMs:     types.Int64Value(1),
-		AudioSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &audioSpecificationTF),
-		DTMFSpecification:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &dtmfSpecificationTF),
+		AudioSpecification: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &audioSpecificationTF),
+		DTMFSpecification:  fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dtmfSpecificationTF),
 	}
 	audioAndDTMFInputSpecificationAWS := lextypes.AudioAndDTMFInputSpecification{
 		StartTimeoutMs:     aws.Int32(1),
@@ -315,10 +316,10 @@ func TestIntentAutoFlex(t *testing.T) {
 
 	promptAttemptSpecificationTF := tflexv2models.PromptAttemptsSpecification{
 		MapBlockKey:                    fwtypes.StringEnumValue(tflexv2models.PromptAttemptsTypeInitial),
-		AllowedInputTypes:              fwtypes.NewListNestedObjectValueOfPtr(ctx, &allowedInputTypesTF),
+		AllowedInputTypes:              fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &allowedInputTypesTF),
 		AllowInterrupt:                 types.BoolValue(true),
-		AudioAndDTMFInputSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &audioAndDTMFInputSpecificationTF),
-		TextInputSpecification:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &textInputSpecificationTF),
+		AudioAndDTMFInputSpecification: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &audioAndDTMFInputSpecificationTF),
+		TextInputSpecification:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &textInputSpecificationTF),
 	}
 	promptAttemptSpecificationAWS := lextypes.PromptAttemptSpecification{
 		AllowedInputTypes:              &allowedInputTypesAWS,
@@ -329,10 +330,10 @@ func TestIntentAutoFlex(t *testing.T) {
 
 	promptSpecificationTF := tflexv2models.PromptSpecification{
 		MaxRetries:                  types.Int64Value(1),
-		MessageGroup:                fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageGroupTF),
+		MessageGroup:                fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &messageGroupTF),
 		AllowInterrupt:              types.BoolValue(true),
 		MessageSelectionStrategy:    fwtypes.StringEnumValue(lextypes.MessageSelectionStrategyOrdered),
-		PromptAttemptsSpecification: fwtypes.NewSetNestedObjectValueOfPtr(ctx, &promptAttemptSpecificationTF),
+		PromptAttemptsSpecification: fwtypes.NewSetNestedObjectValueOfPtrMust(ctx, &promptAttemptSpecificationTF),
 	}
 	promptSpecificationAWS := lextypes.PromptSpecification{
 		MaxRetries:               aws.Int32(1),
@@ -345,15 +346,15 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	failureSuccessTimeoutTF := tflexv2models.FailureSuccessTimeout{
-		FailureConditional: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
-		FailureNextStep:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
-		FailureResponse:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
-		SuccessConditional: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
-		SuccessNextStep:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
-		SuccessResponse:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
-		TimeoutConditional: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
-		TimeoutNextStep:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
-		TimeoutResponse:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
+		FailureConditional: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &conditionalSpecificationTF),
+		FailureNextStep:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogStateTF),
+		FailureResponse:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &responseSpecificationTF),
+		SuccessConditional: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &conditionalSpecificationTF),
+		SuccessNextStep:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogStateTF),
+		SuccessResponse:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &responseSpecificationTF),
+		TimeoutConditional: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &conditionalSpecificationTF),
+		TimeoutNextStep:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogStateTF),
+		TimeoutResponse:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &responseSpecificationTF),
 	}
 
 	postCodeHookSpecificationAWS := lextypes.PostDialogCodeHookInvocationSpecification{
@@ -383,7 +384,7 @@ func TestIntentAutoFlex(t *testing.T) {
 		Active:                    types.BoolValue(true),
 		EnableCodeHookInvocation:  types.BoolValue(true),
 		InvocationLabel:           types.StringValue(testString),
-		PostCodeHookSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &failureSuccessTimeoutTF),
+		PostCodeHookSpecification: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &failureSuccessTimeoutTF),
 	}
 	dialogCodeHookInvocationSettingAWS := lextypes.DialogCodeHookInvocationSetting{
 		Active:                    aws.Bool(true),
@@ -402,19 +403,19 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	intentConfirmationSettingTF := tflexv2models.IntentConfirmationSetting{
-		PromptSpecification:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &promptSpecificationTF),
+		PromptSpecification:     fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &promptSpecificationTF),
 		Active:                  types.BoolValue(true),
-		CodeHook:                fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogCodeHookInvocationSettingTF),
-		ConfirmationConditional: fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
-		ConfirmationNextStep:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
-		ConfirmationResponse:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
-		DeclinationConditional:  fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
-		DeclinationNextStep:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
-		DeclinationResponse:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
-		ElicitationCodeHook:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &elicitationCodeHookTF),
-		FailureConditional:      fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
-		FailureNextStep:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
-		FailureResponse:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
+		CodeHook:                fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogCodeHookInvocationSettingTF),
+		ConfirmationConditional: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &conditionalSpecificationTF),
+		ConfirmationNextStep:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogStateTF),
+		ConfirmationResponse:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &responseSpecificationTF),
+		DeclinationConditional:  fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &conditionalSpecificationTF),
+		DeclinationNextStep:     fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogStateTF),
+		DeclinationResponse:     fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &responseSpecificationTF),
+		ElicitationCodeHook:     fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &elicitationCodeHookTF),
+		FailureConditional:      fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &conditionalSpecificationTF),
+		FailureNextStep:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogStateTF),
+		FailureResponse:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &responseSpecificationTF),
 	}
 	intentConfirmationSettingAWS := lextypes.IntentConfirmationSetting{
 		PromptSpecification:     &promptSpecificationAWS,
@@ -441,7 +442,7 @@ func TestIntentAutoFlex(t *testing.T) {
 
 	fulfillmentStartResponseSpecificationTF := tflexv2models.FulfillmentStartResponseSpecification{
 		DelayInSeconds: types.Int64Value(1),
-		MessageGroup:   fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageGroupTF),
+		MessageGroup:   fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &messageGroupTF),
 		AllowInterrupt: types.BoolValue(true),
 	}
 	fulfillmentStartResponseSpecificationAWS := lextypes.FulfillmentStartResponseSpecification{
@@ -452,7 +453,7 @@ func TestIntentAutoFlex(t *testing.T) {
 
 	fulfillmentUpdateResponseSpecificationTF := tflexv2models.FulfillmentUpdateResponseSpecification{
 		FrequencyInSeconds: types.Int64Value(1),
-		MessageGroup:       fwtypes.NewListNestedObjectValueOfPtr(ctx, &messageGroupTF),
+		MessageGroup:       fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &messageGroupTF),
 		AllowInterrupt:     types.BoolValue(true),
 	}
 	fulfillmentUpdateResponseSpecificationAWS := lextypes.FulfillmentUpdateResponseSpecification{
@@ -463,9 +464,9 @@ func TestIntentAutoFlex(t *testing.T) {
 
 	fulfillmentUpdatesSpecificationTF := tflexv2models.FulfillmentUpdatesSpecification{
 		Active:           types.BoolValue(true),
-		StartResponse:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentStartResponseSpecificationTF),
+		StartResponse:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &fulfillmentStartResponseSpecificationTF),
 		TimeoutInSeconds: types.Int64Value(1),
-		UpdateResponse:   fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentUpdateResponseSpecificationTF),
+		UpdateResponse:   fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &fulfillmentUpdateResponseSpecificationTF),
 	}
 	fulfillmentUpdatesSpecificationAWS := lextypes.FulfillmentUpdatesSpecification{
 		Active:           aws.Bool(true),
@@ -477,8 +478,8 @@ func TestIntentAutoFlex(t *testing.T) {
 	fulfillmentCodeHookSettingsTF := tflexv2models.FulfillmentCodeHookSettings{
 		Enabled:                            types.BoolValue(true),
 		Active:                             types.BoolValue(true),
-		FulfillmentUpdatesSpecification:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentUpdatesSpecificationTF),
-		PostFulfillmentStatusSpecification: fwtypes.NewListNestedObjectValueOfPtr(ctx, &failureSuccessTimeoutTF),
+		FulfillmentUpdatesSpecification:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &fulfillmentUpdatesSpecificationTF),
+		PostFulfillmentStatusSpecification: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &failureSuccessTimeoutTF),
 	}
 	fulfillmentCodeHookSettingsAWS := lextypes.FulfillmentCodeHookSettings{
 		Enabled:                            true,
@@ -488,10 +489,10 @@ func TestIntentAutoFlex(t *testing.T) {
 	}
 
 	initialResponseSettingTF := tflexv2models.InitialResponseSetting{
-		CodeHook:        fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogCodeHookInvocationSettingTF),
-		Conditional:     fwtypes.NewListNestedObjectValueOfPtr(ctx, &conditionalSpecificationTF),
-		InitialResponse: fwtypes.NewListNestedObjectValueOfPtr(ctx, &responseSpecificationTF),
-		NextStep:        fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogStateTF),
+		CodeHook:        fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogCodeHookInvocationSettingTF),
+		Conditional:     fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &conditionalSpecificationTF),
+		InitialResponse: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &responseSpecificationTF),
+		NextStep:        fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogStateTF),
 	}
 	initialResponseSettingAWS := lextypes.InitialResponseSetting{
 		CodeHook:        &dialogCodeHookInvocationSettingAWS,
@@ -579,16 +580,16 @@ func TestIntentAutoFlex(t *testing.T) {
 		Name:                   types.StringValue(testString),
 		LocaleID:               types.StringValue(testString),
 		Description:            types.StringValue(testString),
-		DialogCodeHook:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogCodeHookSettingsTF),
-		FulfillmentCodeHook:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentCodeHookSettingsTF),
-		InitialResponseSetting: fwtypes.NewListNestedObjectValueOfPtr(ctx, &initialResponseSettingTF),
-		InputContext:           fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.InputContext](ctx, inputContextsTF),
-		ClosingSetting:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentClosingSettingTF),
-		ConfirmationSetting:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentConfirmationSettingTF),
-		KendraConfiguration:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &kendraConfigurationTF),
-		OutputContext:          fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.OutputContext](ctx, outputContextsTF),
+		DialogCodeHook:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogCodeHookSettingsTF),
+		FulfillmentCodeHook:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &fulfillmentCodeHookSettingsTF),
+		InitialResponseSetting: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &initialResponseSettingTF),
+		InputContext:           fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.InputContext](ctx, inputContextsTF),
+		ClosingSetting:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &intentClosingSettingTF),
+		ConfirmationSetting:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &intentConfirmationSettingTF),
+		KendraConfiguration:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &kendraConfigurationTF),
+		OutputContext:          fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.OutputContext](ctx, outputContextsTF),
 		ParentIntentSignature:  types.StringValue(testString),
-		SampleUtterance:        fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.SampleUtterance](ctx, sampleUtterancesTF),
+		SampleUtterance:        fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.SampleUtterance](ctx, sampleUtterancesTF),
 	}
 	intentCreateAWS := lexmodelsv2.CreateIntentInput{
 		BotId:                     aws.String(testString),
@@ -614,17 +615,17 @@ func TestIntentAutoFlex(t *testing.T) {
 		Name:                   types.StringValue(testString),
 		LocaleID:               types.StringValue(testString),
 		Description:            types.StringValue(testString),
-		DialogCodeHook:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogCodeHookSettingsTF),
-		FulfillmentCodeHook:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentCodeHookSettingsTF),
-		InitialResponseSetting: fwtypes.NewListNestedObjectValueOfPtr(ctx, &initialResponseSettingTF),
-		InputContext:           fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.InputContext](ctx, inputContextsTF),
-		ClosingSetting:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentClosingSettingTF),
-		ConfirmationSetting:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentConfirmationSettingTF),
-		KendraConfiguration:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &kendraConfigurationTF),
-		OutputContext:          fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.OutputContext](ctx, outputContextsTF),
+		DialogCodeHook:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogCodeHookSettingsTF),
+		FulfillmentCodeHook:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &fulfillmentCodeHookSettingsTF),
+		InitialResponseSetting: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &initialResponseSettingTF),
+		InputContext:           fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.InputContext](ctx, inputContextsTF),
+		ClosingSetting:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &intentClosingSettingTF),
+		ConfirmationSetting:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &intentConfirmationSettingTF),
+		KendraConfiguration:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &kendraConfigurationTF),
+		OutputContext:          fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.OutputContext](ctx, outputContextsTF),
 		ParentIntentSignature:  types.StringValue(testString),
-		SampleUtterance:        fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.SampleUtterance](ctx, sampleUtterancesTF),
-		SlotPriority:           fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.SlotPriority](ctx, slotPrioritiesTF),
+		SampleUtterance:        fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.SampleUtterance](ctx, sampleUtterancesTF),
+		SlotPriority:           fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.SlotPriority](ctx, slotPrioritiesTF),
 	}
 	intentModifyAWS := lexmodelsv2.UpdateIntentInput{
 		BotId:                     aws.String(testString),
@@ -651,23 +652,23 @@ func TestIntentAutoFlex(t *testing.T) {
 	intentDescribeTF := tflexv2models.ResourceIntentData{
 		BotID:                  types.StringValue(testString),
 		BotVersion:             types.StringValue(testString),
-		ClosingSetting:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentClosingSettingTF),
-		ConfirmationSetting:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &intentConfirmationSettingTF),
-		CreationDateTime:       fwtypes.TimestampValue(testTimeStr),
+		ClosingSetting:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &intentClosingSettingTF),
+		ConfirmationSetting:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &intentConfirmationSettingTF),
+		CreationDateTime:       timetypes.NewRFC3339ValueMust(testTimeStr),
 		Description:            types.StringValue(testString),
-		DialogCodeHook:         fwtypes.NewListNestedObjectValueOfPtr(ctx, &dialogCodeHookSettingsTF),
-		FulfillmentCodeHook:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &fulfillmentCodeHookSettingsTF),
+		DialogCodeHook:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogCodeHookSettingsTF),
+		FulfillmentCodeHook:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &fulfillmentCodeHookSettingsTF),
 		IntentID:               types.StringValue(testString),
-		InitialResponseSetting: fwtypes.NewListNestedObjectValueOfPtr(ctx, &initialResponseSettingTF),
-		InputContext:           fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.InputContext](ctx, inputContextsTF),
-		KendraConfiguration:    fwtypes.NewListNestedObjectValueOfPtr(ctx, &kendraConfigurationTF),
-		LastUpdatedDateTime:    fwtypes.TimestampValue(testTimeStr),
+		InitialResponseSetting: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &initialResponseSettingTF),
+		InputContext:           fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.InputContext](ctx, inputContextsTF),
+		KendraConfiguration:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &kendraConfigurationTF),
+		LastUpdatedDateTime:    timetypes.NewRFC3339ValueMust(testTimeStr),
 		LocaleID:               types.StringValue(testString),
 		Name:                   types.StringValue(testString),
-		OutputContext:          fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.OutputContext](ctx, outputContextsTF),
+		OutputContext:          fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.OutputContext](ctx, outputContextsTF),
 		ParentIntentSignature:  types.StringValue(testString),
-		SampleUtterance:        fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.SampleUtterance](ctx, sampleUtterancesTF),
-		SlotPriority:           fwtypes.NewListNestedObjectValueOfValueSlice[tflexv2models.SlotPriority](ctx, slotPrioritiesTF),
+		SampleUtterance:        fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.SampleUtterance](ctx, sampleUtterancesTF),
+		SlotPriority:           fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.SlotPriority](ctx, slotPrioritiesTF),
 	}
 	intentDescribeAWS := lexmodelsv2.DescribeIntentOutput{
 		BotId:                     aws.String(testString),

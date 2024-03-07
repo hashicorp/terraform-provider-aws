@@ -1084,7 +1084,7 @@ func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
 func PreCheckRegionOptIn(ctx context.Context, t *testing.T, region string) {
 	t.Helper()
 
-	output, err := tfaccount.FindRegionOptInStatus(ctx, Provider.Meta().(*conns.AWSClient).AccountClient(ctx), "", region)
+	output, err := tfaccount.FindRegionOptStatus(ctx, Provider.Meta().(*conns.AWSClient).AccountClient(ctx), "", region)
 
 	if err != nil {
 		t.Fatalf("reading Region (%s) opt-in status: %s", region, err)
@@ -2301,7 +2301,7 @@ resource "aws_vpc" "vpc_for_lambda" {
   assign_generated_ipv6_cidr_block = true
 
   tags = {
-    Name = "terraform-testacc-lambda-function"
+    Name = %[3]q
   }
 }
 
@@ -2313,7 +2313,7 @@ resource "aws_subnet" "subnet_for_lambda" {
   assign_ipv6_address_on_creation = true
 
   tags = {
-    Name = "tf-acc-lambda-function-1"
+    Name = %[3]q
   }
 }
 
@@ -2327,7 +2327,7 @@ resource "aws_subnet" "subnet_for_lambda_az2" {
   assign_ipv6_address_on_creation = true
 
   tags = {
-    Name = "tf-acc-lambda-function-2"
+    Name = %[3]q
   }
 }
 
