@@ -219,15 +219,12 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		input.IncludeAll = aws.Bool(v.(bool))
 	}
 
-	defaultOnlySet := false
-
 	if v, ok := d.GetOk("default_only"); ok {
 		input.DefaultOnly = aws.Bool(v.(bool))
-		defaultOnlySet = true
 	}
 
 	// Make sure any optional arguments in the schema are in this list except for "default_only"
-	if !defaultOnlySet && !criteriaSet(d, []string{
+	if _, ok := d.GetOk("default_only"); !ok && !criteriaSet(d, []string{
 		"filter",
 		"has_major_target",
 		"has_minor_target",
