@@ -34,7 +34,8 @@ resource "aws_securityhub_organization_configuration" "example" {
 resource "aws_securityhub_configuration_policy" "example" {
   name        = "Example"
   description = "This is an example configuration policy"
-  policy_member {
+
+  configuration_policy {
     service_enabled = true
     enabled_standard_arns = [
       "arn:aws:securityhub:us-east-1::standards/aws-foundational-security-best-practices/v/1.0.0",
@@ -55,7 +56,8 @@ resource "aws_securityhub_configuration_policy" "example" {
 resource "aws_securityhub_configuration_policy" "disabled" {
   name        = "Disabled"
   description = "This is an example of disabled configuration policy"
-  policy_member {
+
+  configuration_policy {
     service_enabled       = false
     enabled_standard_arns = []
   }
@@ -70,7 +72,8 @@ resource "aws_securityhub_configuration_policy" "disabled" {
 resource "aws_securityhub_configuration_policy" "disabled" {
   name        = "Custom Controls"
   description = "This is an example of configuration policy with custom control settings"
-  policy_member {
+
+  configuration_policy {
     service_enabled = true
     enabled_standard_arns = [
       "arn:aws:securityhub:us-east-1::standards/aws-foundational-security-best-practices/v/1.0.0",
@@ -81,8 +84,8 @@ resource "aws_securityhub_configuration_policy" "disabled" {
         "APIGateway.1",
         "IAM.7",
       ]
-      control_custom_parameter {
-        control_identifier = "APIGateway.1"
+      security_control_custom_parameter {
+        security_control_id = "APIGateway.1"
         parameter {
           name       = "loggingLevel"
           value_type = "CUSTOM"
@@ -91,8 +94,8 @@ resource "aws_securityhub_configuration_policy" "disabled" {
           }
         }
       }
-      control_custom_parameter {
-        control_identifier = "IAM.7"
+      security_control_custom_parameter {
+        security_control_id = "IAM.7"
         parameter {
           name       = "RequireLowercaseCharacters"
           value_type = "CUSTOM"
@@ -119,17 +122,17 @@ resource "aws_securityhub_configuration_policy" "disabled" {
 
 This resource supports the following arguments:
 
-* `name` - (Required) The name of the configuration policy.
+* `configuration_policy` - (Required) Defines how Security Hub is configured. See [below](#configuration_policy).
 * `description` - (Optional) The description of the configuration policy.
-* `policy_member` - (Required) Defines how Security Hub is configured. See [below](#policy_member).
+* `name` - (Required) The name of the configuration policy.
 
-### policy_member
+### configuration_policy
 
-The `policy_member` block supports the following:
+The `configuration_policy` block supports the following:
 
-* `service_enabled` - (Required) Indicates whether Security Hub is enabled in the policy.
 * `enabled_standard_arns` - (Required) A list that defines which security standards are enabled in the configuration policy.
 * `security_controls_configuration` - (Optional) Defines which security controls are enabled in the configuration policy and any customizations to parameters affecting them. See [below](#security_controls_configuration).
+* `service_enabled` - (Required) Indicates whether Security Hub is enabled in the policy.
 
 ### security_controls_configuration
 
@@ -137,14 +140,14 @@ The `security_controls_configuration` block supports the following:
 
 * `disabled_control_identifiers` - (Optional) A list of security controls that are disabled in the configuration policy Security Hub enables all other controls (including newly released controls) other than the listed controls. Conflicts with `enabled_control_identifiers`.
 * `enabled_control_identifiers` - (Optional) A list of security controls that are enabled in the configuration policy. Security Hub disables all other controls (including newly released controls) other than the listed controls. Conflicts with `disabled_control_identifiers`.
-* `control_custom_parameter` - (Optional) A list of control parameter customizations that are included in a configuration policy. Include multiple blocks to define multiple control custom parameters. See [below](#control_custom_parameter).
+* `security_control_custom_parameter` - (Optional) A list of control parameter customizations that are included in a configuration policy. Include multiple blocks to define multiple control custom parameters. See [below](#security_control_custom_parameter).
 
-### control_custom_parameter
+### security_control_custom_parameter
 
-The `control_custom_parameter` block supports the following:
+The `security_control_custom_parameter` block supports the following:
 
-* `control_identifier` - (Required) The ID of the security control. For more information see the [Security Hub controls reference] documentation.
 * `parameter` - (Required) An object that specifies parameter values for a control in a configuration policy. See [below](#parameter).
+* `security_control_id` - (Required) The ID of the security control. For more information see the [Security Hub controls reference] documentation.
 
 ### parameter
 
