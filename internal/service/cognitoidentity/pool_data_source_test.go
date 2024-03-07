@@ -29,7 +29,7 @@ func TestAccCognitoIdentityPoolDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cognitoidentity.ServiceID)
+			acctest.PreCheckPartitionHasService(t, names.CognitoIdentityEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
@@ -65,7 +65,7 @@ func TestAccCognitoIdentityPoolDataSource_openidConnectProviderARNs(t *testing.T
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cognitoidentity.ServiceID)
+			acctest.PreCheckPartitionHasService(t, names.CognitoIdentityEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
@@ -99,7 +99,7 @@ func TestAccCognitoIdentityPoolDataSource_cognitoIdentityProviders(t *testing.T)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cognitoidentity.ServiceID)
+			acctest.PreCheckPartitionHasService(t, names.CognitoIdentityEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
@@ -134,7 +134,7 @@ func TestAccCognitoIdentityPoolDataSource_samlProviderARNs(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cognitoidentity.ServiceID)
+			acctest.PreCheckPartitionHasService(t, names.CognitoIdentityEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
@@ -168,7 +168,7 @@ func TestAccCognitoIdentityPoolDataSource_supportedLoginProviders(t *testing.T) 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cognitoidentity.ServiceID)
+			acctest.PreCheckPartitionHasService(t, names.CognitoIdentityEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
@@ -202,7 +202,7 @@ func TestAccCognitoIdentityPoolDataSource_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cognitoidentity.ServiceID)
+			acctest.PreCheckPartitionHasService(t, names.CognitoIdentityEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
