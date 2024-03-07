@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_securityhub_organization_configuration")
-func ResourceOrganizationConfiguration() *schema.Resource {
+// @SDKResource("aws_securityhub_organization_configuration", name="Organization Configuration")
+func resourceOrganizationConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceOrganizationConfigurationUpdate,
 		ReadWithoutTimeout:   resourceOrganizationConfigurationRead,
@@ -35,7 +35,8 @@ func ResourceOrganizationConfiguration() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Read:   schema.DefaultTimeout(180 * time.Second),
+			Create: schema.DefaultTimeout(180 * time.Second),
+			Update: schema.DefaultTimeout(180 * time.Second),
 			Delete: schema.DefaultTimeout(180 * time.Second),
 		},
 
@@ -92,38 +93,18 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "updating Security Hub Organization Configuration (%s): %s", d.Id(), err)
 	}
 
+	timeout := d.Timeout(schema.TimeoutCreate)
 	if d.IsNewResource() {
 		d.SetId(meta.(*conns.AWSClient).AccountID)
+	} else {
+		timeout = d.Timeout(schema.TimeoutUpdate)
+	}
+
+	if _, err := waitOrganizationConfigurationEnabled(ctx, conn, timeout); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Security Hub Organization Configuration (%s) enable: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceOrganizationConfigurationRead(ctx, d, meta)...)
-}
-
-// resourceOrganizationConfigurationDelete destroys the organizations configuration resource by updating it to a disabled configuration.
-// If orgnanization configuration is of type central, then dependent resources (i.e finding_aggregator, delegated_admin) cannot be removed from AWS.
-// Updating the organization configuration on destroy is necessary to allow dependent resources to be able to be cleaned up.
-func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
-
-	input := &securityhub.UpdateOrganizationConfigurationInput{
-		AutoEnable:          aws.Bool(false),
-		AutoEnableStandards: types.AutoEnableStandardsNone,
-		OrganizationConfiguration: &types.OrganizationConfiguration{
-			ConfigurationType: types.OrganizationConfigurationConfigurationTypeLocal,
-		},
-	}
-	_, err := conn.UpdateOrganizationConfiguration(ctx, input)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Security Hub Organization Configuration (%s): %s", d.Id(), err)
-	}
-
-	_, err = waitOrganizationConfigurationEnabled(ctx, conn, d.Timeout(schema.TimeoutDelete))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Security Hub Organization Configuration (%s): %s", d.Id(), err)
-	}
-
-	return diags
 }
 
 func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -144,9 +125,36 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 
 	d.Set("auto_enable", output.AutoEnable)
 	d.Set("auto_enable_standards", output.AutoEnableStandards)
-
 	if err := d.Set("organization_configuration", []interface{}{flattenOrganizationConfiguration(output.OrganizationConfiguration)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting organization_configuration: %s", err)
+	}
+
+	return diags
+}
+
+// resourceOrganizationConfigurationDelete destroys the organizations configuration resource by updating it to a disabled configuration.
+// If orgnanization configuration is of type central, then dependent resources (i.e finding_aggregator, delegated_admin) cannot be removed from AWS.
+// Updating the organization configuration on destroy is necessary to allow dependent resources to be able to be cleaned up.
+func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
+
+	input := &securityhub.UpdateOrganizationConfigurationInput{
+		AutoEnable:          aws.Bool(false),
+		AutoEnableStandards: types.AutoEnableStandardsNone,
+		OrganizationConfiguration: &types.OrganizationConfiguration{
+			ConfigurationType: types.OrganizationConfigurationConfigurationTypeLocal,
+		},
+	}
+
+	_, err := conn.UpdateOrganizationConfiguration(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Security Hub Organization Configuration (%s): %s", d.Id(), err)
+	}
+
+	if _, err := waitOrganizationConfigurationEnabled(ctx, conn, d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Security Hub Organization Configuration (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -194,7 +202,7 @@ func findOrganizationConfiguration(ctx context.Context, conn *securityhub.Client
 func waitOrganizationConfigurationEnabled(ctx context.Context, conn *securityhub.Client, timeout time.Duration) (*securityhub.DescribeOrganizationConfigurationOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.OrganizationConfigurationStatusPending),
-		Target:                    append(enum.Slice(types.OrganizationConfigurationStatusEnabled), ""),
+		Target:                    enum.Slice(types.OrganizationConfigurationStatusEnabled),
 		Refresh:                   findOrganizationConfiguration(ctx, conn),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,

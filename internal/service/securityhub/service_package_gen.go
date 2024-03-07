@@ -75,8 +75,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_securityhub_organization_admin_account",
 		},
 		{
-			Factory:  ResourceOrganizationConfiguration,
+			Factory:  resourceOrganizationConfiguration,
 			TypeName: "aws_securityhub_organization_configuration",
+			Name:     "Organization Configuration",
 		},
 		{
 			Factory:  ResourceProductSubscription,

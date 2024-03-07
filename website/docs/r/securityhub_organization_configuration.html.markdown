@@ -83,6 +83,14 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - AWS Account ID.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+* `create` - (Default `180s`)
+* `update` - (Default `180s`)
+* `delete` - (Default `180s`)
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an existing Security Hub enabled account using the AWS account ID. For example:
