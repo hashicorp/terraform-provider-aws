@@ -11,6 +11,7 @@ import (
 	"github.com/YakDriver/go-version"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/rds"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -214,7 +215,10 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		input.EngineVersion = aws.String(v.(string))
 	}
 
-	input.DefaultOnly = aws.Bool(true)
+	if v, ok := d.GetOk("include_all"); ok {
+		input.IncludeAll = aws.Bool(v.(bool))
+	}
+
 	defaultOnlySet := false
 
 	if v, ok := d.GetOk("default_only"); ok {
@@ -222,29 +226,19 @@ func dataSourceEngineVersionRead(ctx context.Context, d *schema.ResourceData, me
 		defaultOnlySet = true
 	}
 
-	if v, ok := d.GetOk("include_all"); ok {
-		input.IncludeAll = aws.Bool(v.(bool))
-		input.DefaultOnly = nil
-	}
-
-	if _, ok := d.GetOk("version"); ok && !defaultOnlySet {
-		input.DefaultOnly = nil
-	}
-
-	if _, ok := d.GetOk("preferred_major_targets"); ok && !defaultOnlySet {
-		input.DefaultOnly = nil
-	}
-
-	if _, ok := d.GetOk("preferred_upgrade_targets"); ok && !defaultOnlySet {
-		input.DefaultOnly = nil
-	}
-
-	if _, ok := d.GetOk("preferred_versions"); ok && !defaultOnlySet {
-		input.DefaultOnly = nil
-	}
-
-	if v, ok := d.GetOk("latest"); ok && v.(bool) && !defaultOnlySet {
-		input.DefaultOnly = nil
+	// Make sure any optional arguments in the schema are in this list except for "default_only"
+	if !defaultOnlySet && !criteriaSet(d, []string{
+		"filter",
+		"has_major_target",
+		"has_minor_target",
+		"include_all",
+		"latest",
+		"preferred_major_targets",
+		"preferred_upgrade_targets",
+		"preferred_versions",
+		"version",
+	}) {
+		input.DefaultOnly = aws.Bool(true)
 	}
 
 	log.Printf("[DEBUG] Reading RDS engine versions: %v", input)
@@ -481,4 +475,26 @@ func sortEngineVersions(engineVersions []*rds.DBEngineVersion) {
 	sort.Slice(engineVersions, func(i, j int) bool {
 		return version.LessThanWithTime(engineVersions[i].CreateTime, engineVersions[j].CreateTime, aws.StringValue(engineVersions[i].EngineVersion), aws.StringValue(engineVersions[j].EngineVersion))
 	})
+}
+
+// criteriaSet returns true if any of the given criteria are set. "set" means that, in the config,
+// a bool is set and true, a list is set and not empty, or a string is set and not empty.
+func criteriaSet(d *schema.ResourceData, args []string) bool {
+	for _, arg := range args {
+		val := d.GetRawConfig().GetAttr(arg)
+
+		switch {
+		case val.CanIterateElements():
+			if !val.IsNull() && val.IsKnown() && val.LengthInt() > 0 {
+				return true
+			}
+		case val.Equals(cty.True) == cty.True:
+			return true
+
+		case val.Type() == cty.String && !val.IsNull() && val.IsKnown():
+			return true
+		}
+	}
+
+	return false
 }
