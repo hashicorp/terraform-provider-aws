@@ -45,7 +45,7 @@ func (t mapTypeOf[T]) Equal(o attr.Type) bool {
 
 func (t mapTypeOf[T]) String() string {
 	var zero T
-	return fmt.Sprintf("%T", zero)
+	return fmt.Sprintf("MapTypeOf[%T]", zero)
 }
 
 func (t mapTypeOf[T]) ValueFromMap(ctx context.Context, in basetypes.MapValue) (basetypes.MapValuable, diag.Diagnostics) {

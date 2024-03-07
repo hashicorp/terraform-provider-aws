@@ -48,7 +48,7 @@ func (t listTypeOf[T]) Equal(o attr.Type) bool {
 
 func (t listTypeOf[T]) String() string {
 	var zero T
-	return fmt.Sprintf("%T", zero)
+	return fmt.Sprintf("ListTypeOf[%T]", zero)
 }
 
 func (t listTypeOf[T]) ValueFromList(ctx context.Context, in basetypes.ListValue) (basetypes.ListValuable, diag.Diagnostics) {
