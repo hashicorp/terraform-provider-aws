@@ -1603,6 +1603,66 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
+	if d.HasChange("ipv6_address_count") && !d.IsNewResource() {
+		instance, err := FindInstanceByID(ctx, conn, d.Id())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
+		}
+
+		var primaryInterface *ec2.InstanceNetworkInterface
+		for _, ni := range instance.NetworkInterfaces {
+			if aws.Int64Value(ni.Attachment.DeviceIndex) == 0 {
+				primaryInterface = ni
+			}
+		}
+
+		if primaryInterface == nil {
+			return sdkdiag.AppendErrorf(diags, "Failed to update ipv6_address_count on %q, which does not contain a primary network interface", d.Id())
+		}
+
+		o, n := d.GetChange("ipv6_address_count")
+
+		os := o.(int)
+		ns := n.(int)
+
+		if ns > os {
+			// Add more to the primary NIC
+			net_new_ips := int64(ns - os)
+			input := &ec2.AssignIpv6AddressesInput{
+				NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
+				Ipv6AddressCount: &net_new_ips,
+			}
+			log.Printf("[INFO] Assigning ipv6 address on Instance %q", d.Id())
+			_, err := conn.AssignIpv6AddressesWithContext(ctx, input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "Failure to increase ipv6_address_count: %s", err)
+			}
+
+		} else if os > ns {
+			// Remove IP addresses
+			if len(primaryInterface.Ipv6Addresses) != int(os) {
+				return sdkdiag.AppendErrorf(diags, "IPv6 address count (%d) on the instance does not match state's count (%d), we're in a race with something else", len(primaryInterface.Ipv6Addresses), os)
+			}
+
+			addresses_to_remove := make([]*string, ns)
+
+			for _, addr := range primaryInterface.Ipv6Addresses[ns:] { // Can I assume this is strongly ordered?
+				addresses_to_remove = append(addresses_to_remove, addr.Ipv6Address)
+			}
+
+			input := &ec2.UnassignIpv6AddressesInput{
+				NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
+				Ipv6Addresses: addresses_to_remove,
+			}
+			log.Printf("[INFO] Unassigning ipv6 address on Instance %q", d.Id())
+			_, err := conn.UnassignIpv6AddressesWithContext(ctx, input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "Failure to decrease ipv6_address_count: %s", err)
+			}
+		}
+
+	}
+
 	if d.HasChanges("secondary_private_ips", "vpc_security_group_ids") && !d.IsNewResource() {
 		instance, err := FindInstanceByID(ctx, conn, d.Id())
 
