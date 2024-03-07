@@ -22,6 +22,18 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
+type dummyValueser string
+
+func (dummyValueser) Values() []dummyValueser {
+	return nil
+}
+
+var (
+	_ xattr.TypeWithValidate   = (*stringEnumType[dummyValueser])(nil)
+	_ basetypes.StringTypable  = (*stringEnumType[dummyValueser])(nil)
+	_ basetypes.StringValuable = (*StringEnum[dummyValueser])(nil)
+)
+
 type customStringTypeWithValidator struct {
 	basetypes.StringType
 	validator validator.String
@@ -72,18 +84,6 @@ type stringEnumType[T enum.Valueser[T]] struct {
 func StringEnumType[T enum.Valueser[T]]() stringEnumTypeWithAttributeDefault[T] {
 	return stringEnumType[T]{customStringTypeWithValidator: customStringTypeWithValidator{validator: stringvalidator.OneOf(tfslices.AppendUnique(enum.Values[T](), "")...)}}
 }
-
-type dummyValueser string
-
-func (dummyValueser) Values() []dummyValueser {
-	return nil
-}
-
-var (
-	_ xattr.TypeWithValidate   = (*stringEnumType[dummyValueser])(nil)
-	_ basetypes.StringTypable  = (*stringEnumType[dummyValueser])(nil)
-	_ basetypes.StringValuable = (*StringEnum[dummyValueser])(nil)
-)
 
 func (t stringEnumType[T]) Equal(o attr.Type) bool {
 	other, ok := o.(stringEnumType[T])

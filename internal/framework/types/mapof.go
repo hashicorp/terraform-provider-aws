@@ -16,8 +16,8 @@ import (
 )
 
 var (
-	_ basetypes.MapTypable  = mapTypeOf[basetypes.StringValue]{}
-	_ basetypes.MapValuable = MapValueOf[basetypes.StringValue]{}
+	_ basetypes.MapTypable  = (*mapTypeOf[basetypes.StringValue])(nil)
+	_ basetypes.MapValuable = (*MapValueOf[basetypes.StringValue])(nil)
 )
 
 var (

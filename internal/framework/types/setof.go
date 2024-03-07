@@ -14,6 +14,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
+var (
+	_ basetypes.SetTypable  = (*setTypeOf[basetypes.StringValue])(nil)
+	_ basetypes.SetValuable = (*SetValueOf[basetypes.StringValue])(nil)
+)
+
 // setTypeOf is the attribute type of a SetValueOf.
 type setTypeOf[T attr.Value] struct {
 	basetypes.SetType
@@ -21,11 +26,6 @@ type setTypeOf[T attr.Value] struct {
 
 var (
 	SetOfStringType = setTypeOf[basetypes.StringValue]{basetypes.SetType{ElemType: basetypes.StringType{}}}
-)
-
-var (
-	_ basetypes.SetTypable  = (*setTypeOf[basetypes.StringValue])(nil)
-	_ basetypes.SetValuable = (*SetValueOf[basetypes.StringValue])(nil)
 )
 
 func NewSetTypeOf[T attr.Value](ctx context.Context) setTypeOf[T] {
