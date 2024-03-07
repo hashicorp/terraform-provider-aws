@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -190,6 +191,15 @@ func roleCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string
 	}
 
 	return roleUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
+}
+
+func roleListTags(ctx context.Context, conn *iam.IAM, identifier string) (tftags.KeyValueTags, error) {
+	role, err := findRoleByName(ctx, conn, identifier)
+	if err != nil {
+		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
+	}
+
+	return KeyValueTags(ctx, role.Tags), nil
 }
 
 // samlProviderUpdateTags updates IAM SAML Provider tags.
@@ -394,6 +404,32 @@ func updateTags(ctx context.Context, conn iamiface.IAMAPI, identifier, resourceT
 	}
 
 	return fmt.Errorf("unsupported resource type: %s", resourceType)
+}
+
+// ListTags lists iam service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
+	var (
+		tags tftags.KeyValueTags
+		err  error
+	)
+	switch resourceType {
+	case "Role":
+		tags, err = roleListTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
+
+	default:
+		return nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(tags)
+	}
+
+	return nil
 }
 
 // UpdateTags updates iam service tags.
