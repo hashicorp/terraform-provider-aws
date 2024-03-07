@@ -8,5 +8,6 @@ var (
 	ResourceAutomationRule      = newAutomationRuleResource
 	ResourceConfigurationPolicy = resourceConfigurationPolicy
 
-	FindAutomationRuleByARN = findAutomationRuleByARN
+	FindAutomationRuleByARN     = findAutomationRuleByARN
+	FindConfigurationPolicyByID = findConfigurationPolicyByID
 )

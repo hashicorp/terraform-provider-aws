@@ -296,11 +296,8 @@ func resourceConfigurationPolicyRead(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	input := &securityhub.GetConfigurationPolicyInput{
-		Identifier: aws.String(d.Id()),
-	}
+	output, err := findConfigurationPolicyByID(ctx, conn, d.Id())
 
-	out, err := conn.GetConfigurationPolicy(ctx, input)
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Configuration Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -311,12 +308,12 @@ func resourceConfigurationPolicyRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading Security Hub Configuration Policy (%s): %s", d.Id(), err)
 	}
 
-	d.Set("arn", out.Arn)
-	if err := d.Set("configuration_policy", []interface{}{flattenPolicy(out.ConfigurationPolicy)}); err != nil {
+	d.Set("arn", output.Arn)
+	if err := d.Set("configuration_policy", []interface{}{flattenPolicy(output.ConfigurationPolicy)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting configuration_policy: %s", err)
 	}
-	d.Set("description", out.Description)
-	d.Set("name", out.Name)
+	d.Set("description", output.Description)
+	d.Set("name", output.Name)
 
 	return diags
 }
@@ -365,6 +362,28 @@ func resourceConfigurationPolicyDelete(ctx context.Context, d *schema.ResourceDa
 	}
 
 	return diags
+}
+
+func findConfigurationPolicyByID(ctx context.Context, conn *securityhub.Client, id string) (*securityhub.GetConfigurationPolicyOutput, error) {
+	input := &securityhub.GetConfigurationPolicyInput{
+		Identifier: aws.String(id),
+	}
+
+	return findConfigurationPolicy(ctx, conn, input)
+}
+
+func findConfigurationPolicy(ctx context.Context, conn *securityhub.Client, input *securityhub.GetConfigurationPolicyInput) (*securityhub.GetConfigurationPolicyOutput, error) {
+	output, err := conn.GetConfigurationPolicy(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 // validatePolicyMemberSecurityHub performs validation before running creates/updates to prevent certain issues with state.
