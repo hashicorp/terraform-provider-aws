@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_db_instance: Add support for `io2` storage type
+```
+
+```release-note:enhancement
+resource/aws_rds_cluster: Add support for `io2` storage type
+```
