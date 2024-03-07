@@ -106,14 +106,6 @@ func ResourcePoolRolesAttachment() *schema.Resource {
 	}
 }
 
-func expandMappingRulesType(rules []awstypes.MappingRuleMatchType) []string {
-	mapRules := make([]string, 0, len(rules))
-	for _, v := range rules {
-		mapRules = append(mapRules, string(v))
-	}
-	return mapRules
-}
-
 func resourcePoolRolesAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIdentityClient(ctx)
