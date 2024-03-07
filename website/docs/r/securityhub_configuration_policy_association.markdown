@@ -69,6 +69,12 @@ This resource supports the following arguments:
 * `target_id` - (Required, Forces new resource) The identifier of the target account, organizational unit, or the root to associate with the specified configuration.
 * `policy_id` - (Required) The universally unique identifier (UUID) of the configuration policy.
 
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `id` - The identifier of the target account, organizational unit, or the root that is associated with the configuration.
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import an existing Security Hub configuration policy association using the target id. For example:
