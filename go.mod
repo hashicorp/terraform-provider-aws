@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.0
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.50.32
+	github.com/aws/aws-sdk-go v1.50.33
 	github.com/aws/aws-sdk-go-v2 v1.25.2
 	github.com/aws/aws-sdk-go-v2/config v1.27.6
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.2
@@ -56,7 +56,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.9.0
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.30.2
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.30.3
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.149.4
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.1
@@ -94,7 +94,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.9.1
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/mq v1.22.1
-	github.com/aws/aws-sdk-go-v2/service/mwaa v1.26.1
+	github.com/aws/aws-sdk-go-v2/service/mwaa v1.26.2
 	github.com/aws/aws-sdk-go-v2/service/oam v1.9.1
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.1
 	github.com/aws/aws-sdk-go-v2/service/osis v1.8.1
@@ -105,8 +105,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.4.1
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.16.1
-	github.com/aws/aws-sdk-go-v2/service/rds v1.74.2
-	github.com/aws/aws-sdk-go-v2/service/redshift v1.43.1
+	github.com/aws/aws-sdk-go-v2/service/rds v1.75.0
+	github.com/aws/aws-sdk-go-v2/service/redshift v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.17.1
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.39.1
@@ -140,7 +140,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.43.1
-	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.10.1
+	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.7.1
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.29.1
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.38.1
