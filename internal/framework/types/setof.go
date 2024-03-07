@@ -28,11 +28,6 @@ var (
 	_ basetypes.SetValuable = (*SetValueOf[basetypes.StringValue])(nil)
 )
 
-func newAttrTypeOf[T attr.Value](ctx context.Context) attr.Type {
-	var zero T
-	return zero.Type(ctx)
-}
-
 func NewSetTypeOf[T attr.Value](ctx context.Context) setTypeOf[T] {
 	return setTypeOf[T]{basetypes.SetType{ElemType: newAttrTypeOf[T](ctx)}}
 }
