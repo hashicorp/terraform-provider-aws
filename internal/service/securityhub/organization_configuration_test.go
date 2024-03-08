@@ -8,11 +8,13 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecurityhub "github.com/hashicorp/terraform-provider-aws/internal/service/securityhub"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -24,7 +26,7 @@ func testAccOrganizationConfiguration_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationManagementAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
+		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_basic(true),
@@ -59,7 +61,7 @@ func testAccOrganizationConfiguration_autoEnableStandards(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOrganizationManagementAccount(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             acctest.CheckDestroyNoop,
+		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_autoEnableStandards("DEFAULT"),
@@ -89,6 +91,7 @@ func testAccOrganizationConfiguration_autoEnableStandards(t *testing.T) {
 func testAccOrganizationConfiguration_centralConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_securityhub_organization_configuration.test"
+
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -98,7 +101,7 @@ func testAccOrganizationConfiguration_centralConfiguration(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
-		CheckDestroy:             acctest.CheckDestroyNoop,
+		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrganizationConfigurationConfig_centralConfiguration(false, "NONE", "CENTRAL"),
@@ -141,6 +144,37 @@ func testAccCheckOrganizationConfigurationExists(ctx context.Context, n string) 
 		_, err := tfsecurityhub.FindOrganizationConfiguration(ctx, conn)
 
 		return err
+	}
+}
+
+func testAccCheckOrganizationConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityHubClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_securityhub_standards_subscription" {
+				continue
+			}
+
+			output, err := tfsecurityhub.FindOrganizationConfiguration(ctx, conn)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			// LOCAL ConfigurationType => deleted.
+			if output.OrganizationConfiguration.ConfigurationType == types.OrganizationConfigurationConfigurationTypeLocal {
+				continue
+			}
+
+			return fmt.Errorf("Security Hub Standards Subscription %s still exists", rs.Primary.ID)
+		}
+
+		return nil
 	}
 }
 
