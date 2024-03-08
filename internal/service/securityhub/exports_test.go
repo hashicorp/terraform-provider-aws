@@ -10,6 +10,7 @@ var (
 	ResourceAutomationRule                 = newAutomationRuleResource
 	ResourceConfigurationPolicy            = resourceConfigurationPolicy
 	ResourceConfigurationPolicyAssociation = resourceConfigurationPolicyAssociation
+	ResourceFindingAggregator              = resourceFindingAggregator
 	ResourceOrganizationConfiguration      = resourceOrganizationConfiguration
 
 	AccountHubARN                          = accountHubARN
@@ -17,6 +18,7 @@ var (
 	FindAutomationRuleByARN                = findAutomationRuleByARN
 	FindConfigurationPolicyAssociationByID = findConfigurationPolicyAssociationByID
 	FindConfigurationPolicyByID            = findConfigurationPolicyByID
+	FindFindingAggregatorByARN             = findFindingAggregatorByARN
 	FindHubByARN                           = findHubByARN
 	FindOrganizationConfiguration          = findOrganizationConfiguration
 )
