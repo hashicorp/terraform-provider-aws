@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_opensearch_domain: Add new `Policy-Min-TLS-1-2-PFS-2023-10` possible value for `tls_security_policy` option in acceptance tests and config options
+```

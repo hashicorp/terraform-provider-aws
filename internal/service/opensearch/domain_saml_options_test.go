@@ -257,7 +257,7 @@ resource "aws_opensearch_domain" "test" {
 
   domain_endpoint_options {
     enforce_https       = true
-    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+    tls_security_policy = "Policy-Min-TLS-1-2-PFS-2023-10"
   }
 
   node_to_node_encryption {
@@ -314,7 +314,7 @@ resource "aws_opensearch_domain" "test" {
 
   domain_endpoint_options {
     enforce_https       = true
-    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+    tls_security_policy = "Policy-Min-TLS-1-2-PFS-2023-10"
   }
 
   node_to_node_encryption {
@@ -372,7 +372,7 @@ resource "aws_opensearch_domain" "test" {
 
   domain_endpoint_options {
     enforce_https       = true
-    tls_security_policy = "Policy-Min-TLS-1-2-2019-07"
+    tls_security_policy = "Policy-Min-TLS-1-2-PFS-2023-10"
   }
 
   node_to_node_encryption {

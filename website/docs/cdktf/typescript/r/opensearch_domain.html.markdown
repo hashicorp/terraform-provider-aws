@@ -361,7 +361,7 @@ class MyConvertedCode extends TerraformStack {
       },
       domainEndpointOptions: {
         enforceHttps: true,
-        tlsSecurityPolicy: "Policy-Min-TLS-1-2-2019-07",
+        tlsSecurityPolicy: "Policy-Min-TLS-1-2-PFS-2023-10",
       },
       domainName: "ggkitty",
       ebsOptions: {
@@ -412,7 +412,7 @@ class MyConvertedCode extends TerraformStack {
       },
       domainEndpointOptions: {
         enforceHttps: true,
-        tlsSecurityPolicy: "Policy-Min-TLS-1-2-2019-07",
+        tlsSecurityPolicy: "Policy-Min-TLS-1-2-PFS-2023-10",
       },
       domainName: "ggkitty",
       ebsOptions: {
