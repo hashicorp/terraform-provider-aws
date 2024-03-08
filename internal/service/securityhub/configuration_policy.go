@@ -28,7 +28,6 @@ import (
 
 // @SDKResource("aws_securityhub_configuration_policy", name="Configuration Policy")
 func resourceConfigurationPolicy() *schema.Resource {
-
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationPolicyCreate,
 		ReadWithoutTimeout:   resourceConfigurationPolicyRead,
