@@ -28,7 +28,7 @@ jobs:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
 
-      - run: cd .ci/tools && go install github.com/jar-b/terrafmt
+      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
 
       - run: |
           find ./internal/service -type f -name '*_test.go' \
@@ -63,7 +63,7 @@ jobs:
           path: ~/.tflint.d/plugins
           key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
 
-      - run: cd .ci/tools && go install github.com/jar-b/terrafmt
+      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
       - run: cd .ci/tools && go install github.com/terraform-linters/tflint
 
       - run: tflint --config .ci/.tflint.hcl --init
