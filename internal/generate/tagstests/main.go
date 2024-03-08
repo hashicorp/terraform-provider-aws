@@ -212,6 +212,9 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				if attr, ok := args.Keyword["importIgnore"]; ok {
 					d.ImportIgnore = strings.Split(attr, ",")
 				}
+				if attr, ok := args.Keyword["name"]; ok {
+					d.Name = strings.ReplaceAll(attr, " ", "")
+				}
 			}
 		}
 	}
