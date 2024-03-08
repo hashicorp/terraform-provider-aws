@@ -50,6 +50,10 @@ func DataSourceTransitGatewayPeeringAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -100,6 +104,9 @@ func dataSourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schem
 	d.Set("peer_region", peer.Region)
 	d.Set("peer_transit_gateway_id", peer.TransitGatewayId)
 	d.Set("transit_gateway_id", local.TransitGatewayId)
+	if transitGatewayPeeringAttachment.State != nil {
+		d.Set("state", *transitGatewayPeeringAttachment.State)
+	}
 
 	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayPeeringAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)

@@ -46,6 +46,7 @@ func testAccTransitGatewayPeeringAttachment_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", transitGatewayResourceNamePeer, "id"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
 				),
 			},
 			{
@@ -172,6 +173,7 @@ func testAccTransitGatewayPeeringAttachment_differentAccount(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
+					resource.TestCheckResourceAttrSet(resourceName, "state"),
 				),
 			},
 			{
