@@ -31,15 +31,24 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"mapFilters":    testAccAutomationRule_mapFilters,
 			"tags":          testAccAutomationRule_tags,
 		},
-		"Member": {
-			"basic":  testAccMember_basic,
-			"invite": testAccMember_invite,
-		},
 		"ActionTarget": {
 			"basic":       testAccActionTarget_basic,
 			"disappears":  testAccActionTarget_disappears,
 			"Description": testAccActionTarget_Description,
 			"Name":        testAccActionTarget_Name,
+		},
+		"ConfigurationPolicy": {
+			"basic":              testAccConfigurationPolicy_basic,
+			"disappears":         testAccConfigurationPolicy_disappears,
+			"CustomParameters":   testAccConfigurationPolicy_controlCustomParameters,
+			"ControlIdentifiers": testAccConfigurationPolicy_specificControlIdentifiers,
+		},
+		"ConfigurationPolicyAssociation": {
+			"basic": testAccConfigurationPolicyAssociation_basic,
+		},
+		"FindingAggregator": {
+			"basic":      testAccFindingAggregator_basic,
+			"disappears": testAccFindingAggregator_disappears,
 		},
 		"Insight": {
 			"basic":            testAccInsight_basic,
@@ -57,14 +66,19 @@ func TestAccSecurityHub_serial(t *testing.T) {
 		"InviteAccepter": {
 			"basic": testAccInviteAccepter_basic,
 		},
+		"Member": {
+			"basic":  testAccMember_basic,
+			"invite": testAccMember_invite,
+		},
 		"OrganizationAdminAccount": {
 			"basic":       testAccOrganizationAdminAccount_basic,
 			"disappears":  testAccOrganizationAdminAccount_disappears,
 			"MultiRegion": testAccOrganizationAdminAccount_MultiRegion,
 		},
 		"OrganizationConfiguration": {
-			"basic":               testAccOrganizationConfiguration_basic,
-			"AutoEnableStandards": testAccOrganizationConfiguration_autoEnableStandards,
+			"basic":                testAccOrganizationConfiguration_basic,
+			"AutoEnableStandards":  testAccOrganizationConfiguration_autoEnableStandards,
+			"CentralConfiguration": testAccOrganizationConfiguration_centralConfiguration,
 		},
 		"ProductSubscription": {
 			"basic": testAccProductSubscription_basic,
@@ -78,34 +92,8 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"basic":      testAccStandardsSubscription_basic,
 			"disappears": testAccStandardsSubscription_disappears,
 		},
-		"FindingAggregator": {
-			"basic":      testAccFindingAggregator_basic,
-			"disappears": testAccFindingAggregator_disappears,
-		},
 	}
 
-	acctest.RunSerialTests2Levels(t, testCases, 0)
-}
-
-// TestAccSecurityHub_centralConfiguration is a multi-account test stuite for central configuration features.
-// Central configuration can only be enabled from a *member* delegated admin account.
-// The primary provider is expected to be an organizations member account and the alternate provider is expected to be the organizations management account.
-func TestAccSecurityHub_centralConfiguration(t *testing.T) {
-	t.Parallel()
-	testCases := map[string]map[string]func(t *testing.T){
-		"OrganizationConfiguration": {
-			"centralConfiguration": testAccOrganizationConfiguration_centralConfiguration,
-		},
-		"ConfigurationPolicy": {
-			"basic":              testAccConfigurationPolicy_basic,
-			"disappears":         testAccConfigurationPolicy_disappears,
-			"customParameters":   testAccConfigurationPolicy_controlCustomParameters,
-			"controlIdentifiers": testAccConfigurationPolicy_specificControlIdentifiers,
-		},
-		"ConfigurationPolicyAssociation": {
-			"basic": testAccConfigurationPolicyAssociation_basic,
-		},
-	}
 	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
 
