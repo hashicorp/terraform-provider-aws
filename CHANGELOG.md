@@ -1,4 +1,9 @@
 ## 5.41.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_cognito_identity_pool: Fix handling of resources deleted out of band ([#36100](https://github.com/hashicorp/terraform-provider-aws/issues/36100))
+
 ## 5.40.0 (March  7, 2024)
 
 FEATURES:
