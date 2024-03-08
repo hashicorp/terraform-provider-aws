@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -69,6 +70,10 @@ func (r *resourceDataCellsFilter) Schema(ctx context.Context, _ resource.SchemaR
 						"column_names": schema.SetAttribute{
 							CustomType: fwtypes.SetOfStringType,
 							Optional:   true,
+							Computed:   true,
+							PlanModifiers: []planmodifier.Set{
+								setplanmodifier.UseStateForUnknown(),
+							},
 						},
 						"database_name": schema.StringAttribute{
 							Required: true,
@@ -165,7 +170,7 @@ func (r *resourceDataCellsFilter) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	td, diags := plan.TableData.ToPtr(ctx)
+	planTD, diags := plan.TableData.ToPtr(ctx)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -174,23 +179,23 @@ func (r *resourceDataCellsFilter) Create(ctx context.Context, req resource.Creat
 	_, err := conn.CreateDataCellsFilter(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionCreating, ResNameDataCellsFilter, td.Name.String(), err),
+			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionCreating, ResNameDataCellsFilter, planTD.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	idParts := []string{
-		td.DatabaseName.ValueString(),
-		td.Name.ValueString(),
-		td.TableCatalogID.ValueString(),
-		td.TableName.ValueString(),
+		planTD.DatabaseName.ValueString(),
+		planTD.Name.ValueString(),
+		planTD.TableCatalogID.ValueString(),
+		planTD.TableName.ValueString(),
 	}
 	id, err := intflex.FlattenResourceId(idParts, len(idParts), false)
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionFlatteningResourceId, ResNameDataCellsFilter, td.Name.String(), err),
+			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionFlatteningResourceId, ResNameDataCellsFilter, planTD.Name.String(), err),
 			err.Error(),
 		)
 		return
@@ -203,14 +208,21 @@ func (r *resourceDataCellsFilter) Create(ctx context.Context, req resource.Creat
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionCreating, ResNameDataCellsFilter, td.Name.String(), err),
+			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionCreating, ResNameDataCellsFilter, planTD.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	td.VersionID = fwflex.StringToFramework(ctx, output.VersionId)
-	state.TableData = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, td)
+	td := tableData{}
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &td)...)
+
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	// td.VersionID = fwflex.StringToFramework(ctx, output.VersionId)
+	state.TableData = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &td)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
