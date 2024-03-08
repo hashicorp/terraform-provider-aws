@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -19,6 +20,7 @@ import (
 
 func testAccConfigurationPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	providers := make(map[string]*schema.Provider)
 	resourceName := "aws_securityhub_configuration_policy.test"
 	exampleStandardsARN := fmt.Sprintf("arn:%s:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0", acctest.Partition())
 
@@ -26,14 +28,21 @@ func testAccConfigurationPolicy_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckAlternateRegionIs(t, acctest.Region())
 			acctest.PreCheckOrganizationMemberAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 		CheckDestroy:             testAccCheckConfigurationPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				// Run a simple configuration to initialize the alternate providers
+				Config: testAccOrganizationConfigurationConfig_centralConfigurationInit,
+			},
+			{
+				PreConfig: func() {
+					// Can only run check here because the provider is not available until the previous step.
+					acctest.PreCheckOrganizationManagementAccountWithProvider(ctx, t, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
+				},
 				Config: testAccConfigurationPolicyConfig_baseDisabled("TestPolicy", "This is a disabled policy"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
@@ -56,11 +65,11 @@ func testAccConfigurationPolicy_basic(t *testing.T) {
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", "TestPolicy"),
 					resource.TestCheckResourceAttr(resourceName, "description", "This is an enabled policy"),
-					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.service_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.enabled_standard_arns.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.enabled_standard_arns.0", exampleStandardsARN),
-					resource.TestCheckResourceAttr(resourceName, "security_hub_policy.0.security_controls_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.service_enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.enabled_standard_arns.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.enabled_standard_arns.0", exampleStandardsARN),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.#", "1"),
 				),
 			},
 		},
@@ -69,20 +78,28 @@ func testAccConfigurationPolicy_basic(t *testing.T) {
 
 func testAccConfigurationPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
+	providers := make(map[string]*schema.Provider)
 	resourceName := "aws_securityhub_configuration_policy.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckAlternateRegionIs(t, acctest.Region())
 			acctest.PreCheckOrganizationMemberAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 		CheckDestroy:             testAccCheckConfigurationPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				// Run a simple configuration to initialize the alternate providers
+				Config: testAccOrganizationConfigurationConfig_centralConfigurationInit,
+			},
+			{
+				PreConfig: func() {
+					// Can only run check here because the provider is not available until the previous step.
+					acctest.PreCheckOrganizationManagementAccountWithProvider(ctx, t, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
+				},
 				Config: testAccConfigurationPolicyConfig_baseDisabled("TestPolicy", "This is a disabled policy"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
@@ -96,6 +113,7 @@ func testAccConfigurationPolicy_disappears(t *testing.T) {
 
 func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 	ctx := acctest.Context(t)
+	providers := make(map[string]*schema.Provider)
 	resourceName := "aws_securityhub_configuration_policy.test"
 	foundationalStandardsARN := fmt.Sprintf("arn:%s:securityhub:%s::standards/aws-foundational-security-best-practices/v/1.0.0", acctest.Partition(), acctest.Region())
 	nistStandardsARN := fmt.Sprintf("arn:%s:securityhub:%s::standards/nist-800-53/v/5.0.0", acctest.Partition(), acctest.Region())
@@ -104,22 +122,27 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckAlternateRegionIs(t, acctest.Region())
 			acctest.PreCheckOrganizationMemberAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 		CheckDestroy:             testAccCheckConfigurationPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				// Run a simple configuration to initialize the alternate providers
+				Config: testAccOrganizationConfigurationConfig_centralConfigurationInit,
+			},
+			{
+				PreConfig: func() {
+					// Can only run check here because the provider is not available until the previous step.
+					acctest.PreCheckOrganizationManagementAccountWithProvider(ctx, t, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
+				},
 				Config: testAccConfigurationPolicyConfig_controlCustomParametersMulti(foundationalStandardsARN),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
-
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.#", "2"),
-
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.security_control_id", "APIGateway.1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.parameter.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.0.parameter.*", map[string]string{
@@ -127,7 +150,6 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 						"value_type":   "CUSTOM",
 						"enum.0.value": "INFO",
 					}),
-
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.1.security_control_id", "IAM.7"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.1.parameter.#", "3"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "configuration_policy.0.security_controls_configuration.0.security_control_custom_parameter.1.parameter.*", map[string]string{
@@ -240,6 +262,7 @@ func testAccConfigurationPolicy_controlCustomParameters(t *testing.T) {
 
 func testAccConfigurationPolicy_specificControlIdentifiers(t *testing.T) {
 	ctx := acctest.Context(t)
+	providers := make(map[string]*schema.Provider)
 	resourceName := "aws_securityhub_configuration_policy.test"
 	foundationalStandardsARN := fmt.Sprintf("arn:%s:securityhub:%s::standards/aws-foundational-security-best-practices/v/1.0.0", acctest.Partition(), acctest.Region())
 
@@ -247,23 +270,30 @@ func testAccConfigurationPolicy_specificControlIdentifiers(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckAlternateRegionIs(t, acctest.Region())
 			acctest.PreCheckOrganizationMemberAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 		CheckDestroy:             testAccCheckConfigurationPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				// Run a simple configuration to initialize the alternate providers
+				Config: testAccOrganizationConfigurationConfig_centralConfigurationInit,
+			},
+			{
+				PreConfig: func() {
+					// Can only run check here because the provider is not available until the previous step.
+					acctest.PreCheckOrganizationManagementAccountWithProvider(ctx, t, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
+				},
 				Config: testAccConfigurationPolicyConfig_specifcControlIdentifiers(foundationalStandardsARN, "IAM.7", "APIGateway.1", false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.disabled_security_control_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.disabled_security_control_ids.0", "IAM.7"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.disabled_security_control_ids.1", "APIGateway.1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.enabled_security_control_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.disabled_control_identifiers.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.disabled_control_identifiers.*", "IAM.7"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.disabled_control_identifiers.*", "APIGateway.1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.enabled_control_identifiers.#", "0"),
 				),
 			},
 			{
@@ -277,10 +307,10 @@ func testAccConfigurationPolicy_specificControlIdentifiers(t *testing.T) {
 					testAccCheckConfigurationPolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.enabled_security_control_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.enabled_security_control_ids.0", "APIGateway.1"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.enabled_security_control_ids.1", "IAM.7"),
-					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.disabled_security_control_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.enabled_control_identifiers.#", "2"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.enabled_control_identifiers.*", "APIGateway.1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.enabled_control_identifiers.*", "IAM.7"),
+					resource.TestCheckResourceAttr(resourceName, "configuration_policy.0.security_controls_configuration.0.disabled_control_identifiers.#", "0"),
 				),
 			},
 		},
@@ -363,7 +393,7 @@ resource "aws_securityhub_configuration_policy" "test" {
       %[3]q
     ]
     security_controls_configuration {
-      disabled_security_control_ids = []
+      disabled_control_identifiers = []
     }
   }
 
@@ -387,7 +417,7 @@ resource "aws_securityhub_configuration_policy" "test" {
     ]
 
     security_controls_configuration {
-      disabled_security_control_ids = []
+      disabled_control_identifiers = []
 
       security_control_custom_parameter {
         security_control_id = "APIGateway.1"
@@ -448,7 +478,7 @@ resource "aws_securityhub_configuration_policy" "test" {
     ]
 
     security_controls_configuration {
-      disabled_security_control_ids = []
+      disabled_control_identifiers = []
 
       security_control_custom_parameter {
         security_control_id = %[2]q
@@ -469,9 +499,9 @@ resource "aws_securityhub_configuration_policy" "test" {
 }
 
 func testAccConfigurationPolicyConfig_specifcControlIdentifiers(standardsARN, control1, control2 string, enabledOnly bool) string {
-	controlIDAttr := "disabled_security_control_ids"
+	controlIDAttr := "disabled_control_identifiers"
 	if enabledOnly {
-		controlIDAttr = "enabled_security_control_ids"
+		controlIDAttr = "enabled_control_identifiers"
 	}
 
 	return acctest.ConfigCompose(

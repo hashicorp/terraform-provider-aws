@@ -13,7 +13,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub"
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -360,6 +362,10 @@ func resourceConfigurationPolicyDelete(ctx context.Context, d *schema.ResourceDa
 		Identifier: aws.String(d.Id()),
 	})
 
+	if tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "Must be a Security Hub delegated administrator with Central Configuration enabled") {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Security Hub Configuration Policy (%s): %s", d.Id(), err)
 	}
@@ -377,6 +383,13 @@ func findConfigurationPolicyByID(ctx context.Context, conn *securityhub.Client, 
 
 func findConfigurationPolicy(ctx context.Context, conn *securityhub.Client, input *securityhub.GetConfigurationPolicyInput) (*securityhub.GetConfigurationPolicyOutput, error) {
 	output, err := conn.GetConfigurationPolicy(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "Must be a Security Hub delegated administrator with Central Configuration enabled") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
 
 	if err != nil {
 		return nil, err
