@@ -67,8 +67,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Insight",
 		},
 		{
-			Factory:  ResourceInviteAccepter,
+			Factory:  resourceInviteAccepter,
 			TypeName: "aws_securityhub_invite_accepter",
+			Name:     "Invite Accepter",
 		},
 		{
 			Factory:  ResourceMember,

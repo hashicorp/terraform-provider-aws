@@ -12,6 +12,7 @@ var (
 	ResourceConfigurationPolicyAssociation = resourceConfigurationPolicyAssociation
 	ResourceFindingAggregator              = resourceFindingAggregator
 	ResourceInsight                        = resourceInsight
+	ResourceInviteAccepter                 = resourceInviteAccepter
 	ResourceOrganizationConfiguration      = resourceOrganizationConfiguration
 
 	AccountHubARN                          = accountHubARN
@@ -22,5 +23,6 @@ var (
 	FindFindingAggregatorByARN             = findFindingAggregatorByARN
 	FindHubByARN                           = findHubByARN
 	FindInsightByARN                       = findInsightByARN
+	FindMasterAccount                      = findMasterAccount
 	FindOrganizationConfiguration          = findOrganizationConfiguration
 )
