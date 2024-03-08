@@ -14,17 +14,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
-// listNestedObjectTypeOf is the attribute type of a ListNestedObjectValueOf.
-type listNestedObjectTypeOf[T any] struct {
-	basetypes.ListType
-}
-
 var (
 	_ basetypes.ListTypable       = (*listNestedObjectTypeOf[struct{}])(nil)
 	_ NestedObjectCollectionType  = (*listNestedObjectTypeOf[struct{}])(nil)
 	_ basetypes.ListValuable      = (*ListNestedObjectValueOf[struct{}])(nil)
 	_ NestedObjectCollectionValue = (*ListNestedObjectValueOf[struct{}])(nil)
 )
+
+// listNestedObjectTypeOf is the attribute type of a ListNestedObjectValueOf.
+type listNestedObjectTypeOf[T any] struct {
+	basetypes.ListType
+}
 
 func NewListNestedObjectTypeOf[T any](ctx context.Context) listNestedObjectTypeOf[T] {
 	return listNestedObjectTypeOf[T]{basetypes.ListType{ElemType: NewObjectTypeOf[T](ctx)}}

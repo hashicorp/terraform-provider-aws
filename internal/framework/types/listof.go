@@ -9,15 +9,14 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
 var (
-	_ basetypes.ListValuable = ListValueOf[basetypes.StringValue]{}
-	_ basetypes.ListTypable  = listTypeOf[basetypes.StringValue]{}
+	_ basetypes.ListTypable  = (*listTypeOf[basetypes.StringValue])(nil)
+	_ basetypes.ListValuable = (*ListValueOf[basetypes.StringValue])(nil)
 )
 
 var (
@@ -48,7 +47,7 @@ func (t listTypeOf[T]) Equal(o attr.Type) bool {
 
 func (t listTypeOf[T]) String() string {
 	var zero T
-	return fmt.Sprintf("%T", zero)
+	return fmt.Sprintf("ListTypeOf[%T]", zero)
 }
 
 func (t listTypeOf[T]) ValueFromList(ctx context.Context, in basetypes.ListValue) (basetypes.ListValuable, diag.Diagnostics) {
@@ -65,7 +64,7 @@ func (t listTypeOf[T]) ValueFromList(ctx context.Context, in basetypes.ListValue
 	v, d := basetypes.NewListValue(newAttrTypeOf[T](ctx), in.Elements())
 	diags.Append(d...)
 	if diags.HasError() {
-		return basetypes.NewListUnknown(types.StringType), diags
+		return NewListValueOfUnknown[T](ctx), diags
 	}
 
 	return ListValueOf[T]{ListValue: v}, diags

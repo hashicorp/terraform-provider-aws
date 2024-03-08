@@ -9,15 +9,14 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
 var (
-	_ basetypes.MapTypable  = mapTypeOf[basetypes.StringValue]{}
-	_ basetypes.MapValuable = MapValueOf[basetypes.StringValue]{}
+	_ basetypes.MapTypable  = (*mapTypeOf[basetypes.StringValue])(nil)
+	_ basetypes.MapValuable = (*MapValueOf[basetypes.StringValue])(nil)
 )
 
 var (
@@ -45,7 +44,7 @@ func (t mapTypeOf[T]) Equal(o attr.Type) bool {
 
 func (t mapTypeOf[T]) String() string {
 	var zero T
-	return fmt.Sprintf("%T", zero)
+	return fmt.Sprintf("MapTypeOf[%T]", zero)
 }
 
 func (t mapTypeOf[T]) ValueFromMap(ctx context.Context, in basetypes.MapValue) (basetypes.MapValuable, diag.Diagnostics) {
@@ -66,7 +65,7 @@ func (t mapTypeOf[T]) ValueFromMap(ctx context.Context, in basetypes.MapValue) (
 	mapValue, d := basetypes.NewMapValue(newAttrTypeOf[T](ctx), in.Elements())
 	diags.Append(d...)
 	if diags.HasError() {
-		return basetypes.NewMapUnknown(types.StringType), diags
+		return NewMapValueOfUnknown[T](ctx), diags
 	}
 
 	return MapValueOf[T]{MapValue: mapValue}, diags
