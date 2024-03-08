@@ -3,41 +3,14 @@
 
 package costoptimizationhub_test
 
-// **PLEASE DELETE THIS AND ALL TIP COMMENTS BEFORE SUBMITTING A PR FOR REVIEW!**
-//
-// TIP: ==== INTRODUCTION ====
-// Thank you for trying the skaff tool!
-//
-// You have opted to include these helpful comments. They all include "TIP:"
-// to help you find and remove them when you're done with them.
-//
-// While some aspects of this file are customized to your input, the
-// scaffold tool does *not* look at the AWS API and ensure it has correct
-// function, structure, and variable names. It makes guesses based on
-// commonalities. You will need to make significant adjustments.
-//
-// In other words, as generated, this is a rough outline of the work you will
-// need to do. If something doesn't make sense for your situation, get rid of
-// it.
-
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/costoptimizationhub/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// types.<Type Name>.
 	"context"
 	"errors"
+	"os"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
+	"github.com/aws/aws-sdk-go-v2/service/costoptimizationhub/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -45,32 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/names"
 
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
 	tfcostoptimizationhub "github.com/hashicorp/terraform-provider-aws/internal/service/costoptimizationhub"
 )
-
-// TIP: File Structure. The basic outline for all test files should be as
-// follows. Improve this resource's maintainability by following this
-// outline.
-//
-// 1. Package declaration (add "_test" since this is a test file)
-// 2. Imports
-// 3. Unit tests
-// 4. Basic test
-// 5. Disappears test
-// 6. All the other tests
-// 7. Helper functions (exists, destroy, check, etc.)
-// 8. Functions that return Terraform configurations
-
-// TIP: ==== ACCEPTANCE TESTS ====
-// This is an example of a basic acceptance test. This should test as much of
-// standard functionality of the resource as possible, and test importing, if
-// applicable. We prefix its name with "TestAcc", the service, and the
-// resource name.
-//
-// Acceptance test access AWS and cost money to run.
 
 func TestAccCostOptimizationHubEnrollmentStatus_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -101,6 +50,89 @@ func TestAccCostOptimizationHubEnrollmentStatus_basic(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAccEnrollmentStatus_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	if os.Getenv("COSTOPTIMIZATIONHUB_UNENROLL_ACCOUNT_ON_DESTROY") == "" {
+		t.Skip("Environment variable COSTOPTIMIZATIONHUB_UNENROLL_ACCOUNT_ON_DESTROY is not set")
+	}
+
+	resourceName := "aws_costoptimizationhub_enrollment_status.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CostOptimizationHub),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckEnrollmentStatusDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// unenroll_on_destroy must be enabled for the disappears helper to disable
+				// Cost Optimization Hub on destroy and trigger the non-empty plan after state refresh
+				Config: testAccEnrollmentStatusConfig_unenrollOnDestroy(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckEnrollmentStatusIsActive(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfcostoptimizationhub.ResourceEnrollmentStatus, resourceName),
+				),
+			},
+			{
+				RefreshState:       true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+// testAccCheckEnrollmentStatusDestroy verfies ListEnrollmentStatuses does not return an error
+//
+// Since this resource manages enrollment/unenrollment to Cost Optimization Hub, there is nothing
+// to destroy. Additionally, because enrollment may remain active depending on whether
+// the unenroll_on_destroy attribute was set, this function does not check that account
+// enrollment is inactive, simply that the status check returns a valid response.
+func testAccCheckEnrollmentStatusDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CostOptimizationHubClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_costoptimizationhub_enrollment_status" {
+				continue
+			}
+
+			_, err := conn.ListEnrollmentStatuses(ctx, &costoptimizationhub.ListEnrollmentStatusesInput{})
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	}
+}
+
+// testAccCheckEnrollmentStatusIsActive verifies Cost Optimization Hub is active in the current account/region combination
+func testAccCheckEnrollmentStatusIsActive(ctx context.Context, name string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[name]
+		if !ok {
+			return create.Error(names.CostOptimizationHub, create.ErrActionCheckingExistence, tfcostoptimizationhub.ResNameEnrollmentStatus, name, errors.New("not found"))
+		}
+
+		if rs.Primary.ID == "" {
+			return create.Error(names.CostOptimizationHub, create.ErrActionCheckingExistence, tfcostoptimizationhub.ResNameEnrollmentStatus, name, errors.New("not set"))
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CostOptimizationHubClient(ctx)
+		out, err := conn.ListEnrollmentStatuses(ctx, &costoptimizationhub.ListEnrollmentStatusesInput{})
+		if err != nil {
+			return create.Error(names.CostOptimizationHub, create.ErrActionCheckingExistence, tfcostoptimizationhub.ResNameEnrollmentStatus, rs.Primary.ID, err)
+		}
+		if out == nil || out.Items[0].Status != types.EnrollmentStatusActive {
+			return create.Error(names.CostOptimizationHub, create.ErrActionCheckingExistence, tfcostoptimizationhub.ResNameEnrollmentStatus, rs.Primary.ID, errors.New("Cost Optimization Hub not active"))
+		}
+
+		return nil
+	}
 }
 
 func TestAccCostOptimizationHubEnrollmentStatus_IncludeMemberAccounts_True(t *testing.T) {
@@ -242,7 +274,7 @@ func testAccEnrollmentStatusConfig_IncludeMemberAccounts_False() string {
 	return `
 resource "aws_costoptimizationhub_enrollment_status" "test" {
   status = "Active"
-  include_member_accounts = true
+  include_member_accounts = false
 }
 `
 }
@@ -251,6 +283,15 @@ func testAccEnrollmentStatusConfig_Status_Inactive() string {
 	return `
 resource "aws_costoptimizationhub_enrollment_status" "test" {
   status = "Inactive"
+}
+`
+}
+
+func testAccEnrollmentStatusConfig_unenrollOnDestroy() string {
+	return `
+resource "aws_costoptimizationhub_enrollment_status" "test" {
+  status = "Active"
+  unenroll_on_destroy = true
 }
 `
 }

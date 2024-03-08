@@ -74,18 +74,15 @@ func (r *resourceEnrollmentStatus) Schema(ctx context.Context, req resource.Sche
 func (r *resourceEnrollmentStatus) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().CostOptimizationHubClient(ctx)
 
-	// TIP: -- 2. Fetch the plan
 	var plan resourceEnrollmentStatusData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	// Create two input structures as the single Terraform resource will have to invoke two API calls
-
 	//Input for UpdateEnrollmentStatus
 	ues_in := &costoptimizationhub.UpdateEnrollmentStatusInput{
-		Status: awstypes.EnrollmentStatus(plan.Status.String()),
+		Status: awstypes.EnrollmentStatus(plan.Status.ValueString()),
 	}
 
 	if !plan.IncludeMemberAccounts.IsNull() {
@@ -225,8 +222,8 @@ func (r *resourceEnrollmentStatus) ImportState(ctx context.Context, req resource
 }
 
 type resourceEnrollmentStatusData struct {
+	ID                    types.String `tfsdk:"id"`
 	Status                types.String `tfsdk:"status"`
 	IncludeMemberAccounts types.Bool   `tfsdk:"include_member_accounts"`
-	ID                    types.String `tfsdk:"id"`
 	UnenrollOnDestroy     types.Bool   `tfsdk:"unenroll_on_destroy"`
 }
