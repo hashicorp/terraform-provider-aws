@@ -125,6 +125,10 @@ func resourceConfigurationPolicyAssociationDelete(ctx context.Context, d *schema
 		Target:                        expandTarget(d.Id()),
 	})
 
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "starting Security Hub Configuration Policy Disassociation (%s): %s", d.Id(), err)
 	}
