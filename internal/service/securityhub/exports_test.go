@@ -13,4 +13,5 @@ var (
 	FindAutomationRuleByARN                = findAutomationRuleByARN
 	FindConfigurationPolicyAssociationByID = findConfigurationPolicyAssociationByID
 	FindConfigurationPolicyByID            = findConfigurationPolicyByID
+	FindOrganizationConfiguration          = findOrganizationConfiguration
 )

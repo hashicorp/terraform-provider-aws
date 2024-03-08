@@ -5,7 +5,7 @@ package securityhub
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"log"
 	"time"
 
@@ -111,7 +111,7 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	output, err := waitOrganizationConfigurationEnabled(ctx, conn, d.Timeout(schema.TimeoutRead))
+	output, err := findOrganizationConfiguration(ctx, conn)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Organization Configuration %s not found, removing from state", d.Id())
@@ -160,42 +160,42 @@ func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.Reso
 	return diags
 }
 
-func findOrganizationConfiguration(ctx context.Context, conn *securityhub.Client) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		input := &securityhub.DescribeOrganizationConfigurationInput{}
-		output, err := conn.DescribeOrganizationConfiguration(ctx, input)
+func findOrganizationConfiguration(ctx context.Context, conn *securityhub.Client) (*securityhub.DescribeOrganizationConfigurationOutput, error) {
+	input := &securityhub.DescribeOrganizationConfigurationInput{}
 
-		if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
-			return nil, "", &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: input,
-			}
+	output, err := conn.DescribeOrganizationConfiguration(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.OrganizationConfiguration == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusOrganizationConfiguration(ctx context.Context, conn *securityhub.Client) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findOrganizationConfiguration(ctx, conn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
 		}
 
 		if err != nil {
 			return nil, "", err
 		}
 
-		if output == nil || output.OrganizationConfiguration == nil {
-			return nil, "", tfresource.NewEmptyResultError(input)
-		}
-
-		switch output.OrganizationConfiguration.Status {
-		case types.OrganizationConfigurationStatusPending:
-			return nil, "", nil
-		case types.OrganizationConfigurationStatusEnabled, "":
-			return output, string(output.OrganizationConfiguration.Status), nil
-		default:
-			var statusErr error
-			if msg := output.OrganizationConfiguration.StatusMessage; msg != nil && len(*msg) > 0 {
-				statusErr = fmt.Errorf("StatusMessage: %s", *msg)
-			}
-			return nil, "", &retry.UnexpectedStateError{
-				LastError:     statusErr,
-				State:         string(output.OrganizationConfiguration.Status),
-				ExpectedState: enum.Slice(types.OrganizationConfigurationStatusEnabled, types.OrganizationConfigurationStatusPending),
-			}
-		}
+		return output, string(output.OrganizationConfiguration.Status), nil
 	}
 }
 
@@ -203,15 +203,17 @@ func waitOrganizationConfigurationEnabled(ctx context.Context, conn *securityhub
 	stateConf := &retry.StateChangeConf{
 		Pending:                   enum.Slice(types.OrganizationConfigurationStatusPending),
 		Target:                    enum.Slice(types.OrganizationConfigurationStatusEnabled),
-		Refresh:                   findOrganizationConfiguration(ctx, conn),
+		Refresh:                   statusOrganizationConfiguration(ctx, conn),
 		Timeout:                   timeout,
-		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*securityhub.DescribeOrganizationConfigurationOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*securityhub.DescribeOrganizationConfigurationOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.OrganizationConfiguration.StatusMessage)))
+
+		return output, err
 	}
 
 	return nil, err
