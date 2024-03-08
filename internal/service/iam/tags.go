@@ -358,6 +358,15 @@ func userCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string
 	return userUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
 }
 
+func userListTags(ctx context.Context, conn *iam.IAM, identifier string) (tftags.KeyValueTags, error) {
+	user, err := findUserByName(ctx, conn, identifier)
+	if err != nil {
+		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
+	}
+
+	return KeyValueTags(ctx, user.Tags), nil
+}
+
 // virtualMFADeviceUpdateTags updates IAM Virtual MFA Device tags.
 // The identifier is the Virtual MFA Device ARN.
 func virtualMFADeviceUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
@@ -452,6 +461,9 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 
 	case "Role":
 		tags, err = roleListTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
+
+	case "User":
+		tags, err = userListTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
 
 	default:
 		return nil

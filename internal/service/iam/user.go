@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_iam_user", name="User")
 // @Tags(identifierAttribute="id", resourceType="User")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/iam.User", importIgnore="force_destroy")
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
