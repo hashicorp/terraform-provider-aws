@@ -6,7 +6,7 @@ package ec2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -107,7 +107,7 @@ func resourceDefaultNetworkACLCreate(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL (%s): %s", naclID, err)
 	}
 
-	if !aws.BoolValue(nacl.IsDefault) {
+	if !aws.ToBool(nacl.IsDefault) {
 		return sdkdiag.AppendErrorf(diags, "use the `aws_network_acl` resource instead")
 	}
 

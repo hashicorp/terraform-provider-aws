@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccVPCDefaultNetworkACL_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v types.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	vpcResourceName := "aws_vpc.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -57,7 +57,7 @@ func TestAccVPCDefaultNetworkACL_basic(t *testing.T) {
 
 func TestAccVPCDefaultNetworkACL_basicIPv6VPC(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v types.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -86,7 +86,7 @@ func TestAccVPCDefaultNetworkACL_basicIPv6VPC(t *testing.T) {
 
 func TestAccVPCDefaultNetworkACL_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v types.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -132,7 +132,7 @@ func TestAccVPCDefaultNetworkACL_tags(t *testing.T) {
 
 func TestAccVPCDefaultNetworkACL_Deny_ingress(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v types.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -169,7 +169,7 @@ func TestAccVPCDefaultNetworkACL_Deny_ingress(t *testing.T) {
 
 func TestAccVPCDefaultNetworkACL_withIPv6Ingress(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v types.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -206,7 +206,7 @@ func TestAccVPCDefaultNetworkACL_withIPv6Ingress(t *testing.T) {
 
 func TestAccVPCDefaultNetworkACL_subnetRemoval(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v types.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -251,7 +251,7 @@ func TestAccVPCDefaultNetworkACL_subnetRemoval(t *testing.T) {
 
 func TestAccVPCDefaultNetworkACL_subnetReassign(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v ec2.NetworkAcl
+	var v types.NetworkAcl
 	resourceName := "aws_default_network_acl.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -308,7 +308,7 @@ func testAccCheckDefaultNetworkACLDestroy(s *terraform.State) error {
 	return nil
 }
 
-func testAccCheckDefaultNetworkACLExists(ctx context.Context, n string, v *ec2.NetworkAcl) resource.TestCheckFunc {
+func testAccCheckDefaultNetworkACLExists(ctx context.Context, n string, v *types.NetworkAcl) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -319,15 +319,15 @@ func testAccCheckDefaultNetworkACLExists(ctx context.Context, n string, v *ec2.N
 			return fmt.Errorf("No EC2 Default Network ACL ID is set: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindNetworkACLByID(ctx, conn, rs.Primary.ID)
+		output, err := tfec2.FindNetworkACLByIDV2(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if !aws.BoolValue(output.IsDefault) {
+		if !aws.ToBool(output.IsDefault) {
 			return fmt.Errorf("EC2 Network ACL %s is not a default NACL", rs.Primary.ID)
 		}
 
