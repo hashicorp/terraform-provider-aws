@@ -112,6 +112,8 @@ var (
 // PreCheck(t) must be called before using this provider instance.
 var Provider *schema.Provider
 
+type ProviderFunc func() *schema.Provider
+
 // testAccProviderConfigure ensures Provider is only configured once
 //
 // The PreCheck(t) function is invoked for every test and this prevents
@@ -1046,7 +1048,7 @@ func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 	PreCheckOrganizationManagementAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
 }
 
-func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *testing.T, providerF func() *schema.Provider) {
+func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
 	t.Helper()
 
 	awsClient := providerF().Meta().(*conns.AWSClient)
@@ -1072,7 +1074,7 @@ func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
 	PreCheckOrganizationMemberAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
 }
 
-func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testing.T, providerF func() *schema.Provider) {
+func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
 	t.Helper()
 
 	awsClient := providerF().Meta().(*conns.AWSClient)
@@ -1436,7 +1438,7 @@ provider %[1]q {
 `, providerName, os.Getenv(envvar.AlternateAccessKeyId), os.Getenv(envvar.AlternateProfile), AlternateRegion(), os.Getenv(envvar.AlternateSecretAccessKey))
 }
 
-func RegionProviderFunc(region string, providers *[]*schema.Provider) func() *schema.Provider {
+func RegionProviderFunc(region string, providers *[]*schema.Provider) ProviderFunc {
 	return func() *schema.Provider {
 		if region == "" {
 			log.Println("[DEBUG] No region given")
@@ -1475,7 +1477,7 @@ func RegionProviderFunc(region string, providers *[]*schema.Provider) func() *sc
 	}
 }
 
-func NamedProviderFunc(name string, providers map[string]*schema.Provider) func() *schema.Provider {
+func NamedProviderFunc(name string, providers map[string]*schema.Provider) ProviderFunc {
 	return func() *schema.Provider {
 		return NamedProvider(name, providers)
 	}
