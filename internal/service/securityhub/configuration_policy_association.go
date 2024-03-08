@@ -143,7 +143,7 @@ func findConfigurationPolicyAssociationByID(ctx context.Context, conn *securityh
 func findConfigurationPolicyAssociation(ctx context.Context, conn *securityhub.Client, input *securityhub.GetConfigurationPolicyAssociationInput) (*securityhub.GetConfigurationPolicyAssociationOutput, error) {
 	output, err := conn.GetConfigurationPolicyAssociation(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "Must be a Security Hub delegated administrator with Central Configuration enabled") || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
