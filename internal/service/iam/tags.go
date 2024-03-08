@@ -159,6 +159,15 @@ func policyCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier stri
 	return policyUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
 }
 
+func policyListTags(ctx context.Context, conn *iam.IAM, identifier string) (tftags.KeyValueTags, error) {
+	policy, err := findPolicyByARN(ctx, conn, identifier)
+	if err != nil {
+		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
+	}
+
+	return KeyValueTags(ctx, policy.Tags), nil
+}
+
 // roleUpdateTags updates IAM role tags.
 // The identifier is the role name.
 func roleUpdateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string, oldTagsMap, newTagsMap any) error {
@@ -425,6 +434,9 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 	switch resourceType {
 	case "InstanceProfile":
 		tags, err = instanceProfileListTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
+
+	case "Policy":
+		tags, err = policyListTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
 
 	case "Role":
 		tags, err = roleListTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
