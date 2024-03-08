@@ -40,7 +40,7 @@ type resourceApplication struct {
 }
 
 func (r *resourceApplication) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_servicecatalog_application"
+	resp.TypeName = "aws_servicecatalogappregistry_application"
 }
 
 func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {

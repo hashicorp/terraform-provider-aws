@@ -1,21 +1,15 @@
 ---
-subcategory: "Service Catalog AppRegistry"
+subcategory: "Service Catalog"
 layout: "aws"
 page_title: "AWS: aws_servicecatalogappregistry_application"
 description: |-
   Terraform resource for managing an AWS Service Catalog AppRegistry Application.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
 # Resource: aws_servicecatalogappregistry_application
 
-Terraform resource for managing an AWS Service Catalog AppRegistry Application.
+Terraform resource for managing an AWS Service Catalog AppRegistry Application. 
+
+~> **NOTE: ** An AWS Service Catalog AppRegistry Application is also available in the AWS Console as "MyApplications"
 
 ## Example Usage
 
@@ -23,37 +17,47 @@ Terraform resource for managing an AWS Service Catalog AppRegistry Application.
 
 ```terraform
 resource "aws_servicecatalogappregistry_application" "example" {
+  name = "myApplication"
 }
+```
+
+### Connecting resources
+
+```terraform
+resource "aws_servicecatalogappregistry_application" "example" {
+  name = "myApplication"
+}
+
+resource "aws_s3_bucket" "bucket" {
+  bucket = "application_bucket"
+
+  tags = {
+    awsApplication = aws_servicecatalogappregistry_application.example.arn
+  }
+}
+
 ```
 
 ## Argument Reference
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `Name` - (Required) Name of the application. The name must be unique in the region in which you are creating the application.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `description` - (Optional) Description of the application.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Application. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `arn` - ARN of the Application. 
+* `id` - Identifier of the Application
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Service Catalog AppRegistry Application using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Service Catalog AppRegistry Application using the `id`. For example:
 
 ```terraform
 import {
@@ -62,7 +66,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Service Catalog AppRegistry Application using the `example_id_arg`. For example:
+Using `terraform import`, import AWS Service Catalog AppRegistry Application using the `id`. For example:
 
 ```console
 % terraform import aws_servicecatalogappregistry_application.example application-id-12345678
