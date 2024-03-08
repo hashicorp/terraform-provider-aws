@@ -49,7 +49,7 @@ The following arguments are required:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Provider composed identifier: `database_name,name,table_catalog_id,table_name`.
 
