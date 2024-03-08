@@ -42,8 +42,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Account",
 		},
 		{
-			Factory:  ResourceActionTarget,
+			Factory:  resourceActionTarget,
 			TypeName: "aws_securityhub_action_target",
+			Name:     "Action Target",
 		},
 		{
 			Factory:  resourceConfigurationPolicy,
