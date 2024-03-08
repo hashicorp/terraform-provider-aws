@@ -93,15 +93,24 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 		return sdkdiag.AppendErrorf(diags, "updating Security Hub Organization Configuration (%s): %s", d.Id(), err)
 	}
 
-	timeout := d.Timeout(schema.TimeoutCreate)
 	if d.IsNewResource() {
 		d.SetId(meta.(*conns.AWSClient).AccountID)
-	} else {
-		timeout = d.Timeout(schema.TimeoutUpdate)
 	}
 
-	if _, err := waitOrganizationConfigurationEnabled(ctx, conn, timeout); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Security Hub Organization Configuration (%s) enable: %s", d.Id(), err)
+	configurationType := types.OrganizationConfigurationConfigurationTypeLocal
+	if input.OrganizationConfiguration != nil {
+		configurationType = input.OrganizationConfiguration.ConfigurationType
+	}
+
+	if configurationType == types.OrganizationConfigurationConfigurationTypeCentral {
+		timeout := d.Timeout(schema.TimeoutUpdate)
+		if d.IsNewResource() {
+			timeout = d.Timeout(schema.TimeoutCreate)
+		}
+
+		if _, err := waitOrganizationConfigurationEnabled(ctx, conn, timeout); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Security Hub Organization Configuration (%s) enable: %s", d.Id(), err)
+		}
 	}
 
 	return append(diags, resourceOrganizationConfigurationRead(ctx, d, meta)...)
@@ -150,11 +159,20 @@ func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.Reso
 	_, err := conn.UpdateOrganizationConfiguration(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Security Hub Organization Configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Security Hub Organization Configuration (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitOrganizationConfigurationEnabled(ctx, conn, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for Security Hub Organization Configuration (%s) delete: %s", d.Id(), err)
+	configurationType := types.OrganizationConfigurationConfigurationTypeLocal
+	if v, ok := d.GetOk("organization_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if organizationConfiguration := expandOrganizationConfiguration(v.([]interface{})[0].(map[string]interface{})); organizationConfiguration != nil {
+			configurationType = organizationConfiguration.ConfigurationType
+		}
+	}
+
+	if configurationType == types.OrganizationConfigurationConfigurationTypeCentral {
+		if _, err := waitOrganizationConfigurationEnabled(ctx, conn, d.Timeout(schema.TimeoutDelete)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Security Hub Organization Configuration (%s) delete: %s", d.Id(), err)
+		}
 	}
 
 	return diags
