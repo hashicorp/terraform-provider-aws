@@ -44,7 +44,8 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"ControlIdentifiers": testAccConfigurationPolicy_specificControlIdentifiers,
 		},
 		"ConfigurationPolicyAssociation": {
-			"basic": testAccConfigurationPolicyAssociation_basic,
+			"basic":      testAccConfigurationPolicyAssociation_basic,
+			"disappears": testAccConfigurationPolicyAssociation_disappears,
 		},
 		"FindingAggregator": {
 			"basic":      testAccFindingAggregator_basic,

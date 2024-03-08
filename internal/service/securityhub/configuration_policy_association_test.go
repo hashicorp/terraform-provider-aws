@@ -78,6 +78,35 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 	})
 }
 
+func testAccConfigurationPolicyAssociation_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_securityhub_configuration_policy_association.test"
+	ouTarget := "aws_organizations_organizational_unit.test.id"
+	policy1 := "aws_securityhub_configuration_policy.test_1.id"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckAlternateRegionIs(t, acctest.Region())
+			acctest.PreCheckOrganizationMemberAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckConfigurationPolicyAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationPolicyAssociationConfig_basic(ouTarget, policy1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecurityhub.ResourceConfigurationPolicyAssociation(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckConfigurationPolicyAssociationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
