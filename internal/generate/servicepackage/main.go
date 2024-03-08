@@ -263,6 +263,8 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 			case "Tags":
 				// Handled above.
+			case "Testing":
+				// Ignored.
 			default:
 				v.g.Warnf("unknown annotation: %s", annotationName)
 			}
