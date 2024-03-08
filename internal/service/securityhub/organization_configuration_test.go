@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/securityhub/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -90,6 +91,7 @@ func testAccOrganizationConfiguration_autoEnableStandards(t *testing.T) {
 
 func testAccOrganizationConfiguration_centralConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
+	providers := make(map[string]*schema.Provider)
 	resourceName := "aws_securityhub_organization_configuration.test"
 
 	resource.Test(t, resource.TestCase{
@@ -99,10 +101,18 @@ func testAccOrganizationConfiguration_centralConfiguration(t *testing.T) {
 			acctest.PreCheckOrganizationMemberAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 		CheckDestroy:             testAccCheckOrganizationConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				// Run a simple configuration to initialize the alternate providers
+				Config: testAccOrganizationConfigurationConfig_centralConfigurationInit,
+			},
+			{
+				PreConfig: func() {
+					// Can only run check here because the provider is not available until the previous step.
+					acctest.PreCheckOrganizationManagementAccountWithProvider(ctx, t, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
+				},
 				Config: testAccOrganizationConfigurationConfig_centralConfiguration(false, "NONE", "CENTRAL"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckOrganizationConfigurationExists(ctx, resourceName),
@@ -209,6 +219,27 @@ resource "aws_securityhub_organization_configuration" "test" {
 }
 `, autoEnableStandards))
 }
+
+// Central configuration can only be enabled from a *member* delegated admin account.
+// The primary provider is expected to be an organizations member account and the alternate provider is expected to be the organizations management account.
+const testAccMemberAccountDelegatedAdminConfig_base = `
+data "aws_caller_identity" "member" {}
+
+resource "aws_securityhub_organization_admin_account" "test" {
+  provider = awsalternate
+
+  admin_account_id = data.aws_caller_identity.member.account_id
+}
+`
+
+// Initialize all the providers used by acceptance tests.
+var testAccOrganizationConfigurationConfig_centralConfigurationInit = acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), `
+data "aws_caller_identity" "member" {}
+
+data "aws_caller_identity" "management" {
+  provider = awsalternate
+}
+`)
 
 func testAccOrganizationConfigurationConfig_centralConfiguration(autoEnable bool, autoEnableStandards, configType string) string {
 	return acctest.ConfigCompose(

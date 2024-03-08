@@ -96,13 +96,3 @@ func TestAccSecurityHub_serial(t *testing.T) {
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
-
-const testAccMemberAccountDelegatedAdminConfig_base = `
-data "aws_caller_identity" "member" {}
-
-resource "aws_securityhub_organization_admin_account" "test" {
-  provider = awsalternate
-
-  admin_account_id = data.aws_caller_identity.member.account_id
-}
-`
