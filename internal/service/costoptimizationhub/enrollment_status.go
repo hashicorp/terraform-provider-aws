@@ -120,22 +120,19 @@ func (r *resourceEnrollmentStatus) Read(ctx context.Context, req resource.ReadRe
 		return
 	}
 
-	les_in := &costoptimizationhub.ListEnrollmentStatusesInput{
-		IncludeOrganizationInfo: false, //Pass in false to get only this account's status (and not its member accounts)
-	}
+	output, err := findEnrollmentStatus(ctx, conn)
 
-	les_out, les_err := conn.ListEnrollmentStatuses(ctx, les_in)
-	if les_err != nil {
+	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionSetting, ResNameEnrollmentStatus, state.ID.String(), les_err),
-			les_err.Error(),
+			create.ProblemStandardMessage(names.CostOptimizationHub, create.ErrActionSetting, ResNameEnrollmentStatus, state.ID.String(), err),
+			err.Error(),
 		)
 		return
 	}
 
 	state.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
-	state.Status = flex.StringValueToFramework(ctx, les_out.Items[0].Status)
-	state.IncludeMemberAccounts = flex.BoolToFramework(ctx, les_out.IncludeMemberAccounts)
+	state.Status = flex.StringValueToFramework(ctx, output.Items[0].Status)
+	state.IncludeMemberAccounts = flex.BoolToFramework(ctx, output.IncludeMemberAccounts)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -215,6 +212,19 @@ func (r *resourceEnrollmentStatus) Delete(ctx context.Context, req resource.Dele
 			return
 		}
 	}
+}
+
+func findEnrollmentStatus(ctx context.Context, conn *costoptimizationhub.Client) (*costoptimizationhub.ListEnrollmentStatusesOutput, error) {
+	les_in := &costoptimizationhub.ListEnrollmentStatusesInput{
+		IncludeOrganizationInfo: false, //Pass in false to get only this account's status (and not its member accounts)
+	}
+
+	les_out, les_err := conn.ListEnrollmentStatuses(ctx, les_in)
+	if les_err != nil {
+		return nil, les_err
+	}
+
+	return les_out, nil
 }
 
 func (r *resourceEnrollmentStatus) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
