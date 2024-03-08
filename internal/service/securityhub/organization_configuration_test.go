@@ -96,7 +96,6 @@ func testAccOrganizationConfiguration_centralConfiguration(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckAlternateRegionIs(t, acctest.Region())
 			acctest.PreCheckOrganizationMemberAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
