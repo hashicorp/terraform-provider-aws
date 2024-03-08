@@ -87,7 +87,15 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 		input.OrganizationConfiguration = expandOrganizationConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	_, err := conn.UpdateOrganizationConfiguration(ctx, input)
+	timeout := d.Timeout(schema.TimeoutUpdate)
+	if d.IsNewResource() {
+		timeout = d.Timeout(schema.TimeoutCreate)
+	}
+
+	// e.g. "DataUnavailableException: Central configuration couldn't be enabled because data from organization o-ira6i4k380 is still syncing. Retry later."
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, timeout, func() (interface{}, error) {
+		return conn.UpdateOrganizationConfiguration(ctx, input)
+	}, errCodeDataUnavailableException, "Retry later")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Security Hub Organization Configuration (%s): %s", d.Id(), err)
@@ -103,11 +111,6 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 	}
 
 	if configurationType == types.OrganizationConfigurationConfigurationTypeCentral {
-		timeout := d.Timeout(schema.TimeoutUpdate)
-		if d.IsNewResource() {
-			timeout = d.Timeout(schema.TimeoutCreate)
-		}
-
 		if _, err := waitOrganizationConfigurationEnabled(ctx, conn, timeout); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Security Hub Organization Configuration (%s) enable: %s", d.Id(), err)
 		}
