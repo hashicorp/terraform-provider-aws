@@ -9,8 +9,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -18,23 +18,21 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLakeFormationDataCellsFilter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
-	var datacellsfilter lakeformation.GetDataCellsFilterOutput
+	var datacellsfilter awstypes.DataCellsFilter
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_data_cells_filter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormationServiceID)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
 			testAccDataCellsFilterPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
@@ -45,22 +43,17 @@ func TestAccLakeFormationDataCellsFilter_basic(t *testing.T) {
 				Config: testAccDataCellsFilterConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDataCellsFilterExists(ctx, resourceName, &datacellsfilter),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lakeformation", regexache.MustCompile(`datacellsfilter:+.`)),
+					resource.TestCheckResourceAttr(resourceName, "table_data.0.database_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "table_data.0.name", rName),
+					resource.TestCheckResourceAttr(resourceName, "table_data.0.table_name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "table_data.0.version_id"),
+					// resource.TestCheckResourceAttr(resourceName, "table_data.0.column_names.#", "1"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -68,18 +61,15 @@ func TestAccLakeFormationDataCellsFilter_basic(t *testing.T) {
 
 func TestAccLakeFormationDataCellsFilter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
-	var datacellsfilter lakeformation.GetDataCellsFilterOutput
+	var datacellsfilter awstypes.DataCellsFilter
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_data_cells_filter.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormationServiceID)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
 			testAccDataCellsFilterPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
@@ -100,25 +90,22 @@ func TestAccLakeFormationDataCellsFilter_disappears(t *testing.T) {
 
 func testAccCheckDataCellsFilterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		// conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lakeformation_data_cells_filter" {
 				continue
 			}
 
-			//input := &lakeformation.DescribeDataCellsFilterInput{
-			//	DataCellsFilterId: aws.String(rs.Primary.ID),
-			//}
-			//_, err := conn.DescribeDataCellsFilter(ctx, &lakeformation.DescribeDataCellsFilterInput{
-			//	DataCellsFilterId: aws.String(rs.Primary.ID),
-			//})
-			//if errs.IsA[*types.ResourceNotFoundException](err) {
-			//	return nil
-			//}
-			//if err != nil {
-			//	return create.Error(names.LakeFormation, create.ErrActionCheckingDestroyed, tflakeformation.ResNameDataCellsFilter, rs.Primary.ID, err)
-			//}
+			_, err := tflakeformation.FindDataCellsFilterByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				return nil
+			}
+
+			if err != nil {
+				return create.Error(names.LakeFormation, create.ErrActionCheckingDestroyed, tflakeformation.ResNameDataCellsFilter, rs.Primary.ID, err)
+			}
 
 			return create.Error(names.LakeFormation, create.ErrActionCheckingDestroyed, tflakeformation.ResNameDataCellsFilter, rs.Primary.ID, errors.New("not destroyed"))
 		}
@@ -127,7 +114,7 @@ func testAccCheckDataCellsFilterDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckDataCellsFilterExists(ctx context.Context, name string, datacellsfilter *lakeformation.GetDataCellsFilterOutput) resource.TestCheckFunc {
+func testAccCheckDataCellsFilterExists(ctx context.Context, name string, datacellsfilter *awstypes.DataCellsFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -138,16 +125,14 @@ func testAccCheckDataCellsFilterExists(ctx context.Context, name string, datacel
 			return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameDataCellsFilter, name, errors.New("not set"))
 		}
 
-		//conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
-		//resp, err := conn.DescribeDataCellsFilter(ctx, &lakeformation.DescribeDataCellsFilterInput{
-		//	DataCellsFilterId: aws.String(rs.Primary.ID),
-		//})
-		//
-		//if err != nil {
-		//	return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameDataCellsFilter, rs.Primary.ID, err)
-		//}
-		//
-		//*datacellsfilter = *resp
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
+		resp, err := tflakeformation.FindDataCellsFilterByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameDataCellsFilter, rs.Primary.ID, err)
+		}
+
+		*datacellsfilter = *resp
 
 		return nil
 	}
@@ -167,29 +152,83 @@ func testAccDataCellsFilterPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccDataCellsFilterConfig_basic(rName string) string {
+func testAccDataCellsFilterConfigBase(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
+data "aws_partition" "current" {}
+
+data "aws_caller_identity" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "glue.${data.aws_partition.current.dns_suffix}"
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+}
+
+resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
 
-resource "aws_lakeformation_data_cells_filter" "test" {
-  data_cells_filter_name             = %[1]q
-  engine_type             = "ActiveLakeFormation"
-  engine_version          = %[2]q
-  host_instance_type      = "lakeformation.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
 
-  logs {
-    general = true
+  storage_descriptor {
+    columns {
+      name    = "my_column_12"
+      type    = "date"
+      comment = "my_column1_comment2"
+    }
+
+    columns {
+      name    = "my_column_22"
+      type    = "timestamp"
+      comment = "my_column2_comment2"
+    }
+
+    columns {
+      name    = "my_column_23"
+      type    = "string"
+      comment = "my_column23_comment2"
+    }
   }
+}`, rName)
+}
 
-  user {
-    username = "Test"
-    password = "TestTest1234"
+func testAccDataCellsFilterConfig_basic(rName string) string {
+	return acctest.ConfigCompose(
+		testAccDataCellsFilterConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_lakeformation_data_cells_filter" "test" {
+  table_data {
+    database_name = aws_glue_catalog_database.test.name
+    name = %[1]q
+    table_catalog_id = data.aws_caller_identity.current.account_id
+    table_name = aws_glue_catalog_table.test.name
+
+    column_names = ["my_column_22"]
+
+    row_filter {
+        filter_expression = "my_column_23='testing'"
+    }
   }
 }
-`, rName)
+`, rName))
 }

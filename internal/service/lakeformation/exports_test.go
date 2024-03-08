@@ -6,4 +6,6 @@ package lakeformation
 // exports used for testing only.
 var (
 	ResourceDataCellsFilter = newResourceDataCellsFilter
+
+	FindDataCellsFilterByID = findDataCellsFilterByID
 )

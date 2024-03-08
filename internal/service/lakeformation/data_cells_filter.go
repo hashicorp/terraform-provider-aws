@@ -184,9 +184,23 @@ func (r *resourceDataCellsFilter) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	plan.ID = fwflex.StringValueToFramework(ctx, id)
+	state := plan
+	state.ID = fwflex.StringValueToFramework(ctx, id)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	output, err := findDataCellsFilterByID(ctx, conn, state.ID.ValueString())
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionCreating, ResNameDataCellsFilter, td.Name.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	td.VersionID = fwflex.StringToFramework(ctx, output.VersionId)
+	state.TableData = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, td)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
 func (r *resourceDataCellsFilter) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
@@ -212,19 +226,14 @@ func (r *resourceDataCellsFilter) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	std, diags := state.TableData.ToPtr(ctx)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, std)...)
+	td := tableData{}
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &td)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
-	state.TableData = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, std)
+	state.TableData = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &td)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -328,8 +337,8 @@ func (i *identifier) Len() int {
 }
 
 func findDataCellsFilterByID(ctx context.Context, conn *lakeformation.Client, id string) (*awstypes.DataCellsFilter, error) {
-	idd := identifier(id)
-	idParts, err := intflex.ExpandResourceId(idd.String(), idd.Len(), false)
+	identity := identifier(id)
+	idParts, err := intflex.ExpandResourceId(identity.String(), identity.Len(), false)
 
 	if err != nil {
 		return nil, err
