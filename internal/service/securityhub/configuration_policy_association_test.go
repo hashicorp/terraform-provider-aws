@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,6 +22,7 @@ import (
 func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	providers := make(map[string]*schema.Provider)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_configuration_policy_association.test"
 	accountTarget := "data.aws_caller_identity.member.account_id"
 	ouTarget := "aws_organizations_organizational_unit.test.id"
@@ -47,7 +49,7 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 					// Can only run check here because the provider is not available until the previous step.
 					acctest.PreCheckOrganizationManagementAccountWithProvider(ctx, t, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
 				},
-				Config: testAccConfigurationPolicyAssociationConfig_basic(ouTarget, policy1),
+				Config: testAccConfigurationPolicyAssociationConfig_basic(rName, ouTarget, policy1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", "aws_securityhub_configuration_policy.test_1", "id"),
@@ -60,7 +62,7 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigurationPolicyAssociationConfig_basic(ouTarget, policy2),
+				Config: testAccConfigurationPolicyAssociationConfig_basic(rName, ouTarget, policy2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", "aws_securityhub_configuration_policy.test_2", "id"),
@@ -68,7 +70,7 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfigurationPolicyAssociationConfig_basic(rootTarget, policy2),
+				Config: testAccConfigurationPolicyAssociationConfig_basic(rName, rootTarget, policy2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", "aws_securityhub_configuration_policy.test_2", "id"),
@@ -76,7 +78,7 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfigurationPolicyAssociationConfig_basic(accountTarget, policy2),
+				Config: testAccConfigurationPolicyAssociationConfig_basic(rName, accountTarget, policy2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "policy_id", "aws_securityhub_configuration_policy.test_2", "id"),
@@ -90,6 +92,7 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 func testAccConfigurationPolicyAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	providers := make(map[string]*schema.Provider)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_securityhub_configuration_policy_association.test"
 	ouTarget := "aws_organizations_organizational_unit.test.id"
 	policy1 := "aws_securityhub_configuration_policy.test_1.id"
@@ -113,7 +116,7 @@ func testAccConfigurationPolicyAssociation_disappears(t *testing.T) {
 					// Can only run check here because the provider is not available until the previous step.
 					acctest.PreCheckOrganizationManagementAccountWithProvider(ctx, t, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
 				},
-				Config: testAccConfigurationPolicyAssociationConfig_basic(ouTarget, policy1),
+				Config: testAccConfigurationPolicyAssociationConfig_basic(rName, ouTarget, policy1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsecurityhub.ResourceConfigurationPolicyAssociation(), resourceName),
@@ -165,7 +168,8 @@ func testAccCheckConfigurationPolicyAssociationDestroy(ctx context.Context) reso
 	}
 }
 
-const testAccOrganizationalUnitConfig_base = `
+func testAccOrganizationalUnitConfig_base(rName string) string {
+	return fmt.Sprintf(`
 data "aws_organizations_organization" "test" {
   provider = awsalternate
 }
@@ -173,19 +177,22 @@ data "aws_organizations_organization" "test" {
 resource "aws_organizations_organizational_unit" "test" {
   provider = awsalternate
 
-  name      = "testAccConfigurationPolicyOrgUnitConfig_base"
+  name      = %[1]q
   parent_id = data.aws_organizations_organization.test.roots[0].id
 }
-`
+`, rName)
+}
 
-// lintignore:AWSAT005
-const testAccConfigurationPoliciesConfig_base = `
+func testAccConfigurationPoliciesConfig_base(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
 resource "aws_securityhub_configuration_policy" "test_1" {
-  name = "test1"
+  name = "%[1]s-1"
 
   configuration_policy {
     service_enabled       = true
-    enabled_standard_arns = ["arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"]
+    enabled_standard_arns = ["arn:${data.aws_partition.current.partition}:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"]
 
     security_controls_configuration {
       disabled_control_identifiers = []
@@ -196,11 +203,11 @@ resource "aws_securityhub_configuration_policy" "test_1" {
 }
 
 resource "aws_securityhub_configuration_policy" "test_2" {
-  name = "test2"
+  name = "%[1]s-2"
 
   configuration_policy {
     service_enabled       = true
-    enabled_standard_arns = ["arn:aws:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"]
+    enabled_standard_arns = ["arn:${data.aws_partition.current.partition}:securityhub:::ruleset/cis-aws-foundations-benchmark/v/1.2.0"]
 
     security_controls_configuration {
       enabled_control_identifiers = ["CloudTrail.1"]
@@ -208,16 +215,16 @@ resource "aws_securityhub_configuration_policy" "test_2" {
   }
 
   depends_on = [aws_securityhub_organization_configuration.test]
+}`, rName)
 }
-`
 
-func testAccConfigurationPolicyAssociationConfig_basic(targetID, policyID string) string {
+func testAccConfigurationPolicyAssociationConfig_basic(rName, targetID, policyID string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigAlternateAccountProvider(),
 		testAccMemberAccountDelegatedAdminConfig_base,
-		testAccOrganizationalUnitConfig_base,
+		testAccOrganizationalUnitConfig_base(rName),
 		testAccCentralConfigurationEnabledConfig_base,
-		testAccConfigurationPoliciesConfig_base,
+		testAccConfigurationPoliciesConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_securityhub_configuration_policy_association" "test" {
   target_id = %[1]s
