@@ -62,8 +62,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Finding Aggregator",
 		},
 		{
-			Factory:  ResourceInsight,
+			Factory:  resourceInsight,
 			TypeName: "aws_securityhub_insight",
+			Name:     "Insight",
 		},
 		{
 			Factory:  ResourceInviteAccepter,

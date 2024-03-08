@@ -11,6 +11,7 @@ var (
 	ResourceConfigurationPolicy            = resourceConfigurationPolicy
 	ResourceConfigurationPolicyAssociation = resourceConfigurationPolicyAssociation
 	ResourceFindingAggregator              = resourceFindingAggregator
+	ResourceInsight                        = resourceInsight
 	ResourceOrganizationConfiguration      = resourceOrganizationConfiguration
 
 	AccountHubARN                          = accountHubARN
@@ -20,5 +21,6 @@ var (
 	FindConfigurationPolicyByID            = findConfigurationPolicyByID
 	FindFindingAggregatorByARN             = findFindingAggregatorByARN
 	FindHubByARN                           = findHubByARN
+	FindInsightByARN                       = findInsightByARN
 	FindOrganizationConfiguration          = findOrganizationConfiguration
 )
