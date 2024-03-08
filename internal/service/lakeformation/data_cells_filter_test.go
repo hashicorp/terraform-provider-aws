@@ -47,7 +47,7 @@ func TestAccLakeFormationDataCellsFilter_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "table_data.0.table_name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "table_data.0.version_id"),
-					// resource.TestCheckResourceAttr(resourceName, "table_data.0.column_names.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "table_data.0.column_names.#", "1"),
 				),
 			},
 			{
@@ -218,15 +218,15 @@ func testAccDataCellsFilterConfig_basic(rName string) string {
 		fmt.Sprintf(`
 resource "aws_lakeformation_data_cells_filter" "test" {
   table_data {
-    database_name = aws_glue_catalog_database.test.name
-    name = %[1]q
+    database_name    = aws_glue_catalog_database.test.name
+    name             = %[1]q
     table_catalog_id = data.aws_caller_identity.current.account_id
-    table_name = aws_glue_catalog_table.test.name
+    table_name       = aws_glue_catalog_table.test.name
 
     column_names = ["my_column_22"]
 
     row_filter {
-        filter_expression = "my_column_23='testing'"
+      filter_expression = "my_column_23='testing'"
     }
   }
 }
