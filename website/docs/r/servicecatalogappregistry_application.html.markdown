@@ -1,5 +1,5 @@
 ---
-subcategory: "Service Catalog"
+subcategory: "Service Catalog AppRegistry"
 layout: "aws"
 page_title: "AWS: aws_servicecatalogappregistry_application"
 description: |-
@@ -7,9 +7,9 @@ description: |-
 ---
 # Resource: aws_servicecatalogappregistry_application
 
-Terraform resource for managing an AWS Service Catalog AppRegistry Application. 
+Terraform resource for managing an AWS Service Catalog AppRegistry Application.
 
-~> **NOTE: ** An AWS Service Catalog AppRegistry Application is also available in the AWS Console as "MyApplications"
+~> **NOTE:** An AWS Service Catalog AppRegistry Application is also available in the AWS Console as "MyApplications"
 
 ## Example Usage
 

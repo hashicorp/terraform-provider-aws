@@ -139,7 +139,6 @@ func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateReq
 
 	if !plan.Name.Equal(state.Name) ||
 		!plan.Description.Equal(state.Description) {
-
 		in := &servicecatalogappregistry.UpdateApplicationInput{
 			Application: aws.String(plan.ID.ValueString()),
 		}
@@ -200,13 +199,6 @@ func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteReq
 func (r *resourceApplication) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
-
-const (
-	statusChangePending = "Pending"
-	statusDeleting      = "Deleting"
-	statusNormal        = "Normal"
-	statusUpdated       = "Updated"
-)
 
 func findApplicationByID(ctx context.Context, conn *servicecatalogappregistry.Client, id string) (*servicecatalogappregistry.GetApplicationOutput, error) {
 	in := &servicecatalogappregistry.GetApplicationInput{

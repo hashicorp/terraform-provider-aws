@@ -128,11 +128,8 @@ func testAccCheckApplicationExists(ctx context.Context, name string) resource.Te
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogAppRegistryClient(ctx)
 
 		_, err := servicecatalogappregistry.FindApplicationByID(ctx, conn, rs.Primary.ID)
-		if err != nil {
-			return err
-		}
 
-		return nil
+		return err
 	}
 }
 
