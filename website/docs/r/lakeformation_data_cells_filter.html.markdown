@@ -47,7 +47,7 @@ The following arguments are required:
 * `row_filter` - (Optional) A PartiQL predicate. See [Row Filter](#row-filter) below for details.
 * `version_id` - (Optional) ID of the data cells filter version.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 

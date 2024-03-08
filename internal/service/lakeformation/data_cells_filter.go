@@ -309,7 +309,8 @@ func (r *resourceDataCellsFilter) Delete(ctx context.Context, req resource.Delet
 		return
 	}
 
-	idParts, err := intflex.ExpandResourceId(state.ID.ValueString(), 4, false)
+	id := identifier(state.ID.ValueString())
+	idParts, err := intflex.ExpandResourceId(id.String(), id.Len(), false)
 
 	if err != nil {
 		resp.Diagnostics.AddError(
