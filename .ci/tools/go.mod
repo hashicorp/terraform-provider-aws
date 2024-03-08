@@ -10,7 +10,7 @@ require (
 	github.com/golangci/golangci-lint v1.56.2
 	github.com/hashicorp/copywrite v0.18.0
 	github.com/hashicorp/go-changelog v0.0.0-20240306190400-974418b4aaa3
-	github.com/jar-b/terrafmt v0.5.3-0.20240307161538-2c92e6587474
+	github.com/katbyte/terrafmt v0.5.3
 	github.com/pavius/impi v0.0.3
 	github.com/rhysd/actionlint v1.6.27
 	github.com/terraform-linters/tflint v0.50.3
