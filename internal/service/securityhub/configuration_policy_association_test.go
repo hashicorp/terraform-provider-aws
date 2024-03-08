@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -19,6 +20,7 @@ import (
 
 func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 	ctx := acctest.Context(t)
+	providers := make(map[string]*schema.Provider)
 	resourceName := "aws_securityhub_configuration_policy_association.test"
 	accountTarget := "data.aws_caller_identity.member.account_id"
 	ouTarget := "aws_organizations_organizational_unit.test.id"
@@ -30,14 +32,21 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckAlternateRegionIs(t, acctest.Region())
 			acctest.PreCheckOrganizationMemberAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 		CheckDestroy:             testAccCheckConfigurationPolicyAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				// Run a simple configuration to initialize the alternate providers
+				Config: testAccOrganizationConfigurationConfig_centralConfigurationInit,
+			},
+			{
+				PreConfig: func() {
+					// Can only run check here because the provider is not available until the previous step.
+					acctest.PreCheckOrganizationManagementAccountWithProvider(ctx, t, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
+				},
 				Config: testAccConfigurationPolicyAssociationConfig_basic(ouTarget, policy1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
@@ -80,6 +89,7 @@ func testAccConfigurationPolicyAssociation_basic(t *testing.T) {
 
 func testAccConfigurationPolicyAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
+	providers := make(map[string]*schema.Provider)
 	resourceName := "aws_securityhub_configuration_policy_association.test"
 	ouTarget := "aws_organizations_organizational_unit.test.id"
 	policy1 := "aws_securityhub_configuration_policy.test_1.id"
@@ -88,14 +98,21 @@ func testAccConfigurationPolicyAssociation_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			acctest.PreCheckAlternateRegionIs(t, acctest.Region())
 			acctest.PreCheckOrganizationMemberAccount(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityHubServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
 		CheckDestroy:             testAccCheckConfigurationPolicyAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
+				// Run a simple configuration to initialize the alternate providers
+				Config: testAccOrganizationConfigurationConfig_centralConfigurationInit,
+			},
+			{
+				PreConfig: func() {
+					// Can only run check here because the provider is not available until the previous step.
+					acctest.PreCheckOrganizationManagementAccountWithProvider(ctx, t, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
+				},
 				Config: testAccConfigurationPolicyAssociationConfig_basic(ouTarget, policy1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationPolicyAssociationExists(ctx, resourceName),
