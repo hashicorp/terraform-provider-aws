@@ -1043,14 +1043,20 @@ func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) {
 
 func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
+	PreCheckOrganizationManagementAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
+}
 
-	organization, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx))
+func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *testing.T, providerF func() *schema.Provider) {
+	t.Helper()
+
+	awsClient := providerF().Meta().(*conns.AWSClient)
+	organization, err := tforganizations.FindOrganization(ctx, awsClient.OrganizationsConn(ctx))
 
 	if err != nil {
 		t.Fatalf("describing AWS Organization: %s", err)
 	}
 
-	callerIdentity, err := tfsts.FindCallerIdentity(ctx, Provider.Meta().(*conns.AWSClient).STSClient(ctx))
+	callerIdentity, err := tfsts.FindCallerIdentity(ctx, awsClient.STSClient(ctx))
 
 	if err != nil {
 		t.Fatalf("getting current identity: %s", err)
@@ -1063,14 +1069,20 @@ func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 
 func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
+	PreCheckOrganizationMemberAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
+}
 
-	organization, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx))
+func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testing.T, providerF func() *schema.Provider) {
+	t.Helper()
+
+	awsClient := providerF().Meta().(*conns.AWSClient)
+	organization, err := tforganizations.FindOrganization(ctx, awsClient.OrganizationsConn(ctx))
 
 	if err != nil {
 		t.Fatalf("describing AWS Organization: %s", err)
 	}
 
-	callerIdentity, err := tfsts.FindCallerIdentity(ctx, Provider.Meta().(*conns.AWSClient).STSClient(ctx))
+	callerIdentity, err := tfsts.FindCallerIdentity(ctx, awsClient.STSClient(ctx))
 
 	if err != nil {
 		t.Fatalf("getting current identity: %s", err)
