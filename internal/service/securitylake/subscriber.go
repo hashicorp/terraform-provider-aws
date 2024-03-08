@@ -102,7 +102,7 @@ func (r *subscriberResource) Schema(ctx context.Context, request resource.Schema
 			"source": schema.ListNestedBlock{
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
-					listvalidator.SizeAtMost(1),
+					listvalidator.SizeAtLeast(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
