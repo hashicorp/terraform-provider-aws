@@ -26,137 +26,6 @@ import (
 
 // @SDKResource("aws_securityhub_configuration_policy", name="Configuration Policy")
 func resourceConfigurationPolicy() *schema.Resource {
-	customParameterResource := func() *schema.Resource {
-		return &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"bool": {
-					Type:     schema.TypeList,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"value": {
-								Required: true,
-								Type:     schema.TypeBool,
-							},
-						},
-					},
-				},
-				"double": {
-					Type:     schema.TypeList,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"value": {
-								Required: true,
-								Type:     schema.TypeFloat,
-							},
-						},
-					},
-				},
-				"enum": {
-					Type:     schema.TypeList,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"value": {
-								Required: true,
-								Type:     schema.TypeString,
-							},
-						},
-					},
-				},
-				"enum_list": {
-					Type:     schema.TypeList,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"value": {
-								Required: true,
-								Type:     schema.TypeList,
-								Elem: &schema.Schema{
-									Type: schema.TypeString,
-								},
-							},
-						},
-					},
-				},
-				"int": {
-					Type:     schema.TypeList,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"value": {
-								Required:     true,
-								Type:         schema.TypeInt,
-								ValidateFunc: validation.IntAtMost(math.MaxInt32),
-							},
-						},
-					},
-				},
-				"int_list": {
-					Type:     schema.TypeList,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"value": {
-								Required: true,
-								Type:     schema.TypeList,
-								Elem: &schema.Schema{
-									Type:         schema.TypeInt,
-									ValidateFunc: validation.IntAtMost(math.MaxInt32),
-								},
-							},
-						},
-					},
-				},
-				"name": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringIsNotEmpty,
-				},
-				"string": {
-					Type:     schema.TypeList,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"value": {
-								Required: true,
-								Type:     schema.TypeString,
-							},
-						},
-					},
-				},
-				"string_list": {
-					Type:     schema.TypeList,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"value": {
-								Required: true,
-								Type:     schema.TypeList,
-								Elem: &schema.Schema{
-									Type: schema.TypeString,
-								},
-							},
-						},
-					},
-				},
-				"value_type": {
-					Type:             schema.TypeString,
-					Required:         true,
-					ValidateDiagFunc: enum.Validate[types.ParameterValueType](),
-				},
-			},
-		}
-	}
 
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceConfigurationPolicyCreate,
@@ -168,94 +37,228 @@ func resourceConfigurationPolicy() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"configuration_policy": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
+		SchemaFunc: func() map[string]*schema.Schema {
+			customParameterResource := func() *schema.Resource {
+				return &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"enabled_standard_arns": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: verify.ValidARN,
-							},
-						},
-						"security_controls_configuration": {
+						"bool": {
 							Type:     schema.TypeList,
-							Optional: true,
 							MaxItems: 1,
+							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"disabled_control_identifiers": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringIsNotEmpty,
-										},
-										ConflictsWith: []string{
-											"security_hub_policy.0.security_controls_configuration.0.enabled_control_identifiers",
-										},
+									"value": {
+										Required: true,
+										Type:     schema.TypeBool,
 									},
-									"enabled_control_identifiers": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringIsNotEmpty,
-										},
-										ConflictsWith: []string{
-											"security_hub_policy.0.security_controls_configuration.0.disabled_control_identifiers",
-										},
+								},
+							},
+						},
+						"double": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"value": {
+										Required: true,
+										Type:     schema.TypeFloat,
 									},
-									"security_control_custom_parameter": {
+								},
+							},
+						},
+						"enum": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"value": {
+										Required: true,
+										Type:     schema.TypeString,
+									},
+								},
+							},
+						},
+						"enum_list": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"value": {
+										Required: true,
 										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"parameter": {
-													Type:     schema.TypeSet,
-													Required: true,
-													MinItems: 1,
-													Elem:     customParameterResource(),
-												},
-												"security_control_id": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringIsNotEmpty,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
+							},
+						},
+						"int": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"value": {
+										Required:     true,
+										Type:         schema.TypeInt,
+										ValidateFunc: validation.IntAtMost(math.MaxInt32),
+									},
+								},
+							},
+						},
+						"int_list": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"value": {
+										Required: true,
+										Type:     schema.TypeList,
+										Elem: &schema.Schema{
+											Type:         schema.TypeInt,
+											ValidateFunc: validation.IntAtMost(math.MaxInt32),
+										},
+									},
+								},
+							},
+						},
+						"name": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringIsNotEmpty,
+						},
+						"string": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"value": {
+										Required: true,
+										Type:     schema.TypeString,
+									},
+								},
+							},
+						},
+						"string_list": {
+							Type:     schema.TypeList,
+							MaxItems: 1,
+							Optional: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"value": {
+										Required: true,
+										Type:     schema.TypeList,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+								},
+							},
+						},
+						"value_type": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[types.ParameterValueType](),
+						},
+					},
+				}
+			}
+
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"configuration_policy": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enabled_standard_arns": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: verify.ValidARN,
+								},
+							},
+							"security_controls_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"disabled_control_identifiers": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringIsNotEmpty,
+											},
+											ConflictsWith: []string{
+												"configuration_policy.0.security_controls_configuration.0.enabled_control_identifiers",
+											},
+										},
+										"enabled_control_identifiers": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Schema{
+												Type:         schema.TypeString,
+												ValidateFunc: validation.StringIsNotEmpty,
+											},
+											ConflictsWith: []string{
+												"configuration_policy.0.security_controls_configuration.0.disabled_control_identifiers",
+											},
+										},
+										"security_control_custom_parameter": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"parameter": {
+														Type:     schema.TypeSet,
+														Required: true,
+														MinItems: 1,
+														Elem:     customParameterResource(),
+													},
+													"security_control_id": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringIsNotEmpty,
+													},
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"service_enabled": {
-							Type:     schema.TypeBool,
-							Required: true,
+							"service_enabled": {
+								Type:     schema.TypeBool,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringMatch(
-					regexache.MustCompile(`[A-Za-z0-9\-\.!*/]+`),
-					"Only alphanumeric characters and the following ASCII characters are permitted: -, ., !, *, /",
-				),
-			},
+				"description": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ValidateFunc: validation.StringMatch(
+						regexache.MustCompile(`[A-Za-z0-9\-\.!*/]+`),
+						"Only alphanumeric characters and the following ASCII characters are permitted: -, ., !, *, /",
+					),
+				},
+			}
 		},
 	}
 }
