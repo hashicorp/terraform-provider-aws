@@ -14,17 +14,26 @@ var (
 	ResourceInsight                        = resourceInsight
 	ResourceInviteAccepter                 = resourceInviteAccepter
 	ResourceMember                         = resourceMember
+	ResourceOrganizationAdminAccount       = resourceOrganizationAdminAccount
 	ResourceOrganizationConfiguration      = resourceOrganizationConfiguration
+	ResourceProductSubscription            = resourceProductSubscription
+	ResourceStandardsControl               = resourceStandardsControl
+	ResourceStandardsSubscription          = resourceStandardsSubscription
 
-	AccountHubARN                          = accountHubARN
-	FindActionTargetByARN                  = findActionTargetByARN
-	FindAutomationRuleByARN                = findAutomationRuleByARN
-	FindConfigurationPolicyAssociationByID = findConfigurationPolicyAssociationByID
-	FindConfigurationPolicyByID            = findConfigurationPolicyByID
-	FindFindingAggregatorByARN             = findFindingAggregatorByARN
-	FindHubByARN                           = findHubByARN
-	FindInsightByARN                       = findInsightByARN
-	FindMasterAccount                      = findMasterAccount
-	FindMemberByAccountID                  = findMemberByAccountID
-	FindOrganizationConfiguration          = findOrganizationConfiguration
+	AccountHubARN                                 = accountHubARN
+	FindActionTargetByARN                         = findActionTargetByARN
+	FindAdminAccountByID                          = findAdminAccountByID
+	FindAutomationRuleByARN                       = findAutomationRuleByARN
+	FindConfigurationPolicyAssociationByID        = findConfigurationPolicyAssociationByID
+	FindConfigurationPolicyByID                   = findConfigurationPolicyByID
+	FindFindingAggregatorByARN                    = findFindingAggregatorByARN
+	FindHubByARN                                  = findHubByARN
+	FindInsightByARN                              = findInsightByARN
+	FindMasterAccount                             = findMasterAccount
+	FindMemberByAccountID                         = findMemberByAccountID
+	FindOrganizationConfiguration                 = findOrganizationConfiguration
+	FindProductSubscriptionByARN                  = findProductSubscriptionByARN
+	FindStandardsControlByTwoPartKey              = findStandardsControlByTwoPartKey
+	FindStandardsSubscriptionByARN                = findStandardsSubscriptionByARN
+	StandardsControlARNToStandardsSubscriptionARN = standardsControlARNToStandardsSubscriptionARN
 )
