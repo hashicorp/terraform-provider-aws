@@ -52,7 +52,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Application. 
+* `arn` - ARN of the Application.
 * `id` - Identifier of the Application
 
 ## Import
