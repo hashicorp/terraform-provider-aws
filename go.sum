@@ -200,6 +200,8 @@ github.com/aws/aws-sdk-go-v2/service/keyspaces v1.10.1 h1:Lohdg3iNOlOwm9HQcwLFH/
 github.com/aws/aws-sdk-go-v2/service/keyspaces v1.10.1/go.mod h1:OXV/812H2jsSTmWmLMGXdIoq29tXmPV0CpPSGKAslXI=
 github.com/aws/aws-sdk-go-v2/service/kinesis v1.27.1 h1:p8dOJ/UKXOwttc1Cxw1Ek52klVmMuiaCUkhsUGxce1I=
 github.com/aws/aws-sdk-go-v2/service/kinesis v1.27.1/go.mod h1:VpH1IBG1YYZHPu5qShNt7EGaqUQbHAJZrbDtEpqDvvY=
+github.com/aws/aws-sdk-go-v2/service/lakeformation v1.31.1 h1:Z7YwT1e+RG9BbJFglmesqEj9QXj7uhWLvW8CoImvG7Y=
+github.com/aws/aws-sdk-go-v2/service/lakeformation v1.31.1/go.mod h1:/dNepQjjRaz9Xww8O0GwaNE9uUAZZ3TP7Hgeqsg113I=
 github.com/aws/aws-sdk-go-v2/service/lambda v1.53.1 h1:UP4ijiKqXUneKAHGd5Z8AnuFadzXwzasUXmrUyY/Lx0=
 github.com/aws/aws-sdk-go-v2/service/lambda v1.53.1/go.mod h1:j7LmUBmzv17DtxTqO7DQ/HTnyfFB9ouspZo5C9WWxzk=
 github.com/aws/aws-sdk-go-v2/service/launchwizard v1.3.1 h1:b84mUApg62PRZlBwviTB8PpIOzL3/IpsyCV616ioT2k=
