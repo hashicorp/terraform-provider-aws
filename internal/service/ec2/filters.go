@@ -7,8 +7,8 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
@@ -50,6 +50,39 @@ func BuildTagFilterList(tags []*ec2.Tag) []*ec2.Filter {
 	return filters
 }
 
+// BuildTagFilterListV2 takes a []*ec2.Tag and produces a []*ec2.Filter that
+// represents exact matches for all of the tag key/value pairs given in
+// the tag set.
+//
+// The purpose of this function is to create values to pass in for
+// the "Filters" attribute on most of the "Describe..." API functions
+// in the EC2 API, to implement filtering by tag values e.g. in Terraform
+// data sources that retrieve data about EC2 objects.
+//
+// It is conventional for an EC2 data source to include an attribute called
+// "tags" which conforms to the schema returned by the tftags.TagsSchema() function.
+// The value of this can then be converted to a tags slice using tagsFromMap,
+// and the result finally passed in to this function.
+//
+// In Terraform configuration this would then look like this, to constrain
+// results by name:
+//
+//	tags {
+//	  Name = "my-awesome-subnet"
+//	}
+func BuildTagFilterListV2(tags []*awstypes.Tag) []awstypes.Filter {
+	filters := make([]awstypes.Filter, len(tags))
+
+	for i, tag := range tags {
+		filters[i] = awstypes.Filter{
+			Name:   aws.String(fmt.Sprintf("tag:%s", *tag.Key)),
+			Values: []string{*tag.Value},
+		}
+	}
+
+	return filters
+}
+
 // attributeFiltersFromMultimap returns an array of EC2 Filter objects to be used when listing resources.
 //
 // The keys of the specified map are the resource attributes names used in the filter - see the documentation
@@ -75,14 +108,14 @@ func attributeFiltersFromMultimap(m map[string][]string) []*ec2.Filter {
 }
 
 // tagFilters returns an array of EC2 Filter objects to be used when listing resources by tag.
-func tagFilters(ctx context.Context) []*ec2.Filter {
+func tagFilters(ctx context.Context) []awstypes.Filter {
 	tags := getTagsIn(ctx)
-	filters := make([]*ec2.Filter, len(tags))
+	filters := make([]awstypes.Filter, len(tags))
 
 	for i, tag := range tags {
-		filters[i] = &ec2.Filter{
-			Name:   aws.String(fmt.Sprintf("tag:%s", aws.StringValue(tag.Key))),
-			Values: aws.StringSlice([]string{aws.StringValue(tag.Value)}),
+		filters[i] = awstypes.Filter{
+			Name:   aws.String(fmt.Sprintf("tag:%s", aws.ToString(tag.Key))),
+			Values: aws.ToStringSlice([]*string{tag.Value}),
 		}
 	}
 
@@ -198,6 +231,41 @@ func BuildCustomFilterList(filterSet *schema.Set) []*ec2.Filter {
 		}
 
 		filters[filterIdx] = &ec2.Filter{
+			Name:   &name,
+			Values: values,
+		}
+	}
+
+	return filters
+}
+
+// BuildCustomFilterListV2 takes the set value extracted from a schema
+// attribute conforming to the schema returned by CustomFiltersSchema,
+// and transforms it into a []*ec2.Filter representing the same filter
+// expressions which is ready to pass into the "Filters" attribute on most
+// of the "Describe..." functions in the EC2 API.
+//
+// This function is intended only to be used in conjunction with
+// CustomFiltersSchema. See the docs on that function for more details
+// on the configuration pattern this is intended to support.
+func BuildCustomFilterListV2(filterSet *schema.Set) []awstypes.Filter {
+	if filterSet == nil {
+		return []awstypes.Filter{}
+	}
+
+	customFilters := filterSet.List()
+	filters := make([]awstypes.Filter, len(customFilters))
+
+	for filterIdx, customFilterI := range customFilters {
+		customFilterMapI := customFilterI.(map[string]interface{})
+		name := customFilterMapI["name"].(string)
+		valuesI := customFilterMapI["values"].(*schema.Set).List()
+		values := make([]string, len(valuesI))
+		for valueIdx, valueI := range valuesI {
+			values[valueIdx] = valueI.(string)
+		}
+
+		filters[filterIdx] = awstypes.Filter{
 			Name:   &name,
 			Values: values,
 		}
