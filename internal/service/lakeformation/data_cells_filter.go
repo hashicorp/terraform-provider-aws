@@ -15,6 +15,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -65,11 +67,6 @@ func (r *resourceDataCellsFilter) Schema(ctx context.Context, _ resource.SchemaR
 						"column_names": schema.SetAttribute{
 							CustomType: fwtypes.SetOfStringType,
 							Optional:   true,
-							//Validators: []validator.Set{
-							//	setvalidator.ConflictsWith(
-							//		path.MatchRelative().AtParent().AtName("column_wildcard"),
-							//	),
-							//},
 						},
 						"database_name": schema.StringAttribute{
 							Required: true,
@@ -84,7 +81,10 @@ func (r *resourceDataCellsFilter) Schema(ctx context.Context, _ resource.SchemaR
 							Required: true,
 						},
 						"version_id": schema.StringAttribute{
-							Optional: true,
+							Computed: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
@@ -92,9 +92,6 @@ func (r *resourceDataCellsFilter) Schema(ctx context.Context, _ resource.SchemaR
 							CustomType: fwtypes.NewListNestedObjectTypeOf[columnWildcard](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
-								//listvalidator.ConflictsWith(
-								//	path.MatchRelative().AtParent().AtName("column_names"),
-								//),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -209,11 +206,19 @@ func (r *resourceDataCellsFilter) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, &state)...)
+	std, diags := state.TableData.ToPtr(ctx)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	resp.Diagnostics.Append(fwflex.Flatten(ctx, out, std)...)
 
 	if resp.Diagnostics.HasError() {
 		return
 	}
+
+	state.TableData = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, std)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
