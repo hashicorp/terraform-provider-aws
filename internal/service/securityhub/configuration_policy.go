@@ -384,7 +384,7 @@ func findConfigurationPolicyByID(ctx context.Context, conn *securityhub.Client, 
 func findConfigurationPolicy(ctx context.Context, conn *securityhub.Client, input *securityhub.GetConfigurationPolicyInput) (*securityhub.GetConfigurationPolicyOutput, error) {
 	output, err := conn.GetConfigurationPolicy(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "Must be a Security Hub delegated administrator with Central Configuration enabled") {
+	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "Must be a Security Hub delegated administrator with Central Configuration enabled") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
