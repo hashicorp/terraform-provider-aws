@@ -7,11 +7,13 @@ import (
 	"context"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -81,7 +83,11 @@ func (r *resourceDataCellsFilter) Schema(ctx context.Context, _ resource.SchemaR
 							Required: true,
 						},
 						"version_id": schema.StringAttribute{
+							Optional: true,
 							Computed: true,
+							Validators: []validator.String{
+								stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9]+$`), "must be a number"),
+							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.UseStateForUnknown(),
 							},
