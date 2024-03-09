@@ -55,6 +55,32 @@ func ResourcePermissions() *schema.Resource {
 					"data_cells_filter",
 				},
 			},
+			"data_cells_filter": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"database_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"table_catalog_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"table_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
+				},
+			},
 			"data_location": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -117,32 +143,6 @@ func ResourcePermissions() *schema.Resource {
 						"name": {
 							Type:     schema.TypeString,
 							ForceNew: true,
-							Required: true,
-						},
-					},
-				},
-			},
-			"data_cells_filter": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"database_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"table_catalog_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"table_name": {
-							Type:     schema.TypeString,
 							Required: true,
 						},
 					},

@@ -42,6 +42,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 		},
 		"PermissionsDataSource": {
 			"basic":            testAccPermissionsDataSource_basic,
+			"dataCellsFilter":  testAccPermissionsDataSource_dataCellsFilter,
 			"database":         testAccPermissionsDataSource_database,
 			"dataLocation":     testAccPermissionsDataSource_dataLocation,
 			"lfTag":            testAccPermissionsDataSource_lfTag,
