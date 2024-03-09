@@ -410,6 +410,15 @@ func virtualMFADeviceCreateTags(ctx context.Context, conn iamiface.IAMAPI, ident
 	return virtualMFADeviceUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
 }
 
+func virtualMFADeviceKeyValueTags(ctx context.Context, conn *iam.IAM, identifier string) (tftags.KeyValueTags, error) {
+	tags, err := virtualMFADeviceTags(ctx, conn, identifier)
+	if err != nil {
+		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
+	}
+
+	return KeyValueTags(ctx, tags), nil
+}
+
 // updateTags updates iam service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
@@ -464,6 +473,9 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 
 	case "User":
 		tags, err = userListTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
+
+	case "VirtualMFADevice":
+		tags, err = virtualMFADeviceKeyValueTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
 
 	default:
 		return nil
