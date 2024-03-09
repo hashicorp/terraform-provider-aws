@@ -161,6 +161,12 @@ func ResourceRegisteredDomain() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"billing_contact": contactSchema,
+			"billing_privacy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"creation_date": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -263,11 +269,17 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.ToString(domainDetail.DomainName))
 
-	var adminContact, registrantContact, techContact *types.ContactDetail
+	var adminContact, billingContact, registrantContact, techContact *types.ContactDetail
 
 	if v, ok := d.GetOk("admin_contact"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		if v := expandContactDetail(v.([]interface{})[0].(map[string]interface{})); !reflect.DeepEqual(v, domainDetail.AdminContact) {
 			adminContact = v
+		}
+	}
+
+	if v, ok := d.GetOk("billing_contact"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		if v := expandContactDetail(v.([]interface{})[0].(map[string]interface{})); !reflect.DeepEqual(v, domainDetail.BillingContact) {
+			billingContact = v
 		}
 	}
 
@@ -283,14 +295,14 @@ func resourceRegisteredDomainCreate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
-	if adminContact != nil || registrantContact != nil || techContact != nil {
-		if err := modifyDomainContact(ctx, conn, d.Id(), adminContact, registrantContact, techContact, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if adminContact != nil || billingContact != nil || registrantContact != nil || techContact != nil {
+		if err := modifyDomainContact(ctx, conn, d.Id(), adminContact, billingContact, registrantContact, techContact, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	if adminPrivacy, registrantPrivacy, techPrivacy := d.Get("admin_privacy").(bool), d.Get("registrant_privacy").(bool), d.Get("tech_privacy").(bool); adminPrivacy != aws.ToBool(domainDetail.AdminPrivacy) || registrantPrivacy != aws.ToBool(domainDetail.RegistrantPrivacy) || techPrivacy != aws.ToBool(domainDetail.TechPrivacy) {
-		if err := modifyDomainContactPrivacy(ctx, conn, d.Id(), adminPrivacy, registrantPrivacy, techPrivacy, d.Timeout(schema.TimeoutCreate)); err != nil {
+	if adminPrivacy, billingPrivacy, registrantPrivacy, techPrivacy := d.Get("admin_privacy").(bool), d.Get("billing_privacy").(bool), d.Get("registrant_privacy").(bool), d.Get("tech_privacy").(bool); adminPrivacy != aws.ToBool(domainDetail.AdminPrivacy) || billingPrivacy != aws.ToBool(domainDetail.BillingPrivacy) || registrantPrivacy != aws.ToBool(domainDetail.RegistrantPrivacy) || techPrivacy != aws.ToBool(domainDetail.TechPrivacy) {
+		if err := modifyDomainContactPrivacy(ctx, conn, d.Id(), adminPrivacy, billingPrivacy, registrantPrivacy, techPrivacy, d.Timeout(schema.TimeoutCreate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -368,6 +380,14 @@ func resourceRegisteredDomainRead(ctx context.Context, d *schema.ResourceData, m
 	} else {
 		d.Set("creation_date", nil)
 	}
+	if domainDetail.BillingContact != nil {
+		if err := d.Set("billing_contact", []interface{}{flattenContactDetail(domainDetail.BillingContact)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting billing_contact: %s", err)
+		}
+	} else {
+		d.Set("billing_contact", nil)
+	}
+	d.Set("billing_privacy", domainDetail.BillingPrivacy)
 	d.Set("domain_name", domainDetail.DomainName)
 	if domainDetail.ExpirationDate != nil {
 		d.Set("expiration_date", aws.ToTime(domainDetail.ExpirationDate).Format(time.RFC3339))
@@ -413,12 +433,18 @@ func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).Route53DomainsClient(ctx)
 
-	if d.HasChanges("admin_contact", "registrant_contact", "tech_contact") {
-		var adminContact, registrantContact, techContact *types.ContactDetail
+	if d.HasChanges("admin_contact", "billing_contact", "registrant_contact", "tech_contact") {
+		var adminContact, billingContact, registrantContact, techContact *types.ContactDetail
 
 		if key := "admin_contact"; d.HasChange(key) {
 			if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				adminContact = expandContactDetail(v.([]interface{})[0].(map[string]interface{}))
+			}
+		}
+
+		if key := "billing_contact"; d.HasChange(key) {
+			if v, ok := d.GetOk(key); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				billingContact = expandContactDetail(v.([]interface{})[0].(map[string]interface{}))
 			}
 		}
 
@@ -434,13 +460,13 @@ func resourceRegisteredDomainUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 		}
 
-		if err := modifyDomainContact(ctx, conn, d.Id(), adminContact, registrantContact, techContact, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if err := modifyDomainContact(ctx, conn, d.Id(), adminContact, billingContact, registrantContact, techContact, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	if d.HasChanges("admin_privacy", "registrant_privacy", "tech_privacy") {
-		if err := modifyDomainContactPrivacy(ctx, conn, d.Id(), d.Get("admin_privacy").(bool), d.Get("registrant_privacy").(bool), d.Get("tech_privacy").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
+	if d.HasChanges("admin_privacy", "billing_contact", "registrant_privacy", "tech_privacy") {
+		if err := modifyDomainContactPrivacy(ctx, conn, d.Id(), d.Get("admin_privacy").(bool), d.Get("billing_privacy").(bool), d.Get("registrant_privacy").(bool), d.Get("tech_privacy").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -501,9 +527,10 @@ func modifyDomainAutoRenew(ctx context.Context, conn *route53domains.Client, dom
 	return nil
 }
 
-func modifyDomainContact(ctx context.Context, conn *route53domains.Client, domainName string, adminContact, registrantContact, techContact *types.ContactDetail, timeout time.Duration) error {
+func modifyDomainContact(ctx context.Context, conn *route53domains.Client, domainName string, adminContact, billingContact, registrantContact, techContact *types.ContactDetail, timeout time.Duration) error {
 	input := &route53domains.UpdateDomainContactInput{
 		AdminContact:      adminContact,
+		BillingContact:    billingContact,
 		DomainName:        aws.String(domainName),
 		RegistrantContact: registrantContact,
 		TechContact:       techContact,
@@ -522,9 +549,10 @@ func modifyDomainContact(ctx context.Context, conn *route53domains.Client, domai
 	return nil
 }
 
-func modifyDomainContactPrivacy(ctx context.Context, conn *route53domains.Client, domainName string, adminPrivacy, registrantPrivacy, techPrivacy bool, timeout time.Duration) error {
+func modifyDomainContactPrivacy(ctx context.Context, conn *route53domains.Client, domainName string, adminPrivacy, billingPrivacy, registrantPrivacy, techPrivacy bool, timeout time.Duration) error {
 	input := &route53domains.UpdateDomainContactPrivacyInput{
 		AdminPrivacy:      aws.Bool(adminPrivacy),
+		BillingPrivacy:    aws.Bool(billingPrivacy),
 		DomainName:        aws.String(domainName),
 		RegistrantPrivacy: aws.Bool(registrantPrivacy),
 		TechPrivacy:       aws.Bool(techPrivacy),
