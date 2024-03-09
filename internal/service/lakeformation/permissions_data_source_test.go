@@ -379,7 +379,7 @@ resource "aws_lakeformation_permissions" "test" {
 }
 
 data "aws_lakeformation_permissions" "test" {
-  principal        = aws_lakeformation_permissions.test.principal
+  principal = aws_lakeformation_permissions.test.principal
 
   data_cells_filter {
     database_name    = aws_lakeformation_data_cells_filter.test.table_data[0].database_name
