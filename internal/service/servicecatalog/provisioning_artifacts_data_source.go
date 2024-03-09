@@ -133,18 +133,17 @@ func flattenProvisioningArtifactDetail(apiObject *types.ProvisioningArtifactDeta
 	if apiObject.Description != nil {
 		tfMap["description"] = aws.ToString(apiObject.Description)
 	}
-	if apiObject.Guidance != nil {
-		tfMap["guidance"] = aws.ToString(apiObject.Guidance)
-	}
+
+	tfMap["guidance"] = string(apiObject.Guidance)
+
 	if apiObject.Id != nil {
 		tfMap["id"] = aws.ToString(apiObject.Id)
 	}
 	if apiObject.Name != nil {
 		tfMap["name"] = aws.ToString(apiObject.Name)
 	}
-	if apiObject.Type != nil {
-		tfMap["type"] = aws.ToString(apiObject.Type)
-	}
+
+	tfMap["type"] = string(apiObject.Type)
 
 	return tfMap
 }

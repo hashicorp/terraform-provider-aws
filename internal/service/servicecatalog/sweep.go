@@ -497,7 +497,7 @@ func sweepProvisionedProducts(region string) error {
 
 	input := &servicecatalog.SearchProvisionedProductsInput{
 		AccessLevelFilter: &types.AccessLevelFilter{
-			Key:   aws.String(servicecatalog.AccessLevelFilterKeyAccount),
+			Key:   types.AccessLevelFilterKeyAccount,
 			Value: aws.String("self"), // only supported value
 		},
 	}

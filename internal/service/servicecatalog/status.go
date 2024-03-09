@@ -47,7 +47,7 @@ func StatusProduct(ctx context.Context, conn *servicecatalog.Client, acceptLangu
 			return nil, StatusUnavailable, fmt.Errorf("describing product status: empty product view detail")
 		}
 
-		return output, aws.ToString(output.ProductViewDetail.Status), err
+		return output, string(output.ProductViewDetail.Status), err
 	}
 }
 
@@ -64,14 +64,14 @@ func StatusTagOption(ctx context.Context, conn *servicecatalog.Client, id string
 		}
 
 		if err != nil {
-			return nil, servicecatalog.StatusFailed, fmt.Errorf("describing tag option: %w", err)
+			return nil, string(types.StatusFailed), fmt.Errorf("describing tag option: %w", err)
 		}
 
 		if output == nil || output.TagOptionDetail == nil {
 			return nil, StatusUnavailable, fmt.Errorf("describing tag option: empty tag option detail")
 		}
 
-		return output.TagOptionDetail, servicecatalog.StatusAvailable, err
+		return output.TagOptionDetail, string(types.StatusAvailable), err
 	}
 }
 
@@ -94,7 +94,7 @@ func StatusPortfolioShareWithToken(ctx context.Context, conn *servicecatalog.Cli
 			return nil, StatusUnavailable, fmt.Errorf("describing portfolio share status: empty response")
 		}
 
-		return output, aws.ToString(output.Status), err
+		return output, string(output.Status), err
 	}
 }
 
@@ -110,11 +110,11 @@ func StatusPortfolioShare(ctx context.Context, conn *servicecatalog.Client, port
 			return nil, "", err
 		}
 
-		if !aws.ToBool(output.Accepted) {
-			return output, servicecatalog.ShareStatusInProgress, nil
+		if !output.Accepted {
+			return output, string(types.ShareStatusInProgress), nil
 		}
 
-		return output, servicecatalog.ShareStatusCompleted, nil
+		return output, string(types.ShareStatusCompleted), nil
 	}
 }
 
@@ -136,7 +136,7 @@ func StatusOrganizationsAccess(ctx context.Context, conn *servicecatalog.Client)
 			return nil, StatusUnavailable, fmt.Errorf("getting Organizations Access: empty response")
 		}
 
-		return output, aws.ToString(output.AccessStatus), err
+		return output, string(output.AccessStatus), err
 	}
 }
 
@@ -168,7 +168,7 @@ func StatusConstraint(ctx context.Context, conn *servicecatalog.Client, acceptLa
 			}
 		}
 
-		return output, aws.ToString(output.Status), err
+		return output, string(output.Status), err
 	}
 }
 
@@ -293,7 +293,7 @@ func StatusProvisioningArtifact(ctx context.Context, conn *servicecatalog.Client
 			return nil, StatusUnavailable, err
 		}
 
-		return output, aws.ToString(output.Status), err
+		return output, string(output.Status), err
 	}
 }
 
@@ -363,7 +363,7 @@ func StatusProvisionedProduct(ctx context.Context, conn *servicecatalog.Client, 
 			return nil, "", nil
 		}
 
-		return output, aws.ToString(output.ProvisionedProductDetail.Status), err
+		return output, string(output.ProvisionedProductDetail.Status), err
 	}
 }
 

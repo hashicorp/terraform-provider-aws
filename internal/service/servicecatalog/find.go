@@ -18,7 +18,7 @@ import (
 func FindPortfolioShare(ctx context.Context, conn *servicecatalog.Client, portfolioID, shareType, principalID string) (*types.PortfolioShareDetail, error) {
 	input := &servicecatalog.DescribePortfolioSharesInput{
 		PortfolioId: aws.String(portfolioID),
-		Type:        aws.String(shareType),
+		Type:        types.DescribePortfolioShareType(shareType),
 	}
 	var result *types.PortfolioShareDetail
 

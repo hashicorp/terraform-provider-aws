@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalog/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -103,7 +102,7 @@ func resourceServiceActionCreate(ctx context.Context, d *schema.ResourceData, me
 		IdempotencyToken: aws.String(id.UniqueId()),
 		Name:             aws.String(d.Get("name").(string)),
 		Definition:       expandServiceActionDefinition(d.Get("definition").([]interface{})[0].(map[string]interface{})),
-		DefinitionType:   aws.String(d.Get("definition.0.type").(string)),
+		DefinitionType:   types.ServiceActionDefinitionType(d.Get("definition.0.type").(string)),
 	}
 
 	if v, ok := d.GetOk("accept_language"); ok {
@@ -143,7 +142,7 @@ func resourceServiceActionCreate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "creating Service Catalog Service Action: empty response")
 	}
 
-	d.SetId(aws.StringValue(output.ServiceActionDetail.ServiceActionSummary.Id))
+	d.SetId(aws.ToString(output.ServiceActionDetail.ServiceActionSummary.Id))
 
 	return append(diags, resourceServiceActionRead(ctx, d, meta)...)
 }
@@ -174,7 +173,7 @@ func resourceServiceActionRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("name", sas.Name)
 
 	if output.Definition != nil {
-		d.Set("definition", []interface{}{flattenServiceActionDefinition(output.Definition, aws.StringValue(sas.DefinitionType))})
+		d.Set("definition", []interface{}{flattenServiceActionDefinition(output.Definition, aws.ToString(sas.DefinitionType))})
 	} else {
 		d.Set("definition", nil)
 	}
@@ -242,7 +241,7 @@ func resourceServiceActionDelete(ctx context.Context, d *schema.ResourceData, me
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
 		_, err := conn.DeleteServiceAction(ctx, input)
 
-		if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceInUseException) {
+		if errs.IsA[*types.ResourceInUseException](err) {
 			return retry.RetryableError(err)
 		}
 

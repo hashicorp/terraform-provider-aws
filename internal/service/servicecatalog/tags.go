@@ -49,7 +49,7 @@ func recordKeyValueTags(ctx context.Context, tags []*servicecatalog.RecordTag) t
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
-		m[aws.StringValue(tag.Key)] = tag.Value
+		m[aws.ToString(tag.Key)] = tag.Value
 	}
 
 	return tftags.New(ctx, m)

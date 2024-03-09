@@ -155,9 +155,9 @@ func ResourceProduct() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(servicecatalog.ProductType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[types.ProductType](),
 			},
 		},
 
@@ -174,7 +174,7 @@ func resourceProductCreate(ctx context.Context, d *schema.ResourceData, meta int
 		IdempotencyToken: aws.String(id.UniqueId()),
 		Name:             aws.String(name),
 		Owner:            aws.String(d.Get("owner").(string)),
-		ProductType:      aws.String(d.Get("type").(string)),
+		ProductType:      types.ProductType(d.Get("type").(string)),
 		ProvisioningArtifactParameters: expandProvisioningArtifactParameters(
 			d.Get("provisioning_artifact_parameters").([]interface{})[0].(map[string]interface{}),
 		),
@@ -358,7 +358,7 @@ func resourceProductImport(ctx context.Context, d *schema.ResourceData, meta int
 	// import the last entry in the summary
 	if len(productData.ProvisioningArtifactSummaries) > 0 {
 		sort.Slice(productData.ProvisioningArtifactSummaries, func(i, j int) bool {
-			return aws.ToTime(productData.ProvisioningArtifactSummaries[i].CreatedTime).Before(aws.TimeValue(productData.ProvisioningArtifactSummaries[j].CreatedTime))
+			return aws.ToTime(productData.ProvisioningArtifactSummaries[i].CreatedTime).Before(aws.ToTime(productData.ProvisioningArtifactSummaries[j].CreatedTime))
 		})
 
 		provisioningArtifact := productData.ProvisioningArtifactSummaries[len(productData.ProvisioningArtifactSummaries)-1]
@@ -413,7 +413,7 @@ func expandProvisioningArtifactParameters(tfMap map[string]interface{}) *types.P
 	}
 
 	if v, ok := tfMap["type"].(string); ok && v != "" {
-		apiObject.Type = aws.String(v)
+		apiObject.Type = types.ProvisioningArtifactType(v)
 	}
 
 	return apiObject
@@ -428,7 +428,7 @@ func flattenProvisioningArtifactParameters(apiObject *servicecatalog.DescribePro
 		"description":                 aws.ToString(apiObject.ProvisioningArtifactDetail.Description),
 		"disable_template_validation": false, // set default because it cannot be read
 		"name":                        aws.ToString(apiObject.ProvisioningArtifactDetail.Name),
-		"type":                        aws.ToString(apiObject.ProvisioningArtifactDetail.Type),
+		"type":                        types.ProvisioningArtifactType(apiObject.ProvisioningArtifactDetail.Type),
 	}
 
 	if apiObject.Info != nil {

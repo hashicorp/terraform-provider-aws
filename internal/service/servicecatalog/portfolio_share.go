@@ -119,7 +119,7 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 
 		if v.(string) == string(types.DescribePortfolioShareTypeOrganizationMemberAccount) {
 			// portfolio_share type ORGANIZATION_MEMBER_ACCOUNT = org node type ACCOUNT
-			orgNode.Type = aws.String(servicecatalog.OrganizationNodeTypeAccount)
+			orgNode.Type = types.OrganizationNodeTypeAccount
 		} else {
 			orgNode.Type = types.OrganizationNodeType(d.Get("type").(string))
 		}
@@ -244,7 +244,7 @@ func resourcePortfolioShareUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		if v.(string) == string(types.DescribePortfolioShareTypeOrganizationMemberAccount) {
 			// portfolio_share type ORGANIZATION_MEMBER_ACCOUNT = org node type ACCOUNT
-			orgNode.Type = aws.String(servicecatalog.OrganizationNodeTypeAccount)
+			orgNode.Type = types.OrganizationNodeTypeAccount
 		} else {
 			orgNode.Type = types.OrganizationNodeType(d.Get("type").(string))
 		}
@@ -297,7 +297,7 @@ func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, m
 
 		if v.(string) == string(types.DescribePortfolioShareTypeOrganizationMemberAccount) {
 			// portfolio_share type ORGANIZATION_MEMBER_ACCOUNT = org node type ACCOUNT
-			orgNode.Type = aws.String(servicecatalog.OrganizationNodeTypeAccount)
+			orgNode.Type = types.OrganizationNodeTypeAccount
 		} else {
 			orgNode.Type = types.OrganizationNodeType(d.Get("type").(string))
 		}

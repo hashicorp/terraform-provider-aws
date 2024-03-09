@@ -156,7 +156,7 @@ func resourcePrincipalPortfolioAssociationDelete(ctx context.Context, d *schema.
 		PortfolioId:    aws.String(portfolioID),
 		PrincipalARN:   aws.String(principalARN),
 		AcceptLanguage: aws.String(acceptLanguage),
-		PrincipalType:  aws.String(principalType),
+		PrincipalType:  types.PrincipalType(principalType),
 	}
 
 	log.Printf("[WARN] Deleting Service Catalog Principal Portfolio Association: %s", d.Id())
@@ -208,7 +208,7 @@ func findPrincipalForPortfolio(ctx context.Context, conn *servicecatalog.Client,
 }
 
 func findPrincipalsForPortfolio(ctx context.Context, conn *servicecatalog.Client, input *servicecatalog.ListPrincipalsForPortfolioInput, filter tfslices.Predicate[*types.Principal]) ([]*servicecatalog.Principal, error) {
-	var output []*servicecatalog.Principal
+	var output []*types.Principal
 
 	err := conn.ListPrincipalsForPortfolioPages(ctx, input, func(page *servicecatalog.ListPrincipalsForPortfolioOutput, lastPage bool) bool {
 		if page == nil {
@@ -244,7 +244,7 @@ func FindPrincipalPortfolioAssociation(ctx context.Context, conn *servicecatalog
 		PortfolioId:    aws.String(portfolioID),
 	}
 	filter := func(v *types.Principal) bool {
-		return aws.ToString(v.PrincipalARN) == principalARN && aws.ToString(v.PrincipalType) == principalType
+		return aws.ToString(v.PrincipalARN) == principalARN && string(types.PrincipalType(v.PrincipalType)) == principalType
 	}
 
 	return findPrincipalForPortfolio(ctx, conn, input, filter)

@@ -294,7 +294,7 @@ func resourceProvisionedProductCreate(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if v, ok := d.GetOk("notification_arns"); ok && len(v.([]interface{})) > 0 {
-		input.NotificationArns = flex.ExpandStringList(v.([]interface{}))
+		input.NotificationArns = flex.ExpandToStringList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("path_id"); ok {
@@ -417,7 +417,7 @@ func resourceProvisionedProductRead(ctx context.Context, d *schema.ResourceData,
 	detail := output.ProvisionedProductDetail
 
 	d.Set("arn", detail.Arn)
-	d.Set("cloudwatch_dashboard_names", aws.StringValueSlice(flattenCloudWatchDashboards(output.CloudWatchDashboards)))
+	d.Set("cloudwatch_dashboard_names", aws.StringSlice(flattenCloudWatchDashboards(output.CloudWatchDashboards)))
 
 	if detail.CreatedTime != nil {
 		d.Set("created_time", detail.CreatedTime.Format(time.RFC3339))
@@ -658,27 +658,27 @@ func expandProvisioningPreferences(tfMap map[string]interface{}) *types.Provisio
 	apiObject := &types.ProvisioningPreferences{}
 
 	if v, ok := tfMap["accounts"].([]interface{}); ok && len(v) > 0 {
-		apiObject.StackSetAccounts = flex.ExpandStringList(v)
+		apiObject.StackSetAccounts = flex.ExpandToStringList(v)
 	}
 
 	if v, ok := tfMap["failure_tolerance_count"].(int); ok && v != 0 {
-		apiObject.StackSetFailureToleranceCount = aws.Int64(int64(v))
+		apiObject.StackSetFailureToleranceCount = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["failure_tolerance_percentage"].(int); ok && v != 0 {
-		apiObject.StackSetFailureTolerancePercentage = aws.Int64(int64(v))
+		apiObject.StackSetFailureTolerancePercentage = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["max_concurrency_count"].(int); ok && v != 0 {
-		apiObject.StackSetMaxConcurrencyCount = aws.Int64(int64(v))
+		apiObject.StackSetMaxConcurrencyCount = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["max_concurrency_percentage"].(int); ok && v != 0 {
-		apiObject.StackSetMaxConcurrencyPercentage = aws.Int64(int64(v))
+		apiObject.StackSetMaxConcurrencyPercentage = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["regions"].([]interface{}); ok && len(v) > 0 {
-		apiObject.StackSetRegions = flex.ExpandStringList(v)
+		apiObject.StackSetRegions = flex.ExpandToStringList(v)
 	}
 
 	return apiObject
@@ -696,7 +696,7 @@ func expandUpdateProvisioningParameter(tfMap map[string]interface{}) *types.Upda
 	}
 
 	if v, ok := tfMap["use_previous_value"].(bool); ok && v {
-		apiObject.UsePreviousValue = aws.Bool(v)
+		apiObject.UsePreviousValue = v
 	}
 
 	if v, ok := tfMap["value"].(string); ok {
@@ -740,27 +740,27 @@ func expandUpdateProvisioningPreferences(tfMap map[string]interface{}) *types.Up
 	apiObject := &types.UpdateProvisioningPreferences{}
 
 	if v, ok := tfMap["accounts"].([]interface{}); ok && len(v) > 0 {
-		apiObject.StackSetAccounts = flex.ExpandStringList(v)
+		apiObject.StackSetAccounts = flex.ExpandToStringList(v)
 	}
 
 	if v, ok := tfMap["failure_tolerance_count"].(int); ok && v != 0 {
-		apiObject.StackSetFailureToleranceCount = aws.Int64(int64(v))
+		apiObject.StackSetFailureToleranceCount = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["failure_tolerance_percentage"].(int); ok && v != 0 {
-		apiObject.StackSetFailureTolerancePercentage = aws.Int64(int64(v))
+		apiObject.StackSetFailureTolerancePercentage = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["max_concurrency_count"].(int); ok && v != 0 {
-		apiObject.StackSetMaxConcurrencyCount = aws.Int64(int64(v))
+		apiObject.StackSetMaxConcurrencyCount = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["max_concurrency_percentage"].(int); ok && v != 0 {
-		apiObject.StackSetMaxConcurrencyPercentage = aws.Int64(int64(v))
+		apiObject.StackSetMaxConcurrencyPercentage = aws.Int32(int32(v))
 	}
 
 	if v, ok := tfMap["regions"].([]interface{}); ok && len(v) > 0 {
-		apiObject.StackSetRegions = flex.ExpandStringList(v)
+		apiObject.StackSetRegions = flex.ExpandToStringList(v)
 	}
 
 	return apiObject

@@ -69,10 +69,10 @@ func ResourceProvisioningArtifact() *schema.Resource {
 				ForceNew: true,
 			},
 			"guidance": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      types.ProvisioningArtifactGuidanceDefault,
-				ValidateFunc: validation.StringInSlice(servicecatalog.ProvisioningArtifactGuidance_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          types.ProvisioningArtifactGuidanceDefault,
+				ValidateDiagFunc: enum.Validate[types.ProvisioningArtifactGuidance](),
 			},
 			"name": {
 				Type:     schema.TypeString,

@@ -240,7 +240,7 @@ func WaitOrganizationsAccessStable(ctx context.Context, conn *servicecatalog.Cli
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*servicecatalog.GetAWSOrganizationsAccessStatusOutput); ok {
-		return aws.ToString(output.AccessStatus), err
+		return string(output.AccessStatus), err
 	}
 
 	return "", err
@@ -482,7 +482,7 @@ func WaitProvisionedProductReady(ctx context.Context, conn *servicecatalog.Clien
 			if errors.As(err, &foo) {
 				// The statuses `ERROR` and `TAINTED` are equivalent: the application of the requested change has failed.
 				// The difference is that, in the case of `TAINTED`, there is a previous version to roll back to.
-				status := aws.ToString(detail.Status)
+				status := string(detail.Status)
 				if status == string(types.ProvisionedProductStatusError) || status == string(types.ProvisionedProductStatusTainted) {
 					return output, errors.New(aws.ToString(detail.StatusMessage))
 				}
