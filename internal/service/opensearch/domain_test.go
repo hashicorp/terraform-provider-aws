@@ -2885,18 +2885,18 @@ resource "aws_opensearch_domain" "test" {
 }
 
 data "aws_iam_policy_document" "test" {
-	statement {
-		actions = ["es:*"]
-		resources = ["arn:${data.aws_partition.current.partition}:es:*"]
-		principals {
-			type = "AWS"
-			identifiers = aws_iam_role.test[*].arn
-		}
-	}
+  statement {
+    actions   = ["es:*"]
+    resources = ["arn:${data.aws_partition.current.partition}:es:*"]
+    principals {
+      type        = "AWS"
+      identifiers = aws_iam_role.test[*].arn
+    }
+  }
 }
 
 resource "aws_iam_role" "test" {
-  count			  = %[2]d
+  count              = %[2]d
   name               = "%[1]s-${count.index}"
   assume_role_policy = data.aws_iam_policy_document.role.json
 }
