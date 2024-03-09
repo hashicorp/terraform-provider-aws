@@ -471,6 +471,13 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 	case "Role":
 		tags, err = roleKeyValueTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
 
+	case "ServiceLinkedRole":
+		_, roleName, _, err := DecodeServiceLinkedRoleID(identifier)
+		if err != nil {
+			return err
+		}
+		tags, err = roleKeyValueTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), roleName)
+
 	case "User":
 		tags, err = userKeyValueTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
 
