@@ -529,7 +529,6 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	if _, ok := d.GetOk("data_cells_filter"); ok {
 		input.Resource.DataCellsFilter = ExpandDataCellsFilter(d.Get("data_cells_filter").([]interface{}))
-
 	}
 
 	if v, ok := d.GetOk("data_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
