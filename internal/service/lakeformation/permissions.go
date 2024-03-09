@@ -430,7 +430,7 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("data_cells_filter"); ok {
-		input.Resource.DataCellsFilter = expandDataCellsFilter(v.([]interface{}))
+		input.Resource.DataCellsFilter = ExpandDataCellsFilter(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("permissions_with_grant_option"); ok {
@@ -528,7 +528,7 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	if _, ok := d.GetOk("data_cells_filter"); ok {
-		input.Resource.DataCellsFilter = expandDataCellsFilter(d.Get("data_cells_filter").([]interface{}))
+		input.Resource.DataCellsFilter = ExpandDataCellsFilter(d.Get("data_cells_filter").([]interface{}))
 
 	}
 
@@ -857,7 +857,7 @@ func ExpandCatalogResource() *lakeformation.CatalogResource {
 	return &lakeformation.CatalogResource{}
 }
 
-func expandDataCellsFilter(in []interface{}) *lakeformation.DataCellsFilterResource {
+func ExpandDataCellsFilter(in []interface{}) *lakeformation.DataCellsFilterResource {
 	if len(in) == 0 {
 		return nil
 	}

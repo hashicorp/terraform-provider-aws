@@ -28,6 +28,7 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"database":            testAccPermissions_database,
 			"databaseIAMAllowed":  testAccPermissions_databaseIAMAllowed,
 			"databaseMultiple":    testAccPermissions_databaseMultiple,
+			"dataCellsFilter":     testAccPermissions_dataCellsFilter,
 			"dataLocation":        testAccPermissions_dataLocation,
 			"disappears":          testAccPermissions_disappears,
 			"lfTag":               testAccPermissions_lfTag,
