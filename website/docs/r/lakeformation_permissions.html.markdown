@@ -159,8 +159,8 @@ The following arguments are required:
 One of the following is required:
 
 * `catalog_resource` - (Optional) Whether the permissions are to be granted for the Data Catalog. Defaults to `false`.
-* `data_location` - (Optional) Configuration block for a data location resource. Detailed below.
-*  `data_cells_filter` - (Optional) Configuration block for a data cells filter resource. Detailed below. 
+* `data_cells_filter` - (Optional) Configuration block for a data cells filter resource. Detailed below.
+* `data_location` - (Optional) Configuration block for a data location resource. Detailed below. 
 * `database` - (Optional) Configuration block for a database resource. Detailed below.
 * `lf_tag` - (Optional) Configuration block for an LF-tag resource. Detailed below.
 * `lf_tag_policy` - (Optional) Configuration block for an LF-tag policy resource. Detailed below.
