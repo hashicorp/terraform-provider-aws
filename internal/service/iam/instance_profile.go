@@ -326,3 +326,14 @@ func findInstanceProfileByName(ctx context.Context, conn *iam.IAM, name string) 
 
 	return output.InstanceProfile, nil
 }
+
+func instanceProfileTags(ctx context.Context, conn *iam.IAM, identifier string) ([]*iam.Tag, error) {
+	output, err := conn.ListInstanceProfileTagsWithContext(ctx, &iam.ListInstanceProfileTagsInput{
+		InstanceProfileName: aws.String(identifier),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return output.Tags, nil
+}

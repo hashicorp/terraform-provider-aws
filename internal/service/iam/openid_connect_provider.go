@@ -207,3 +207,14 @@ func findOpenIDConnectProviderByARN(ctx context.Context, conn *iam.IAM, arn stri
 
 	return output, nil
 }
+
+func openIDConnectProviderTags(ctx context.Context, conn *iam.IAM, identifier string) ([]*iam.Tag, error) {
+	output, err := conn.ListOpenIDConnectProviderTagsWithContext(ctx, &iam.ListOpenIDConnectProviderTagsInput{
+		OpenIDConnectProviderArn: aws.String(identifier),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return output.Tags, nil
+}

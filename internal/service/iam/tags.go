@@ -64,13 +64,13 @@ func instanceProfileCreateTags(ctx context.Context, conn iamiface.IAMAPI, identi
 	return instanceProfileUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
 }
 
-func instanceProfileListTags(ctx context.Context, conn *iam.IAM, identifier string) (tftags.KeyValueTags, error) {
-	instanceProfile, err := findInstanceProfileByName(ctx, conn, identifier)
+func instanceProfileKeyValueTags(ctx context.Context, conn *iam.IAM, identifier string) (tftags.KeyValueTags, error) {
+	tags, err := instanceProfileTags(ctx, conn, identifier)
 	if err != nil {
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, instanceProfile.Tags), nil
+	return KeyValueTags(ctx, tags), nil
 }
 
 // openIDConnectProviderUpdateTags updates IAM OpenID Connect Provider tags.
@@ -116,13 +116,13 @@ func openIDConnectProviderCreateTags(ctx context.Context, conn iamiface.IAMAPI, 
 	return openIDConnectProviderUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
 }
 
-func openIDConnectProviderListTags(ctx context.Context, conn *iam.IAM, identifier string) (tftags.KeyValueTags, error) {
-	oidcProvider, err := findOpenIDConnectProviderByARN(ctx, conn, identifier)
+func openIDConnectProviderKeyValueTags(ctx context.Context, conn *iam.IAM, identifier string) (tftags.KeyValueTags, error) {
+	tags, err := openIDConnectProviderTags(ctx, conn, identifier)
 	if err != nil {
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, oidcProvider.Tags), nil
+	return KeyValueTags(ctx, tags), nil
 }
 
 // policyUpdateTags updates IAM Policy tags.
@@ -168,13 +168,13 @@ func policyCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier stri
 	return policyUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
 }
 
-func policyListTags(ctx context.Context, conn *iam.IAM, identifier string) (tftags.KeyValueTags, error) {
-	policy, err := findPolicyByARN(ctx, conn, identifier)
+func policyKeyValueTags(ctx context.Context, conn *iam.IAM, identifier string) (tftags.KeyValueTags, error) {
+	tags, err := policyTags(ctx, conn, identifier)
 	if err != nil {
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, policy.Tags), nil
+	return KeyValueTags(ctx, tags), nil
 }
 
 // roleUpdateTags updates IAM role tags.
@@ -220,13 +220,13 @@ func roleCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string
 	return roleUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
 }
 
-func roleListTags(ctx context.Context, conn *iam.IAM, identifier string) (tftags.KeyValueTags, error) {
-	role, err := findRoleByName(ctx, conn, identifier)
+func roleKeyValueTags(ctx context.Context, conn *iam.IAM, identifier string) (tftags.KeyValueTags, error) {
+	tags, err := roleTags(ctx, conn, identifier)
 	if err != nil {
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, role.Tags), nil
+	return KeyValueTags(ctx, tags), nil
 }
 
 // samlProviderUpdateTags updates IAM SAML Provider tags.
@@ -358,13 +358,13 @@ func userCreateTags(ctx context.Context, conn iamiface.IAMAPI, identifier string
 	return userUpdateTags(ctx, conn, identifier, nil, KeyValueTags(ctx, tags))
 }
 
-func userListTags(ctx context.Context, conn *iam.IAM, identifier string) (tftags.KeyValueTags, error) {
-	user, err := findUserByName(ctx, conn, identifier)
+func userKeyValueTags(ctx context.Context, conn *iam.IAM, identifier string) (tftags.KeyValueTags, error) {
+	tags, err := userTags(ctx, conn, identifier)
 	if err != nil {
 		return tftags.New(ctx, nil), fmt.Errorf("listing tags for resource (%s): %w", identifier, err)
 	}
 
-	return KeyValueTags(ctx, user.Tags), nil
+	return KeyValueTags(ctx, tags), nil
 }
 
 // virtualMFADeviceUpdateTags updates IAM Virtual MFA Device tags.
@@ -460,19 +460,19 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 	)
 	switch resourceType {
 	case "InstanceProfile":
-		tags, err = instanceProfileListTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
+		tags, err = instanceProfileKeyValueTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
 
 	case "OIDCProvider":
-		tags, err = openIDConnectProviderListTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
+		tags, err = openIDConnectProviderKeyValueTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
 
 	case "Policy":
-		tags, err = policyListTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
+		tags, err = policyKeyValueTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
 
 	case "Role":
-		tags, err = roleListTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
+		tags, err = roleKeyValueTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
 
 	case "User":
-		tags, err = userListTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
+		tags, err = userKeyValueTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)
 
 	case "VirtualMFADevice":
 		tags, err = virtualMFADeviceKeyValueTags(ctx, meta.(*conns.AWSClient).IAMConn(ctx), identifier)

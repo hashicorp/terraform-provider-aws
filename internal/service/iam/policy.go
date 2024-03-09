@@ -467,3 +467,14 @@ func findPolicyVersionsByARN(ctx context.Context, conn *iam.IAM, arn string) ([]
 
 	return output, nil
 }
+
+func policyTags(ctx context.Context, conn *iam.IAM, identifier string) ([]*iam.Tag, error) {
+	output, err := conn.ListPolicyTagsWithContext(ctx, &iam.ListPolicyTagsInput{
+		PolicyArn: aws.String(identifier),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return output.Tags, nil
+}

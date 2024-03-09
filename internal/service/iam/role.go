@@ -954,3 +954,14 @@ func inlinePoliciesEquivalent(readPolicies, configPolicies []*iam.PutRolePolicyI
 
 	return matches == len(readPolicies)
 }
+
+func roleTags(ctx context.Context, conn *iam.IAM, identifier string) ([]*iam.Tag, error) {
+	output, err := conn.ListRoleTagsWithContext(ctx, &iam.ListRoleTagsInput{
+		RoleName: aws.String(identifier),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return output.Tags, nil
+}
