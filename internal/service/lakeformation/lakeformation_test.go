@@ -19,6 +19,11 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"withoutCatalogId": testAccDataLakeSettings_withoutCatalogID,
 			"readOnlyAdmins":   testAccDataLakeSettings_readOnlyAdmins,
 		},
+		"DataCellsFilter": {
+			"basic":          testAccDataCellsFilter_basic,
+			"columnWildcard": testAccDataCellsFilter_columnWildcard,
+			"disappears":     testAccDataCellsFilter_disappears,
+		},
 		"DataLakeSettingsDataSource": {
 			"basic":          testAccDataLakeSettingsDataSource_basic,
 			"readOnlyAdmins": testAccDataLakeSettingsDataSource_readOnlyAdmins,

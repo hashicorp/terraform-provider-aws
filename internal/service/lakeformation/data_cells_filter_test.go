@@ -22,14 +22,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLakeFormationDataCellsFilter_basic(t *testing.T) {
+func testAccDataCellsFilter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var datacellsfilter awstypes.DataCellsFilter
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_data_cells_filter.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
@@ -59,14 +59,14 @@ func TestAccLakeFormationDataCellsFilter_basic(t *testing.T) {
 	})
 }
 
-func TestAccLakeFormationDataCellsFilter_columnWildcard(t *testing.T) {
+func testAccDataCellsFilter_columnWildcard(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var datacellsfilter awstypes.DataCellsFilter
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_data_cells_filter.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
@@ -92,14 +92,14 @@ func TestAccLakeFormationDataCellsFilter_columnWildcard(t *testing.T) {
 	})
 }
 
-func TestAccLakeFormationDataCellsFilter_disappears(t *testing.T) {
+func testAccDataCellsFilter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var datacellsfilter awstypes.DataCellsFilter
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_data_cells_filter.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
