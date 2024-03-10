@@ -5,10 +5,12 @@ import (
 	"errors"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -51,8 +53,7 @@ func (r *subscriberNotificationResource) Metadata(_ context.Context, req resourc
 func (r *subscriberNotificationResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"id":  framework.IDAttribute(),
+			"id": framework.IDAttribute(),
 			"endpoint_id": schema.StringAttribute{
 				Computed: true,
 			},
@@ -65,33 +66,36 @@ func (r *subscriberNotificationResource) Schema(ctx context.Context, req resourc
 		},
 		Blocks: map[string]schema.Block{
 			"configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[subscriberNotificationResourceConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"sqs_notification_configuration": schema.BoolAttribute{
-							Optional: true,
-						},
-					},
 					Blocks: map[string]schema.Block{
+						"sqs_notification_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[sqsNotificationConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+						},
 						"https_notification_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[httpsNotificationConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"endpoint": schema.StringAttribute{
-										Required: true,
+										Optional: true,
 									},
 									"target_role_arn": schema.StringAttribute{
-										Required: true,
+										Optional: true,
 									},
 									"authorization_api_key_name": schema.StringAttribute{
 										Optional: true,
 									},
-									"authorization_api_key_value ": schema.StringAttribute{
+									"authorization_api_key_value": schema.StringAttribute{
 										Optional: true,
 									},
 									"http_method": schema.StringAttribute{
@@ -103,25 +107,31 @@ func (r *subscriberNotificationResource) Schema(ctx context.Context, req resourc
 					},
 				},
 			},
-			"timeouts": timeouts.Block(ctx, timeouts.Opts{
-				Create: true,
-				Update: true,
-				Delete: true,
-			}),
 		},
 	}
 }
 
 func (r *subscriberNotificationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	conn := r.Meta().SecurityLakeClient(ctx)
-
 	var data subscriberNotificationResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	input := &securitylake.CreateSubscriberNotificationInput{}
+	conn := r.Meta().SecurityLakeClient(ctx)
+
+	var configurationData subscriberNotificationResourceConfigurationModel
+	response.Diagnostics.Append(data.Configuration.ElementsAs(ctx, &configurationData, false)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	configuration, d := expandSubscriberNotificationResourceConfiguration(ctx, configurationData)
+	response.Diagnostics.Append(d...)
+
+	input := &securitylake.CreateSubscriberNotificationInput{
+		Configuration: configuration[0],
+	}
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -287,8 +297,77 @@ func (r *subscriberNotificationResource) ImportState(ctx context.Context, req re
 // 		return nil, tfresource.NewEmptyResultError(in)
 // 	}
 
-// 	return out.SubscriberNotification, nil
-// }
+//		return out.SubscriberNotification, nil
+//	}
+
+func expandSubscriberNotificationResourceConfiguration(ctx context.Context, subscriberNotificationResourceConfigurationModels subscriberNotificationResourceConfigurationModel) (awstypes.NotificationConfiguration, diag.Diagnostics) {
+	configuration := awstypes.NotificationConfiguration{}
+	var diags diag.Diagnostics
+
+	for _, item := range subscriberNotificationResourceConfigurationModels {
+		if !item.SqsNotificationConfiguration.IsNull() && (len(item.SqsNotificationConfiguration.Elements()) > 0) {
+			var sqsNotificationConfiguration []sqsNotificationConfigurationModel
+			diags.Append(item.SqsNotificationConfiguration.ElementsAs(ctx, &sqsNotificationConfiguration, false)...)
+			notificationConfiguration := expandSQSNotificationConfigurationModel(ctx, sqsNotificationConfiguration)
+			configuration = append(configuration, notificationConfiguration)
+		}
+		if (!item.HTTPSNotificationConfiguration.IsNull()) && (len(item.HTTPSNotificationConfiguration.Elements()) > 0) {
+			var hppsNotificationConfiguration []httpsNotificationConfigurationModel
+			diags.Append(item.HTTPSNotificationConfiguration.ElementsAs(ctx, &hppsNotificationConfiguration, false)...)
+			notificationConfiguration := expandHTTPSNotificationConfigurationModel(ctx, hppsNotificationConfiguration)
+			configuration = append(configuration, notificationConfiguration)
+		}
+	}
+
+	return configuration, diags
+}
+
+func expandHTTPSNotificationConfigurationModel(ctx context.Context, HTTPSNotifications []httpsNotificationConfigurationModel) *awstypes.NotificationConfigurationMemberHttpsNotificationConfiguration {
+	if len(HTTPSNotifications) == 0 {
+		return nil
+	}
+
+	httpMethod := aws.ToString(fwflex.StringFromFramework(ctx, HTTPSNotifications[0].HTTPMethod))
+	return &awstypes.NotificationConfigurationMemberHttpsNotificationConfiguration{
+		Value: awstypes.HttpsNotificationConfiguration{
+			Endpoint:                 fwflex.StringFromFramework(ctx, HTTPSNotifications[0].Endpoint),
+			TargetRoleArn:            fwflex.StringFromFramework(ctx, HTTPSNotifications[0].TargetRoleArn),
+			AuthorizationApiKeyName:  fwflex.StringFromFramework(ctx, HTTPSNotifications[0].AuthorizationApiKeyName),
+			AuthorizationApiKeyValue: fwflex.StringFromFramework(ctx, HTTPSNotifications[0].AuthorizationApiKeyValue),
+			HttpMethod:               awstypes.HttpMethod(httpMethod),
+		},
+	}
+}
+
+func expandSQSNotificationConfigurationModel(ctx context.Context, SQSNotifications []sqsNotificationConfigurationModel) *awstypes.NotificationConfigurationMemberSqsNotificationConfiguration {
+	if len(SQSNotifications) == 0 {
+		return nil
+	}
+
+	return &awstypes.NotificationConfigurationMemberSqsNotificationConfiguration{
+		Value: awstypes.SqsNotificationConfiguration{},
+	}
+}
+
+var (
+	sqsNotificationConfigurationModelAttrTypes = map[string]attr.Type{}
+
+	HTTPSNotificationConfigurationModelAttrTypes = map[string]attr.Type{
+		"endpoint":                    types.StringType,
+		"target_role_arn":             types.StringType,
+		"authorization_api_key_name":  types.StringType,
+		"authorization_api_key_value": types.StringType,
+		"http_method":                 types.StringType,
+	}
+
+	sqsNotificationAttrTypes   = types.ObjectType{AttrTypes: sqsNotificationConfigurationModelAttrTypes}
+	HTTPSNotificationAttrTypes = types.ObjectType{AttrTypes: HTTPSNotificationConfigurationModelAttrTypes}
+
+	subscriberNotificationResourceConfigurationModelAttrTypes = map[string]attr.Type{
+		"sqs_notification_configuration":   types.ListType{ElemType: sqsNotificationAttrTypes},
+		"https_notification_configuration": types.ListType{ElemType: HTTPSNotificationAttrTypes},
+	}
+)
 
 type subscriberNotificationResourceModel struct {
 	Configuration fwtypes.ListNestedObjectValueOf[subscriberNotificationResourceConfigurationModel] `tfsdk:"configuration"`
@@ -298,11 +377,13 @@ type subscriberNotificationResourceModel struct {
 }
 
 type subscriberNotificationResourceConfigurationModel struct {
-	SqsNotificationConfiguration   types.String                                                         `tfsdk:"sqs_notification_configuration"`
-	HTTPSNotificationConfiguration fwtypes.ListNestedObjectValueOf[HTTPSNotificationConfigurationModel] `tfsdk:"https_notification_configuration"`
+	SqsNotificationConfiguration   fwtypes.ListNestedObjectValueOf[sqsNotificationConfigurationModel]   `tfsdk:"sqs_notification_configuration"`
+	HTTPSNotificationConfiguration fwtypes.ListNestedObjectValueOf[httpsNotificationConfigurationModel] `tfsdk:"https_notification_configuration"`
 }
 
-type HTTPSNotificationConfigurationModel struct {
+type sqsNotificationConfigurationModel struct{}
+
+type httpsNotificationConfigurationModel struct {
 	Endpoint                 types.String `tfsdk:"endpoint"`
 	TargetRoleArn            types.String `tfsdk:"target_role_arn"`
 	AuthorizationApiKeyName  types.String `tfsdk:"authorization_api_key_name"`
