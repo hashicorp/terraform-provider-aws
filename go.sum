@@ -282,8 +282,8 @@ github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.1 h1:35Nb6/mdS48Z+VzcEB/
 github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.1/go.mod h1:7BIR0ya929k6yfaLhOIPBV1VoCP7RGxFYFvXpT8hORg=
 github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.26.2 h1:xTZ0HzufTyOj+Sd9/Bveu55YbIkWgpWyqTYK90HzYq0=
 github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.26.2/go.mod h1:XwH5ffJZpBM6ZzoI4t0PR/mLwCsHpGb1amGAZLhvBAw=
-github.com/aws/aws-sdk-go-v2/service/servicequotas v1.21.1 h1:CCd+AWX79LVGzTXkgW9fBaPRFiC+J67zGuMcsER8Q1g=
-github.com/aws/aws-sdk-go-v2/service/servicequotas v1.21.1/go.mod h1:+M0h5pY1hwymLXfxTAiAB0D87KxkvGrqmDz0gQbrm4A=
+github.com/aws/aws-sdk-go-v2/service/servicequotas v1.21.2 h1:A7yE1iHBGVnOEtEwncqmHuIsCnOWcfZS1Ds16tpMAJ8=
+github.com/aws/aws-sdk-go-v2/service/servicequotas v1.21.2/go.mod h1:lBZEmYI//BiJqYcIgIJ9NYDKu9rco/n+59vlsZaQjGA=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.27.0 h1:/LWLtSAa1ujnhrRuvnXqPWVbXEpWecht8PZRY719VwM=
 github.com/aws/aws-sdk-go-v2/service/sesv2 v1.27.0/go.mod h1:gT09471Sxu2GX7nmEbGvuNmPsmElmWtF7BM19XO557o=
 github.com/aws/aws-sdk-go-v2/service/shield v1.25.1 h1:kT4QJtz5K8UtyMVXTqUyLC+oENjfsq0cuigNS5RsyKA=
