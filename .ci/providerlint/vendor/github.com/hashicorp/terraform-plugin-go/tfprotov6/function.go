@@ -109,10 +109,10 @@ type CallFunctionRequest struct {
 // CallFunctionResponse is the response from the provider with the result of
 // executing the logic of the function.
 type CallFunctionResponse struct {
-	// Diagnostics report errors or warnings related to the execution of the
-	// function logic. Returning an empty slice indicates a successful response
-	// with no warnings or errors presented to practitioners.
-	Diagnostics []*Diagnostic
+	// Error reports errors related to the execution of the
+	// function logic. Returning a nil error indicates a successful response
+	// with no errors presented to practitioners.
+	Error *FunctionError
 
 	// Result is the return value from the called function, matching the result
 	// type in the function definition.

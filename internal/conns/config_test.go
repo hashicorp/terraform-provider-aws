@@ -6,6 +6,7 @@ package conns_test
 import (
 	"context"
 	"fmt"
+	"maps"
 	"net/http"
 	"testing"
 
@@ -18,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
-	"golang.org/x/exp/maps"
 )
 
 type proxyCase struct {
@@ -479,7 +479,7 @@ func TestProxyConfig(t *testing.T) {
 
 			meta := p.Meta().(*conns.AWSClient)
 
-			client := meta.AwsConfig().HTTPClient
+			client := meta.AwsConfig(ctx).HTTPClient
 			bClient, ok := client.(*awshttp.BuildableClient)
 			if !ok {
 				t.Fatalf("expected awshttp.BuildableClient, got %T", client)
@@ -488,7 +488,7 @@ func TestProxyConfig(t *testing.T) {
 			proxyF := transport.Proxy
 
 			for _, url := range tc.urls {
-				req, _ := http.NewRequest("GET", url.url, nil)
+				req, _ := http.NewRequest(http.MethodGet, url.url, nil)
 				pUrl, err := proxyF(req)
 				if err != nil {
 					t.Fatalf("unexpected error: %s", err)

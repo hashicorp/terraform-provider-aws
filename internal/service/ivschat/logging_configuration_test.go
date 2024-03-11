@@ -34,7 +34,7 @@ func TestAccIVSChatLoggingConfiguration_basic_cloudwatch(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -73,7 +73,7 @@ func TestAccIVSChatLoggingConfiguration_basic_firehose(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -108,7 +108,7 @@ func TestAccIVSChatLoggingConfiguration_basic_s3(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -143,7 +143,7 @@ func TestAccIVSChatLoggingConfiguration_update_s3(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -182,7 +182,7 @@ func TestAccIVSChatLoggingConfiguration_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -230,7 +230,7 @@ func TestAccIVSChatLoggingConfiguration_failure_invalidDestination(t *testing.T)
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -274,7 +274,7 @@ func TestAccIVSChatLoggingConfiguration_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{

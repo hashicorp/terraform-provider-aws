@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -439,7 +438,7 @@ func resourceMetricAlarmDelete(ctx context.Context, d *schema.ResourceData, meta
 
 	log.Printf("[INFO] Deleting CloudWatch Metric Alarm: %s", d.Id())
 	_, err := conn.DeleteAlarms(ctx, &cloudwatch.DeleteAlarmsInput{
-		AlarmNames: tfslices.Of(d.Id()),
+		AlarmNames: []string{d.Id()},
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -455,8 +454,8 @@ func resourceMetricAlarmDelete(ctx context.Context, d *schema.ResourceData, meta
 
 func findMetricAlarmByName(ctx context.Context, conn *cloudwatch.Client, name string) (*types.MetricAlarm, error) {
 	input := &cloudwatch.DescribeAlarmsInput{
-		AlarmNames: tfslices.Of(name),
-		AlarmTypes: tfslices.Of(types.AlarmTypeMetricAlarm),
+		AlarmNames: []string{name},
+		AlarmTypes: []types.AlarmType{types.AlarmTypeMetricAlarm},
 	}
 
 	output, err := conn.DescribeAlarms(ctx, input)

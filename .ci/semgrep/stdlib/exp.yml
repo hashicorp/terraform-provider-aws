@@ -1,0 +1,14 @@
+rules:
+  - id: do-not-use-exp-maps-or-slices
+    languages: [go]
+    message: Use Go standard library maps and slices packages instead of the golang.org/x/exp packages
+    paths:
+      include:
+        - internal/
+    patterns:
+      - pattern: |
+          import ("$X")
+      - metavariable-regex:
+          metavariable: "$X"
+          regex: '^golang.org/x/exp/(maps|slices)$'
+    severity: WARNING

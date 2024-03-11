@@ -6,6 +6,7 @@ package rds_test
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRDSEngineVersionDataSource_basic(t *testing.T) {
@@ -26,7 +28,7 @@ func TestAccRDSEngineVersionDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -62,7 +64,7 @@ func TestAccRDSEngineVersionDataSource_upgradeTargets(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -83,7 +85,7 @@ func TestAccRDSEngineVersionDataSource_preferred(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -111,7 +113,7 @@ func TestAccRDSEngineVersionDataSource_preferredVersionsPreferredUpgradeTargets(
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -137,7 +139,7 @@ func TestAccRDSEngineVersionDataSource_preferredUpgradeTargetsVersion(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -158,7 +160,7 @@ func TestAccRDSEngineVersionDataSource_preferredMajorTargets(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -184,7 +186,7 @@ func TestAccRDSEngineVersionDataSource_defaultOnlyImplicit(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -204,7 +206,7 @@ func TestAccRDSEngineVersionDataSource_defaultOnlyExplicit(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -225,7 +227,7 @@ func TestAccRDSEngineVersionDataSource_includeAll(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -246,7 +248,7 @@ func TestAccRDSEngineVersionDataSource_filter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -274,7 +276,7 @@ func TestAccRDSEngineVersionDataSource_latest(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -302,6 +304,83 @@ func TestAccRDSEngineVersionDataSource_latest(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`^8\.0`)),
 					resource.TestMatchResourceAttr(dataSourceName, "version_actual", regexache.MustCompile(`^8\.0\.[0-9]+$`)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSEngineVersionDataSource_hasMinorMajor(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_rds_engine_version.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             nil,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(tfrds.InstanceEngineAuroraPostgreSQL, true, false),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrWith(dataSourceName, "valid_major_targets.#", func(value string) error {
+						intValue, err := strconv.Atoi(value)
+						if err != nil {
+							return fmt.Errorf("could not convert string to int: %v", err)
+						}
+
+						if intValue <= 0 {
+							return fmt.Errorf("value is not greater than 0: %d", intValue)
+						}
+
+						return nil
+					}),
+				),
+			},
+			{
+				Config: testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(tfrds.InstanceEngineAuroraPostgreSQL, false, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrWith(dataSourceName, "valid_minor_targets.#", func(value string) error {
+						intValue, err := strconv.Atoi(value)
+						if err != nil {
+							return fmt.Errorf("could not convert string to int: %v", err)
+						}
+
+						if intValue <= 0 {
+							return fmt.Errorf("value is not greater than 0: %d", intValue)
+						}
+
+						return nil
+					}),
+				),
+			},
+			{
+				Config: testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(tfrds.InstanceEngineAuroraPostgreSQL, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrWith(dataSourceName, "valid_major_targets.#", func(value string) error {
+						intValue, err := strconv.Atoi(value)
+						if err != nil {
+							return fmt.Errorf("could not convert string to int: %v", err)
+						}
+
+						if intValue <= 0 {
+							return fmt.Errorf("value is not greater than 0: %d", intValue)
+						}
+
+						return nil
+					}),
+					resource.TestCheckResourceAttrWith(dataSourceName, "valid_minor_targets.#", func(value string) error {
+						intValue, err := strconv.Atoi(value)
+						if err != nil {
+							return fmt.Errorf("could not convert string to int: %v", err)
+						}
+
+						if intValue <= 0 {
+							return fmt.Errorf("value is not greater than 0: %d", intValue)
+						}
+
+						return nil
+					}),
 				),
 			},
 		},
@@ -462,4 +541,15 @@ data "aws_rds_engine_version" "test" {
   latest  = true
 }
 `, engine, majorVersion)
+}
+
+func testAccEngineVersionDataSourceConfig_hasMajorMinorTarget(engine string, major, minor bool) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "test" {
+  engine           = %[1]q
+  has_major_target = %[2]t
+  has_minor_target = %[3]t
+  latest           = true
+}
+`, engine, major, minor)
 }

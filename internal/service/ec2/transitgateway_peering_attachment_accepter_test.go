@@ -11,6 +11,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccTransitGatewayPeeringAttachmentAccepter_basic(t *testing.T) {
@@ -28,7 +29,7 @@ func testAccTransitGatewayPeeringAttachmentAccepter_basic(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckTransitGateway(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -66,7 +67,7 @@ func testAccTransitGatewayPeeringAttachmentAccepter_tags(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 			testAccPreCheckTransitGateway(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -120,7 +121,7 @@ func testAccTransitGatewayPeeringAttachmentAccepter_differentAccount(t *testing.
 			acctest.PreCheckAlternateAccount(t)
 			testAccPreCheckTransitGateway(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{

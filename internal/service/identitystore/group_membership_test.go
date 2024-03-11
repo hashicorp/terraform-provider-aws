@@ -39,7 +39,7 @@ func TestAccIdentityStoreGroupMembership_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupMembershipDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -77,7 +77,7 @@ func TestAccIdentityStoreGroupMembership_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupMembershipDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -110,7 +110,7 @@ func TestAccIdentityStoreGroupMembership_GroupId(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupMembershipDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -154,7 +154,7 @@ func TestAccIdentityStoreGroupMembership_MemberId(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
 			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupMembershipDestroy(ctx),
 		Steps: []resource.TestStep{

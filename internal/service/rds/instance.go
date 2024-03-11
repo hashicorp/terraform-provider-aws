@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -35,7 +36,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"golang.org/x/exp/slices"
 )
 
 // NOTE ON "ID", "IDENTIFIER":
@@ -481,6 +481,10 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ValidateFunc: validation.Any(
+					validation.IntInSlice([]int{7, 731}),
+					validation.IntDivisibleBy(31),
+				),
 			},
 			"port": {
 				Type:     schema.TypeInt,
@@ -762,6 +766,20 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("option_group_name"); ok {
 			input.OptionGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("parameter_group_name"); ok {
+			crossRegion := false
+			if arn.IsARN(sourceDBInstanceID) {
+				sourceARN, err := arn.Parse(sourceDBInstanceID)
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (read replica) (%s): %s", identifier, err)
+				}
+				crossRegion = sourceARN.Region != meta.(*conns.AWSClient).Region
+			}
+			if crossRegion {
+				input.DBParameterGroupName = aws.String(v.(string))
+			}
 		}
 
 		if v, ok := d.GetOk("performance_insights_enabled"); ok {
@@ -2327,7 +2345,7 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		needsModify = true
 		input.StorageType = aws.String(d.Get("storage_type").(string))
 
-		if aws.StringValue(input.StorageType) == storageTypeIO1 {
+		if slices.Contains([]string{storageTypeIO1, storageTypeIO2}, aws.StringValue(input.StorageType)) {
 			input.Iops = aws.Int32(int32(d.Get("iops").(int)))
 		}
 	}

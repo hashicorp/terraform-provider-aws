@@ -125,7 +125,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			requestURL = fmt.Sprintf("http://%s/?gatewayType=SYNC&activationRegion=%s", agentIpAddress, region)
 		}
 
-		request, err := http.NewRequest("GET", requestURL, nil)
+		request, err := http.NewRequest(http.MethodGet, requestURL, nil)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating HTTP request: %s", err)
 		}

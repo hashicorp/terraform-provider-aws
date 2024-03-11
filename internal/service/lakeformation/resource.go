@@ -85,7 +85,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.UseServiceLinkedRole = aws.Bool(true)
 	}
 
-	if v, ok := d.GetOk("use_service_linked_role"); ok {
+	if v, ok := d.GetOkExists("use_service_linked_role"); ok {
 		input.UseServiceLinkedRole = aws.Bool(v.(bool))
 	}
 

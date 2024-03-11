@@ -15,11 +15,20 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newHostedZoneIDDataSource,
+			Name:    "Hosted Zone ID",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newDeploymentResource,
+			Name:    "Deployment",
+		},
 		{
 			Factory: newResourceIndex,
 			Name:    "Default AutoScaling Configuration Version",

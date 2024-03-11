@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Serialized acceptance tests due to WAF account limits
@@ -43,7 +44,7 @@ func testAccRegexPatternSet_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRegexPatternSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -74,7 +75,7 @@ func testAccRegexPatternSet_changePatterns(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRegexPatternSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -116,7 +117,7 @@ func testAccRegexPatternSet_noPatterns(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRegexPatternSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -145,7 +146,7 @@ func testAccRegexPatternSet_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRegexPatternSetDestroy(ctx),
 		Steps: []resource.TestStep{

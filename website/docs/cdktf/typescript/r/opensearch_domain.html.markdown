@@ -477,7 +477,10 @@ The following arguments are optional:
 
 * `desiredState` - (Required) Auto-Tune desired state for the domain. Valid values: `ENABLED` or `DISABLED`.
 * `maintenanceSchedule` - (Required if `rollbackOnDisable` is set to `DEFAULT_ROLLBACK`) Configuration block for Auto-Tune maintenance windows. Can be specified multiple times for each maintenance window. Detailed below.
+
+  **NOTE:** Maintenance windows are deprecated and have been replaced with [off-peak windows](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/off-peak.html). Consequently, `maintenanceSchedule` configuration blocks cannot be specified when `useOffPeakWindow` is set to `true`.
 * `rollbackOnDisable` - (Optional) Whether to roll back to default Auto-Tune settings when disabling Auto-Tune. Valid values: `DEFAULT_ROLLBACK` or `NO_ROLLBACK`.
+* `useOffPeakWindow` - (Optional) Whether to schedule Auto-Tune optimizations that require blue/green deployments during the domain's configured daily off-peak window. Defaults to `false`.
 
 #### maintenance_schedule
 
@@ -498,6 +501,7 @@ The following arguments are optional:
 * `dedicatedMasterType` - (Optional) Instance type of the dedicated main nodes in the cluster.
 * `instanceCount` - (Optional) Number of instances in the cluster.
 * `instanceType` - (Optional) Instance type of data nodes in the cluster.
+* `multiAzWithStandbyEnabled` - (Optional) Whether a multi-AZ domain is turned on with a standby AZ. For more information, see [Configuring a multi-AZ domain in Amazon OpenSearch Service](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/managedomains-multiaz.html).
 * `warmCount` - (Optional) Number of warm nodes in the cluster. Valid values are between `2` and `150`. `warmCount` can be only and must be set when `warmEnabled` is set to `true`.
 * `warmEnabled` - (Optional) Whether to enable warm storage.
 * `warmType` - (Optional) Instance type for the OpenSearch cluster's warm nodes. Valid values are `ultrawarm1.medium.search`, `ultrawarm1.large.search` and `ultrawarm1.xlarge.search`. `warmType` can be only and must be set when `warmEnabled` is set to `true`.
@@ -527,7 +531,7 @@ AWS documentation: [Amazon Cognito Authentication for Dashboard](https://docs.aw
 * `customEndpointEnabled` - (Optional) Whether to enable custom endpoint for the OpenSearch domain.
 * `customEndpoint` - (Optional) Fully qualified domain for your custom endpoint.
 * `enforceHttps` - (Optional) Whether or not to require HTTPS. Defaults to `true`.
-* `tlsSecurityPolicy` - (Optional) Name of the TLS security policy that needs to be applied to the HTTPS endpoint. Valid values:  `Policy-Min-TLS-1-0-2019-07` and `Policy-Min-TLS-1-2-2019-07`. Terraform will only perform drift detection if a configuration value is provided.
+* `tlsSecurityPolicy` - (Optional) Name of the TLS security policy that needs to be applied to the HTTPS endpoint. For valid values, refer to the [AWS documentation](https://docs.aws.amazon.com/opensearch-service/latest/APIReference/API_DomainEndpointOptions.html#opensearchservice-Type-DomainEndpointOptions-TLSSecurityPolicy). Terraform will only perform drift detection if a configuration value is provided.
 
 ### ebs_options
 
@@ -635,4 +639,4 @@ Using `terraform import`, import OpenSearch domains using the `domainName`. For 
 % terraform import aws_opensearch_domain.example domain_name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6be783c117732ccc247a91f3a21b873ce34ae5384be5834b261ffa5d5d287402 -->
+<!-- cache-key: cdktf-0.20.1 input-67cdb16ac2a864835c0cf54ca3a5a6ddd68cbfa0a33beec2dc6e6b98b6a7a9b7 -->

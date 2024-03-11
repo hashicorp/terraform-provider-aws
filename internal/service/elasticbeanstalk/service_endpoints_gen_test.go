@@ -4,27 +4,28 @@ package elasticbeanstalk_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"net/url"
+	"maps"
 	"os"
 	"path/filepath"
 	"reflect"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	elasticbeanstalk_sdkv1 "github.com/aws/aws-sdk-go/service/elasticbeanstalk"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	elasticbeanstalk_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/servicemocks"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	terraformsdk "github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
-	"golang.org/x/exp/maps"
 )
 
 type endpointTestCase struct {
@@ -94,7 +95,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 				withPackageNameEndpointInConfig,
 				withAliasName0EndpointInConfig,
 			},
-			expected: expectPackageNameConfigEndpoint(),
+			expected: conflictsWith(expectPackageNameConfigEndpoint()),
 		},
 
 		"package name endpoint config overrides aws service envvar": {
@@ -265,32 +266,42 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 }
 
 func defaultEndpoint(region string) string {
-	r := endpoints.DefaultResolver()
+	r := elasticbeanstalk_sdkv2.NewDefaultEndpointResolverV2()
 
-	ep, err := r.EndpointFor(elasticbeanstalk_sdkv1.EndpointsID, region)
+	ep, err := r.ResolveEndpoint(context.Background(), elasticbeanstalk_sdkv2.EndpointParameters{
+		Region: aws_sdkv2.String(region),
+	})
 	if err != nil {
 		return err.Error()
 	}
 
-	url, _ := url.Parse(ep.URL)
-
-	if url.Path == "" {
-		url.Path = "/"
+	if ep.URI.Path == "" {
+		ep.URI.Path = "/"
 	}
 
-	return url.String()
+	return ep.URI.String()
 }
 
 func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
 	t.Helper()
 
-	client := meta.ElasticBeanstalkConn(ctx)
+	var endpoint string
 
-	req, _ := client.ListAvailableSolutionStacksRequest(&elasticbeanstalk_sdkv1.ListAvailableSolutionStacksInput{})
+	client := meta.ElasticBeanstalkClient(ctx)
 
-	req.HTTPRequest.URL.Path = "/"
-
-	endpoint := req.HTTPRequest.URL.String()
+	_, err := client.ListAvailableSolutionStacks(ctx, &elasticbeanstalk_sdkv2.ListAvailableSolutionStacksInput{},
+		func(opts *elasticbeanstalk_sdkv2.Options) {
+			opts.APIOptions = append(opts.APIOptions,
+				addRetrieveEndpointURLMiddleware(t, &endpoint),
+				addCancelRequestMiddleware(),
+			)
+		},
+	)
+	if err == nil {
+		t.Fatal("Expected an error, got none")
+	} else if !errors.Is(err, errCancelOperation) {
+		t.Fatalf("Unexpected error: %s", err)
+	}
 
 	return endpoint
 }
@@ -317,6 +328,15 @@ func withAliasName0EndpointInConfig(setup *caseSetup) {
 	}
 	endpoints := setup.config["endpoints"].([]any)[0].(map[string]any)
 	endpoints[aliasName0] = aliasName0ConfigEndpoint
+}
+
+func conflictsWith(e caseExpectations) caseExpectations {
+	e.diags = append(e.diags, provider.ConflictingEndpointsWarningDiag(
+		cty.GetAttrPath("endpoints").IndexInt(0),
+		packageName,
+		aliasName0,
+	))
+	return e
 }
 
 func withAwsEnvVar(setup *caseSetup) {

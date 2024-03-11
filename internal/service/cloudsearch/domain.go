@@ -23,7 +23,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -543,7 +542,7 @@ func defineIndexFields(ctx context.Context, conn *cloudsearch.Client, domainName
 
 func findDomainByName(ctx context.Context, conn *cloudsearch.Client, name string) (*types.DomainStatus, error) {
 	input := &cloudsearch.DescribeDomainsInput{
-		DomainNames: tfslices.Of(name),
+		DomainNames: []string{name},
 	}
 
 	output, err := conn.DescribeDomains(ctx, input)
@@ -1050,6 +1049,9 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 	switch fieldType {
 	case types.IndexFieldTypeDate:
 		options := field.DateOptions
+		if options == nil {
+			break
+		}
 
 		if v := options.DefaultValue; v != nil {
 			tfMap["default_value"] = aws.ToString(v)
@@ -1081,6 +1083,9 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 
 	case types.IndexFieldTypeDateArray:
 		options := field.DateArrayOptions
+		if options == nil {
+			break
+		}
 
 		if v := options.DefaultValue; v != nil {
 			tfMap["default_value"] = aws.ToString(v)
@@ -1109,6 +1114,9 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 
 	case types.IndexFieldTypeDouble:
 		options := field.DoubleOptions
+		if options == nil {
+			break
+		}
 
 		if v := options.DefaultValue; v != nil {
 			tfMap["default_value"] = flex.Float64ToStringValue(v)
@@ -1140,6 +1148,9 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 
 	case types.IndexFieldTypeDoubleArray:
 		options := field.DoubleArrayOptions
+		if options == nil {
+			break
+		}
 
 		if v := options.DefaultValue; v != nil {
 			tfMap["default_value"] = flex.Float64ToStringValue(v)
@@ -1168,6 +1179,9 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 
 	case types.IndexFieldTypeInt:
 		options := field.IntOptions
+		if options == nil {
+			break
+		}
 
 		if v := options.DefaultValue; v != nil {
 			tfMap["default_value"] = flex.Int64ToStringValue(v)
@@ -1199,6 +1213,9 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 
 	case types.IndexFieldTypeIntArray:
 		options := field.IntArrayOptions
+		if options == nil {
+			break
+		}
 
 		if v := options.DefaultValue; v != nil {
 			tfMap["default_value"] = flex.Int64ToStringValue(v)
@@ -1227,6 +1244,9 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 
 	case types.IndexFieldTypeLatlon:
 		options := field.LatLonOptions
+		if options == nil {
+			break
+		}
 
 		if v := options.DefaultValue; v != nil {
 			tfMap["default_value"] = aws.ToString(v)
@@ -1258,6 +1278,9 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 
 	case types.IndexFieldTypeLiteral:
 		options := field.LiteralOptions
+		if options == nil {
+			break
+		}
 
 		if v := options.DefaultValue; v != nil {
 			tfMap["default_value"] = aws.ToString(v)
@@ -1289,6 +1312,9 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 
 	case types.IndexFieldTypeLiteralArray:
 		options := field.LiteralArrayOptions
+		if options == nil {
+			break
+		}
 
 		if v := options.DefaultValue; v != nil {
 			tfMap["default_value"] = aws.ToString(v)
@@ -1317,6 +1343,9 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 
 	case types.IndexFieldTypeText:
 		options := field.TextOptions
+		if options == nil {
+			break
+		}
 
 		if v := options.AnalysisScheme; v != nil {
 			tfMap["analysis_scheme"] = aws.ToString(v)
@@ -1348,6 +1377,9 @@ func flattenIndexFieldStatus(apiObject types.IndexFieldStatus) (map[string]inter
 
 	case types.IndexFieldTypeTextArray:
 		options := field.TextArrayOptions
+		if options == nil {
+			break
+		}
 
 		if v := options.AnalysisScheme; v != nil {
 			tfMap["analysis_scheme"] = aws.ToString(v)
