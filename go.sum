@@ -130,8 +130,8 @@ github.com/aws/aws-sdk-go-v2/service/controltower v1.13.2 h1:4Fivjx18u2ZIG9nwcu1
 github.com/aws/aws-sdk-go-v2/service/controltower v1.13.2/go.mod h1:UIvUBo2/i4iPoyi4AMoI/6YQ/F95PQ3UbKrh366MID0=
 github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.2 h1:trs+Vgd/4VvHr1B+bzQPWEp923It3GxR91WvA91k43s=
 github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.2/go.mod h1:EQYjdYyXTpCZXuHMK2t0sMtdOJ+cW6XQ2wekotnm/Hc=
-github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.1 h1:fuoX8H3zlFFbXvuDG0/jBoE4HcrbBTANgYzmpNLEs6s=
-github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.1/go.mod h1:4NqexR3UzSSCVJYyxqkEeWvGuHcSudqwdnzJCCC+NvQ=
+github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.2 h1:IXaIyKQmuuSQ159kQj5UoIbg/pb8SQ+R/+D7s3nUapQ=
+github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.2/go.mod h1:aOYb58r6q9DSLhAqovQv7Um3qL3HKuzD/kX7xu1HHlk=
 github.com/aws/aws-sdk-go-v2/service/dax v1.19.1 h1:m3o6QYXv4zFXTTbSPlMGhGyrJySmGg5ejbrAA9NRrcI=
 github.com/aws/aws-sdk-go-v2/service/dax v1.19.1/go.mod h1:QJzqcWGkvfcpDWQI7S0MkQuESisgPaoVRaONToDvwyo=
 github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.1 h1:4zKDWmYwlhvwY0r0n++ZJkyHjW4y+ESPSjnJ0iuDGSU=
