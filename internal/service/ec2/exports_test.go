@@ -5,8 +5,10 @@ package ec2
 
 // Exports for use in tests only.
 var (
+	ResourceDefaultNetworkACL        = resourceDefaultNetworkACL
 	ResourceEBSFastSnapshotRestore   = newResourceEBSFastSnapshotRestore
 	ResourceInstanceConnectEndpoint  = newResourceInstanceConnectEndpoint
+	ResourceNetworkACL               = resourceNetworkACL
 	ResourceSecurityGroupEgressRule  = newResourceSecurityGroupEgressRule
 	ResourceSecurityGroupIngressRule = newResourceSecurityGroupIngressRule
 	ResourceTag                      = resourceTag
