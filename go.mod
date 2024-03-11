@@ -101,7 +101,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/osis v1.8.2
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.5.2
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.11.2
-	github.com/aws/aws-sdk-go-v2/service/polly v1.39.3
+	github.com/aws/aws-sdk-go-v2/service/polly v1.39.4
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.4.1
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.21.1
