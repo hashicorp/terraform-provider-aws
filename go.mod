@@ -103,7 +103,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.11.2
 	github.com/aws/aws-sdk-go-v2/service/polly v1.39.4
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.27.2
-	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.4.1
+	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.4.2
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.21.1
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.16.1
 	github.com/aws/aws-sdk-go-v2/service/rds v1.75.0
