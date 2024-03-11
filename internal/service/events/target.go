@@ -5,6 +5,7 @@ package events
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"math"
@@ -14,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -666,15 +666,15 @@ func putTargetError(apiObject *eventbridge.PutTargetsResultEntry) error {
 }
 
 func putTargetsError(apiObjects []*eventbridge.PutTargetsResultEntry) error {
-	var errors *multierror.Error
+	var errs []error
 
 	for _, apiObject := range apiObjects {
 		if err := putTargetError(apiObject); err != nil {
-			errors = multierror.Append(errors, fmt.Errorf("%s: %w", aws.StringValue(apiObject.TargetId), err))
+			errs = append(errs, fmt.Errorf("%s: %w", aws.StringValue(apiObject.TargetId), err))
 		}
 	}
 
-	return errors.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 func removeTargetError(apiObject *eventbridge.RemoveTargetsResultEntry) error {
@@ -686,15 +686,15 @@ func removeTargetError(apiObject *eventbridge.RemoveTargetsResultEntry) error {
 }
 
 func removeTargetsError(apiObjects []*eventbridge.RemoveTargetsResultEntry) error {
-	var errors *multierror.Error
+	var errs []error
 
 	for _, apiObject := range apiObjects {
 		if err := removeTargetError(apiObject); err != nil {
-			errors = multierror.Append(errors, fmt.Errorf("%s: %w", aws.StringValue(apiObject.TargetId), err))
+			errs = append(errs, fmt.Errorf("%s: %w", aws.StringValue(apiObject.TargetId), err))
 		}
 	}
 
-	return errors.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 func buildPutTargetInputStruct(ctx context.Context, d *schema.ResourceData) *eventbridge.PutTargetsInput {
