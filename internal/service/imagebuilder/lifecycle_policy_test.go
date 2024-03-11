@@ -21,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccLifecyclePolicy_basic(t *testing.T) {
+func TestAccImageBuilderLifecyclePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var lifecyclePolicy types.LifecyclePolicy
 	resourceName := "aws_imagebuilder_lifecycle_policy.test"
