@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -21,16 +22,24 @@ import (
 // it may also be a different identifier depending on the service.
 func listTags(ctx context.Context, conn *cloudtrail.Client, identifier string, optFns ...func(*cloudtrail.Options)) (tftags.KeyValueTags, error) {
 	input := &cloudtrail.ListTagsInput{
-		ResourceIdList: []string{identifier},
+		ResourceIdList: tfslices.Of(identifier),
+	}
+	var output []awstypes.Tag
+
+	pages := cloudtrail.NewListTagsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return tftags.New(ctx, nil), err
+		}
+
+		for _, v := range page.ResourceTagList[0].TagsList {
+			output = append(output, v)
+		}
 	}
 
-	output, err := conn.ListTags(ctx, input, optFns...)
-
-	if err != nil {
-		return tftags.New(ctx, nil), err
-	}
-
-	return KeyValueTags(ctx, output.ResourceTagList[0].TagsList), nil
+	return KeyValueTags(ctx, output), nil
 }
 
 // ListTags lists cloudtrail service tags and set them in Context.

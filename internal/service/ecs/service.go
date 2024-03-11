@@ -414,6 +414,25 @@ func ResourceService() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
+									"timeout": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"idle_timeout_seconds": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntBetween(0, 2147483647),
+												},
+												"per_request_timeout_seconds": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntBetween(0, 2147483647),
+												},
+											},
+										},
+									},
 									"tls": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -442,25 +461,6 @@ func ResourceService() *schema.Resource {
 													Type:         schema.TypeString,
 													Optional:     true,
 													ValidateFunc: verify.ValidARN,
-												},
-											},
-										},
-									},
-									"timeout": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"idle_timeout_seconds": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntBetween(0, 2147483647),
-												},
-												"per_request_timeout_seconds": {
-													Type:         schema.TypeInt,
-													Optional:     true,
-													ValidateFunc: validation.IntBetween(0, 2147483647),
 												},
 											},
 										},
@@ -1492,12 +1492,12 @@ func expandServices(srv []interface{}) []*ecs.ServiceConnectService {
 			config.PortName = aws.String(v)
 		}
 
-		if v, ok := raw["tls"].([]interface{}); ok && len(v) > 0 {
-			config.Tls = expandTLS(v)
-		}
-
 		if v, ok := raw["timeout"].([]interface{}); ok && len(v) > 0 {
 			config.Timeout = expandTimeout(v)
+		}
+
+		if v, ok := raw["tls"].([]interface{}); ok && len(v) > 0 {
+			config.Tls = expandTLS(v)
 		}
 
 		out = append(out, &config)
