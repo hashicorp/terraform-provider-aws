@@ -12,9 +12,8 @@ var (
 	ResourceTag                      = resourceTag
 
 	FindEBSFastSnapshotRestoreByID = findEBSFastSnapshotRestoreByID
-
-	UpdateTags   = updateTags
-	UpdateTagsV2 = updateTagsV2
-
-	StopInstance = stopInstance
+	FindNetworkACLByIDV2           = findNetworkACLByIDV2
+	StopInstance                   = stopInstance
+	UpdateTags                     = updateTags
+	UpdateTagsV2                   = updateTagsV2
 )
