@@ -118,7 +118,7 @@ func testAccRegisteredDomain_contacts(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.fax", "+61.412345678"),
 					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.first_name", "John"),
 					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.last_name", "Cleese"),
-					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.organization_name", "Monty Python"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.organization_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.phone_number", "+61.412345679"),
 					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.state", "ACT"),
 					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.zip_code", "2606"),
@@ -371,7 +371,6 @@ resource "aws_route53domains_registered_domain" "test" {
     fax               = "+61.412345678"
     first_name        = "John"
     last_name         = "Cleese"
-    organization_name = "Monty Python"
     phone_number      = "+61.412345679"
     state             = "ACT"
     zip_code          = "2606"
