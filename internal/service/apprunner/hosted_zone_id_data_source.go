@@ -12,11 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // See https://docs.aws.amazon.com/general/latest/gr/apprunner.html
 
-var HostedZoneIdPerRegionMap = map[string]string{
+var hostedZoneIDPerRegionMap = map[string]string{
 	endpoints.UsEast2RegionID:      "Z0224347AD7KVHMLOX31",
 	endpoints.UsEast1RegionID:      "Z01915732ZBZKC8D32TPT",
 	endpoints.UsWest2RegionID:      "Z02243383FTQ64HJ5772Q",
@@ -30,30 +31,23 @@ var HostedZoneIdPerRegionMap = map[string]string{
 	endpoints.EuWest3RegionID:      "Z087117439MBKHYM69QS6",
 }
 
-// Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
 // @FrameworkDataSource(name="Hosted Zone ID")
-func newDataSourceHostedZoneID(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceHostedZoneID{}, nil
+func newHostedZoneIDDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &hostedZoneIDDataSource{}, nil
 }
 
-const (
-	DSNameHostedZoneID = "Hosted Zone ID Data Source"
-)
-
-type dataSourceHostedZoneID struct {
+type hostedZoneIDDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceHostedZoneID) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_apprunner_hosted_zone_id"
+func (d *hostedZoneIDDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+	response.TypeName = "aws_apprunner_hosted_zone_id"
 }
 
-func (d *dataSourceHostedZoneID) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (d *hostedZoneIDDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": schema.StringAttribute{
-				Computed: true,
-			},
+			names.AttrID: framework.IDAttribute(),
 			"region": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -62,10 +56,10 @@ func (d *dataSourceHostedZoneID) Schema(ctx context.Context, req datasource.Sche
 	}
 }
 
-func (d *dataSourceHostedZoneID) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	var data dataSourceHostedZoneIDData
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+func (d *hostedZoneIDDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data hostedZoneIDDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -76,18 +70,19 @@ func (d *dataSourceHostedZoneID) Read(ctx context.Context, req datasource.ReadRe
 		region = data.Region.ValueString()
 	}
 
-	if zoneId, ok := HostedZoneIdPerRegionMap[region]; ok {
-		data.ID = types.StringValue(zoneId)
+	if zoneID, ok := hostedZoneIDPerRegionMap[region]; ok {
+		data.ID = types.StringValue(zoneID)
 		data.Region = types.StringValue(region)
 	} else {
-		resp.Diagnostics.AddError("unsupported AWS Region", fmt.Sprintf("region %s is currently not supported", region))
+		response.Diagnostics.AddError("unsupported AWS Region", fmt.Sprintf("region %s is currently not supported", region))
+
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type dataSourceHostedZoneIDData struct {
+type hostedZoneIDDataSourceModel struct {
 	ID     types.String `tfsdk:"id"`
 	Region types.String `tfsdk:"region"`
 }

@@ -4,20 +4,17 @@
 package apprunner_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/apprunner"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppRunnerHostedZoneIDDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
+	datasourceName := "data.aws_apprunner_hosted_zone_id.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -31,13 +28,13 @@ func TestAccAppRunnerHostedZoneIDDataSource_basic(t *testing.T) {
 			{
 				Config: testAccHostedZoneIDDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_apprunner_hosted_zone_id.main", "id", apprunner.HostedZoneIdPerRegionMap[acctest.Region()]),
+					resource.TestCheckResourceAttrSet(datasourceName, "id"),
 				),
 			},
 			{
-				Config: testAccHostedZoneIDDataSourceConfig_explicitRegion,
+				Config: testAccHostedZoneIDDataSourceConfig_explicitRegion(names.APNortheast1RegionID),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_apprunner_hosted_zone_id.regional", "id", "Z08491812XW6IPYLR6CCA"),
+					resource.TestCheckResourceAttr(datasourceName, "id", "Z08491812XW6IPYLR6CCA"),
 				),
 			},
 		},
@@ -45,12 +42,13 @@ func TestAccAppRunnerHostedZoneIDDataSource_basic(t *testing.T) {
 }
 
 const testAccHostedZoneIDDataSourceConfig_basic = `
-data "aws_apprunner_hosted_zone_id" "main" {}
+data "aws_apprunner_hosted_zone_id" "test" {}
 `
 
-// lintignore:AWSAT003
-const testAccHostedZoneIDDataSourceConfig_explicitRegion = `
-data "aws_apprunner_hosted_zone_id" "regional" {
-  region = "ap-northeast-1"
+func testAccHostedZoneIDDataSourceConfig_explicitRegion(region string) string {
+	return fmt.Sprintf(`
+data "aws_apprunner_hosted_zone_id" "test" {
+  region = %[1]q
 }
-`
+`, region)
+}
