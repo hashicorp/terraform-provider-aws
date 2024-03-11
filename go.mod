@@ -14,7 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/account v1.16.2
 	github.com/aws/aws-sdk-go-v2/service/acm v1.25.2
-	github.com/aws/aws-sdk-go-v2/service/amp v1.25.1
+	github.com/aws/aws-sdk-go-v2/service/amp v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.7.1
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.41.1
