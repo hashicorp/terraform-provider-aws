@@ -19,7 +19,7 @@ import (
 )
 
 // @FrameworkDataSource(name="Input")
-func newDataSourceInput(context.Context) (datasource.DataSourceWithConfigure, error) {
+func newDataSourceInput(_ context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceInput{}, nil
 }
 
@@ -31,7 +31,7 @@ type dataSourceInput struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceInput) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+func (d *dataSourceInput) Metadata(_ context.Context, _ datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
 	resp.TypeName = "aws_medialive_input"
 }
 

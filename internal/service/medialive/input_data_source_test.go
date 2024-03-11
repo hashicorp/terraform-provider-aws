@@ -5,74 +5,14 @@ package medialive_test
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
-	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/medialive"
-	"github.com/aws/aws-sdk-go-v2/service/medialive/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	tfmedialive "github.com/hashicorp/terraform-provider-aws/internal/service/medialive"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-func TestInputExampleUnitTest(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
-		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-			got, err := tfmedialive.FunctionFromDataSource(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
 
 func TestAccMediaLiveInputDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -80,17 +20,18 @@ func TestAccMediaLiveInputDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var input medialive.DescribeInputResponse
+	var input medialive.DescribeInputOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_medialive_input.test"
 	dataSourceName := "data.aws_medialive_input.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
-			testAccPreCheck(ctx, t)
+			testAccInputsPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInputDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -98,44 +39,37 @@ func TestAccMediaLiveInputDataSource_basic(t *testing.T) {
 				Config: testAccInputDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInputExists(ctx, dataSourceName, &input),
-					resource.TestCheckResourceAttr(dataSourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(dataSourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(dataSourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "medialive", regexache.MustCompile(`input:+.`)),
+					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceName, "arn"),
 				),
 			},
 		},
 	})
 }
 
-func testAccInputDataSourceConfig_basic(rName, version string) string {
+func testAccInputDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-data "aws_security_group" "test" {
-  name = %[1]q
+resource "aws_medialive_input_security_group" "test" {
+  whitelist_rules {
+    cidr = "10.0.0.8/32"
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_medialive_input" "test" {
+  name                  = %[1]q
+  input_security_groups = [aws_medialive_input_security_group.test.id]
+  type                  = "UDP_PUSH"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 data "aws_medialive_input" "test" {
-  input_name             = %[1]q
-  engine_type             = "ActiveMediaLive"
-  engine_version          = %[2]q
-  host_instance_type      = "medialive.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
-
-  logs {
-    general = true
-  }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
-  }
+  id = aws_medialive_input.test.id
 }
-`, rName, version)
+`, rName)
 }

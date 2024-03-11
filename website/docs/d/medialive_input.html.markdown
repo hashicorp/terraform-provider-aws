@@ -16,6 +16,7 @@ Terraform data source for managing an AWS Elemental MediaLive Input.
 
 ```terraform
 data "aws_medialive_input" "example" {
+  id = aws_medialive_input.example.id
 }
 ```
 
@@ -23,15 +24,24 @@ data "aws_medialive_input" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-The following arguments are optional:
-
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `id` - (Required) The ID of the Input.
 
 ## Attribute Reference
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Input. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `arn` - ARN of the Input.
+* `attached_channels` - Channels attached to Input.
+* `destionations` - Destination settings for PUSH type inputs.
+* `input_class` - The input class.
+* `input_devices` - Settings for the devices.
+* `input_partner_ids` - A list of IDs for all Inputs which are partners of this one.
+* `input_source_type` - Source type of the input.
+* `media_connect_flows` - A list of the MediaConnect Flows.
+* `name` - Name of the input.
+* `role_arn` - The ARN of the role this input assumes during and after creation.
+* `security_groups` - List of input security groups.
+* `sources` - The source URLs for a PULL-type input.
+* `state` - The state of the input.
+* `tags` - A map of tags assigned to the Input.
+* `type` - The type of the input.
