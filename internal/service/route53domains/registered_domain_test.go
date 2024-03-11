@@ -99,7 +99,7 @@ func testAccRegisteredDomain_contacts(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.address_line_1", "99 High Street"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.address_line_2", "Flat 1a"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.city", "Little Nowhere"),
-					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.contact_type", "ASSOCIATION"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.contact_type", "COMPANY"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.country_code", "GB"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.email", "terraform-acctest+aws-route53domains-test1@hashicorp.com"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.fax", "+44.123456788"),
@@ -350,7 +350,7 @@ resource "aws_route53domains_registered_domain" "test" {
     address_line_1    = "99 High Street"
     address_line_2    = "Flat 1a"
     city              = "Little Nowhere"
-    contact_type      = "ASSOCIATION"
+    contact_type      = "COMPANY"
     country_code      = "GB"
     email             = "terraform-acctest+aws-route53domains-test1@hashicorp.com"
     fax               = "+44.123456788"
