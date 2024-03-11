@@ -5,6 +5,7 @@ package appstream
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -12,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -81,12 +81,13 @@ func resourceUserStackAssociationCreate(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "creating AppStream User Stack Association (%s): %s", id, err)
 	}
 	if len(output.Errors) > 0 {
-		var errs *multierror.Error
+		var errs []error
 
 		for _, err := range output.Errors {
-			errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.ErrorMessage)))
+			errs = append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.ErrorMessage)))
 		}
-		return sdkdiag.AppendErrorf(diags, "creating AppStream User Stack Association (%s): %s", id, errs)
+
+		return sdkdiag.AppendErrorf(diags, "creating AppStream User Stack Association (%s): %s", id, errors.Join(errs...))
 	}
 
 	d.SetId(id)
