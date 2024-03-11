@@ -6,11 +6,13 @@ package lakeformation
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
+	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -36,6 +38,7 @@ import (
 // @FrameworkResource(name="Data Cells Filter")
 func newResourceDataCellsFilter(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceDataCellsFilter{}
+	r.SetDefaultCreateTimeout(2 * time.Minute)
 
 	return r, nil
 }
@@ -47,6 +50,7 @@ const (
 type resourceDataCellsFilter struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
+	framework.WithTimeouts
 }
 
 func (r *resourceDataCellsFilter) Metadata(_ context.Context, _ resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -149,6 +153,9 @@ func (r *resourceDataCellsFilter) Schema(ctx context.Context, _ resource.SchemaR
 					},
 				},
 			},
+			"timeouts": timeouts.Block(ctx, timeouts.Opts{
+				Create: true,
+			}),
 		},
 	}
 }
@@ -204,7 +211,10 @@ func (r *resourceDataCellsFilter) Create(ctx context.Context, req resource.Creat
 	state := plan
 	state.ID = fwflex.StringValueToFramework(ctx, id)
 
-	output, err := findDataCellsFilterByID(ctx, conn, state.ID.ValueString())
+	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
+	outputRaws, err := tfresource.RetryWhenNotFound(ctx, createTimeout, func() (interface{}, error) {
+		return findDataCellsFilterByID(ctx, conn, state.ID.ValueString())
+	})
 
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -214,6 +224,7 @@ func (r *resourceDataCellsFilter) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
+	output := outputRaws.(*awstypes.DataCellsFilter)
 	td := tableData{}
 	resp.Diagnostics.Append(fwflex.Flatten(ctx, output, &td)...)
 
@@ -221,7 +232,6 @@ func (r *resourceDataCellsFilter) Create(ctx context.Context, req resource.Creat
 		return
 	}
 
-	// td.VersionID = fwflex.StringToFramework(ctx, output.VersionId)
 	state.TableData = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &td)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
@@ -399,6 +409,7 @@ func findDataCellsFilterByID(ctx context.Context, conn *lakeformation.Client, id
 type resourceDataCellsFilterData struct {
 	ID        types.String                               `tfsdk:"id"`
 	TableData fwtypes.ListNestedObjectValueOf[tableData] `tfsdk:"table_data"`
+	Timeouts  timeouts.Value                             `tfsdk:"timeouts"`
 }
 
 type tableData struct {
