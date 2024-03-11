@@ -47,6 +47,7 @@ func testAccTransitGatewayPeeringAttachment_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					testAccCheckTransitGatewayPeeringAttachmentState(resourceName, &transitGatewayPeeringAttachment),
 				),
 			},
 			{
@@ -173,7 +174,7 @@ func testAccTransitGatewayPeeringAttachment_differentAccount(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "transit_gateway_id", transitGatewayResourceName, "id"),
-					resource.TestCheckResourceAttrSet(resourceName, "state"),
+					testAccCheckTransitGatewayPeeringAttachmentState(resourceName, &transitGatewayPeeringAttachment),
 				),
 			},
 			{
@@ -208,6 +209,12 @@ func testAccCheckTransitGatewayPeeringAttachmentExists(ctx context.Context, n st
 		*v = *output
 
 		return nil
+	}
+}
+
+func testAccCheckTransitGatewayPeeringAttachmentState(resourceName string, v *ec2.TransitGatewayPeeringAttachment) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return resource.TestCheckResourceAttr(resourceName, "state", *v.State)(s)
 	}
 }
 
