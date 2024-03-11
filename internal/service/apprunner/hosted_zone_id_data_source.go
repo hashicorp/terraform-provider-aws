@@ -16,7 +16,7 @@ import (
 
 // See https://docs.aws.amazon.com/general/latest/gr/apprunner.html
 
-var HostedZoneIdPerRegionApprunnerMap = map[string]string{
+var HostedZoneIdPerRegionMap = map[string]string{
 	endpoints.UsEast2RegionID:      "Z0224347AD7KVHMLOX31",
 	endpoints.UsEast1RegionID:      "Z01915732ZBZKC8D32TPT",
 	endpoints.UsWest2RegionID:      "Z02243383FTQ64HJ5772Q",
@@ -76,7 +76,7 @@ func (d *dataSourceHostedZoneID) Read(ctx context.Context, req datasource.ReadRe
 		region = data.Region.ValueString()
 	}
 
-	if zoneId, ok := HostedZoneIdPerRegionApprunnerMap[region]; ok {
+	if zoneId, ok := HostedZoneIdPerRegionMap[region]; ok {
 		data.ID = types.StringValue(zoneId)
 		data.Region = types.StringValue(region)
 	} else {

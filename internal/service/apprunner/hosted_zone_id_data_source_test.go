@@ -31,7 +31,7 @@ func TestAccAppRunnerHostedZoneIDDataSource_basic(t *testing.T) {
 			{
 				Config: testAccHostedZoneIDDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr("data.aws_apprunner_hosted_zone_id.main", "id", apprunner.HostedZoneIdPerRegionApprunnerMap[acctest.Region()]),
+					resource.TestCheckResourceAttr("data.aws_apprunner_hosted_zone_id.main", "id", apprunner.HostedZoneIdPerRegionMap[acctest.Region()]),
 				),
 			},
 			{
