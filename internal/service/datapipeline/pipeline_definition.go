@@ -5,6 +5,7 @@ package datapipeline
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -12,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datapipeline"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -569,11 +569,12 @@ func flattenPipelineDefinitionObjects(apiObjects []*datapipeline.PipelineObject)
 	return tfList
 }
 
-func getValidationError(validationError []*datapipeline.ValidationError) error {
-	var validationErrors error
-	for _, error := range validationError {
-		validationErrors = multierror.Append(validationErrors, fmt.Errorf("id: %s, error: %v", aws.StringValue(error.Id), aws.StringValueSlice(error.Errors)))
+func getValidationError(validationErrors []*datapipeline.ValidationError) error {
+	var errs []error
+
+	for _, err := range validationErrors {
+		errs = append(errs, fmt.Errorf("id: %s, error: %v", aws.StringValue(err.Id), aws.StringValueSlice(err.Errors)))
 	}
 
-	return validationErrors
+	return errors.Join(errs...)
 }
