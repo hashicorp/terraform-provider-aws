@@ -1521,6 +1521,10 @@ resource "aws_cloudformation_stack_set" "test" {
 TEMPLATE
 
   depends_on = [aws_organizations_delegated_administrator.test]
+
+  lifecycle {
+    ignore_changes = [administration_role_arn]
+  }
 }
 `, rName, testAccStackSetTemplateBodyVPC(rName)))
 }
