@@ -526,6 +526,10 @@ func testAccCheckEnablerDestroy(ctx context.Context) resource.TestCheckFunc {
 					)
 				}
 			}
+
+			if err := errors.Join(errs...); err != nil {
+				return err
+			}
 		}
 
 		return nil
