@@ -121,6 +121,8 @@ func (d *dataSourceInput) Read(ctx context.Context, req datasource.ReadRequest, 
 		return
 	}
 
+	data.Tags = fwflex.FlattenFrameworkStringValueMap(ctx, out.Tags)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
