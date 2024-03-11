@@ -84,7 +84,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.53.2
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.3.2
-	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.43.0
+	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.43.1
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.27.1
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.12.1
