@@ -665,13 +665,13 @@ func expandPolicyDetailExclusionRules(ctx context.Context, tfList []resourceExcl
 	apiObject := awstypes.LifecyclePolicyDetailExclusionRules{}
 
 	if !tfObj.AMIs.IsNull() {
-		var tfList []resourceAMIsData
+		var tfList []resourceAMISData
 		diags.Append(tfObj.AMIs.ElementsAs(ctx, &tfList, false)...)
 		if diags.HasError() {
 			return nil, diags
 		}
 
-		Amis, d := expandPolicyDetailExclusionRulesAmis(ctx, tfList)
+		Amis, d := expandPolicyDetailExclusionRulesAMIS(ctx, tfList)
 		diags.Append(d...)
 		if diags.HasError() {
 			return nil, diags
@@ -686,7 +686,7 @@ func expandPolicyDetailExclusionRules(ctx context.Context, tfList []resourceExcl
 	return &apiObject, diags
 }
 
-func expandPolicyDetailExclusionRulesAmis(ctx context.Context, tfList []resourceAMIsData) (*awstypes.LifecyclePolicyDetailExclusionRulesAmis, diag.Diagnostics) {
+func expandPolicyDetailExclusionRulesAMIS(ctx context.Context, tfList []resourceAMISData) (*awstypes.LifecyclePolicyDetailExclusionRulesAmis, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if len(tfList) == 0 {
@@ -708,7 +708,7 @@ func expandPolicyDetailExclusionRulesAmis(ctx context.Context, tfList []resource
 			return nil, diags
 		}
 
-		apiObject.LastLaunched = expandPolicyDetailExclusionRulesAmisLastLaunched(tfList)
+		apiObject.LastLaunched = expandPolicyDetailExclusionRulesAMISLastLaunched(tfList)
 	}
 
 	if !tfObj.Regions.IsNull() {
@@ -726,7 +726,7 @@ func expandPolicyDetailExclusionRulesAmis(ctx context.Context, tfList []resource
 	return &apiObject, diags
 }
 
-func expandPolicyDetailExclusionRulesAmisLastLaunched(tfList []resourceLastLaunchedData) *awstypes.LifecyclePolicyDetailExclusionRulesAmisLastLaunched {
+func expandPolicyDetailExclusionRulesAMISLastLaunched(tfList []resourceLastLaunchedData) *awstypes.LifecyclePolicyDetailExclusionRulesAmisLastLaunched {
 	tfObj := tfList[0]
 
 	apiObject := awstypes.LifecyclePolicyDetailExclusionRulesAmisLastLaunched{}
@@ -938,7 +938,7 @@ func flattenDetailExclusionRules(ctx context.Context, apiObject *awstypes.Lifecy
 
 func flattenExclusionRulesAmis(ctx context.Context, apiObject *awstypes.LifecyclePolicyDetailExclusionRulesAmis) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: resourceAmisAttrTypes}
+	elemType := types.ObjectType{AttrTypes: resourceAMISAttrTypes}
 
 	if apiObject == nil {
 		return types.ListNull(elemType), diags
@@ -949,7 +949,7 @@ func flattenExclusionRulesAmis(ctx context.Context, apiObject *awstypes.Lifecycl
 	}
 
 	if apiObject.LastLaunched != nil {
-		lastLaunched, d := flattenExclusionRulesAmisLastLaunched(ctx, apiObject.LastLaunched)
+		lastLaunched, d := flattenExclusionRulesAMISLastLaunched(ctx, apiObject.LastLaunched)
 		diags.Append(d...)
 
 		obj["last_launched"] = lastLaunched
@@ -967,7 +967,7 @@ func flattenExclusionRulesAmis(ctx context.Context, apiObject *awstypes.Lifecycl
 		obj["tag_map"] = flex.FlattenFrameworkStringValueMap(ctx, apiObject.TagMap)
 	}
 
-	objVal, d := types.ObjectValue(resourceAmisAttrTypes, obj)
+	objVal, d := types.ObjectValue(resourceAMISAttrTypes, obj)
 	diags.Append(d...)
 
 	listVal, d := types.ListValue(elemType, []attr.Value{objVal})
@@ -977,7 +977,7 @@ func flattenExclusionRulesAmis(ctx context.Context, apiObject *awstypes.Lifecycl
 
 }
 
-func flattenExclusionRulesAmisLastLaunched(ctx context.Context, apiObject *awstypes.LifecyclePolicyDetailExclusionRulesAmisLastLaunched) (types.List, diag.Diagnostics) {
+func flattenExclusionRulesAMISLastLaunched(ctx context.Context, apiObject *awstypes.LifecyclePolicyDetailExclusionRulesAmisLastLaunched) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: resourceLastLaunchedAttrTypes}
 
@@ -1112,7 +1112,7 @@ type resourceExclusionRulesData struct {
 	TagMap types.Map  `tfsdk:"tag_map"`
 }
 
-type resourceAMIsData struct {
+type resourceAMISData struct {
 	IsPublic       types.Bool `tfsdk:"is_public"`
 	LastLaunched   types.List `tfsdk:"last_launched"`
 	Regions        types.List `tfsdk:"regions"`
@@ -1150,11 +1150,11 @@ var resourceFilterAttrTypes = map[string]attr.Type{
 }
 
 var resourceExclusionRulesAttrTypes = map[string]attr.Type{
-	"amis":    types.ListType{ElemType: types.ObjectType{AttrTypes: resourceAmisAttrTypes}},
+	"amis":    types.ListType{ElemType: types.ObjectType{AttrTypes: resourceAMISAttrTypes}},
 	"tag_map": types.MapType{ElemType: types.StringType},
 }
 
-var resourceAmisAttrTypes = map[string]attr.Type{
+var resourceAMISAttrTypes = map[string]attr.Type{
 	"is_public":       types.BoolType,
 	"last_launched":   types.ListType{ElemType: types.ObjectType{AttrTypes: resourceLastLaunchedAttrTypes}},
 	"regions":         types.ListType{ElemType: types.StringType},
