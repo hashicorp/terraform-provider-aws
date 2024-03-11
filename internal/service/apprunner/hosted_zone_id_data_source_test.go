@@ -48,6 +48,7 @@ const testAccHostedZoneIDDataSourceConfig_basic = `
 data "aws_apprunner_hosted_zone_id" "main" {}
 `
 
+// lintignore:AWSAT003
 const testAccHostedZoneIDDataSourceConfig_explicitRegion = `
 data "aws_apprunner_hosted_zone_id" "regional" {
   region = "ap-northeast-1"
