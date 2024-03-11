@@ -30,102 +30,7 @@ import (
 
 // @SDKResource("aws_route53domains_registered_domain", name="Registered Domain")
 // @Tags(identifierAttribute="id")
-func ResourceRegisteredDomain() *schema.Resource {
-	contactSchema := &schema.Schema{
-		Type:     schema.TypeList,
-		Optional: true,
-		Computed: true,
-		MaxItems: 1,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"address_line_1": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 255),
-				},
-				"address_line_2": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 255),
-				},
-				"city": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 255),
-				},
-				"contact_type": {
-					Type:             schema.TypeString,
-					Optional:         true,
-					Computed:         true,
-					ValidateDiagFunc: enum.Validate[types.ContactType](),
-				},
-				"country_code": {
-					Type:             schema.TypeString,
-					Optional:         true,
-					Computed:         true,
-					ValidateDiagFunc: enum.Validate[types.CountryCode](),
-				},
-				"email": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 254),
-				},
-				"extra_params": {
-					Type:     schema.TypeMap,
-					Optional: true,
-					Computed: true,
-					Elem:     &schema.Schema{Type: schema.TypeString},
-				},
-				"fax": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 30),
-				},
-				"first_name": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 255),
-				},
-				"last_name": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 255),
-				},
-				"organization_name": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 255),
-				},
-				"phone_number": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 30),
-				},
-				"state": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 255),
-				},
-				"zip_code": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: validation.StringLenBetween(0, 255),
-				},
-			},
-		},
-	}
-
+func resourceRegisteredDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegisteredDomainCreate,
 		ReadWithoutTimeout:   resourceRegisteredDomainRead,
@@ -141,115 +46,214 @@ func ResourceRegisteredDomain() *schema.Resource {
 			Update: schema.DefaultTimeout(30 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"abuse_contact_email": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"abuse_contact_phone": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"admin_contact": contactSchema,
-			"admin_privacy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"auto_renew": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"billing_contact": contactSchema,
-			"billing_privacy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"creation_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"domain_name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"expiration_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name_server": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 6,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"glue_ips": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 2,
-							Elem: &schema.Schema{
+		SchemaFunc: func() map[string]*schema.Schema {
+			contactSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"address_line_1": {
 								Type:         schema.TypeString,
-								ValidateFunc: validation.IsIPAddress,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
+							"address_line_2": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
+							"city": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
+							"contact_type": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.ContactType](),
+							},
+							"country_code": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.CountryCode](),
+							},
+							"email": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 254),
+							},
+							"extra_params": {
+								Type:     schema.TypeMap,
+								Optional: true,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"fax": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 30),
+							},
+							"first_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
+							"last_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
+							"organization_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
+							"phone_number": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 30),
+							},
+							"state": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
+							},
+							"zip_code": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringLenBetween(0, 255),
 							},
 						},
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 255),
-								validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.-]*`), "can contain only alphabetical characters (A-Z or a-z), numeric characters (0-9), underscore (_), the minus sign (-), and the period (.)"),
-							),
+					},
+				}
+			}
+
+			return map[string]*schema.Schema{
+				"abuse_contact_email": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"abuse_contact_phone": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"admin_contact": contactSchema(),
+				"admin_privacy": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"auto_renew": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"billing_contact": contactSchema(),
+				"billing_privacy": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"creation_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"domain_name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"expiration_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name_server": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 6,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"glue_ips": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								MaxItems: 2,
+								Elem: &schema.Schema{
+									Type:         schema.TypeString,
+									ValidateFunc: validation.IsIPAddress,
+								},
+							},
+							"name": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 255),
+									validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z_.-]*`), "can contain only alphabetical characters (A-Z or a-z), numeric characters (0-9), underscore (_), the minus sign (-), and the period (.)"),
+								),
+							},
 						},
 					},
 				},
-			},
-			"registrant_contact": contactSchema,
-			"registrant_privacy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"registrar_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"registrar_url": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"reseller": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"status_list": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"tech_contact":    contactSchema,
-			"tech_privacy": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"transfer_lock": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-			"updated_date": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"whois_server": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+				"registrant_contact": contactSchema(),
+				"registrant_privacy": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"registrar_name": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"registrar_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"reseller": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"status_list": {
+					Type:     schema.TypeList,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"tech_contact":    contactSchema(),
+				"tech_privacy": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"transfer_lock": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+				"updated_date": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"whois_server": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+			}
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
