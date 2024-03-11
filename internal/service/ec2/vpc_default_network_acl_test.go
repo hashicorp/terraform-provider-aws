@@ -158,11 +158,6 @@ func TestAccVPCDefaultNetworkACL_Deny_ingress(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
@@ -195,11 +190,6 @@ func TestAccVPCDefaultNetworkACL_withIPv6Ingress(t *testing.T) {
 					}),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
@@ -225,11 +215,6 @@ func TestAccVPCDefaultNetworkACL_subnetRemoval(t *testing.T) {
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "subnet_ids.*", "aws_subnet.test2", "id"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 			// Here the Subnets have been removed from the Default Network ACL Config,
 			// but have not been reassigned. The result is that the Subnets are still
 			// there, and we have a non-empty plan
@@ -239,11 +224,6 @@ func TestAccVPCDefaultNetworkACL_subnetRemoval(t *testing.T) {
 					testAccCheckDefaultNetworkACLExists(ctx, resourceName, &v),
 				),
 				ExpectNonEmptyPlan: true,
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})

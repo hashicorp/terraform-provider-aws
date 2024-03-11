@@ -272,6 +272,10 @@ func resourceNetworkACLDelete(ctx context.Context, d *schema.ResourceData, meta 
 	// Delete all NACL/Subnet associations, even if they are managed via aws_network_acl_association resources.
 	nacl, err := FindNetworkACLByID(ctx, conn, d.Id())
 
+	if tfresource.NotFound(err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL (%s): %s", d.Id(), err)
 	}
