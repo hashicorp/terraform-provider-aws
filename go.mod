@@ -48,7 +48,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.22.2
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.23.2
-	github.com/aws/aws-sdk-go-v2/service/comprehend v1.31.1
+	github.com/aws/aws-sdk-go-v2/service/comprehend v1.31.2
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.33.1
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.1
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.15.1
