@@ -49,6 +49,7 @@ import (
 	costoptimizationhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	customerprofiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/customerprofiles"
 	dax_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dax"
+	devopsguru_sdkv2 "github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	dynamodb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -546,6 +547,10 @@ func (c *AWSClient) DeployClient(ctx context.Context) *codedeploy_sdkv2.Client {
 
 func (c *AWSClient) DetectiveConn(ctx context.Context) *detective_sdkv1.Detective {
 	return errs.Must(conn[*detective_sdkv1.Detective](ctx, c, names.Detective, make(map[string]any)))
+}
+
+func (c *AWSClient) DevOpsGuruClient(ctx context.Context) *devopsguru_sdkv2.Client {
+	return errs.Must(client[*devopsguru_sdkv2.Client](ctx, c, names.DevOpsGuru, make(map[string]any)))
 }
 
 func (c *AWSClient) DeviceFarmConn(ctx context.Context) *devicefarm_sdkv1.DeviceFarm {
