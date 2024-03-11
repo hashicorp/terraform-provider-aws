@@ -79,7 +79,7 @@ resource "aws_cloudfront_origin_access_control" "this" {
 }
 
 data "aws_cloudfront_origin_access_control" "this" {
-	id = aws_cloudfront_origin_access_control.this.id
+  id = aws_cloudfront_origin_access_control.this.id
 }
 `, rName, description)
 }
@@ -94,7 +94,7 @@ resource "aws_cloudfront_origin_access_control" "this" {
 }
 
 data "aws_cloudfront_origin_access_control" "this" {
-	id = aws_cloudfront_origin_access_control.this.id
+  id = aws_cloudfront_origin_access_control.this.id
 }
 `, rName)
 }
