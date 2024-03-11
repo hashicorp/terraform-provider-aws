@@ -62,6 +62,13 @@ This resource exports the following attributes in addition to the arguments abov
 * `all_rows_wildcard` - (Optional) A wildcard that matches all rows.
 * `filter_expression` - (Optional) A filter expression.
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `2m`)
+
+
 ## Import
 
 In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lake Formation Data Cells Filter using the `example_id_arg`. For example:
