@@ -1,0 +1,15 @@
+```release-note:new-resource
+aws_shield_proactive_engagement
+```
+
+```release-note:bug
+resource/aws_shield_drt_access_log_bucket_association: Change `log_bucket` and `role_arn_association_id` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew)
+```
+
+```release-note:enhancement
+resource/aws_shield_drt_access_log_bucket_association: Support resource import
+```
+
+```release-note:enhancement
+resource/aws_shield_drt_access_role_arn_association: Support resource import
+```

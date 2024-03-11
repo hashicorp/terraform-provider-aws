@@ -231,8 +231,8 @@ If no content is provided through `source`, `content` or `content_base64`, then 
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - ARN of the object.
 * `etag` - ETag generated for the object (an MD5 sum of the object content). For plaintext objects or objects encrypted with an AWS-managed key, the hash is an MD5 digest of the object data. For objects encrypted with a KMS key or objects created by either the Multipart Upload or Part Copy operation, the hash is not an MD5 digest, regardless of the method of encryption. More information on possible values can be found on [Common Response Headers](https://docs.aws.amazon.com/AmazonS3/latest/API/RESTCommonResponseHeaders.html).
-* `id` - `key` of the resource supplied above
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `version_id` - Unique version ID value for the object, if bucket versioning is enabled.
 
@@ -288,4 +288,4 @@ Import using S3 URL syntax:
 % terraform import aws_s3_bucket_object.example s3://some-bucket-name/some/key.txt
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-14589e1ae162949ae3f6416dd42328f66eec724846549bb78e39459ea85cd9c1 -->
+<!-- cache-key: cdktf-0.20.1 input-fea579f14f7dc3c1f3505a997961312e5c087ae48c5e42b8681b5d29cc9c68ed -->

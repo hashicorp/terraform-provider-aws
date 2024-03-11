@@ -36,7 +36,7 @@ resource "aws_guardduty_detector_feature" "eks_runtime_monitoring" {
 This resource supports the following arguments:
 
 * `detector_id` - (Required) Amazon GuardDuty detector ID.
-* `name` - (Required) The name of the detector feature. Valid values: `S3_DATA_EVENTS`, `EKS_AUDIT_LOGS`, `EBS_MALWARE_PROTECTION`, `RDS_LOGIN_EVENTS`, `EKS_RUNTIME_MONITORING`, `LAMBDA_NETWORK_LOGS`.
+* `name` - (Required) The name of the detector feature. Valid values: `S3_DATA_EVENTS`, `EKS_AUDIT_LOGS`, `EBS_MALWARE_PROTECTION`, `RDS_LOGIN_EVENTS`, `EKS_RUNTIME_MONITORING`, `LAMBDA_NETWORK_LOGS`, `RUNTIME_MONITORING`.
 * `status` - (Required) The status of the detector feature. Valid values: `ENABLED`, `DISABLED`.
 * `additional_configuration` - (Optional) Additional feature configuration block. See [below](#additional-configuration).
 
@@ -44,7 +44,7 @@ This resource supports the following arguments:
 
 The `additional_configuration` block supports the following:
 
-* `name` - (Required) The name of the additional configuration. Valid values: `EKS_ADDON_MANAGEMENT`.
+* `name` - (Required) The name of the additional configuration. Valid values: `EKS_ADDON_MANAGEMENT`, `ECS_FARGATE_AGENT_MANAGEMENT`.
 * `status` - (Required) The status of the additional configuration. Valid values: `ENABLED`, `DISABLED`.
 
 ## Attribute Reference

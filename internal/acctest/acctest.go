@@ -112,6 +112,8 @@ var (
 // PreCheck(t) must be called before using this provider instance.
 var Provider *schema.Provider
 
+type ProviderFunc func() *schema.Provider
+
 // testAccProviderConfigure ensures Provider is only configured once
 //
 // The PreCheck(t) function is invoked for every test and this prevents
@@ -1043,14 +1045,20 @@ func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) {
 
 func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
+	PreCheckOrganizationManagementAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
+}
 
-	organization, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx))
+func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
+	t.Helper()
+
+	awsClient := providerF().Meta().(*conns.AWSClient)
+	organization, err := tforganizations.FindOrganization(ctx, awsClient.OrganizationsConn(ctx))
 
 	if err != nil {
 		t.Fatalf("describing AWS Organization: %s", err)
 	}
 
-	callerIdentity, err := tfsts.FindCallerIdentity(ctx, Provider.Meta().(*conns.AWSClient).STSClient(ctx))
+	callerIdentity, err := tfsts.FindCallerIdentity(ctx, awsClient.STSClient(ctx))
 
 	if err != nil {
 		t.Fatalf("getting current identity: %s", err)
@@ -1063,14 +1071,20 @@ func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 
 func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
+	PreCheckOrganizationMemberAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
+}
 
-	organization, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx))
+func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
+	t.Helper()
+
+	awsClient := providerF().Meta().(*conns.AWSClient)
+	organization, err := tforganizations.FindOrganization(ctx, awsClient.OrganizationsConn(ctx))
 
 	if err != nil {
 		t.Fatalf("describing AWS Organization: %s", err)
 	}
 
-	callerIdentity, err := tfsts.FindCallerIdentity(ctx, Provider.Meta().(*conns.AWSClient).STSClient(ctx))
+	callerIdentity, err := tfsts.FindCallerIdentity(ctx, awsClient.STSClient(ctx))
 
 	if err != nil {
 		t.Fatalf("getting current identity: %s", err)
@@ -1084,7 +1098,7 @@ func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
 func PreCheckRegionOptIn(ctx context.Context, t *testing.T, region string) {
 	t.Helper()
 
-	output, err := tfaccount.FindRegionOptInStatus(ctx, Provider.Meta().(*conns.AWSClient).AccountClient(ctx), "", region)
+	output, err := tfaccount.FindRegionOptStatus(ctx, Provider.Meta().(*conns.AWSClient).AccountClient(ctx), "", region)
 
 	if err != nil {
 		t.Fatalf("reading Region (%s) opt-in status: %s", region, err)
@@ -1142,8 +1156,13 @@ func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
 
 func PreCheckIAMServiceLinkedRole(ctx context.Context, t *testing.T, pathPrefix string) {
 	t.Helper()
+	PreCheckIAMServiceLinkedRoleWithProvider(ctx, t, func() *schema.Provider { return Provider }, pathPrefix)
+}
 
-	conn := Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+func PreCheckIAMServiceLinkedRoleWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc, pathPrefix string) {
+	t.Helper()
+
+	conn := providerF().Meta().(*conns.AWSClient).IAMConn(ctx)
 	input := &iam.ListRolesInput{
 		PathPrefix: aws.String(pathPrefix),
 	}
@@ -1424,7 +1443,7 @@ provider %[1]q {
 `, providerName, os.Getenv(envvar.AlternateAccessKeyId), os.Getenv(envvar.AlternateProfile), AlternateRegion(), os.Getenv(envvar.AlternateSecretAccessKey))
 }
 
-func RegionProviderFunc(region string, providers *[]*schema.Provider) func() *schema.Provider {
+func RegionProviderFunc(region string, providers *[]*schema.Provider) ProviderFunc {
 	return func() *schema.Provider {
 		if region == "" {
 			log.Println("[DEBUG] No region given")
@@ -1463,7 +1482,7 @@ func RegionProviderFunc(region string, providers *[]*schema.Provider) func() *sc
 	}
 }
 
-func NamedProviderFunc(name string, providers map[string]*schema.Provider) func() *schema.Provider {
+func NamedProviderFunc(name string, providers map[string]*schema.Provider) ProviderFunc {
 	return func() *schema.Provider {
 		return NamedProvider(name, providers)
 	}

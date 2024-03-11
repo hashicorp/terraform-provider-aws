@@ -99,7 +99,7 @@ func testAccRegisteredDomain_contacts(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.address_line_1", "99 High Street"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.address_line_2", "Flat 1a"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.city", "Little Nowhere"),
-					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.contact_type", "ASSOCIATION"),
+					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.contact_type", "COMPANY"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.country_code", "GB"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.email", "terraform-acctest+aws-route53domains-test1@hashicorp.com"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.fax", "+44.123456788"),
@@ -108,6 +108,20 @@ func testAccRegisteredDomain_contacts(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.organization_name", "Support"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.phone_number", "+44.123456789"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.zip_code", "ST1 1AB"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.address_line_1", "1 Mawson Street"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.address_line_2", "Unit 2"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.city", "Mawson"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.contact_type", "PERSON"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.country_code", "AU"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.email", "terraform-acctest+aws-route53domains-test4@hashicorp.com"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.fax", "+61.412345678"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.first_name", "John"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.last_name", "Cleese"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.organization_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.phone_number", "+61.412345679"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.state", "ACT"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.zip_code", "2606"),
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.address_line_1", "100 Main Street"),
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.city", "New York City"),
@@ -148,6 +162,19 @@ func testAccRegisteredDomain_contacts(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.phone_number", "+1.4155551234"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.state", "CA"),
 					resource.TestCheckResourceAttr(resourceName, "admin_contact.0.zip_code", "94105"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.address_line_1", "101 2nd St #700"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.city", "San Francisco"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.contact_type", "COMPANY"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.country_code", "US"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.email", "terraform-acctest+aws@hashicorp.com"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.fax", "+1.4155551234"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.first_name", "Terraform"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.last_name", "Team"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.organization_name", "HashiCorp"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.phone_number", "+1.4155551234"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.state", "CA"),
+					resource.TestCheckResourceAttr(resourceName, "billing_contact.0.zip_code", "94105"),
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.address_line_1", "101 2nd St #700"),
 					resource.TestCheckResourceAttr(resourceName, "registrant_contact.0.city", "San Francisco"),
@@ -192,17 +219,19 @@ func testAccRegisteredDomain_contactPrivacy(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRegisteredDomainConfig_contactPrivacy(domainName, true, true, true),
+				Config: testAccRegisteredDomainConfig_contactPrivacy(domainName, true, true, true, true),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "admin_privacy", "true"),
+					resource.TestCheckResourceAttr(resourceName, "billing_privacy", "true"),
 					resource.TestCheckResourceAttr(resourceName, "registrant_privacy", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tech_privacy", "true"),
 				),
 			},
 			{
-				Config: testAccRegisteredDomainConfig_contactPrivacy(domainName, false, false, false),
+				Config: testAccRegisteredDomainConfig_contactPrivacy(domainName, false, false, false, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "admin_privacy", "false"),
+					resource.TestCheckResourceAttr(resourceName, "billing_privacy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "registrant_privacy", "false"),
 					resource.TestCheckResourceAttr(resourceName, "tech_privacy", "false"),
 				),
@@ -321,7 +350,7 @@ resource "aws_route53domains_registered_domain" "test" {
     address_line_1    = "99 High Street"
     address_line_2    = "Flat 1a"
     city              = "Little Nowhere"
-    contact_type      = "ASSOCIATION"
+    contact_type      = "COMPANY"
     country_code      = "GB"
     email             = "terraform-acctest+aws-route53domains-test1@hashicorp.com"
     fax               = "+44.123456788"
@@ -330,6 +359,21 @@ resource "aws_route53domains_registered_domain" "test" {
     organization_name = "Support"
     phone_number      = "+44.123456789"
     zip_code          = "ST1 1AB"
+  }
+
+  billing_contact {
+    address_line_1 = "1 Mawson Street"
+    address_line_2 = "Unit 2"
+    city           = "Mawson"
+    contact_type   = "PERSON"
+    country_code   = "AU"
+    email          = "terraform-acctest+aws-route53domains-test4@hashicorp.com"
+    fax            = "+61.412345678"
+    first_name     = "John"
+    last_name      = "Cleese"
+    phone_number   = "+61.412345679"
+    state          = "ACT"
+    zip_code       = "2606"
   }
 
   registrant_contact {
@@ -381,6 +425,21 @@ resource "aws_route53domains_registered_domain" "test" {
     zip_code          = "94105"
   }
 
+  billing_contact {
+    address_line_1    = "101 2nd St #700"
+    city              = "San Francisco"
+    contact_type      = "COMPANY"
+    country_code      = "US"
+    email             = "terraform-acctest+aws@hashicorp.com"
+    fax               = "+1.4155551234"
+    first_name        = "Terraform"
+    last_name         = "Team"
+    organization_name = "HashiCorp"
+    phone_number      = "+1.4155551234"
+    state             = "CA"
+    zip_code          = "94105"
+  }
+
   registrant_contact {
     address_line_1    = "101 2nd St #700"
     city              = "San Francisco"
@@ -414,16 +473,17 @@ resource "aws_route53domains_registered_domain" "test" {
 `, domainName)
 }
 
-func testAccRegisteredDomainConfig_contactPrivacy(domainName string, adminPrivacy, registrantPrivacy, techPrivacy bool) string {
+func testAccRegisteredDomainConfig_contactPrivacy(domainName string, adminPrivacy, billingPrivacy, registrantPrivacy, techPrivacy bool) string {
 	return fmt.Sprintf(`
 resource "aws_route53domains_registered_domain" "test" {
   domain_name = %[1]q
 
   admin_privacy      = %[2]t
-  registrant_privacy = %[3]t
-  tech_privacy       = %[4]t
+  billing_privacy    = %[3]t
+  registrant_privacy = %[4]t
+  tech_privacy       = %[5]t
 }
-`, domainName, adminPrivacy, registrantPrivacy, techPrivacy)
+`, domainName, adminPrivacy, billingPrivacy, registrantPrivacy, techPrivacy)
 }
 
 func testAccRegisteredDomainConfig_nameservers(domainName string) string {

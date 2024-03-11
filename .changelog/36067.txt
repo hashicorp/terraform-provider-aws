@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_opensearch_domain: Add `use_off_peak_window` argument to the `auto_tune_options` configuration block
+```

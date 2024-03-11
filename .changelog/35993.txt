@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_appflow_flow: Fix perpetual diff when `task.task_type` is set to `Map_all`
+```
+
+```release-note:enhancement
+resource/aws_appflow_flow: Allow `task.source_fields` to be a `null` value
+```

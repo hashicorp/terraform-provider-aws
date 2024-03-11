@@ -5,13 +5,13 @@ package cognitoidp
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -126,29 +126,29 @@ func FindCognitoUserPoolClientByName(ctx context.Context, conn *cognitoidentityp
 type cognitoUserPoolClientDescriptionNameFilter func(string) (bool, error)
 
 func listCognitoUserPoolClientDescriptions(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId string, nameFilter cognitoUserPoolClientDescriptionNameFilter) ([]*cognitoidentityprovider.UserPoolClientDescription, error) {
-	var errs *multierror.Error
+	var errs []error
 	var descs []*cognitoidentityprovider.UserPoolClientDescription
 
 	input := &cognitoidentityprovider.ListUserPoolClientsInput{
 		UserPoolId: aws.String(userPoolId),
 	}
+
 	err := conn.ListUserPoolClientsPagesWithContext(ctx, input, func(page *cognitoidentityprovider.ListUserPoolClientsOutput, lastPage bool) bool {
 		for _, client := range page.UserPoolClients {
 			if ok, err := nameFilter(aws.StringValue(client.ClientName)); err != nil {
-				errs = multierror.Append(errs, err)
+				errs = append(errs, err)
 			} else if ok {
 				descs = append(descs, client)
 			}
 		}
 		return !lastPage
 	})
+
 	if err != nil {
-		if e := errs.ErrorOrNil(); e == nil {
-			return descs, err
-		} else {
-			return descs, multierror.Append(errs, err)
-		}
+		errs = append(errs, err)
+		return descs, errors.Join(errs...)
 	}
+
 	return descs, nil
 }
 

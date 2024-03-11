@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -826,6 +827,63 @@ func TestAccCloudFormationStackSet_autoDeploymentDisabled(t *testing.T) {
 	})
 }
 
+// https://github.com/hashicorp/terraform-provider-aws/issues/32536.
+func TestAccCloudFormationStackSet_delegatedAdministrator(t *testing.T) {
+	ctx := acctest.Context(t)
+	providers := make(map[string]*schema.Provider)
+	var stackSet cloudformation.StackSet
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudformation_stack_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckStackSet(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+			acctest.PreCheckOrganizationMemberAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesNamedAlternate(ctx, t, providers),
+		CheckDestroy:             testAccCheckStackSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				// Run a simple configuration to initialize the alternate providers
+				Config: testAccStackSetConfig_delegatedAdministratorInit,
+			},
+			{
+				PreConfig: func() {
+					// Can only run check here because the provider is not available until the previous step.
+					acctest.PreCheckOrganizationManagementAccountWithProvider(ctx, t, acctest.NamedProviderFunc(acctest.ProviderNameAlternate, providers))
+				},
+				Config: testAccStackSetConfig_delegatedAdministrator(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckStackSetExists(ctx, resourceName, &stackSet),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "auto_deployment.0.retain_stacks_on_account_removal", "false"),
+				),
+			},
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateIdFunc: func(s *terraform.State) (string, error) {
+					rs, ok := s.RootModule().Resources[resourceName]
+					if !ok {
+						return "", fmt.Errorf("Not found: %s", resourceName)
+					}
+
+					return fmt.Sprintf("%s,DELEGATED_ADMIN", rs.Primary.ID), nil
+				},
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"call_as",
+					"template_url",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckStackSetExists(ctx context.Context, resourceName string, v *cloudformation.StackSet) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -1418,4 +1476,55 @@ resource "aws_cloudformation_stack_set" "test" {
 TEMPLATE
 }
 `, rName, testAccStackSetTemplateBodyVPC(rName), enabled, retainStacksOnAccountRemoval)
+}
+
+// Initialize all the providers used by dlegated administrator acceptance tests.
+var testAccStackSetConfig_delegatedAdministratorInit = acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), `
+data "aws_caller_identity" "member" {}
+
+data "aws_caller_identity" "management" {
+  provider = awsalternate
+}
+`)
+
+// Primary provider is Organizations member account that is made a delegated administrator.
+// Alternate provider is the Organizations management account.
+var testAccStackSetConfigDelegatedAdministratorConfig_base = acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), `
+data "aws_caller_identity" "member" {}
+
+data "aws_caller_identity" "management" {
+  provider = awsalternate
+}
+
+resource "aws_organizations_delegated_administrator" "test" {
+  provider = awsalternate
+
+  account_id        = data.aws_caller_identity.member.account_id
+  service_principal = "member.org.stacksets.cloudformation.amazonaws.com"
+}
+`)
+
+func testAccStackSetConfig_delegatedAdministrator(rName string) string {
+	return acctest.ConfigCompose(testAccStackSetConfigDelegatedAdministratorConfig_base, fmt.Sprintf(`
+resource "aws_cloudformation_stack_set" "test" {
+  name             = %[1]q
+  permission_model = "SERVICE_MANAGED"
+  call_as          = "DELEGATED_ADMIN"
+
+  auto_deployment {
+    enabled                          = true
+    retain_stacks_on_account_removal = false
+  }
+
+  template_body = <<TEMPLATE
+%[2]s
+TEMPLATE
+
+  depends_on = [aws_organizations_delegated_administrator.test]
+
+  lifecycle {
+    ignore_changes = [administration_role_arn]
+  }
+}
+`, rName, testAccStackSetTemplateBodyVPC(rName)))
 }

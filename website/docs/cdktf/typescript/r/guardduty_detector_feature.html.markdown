@@ -53,7 +53,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `detectorId` - (Required) Amazon GuardDuty detector ID.
-* `name` - (Required) The name of the detector feature. Valid values: `S3_DATA_EVENTS`, `EKS_AUDIT_LOGS`, `EBS_MALWARE_PROTECTION`, `RDS_LOGIN_EVENTS`, `EKS_RUNTIME_MONITORING`, `LAMBDA_NETWORK_LOGS`.
+* `name` - (Required) The name of the detector feature. Valid values: `S3_DATA_EVENTS`, `EKS_AUDIT_LOGS`, `EBS_MALWARE_PROTECTION`, `RDS_LOGIN_EVENTS`, `EKS_RUNTIME_MONITORING`, `LAMBDA_NETWORK_LOGS`, `RUNTIME_MONITORING`.
 * `status` - (Required) The status of the detector feature. Valid values: `ENABLED`, `DISABLED`.
 * `additionalConfiguration` - (Optional) Additional feature configuration block. See [below](#additional-configuration).
 
@@ -61,11 +61,11 @@ This resource supports the following arguments:
 
 The `additionalConfiguration` block supports the following:
 
-* `name` - (Required) The name of the additional configuration. Valid values: `EKS_ADDON_MANAGEMENT`.
+* `name` - (Required) The name of the additional configuration. Valid values: `EKS_ADDON_MANAGEMENT`, `ECS_FARGATE_AGENT_MANAGEMENT`.
 * `status` - (Required) The status of the additional configuration. Valid values: `ENABLED`, `DISABLED`.
 
 ## Attribute Reference
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.20.1 input-730bfa0c7a2b94ed5a34772f00e9b6d3c65956aa82ca10d129920a025e89eb3e -->
+<!-- cache-key: cdktf-0.20.1 input-49bf3ba0850b21a4cccf774bc3e16fd40909a4fb62c6cbec70237dccc2070f5c -->
