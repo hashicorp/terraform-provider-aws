@@ -52,7 +52,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.33.2
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.2
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.15.2
-	github.com/aws/aws-sdk-go-v2/service/controltower v1.13.1
+	github.com/aws/aws-sdk-go-v2/service/controltower v1.13.2
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.1
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.1
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.1
