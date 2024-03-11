@@ -362,18 +362,18 @@ resource "aws_route53domains_registered_domain" "test" {
   }
 
   billing_contact {
-    address_line_1    = "1 Mawson Street"
-    address_line_2    = "Unit 2"
-    city              = "Mawson"
-    contact_type      = "PERSON"
-    country_code      = "AU"
-    email             = "terraform-acctest+aws-route53domains-test4@hashicorp.com"
-    fax               = "+61.412345678"
-    first_name        = "John"
-    last_name         = "Cleese"
-    phone_number      = "+61.412345679"
-    state             = "ACT"
-    zip_code          = "2606"
+    address_line_1 = "1 Mawson Street"
+    address_line_2 = "Unit 2"
+    city           = "Mawson"
+    contact_type   = "PERSON"
+    country_code   = "AU"
+    email          = "terraform-acctest+aws-route53domains-test4@hashicorp.com"
+    fax            = "+61.412345678"
+    first_name     = "John"
+    last_name      = "Cleese"
+    phone_number   = "+61.412345679"
+    state          = "ACT"
+    zip_code       = "2606"
   }
 
   registrant_contact {
