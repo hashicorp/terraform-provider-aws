@@ -138,7 +138,7 @@ func ResourceDashboard() *schema.Resource {
 }
 
 const (
-	ResNameDashboard = "Dashboard"
+	ResNameDashboard             = "Dashboard"
 	DashboardLatestVersion int64 = -1
 )
 

@@ -125,7 +125,7 @@ func TestAccQuickSightDashboard_updateVersionNumber(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var dashboard quicksight.Dashboard
-  var dashboardV1 quicksight.Dashboard
+	var dashboardV1 quicksight.Dashboard
 	resourceName := "aws_quicksight_dashboard.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
