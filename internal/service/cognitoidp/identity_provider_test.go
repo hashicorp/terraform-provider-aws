@@ -23,7 +23,7 @@ func TestAccCognitoIDPIdentityProvider_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var identityProvider cognitoidentityprovider.IdentityProviderType
 	resourceName := "aws_cognito_identity_provider.test"
-	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
@@ -32,7 +32,7 @@ func TestAccCognitoIDPIdentityProvider_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdentityProviderConfig_basic(userPoolName),
+				Config: testAccIdentityProviderConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", "1"),
@@ -52,7 +52,7 @@ func TestAccCognitoIDPIdentityProvider_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccIdentityProviderConfig_basicUpdated(userPoolName),
+				Config: testAccIdentityProviderConfig_basicUpdated(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", "2"),
@@ -85,7 +85,7 @@ func TestAccCognitoIDPIdentityProvider_idpIdentifiers(t *testing.T) {
 	ctx := acctest.Context(t)
 	var identityProvider cognitoidentityprovider.IdentityProviderType
 	resourceName := "aws_cognito_identity_provider.test"
-	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
@@ -94,7 +94,7 @@ func TestAccCognitoIDPIdentityProvider_idpIdentifiers(t *testing.T) {
 		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdentityProviderConfig_identifier(userPoolName, "test"),
+				Config: testAccIdentityProviderConfig_identifier(rName, "test"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", "1"),
@@ -107,7 +107,7 @@ func TestAccCognitoIDPIdentityProvider_idpIdentifiers(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccIdentityProviderConfig_identifier(userPoolName, "test2"),
+				Config: testAccIdentityProviderConfig_identifier(rName, "test2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
 					resource.TestCheckResourceAttr(resourceName, "idp_identifiers.#", "1"),
@@ -175,7 +175,7 @@ func TestAccCognitoIDPIdentityProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var identityProvider cognitoidentityprovider.IdentityProviderType
 	resourceName := "aws_cognito_identity_provider.test"
-	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
@@ -184,7 +184,7 @@ func TestAccCognitoIDPIdentityProvider_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdentityProviderConfig_basic(userPoolName),
+				Config: testAccIdentityProviderConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceIdentityProvider(), resourceName),
@@ -199,7 +199,7 @@ func TestAccCognitoIDPIdentityProvider_Disappears_userPool(t *testing.T) {
 	ctx := acctest.Context(t)
 	var identityProvider cognitoidentityprovider.IdentityProviderType
 	resourceName := "aws_cognito_identity_provider.test"
-	userPoolName := fmt.Sprintf("tf-acc-cognito-user-pool-%s", sdkacctest.RandString(7))
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
@@ -208,7 +208,7 @@ func TestAccCognitoIDPIdentityProvider_Disappears_userPool(t *testing.T) {
 		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccIdentityProviderConfig_basic(userPoolName),
+				Config: testAccIdentityProviderConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcognitoidp.ResourceUserPool(), "aws_cognito_user_pool.test"),
@@ -266,10 +266,10 @@ func testAccCheckIdentityProviderExists(ctx context.Context, n string, v *cognit
 	}
 }
 
-func testAccIdentityProviderConfig_basic(userPoolName string) string {
+func testAccIdentityProviderConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
-  name                     = "%s"
+  name                     = %[1]q
   auto_verified_attributes = ["email"]
 }
 
@@ -290,13 +290,13 @@ resource "aws_cognito_identity_provider" "test" {
     token_url                     = "https://www.googleapis.com/oauth2/v4/token"
   }
 }
-`, userPoolName)
+`, rName)
 }
 
-func testAccIdentityProviderConfig_basicUpdated(userPoolName string) string {
+func testAccIdentityProviderConfig_basicUpdated(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
-  name                     = "%s"
+  name                     = %[1]q
   auto_verified_attributes = ["email"]
 }
 
@@ -322,10 +322,10 @@ resource "aws_cognito_identity_provider" "test" {
     username = "sub"
   }
 }
-`, userPoolName)
+`, rName)
 }
 
-func testAccIdentityProviderConfig_identifier(userPoolName, attribute string) string {
+func testAccIdentityProviderConfig_identifier(rName, attribute string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name                     = %[1]q
@@ -351,7 +351,7 @@ resource "aws_cognito_identity_provider" "test" {
     token_url                     = "https://www.googleapis.com/oauth2/v4/token"
   }
 }
-`, userPoolName, attribute)
+`, rName, attribute)
 }
 
 func testAccIdentityProviderConfig_saml(rName, encryptedResponses string) string {
