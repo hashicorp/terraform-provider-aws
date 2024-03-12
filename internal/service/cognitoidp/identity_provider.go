@@ -201,7 +201,9 @@ func resourceIdentityProviderUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if d.HasChange("provider_details") {
-		params.ProviderDetails = flex.ExpandStringMap(d.Get("provider_details").(map[string]interface{}))
+		providerDetailsForUpdate := flex.ExpandStringMap(d.Get("provider_details").(map[string]interface{}))
+		delete(providerDetailsForUpdate, "ActiveEncryptionCertificate")
+		params.ProviderDetails = providerDetailsForUpdate
 	}
 
 	if d.HasChange("idp_identifiers") {
