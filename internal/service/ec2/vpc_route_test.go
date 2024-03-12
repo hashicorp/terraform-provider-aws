@@ -39,7 +39,7 @@ func TestAccVPCRoute_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteConfig_ipv4InternetGateway(rName, destinationCidr),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, rtResourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
 					testAccCheckRouteExists(ctx, resourceName, &route),
@@ -2205,6 +2205,33 @@ func TestAccVPCRoute_prefixListToEgressOnlyInternetGateway(t *testing.T) {
 	})
 }
 
+func TestAccVPCRoute_duplicate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var route ec2.Route
+	var routeTable ec2.RouteTable
+	resourceName := "aws_route.test1"
+	rtResourceName := "aws_route_table.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	destinationCidr := "10.3.0.0/16"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCRouteConfig_ipv4InternetGatewayDuplicate(rName, destinationCidr),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRouteTableExists(ctx, rtResourceName, &routeTable),
+					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
+					testAccCheckRouteExists(ctx, resourceName, &route),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckRouteExists(ctx context.Context, n string, v *ec2.Route) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -2318,6 +2345,46 @@ resource "aws_route_table" "test" {
 
 resource "aws_route" "test" {
   route_table_id         = aws_route_table.test.id
+  destination_cidr_block = %[2]q
+  gateway_id             = aws_internet_gateway.test.id
+}
+`, rName, destinationCidr)
+}
+
+func testAccVPCRouteConfig_ipv4InternetGatewayDuplicate(rName, destinationCidr string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test1" {
+  route_table_id         = aws_route_table.test.id
+  destination_cidr_block = %[2]q
+  gateway_id             = aws_internet_gateway.test.id
+}
+
+resource "aws_route" "test2" {
+  route_table_id         = aws_route.test1.route_table_id
   destination_cidr_block = %[2]q
   gateway_id             = aws_internet_gateway.test.id
 }
