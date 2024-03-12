@@ -46,7 +46,7 @@ Typically these types of drift detection issues can be discovered by implementin
 
 Perhaps the most distinct difference between [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework) and [Terraform Plugin SDKv2](https://developer.hashicorp.com/terraform/plugin/sdkv2) is data handling.
 With Terraform Plugin Framework state data is strongly typed, while Plugin SDK V2 based resources represent state data generically (each attribute is an `interface{}`) and types must be asserted at runtime.
-Strongly typed data eliminates an entire class of runtime bugs and crashes, but does require compile type type declarations and a slightly different approach to reading and writing data.
+Strongly typed data eliminates an entire class of runtime bugs and crashes, but does require compile time type declarations and a slightly different approach to reading and writing data.
 The sections below contain examples for both plugin libraries, but Terraform Plugin Framework should be preferred whenever possible.
 
 ## Data Conversions in the Terraform AWS Provider

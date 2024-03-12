@@ -15,6 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/account v1.16.1
 	github.com/aws/aws-sdk-go-v2/service/acm v1.25.1
 	github.com/aws/aws-sdk-go-v2/service/amp v1.25.1
+	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.20.1
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.28.1
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.7.1
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.41.1
