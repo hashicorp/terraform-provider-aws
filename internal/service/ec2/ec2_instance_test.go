@@ -3284,14 +3284,14 @@ func TestAccEC2Instance_IPv6AddressCount(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstance_IPv6AddressCount(rName, originalCount),
+				Config: testAccInstance_ipv6AddressCount(rName, originalCount),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &original),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", fmt.Sprint(originalCount)),
 				),
 			},
 			{
-				Config: testAccInstance_IPv6AddressCount(rName, updatedCount),
+				Config: testAccInstance_ipv6AddressCount(rName, updatedCount),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
@@ -3299,7 +3299,7 @@ func TestAccEC2Instance_IPv6AddressCount(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccInstance_IPv6AddressCount(rName, shrunkenCount),
+				Config: testAccInstance_ipv6AddressCount(rName, shrunkenCount),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &updated),
 					testAccCheckInstanceNotRecreated(&original, &updated),
@@ -6373,7 +6373,7 @@ func testAccInstanceConfig_rootBlockDevice(rName, size, delete, volumeType strin
 	return testAccInstanceConfig_rootBlockDeviceIOPS(rName, size, delete, volumeType, "")
 }
 
-func testAccInstance_IPv6AddressCount(rName string, ipv6_address_count int) string {
+func testAccInstance_ipv6AddressCount(rName string, ipv6AddressCount int) string {
 	return acctest.ConfigCompose(
 		testAccInstanceAMIWithEBSRootVolume,
 		fmt.Sprintf(`
@@ -6387,7 +6387,7 @@ resource "aws_instance" "test" {
     Name = %[1]q
   }
 }
-`, rName, ipv6_address_count))
+`, rName, ipv6AddressCount))
 }
 
 func testAccInstanceConfig_rootBlockDeviceIOPS(rName, size, delete, volumeType, iops string) string {
