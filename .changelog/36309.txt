@@ -1,0 +1,3 @@
+```release-note:bug
+resource/ecs_service : This fixes a bug introduced in [v5.37.0] causing an exception if service connect timeout block is empty or the aws_pca_authority_arn is set to null.
+```
