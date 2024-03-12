@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub/types"
-
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -150,7 +149,6 @@ func (r *resourceEnrollmentStatus) Update(ctx context.Context, req resource.Upda
 	// TIP: -- 3. Populate a modify input structure and check for changes
 	if !plan.Status.Equal(state.Status) ||
 		!plan.IncludeMemberAccounts.Equal(state.IncludeMemberAccounts) {
-
 		//Input for UpdateEnrollmentStatus
 		ues_in := &costoptimizationhub.UpdateEnrollmentStatusInput{
 			//Status is a mandatory parameter. Hence has to be passed in.

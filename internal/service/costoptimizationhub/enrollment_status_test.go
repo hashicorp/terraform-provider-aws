@@ -16,9 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfcostoptimizationhub "github.com/hashicorp/terraform-provider-aws/internal/service/costoptimizationhub"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCostOptimizationHubEnrollmentStatus_basic(t *testing.T) {
@@ -52,7 +51,7 @@ func TestAccCostOptimizationHubEnrollmentStatus_basic(t *testing.T) {
 	})
 }
 
-func TestAccEnrollmentStatus_disappears(t *testing.T) {
+func TestAccCostOptimizationHubEnrollmentStatus_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if os.Getenv("COSTOPTIMIZATIONHUB_UNENROLL_ACCOUNT_ON_DESTROY") == "" {
 		t.Skip("Environment variable COSTOPTIMIZATIONHUB_UNENROLL_ACCOUNT_ON_DESTROY is not set")
@@ -264,7 +263,7 @@ resource "aws_costoptimizationhub_enrollment_status" "test" {
 func testAccEnrollmentStatusConfig_IncludeMemberAccounts_True() string {
 	return `
 resource "aws_costoptimizationhub_enrollment_status" "test" {
-  status = "Active"
+  status                  = "Active"
   include_member_accounts = true
 }
 `
@@ -273,7 +272,7 @@ resource "aws_costoptimizationhub_enrollment_status" "test" {
 func testAccEnrollmentStatusConfig_IncludeMemberAccounts_False() string {
 	return `
 resource "aws_costoptimizationhub_enrollment_status" "test" {
-  status = "Active"
+  status                  = "Active"
   include_member_accounts = false
 }
 `
@@ -290,7 +289,7 @@ resource "aws_costoptimizationhub_enrollment_status" "test" {
 func testAccEnrollmentStatusConfig_unenrollOnDestroy() string {
 	return `
 resource "aws_costoptimizationhub_enrollment_status" "test" {
-  status = "Active"
+  status              = "Active"
   unenroll_on_destroy = true
 }
 `
