@@ -1,4 +1,7 @@
 ```release-note:enhancement
-resource/aws_ec2_transit_gateway_peering_attachment: Add attachement status to attributes as `status`
-data-source/aws_ec2_transit_gateway_peering_attachment: Add attachement status to attributes as `status`
+resource/aws_ec2_transit_gateway_peering_attachment: Add `state` attribute
+```
+
+```release-note:enhancement
+data-source/aws_ec2_transit_gateway_peering_attachment: Add `state` attribute
 ```
