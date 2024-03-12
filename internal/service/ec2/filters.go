@@ -284,7 +284,7 @@ func newCustomFilterListFramework(ctx context.Context, filterSet types.Set) []*e
 	return filters
 }
 
-func BuildCustomFiltersV2(ctx context.Context, filterSet types.Set) []awstypes.Filter {
+func newCustomFilterListFrameworkV2(ctx context.Context, filterSet types.Set) []awstypes.Filter {
 	if filterSet.IsNull() || filterSet.IsUnknown() {
 		return nil
 	}

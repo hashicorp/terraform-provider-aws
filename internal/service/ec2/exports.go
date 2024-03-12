@@ -4,7 +4,8 @@
 package ec2
 
 var (
-	CustomFiltersBlock = customFiltersBlock
-	FindVPCByIDV2      = findVPCByIDV2
-	NewFilter          = newFilter
+	CustomFiltersBlock             = customFiltersBlock
+	FindVPCByIDV2                  = findVPCByIDV2
+	NewCustomFilterListFrameworkV2 = newCustomFilterListFrameworkV2
+	NewFilter                      = newFilter
 )
