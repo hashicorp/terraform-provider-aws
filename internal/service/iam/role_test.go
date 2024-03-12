@@ -63,7 +63,7 @@ func TestAccIAMRole_MigrateFromPluginSDK_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
 		CheckDestroy: testAccCheckRoleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -742,7 +742,7 @@ func TestAccIAMRole_MigrateFromPluginSDK_InlinePolicy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
 		CheckDestroy: testAccCheckRoleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -782,7 +782,7 @@ func TestAccIAMRole_InlinePolicy_badJSON(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -912,7 +912,7 @@ func TestAccIAMRole_ManagedPolicy_badARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoleDestroy(ctx),
 		Steps: []resource.TestStep{
