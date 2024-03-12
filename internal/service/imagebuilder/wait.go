@@ -23,7 +23,7 @@ func waitImageStatusAvailable(ctx context.Context, conn *imagebuilder.Client, im
 			string(awstypes.ImageStatusPending),
 			string(awstypes.ImageStatusTesting),
 		},
-		Target:  []string{string(awstypes.ImageStatusAvailable)},
+		Target:  enum.Slice({string(awstypes.ImageStatusAvailable)}),
 		Refresh: statusImage(ctx, conn, imageBuildVersionArn),
 		Timeout: timeout,
 	}
