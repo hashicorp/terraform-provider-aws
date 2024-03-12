@@ -10,7 +10,7 @@ description: |-
 
 Terraform resource for managing an AWS Security Lake Subscriber Notification.
 
-### Basic Usage
+## Example Usage
 
 ```terraform
 resource "aws_securitylake_subscriber_notification" "test" {
@@ -43,7 +43,7 @@ HTTPS Notification Configuration support the following:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `subscriber_endpoint` - The subscriber endpoint to which exception messages are posted.
 
