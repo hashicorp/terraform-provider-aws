@@ -140,7 +140,7 @@ func customFiltersSchema() *schema.Schema {
 	}
 }
 
-func CustomRequiredFiltersSchema() *schema.Schema {
+func customRequiredFiltersSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Required: true,
