@@ -16,11 +16,10 @@ Terraform resource for managing an AWS Security Lake Subscriber Notification.
 
 ```terraform
 resource "aws_securitylake_subscriber_notification" "test" {
-	subscriber_id = aws_securitylake_subscriber.test.id
-	
+  subscriber_id = aws_securitylake_subscriber.test.id
   configuration {
-		sqs_notification_configuration {}
-	}
+    sqs_notification_configuration {}
+  }
 }
 ```
 
@@ -44,7 +43,7 @@ HTTPS Notification Configuration support the following:
 * `authorization_api_key_value` - (Optional) The key value for the notification subscription.
 * `http_method` - (Optional) The HTTPS method used for the notification subscription.
 
-## Attributes Reference
+## Attribute Reference
 
 In addition to all arguments above, the following attributes are exported:
 
