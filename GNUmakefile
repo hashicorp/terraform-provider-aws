@@ -156,7 +156,7 @@ fmt: ## Fix Go source formatting
 	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
 # Currently required by tf-deploy compile
-fmtcheck: prereq-go ## Verify Go source is formatted
+fmtcheck: ## Verify Go source is formatted
 	@sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
 
 fumpt: ## Run gofumpt
@@ -459,6 +459,10 @@ yamllint: ## Lint YAML files (via yamllint)
 # Please keep targets in alphabetical order
 .PHONY: \
 	build \
+	clean \
+	cleango \
+	cleantidy \
+	copyright \
 	depscheck \
 	docs-lint \
 	docs-lint-fix \
@@ -466,22 +470,26 @@ yamllint: ## Lint YAML files (via yamllint)
 	fmt \
 	fmtcheck \
 	fumpt \
-	help \
 	gen \
 	gencheck \
 	generate-changelog \
 	gh-workflows-lint \
 	golangci-lint \
+	help \
 	importlint \
+	install \
 	lint \
 	lint-fix \
+	prereq-go \
 	providerlint \
 	sane \
 	sanity \
 	semall \
 	semgrep \
+	semgrep-validate \
 	skaff \
 	sweep \
+	sweeper \
 	t \
 	test \
 	test-compile \
@@ -492,8 +500,8 @@ yamllint: ## Lint YAML files (via yamllint)
 	tfsdk2fw \
 	tools \
 	ts \
+	website-lint \
 	website-link-check \
 	website-link-check-ghrc \
-	website-lint \
 	website-lint-fix \
 	yamllint
