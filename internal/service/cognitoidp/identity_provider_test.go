@@ -118,6 +118,59 @@ func TestAccCognitoIDPIdentityProvider_idpIdentifiers(t *testing.T) {
 	})
 }
 
+func TestAccCognitoIDPIdentityProvider_saml(t *testing.T) {
+	ctx := acctest.Context(t)
+	var identityProvider cognitoidentityprovider.IdentityProviderType
+	resourceName := "aws_cognito_identity_provider.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIdentityProviderDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIdentityProviderConfig_saml(rName, "false"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
+					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.email", "email"),
+					resource.TestCheckNoResourceAttr(resourceName, "idp_identifiers.#"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.%", "4"),
+					resource.TestCheckResourceAttrSet(resourceName, "provider_details.ActiveEncryptionCertificate"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.EncryptedResponses", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "provider_details.MetadataFile"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.SSORedirectBindingURI", "https://terraform-dev-ed.my.salesforce.com/idp/endpoint/HttpRedirect"),
+					resource.TestCheckResourceAttr(resourceName, "provider_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "provider_type", "SAML"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccIdentityProviderConfig_saml(rName, "true"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIdentityProviderExists(ctx, resourceName, &identityProvider),
+					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "attribute_mapping.email", "email"),
+					resource.TestCheckNoResourceAttr(resourceName, "idp_identifiers.#"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.%", "4"),
+					resource.TestCheckResourceAttrSet(resourceName, "provider_details.ActiveEncryptionCertificate"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.EncryptedResponses", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "provider_details.MetadataFile"),
+					resource.TestCheckResourceAttr(resourceName, "provider_details.SSORedirectBindingURI", "https://terraform-dev-ed.my.salesforce.com/idp/endpoint/HttpRedirect"),
+					resource.TestCheckResourceAttr(resourceName, "provider_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "provider_type", "SAML"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccCognitoIDPIdentityProvider_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var identityProvider cognitoidentityprovider.IdentityProviderType
@@ -299,4 +352,33 @@ resource "aws_cognito_identity_provider" "test" {
   }
 }
 `, userPoolName, attribute)
+}
+
+func testAccIdentityProviderConfig_saml(rName, encryptedResponses string) string {
+	return fmt.Sprintf(`
+resource "aws_cognito_user_pool" "test" {
+  name                     = %[1]q
+  auto_verified_attributes = ["email"]
+}
+
+resource "aws_cognito_identity_provider" "test" {
+  user_pool_id  = aws_cognito_user_pool.test.id
+  provider_name = %[1]q
+  provider_type = "SAML"
+
+  provider_details = {
+    EncryptedResponses    = %[2]q
+    MetadataFile          = file("./test-fixtures/saml-metadata.xml")
+    SSORedirectBindingURI = "https://terraform-dev-ed.my.salesforce.com/idp/endpoint/HttpRedirect"
+  }
+
+  attribute_mapping = {
+    email = "email"
+  }
+
+  lifecycle {
+    ignore_changes = [provider_details["ActiveEncryptionCertificate"]]
+  }
+}
+`, rName, encryptedResponses)
 }

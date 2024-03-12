@@ -175,9 +175,9 @@ func resourceIdentityProviderUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if d.HasChange("provider_details") {
-		providerDetailsForUpdate := flex.ExpandStringMap(d.Get("provider_details").(map[string]interface{}))
-		delete(providerDetailsForUpdate, "ActiveEncryptionCertificate")
-		input.ProviderDetails = providerDetailsForUpdate
+		v := flex.ExpandStringMap(d.Get("provider_details").(map[string]interface{}))
+		delete(v, "ActiveEncryptionCertificate")
+		input.ProviderDetails = v
 	}
 
 	_, err = conn.UpdateIdentityProviderWithContext(ctx, input)
