@@ -1641,7 +1641,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				return sdkdiag.AppendErrorf(diags, "IPv6 address count (%d) on the instance does not match state's count (%d), we're in a race with something else", len(primaryInterface.Ipv6Addresses), os)
 			}
 
-			toRemove := make([]*string, ns)
+			toRemove := make([]*string, 0)
 			for _, addr := range primaryInterface.Ipv6Addresses[ns:] { // Can I assume this is strongly ordered?
 				toRemove = append(toRemove, addr.Ipv6Address)
 			}
