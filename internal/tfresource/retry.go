@@ -57,6 +57,41 @@ func RetryWhen(ctx context.Context, timeout time.Duration, f func() (interface{}
 	return output, nil
 }
 
+// RetryGWhen is the generic version of RetryWhen which obviates the need for a type
+// assertion after the call. It retries the function `f` when the error it returns
+// satisfies `retryable`. `f` is retried until `timeout` expires.
+func RetryGWhen[T any](ctx context.Context, timeout time.Duration, f func() (*T, error), retryable Retryable) (*T, error) {
+	var output *T
+
+	err := Retry(ctx, timeout, func() *retry.RetryError {
+		var err error
+		var again bool
+
+		output, err = f()
+		again, err = retryable(err)
+
+		if again {
+			return retry.RetryableError(err)
+		}
+
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+
+		return nil
+	})
+
+	if TimedOut(err) {
+		output, err = f()
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
 // RetryWhenAWSErrCodeEquals retries the specified function when it returns one of the specified AWS error codes.
 func RetryWhenAWSErrCodeEquals(ctx context.Context, timeout time.Duration, f func() (interface{}, error), codes ...string) (interface{}, error) { // nosemgrep:ci.aws-in-func-name
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
@@ -84,6 +119,32 @@ func RetryWhenAWSErrMessageContains(ctx context.Context, timeout time.Duration, 
 	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
 		if tfawserr.ErrMessageContains(err, code, message) || tfawserr_sdkv2.ErrMessageContains(err, code, message) {
 			return true, err
+		}
+
+		return false, err
+	})
+}
+
+// RetryWhenMessageContains retries the specified function when it returns an error containing any of the specified messages.
+func RetryWhenMessageContains(ctx context.Context, timeout time.Duration, f func() (interface{}, error), codes []string, messages []string) (interface{}, error) {
+	return RetryWhen(ctx, timeout, f, func(err error) (bool, error) {
+		for i, message := range messages {
+			if tfawserr.ErrMessageContains(err, codes[i], message) || tfawserr_sdkv2.ErrMessageContains(err, codes[i], message) {
+				return true, err
+			}
+		}
+
+		return false, err
+	})
+}
+
+// RetryGWhenMessageContains retries the specified function when it returns an error containing any of the specified messages.
+func RetryGWhenMessageContains[T any](ctx context.Context, timeout time.Duration, f func() (*T, error), codes []string, messages []string) (*T, error) {
+	return RetryGWhen(ctx, timeout, f, func(err error) (bool, error) {
+		for i, message := range messages {
+			if tfawserr.ErrMessageContains(err, codes[i], message) || tfawserr_sdkv2.ErrMessageContains(err, codes[i], message) {
+				return true, err
+			}
 		}
 
 		return false, err
