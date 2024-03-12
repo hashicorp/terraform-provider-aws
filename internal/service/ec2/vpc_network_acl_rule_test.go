@@ -338,6 +338,24 @@ func TestAccVPCNetworkACLRule_tcpProtocol(t *testing.T) {
 	})
 }
 
+func TestAccVPCNetworkACLRule_duplicate(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNetworkACLRuleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccVPCNetworkACLRuleConfig_duplicate(rName),
+				ExpectError: regexache.MustCompile(`NetworkAclEntryAlreadyExists: EC2 Network ACL .* already exists`),
+			},
+		},
+	})
+}
+
 func testAccCheckNetworkACLRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
@@ -737,6 +755,48 @@ resource "aws_network_acl" "test" {
     Name = %[1]q
   }
 }`, rName)
+}
+
+func testAccVPCNetworkACLRuleConfig_duplicate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.3.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_acl" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_network_acl_rule" "test1" {
+  network_acl_id = aws_network_acl.test.id
+  rule_number    = 200
+  egress         = false
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 22
+  to_port        = 22
+}
+
+resource "aws_network_acl_rule" "test2" {
+  network_acl_id = aws_network_acl_rule.test1.network_acl_id
+  rule_number    = 200
+  egress         = false
+  protocol       = "tcp"
+  rule_action    = "allow"
+  cidr_block     = "0.0.0.0/0"
+  from_port      = 22
+  to_port        = 22
+}
+`, rName)
 }
 
 func testAccNetworkACLRuleImportStateIdFunc(resourceName, resourceProtocol string) resource.ImportStateIdFunc {

@@ -442,7 +442,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceDefaultRouteTable,
+			Factory:  resourceDefaultRouteTable,
 			TypeName: "aws_default_route_table",
 			Name:     "Route Table",
 			Tags: &types.ServicePackageResourceTags{
@@ -872,8 +872,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_network_acl_association",
 		},
 		{
-			Factory:  ResourceNetworkACLRule,
+			Factory:  resourceNetworkACLRule,
 			TypeName: "aws_network_acl_rule",
+			Name:     "Network ACL Rule",
 		},
 		{
 			Factory:  ResourceNetworkInterface,
@@ -900,11 +901,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRoute,
+			Factory:  resourceRoute,
 			TypeName: "aws_route",
+			Name:     "Route",
 		},
 		{
-			Factory:  ResourceRouteTable,
+			Factory:  resourceRouteTable,
 			TypeName: "aws_route_table",
 			Name:     "Route Table",
 			Tags: &types.ServicePackageResourceTags{

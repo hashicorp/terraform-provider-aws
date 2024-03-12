@@ -22,7 +22,7 @@ import (
 
 // @SDKResource("aws_default_route_table", name="Route Table")
 // @Tags(identifierAttribute="id")
-func ResourceDefaultRouteTable() *schema.Resource {
+func resourceDefaultRouteTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultRouteTableCreate,
 		ReadWithoutTimeout:   resourceDefaultRouteTableRead,
