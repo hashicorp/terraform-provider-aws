@@ -14,7 +14,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acm"
 	"github.com/aws/aws-sdk-go-v2/service/acm/types"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -87,13 +86,13 @@ func resourceCertificateValidationCreate(ctx context.Context, d *schema.Resource
 		}
 
 		if len(fqdns) > 0 {
-			var errs *multierror.Error
+			var errs []error
 
 			for fqdn, domainValidation := range fqdns {
-				errs = multierror.Append(errs, fmt.Errorf("missing %s DNS validation record: %s", aws.ToString(domainValidation.DomainName), fqdn))
+				errs = append(errs, fmt.Errorf("missing %s DNS validation record: %s", aws.ToString(domainValidation.DomainName), fqdn))
 			}
 
-			return sdkdiag.AppendFromErr(diags, errs)
+			return sdkdiag.AppendFromErr(diags, errors.Join(errs...))
 		}
 	}
 

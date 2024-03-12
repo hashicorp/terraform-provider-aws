@@ -76,6 +76,7 @@ import (
 	kendra_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kendra"
 	keyspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/keyspaces"
 	kinesis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/kinesis"
+	lakeformation_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lakeformation"
 	lambda_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lambda"
 	launchwizard_sdkv2 "github.com/aws/aws-sdk-go-v2/service/launchwizard"
 	lexmodelsv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
@@ -801,6 +802,10 @@ func (c *AWSClient) KinesisVideoConn(ctx context.Context) *kinesisvideo_sdkv1.Ki
 
 func (c *AWSClient) LakeFormationConn(ctx context.Context) *lakeformation_sdkv1.LakeFormation {
 	return errs.Must(conn[*lakeformation_sdkv1.LakeFormation](ctx, c, names.LakeFormation, make(map[string]any)))
+}
+
+func (c *AWSClient) LakeFormationClient(ctx context.Context) *lakeformation_sdkv2.Client {
+	return errs.Must(client[*lakeformation_sdkv2.Client](ctx, c, names.LakeFormation, make(map[string]any)))
 }
 
 func (c *AWSClient) LambdaConn(ctx context.Context) *lambda_sdkv1.Lambda {

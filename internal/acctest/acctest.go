@@ -1156,8 +1156,13 @@ func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
 
 func PreCheckIAMServiceLinkedRole(ctx context.Context, t *testing.T, pathPrefix string) {
 	t.Helper()
+	PreCheckIAMServiceLinkedRoleWithProvider(ctx, t, func() *schema.Provider { return Provider }, pathPrefix)
+}
 
-	conn := Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+func PreCheckIAMServiceLinkedRoleWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc, pathPrefix string) {
+	t.Helper()
+
+	conn := providerF().Meta().(*conns.AWSClient).IAMConn(ctx)
 	input := &iam.ListRolesInput{
 		PathPrefix: aws.String(pathPrefix),
 	}

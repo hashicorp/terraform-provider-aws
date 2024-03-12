@@ -8,6 +8,7 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -16,7 +17,6 @@ import (
 	"regexp"
 	"strings"
 
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
@@ -239,7 +239,7 @@ func checkDocDir(dir string, prefixes []DocPrefix) error {
 		log.Fatalf("reading directory (%s): %s", dir, err)
 	}
 
-	var errs error
+	var errs []error
 	for _, fh := range fs {
 		if fh.IsDir() {
 			continue
@@ -252,11 +252,11 @@ func checkDocDir(dir string, prefixes []DocPrefix) error {
 		allDocs++
 
 		if err := checkDocFile(dir, fh.Name(), prefixes); err != nil {
-			errs = multierror.Append(errs, err)
+			errs = append(errs, err)
 		}
 	}
 
-	return errs
+	return errors.Join(errs...)
 }
 
 func checkDocFile(dir, name string, prefixes []DocPrefix) error {
