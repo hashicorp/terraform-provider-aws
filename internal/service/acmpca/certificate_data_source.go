@@ -7,8 +7,8 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/acmpca"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -46,7 +46,7 @@ func DataSourceCertificate() *schema.Resource {
 
 func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
+	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 	certificateARN := d.Get("arn").(string)
 
 	getCertificateInput := &acmpca.GetCertificateInput{
@@ -56,7 +56,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 
 	log.Printf("[DEBUG] Reading ACM PCA Certificate: %s", getCertificateInput)
 
-	certificateOutput, err := conn.GetCertificateWithContext(ctx, getCertificateInput)
+	certificateOutput, err := conn.GetCertificate(ctx, getCertificateInput)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate (%s): %s", certificateARN, err)
 	}

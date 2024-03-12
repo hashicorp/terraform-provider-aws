@@ -16,10 +16,10 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/acmpca"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -27,9 +27,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"golang.org/x/crypto/cryptobyte"
 	cryptobyte_asn1 "golang.org/x/crypto/cryptobyte/asn1"
 )
@@ -82,10 +85,10 @@ func ResourceCertificate() *schema.Resource {
 				ForceNew: true,
 			},
 			"signing_algorithm": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(acmpca.SigningAlgorithm_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.SigningAlgorithm](),
 			},
 			"validity": {
 				Type:     schema.TypeList,
@@ -96,10 +99,10 @@ func ResourceCertificate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(acmpca.ValidityPeriodType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ValidityPeriodType](),
 						},
 						"value": {
 							Type:         schema.TypeString,
@@ -133,14 +136,14 @@ func ResourceCertificate() *schema.Resource {
 
 func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
+	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	certificateAuthorityARN := d.Get("certificate_authority_arn").(string)
 	input := &acmpca.IssueCertificateInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 		Csr:                     []byte(d.Get("certificate_signing_request").(string)),
 		IdempotencyToken:        aws.String(id.UniqueId()),
-		SigningAlgorithm:        aws.String(d.Get("signing_algorithm").(string)),
+		SigningAlgorithm:        awstypes.SigningAlgorithm(d.Get("signing_algorithm").(string)),
 	}
 	validity, err := expandValidity(d.Get("validity").([]interface{}))
 	if err != nil {
@@ -153,7 +156,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.Get("api_passthrough").(string); ok && v != "" {
-		ap := &acmpca.ApiPassthrough{}
+		ap := &awstypes.ApiPassthrough{}
 		if err := json.Unmarshal([]byte(v), ap); err != nil {
 			return sdkdiag.AppendErrorf(diags, "decoding api_passthrough: %s", err)
 		}
@@ -163,8 +166,8 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	var output *acmpca.IssueCertificateOutput
 	err = retry.RetryContext(ctx, certificateAuthorityActiveTimeout, func() *retry.RetryError {
 		var err error
-		output, err = conn.IssueCertificateWithContext(ctx, input)
-		if tfawserr.ErrMessageContains(err, acmpca.ErrCodeInvalidStateException, "The certificate authority is not in a valid state for issuing certificates") {
+		output, err = conn.IssueCertificate(ctx, input)
+		if errs.IsAErrorMessageContains[*awstypes.InvalidStateException](err, "The certificate authority is not in a valid state for issuing certificates") {
 			return retry.RetryableError(err)
 		}
 		if err != nil {
@@ -173,21 +176,24 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		output, err = conn.IssueCertificateWithContext(ctx, input)
+		output, err = conn.IssueCertificate(ctx, input)
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "issuing ACM PCA Certificate with Certificate Authority (%s): %s", certificateAuthorityARN, err)
 	}
 
-	d.SetId(aws.StringValue(output.CertificateArn))
+	d.SetId(aws.ToString(output.CertificateArn))
 
-	getCertificateInput := &acmpca.GetCertificateInput{
-		CertificateArn:          output.CertificateArn,
-		CertificateAuthorityArn: aws.String(d.Get("certificate_authority_arn").(string)),
+	// Wait for certificate status to become ISSUED.
+	waiter := acmpca.NewCertificateIssuedWaiter(conn)
+	params := &acmpca.GetCertificateInput{
+		CertificateAuthorityArn: output.CertificateArn,
+		CertificateArn:          aws.String(d.Get("certificate_authority_arn").(string)),
 	}
 
-	err = conn.WaitUntilCertificateIssuedWithContext(ctx, getCertificateInput)
+	err = waiter.Wait(ctx, params, time.Duration(5*time.Minute))
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ACM PCA Certificate Authority (%s) to issue Certificate (%s), error: %s", certificateAuthorityARN, d.Id(), err)
 	}
@@ -197,7 +203,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
+	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	getCertificateInput := &acmpca.GetCertificateInput{
 		CertificateArn:          aws.String(d.Id()),
@@ -206,9 +212,9 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	log.Printf("[DEBUG] Reading ACM PCA Certificate: %s", getCertificateInput)
 
-	certificateOutput, err := conn.GetCertificateWithContext(ctx, getCertificateInput)
+	certificateOutput, err := conn.GetCertificate(ctx, getCertificateInput)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] ACM PCA Certificate (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -231,7 +237,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceCertificateRevoke(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
+	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	block, _ := pem.Decode([]byte(d.Get("certificate").(string)))
 	if block == nil {
@@ -250,14 +256,14 @@ func resourceCertificateRevoke(ctx context.Context, d *schema.ResourceData, meta
 	input := &acmpca.RevokeCertificateInput{
 		CertificateAuthorityArn: aws.String(d.Get("certificate_authority_arn").(string)),
 		CertificateSerial:       aws.String(fmt.Sprintf("%x", serial)),
-		RevocationReason:        aws.String(acmpca.RevocationReasonUnspecified),
+		RevocationReason:        awstypes.RevocationReasonUnspecified,
 	}
-	_, err = conn.RevokeCertificateWithContext(ctx, input)
+	_, err = conn.RevokeCertificate(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) ||
-		tfawserr.ErrCodeEquals(err, acmpca.ErrCodeRequestAlreadyProcessedException) ||
-		tfawserr.ErrCodeEquals(err, acmpca.ErrCodeRequestInProgressException) ||
-		tfawserr.ErrMessageContains(err, acmpca.ErrCodeInvalidRequestException, "Self-signed certificate can not be revoked") {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
+		errs.IsA[*awstypes.RequestAlreadyProcessedException](err) ||
+		errs.IsA[*awstypes.RequestInProgressException](err) ||
+		errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Self-signed certificate can not be revoked") {
 		return diags
 	}
 	if err != nil {
@@ -310,8 +316,8 @@ func ValidTemplateARN(v interface{}, k string) (ws []string, errors []error) {
 		value := v.(string)
 		parsedARN, _ := arn.Parse(value)
 
-		if parsedARN.Service != acmpca.ServiceName {
-			errors = append(errors, fmt.Errorf("%q (%s) is not a valid ACM PCA template ARN: service must be \""+acmpca.ServiceName+"\", was %q)", k, value, parsedARN.Service))
+		if parsedARN.Service != names.ACMPCAEndpointID {
+			errors = append(errors, fmt.Errorf("%q (%s) is not a valid ACM PCA template ARN: service must be \""+names.ACMPCAEndpointID+"\", was %q)", k, value, parsedARN.Service))
 		}
 
 		if parsedARN.Region != "" {
@@ -330,7 +336,7 @@ func ValidTemplateARN(v interface{}, k string) (ws []string, errors []error) {
 	return ws, errors
 }
 
-func expandValidity(l []interface{}) (*acmpca.Validity, error) {
+func expandValidity(l []interface{}) (*awstypes.Validity, error) {
 	if len(l) == 0 {
 		return nil, nil
 	}
@@ -338,8 +344,8 @@ func expandValidity(l []interface{}) (*acmpca.Validity, error) {
 	m := l[0].(map[string]interface{})
 
 	valueType := m["type"].(string)
-	result := &acmpca.Validity{
-		Type: aws.String(valueType),
+	result := &awstypes.Validity{
+		Type: awstypes.ValidityPeriodType(valueType),
 	}
 
 	i, err := ExpandValidityValue(valueType, m["value"].(string))
@@ -352,7 +358,7 @@ func expandValidity(l []interface{}) (*acmpca.Validity, error) {
 }
 
 func ExpandValidityValue(valueType, v string) (int64, error) {
-	if valueType == acmpca.ValidityPeriodTypeEndDate {
+	if valueType == string(awstypes.ValidityPeriodTypeEndDate) {
 		date, err := time.Parse(time.RFC3339, v)
 		if err != nil {
 			return 0, err
