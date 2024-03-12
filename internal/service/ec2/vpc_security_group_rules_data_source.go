@@ -57,7 +57,7 @@ func (d *dataSourceSecurityGroupRules) Read(ctx context.Context, request datasou
 	conn := d.Meta().EC2Conn(ctx)
 
 	input := &ec2.DescribeSecurityGroupRulesInput{
-		Filters: append(BuildCustomFilters(ctx, data.Filters), newTagFilterList(Tags(tftags.New(ctx, data.Tags)))...),
+		Filters: append(newCustomFilterListFramework(ctx, data.Filters), newTagFilterList(Tags(tftags.New(ctx, data.Tags)))...),
 	}
 
 	if len(input.Filters) == 0 {

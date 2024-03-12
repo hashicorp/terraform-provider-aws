@@ -255,7 +255,7 @@ func newCustomFilterListV2(filterSet *schema.Set) []awstypes.Filter {
 	return filters
 }
 
-func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2_sdkv1.Filter {
+func newCustomFilterListFramework(ctx context.Context, filterSet types.Set) []*ec2_sdkv1.Filter {
 	if filterSet.IsNull() || filterSet.IsUnknown() {
 		return nil
 	}
