@@ -128,7 +128,7 @@ func dataSourceVPCPeeringConnectionRead(ctx context.Context, d *schema.ResourceD
 		input.VpcPeeringConnectionIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	input.Filters = BuildAttributeFilterList(
+	input.Filters = newAttributeFilterList(
 		map[string]string{
 			"status-code":                   d.Get("status").(string),
 			"requester-vpc-info.vpc-id":     d.Get("vpc_id").(string),

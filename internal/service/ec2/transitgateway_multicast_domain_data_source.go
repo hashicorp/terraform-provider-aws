@@ -171,7 +171,7 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 	}
 
 	members, err := FindTransitGatewayMulticastGroups(ctx, conn, &ec2.SearchTransitGatewayMulticastGroupsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"is-group-member": "true",
 			"is-group-source": "false",
 		}),
@@ -187,7 +187,7 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 	}
 
 	sources, err := FindTransitGatewayMulticastGroups(ctx, conn, &ec2.SearchTransitGatewayMulticastGroupsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"is-group-member": "false",
 			"is-group-source": "true",
 		}),

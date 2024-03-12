@@ -101,7 +101,7 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 		input.ZoneNames = aws.StringSlice([]string{v.(string)})
 	}
 
-	input.Filters = BuildAttributeFilterList(
+	input.Filters = newAttributeFilterList(
 		map[string]string{
 			"state": d.Get("state").(string),
 		},

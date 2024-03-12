@@ -75,7 +75,7 @@ func dataSourceCoIPPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 		filters["coip-pool.local-gateway-route-table-id"] = v.(string)
 	}
 
-	req.Filters = BuildAttributeFilterList(filters)
+	req.Filters = newAttributeFilterList(filters)
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
 		req.Filters = append(req.Filters, newTagFilterList(

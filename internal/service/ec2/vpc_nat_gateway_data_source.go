@@ -98,7 +98,7 @@ func dataSourceNATGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeNatGatewaysInput{
-		Filter: BuildAttributeFilterList(
+		Filter: newAttributeFilterList(
 			map[string]string{
 				"state":     d.Get("state").(string),
 				"subnet-id": d.Get("subnet_id").(string),

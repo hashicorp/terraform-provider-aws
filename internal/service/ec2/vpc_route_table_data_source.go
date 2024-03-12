@@ -198,7 +198,7 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	if !rtbOk && !vpcIdOk && !subnetIdOk && !gatewayIdOk && !filterOk && !tagsOk {
 		return sdkdiag.AppendErrorf(diags, "one of route_table_id, vpc_id, subnet_id, gateway_id, filters, or tags must be assigned")
 	}
-	req.Filters = BuildAttributeFilterList(
+	req.Filters = newAttributeFilterList(
 		map[string]string{
 			"route-table-id":         rtbId.(string),
 			"vpc-id":                 vpcId.(string),

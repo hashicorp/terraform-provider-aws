@@ -3261,7 +3261,7 @@ func getInstanceVolIDs(ctx context.Context, conn *ec2.EC2, instanceId string) ([
 	volIDs := []string{}
 
 	resp, err := conn.DescribeVolumesWithContext(ctx, &ec2.DescribeVolumesInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"attachment.instance-id": instanceId,
 		}),
 	})
@@ -3845,7 +3845,7 @@ func findLaunchTemplateData(ctx context.Context, conn *ec2.EC2, launchTemplateSp
 	if v := aws.StringValue(launchTemplateSpecification.Version); v != "" {
 		switch v {
 		case LaunchTemplateVersionDefault:
-			input.Filters = BuildAttributeFilterList(map[string]string{
+			input.Filters = newAttributeFilterList(map[string]string{
 				"is-default-version": "true",
 			})
 		case LaunchTemplateVersionLatest:
@@ -3881,7 +3881,7 @@ func findLaunchTemplateNameAndVersions(ctx context.Context, conn *ec2.EC2, id st
 
 func findInstanceTagValue(ctx context.Context, conn *ec2.EC2, instanceID, tagKey string) (string, error) {
 	input := &ec2.DescribeTagsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"resource-id": instanceID,
 			"key":         tagKey,
 		}),

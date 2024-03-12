@@ -1476,7 +1476,7 @@ func deleteLingeringENIs(ctx context.Context, conn *ec2.EC2, filterName, resourc
 	tflog.Trace(ctx, "Checking for lingering ENIs")
 
 	enis, err := FindNetworkInterfaces(ctx, conn, &ec2.DescribeNetworkInterfacesInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			filterName: resourceId,
 		}),
 	})

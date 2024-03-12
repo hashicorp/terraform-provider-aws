@@ -13,7 +13,7 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-func TestBuildAttributeFilterList(t *testing.T) {
+func TestNewAttributeFilterList(t *testing.T) {
 	t.Parallel()
 
 	type TestCase struct {
@@ -52,7 +52,7 @@ func TestBuildAttributeFilterList(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
-		result := tfec2.BuildAttributeFilterList(testCase.Attrs)
+		result := tfec2.NewAttributeFilterList(testCase.Attrs)
 
 		if diff := cmp.Diff(result, testCase.Expected); diff != "" {
 			t.Errorf("unexpected diff (+wanted, -got): %s", diff)

@@ -169,7 +169,7 @@ func resourceDefaultSubnetCreate(ctx context.Context, d *schema.ResourceData, me
 
 	availabilityZone := d.Get("availability_zone").(string)
 	input := &ec2.DescribeSubnetsInput{
-		Filters: BuildAttributeFilterList(
+		Filters: newAttributeFilterList(
 			map[string]string{
 				"availabilityZone": availabilityZone,
 				"defaultForAz":     "true",

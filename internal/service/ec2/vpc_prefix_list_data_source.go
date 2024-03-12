@@ -52,7 +52,7 @@ func dataSourcePrefixListRead(ctx context.Context, d *schema.ResourceData, meta 
 	input := &ec2.DescribePrefixListsInput{}
 
 	if v, ok := d.GetOk("name"); ok {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(map[string]string{
+		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"prefix-list-name": v.(string),
 		})...)
 	}

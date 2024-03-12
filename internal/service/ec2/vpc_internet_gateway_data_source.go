@@ -78,7 +78,7 @@ func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	input := &ec2.DescribeInternetGatewaysInput{}
-	input.Filters = BuildAttributeFilterList(map[string]string{
+	input.Filters = newAttributeFilterList(map[string]string{
 		"internet-gateway-id": internetGatewayId.(string),
 	})
 	input.Filters = append(input.Filters, newTagFilterList(

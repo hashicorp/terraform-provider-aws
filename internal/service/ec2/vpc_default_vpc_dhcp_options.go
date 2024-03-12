@@ -92,7 +92,7 @@ func resourceDefaultVPCDHCPOptionsCreate(ctx context.Context, d *schema.Resource
 	)
 
 	if v, ok := d.GetOk("owner_id"); ok {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(map[string]string{
+		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"owner-id": v.(string),
 		})...)
 	}

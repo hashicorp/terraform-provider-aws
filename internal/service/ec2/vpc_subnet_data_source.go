@@ -170,7 +170,7 @@ func dataSourceSubnetRead(ctx context.Context, d *schema.ResourceData, meta inte
 		filters["ipv6-cidr-block-association.ipv6-cidr-block"] = v.(string)
 	}
 
-	input.Filters = BuildAttributeFilterList(filters)
+	input.Filters = newAttributeFilterList(filters)
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
 		input.Filters = append(input.Filters, newTagFilterList(

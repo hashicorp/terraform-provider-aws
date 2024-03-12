@@ -65,7 +65,7 @@ func dataSourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, me
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeSecurityGroupsInput{
-		Filters: BuildAttributeFilterList(
+		Filters: newAttributeFilterList(
 			map[string]string{
 				"group-name": d.Get("name").(string),
 				"vpc-id":     d.Get("vpc_id").(string),

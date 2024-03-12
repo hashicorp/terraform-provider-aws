@@ -313,7 +313,7 @@ func newCustomFilterListFrameworkV2(ctx context.Context, filterSet types.Set) []
 	return filters
 }
 
-// BuildAttributeFilterList takes a flat map of scalar attributes (most
+// newAttributeFilterList takes a flat map of scalar attributes (most
 // likely values extracted from a *schema.ResourceData on an EC2-querying
 // data source) and produces a []*ec2.Filter representing an exact match
 // for each of the given non-empty attributes.
@@ -334,7 +334,7 @@ func newCustomFilterListFrameworkV2(ctx context.Context, filterSet types.Set) []
 // for the "Filters" attribute on most of the "Describe..." API functions in
 // the EC2 API, to aid in the implementation of Terraform data sources that
 // retrieve data about EC2 objects.
-func BuildAttributeFilterList(m map[string]string) []*ec2_sdkv1.Filter {
+func newAttributeFilterList(m map[string]string) []*ec2_sdkv1.Filter {
 	var filters []*ec2_sdkv1.Filter
 
 	// sort the filters by name to make the output deterministic

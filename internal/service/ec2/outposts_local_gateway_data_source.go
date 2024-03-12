@@ -67,7 +67,7 @@ func dataSourceLocalGatewayRead(ctx context.Context, d *schema.ResourceData, met
 		req.LocalGatewayIds = []*string{aws.String(v.(string))}
 	}
 
-	req.Filters = BuildAttributeFilterList(
+	req.Filters = newAttributeFilterList(
 		map[string]string{
 			"state": d.Get("state").(string),
 		},

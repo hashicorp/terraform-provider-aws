@@ -48,7 +48,7 @@ func dataSourceNetworkACLsRead(ctx context.Context, d *schema.ResourceData, meta
 	input := &ec2.DescribeNetworkAclsInput{}
 
 	if v, ok := d.GetOk("vpc_id"); ok {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(
+		input.Filters = append(input.Filters, newAttributeFilterList(
 			map[string]string{
 				"vpc-id": v.(string),
 			},

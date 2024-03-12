@@ -58,7 +58,7 @@ func dataSourceLocalGatewayVirtualInterfaceGroupRead(ctx context.Context, d *sch
 		input.LocalGatewayVirtualInterfaceGroupIds = []*string{aws.String(v.(string))}
 	}
 
-	input.Filters = BuildAttributeFilterList(
+	input.Filters = newAttributeFilterList(
 		map[string]string{
 			"local-gateway-id": d.Get("local_gateway_id").(string),
 		},
