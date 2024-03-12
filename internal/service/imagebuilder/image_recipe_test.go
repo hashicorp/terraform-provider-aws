@@ -12,7 +12,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -47,7 +46,7 @@ func TestAccImageBuilderImageRecipe_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
 					acctest.CheckResourceAttrRegionalARNAccountID(resourceName, "parent_image", "imagebuilder", "aws", "image/amazon-linux-2-x86/x.x.x"),
-					resource.TestCheckResourceAttr(resourceName, "platform", string(awstypes.PlatformLinux)),
+					resource.TestCheckResourceAttr(resourceName, "platform", string(types.PlatformLinux)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "version", "1.0.0"),
 				),
@@ -334,7 +333,7 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_volumeTypeGP2(t *testi
 		CheckDestroy:             testAccCheckImageRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageRecipeConfig_blockDeviceMappingEBSVolumeType(rName, string(awstypes.EbsVolumeTypeGp2)),
+				Config: testAccImageRecipeConfig_blockDeviceMappingEBSVolumeType(rName, string(types.EbsVolumeTypeGp2)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageRecipeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mapping.#", "1"),
@@ -757,7 +756,7 @@ func testAccCheckImageRecipeDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			output, err := conn.GetImageRecipe(ctx, input)
 
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			if errs.IsA[*types.ResourceNotFoundException](err) {
 				continue
 			}
 
