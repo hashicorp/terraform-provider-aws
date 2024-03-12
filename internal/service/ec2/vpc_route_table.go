@@ -353,6 +353,10 @@ func resourceRouteTableDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	routeTable, err := FindRouteTableByID(ctx, conn, d.Id())
 
+	if tfresource.NotFound(err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Route Table (%s): %s", d.Id(), err)
 	}

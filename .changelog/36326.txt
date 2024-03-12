@@ -9,3 +9,7 @@ resource/aws_network_acl_rule: Fix `InvalidNetworkAclID.NotFound` errors on reso
 ```release-note:bug
 resource/aws_route: Prevent creation of duplicate Terraform resources
 ```
+
+```release-note:bug
+resource/aws_route_table: Fix `couldn't find resource` errors on resource Delete
+```
