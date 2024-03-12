@@ -6816,9 +6816,9 @@ func testAccInstance_ipv6AddressCount(rName string, ipv6AddressCount int) string
 		testAccInstanceVPCIPv6Config(rName),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
-  instance_type = "t2.medium"
-
+  ami                = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type      = "t2.medium"
+  subnet_id          = aws_subnet.test.id
   ipv6_address_count = %[2]d
 
   tags = {
