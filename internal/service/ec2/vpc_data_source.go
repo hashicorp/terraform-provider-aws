@@ -5,7 +5,6 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -170,7 +169,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: aws.ToString(ownerID),
-		Resource:  fmt.Sprintf("vpc/%s", d.Id()),
+		Resource:  "vpc/" + d.Id(),
 	}.String()
 	d.Set("arn", arn)
 	d.Set("cidr_block", vpc.CidrBlock)
