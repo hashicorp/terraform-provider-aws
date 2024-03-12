@@ -18,18 +18,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
+var (
+	_ xattr.TypeWithValidate   = (*regexpType)(nil)
+	_ basetypes.StringTypable  = (*regexpType)(nil)
+	_ basetypes.StringValuable = (*Regexp)(nil)
+)
+
 type regexpType struct {
 	basetypes.StringType
 }
 
 var (
 	RegexpType = regexpType{}
-)
-
-var (
-	_ xattr.TypeWithValidate   = (*regexpType)(nil)
-	_ basetypes.StringTypable  = (*regexpType)(nil)
-	_ basetypes.StringValuable = (*Regexp)(nil)
 )
 
 func (t regexpType) Equal(o attr.Type) bool {

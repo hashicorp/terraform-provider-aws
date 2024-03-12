@@ -1334,7 +1334,7 @@ func testAccCheckRouteTableWaitForVPCEndpointRoute(ctx context.Context, routeTab
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		resp, err := conn.DescribePrefixListsWithContext(ctx, &ec2.DescribePrefixListsInput{
-			Filters: tfec2.BuildAttributeFilterList(map[string]string{
+			Filters: tfec2.NewAttributeFilterList(map[string]string{
 				"prefix-list-name": aws.StringValue(vpce.ServiceName),
 			}),
 		})

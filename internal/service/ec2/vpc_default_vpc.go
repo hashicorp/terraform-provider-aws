@@ -158,7 +158,7 @@ func resourceDefaultVPCCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeVpcsInput{
-		Filters: buildAttributeFilterListV2(
+		Filters: newAttributeFilterListV2(
 			map[string]string{
 				"isDefault": "true",
 			},

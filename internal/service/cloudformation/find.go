@@ -134,6 +134,13 @@ func FindStackSetByName(ctx context.Context, conn *cloudformation.CloudFormation
 		}
 	}
 
+	if callAs == cloudformation.CallAsDelegatedAdmin && tfawserr.ErrMessageContains(err, errCodeValidationError, "Failed to check account is Delegated Administrator") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
 	if err != nil {
 		return nil, err
 	}

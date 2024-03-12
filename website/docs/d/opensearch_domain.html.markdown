@@ -43,6 +43,7 @@ This data source exports the following attributes in addition to the arguments a
             * `unit` - Unit of time.
         * `cron_expression_for_recurrence` - Cron expression for an Auto-Tune maintenance schedule.
     * `rollback_on_disable` - Whether the domain is set to roll back to default Auto-Tune settings when disabling Auto-Tune.
+    * `use_off_peak_window` - Whether to schedule Auto-Tune optimizations that require blue/green deployments during the domain's configured daily off-peak window.
 * `cluster_config` - Cluster configuration of the domain.
     * `cold_storage_options` - Configuration block containing cold storage configuration.
         * `enabled` - Indicates  cold storage is enabled.
