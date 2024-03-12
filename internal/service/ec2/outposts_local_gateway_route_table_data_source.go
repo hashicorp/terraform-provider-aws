@@ -77,7 +77,7 @@ func dataSourceLocalGatewayRouteTableRead(ctx context.Context, d *schema.Resourc
 		},
 	)
 
-	req.Filters = append(req.Filters, BuildTagFilterList(
+	req.Filters = append(req.Filters, newTagFilterList(
 		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 

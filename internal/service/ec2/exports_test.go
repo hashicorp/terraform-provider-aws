@@ -15,6 +15,7 @@ var (
 
 	FindEBSFastSnapshotRestoreByID = findEBSFastSnapshotRestoreByID
 	FindNetworkACLByIDV2           = findNetworkACLByIDV2
+	NewTagFilterList               = newTagFilterList
 	StopInstance                   = stopInstance
 	UpdateTags                     = updateTags
 	UpdateTagsV2                   = updateTagsV2

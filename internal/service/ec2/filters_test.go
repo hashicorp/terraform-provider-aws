@@ -4,11 +4,11 @@
 package ec2_test
 
 import (
-	"reflect"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
@@ -51,19 +51,16 @@ func TestBuildAttributeFilterList(t *testing.T) {
 		},
 	}
 
-	for i, testCase := range testCases {
+	for _, testCase := range testCases {
 		result := tfec2.BuildAttributeFilterList(testCase.Attrs)
 
-		if !reflect.DeepEqual(result, testCase.Expected) {
-			t.Errorf(
-				"test case %d: got %#v, but want %#v",
-				i, result, testCase.Expected,
-			)
+		if diff := cmp.Diff(result, testCase.Expected); diff != "" {
+			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 		}
 	}
 }
 
-func TestBuildTagFilterList(t *testing.T) {
+func TestNewTagFilterList(t *testing.T) {
 	t.Parallel()
 
 	type TestCase struct {
@@ -95,14 +92,11 @@ func TestBuildTagFilterList(t *testing.T) {
 		},
 	}
 
-	for i, testCase := range testCases {
-		result := tfec2.BuildTagFilterList(testCase.Tags)
+	for _, testCase := range testCases {
+		result := tfec2.NewTagFilterList(testCase.Tags)
 
-		if !reflect.DeepEqual(result, testCase.Expected) {
-			t.Errorf(
-				"test case %d: got %#v, but want %#v",
-				i, result, testCase.Expected,
-			)
+		if diff := cmp.Diff(result, testCase.Expected); diff != "" {
+			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 		}
 	}
 }
@@ -157,10 +151,7 @@ func TestBuildCustomFilterList(t *testing.T) {
 	}
 	result := tfec2.BuildCustomFilterList(filters)
 
-	if !reflect.DeepEqual(result, expected) {
-		t.Errorf(
-			"got %#v, but want %#v",
-			result, expected,
-		)
+	if diff := cmp.Diff(result, expected); diff != "" {
+		t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 	}
 }

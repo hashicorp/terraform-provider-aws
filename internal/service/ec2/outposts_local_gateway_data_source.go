@@ -74,7 +74,7 @@ func dataSourceLocalGatewayRead(ctx context.Context, d *schema.ResourceData, met
 	)
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		req.Filters = append(req.Filters, BuildTagFilterList(
+		req.Filters = append(req.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}

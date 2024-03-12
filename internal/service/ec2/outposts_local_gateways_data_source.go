@@ -43,7 +43,7 @@ func dataSourceLocalGatewaysRead(ctx context.Context, d *schema.ResourceData, me
 
 	input := &ec2.DescribeLocalGatewaysInput{}
 
-	input.Filters = append(input.Filters, BuildTagFilterList(
+	input.Filters = append(input.Filters, newTagFilterList(
 		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 

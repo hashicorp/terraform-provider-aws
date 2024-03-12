@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
 
-// BuildTagFilterList takes a []*ec2.Tag and produces a []*ec2.Filter that
+// newTagFilterList takes a []*ec2.Tag and produces a []*ec2.Filter that
 // represents exact matches for all of the tag key/value pairs given in
 // the tag set.
 //
@@ -39,7 +39,7 @@ import (
 //	tags {
 //	  Name = "my-awesome-subnet"
 //	}
-func BuildTagFilterList(tags []*ec2_sdkv1.Tag) []*ec2_sdkv1.Filter {
+func newTagFilterList(tags []*ec2_sdkv1.Tag) []*ec2_sdkv1.Filter {
 	filters := make([]*ec2_sdkv1.Filter, len(tags))
 
 	for i, tag := range tags {

@@ -44,7 +44,7 @@ func dataSourceSubnetsRead(ctx context.Context, d *schema.ResourceData, meta int
 	input := &ec2.DescribeSubnetsInput{}
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		input.Filters = append(input.Filters, BuildTagFilterList(
+		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}

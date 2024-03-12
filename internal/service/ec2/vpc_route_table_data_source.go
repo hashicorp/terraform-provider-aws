@@ -206,7 +206,7 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 			"association.gateway-id": gatewayId.(string),
 		},
 	)
-	req.Filters = append(req.Filters, BuildTagFilterList(
+	req.Filters = append(req.Filters, newTagFilterList(
 		Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 	)...)
 	req.Filters = append(req.Filters, BuildCustomFilterList(
