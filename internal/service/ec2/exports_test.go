@@ -16,7 +16,7 @@ var (
 	ResourceSecurityGroupEgressRule         = newResourceSecurityGroupEgressRule
 	ResourceSecurityGroupIngressRule        = newResourceSecurityGroupIngressRule
 	ResourceTag                             = resourceTag
- 	ResourceTransitGatewayPeeringAttachment = resourceTransitGatewayPeeringAttachment
+	ResourceTransitGatewayPeeringAttachment = resourceTransitGatewayPeeringAttachment
 
 	CustomFiltersSchema            = customFiltersSchema
 	FindEBSFastSnapshotRestoreByID = findEBSFastSnapshotRestoreByID
