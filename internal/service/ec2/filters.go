@@ -5,7 +5,6 @@ package ec2
 
 import (
 	"context"
-	"fmt"
 	"sort"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
@@ -16,7 +15,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 func newFilter(name string, values []string) *ec2_sdkv1.Filter {
@@ -54,16 +56,9 @@ func newFilterV2(name string, values []string) awstypes.Filter {
 //	  Name = "my-awesome-subnet"
 //	}
 func newTagFilterList(tags []*ec2_sdkv1.Tag) []*ec2_sdkv1.Filter {
-	filters := make([]*ec2_sdkv1.Filter, len(tags))
-
-	for i, tag := range tags {
-		filters[i] = &ec2_sdkv1.Filter{
-			Name:   aws_sdkv1.String(fmt.Sprintf("tag:%s", *tag.Key)),
-			Values: []*string{tag.Value},
-		}
-	}
-
-	return filters
+	return tfslices.ApplyToAll(tags, func(tag *ec2_sdkv1.Tag) *ec2_sdkv1.Filter {
+		return newFilter("tag:"+aws_sdkv1.StringValue(tag.Key), []string{aws_sdkv1.StringValue(tag.Value)})
+	})
 }
 
 // attributeFiltersFromMultimap returns an array of EC2 Filter objects to be used when listing resources.
@@ -91,16 +86,10 @@ func attributeFiltersFromMultimap(m map[string][]string) []*ec2_sdkv1.Filter {
 // tagFilters returns an array of EC2 Filter objects to be used when listing resources by tag.
 func tagFilters(ctx context.Context) []awstypes.Filter {
 	tags := getTagsIn(ctx)
-	filters := make([]awstypes.Filter, len(tags))
 
-	for i, tag := range tags {
-		filters[i] = awstypes.Filter{
-			Name:   aws_sdkv2.String(fmt.Sprintf("tag:%s", aws_sdkv2.ToString(tag.Key))),
-			Values: aws_sdkv2.ToStringSlice([]*string{tag.Value}),
-		}
-	}
-
-	return filters
+	return tfslices.ApplyToAll(tags, func(tag *ec2_sdkv1.Tag) awstypes.Filter {
+		return newFilterV2("tag:"+aws_sdkv1.StringValue(tag.Key), []string{aws_sdkv1.StringValue(tag.Value)})
+	})
 }
 
 // customFiltersSchema returns a *schema.Schema that represents
@@ -194,30 +183,15 @@ type customFilterModel struct {
 // This function is intended only to be used in conjunction with
 // CustomFiltersSchema. See the docs on that function for more details
 // on the configuration pattern this is intended to support.
-func newCustomFilterList(filterSet *schema.Set) []*ec2_sdkv1.Filter {
-	if filterSet == nil {
+func newCustomFilterList(s *schema.Set) []*ec2_sdkv1.Filter {
+	if s == nil {
 		return []*ec2_sdkv1.Filter{}
 	}
 
-	customFilters := filterSet.List()
-	filters := make([]*ec2_sdkv1.Filter, len(customFilters))
-
-	for filterIdx, customFilterI := range customFilters {
-		customFilterMapI := customFilterI.(map[string]interface{})
-		name := customFilterMapI["name"].(string)
-		valuesI := customFilterMapI["values"].(*schema.Set).List()
-		values := make([]*string, len(valuesI))
-		for valueIdx, valueI := range valuesI {
-			values[valueIdx] = aws_sdkv1.String(valueI.(string))
-		}
-
-		filters[filterIdx] = &ec2_sdkv1.Filter{
-			Name:   &name,
-			Values: values,
-		}
-	}
-
-	return filters
+	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) *ec2_sdkv1.Filter {
+		tfMap := tfList.(map[string]interface{})
+		return newFilter(tfMap["name"].(string), flex.ExpandStringValueSet(tfMap["values"].(*schema.Set)))
+	})
 }
 
 // newCustomFilterListV2 takes the set value extracted from a schema
@@ -229,30 +203,15 @@ func newCustomFilterList(filterSet *schema.Set) []*ec2_sdkv1.Filter {
 // This function is intended only to be used in conjunction with
 // CustomFiltersSchema. See the docs on that function for more details
 // on the configuration pattern this is intended to support.
-func newCustomFilterListV2(filterSet *schema.Set) []awstypes.Filter {
-	if filterSet == nil {
+func newCustomFilterListV2(s *schema.Set) []awstypes.Filter {
+	if s == nil {
 		return []awstypes.Filter{}
 	}
 
-	customFilters := filterSet.List()
-	filters := make([]awstypes.Filter, len(customFilters))
-
-	for filterIdx, customFilterI := range customFilters {
-		customFilterMapI := customFilterI.(map[string]interface{})
-		name := customFilterMapI["name"].(string)
-		valuesI := customFilterMapI["values"].(*schema.Set).List()
-		values := make([]string, len(valuesI))
-		for valueIdx, valueI := range valuesI {
-			values[valueIdx] = valueI.(string)
-		}
-
-		filters[filterIdx] = awstypes.Filter{
-			Name:   &name,
-			Values: values,
-		}
-	}
-
-	return filters
+	return tfslices.ApplyToAll(s.List(), func(tfList interface{}) awstypes.Filter {
+		tfMap := tfList.(map[string]interface{})
+		return newFilterV2(tfMap["name"].(string), flex.ExpandStringValueSet(tfMap["values"].(*schema.Set)))
+	})
 }
 
 func newCustomFilterListFramework(ctx context.Context, filterSet types.Set) []*ec2_sdkv1.Filter {
@@ -273,9 +232,9 @@ func newCustomFilterListFramework(ctx context.Context, filterSet types.Set) []*e
 			continue
 		}
 
-		if v := flex.ExpandFrameworkStringSet(ctx, data.Values); v != nil {
+		if v := fwflex.ExpandFrameworkStringSet(ctx, data.Values); v != nil {
 			filters = append(filters, &ec2_sdkv1.Filter{
-				Name:   flex.StringFromFramework(ctx, data.Name),
+				Name:   fwflex.StringFromFramework(ctx, data.Name),
 				Values: v,
 			})
 		}
@@ -302,9 +261,9 @@ func newCustomFilterListFrameworkV2(ctx context.Context, filterSet types.Set) []
 			continue
 		}
 
-		if v := flex.ExpandFrameworkStringValueSet(ctx, data.Values); v != nil {
+		if v := fwflex.ExpandFrameworkStringValueSet(ctx, data.Values); v != nil {
 			filters = append(filters, awstypes.Filter{
-				Name:   flex.StringFromFramework(ctx, data.Name),
+				Name:   fwflex.StringFromFramework(ctx, data.Name),
 				Values: v,
 			})
 		}
@@ -337,12 +296,8 @@ func newCustomFilterListFrameworkV2(ctx context.Context, filterSet types.Set) []
 func newAttributeFilterList(m map[string]string) []*ec2_sdkv1.Filter {
 	var filters []*ec2_sdkv1.Filter
 
-	// sort the filters by name to make the output deterministic
-	var names []string
-	for k := range m {
-		names = append(names, k)
-	}
-
+	// Sort the filters by name to make the output deterministic.
+	names := tfmaps.Keys(m)
 	sort.Strings(names)
 
 	for _, name := range names {
@@ -351,7 +306,7 @@ func newAttributeFilterList(m map[string]string) []*ec2_sdkv1.Filter {
 			continue
 		}
 
-		filters = append(filters, NewFilter(name, []string{value}))
+		filters = append(filters, newFilter(name, []string{value}))
 	}
 
 	return filters
@@ -360,12 +315,8 @@ func newAttributeFilterList(m map[string]string) []*ec2_sdkv1.Filter {
 func newAttributeFilterListV2(m map[string]string) []awstypes.Filter {
 	var filters []awstypes.Filter
 
-	// sort the filters by name to make the output deterministic
-	var names []string
-	for k := range m {
-		names = append(names, k)
-	}
-
+	// Sort the filters by name to make the output deterministic.
+	names := tfmaps.Keys(m)
 	sort.Strings(names)
 
 	for _, name := range names {
