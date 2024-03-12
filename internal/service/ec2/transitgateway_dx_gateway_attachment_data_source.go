@@ -31,7 +31,7 @@ func DataSourceTransitGatewayDxGatewayAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"tags":   tftags.TagsSchemaComputed(),
 			"transit_gateway_id": {
 				Type:     schema.TypeString,
@@ -47,30 +47,30 @@ func dataSourceTransitGatewayDxGatewayAttachmentRead(ctx context.Context, d *sch
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"resource-type": ec2.TransitGatewayAttachmentResourceTypeDirectConnectGateway,
 		}),
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
 	if v, ok := d.GetOk("tags"); ok {
-		input.Filters = append(input.Filters, BuildTagFilterList(
+		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, v.(map[string]interface{}))),
 		)...)
 	}
 
 	// to preserve original functionality
 	if v, ok := d.GetOk("dx_gateway_id"); ok {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(map[string]string{
+		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"resource-id": v.(string),
 		})...)
 	}
 
 	if v, ok := d.GetOk("transit_gateway_id"); ok {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(map[string]string{
+		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"transit-gateway-id": v.(string),
 		})...)
 	}

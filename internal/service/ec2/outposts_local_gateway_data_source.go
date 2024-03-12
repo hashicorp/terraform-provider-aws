@@ -38,7 +38,7 @@ func DataSourceLocalGateway() *schema.Resource {
 				Computed: true,
 			},
 
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 
 			"state": {
 				Type:     schema.TypeString,
@@ -67,19 +67,19 @@ func dataSourceLocalGatewayRead(ctx context.Context, d *schema.ResourceData, met
 		req.LocalGatewayIds = []*string{aws.String(v.(string))}
 	}
 
-	req.Filters = BuildAttributeFilterList(
+	req.Filters = newAttributeFilterList(
 		map[string]string{
 			"state": d.Get("state").(string),
 		},
 	)
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		req.Filters = append(req.Filters, BuildTagFilterList(
+		req.Filters = append(req.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
-	req.Filters = append(req.Filters, BuildCustomFilterList(
+	req.Filters = append(req.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(req.Filters) == 0 {

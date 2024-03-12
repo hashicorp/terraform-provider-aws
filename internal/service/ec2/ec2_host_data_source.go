@@ -49,7 +49,7 @@ func DataSourceHost() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"host_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -94,7 +94,7 @@ func dataSourceHostRead(ctx context.Context, d *schema.ResourceData, meta interf
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeHostsInput{
-		Filter: BuildCustomFilterList(d.Get("filter").(*schema.Set)),
+		Filter: newCustomFilterList(d.Get("filter").(*schema.Set)),
 	}
 
 	if v, ok := d.GetOk("host_id"); ok {

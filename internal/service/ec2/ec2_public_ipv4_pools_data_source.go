@@ -21,7 +21,7 @@ func DataSourcePublicIPv4Pools() *schema.Resource {
 		ReadWithoutTimeout: dataSourcePublicIPv4PoolsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"pool_ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -38,11 +38,11 @@ func dataSourcePublicIPv4PoolsRead(ctx context.Context, d *schema.ResourceData, 
 
 	input := &ec2.DescribePublicIpv4PoolsInput{}
 
-	input.Filters = append(input.Filters, BuildTagFilterList(
+	input.Filters = append(input.Filters, newTagFilterList(
 		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

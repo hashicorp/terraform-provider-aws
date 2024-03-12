@@ -53,7 +53,7 @@ func DataSourceCoIPPool() *schema.Resource {
 
 			"tags": tftags.TagsSchemaComputed(),
 
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 		},
 	}
 }
@@ -75,15 +75,15 @@ func dataSourceCoIPPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 		filters["coip-pool.local-gateway-route-table-id"] = v.(string)
 	}
 
-	req.Filters = BuildAttributeFilterList(filters)
+	req.Filters = newAttributeFilterList(filters)
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		req.Filters = append(req.Filters, BuildTagFilterList(
+		req.Filters = append(req.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
-	req.Filters = append(req.Filters, BuildCustomFilterList(
+	req.Filters = append(req.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(req.Filters) == 0 {

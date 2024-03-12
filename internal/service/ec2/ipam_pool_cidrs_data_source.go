@@ -25,7 +25,7 @@ func DataSourceIPAMPoolCIDRs() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"ipam_pool_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -59,7 +59,7 @@ func dataSourceIPAMPoolCIDRsRead(ctx context.Context, d *schema.ResourceData, me
 		IpamPoolId: aws.String(poolID),
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

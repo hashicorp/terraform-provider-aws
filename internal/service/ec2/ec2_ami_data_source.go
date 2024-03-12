@@ -94,7 +94,7 @@ func DataSourceAMI() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"hypervisor": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -244,7 +244,7 @@ func dataSourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildCustomFilterList(v.(*schema.Set))
+		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("owners"); ok && len(v.([]interface{})) > 0 {

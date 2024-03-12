@@ -27,7 +27,7 @@ func DataSourceTransitGatewayPeeringAttachment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -61,7 +61,7 @@ func dataSourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schem
 
 	input := &ec2.DescribeTransitGatewayPeeringAttachmentsInput{}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
@@ -70,7 +70,7 @@ func dataSourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schem
 	}
 
 	if v, ok := d.GetOk("tags"); ok {
-		input.Filters = append(input.Filters, BuildTagFilterList(
+		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, v.(map[string]interface{}))),
 		)...)
 	}

@@ -135,7 +135,7 @@ func DataSourceClientVPNEndpoint() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"security_group_ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -189,11 +189,11 @@ func dataSourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData
 		input.ClientVpnEndpointIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	input.Filters = append(input.Filters, BuildTagFilterList(
+	input.Filters = append(input.Filters, newTagFilterList(
 		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

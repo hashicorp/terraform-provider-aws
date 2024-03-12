@@ -13,8 +13,12 @@ var (
 	ResourceSecurityGroupIngressRule = newResourceSecurityGroupIngressRule
 	ResourceTag                      = resourceTag
 
+	CustomFiltersSchema            = customFiltersSchema
 	FindEBSFastSnapshotRestoreByID = findEBSFastSnapshotRestoreByID
 	FindNetworkACLByIDV2           = findNetworkACLByIDV2
+	NewAttributeFilterList         = newAttributeFilterList
+	NewCustomFilterList            = newCustomFilterList
+	NewTagFilterList               = newTagFilterList
 	StopInstance                   = stopInstance
 	UpdateTags                     = updateTags
 	UpdateTagsV2                   = updateTagsV2
