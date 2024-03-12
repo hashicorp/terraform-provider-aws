@@ -1630,7 +1630,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			net_new_ips := int64(ns - os)
 			input := &ec2.AssignIpv6AddressesInput{
 				NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
-				Ipv6AddressCount: &net_new_ips,
+				Ipv6AddressCount:   &net_new_ips,
 			}
 			log.Printf("[INFO] Assigning ipv6 address on Instance %q", d.Id())
 			_, err := conn.AssignIpv6AddressesWithContext(ctx, input)
@@ -1652,7 +1652,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 			input := &ec2.UnassignIpv6AddressesInput{
 				NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
-				Ipv6Addresses: addresses_to_remove,
+				Ipv6Addresses:      addresses_to_remove,
 			}
 			log.Printf("[INFO] Unassigning ipv6 address on Instance %q", d.Id())
 			_, err := conn.UnassignIpv6AddressesWithContext(ctx, input)

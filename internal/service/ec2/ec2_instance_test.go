@@ -6370,7 +6370,7 @@ resource "aws_instance" "test" {
 }
 
 func testAccInstanceConfig_rootBlockDevice(rName, size, delete, volumeType string) string {
-       return testAccInstanceConfig_rootBlockDeviceIOPS(rName, size, delete, volumeType, "")
+	return testAccInstanceConfig_rootBlockDeviceIOPS(rName, size, delete, volumeType, "")
 }
 
 func testAccInstance_IPv6AddressCount(rName string, ipv6_address_count int) string {
