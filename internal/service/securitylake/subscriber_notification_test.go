@@ -102,7 +102,7 @@ func testAccSubscriberNotification_disappears(t *testing.T) {
 				Config: testAccSubscriberNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
-					// acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceSubscriber, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceSubscriberNotification, resourceName),
 					// resource.TestCheckResourceAttr(resourceName, "subscriber_name", rName),
 					// resource.TestCheckResourceAttr(resourceName, "access_type", "S3"),
 					// resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
@@ -159,8 +159,8 @@ func testAccCheckSubscriberNotificationExists(ctx context.Context, n string) res
 	}
 }
 
-func testAccSubscriberNotification_config() string {
-	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), `
+func testAccSubscriberNotification_config(rName string) string {
+	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
   path = "/service-role/"
@@ -260,12 +260,6 @@ resource "aws_securitylake_custom_log_source" "test" {
   depends_on = [aws_securitylake_data_lake.test, aws_iam_role.test]
 }
 
-`)
-}
-
-func testAccSubscriberNotificationConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccSubscriberNotification_config(), fmt.Sprintf(`
-
 resource "aws_securitylake_subscriber" "test" {
 	subscriber_name        = %[1]q
 	subscriber_description = "Example"
@@ -283,6 +277,11 @@ resource "aws_securitylake_subscriber" "test" {
 	depends_on = [aws_securitylake_custom_log_source.test]
 }
 
+`, rName))
+}
+
+func testAccSubscriberNotificationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccSubscriberNotification_config(rName), (`
 resource "aws_securitylake_subscriber_notification" "test" {
 	subscriber_id = aws_securitylake_subscriber.test.id
 	configuration {
@@ -291,30 +290,11 @@ resource "aws_securitylake_subscriber_notification" "test" {
 
 	depends_on = [aws_securitylake_subscriber.test]
 }
-`, rName))
+`))
 }
 
 func testAccSubscriberNotificationConfig_https(rName string) string {
-	return acctest.ConfigCompose(testAccSubscriberNotification_config(), fmt.Sprintf(`
-
-resource "aws_securitylake_subscriber" "test" {
-	subscriber_name        = %[1]q
-	subscriber_description = "Example"
-	source {
-		custom_log_source_resource {
-		source_name    = aws_securitylake_custom_log_source.test.source_name
-		source_version = aws_securitylake_custom_log_source.test.source_version
-		}
-	}
-	subscriber_identity {
-		external_id = "example"
-		principal   = data.aws_caller_identity.current.account_id
-	}
-	
-	depends_on = [aws_securitylake_custom_log_source.test]
-}
-
-
+	return acctest.ConfigCompose(testAccSubscriberNotification_config(rName), (`
 resource "aws_securitylake_subscriber_notification" "test" {
 	subscriber_id = aws_securitylake_subscriber.test.id
 	configuration {
@@ -326,5 +306,5 @@ resource "aws_securitylake_subscriber_notification" "test" {
 
 	depends_on = [aws_securitylake_subscriber.test]
 }
-`, rName))
+`))
 }

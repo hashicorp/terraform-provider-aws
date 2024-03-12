@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/securitylake/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -82,65 +81,45 @@ func (r *subscriberNotificationResource) Schema(ctx context.Context, req resourc
 					listplanmodifier.UseStateForUnknown(),
 				},
 				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"sqs_notification_configuration": schema.ListAttribute{
-							Optional:   true,
+					Blocks: map[string]schema.Block{
+						"sqs_notification_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[sqsNotificationConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.UseStateForUnknown(),
+							},
 						},
-						"https_notification_configuration": schema.ListAttribute{
-							Optional:   true,
+						"https_notification_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[httpsNotificationConfigurationModel](ctx),
-							ElementType: types.ObjectType{
-								AttrTypes: map[string]attr.Type{
-									"endpoint":                    types.StringType,
-									"target_role_arn":             types.StringType,
-									"authorization_api_key_name":  types.StringType,
-									"authorization_api_key_value": types.StringType,
-									"http_method":                 types.StringType,
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.UseStateForUnknown(),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"endpoint": schema.StringAttribute{
+										Optional: true,
+									},
+									"target_role_arn": schema.StringAttribute{
+										Optional: true,
+									},
+									"authorization_api_key_name": schema.StringAttribute{
+										Optional: true,
+									},
+									"authorization_api_key_value": schema.StringAttribute{
+										Optional: true,
+									},
+									"http_method": schema.StringAttribute{
+										Optional: true,
+									},
 								},
 							},
 						},
 					},
-					// Blocks: map[string]schema.Block{
-					// 	"sqs_notification_configuration": schema.ListNestedBlock{
-					// 		CustomType: fwtypes.NewListNestedObjectTypeOf[sqsNotificationConfigurationModel](ctx),
-					// 		Computed:   true,
-					// 		Validators: []validator.List{
-					// 			listvalidator.SizeAtMost(1),
-					// 		},
-					// 		PlanModifiers: []planmodifier.List{
-					// 			listplanmodifier.UseStateForUnknown(),
-					// 		},
-					// 	},
-					// 	"https_notification_configuration": schema.ListNestedBlock{
-					// 		CustomType: fwtypes.NewListNestedObjectTypeOf[httpsNotificationConfigurationModel](ctx),
-					// 		Validators: []validator.List{
-					// 			listvalidator.SizeAtMost(1),
-					// 		},
-					// 		PlanModifiers: []planmodifier.List{
-					// 			listplanmodifier.UseStateForUnknown(),
-					// 		},
-					// 		NestedObject: schema.NestedBlockObject{
-					// 			Attributes: map[string]schema.Attribute{
-					// 				"endpoint": schema.StringAttribute{
-					// 					Optional: true,
-					// 				},
-					// 				"target_role_arn": schema.StringAttribute{
-					// 					Optional: true,
-					// 				},
-					// 				"authorization_api_key_name": schema.StringAttribute{
-					// 					Optional: true,
-					// 				},
-					// 				"authorization_api_key_value": schema.StringAttribute{
-					// 					Optional: true,
-					// 				},
-					// 				"http_method": schema.StringAttribute{
-					// 					Optional: true,
-					// 				},
-					// 			},
-					// 		},
-					// 	},
-					// },
 				},
 			},
 		},
@@ -183,7 +162,7 @@ func (r *subscriberNotificationResource) Create(ctx context.Context, request res
 
 		return
 	}
-	parts, err := flex.ExpandResourceId(output, subscriberNotificationIdPartCount, false)
+	parts, err := flex.ExpandResourceId(aws.ToString(output), subscriberNotificationIdPartCount, false)
 	if err != nil {
 		response.Diagnostics.AddError("creating Security Lake Subscriber Notification", err.Error())
 
@@ -215,12 +194,12 @@ func (r *subscriberNotificationResource) Read(ctx context.Context, request resou
 
 	output, err := findSubscriberNotificationByEndPointID(ctx, conn, data.SubscriberID.ValueString(), data.EndpointID.ValueString())
 
-	if tfresource.NotFound(err) {
+	if tfresource.NotFound(err) || output == nil {
 		response.State.RemoveResource(ctx)
 		return
 	}
 
-	parts, err := flex.ExpandResourceId(output, subscriberNotificationIdPartCount, false)
+	parts, err := flex.ExpandResourceId(aws.ToString(output), subscriberNotificationIdPartCount, false)
 	if err != nil {
 		response.Diagnostics.AddError("creating Security Lake Subscriber Notification", err.Error())
 
@@ -305,17 +284,21 @@ func (r *subscriberNotificationResource) ImportState(ctx context.Context, req re
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func findSubscriberNotificationByEndPointID(ctx context.Context, conn *securitylake.Client, subscriberID, endpointID string) (string, error) {
+func findSubscriberNotificationByEndPointID(ctx context.Context, conn *securitylake.Client, subscriberID, endpointID string) (*string, error) {
 	var resourceID string
 	output, err := findSubscriberByID(ctx, conn, subscriberID)
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	resourceID = fmt.Sprintf("%s,%s", *output.SubscriberId, *output.SubscriberEndpoint)
+	if output == nil || output.SubscriberEndpoint == nil {
+		return nil, &tfresource.EmptyResultError{}
+	}
 
-	return resourceID, nil
+	resourceID = fmt.Sprintf("%s,%s", aws.ToString(output.SubscriberId), aws.ToString(output.SubscriberEndpoint))
+
+	return &resourceID, nil
 }
 
 func expandSubscriberNotificationResourceConfiguration(ctx context.Context, subscriberNotificationResourceConfigurationModels []subscriberNotificationResourceConfigurationModel) (awstypes.NotificationConfiguration, diag.Diagnostics) {
