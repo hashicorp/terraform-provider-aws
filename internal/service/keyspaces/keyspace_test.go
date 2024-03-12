@@ -53,10 +53,12 @@ func TestAccKeyspacesKeyspace_basic(t *testing.T) {
 	})
 }
 
-func TestAccKeyspacesKeyspace_replicationSpecification(t *testing.T) {
+func TestAccKeyspacesKeyspace_replicationSpecificationMulti(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := "tf_acc_test_" + sdkacctest.RandString(20)
 	resourceName := "aws_keyspaces_keyspace.test"
+	region1 := acctest.Region()
+	region2 := acctest.AlternateRegion()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
@@ -71,12 +73,11 @@ func TestAccKeyspacesKeyspace_replicationSpecification(t *testing.T) {
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cassandra", "/keyspace/"+rName+"/"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "replication_specification.0.replication_strategy", string(types.RsMultiRegion)),
-					resource.TestCheckResourceAttr(resourceName, "replication_specification.0.region_list.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "replication_specification.0.replication_strategy", string(types.RsSingleRegion)),
 				),
 			},
 			{
-				Config: testAccKeyspaceConfig_multiReplicationSpecification(rName, string(types.RsMultiRegion), string("[\"us-east-1\", \"us-west-2\"]")),
+				Config: testAccKeyspaceConfig_multiReplicationSpecification(rName, string(types.RsMultiRegion), region1, region2),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckKeyspaceExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cassandra", "/keyspace/"+rName+"/"),
@@ -247,14 +248,14 @@ resource "aws_keyspaces_keyspace" "test" {
 `, rName, rSpecification)
 }
 
-func testAccKeyspaceConfig_multiReplicationSpecification(rName, rSpecification, regionList string) string {
+func testAccKeyspaceConfig_multiReplicationSpecification(rName, rSpecification, region1, region2 string) string {
 	return fmt.Sprintf(`
 resource "aws_keyspaces_keyspace" "test" {
   name = %[1]q
   replication_specification {
 	replication_strategy = %[2]q
-	region_list = %[3]q
+	region_list = [%[3]q, %[4]q]
   }
 }
-`, rName, rSpecification, regionList)
+`, rName, rSpecification, region1, region2)
 }

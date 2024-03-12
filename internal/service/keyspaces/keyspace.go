@@ -66,14 +66,14 @@ func resourceKeyspace() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"replication_strategy": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								string(types.RsSingleRegion),
 								string(types.RsMultiRegion)}, false),
 						},
 						"region_list": {
 							Type:     schema.TypeList,
-							Required: false,
+							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
@@ -98,9 +98,12 @@ func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("replication_specification"); ok {
 		replicationSpecification := v.([]interface{})[0].(map[string]interface{})
-		input.ReplicationSpecification = &types.ReplicationSpecification{
-			RegionList:          replicationSpecification["region_list"].([]string),
-			ReplicationStrategy: types.Rs(replicationSpecification["replication_strategy"].(string)),
+		replicationStrategy := replicationSpecification["replication_strategy"].(string)
+		if replicationStrategy == string(types.RsMultiRegion) {
+			input.ReplicationSpecification = &types.ReplicationSpecification{
+				ReplicationStrategy: types.Rs(replicationStrategy),
+				RegionList:          listToStringSlice(replicationSpecification["region_list"].([]interface{})),
+			}
 		}
 	}
 
@@ -207,4 +210,13 @@ func findKeyspaceByName(ctx context.Context, conn *keyspaces.Client, name string
 	}
 
 	return output, nil
+}
+
+// converts a interface of regions to a string slice
+func listToStringSlice(regions []interface{}) []string {
+	result := make([]string, len(regions))
+	for i, region := range regions {
+		result[i] = region.(string)
+	}
+	return result
 }
