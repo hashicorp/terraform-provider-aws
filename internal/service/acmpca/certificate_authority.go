@@ -600,8 +600,8 @@ func statusCertificateAuthority(ctx context.Context, conn *acmpca.Client, arn st
 
 func waitCertificateAuthorityCreated(ctx context.Context, conn *acmpca.Client, arn string, timeout time.Duration) (*awstypes.CertificateAuthority, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{string(awstypes.CertificateAuthorityStatusCreating)},
-		Target:  []string{string(awstypes.CertificateAuthorityStatusActive), string(awstypes.CertificateAuthorityStatusPendingCertificate)},
+		Pending: enum.Slice(awstypes.CertificateAuthorityStatusCreating),
+		Target:  enum.Slice(awstypes.CertificateAuthorityStatusActive, awstypes.CertificateAuthorityStatusPendingCertificate),
 		Refresh: statusCertificateAuthority(ctx, conn, arn),
 		Timeout: timeout,
 	}
