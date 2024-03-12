@@ -97,8 +97,31 @@ func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckF
 
 func testAccLifecyclePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_imagebuilder_lifecycle_policy" "test" {
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}"
+      }
+      Sid = ""
+    }]
+  })
   name = %[1]q
+}
+
+resource "aws_iam_instance_profile" "test" {
+	name = aws_iam_role.test.name
+	role = aws_iam_role.test.name
+  }
+  
+resource "aws_imagebuilder_lifecycle_policy" "test" {
+  name           = %[1]q
+  execution_role = aws_iam_role.test.arn
 }
 `, rName)
 }
