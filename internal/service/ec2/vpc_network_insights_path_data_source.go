@@ -81,7 +81,7 @@ func dataSourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceDa
 		input.NetworkInsightsPathIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

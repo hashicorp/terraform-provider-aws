@@ -84,7 +84,7 @@ func dataSourceAMIIDsRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildCustomFilterList(v.(*schema.Set))
+		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
 	images, err := FindImages(ctx, conn, input)

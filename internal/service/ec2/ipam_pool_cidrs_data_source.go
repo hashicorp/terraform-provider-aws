@@ -59,7 +59,7 @@ func dataSourceIPAMPoolCIDRsRead(ctx context.Context, d *schema.ResourceData, me
 		IpamPoolId: aws.String(poolID),
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

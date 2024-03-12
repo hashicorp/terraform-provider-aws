@@ -79,7 +79,7 @@ func dataSourceLocalGatewayRead(ctx context.Context, d *schema.ResourceData, met
 		)...)
 	}
 
-	req.Filters = append(req.Filters, BuildCustomFilterList(
+	req.Filters = append(req.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(req.Filters) == 0 {

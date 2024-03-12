@@ -43,7 +43,7 @@ func dataSourceTransitGatewayAttachmentsRead(ctx context.Context, d *schema.Reso
 
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

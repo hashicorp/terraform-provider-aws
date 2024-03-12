@@ -63,7 +63,7 @@ func dataSourceTransitGatewayRouteTableRead(ctx context.Context, d *schema.Resou
 
 	input := &ec2.DescribeTransitGatewayRouteTablesInput{}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

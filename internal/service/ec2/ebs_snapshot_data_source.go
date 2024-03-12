@@ -127,7 +127,7 @@ func dataSourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta
 		input.SnapshotIds = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

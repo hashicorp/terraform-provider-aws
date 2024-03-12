@@ -52,7 +52,7 @@ func dataSourceLocalGatewayVirtualInterfaceGroupsRead(ctx context.Context, d *sc
 		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

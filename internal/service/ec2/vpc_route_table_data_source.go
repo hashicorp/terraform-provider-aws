@@ -209,7 +209,7 @@ func dataSourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta 
 	req.Filters = append(req.Filters, newTagFilterList(
 		Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 	)...)
-	req.Filters = append(req.Filters, BuildCustomFilterList(
+	req.Filters = append(req.Filters, newCustomFilterList(
 		filter.(*schema.Set),
 	)...)
 

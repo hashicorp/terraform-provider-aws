@@ -411,7 +411,7 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 		)...)
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {

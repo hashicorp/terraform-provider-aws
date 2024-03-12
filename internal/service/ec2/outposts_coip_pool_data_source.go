@@ -83,7 +83,7 @@ func dataSourceCoIPPoolRead(ctx context.Context, d *schema.ResourceData, meta in
 		)...)
 	}
 
-	req.Filters = append(req.Filters, BuildCustomFilterList(
+	req.Filters = append(req.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(req.Filters) == 0 {

@@ -95,7 +95,7 @@ func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	input := &ec2.DescribeVolumesInput{}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

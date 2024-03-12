@@ -74,7 +74,7 @@ func dataSourceCustomerGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	input := &ec2.DescribeCustomerGatewaysInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildCustomFilterList(v.(*schema.Set))
+		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("id"); ok {

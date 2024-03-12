@@ -82,7 +82,7 @@ func dataSourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, m
 		input.DhcpOptionsIds = []*string{aws.String(v.(string))}
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {

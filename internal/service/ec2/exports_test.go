@@ -16,6 +16,7 @@ var (
 	CustomFiltersSchema            = customFiltersSchema
 	FindEBSFastSnapshotRestoreByID = findEBSFastSnapshotRestoreByID
 	FindNetworkACLByIDV2           = findNetworkACLByIDV2
+	NewCustomFilterList            = newCustomFilterList
 	NewTagFilterList               = newTagFilterList
 	StopInstance                   = stopInstance
 	UpdateTags                     = updateTags

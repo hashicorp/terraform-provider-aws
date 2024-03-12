@@ -88,7 +88,7 @@ func dataSourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Reso
 		input.TransitGatewayConnectPeerIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

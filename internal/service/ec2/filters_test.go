@@ -101,7 +101,7 @@ func TestNewTagFilterList(t *testing.T) {
 	}
 }
 
-func TestBuildCustomFilterList(t *testing.T) {
+func TestNewCustomFilterList(t *testing.T) {
 	t.Parallel()
 
 	// We need to get a set with the appropriate hash function,
@@ -149,7 +149,7 @@ func TestBuildCustomFilterList(t *testing.T) {
 			Values: []*string{aws.String("bar"), aws.String("baz")},
 		},
 	}
-	result := tfec2.BuildCustomFilterList(filters)
+	result := tfec2.NewCustomFilterList(filters)
 
 	if diff := cmp.Diff(result, expected); diff != "" {
 		t.Errorf("unexpected diff (+wanted, -got): %s", diff)

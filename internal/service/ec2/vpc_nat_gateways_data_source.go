@@ -62,7 +62,7 @@ func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta
 		)...)
 	}
 
-	input.Filter = append(input.Filter, BuildCustomFilterList(
+	input.Filter = append(input.Filter, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

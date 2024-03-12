@@ -84,7 +84,7 @@ func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	input.Filters = append(input.Filters, newTagFilterList(
 		Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 	)...)
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		filter.(*schema.Set),
 	)...)
 

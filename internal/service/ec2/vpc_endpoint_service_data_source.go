@@ -128,7 +128,7 @@ func dataSourceVPCEndpointServiceRead(ctx context.Context, d *schema.ResourceDat
 		)...)
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

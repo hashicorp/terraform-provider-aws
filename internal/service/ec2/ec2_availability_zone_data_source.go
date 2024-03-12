@@ -107,7 +107,7 @@ func dataSourceAvailabilityZoneRead(ctx context.Context, d *schema.ResourceData,
 		},
 	)
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
