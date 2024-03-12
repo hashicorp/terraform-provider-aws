@@ -334,7 +334,7 @@ func TestAccImageBuilderImageRecipe_BlockDeviceMappingEBS_volumeTypeGP2(t *testi
 		CheckDestroy:             testAccCheckImageRecipeDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccImageRecipeConfig_blockDeviceMappingEBSVolumeType(rName, string(types.EbsVolumeTypeGp2)),
+				Config: testAccImageRecipeConfig_blockDeviceMappingEBSVolumeType(rName, string(awstypes.EbsVolumeTypeGp2)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageRecipeExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "block_device_mapping.#", "1"),
@@ -757,7 +757,7 @@ func testAccCheckImageRecipeDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			output, err := conn.GetImageRecipe(ctx, input)
 
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 
