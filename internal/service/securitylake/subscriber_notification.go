@@ -89,6 +89,7 @@ func (r *subscriberNotificationResource) Schema(ctx context.Context, req resourc
 							},
 							PlanModifiers: []planmodifier.List{
 								listplanmodifier.UseStateForUnknown(),
+								listplanmodifier.RequiresReplace(),
 							},
 						},
 						"https_notification_configuration": schema.ListNestedBlock{
@@ -98,6 +99,7 @@ func (r *subscriberNotificationResource) Schema(ctx context.Context, req resourc
 							},
 							PlanModifiers: []planmodifier.List{
 								listplanmodifier.UseStateForUnknown(),
+								listplanmodifier.RequiresReplace(),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
@@ -156,7 +158,7 @@ func (r *subscriberNotificationResource) Create(ctx context.Context, request res
 		return
 	}
 
-	output, err := findSubscriberNotificationByEndPointID(ctx, conn, data.SubscriberID.ValueString(), data.EndpointID.ValueString())
+	output, endpointID, err := findSubscriberNotificationByEndPointID(ctx, conn, data.SubscriberID.ValueString())
 	if err != nil {
 		response.Diagnostics.AddError("creating Security Lake Subscriber Notification", err.Error())
 
@@ -171,7 +173,7 @@ func (r *subscriberNotificationResource) Create(ctx context.Context, request res
 
 	// Set values for unknowns.
 	data.SubscriberID = fwflex.StringToFramework(ctx, &parts[0])
-	data.EndpointID = fwflex.StringToFramework(ctx, &parts[1])
+	data.EndpointID = fwflex.StringToFramework(ctx, endpointID)
 	data.setID()
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
@@ -192,7 +194,7 @@ func (r *subscriberNotificationResource) Read(ctx context.Context, request resou
 
 	conn := r.Meta().SecurityLakeClient(ctx)
 
-	output, err := findSubscriberNotificationByEndPointID(ctx, conn, data.SubscriberID.ValueString(), data.EndpointID.ValueString())
+	output, endpointID, err := findSubscriberNotificationByEndPointID(ctx, conn, data.SubscriberID.ValueString())
 
 	if tfresource.NotFound(err) || output == nil {
 		response.State.RemoveResource(ctx)
@@ -207,20 +209,24 @@ func (r *subscriberNotificationResource) Read(ctx context.Context, request resou
 	}
 
 	data.SubscriberID = fwflex.StringToFramework(ctx, &parts[0])
-	data.EndpointID = fwflex.StringToFramework(ctx, &parts[1])
+	data.EndpointID = fwflex.StringToFramework(ctx, endpointID)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *subscriberNotificationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	conn := r.Meta().SecurityLakeClient(ctx)
-
 	var old, new subscriberNotificationResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	response.Diagnostics.Append(request.State.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	conn := r.Meta().SecurityLakeClient(ctx)
 
 	if !old.Configuration.Equal(new.Configuration) {
 		var configurationData []subscriberNotificationResourceConfigurationModel
@@ -248,6 +254,7 @@ func (r *subscriberNotificationResource) Update(ctx context.Context, request res
 			)
 			return
 		}
+
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
@@ -284,21 +291,21 @@ func (r *subscriberNotificationResource) ImportState(ctx context.Context, req re
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func findSubscriberNotificationByEndPointID(ctx context.Context, conn *securitylake.Client, subscriberID, endpointID string) (*string, error) {
+func findSubscriberNotificationByEndPointID(ctx context.Context, conn *securitylake.Client, subscriberID string) (*string, *string, error) {
 	var resourceID string
 	output, err := findSubscriberByID(ctx, conn, subscriberID)
 
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	if output == nil || output.SubscriberEndpoint == nil {
-		return nil, &tfresource.EmptyResultError{}
+		return nil, nil, &tfresource.EmptyResultError{}
 	}
 
-	resourceID = fmt.Sprintf("%s,%s", aws.ToString(output.SubscriberId), aws.ToString(output.SubscriberEndpoint))
+	resourceID = fmt.Sprintf("%s,%s", aws.ToString(output.SubscriberId), "notification")
 
-	return &resourceID, nil
+	return &resourceID, output.SubscriberEndpoint, nil
 }
 
 func expandSubscriberNotificationResourceConfiguration(ctx context.Context, subscriberNotificationResourceConfigurationModels []subscriberNotificationResourceConfigurationModel) (awstypes.NotificationConfiguration, diag.Diagnostics) {
@@ -370,13 +377,12 @@ func (data *subscriberNotificationResourceModel) InitFromID() error {
 	}
 
 	data.SubscriberID = types.StringValue(parts[0])
-	data.EndpointID = types.StringValue(parts[1])
 
 	return nil
 }
 
 func (data *subscriberNotificationResourceModel) setID() {
-	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.SubscriberID.ValueString(), data.EndpointID.ValueString()}, subscriberNotificationIdPartCount, false)))
+	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.SubscriberID.ValueString(), "notification"}, subscriberNotificationIdPartCount, false)))
 }
 
 type subscriberNotificationResourceConfigurationModel struct {

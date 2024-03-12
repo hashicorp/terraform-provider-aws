@@ -41,6 +41,7 @@ func TestAccSecurityLake_serial(t *testing.T) {
 			"basic":      testAccSubscriberNotification_basic,
 			"https":      testAccSubscriberNotification_https,
 			"disappears": testAccSubscriberNotification_disappears,
+			"update":     testAccSubscriberNotification_update,
 		},
 	}
 

@@ -38,6 +38,9 @@ func testAccSubscriberNotification_basic(t *testing.T) {
 				Config: testAccSubscriberNotificationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.sqs_notification_configuration.#", "1"),
 				),
 			},
 			{
@@ -70,6 +73,11 @@ func testAccSubscriberNotification_https(t *testing.T) {
 				Config: testAccSubscriberNotificationConfig_https(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.https_notification_configuration.0.endpoint", "aws_apigatewayv2_api.test", "api_endpoint"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.https_notification_configuration.0.target_role_arn", "aws_iam_role.event_bridge", "arn"),
 				),
 			},
 			{
@@ -103,16 +111,76 @@ func testAccSubscriberNotification_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSubscriberNotificationExists(ctx, resourceName),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfsecuritylake.ResourceSubscriberNotification, resourceName),
-					// resource.TestCheckResourceAttr(resourceName, "subscriber_name", rName),
-					// resource.TestCheckResourceAttr(resourceName, "access_type", "S3"),
-					// resource.TestCheckResourceAttr(resourceName, "source.#", "1"),
-					// resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.#", "1"),
-					// resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.0.source_name", "ROUTE53"),
-					// resource.TestCheckResourceAttr(resourceName, "source.0.aws_log_source_resource.0.source_version", "1.0"),
-					// resource.TestCheckResourceAttr(resourceName, "subscriber_identity.#", "1"),
-					// resource.TestCheckResourceAttr(resourceName, "subscriber_identity.0.external_id", "example"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.sqs_notification_configuration.#", "1"),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccSubscriberNotification_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_securitylake_subscriber_notification.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			acctest.PreCheckOrganizationsAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSubscriberNotificationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSubscriberNotificationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configuration"},
+			},
+			{
+				Config: testAccSubscriberNotificationConfig_https(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.https_notification_configuration.0.endpoint", "aws_apigatewayv2_api.test", "api_endpoint"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.https_notification_configuration.0.target_role_arn", "aws_iam_role.event_bridge", "arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configuration"},
+			},
+			{
+				Config: testAccSubscriberNotificationConfig_https_update(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSubscriberNotificationExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "subscriber_id", "aws_securitylake_subscriber.test", "id"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.#", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.https_notification_configuration.0.endpoint", "aws_apigatewayv2_api.test", "api_endpoint"),
+					resource.TestCheckResourceAttrPair(resourceName, "configuration.0.https_notification_configuration.0.target_role_arn", "aws_iam_role.event_bridge", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.https_notification_configuration.0.http_method", "POST"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"configuration"},
 			},
 		},
 	})
@@ -127,7 +195,7 @@ func testAccCheckSubscriberNotificationDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			_, err := tfsecuritylake.FindSubscriberNotificationByEndPointID(ctx, conn, rs.Primary.Attributes["subscriber_id"], rs.Primary.Attributes["endpoint_id"])
+			_, _, err := tfsecuritylake.FindSubscriberNotificationByEndPointID(ctx, conn, rs.Primary.Attributes["subscriber_id"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -153,7 +221,7 @@ func testAccCheckSubscriberNotificationExists(ctx context.Context, n string) res
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).SecurityLakeClient(ctx)
 
-		_, err := tfsecuritylake.FindSubscriberNotificationByEndPointID(ctx, conn, rs.Primary.Attributes["subscriber_id"], rs.Primary.Attributes["endpoint_id"])
+		_, _, err := tfsecuritylake.FindSubscriberNotificationByEndPointID(ctx, conn, rs.Primary.Attributes["subscriber_id"])
 
 		return err
 	}
@@ -161,6 +229,12 @@ func testAccCheckSubscriberNotificationExists(ctx context.Context, n string) res
 
 func testAccSubscriberNotification_config(rName string) string {
 	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
+
+resource "aws_apigatewayv2_api" "test" {
+	name          = %[1]q
+	protocol_type = "HTTP"
+}
+
 resource "aws_iam_role" "test" {
   name = "AmazonSecurityLakeCustomDataGlueCrawler-windows-sysmon"
   path = "/service-role/"
@@ -299,8 +373,25 @@ resource "aws_securitylake_subscriber_notification" "test" {
 	subscriber_id = aws_securitylake_subscriber.test.id
 	configuration {
 		https_notification_configuration {
-			endpoint = "https://rqc0a4dz9k.execute-api.eu-west-1.amazonaws.com"
+			endpoint = aws_apigatewayv2_api.test.api_endpoint
 			target_role_arn = aws_iam_role.event_bridge.arn
+		}
+	}
+
+	depends_on = [aws_securitylake_subscriber.test]
+}
+`))
+}
+
+func testAccSubscriberNotificationConfig_https_update(rName string) string {
+	return acctest.ConfigCompose(testAccSubscriberNotification_config(rName), (`
+resource "aws_securitylake_subscriber_notification" "test" {
+	subscriber_id = aws_securitylake_subscriber.test.id
+	configuration {
+		https_notification_configuration {
+			endpoint = aws_apigatewayv2_api.test.api_endpoint
+			target_role_arn = aws_iam_role.event_bridge.arn
+			http_method = "POST"
 		}
 	}
 

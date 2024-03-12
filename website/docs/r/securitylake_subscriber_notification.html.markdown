@@ -5,14 +5,7 @@ page_title: "AWS: aws_securitylake_subscriber_notification"
 description: |-
   Terraform resource for managing an AWS Security Lake Subscriber Notification.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_securitylake_subscriber_notification
 
 Terraform resource for managing an AWS Security Lake Subscriber Notification.
@@ -22,7 +15,12 @@ Terraform resource for managing an AWS Security Lake Subscriber Notification.
 ### Basic Usage
 
 ```terraform
-resource "aws_securitylake_subscriber_notification" "example" {
+resource "aws_securitylake_subscriber_notification" "test" {
+	subscriber_id = aws_securitylake_subscriber.test.id
+	
+  configuration {
+		sqs_notification_configuration {}
+	}
 }
 ```
 
@@ -30,18 +28,27 @@ resource "aws_securitylake_subscriber_notification" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `subscriber_id` - (Required) The subscriber ID for the notification subscription.
+* `configuration` - (Required) Specify the configuration using which you want to create the subscriber notification..
 
-The following arguments are optional:
+Configuration support the following:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `sqs_notification_configuration` - (Optional) The configurations for SQS subscriber notification.
+* `https_notification_configuration` - (Optional) The configurations for HTTPS subscriber notification.
+
+HTTPS Notification Configuration support the following:
+
+* `endpoint` - (Required) The subscription endpoint in Security Lake. If you prefer notification with an HTTPs endpoint, populate this field.
+* `target_role_arn` - (Required) The Amazon Resource Name (ARN) of the EventBridge API destinations IAM role that you created. For more information about ARNs and how to use them in policies, see Managing data access and AWS Managed Policies in the Amazon Security Lake User Guide.
+* `authorization_api_key_name` - (Optional) The key name for the notification subscription.
+* `authorization_api_key_value` - (Optional) The key value for the notification subscription.
+* `http_method` - (Optional) The HTTPS method used for the notification subscription.
 
 ## Attributes Reference
 
 In addition to all arguments above, the following attributes are exported:
 
-* `arn` - ARN of the Subscriber Notification. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `subscriber_endpoint` - The subscriber endpoint to which exception messages are posted.
 
 ## Timeouts
 
@@ -51,10 +58,3 @@ In addition to all arguments above, the following attributes are exported:
 * `update` - (Default `180m`)
 * `delete` - (Default `90m`)
 
-## Import
-
-Security Lake Subscriber Notification can be imported using the `example_id_arg`, e.g.,
-
-```
-$ terraform import aws_securitylake_subscriber_notification.example rft-8012925589
-```
