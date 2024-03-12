@@ -125,6 +125,7 @@ func TestAccQuickSightDashboard_updateVersionNumber(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var dashboard quicksight.Dashboard
+  var dashboardV1 quicksight.Dashboard
 	resourceName := "aws_quicksight_dashboard.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -151,13 +152,13 @@ func TestAccQuickSightDashboard_updateVersionNumber(t *testing.T) {
 			{
 				Config: testAccDashboardConfig_basic(rId, rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
+					testAccCheckDashboardExists(ctx, resourceName, &dashboardV1),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
 					resource.TestCheckResourceAttr(resourceName, "version_number", "2"),
-					testAccCheckDashboardVersionExists(ctx, resourceName, 1, &dashboard),
-					testAccCheckDashboardName(&dashboard, rName),
+					testAccCheckDashboardVersionExists(ctx, resourceName, 1, &dashboardV1),
+					testAccCheckDashboardName(&dashboardV1, rName),
 				),
 			},
 		},
