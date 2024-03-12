@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 // waitImageStatusAvailable waits for an Image to return Available
@@ -23,7 +24,7 @@ func waitImageStatusAvailable(ctx context.Context, conn *imagebuilder.Client, im
 			string(awstypes.ImageStatusPending),
 			string(awstypes.ImageStatusTesting),
 		},
-		Target:  enum.Slice({string(awstypes.ImageStatusAvailable)}),
+		Target:  enum.Slice(awstypes.ImageStatusAvailable),
 		Refresh: statusImage(ctx, conn, imageBuildVersionArn),
 		Timeout: timeout,
 	}
