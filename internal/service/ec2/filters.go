@@ -357,7 +357,7 @@ func newAttributeFilterList(m map[string]string) []*ec2_sdkv1.Filter {
 	return filters
 }
 
-func buildAttributeFilterListV2(m map[string]string) []awstypes.Filter {
+func newAttributeFilterListV2(m map[string]string) []awstypes.Filter {
 	var filters []awstypes.Filter
 
 	// sort the filters by name to make the output deterministic

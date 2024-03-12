@@ -134,7 +134,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		isDefaultStr = "true"
 	}
 	input := &ec2.DescribeVpcsInput{
-		Filters: buildAttributeFilterListV2(
+		Filters: newAttributeFilterListV2(
 			map[string]string{
 				"cidr":            d.Get("cidr_block").(string),
 				"dhcp-options-id": d.Get("dhcp_options_id").(string),
