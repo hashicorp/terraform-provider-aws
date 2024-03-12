@@ -8,12 +8,13 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/shield"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/shield"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
@@ -44,7 +45,7 @@ func ResourceProtectionHealthCheckAssociation() *schema.Resource {
 
 func ResourceProtectionHealthCheckAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ShieldConn(ctx)
+	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
 	protectionId := d.Get("shield_protection_id").(string)
 	healthCheckArn := d.Get("health_check_arn").(string)
@@ -55,7 +56,7 @@ func ResourceProtectionHealthCheckAssociationCreate(ctx context.Context, d *sche
 		HealthCheckArn: aws.String(healthCheckArn),
 	}
 
-	_, err := conn.AssociateHealthCheckWithContext(ctx, input)
+	_, err := conn.AssociateHealthCheck(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "associating Route53 Health Check (%s) with Shield Protected resource (%s): %s", d.Get("health_check_arn"), d.Get("shield_protection_id"), err)
 	}
@@ -65,7 +66,7 @@ func ResourceProtectionHealthCheckAssociationCreate(ctx context.Context, d *sche
 
 func ResourceProtectionHealthCheckAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ShieldConn(ctx)
+	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
 	protectionId, healthCheckArn, err := ProtectionHealthCheckAssociationParseResourceID(d.Id())
 
@@ -77,9 +78,9 @@ func ResourceProtectionHealthCheckAssociationRead(ctx context.Context, d *schema
 		ProtectionId: aws.String(protectionId),
 	}
 
-	resp, err := conn.DescribeProtectionWithContext(ctx, input)
+	resp, err := conn.DescribeProtection(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Shield Protection itself (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -89,7 +90,7 @@ func ResourceProtectionHealthCheckAssociationRead(ctx context.Context, d *schema
 		return sdkdiag.AppendErrorf(diags, "reading Shield Protection Health Check Association (%s): %s", d.Id(), err)
 	}
 
-	isHealthCheck := stringInSlice(strings.Split(healthCheckArn, "/")[1], aws.StringValueSlice(resp.Protection.HealthCheckIds))
+	isHealthCheck := stringInSlice(strings.Split(healthCheckArn, "/")[1], resp.Protection.HealthCheckIds)
 	if !isHealthCheck {
 		log.Printf("[WARN] Shield Protection Health Check Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -103,7 +104,7 @@ func ResourceProtectionHealthCheckAssociationRead(ctx context.Context, d *schema
 
 func ResourceProtectionHealthCheckAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ShieldConn(ctx)
+	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
 	protectionId, healthCheckId, err := ProtectionHealthCheckAssociationParseResourceID(d.Id())
 
@@ -116,7 +117,7 @@ func ResourceProtectionHealthCheckAssociationDelete(ctx context.Context, d *sche
 		HealthCheckArn: aws.String(healthCheckId),
 	}
 
-	_, err = conn.DisassociateHealthCheckWithContext(ctx, input)
+	_, err = conn.DisassociateHealthCheck(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "disassociating Route53 Health Check (%s) from Shield Protected resource (%s): %s", d.Get("health_check_arn"), d.Get("shield_protection_id"), err)

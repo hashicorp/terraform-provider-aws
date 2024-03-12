@@ -1696,7 +1696,7 @@ func validVPNConnectionTunnelInsideCIDR() schema.SchemaValidateFunc {
 func validVPNConnectionTunnelInsideIPv6CIDR() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.IsCIDRNetwork(126, 126),
-		validation.StringMatch(regexache.MustCompile(`^fd00:`), "must be within fd00::/8"),
+		validation.StringMatch(regexache.MustCompile(`^fd`), "must be within fd00::/8"),
 	)
 }
 

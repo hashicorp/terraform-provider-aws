@@ -18,18 +18,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
+var (
+	_ xattr.TypeWithValidate   = (*durationType)(nil)
+	_ basetypes.StringTypable  = (*durationType)(nil)
+	_ basetypes.StringValuable = (*Duration)(nil)
+)
+
 type durationType struct {
 	basetypes.StringType
 }
 
 var (
 	DurationType = durationType{}
-)
-
-var (
-	_ xattr.TypeWithValidate   = (*durationType)(nil)
-	_ basetypes.StringTypable  = (*durationType)(nil)
-	_ basetypes.StringValuable = (*Duration)(nil)
 )
 
 func (t durationType) Equal(o attr.Type) bool {
@@ -61,7 +61,7 @@ func (t durationType) ValueFromString(_ context.Context, in types.String) (baset
 		return DurationUnknown(), diags // Must not return validation errors
 	}
 
-	return DurationValue(valueString), diags
+	return DurationValueMust(valueString), diags
 }
 
 func (t durationType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
@@ -128,7 +128,7 @@ func DurationUnknown() Duration {
 	return Duration{StringValue: basetypes.NewStringUnknown()}
 }
 
-func DurationValue(value string) Duration {
+func DurationValueMust(value string) Duration {
 	return Duration{
 		StringValue: basetypes.NewStringValue(value),
 		value:       errs.Must(time.ParseDuration(value)),

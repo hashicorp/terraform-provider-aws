@@ -342,6 +342,7 @@ func fieldToMatchBaseSchema() *schema.Resource {
 			"all_query_arguments": emptySchema(),
 			"body":                bodySchema(),
 			"cookies":             cookiesSchema(),
+			"header_order":        headerOrderSchema(),
 			"headers":             headersSchema(),
 			"ja3_fingerprint":     ja3fingerprintSchema(),
 			"json_body":           jsonBodySchema(),
@@ -618,6 +619,31 @@ func challengeConfigSchema() *schema.Schema {
 	}
 }
 
+func outerChallengeConfigSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"immunity_time_property": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"immunity_time": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func countConfigSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -845,6 +871,18 @@ func matchScopeSchema() *schema.Schema {
 	}
 }
 
+func headerOrderSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"oversize_handling": oversizeHandlingRequiredSchema(),
+			},
+		},
+	}
+}
+
 func headersSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -1051,6 +1089,12 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 							},
 						},
 					},
+				},
+				"evaluation_window_sec": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      300,
+					ValidateFunc: validation.IntInSlice([]int{60, 120, 300, 600}),
 				},
 				"forwarded_ip_config": forwardedIPConfigSchema(),
 				"limit": {

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWAFRegionalByteMatchSet_basic(t *testing.T) {
@@ -28,7 +29,7 @@ func TestAccWAFRegionalByteMatchSet_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckByteMatchSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -76,7 +77,7 @@ func TestAccWAFRegionalByteMatchSet_changeNameForceNew(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckByteMatchSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -149,7 +150,7 @@ func TestAccWAFRegionalByteMatchSet_changeByteMatchTuples(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckByteMatchSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -220,7 +221,7 @@ func TestAccWAFRegionalByteMatchSet_noByteMatchTuples(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckByteMatchSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -249,7 +250,7 @@ func TestAccWAFRegionalByteMatchSet_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafregional.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckByteMatchSetDestroy(ctx),
 		Steps: []resource.TestStep{

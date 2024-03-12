@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"sort"
 	"strings"
 	"time"
@@ -15,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -26,13 +26,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/mapstructure"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 )
 
 // @SDKResource("aws_inspector2_enabler")
@@ -129,11 +128,11 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 			return nil
 		}
 
-		var errs *multierror.Error
+		var errs []error
 		for _, acct := range out.FailedAccounts {
-			errs = multierror.Append(errs, newFailedAccountError(acct))
+			errs = append(errs, newFailedAccountError(acct))
 		}
-		err = failedAccountsError(*errs)
+		err = errors.Join(errs...)
 
 		if tfslices.All(out.FailedAccounts, func(acct types.FailedAccount) bool {
 			switch acct.ErrorCode {
@@ -176,7 +175,7 @@ func resourceEnablerCreate(ctx context.Context, d *schema.ResourceData, meta int
 			disableAccountIDs = append(disableAccountIDs, acctID)
 			in := &inspector2.DisableInput{
 				AccountIds:    []string{acctID},
-				ResourceTypes: maps.Keys(resourceStatuses),
+				ResourceTypes: tfmaps.Keys(resourceStatuses),
 			}
 
 			_, err := conn.Disable(ctx, in)
@@ -222,7 +221,7 @@ func resourceEnablerRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	}
 
-	accountStatuses := maps.Values(s)
+	accountStatuses := tfmaps.Values(s)
 	accountStatus := accountStatuses[0]
 	var resourceTypes []types.ResourceScanType
 	for k, a := range accountStatus.ResourceStatuses {
@@ -364,11 +363,14 @@ func disableAccounts(ctx context.Context, conn *inspector2.Client, d *schema.Res
 		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), tfresource.NewEmptyResultError(nil))
 	}
 
+	var errs []error
 	for _, acct := range out.FailedAccounts {
 		if acct.ErrorCode != types.ErrorCodeAccessDenied {
-			err = multierror.Append(err, newFailedAccountError(acct))
+			errs = append(errs, newFailedAccountError(acct))
 		}
 	}
+	err = errors.Join(errs...)
+
 	if err != nil {
 		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionDeleting, ResNameEnabler, d.Id(), err)
 	}
@@ -378,13 +380,6 @@ func disableAccounts(ctx context.Context, conn *inspector2.Client, d *schema.Res
 	}
 
 	return diags
-}
-
-type failedAccountsError multierror.Error
-
-func (e failedAccountsError) Error() string {
-	m := multierror.Error(e)
-	return m.Error()
 }
 
 type failedAccountError struct {
@@ -462,20 +457,20 @@ func statusEnablerAccountAndResourceTypes(ctx context.Context, conn *inspector2.
 			return nil, "", err
 		}
 
-		if tfslices.All(maps.Values(st), accountStatusEquals(types.StatusDisabled)) {
+		if tfslices.All(tfmaps.Values(st), accountStatusEquals(types.StatusDisabled)) {
 			return nil, "", nil
 		}
 
-		if tfslices.Any(maps.Values(st), func(v AccountResourceStatus) bool {
+		if tfslices.Any(tfmaps.Values(st), func(v AccountResourceStatus) bool {
 			if slices.Contains(pendingStates, v.Status) {
 				return true
 			}
-			if tfslices.Any(maps.Values(v.ResourceStatuses), func(v types.Status) bool {
+			if tfslices.Any(tfmaps.Values(v.ResourceStatuses), func(v types.Status) bool {
 				return slices.Contains(pendingStates, v)
 			}) {
 				return true
 			}
-			if v.Status == types.StatusEnabled && tfslices.All(maps.Values(v.ResourceStatuses), tfslices.PredicateEquals(types.StatusDisabled)) {
+			if v.Status == types.StatusEnabled && tfslices.All(tfmaps.Values(v.ResourceStatuses), tfslices.PredicateEquals(types.StatusDisabled)) {
 				return true
 			}
 			return false
@@ -499,7 +494,7 @@ func statusEnablerAccount(ctx context.Context, conn *inspector2.Client, accountI
 			return nil, "", err
 		}
 
-		if tfslices.All(maps.Values(st), accountStatusEquals(types.StatusDisabled)) {
+		if tfslices.All(tfmaps.Values(st), accountStatusEquals(types.StatusDisabled)) {
 			return nil, "", nil
 		}
 
@@ -527,6 +522,7 @@ func AccountStatuses(ctx context.Context, conn *inspector2.Client, accountIDs []
 		return nil, err
 	}
 
+	var errs []error
 	results := make(map[string]AccountResourceStatus, len(out.Accounts))
 	for _, a := range out.Accounts {
 		if a.AccountId == nil || a.State == nil {
@@ -539,7 +535,7 @@ func AccountStatuses(ctx context.Context, conn *inspector2.Client, accountIDs []
 		var m map[string]*types.State
 		e := mapstructure.Decode(a.ResourceState, &m)
 		if e != nil {
-			err = multierror.Append(err, e)
+			errs = append(errs, e)
 			continue
 		}
 		for k, v := range m {
@@ -550,6 +546,7 @@ func AccountStatuses(ctx context.Context, conn *inspector2.Client, accountIDs []
 		}
 		results[aws.ToString(a.AccountId)] = status
 	}
+	err = errors.Join(errs...)
 
 	if err != nil {
 		return results, err

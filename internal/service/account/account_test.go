@@ -21,6 +21,10 @@ func TestAccAccount_serial(t *testing.T) {
 		"PrimaryContact": {
 			"basic": testAccPrimaryContact_basic,
 		},
+		"Region": {
+			"basic":     testAccRegion_basic,
+			"AccountID": testAccRegion_accountID,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

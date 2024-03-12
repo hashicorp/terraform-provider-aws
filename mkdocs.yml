@@ -14,6 +14,7 @@ nav:
           - Resource: add-a-new-resource.md
           - Service: add-a-new-service.md
           - Data source: add-a-new-datasource.md
+          - Function: add-a-new-function.md
           - AWS Region: add-a-new-region.md
           - Import Support: add-import-support.md
           - Resource Filtering: resource-filtering.md
@@ -34,6 +35,7 @@ nav:
       - Design Decision Log: design-decision-log.md
       - Dependency Updates: dependency-updates.md
       - AWS SDK for Go Versions: aws-go-sdk-versions.md
+      - AWS SDK for Go Migrations: aws-go-sdk-migrations.md
       - Terraform Plugin Development Packages: terraform-plugin-development-packages.md
       - AWS Go SDK Base: aws-go-sdk-base.md
       - Error Handling: error-handling.md

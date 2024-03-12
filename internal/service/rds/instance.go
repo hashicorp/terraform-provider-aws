@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -35,7 +36,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"golang.org/x/exp/slices"
 )
 
 // NOTE ON "ID", "IDENTIFIER":
@@ -222,12 +222,42 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 			},
 			"domain": {
-				Type:     schema.TypeString,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"domain_fqdn", "domain_ou", "domain_auth_secret_arn", "domain_dns_ips"},
+			},
+			"domain_auth_secret_arn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ValidateFunc:  verify.ValidARN,
+				ConflictsWith: []string{"domain", "domain_iam_role_name"},
+			},
+			"domain_dns_ips": {
+				Type:     schema.TypeSet,
 				Optional: true,
+				MinItems: 2,
+				MaxItems: 2,
+				Elem: &schema.Schema{
+					Type:         schema.TypeString,
+					ValidateFunc: validation.IsIPAddress,
+				},
+				ConflictsWith: []string{"domain", "domain_iam_role_name"},
+			},
+			"domain_fqdn": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ConflictsWith: []string{"domain", "domain_iam_role_name"},
 			},
 			"domain_iam_role_name": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"domain_fqdn", "domain_ou", "domain_auth_secret_arn", "domain_dns_ips"},
+			},
+			"domain_ou": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"domain", "domain_iam_role_name"},
 			},
 			"enabled_cloudwatch_logs_exports": {
 				Type:     schema.TypeSet,
@@ -451,6 +481,10 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ValidateFunc: validation.Any(
+					validation.IntInSlice([]int{7, 731}),
+					validation.IntDivisibleBy(31),
+				),
 			},
 			"port": {
 				Type:     schema.TypeInt,
@@ -642,8 +676,8 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	// Some API calls (e.g. CreateDBInstanceReadReplica and
-	// RestoreDBInstanceFromDBSnapshot do not support all parameters to
+	// Some API calls (e.g. CreateDBInstanceReadReplica, RestoreDBInstanceFromDBSnapshot
+	// RestoreDBInstanceToPointInTime do not support all parameters to
 	// correctly apply all settings in one pass. For missing parameters or
 	// unsupported configurations, we may need to call ModifyDBInstance
 	// afterwards to prevent Terraform operators from API errors or needing
@@ -732,6 +766,20 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("option_group_name"); ok {
 			input.OptionGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("parameter_group_name"); ok {
+			crossRegion := false
+			if arn.IsARN(sourceDBInstanceID) {
+				sourceARN, err := arn.Parse(sourceDBInstanceID)
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (read replica) (%s): %s", identifier, err)
+				}
+				crossRegion = sourceARN.Region != meta.(*conns.AWSClient).Region
+			}
+			if crossRegion {
+				input.DBParameterGroupName = aws.String(v.(string))
+			}
 		}
 
 		if v, ok := d.GetOk("performance_insights_enabled"); ok {
@@ -950,12 +998,12 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.OptionGroupName = aws.String(v.(string))
 		}
 
-		if v, ok := d.GetOk("password"); ok {
-			input.MasterUserPassword = aws.String(v.(string))
-		}
-
 		if v, ok := d.GetOk("parameter_group_name"); ok {
 			input.DBParameterGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("password"); ok {
+			input.MasterUserPassword = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("performance_insights_enabled"); ok {
@@ -1085,8 +1133,24 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Domain = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("domain_auth_secret_arn"); ok {
+			input.DomainAuthSecretArn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
+			input.DomainDnsIps = flex.ExpandStringSet(v.(*schema.Set))
+		}
+
+		if v, ok := d.GetOk("domain_fqdn"); ok {
+			input.DomainFqdn = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("domain_iam_role_name"); ok {
 			input.DomainIAMRoleName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_ou"); ok {
+			input.DomainOu = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
@@ -1314,6 +1378,22 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.DomainIAMRoleName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("domain_fqdn"); ok {
+			input.DomainFqdn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_ou"); ok {
+			input.DomainOu = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_auth_secret_arn"); ok {
+			input.DomainAuthSecretArn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
+			input.DomainDnsIps = flex.ExpandStringSet(v.(*schema.Set))
+		}
+
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
@@ -1368,6 +1448,11 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("parameter_group_name"); ok {
 			input.DBParameterGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("password"); ok {
+			modifyDbInstanceInput.MasterUserPassword = aws.String(v.(string))
+			requiresModifyDbInstance = true
 		}
 
 		if v, ok := d.GetOk("port"); ok {
@@ -1473,8 +1558,24 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.Domain = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("domain_auth_secret_arn"); ok {
+			input.DomainAuthSecretArn = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
+			input.DomainDnsIps = flex.ExpandStringSet(v.(*schema.Set))
+		}
+
+		if v, ok := d.GetOk("domain_fqdn"); ok {
+			input.DomainFqdn = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("domain_iam_role_name"); ok {
 			input.DomainIAMRoleName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_ou"); ok {
+			input.DomainOu = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
@@ -1694,11 +1795,20 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.Set("deletion_protection", v.DeletionProtection)
 	if len(v.DomainMemberships) > 0 && v.DomainMemberships[0] != nil {
-		d.Set("domain", v.DomainMemberships[0].Domain)
-		d.Set("domain_iam_role_name", v.DomainMemberships[0].IAMRoleName)
+		v := v.DomainMemberships[0]
+		d.Set("domain", v.Domain)
+		d.Set("domain_auth_secret_arn", v.AuthSecretArn)
+		d.Set("domain_dns_ips", aws.StringValueSlice(v.DnsIps))
+		d.Set("domain_fqdn", v.FQDN)
+		d.Set("domain_iam_role_name", v.IAMRoleName)
+		d.Set("domain_ou", v.OU)
 	} else {
 		d.Set("domain", nil)
+		d.Set("domain_auth_secret_arn", nil)
+		d.Set("domain_dns_ips", nil)
+		d.Set("domain_fqdn", nil)
 		d.Set("domain_iam_role_name", nil)
+		d.Set("domain_ou", nil)
 	}
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(v.EnabledCloudwatchLogsExports))
 	d.Set("engine", v.Engine)
@@ -2074,10 +2184,19 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 	// Always set this. Fixes TestAccRDSInstance_BlueGreenDeployment_updateWithDeletionProtection
 	input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
 
+	// "InvalidParameterCombination: Specify the parameters for either AWS Managed Active Directory or self-managed Active Directory".
 	if d.HasChanges("domain", "domain_iam_role_name") {
 		needsModify = true
 		input.Domain = aws.String(d.Get("domain").(string))
 		input.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
+	} else if d.HasChanges("domain_auth_secret_arn", "domain_dns_ips", "domain_fqdn", "domain_ou") {
+		needsModify = true
+		input.DomainAuthSecretArn = aws.String(d.Get("domain_auth_secret_arn").(string))
+		if v, ok := d.GetOk("domain_dns_ips"); ok && v.(*schema.Set).Len() > 0 {
+			input.DomainDnsIps = flex.ExpandStringValueSet(v.(*schema.Set))
+		}
+		input.DomainFqdn = aws.String(d.Get("domain_fqdn").(string))
+		input.DomainOu = aws.String(d.Get("domain_ou").(string))
 	}
 
 	if d.HasChange("enabled_cloudwatch_logs_exports") {
@@ -2226,7 +2345,7 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		needsModify = true
 		input.StorageType = aws.String(d.Get("storage_type").(string))
 
-		if aws.StringValue(input.StorageType) == storageTypeIO1 {
+		if slices.Contains([]string{storageTypeIO1, storageTypeIO2}, aws.StringValue(input.StorageType)) {
 			input.Iops = aws.Int32(int32(d.Get("iops").(int)))
 		}
 	}

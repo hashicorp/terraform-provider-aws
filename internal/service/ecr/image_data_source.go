@@ -6,6 +6,7 @@ package ecr
 import (
 	"context"
 	"fmt"
+	"slices"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ecr"
@@ -16,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"golang.org/x/exp/slices"
 )
 
 // @SDKDataSource("aws_ecr_image")
@@ -99,18 +99,6 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		} else {
 			input.ImageIds[0].ImageTag = aws.String(v.(string))
-		}
-	}
-
-	if v, ok := d.Get("most_recent").(bool); ok && v {
-		if len(input.ImageIds) == 0 {
-			input.ImageIds = []*ecr.ImageIdentifier{
-				{
-					ImageTag: aws.String("latest"),
-				},
-			}
-		} else {
-			input.ImageIds[0].ImageTag = aws.String("latest")
 		}
 	}
 

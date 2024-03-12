@@ -29,13 +29,13 @@ class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
         DataAwsCloudfrontOriginAccessIdentity(self, "example",
-            id="EDFDVBD632BHDS5"
+            id="E1ZAKK699EOLAL"
         )
 ```
 
 ## Argument Reference
 
-* `id` (Required) -  The identifier for the distribution. For example: `EDFDVBD632BHDS5`.
+* `id` (Required) -  The identifier for the origin access identity. For example: `E1ZAKK699EOLAL`.
 
 ## Attribute Reference
 
@@ -55,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
    access identity, which you use when giving the origin access identity read
    permission to an object in Amazon S3.
 
-<!-- cache-key: cdktf-0.19.0 input-6ee07d67e88c83135a682bc01ecae9a6413d07992377fed93295e34cd1b0ceec -->
+<!-- cache-key: cdktf-0.20.1 input-a7cd9b1786140626f45007d44ca5d963414beca09e6e286c1818e2e771206508 -->

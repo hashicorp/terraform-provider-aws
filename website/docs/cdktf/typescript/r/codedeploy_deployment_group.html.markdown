@@ -12,7 +12,7 @@ description: |-
 
 Provides a CodeDeploy Deployment Group for a CodeDeploy Application
 
-~> **NOTE on blue/green deployments:** When using `greenFleetProvisioningOption` with the `copyAutoScalingGroup` action, CodeDeploy will create a new ASG with a different name. This ASG is _not_ managed by terraform and will conflict with existing configuration and state. You may want to use a different approach to managing deployments that involve multiple ASG, such as `discoverExisting` with separate blue and green ASG.
+~> **NOTE on blue/green deployments:** When using `greenFleetProvisioningOption` with the `COPY_AUTO_SCALING_GROUP` action, CodeDeploy will create a new ASG with a different name. This ASG is _not_ managed by terraform and will conflict with existing configuration and state. You may want to use a different approach to managing deployments that involve multiple ASG, such as `DISCOVER_EXISTING` with separate blue and green ASG.
 
 ## Example Usage
 
@@ -262,7 +262,7 @@ This resource supports the following arguments:
 * `onPremisesInstanceTagFilter` - (Optional) On premise tag filters associated with the group. See the AWS docs for details.
 * `triggerConfiguration` - (Optional) Configuration block(s) of the triggers for the deployment group (documented below).
 * `outdatedInstancesStrategy` - (Optional) Configuration block of Indicates what happens when new Amazon EC2 instances are launched mid-deployment and do not receive the deployed application revision. Valid values are `UPDATE` and `IGNORE`. Defaults to `UPDATE`.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### alarm_configuration Argument Reference
 
@@ -300,13 +300,13 @@ You can configure how traffic is rerouted to instances in a replacement environm
 * `actionOnTimeout` - (Optional) When to reroute traffic from an original environment to a replacement environment in a blue/green deployment.
     * `CONTINUE_DEPLOYMENT`: Register new instances with the load balancer immediately after the new application revision is installed on the instances in the replacement environment.
     * `STOP_DEPLOYMENT`: Do not register new instances with load balancer unless traffic is rerouted manually. If traffic is not rerouted manually before the end of the specified wait period, the deployment status is changed to Stopped.
-* `waitTimeInMinutes` - (Optional) The number of minutes to wait before the status of a blue/green deployment changed to Stopped if rerouting is not started manually. Applies only to the `STOP_DEPLOYMENT` option for `action_on_timeout`.
+* `waitTimeInMinutes` - (Optional) The number of minutes to wait before the status of a blue/green deployment changed to Stopped if rerouting is not started manually. Applies only to the `STOP_DEPLOYMENT` option for `actionOnTimeout`.
 
 You can configure how instances will be added to the replacement environment in a blue/green deployment. `greenFleetProvisioningOption` supports the following:
 
 * `action` - (Optional) The method used to add instances to a replacement environment.
     * `DISCOVER_EXISTING`: Use instances that already exist or will be created manually.
-    * `COPY_AUTO_SCALING_GROUP`: Use settings from a specified **Auto Scaling** group to define and create instances in a new Auto Scaling group. _Exactly one Auto Scaling group must be specified_ when selecting `COPY_AUTO_SCALING_GROUP`. Use `autoscaling_groups` to specify the Auto Scaling group.
+    * `COPY_AUTO_SCALING_GROUP`: Use settings from a specified **Auto Scaling** group to define and create instances in a new Auto Scaling group. _Exactly one Auto Scaling group must be specified_ when selecting `COPY_AUTO_SCALING_GROUP`. Use `autoscalingGroups` to specify the Auto Scaling group.
 
 You can configure how instances in the original environment are terminated when a blue/green deployment is successful. `terminateBlueInstancesOnDeploymentSuccess` supports the following:
 
@@ -349,9 +349,9 @@ Each `ecsService` configuration block supports the following:
 
 You can configure the **Load Balancer** to use in a deployment. `loadBalancerInfo` supports the following:
 
-* `elbInfo` - (Optional) The Classic Elastic Load Balancer to use in a deployment. Conflicts with `target_group_info` and `target_group_pair_info`.
-* `targetGroupInfo` - (Optional) The (Application/Network Load Balancer) target group to use in a deployment. Conflicts with `elb_info` and `target_group_pair_info`.
-* `targetGroupPairInfo` - (Optional) The (Application/Network Load Balancer) target group pair to use in a deployment. Conflicts with `elb_info` and `target_group_info`.
+* `elbInfo` - (Optional) The Classic Elastic Load Balancer to use in a deployment. Conflicts with `targetGroupInfo` and `targetGroupPairInfo`.
+* `targetGroupInfo` - (Optional) The (Application/Network Load Balancer) target group to use in a deployment. Conflicts with `elbInfo` and `targetGroupPairInfo`.
+* `targetGroupPairInfo` - (Optional) The (Application/Network Load Balancer) target group pair to use in a deployment. Conflicts with `elbInfo` and `targetGroupInfo`.
 
 #### load_balancer_info elb_info Argument Reference
 
@@ -415,7 +415,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - Application name and deployment group name.
 * `computePlatform` - The destination platform type for the deployment.
 * `deploymentGroupId` - The ID of the CodeDeploy deployment group.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -425,9 +425,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { CodedeployDeploymentGroup } from "./.gen/providers/aws/codedeploy-deployment-group";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    CodedeployDeploymentGroup.generateConfigForImport(
+      this,
+      "example",
+      "my-application:my-deployment-group"
+    );
   }
 }
 
@@ -441,4 +451,4 @@ Using `terraform import`, import CodeDeploy Deployment Groups using `appName`, a
 
 [1]: http://docs.aws.amazon.com/codedeploy/latest/userguide/monitoring-sns-event-notifications-create-trigger.html
 
-<!-- cache-key: cdktf-0.19.0 input-5e030adb78af16cbd2b9d795ba427fe21289613e6f4a6a7fcdd3fb270bcf4d76 -->
+<!-- cache-key: cdktf-0.20.1 input-5e030adb78af16cbd2b9d795ba427fe21289613e6f4a6a7fcdd3fb270bcf4d76 -->

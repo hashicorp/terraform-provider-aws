@@ -10,10 +10,11 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/acm"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/acm/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const certificateRE = `^arn:[^:]+:acm:[^:]+:[^:]+:certificate/.+$`
@@ -43,7 +44,7 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -51,23 +52,23 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.CertificateStatusIssued)),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
 				),
 			},
 			{
-				Config: testAccCertificateDataSourceConfig_status(domain, acm.CertificateStatusIssued),
+				Config: testAccCertificateDataSourceConfig_status(domain, string(awstypes.CertificateStatusIssued)),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
-					resource.TestCheckResourceAttr(resourceName, "status", acm.CertificateStatusIssued),
+					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.CertificateStatusIssued)),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate"),
 					resource.TestCheckResourceAttrSet(resourceName, "certificate_chain"),
 				),
 			},
 			{
-				Config: testAccCertificateDataSourceConfig_types(domain, acm.CertificateTypeAmazonIssued),
+				Config: testAccCertificateDataSourceConfig_types(domain, string(awstypes.CertificateTypeAmazonIssued)),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
@@ -85,7 +86,7 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCertificateDataSourceConfig_mostRecentAndStatus(domain, acm.CertificateStatusIssued, true),
+				Config: testAccCertificateDataSourceConfig_mostRecentAndStatus(domain, string(awstypes.CertificateStatusIssued), true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
@@ -94,7 +95,7 @@ func TestAccACMCertificateDataSource_singleIssued(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, acm.CertificateTypeAmazonIssued, true),
+				Config: testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, string(awstypes.CertificateTypeAmazonIssued), true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
@@ -131,7 +132,7 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -139,11 +140,11 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching domain`),
 			},
 			{
-				Config:      testAccCertificateDataSourceConfig_status(domain, acm.CertificateStatusIssued),
+				Config:      testAccCertificateDataSourceConfig_status(domain, string(awstypes.CertificateStatusIssued)),
 				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching domain`),
 			},
 			{
-				Config:      testAccCertificateDataSourceConfig_types(domain, acm.CertificateTypeAmazonIssued),
+				Config:      testAccCertificateDataSourceConfig_types(domain, string(awstypes.CertificateTypeAmazonIssued)),
 				ExpectError: regexache.MustCompile(`multiple ACM Certificates matching domain`),
 			},
 			{
@@ -154,14 +155,14 @@ func TestAccACMCertificateDataSource_multipleIssued(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccCertificateDataSourceConfig_mostRecentAndStatus(domain, acm.CertificateStatusIssued, true),
+				Config: testAccCertificateDataSourceConfig_mostRecentAndStatus(domain, string(awstypes.CertificateStatusIssued), true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
 				),
 			},
 			{
-				Config: testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, acm.CertificateTypeAmazonIssued, true),
+				Config: testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, string(awstypes.CertificateTypeAmazonIssued), true),
 				Check: resource.ComposeTestCheckFunc(
 					//lintignore:AWSAT001
 					resource.TestMatchResourceAttr(resourceName, "arn", arnRe),
@@ -181,7 +182,7 @@ func TestAccACMCertificateDataSource_noMatchReturnsError(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -189,11 +190,11 @@ func TestAccACMCertificateDataSource_noMatchReturnsError(t *testing.T) {
 				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
-				Config:      testAccCertificateDataSourceConfig_status(domain, acm.CertificateStatusIssued),
+				Config:      testAccCertificateDataSourceConfig_status(domain, string(awstypes.CertificateStatusIssued)),
 				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
-				Config:      testAccCertificateDataSourceConfig_types(domain, acm.CertificateTypeAmazonIssued),
+				Config:      testAccCertificateDataSourceConfig_types(domain, string(awstypes.CertificateTypeAmazonIssued)),
 				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
@@ -201,11 +202,11 @@ func TestAccACMCertificateDataSource_noMatchReturnsError(t *testing.T) {
 				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
-				Config:      testAccCertificateDataSourceConfig_mostRecentAndStatus(domain, acm.CertificateStatusIssued, true),
+				Config:      testAccCertificateDataSourceConfig_mostRecentAndStatus(domain, string(awstypes.CertificateStatusIssued), true),
 				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 			{
-				Config:      testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, acm.CertificateTypeAmazonIssued, true),
+				Config:      testAccCertificateDataSourceConfig_mostRecentAndTypes(domain, string(awstypes.CertificateTypeAmazonIssued), true),
 				ExpectError: regexache.MustCompile(`no ACM Certificate matching domain`),
 			},
 		},
@@ -222,7 +223,7 @@ func TestAccACMCertificateDataSource_keyTypes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acm.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{

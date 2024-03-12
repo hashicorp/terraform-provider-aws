@@ -6,6 +6,7 @@ package ecr
 import (
 	"context"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -16,7 +17,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"golang.org/x/exp/slices"
 )
 
 // @SDKDataSource("aws_ecr_repository")

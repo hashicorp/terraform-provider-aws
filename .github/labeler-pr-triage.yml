@@ -161,6 +161,9 @@ service/batch:
 service/bedrock:
   - 'internal/service/bedrock/**/*'
   - 'website/**/bedrock_*'
+service/bedrockagent:
+  - 'internal/service/bedrockagent/**/*'
+  - 'website/**/bedrock_agent_*'
 service/billingconductor:
   - 'internal/service/billingconductor/**/*'
   - 'website/**/billingconductor_*'
@@ -209,6 +212,9 @@ service/cloudformation:
 service/cloudfront:
   - 'internal/service/cloudfront/**/*'
   - 'website/**/cloudfront_*'
+service/cloudfrontkeyvaluestore:
+  - 'internal/service/cloudfrontkeyvaluestore/**/*'
+  - 'website/**/cloudfront_keyvaluestore_*'
 service/cloudhsmv2:
   - 'internal/service/cloudhsmv2/**/*'
   - 'website/**/cloudhsm*'
@@ -296,6 +302,9 @@ service/connectparticipant:
 service/controltower:
   - 'internal/service/controltower/**/*'
   - 'website/**/controltower_*'
+service/costoptimizationhub:
+  - 'internal/service/costoptimizationhub/**/*'
+  - 'website/**/costoptimizationhub_*'
 service/cur:
   - 'internal/service/cur/**/*'
   - 'website/**/cur_*'
@@ -669,6 +678,9 @@ service/lookoutmetrics:
 service/lookoutvision:
   - 'internal/service/lookoutvision/**/*'
   - 'website/**/lookoutvision_*'
+service/m2:
+  - 'internal/service/m2/**/*'
+  - 'website/**/m2_*'
 service/machinelearning:
   - 'internal/service/machinelearning/**/*'
   - 'website/**/machinelearning_*'

@@ -12,7 +12,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -575,6 +574,107 @@ func TestAccVPC_DefaultTagsProviderAndResource_moveDuplicateTags(t *testing.T) {
 	})
 }
 
+func TestAccVPC_Tags_EmptyTag_OnCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpc awstypes.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCConfig_tags1("key1", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPC_Tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpc awstypes.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCConfig_tags1("key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccVPCConfig_tags2("key1", "value1", "key2", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPC_Tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpc awstypes.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCConfig_tags1("key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccVPCConfig_tags1("key1", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // TestAccVPC_DynamicResourceTagsMergedWithLocals_ignoreChanges ensures computed "tags_all"
 // attributes are correctly determined when the provider-level default_tags block
 // is left unused and resource tags (merged with local.tags) are only known at apply time,
@@ -890,7 +990,7 @@ func TestAccVPC_enableNetworkAddressUsageMetrics(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, endpoints.AwsUsGovPartitionID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVPCDestroy(ctx),
@@ -972,7 +1072,7 @@ func TestAccVPC_assignGeneratedIPv6CIDRBlockWithNetworkBorderGroup(t *testing.T)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckRegion(t, endpoints.UsWest2RegionID)
+			acctest.PreCheckRegion(t, names.USWest2RegionID)
 			// https://docs.aws.amazon.com/vpc/latest/userguide/Extend_VPCs.html#local-zone:
 			// "You can request the IPv6 Amazon-provided IP addresses and associate them with the network border group
 			//  for a new or existing VPCs only for us-west-2-lax-1a and use-west-2-lax-1b. All other Local Zones don't support IPv6."

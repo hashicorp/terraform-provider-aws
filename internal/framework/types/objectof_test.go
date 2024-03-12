@@ -95,11 +95,11 @@ func TestObjectTypeOfValueFromTerraform(t *testing.T) {
 		},
 		"valid value": {
 			tfVal:   objectAValue,
-			wantVal: fwtypes.NewObjectValueOf[ObjectA](ctx, &objectA),
+			wantVal: fwtypes.NewObjectValueOfMust[ObjectA](ctx, &objectA),
 		},
 		"invalid Terraform value": {
 			tfVal:   objectBValue,
-			wantVal: fwtypes.NewObjectValueOf[ObjectA](ctx, &objectA),
+			wantVal: fwtypes.NewObjectValueOfMust[ObjectA](ctx, &objectA),
 			wantErr: true,
 		},
 	}
@@ -149,14 +149,14 @@ func TestObjectValueOfEqual(t *testing.T) {
 			other: types.StringValue("test"),
 		},
 		"equal value": {
-			other: fwtypes.NewObjectValueOf(ctx, &objectA),
+			other: fwtypes.NewObjectValueOfMust(ctx, &objectA),
 			want:  true,
 		},
 		"struct not equal value": {
-			other: fwtypes.NewObjectValueOf(ctx, &objectA2),
+			other: fwtypes.NewObjectValueOfMust(ctx, &objectA2),
 		},
 		"other struct value": {
-			other: fwtypes.NewObjectValueOf(ctx, &objectB),
+			other: fwtypes.NewObjectValueOfMust(ctx, &objectB),
 		},
 		"null value": {
 			other: fwtypes.NewObjectValueOfNull[ObjectA](ctx),
@@ -171,7 +171,7 @@ func TestObjectValueOfEqual(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			got := fwtypes.NewObjectValueOf(ctx, &objectA).Equal(testCase.other)
+			got := fwtypes.NewObjectValueOfMust(ctx, &objectA).Equal(testCase.other)
 
 			if got != testCase.want {
 				t.Errorf("got = %v, want = %v", got, testCase.want)

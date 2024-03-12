@@ -77,6 +77,9 @@ func TestStringEnumTypeValidate(t *testing.T) {
 		"valid enum": {
 			val: tftypes.NewValue(tftypes.String, string(awstypes.AclPermissionWrite)),
 		},
+		"valid zero value": {
+			val: tftypes.NewValue(tftypes.String, ""),
+		},
 		"invalid enum": {
 			val:         tftypes.NewValue(tftypes.String, "LIST"),
 			expectError: true,
@@ -100,5 +103,14 @@ func TestStringEnumTypeValidate(t *testing.T) {
 				t.Fatalf("got unexpected error: %#v", diags)
 			}
 		})
+	}
+}
+
+func TestStringEnumZeroValue(t *testing.T) {
+	t.Parallel()
+
+	var x fwtypes.StringEnum[awstypes.AclPermission]
+	if got, want := x.IsNull(), true; got != want {
+		t.Errorf("IsNull = %t, want %t", got, want)
 	}
 }

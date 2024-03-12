@@ -70,6 +70,12 @@ func (r *scraperResource) Schema(ctx context.Context, req resource.SchemaRequest
 			},
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			names.AttrID:  framework.IDAttribute(),
+			"role_arn": schema.StringAttribute{
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"scrape_configuration": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -272,8 +278,9 @@ func (r *scraperResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	// Set values for unknowns after creation is complete.
-	sourceData.EKS = fwtypes.NewListNestedObjectValueOfPtr(ctx, eksSourceData)
-	data.Source = fwtypes.NewListNestedObjectValueOfPtr(ctx, sourceData)
+	sourceData.EKS = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, eksSourceData)
+	data.RoleARN = flex.StringToFramework(ctx, scraper.RoleArn)
+	data.Source = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, sourceData)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -312,10 +319,11 @@ func (r *scraperResource) Read(ctx context.Context, req resource.ReadRequest, re
 			return
 		}
 
-		data.Destination = fwtypes.NewListNestedObjectValueOfPtr(ctx, &scraperDestinationModel{
-			AMP: fwtypes.NewListNestedObjectValueOfPtr(ctx, &ampDestinationData),
+		data.Destination = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &scraperDestinationModel{
+			AMP: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &ampDestinationData),
 		})
 	}
+	data.RoleARN = flex.StringToFramework(ctx, scraper.RoleArn)
 	if v, ok := scraper.ScrapeConfiguration.(*awstypes.ScrapeConfigurationMemberConfigurationBlob); ok {
 		data.ScrapeConfiguration = flex.StringValueToFramework(ctx, string(v.Value))
 	}
@@ -326,8 +334,8 @@ func (r *scraperResource) Read(ctx context.Context, req resource.ReadRequest, re
 			return
 		}
 
-		data.Source = fwtypes.NewListNestedObjectValueOfPtr(ctx, &scraperSourceModel{
-			EKS: fwtypes.NewListNestedObjectValueOfPtr(ctx, &eksSourceData),
+		data.Source = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &scraperSourceModel{
+			EKS: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &eksSourceData),
 		})
 	}
 
@@ -392,6 +400,7 @@ type scraperResourceModel struct {
 	ARN                 types.String                                             `tfsdk:"arn"`
 	Destination         fwtypes.ListNestedObjectValueOf[scraperDestinationModel] `tfsdk:"destination"`
 	ID                  types.String                                             `tfsdk:"id"`
+	RoleARN             types.String                                             `tfsdk:"role_arn"`
 	ScrapeConfiguration types.String                                             `tfsdk:"scrape_configuration"`
 	Source              fwtypes.ListNestedObjectValueOf[scraperSourceModel]      `tfsdk:"source"`
 	Tags                types.Map                                                `tfsdk:"tags"`
