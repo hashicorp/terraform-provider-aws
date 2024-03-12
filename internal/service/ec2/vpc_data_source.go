@@ -148,7 +148,7 @@ func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.VpcIds = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterListV2(d.Get("filter").(*schema.Set))...)
+	input.Filters = append(input.Filters, newCustomFilterListV2(d.Get("filter").(*schema.Set))...)
 	input.Filters = append(input.Filters, tagFilters(ctx)...)
 
 	if len(input.Filters) == 0 {

@@ -220,7 +220,7 @@ func newCustomFilterList(filterSet *schema.Set) []*ec2_sdkv1.Filter {
 	return filters
 }
 
-// BuildCustomFilterListV2 takes the set value extracted from a schema
+// newCustomFilterListV2 takes the set value extracted from a schema
 // attribute conforming to the schema returned by CustomFiltersSchema,
 // and transforms it into a []*ec2.Filter representing the same filter
 // expressions which is ready to pass into the "Filters" attribute on most
@@ -229,7 +229,7 @@ func newCustomFilterList(filterSet *schema.Set) []*ec2_sdkv1.Filter {
 // This function is intended only to be used in conjunction with
 // CustomFiltersSchema. See the docs on that function for more details
 // on the configuration pattern this is intended to support.
-func BuildCustomFilterListV2(filterSet *schema.Set) []awstypes.Filter {
+func newCustomFilterListV2(filterSet *schema.Set) []awstypes.Filter {
 	if filterSet == nil {
 		return []awstypes.Filter{}
 	}
