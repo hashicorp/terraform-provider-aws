@@ -10,8 +10,9 @@ var (
 	ResourceDataLake        = newDataLakeResource
 	ResourceSubscriber      = newSubscriberResource
 
-	FindAWSLogSourceBySourceName    = findAWSLogSourceBySourceName
-	FindCustomLogSourceBySourceName = findCustomLogSourceBySourceName
-	FindDataLakeByARN               = findDataLakeByARN
-	FindSubscriberByID              = findSubscriberByID
+	FindAWSLogSourceBySourceName           = findAWSLogSourceBySourceName
+	FindCustomLogSourceBySourceName        = findCustomLogSourceBySourceName
+	FindDataLakeByARN                      = findDataLakeByARN
+	FindSubscriberByID                     = findSubscriberByID
+	FindSubscriberNotificationByEndPointID = findSubscriberNotificationByEndPointID
 )

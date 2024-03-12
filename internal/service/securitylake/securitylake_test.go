@@ -37,6 +37,11 @@ func TestAccSecurityLake_serial(t *testing.T) {
 			"tags":       testAccSubscriber_tags,
 			"updated":    testAccSubscriber_update,
 		},
+		"SubscriberNotification": {
+			"basic":      testAccSubscriberNotification_basic,
+			"https":      testAccSubscriberNotification_https,
+			"disappears": testAccSubscriberNotification_disappears,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
