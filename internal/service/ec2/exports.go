@@ -5,4 +5,5 @@ package ec2
 
 var (
 	FindVPCByIDV2 = findVPCByIDV2
+	NewFilter     = newFilter
 )

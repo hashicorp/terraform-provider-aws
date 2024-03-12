@@ -19,6 +19,20 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
 
+func newFilter(name string, values []string) *ec2_sdkv1.Filter {
+	return &ec2_sdkv1.Filter{
+		Name:   aws_sdkv1.String(name),
+		Values: aws_sdkv1.StringSlice(values),
+	}
+}
+
+func newFilterV2(name string, values []string) awstypes.Filter {
+	return awstypes.Filter{
+		Name:   aws_sdkv2.String(name),
+		Values: values,
+	}
+}
+
 // newTagFilterList takes a []*ec2.Tag and produces a []*ec2.Filter that
 // represents exact matches for all of the tag key/value pairs given in
 // the tag set.
@@ -66,11 +80,9 @@ func attributeFiltersFromMultimap(m map[string][]string) []*ec2_sdkv1.Filter {
 	}
 
 	filters := []*ec2_sdkv1.Filter{}
+
 	for k, v := range m {
-		filters = append(filters, &ec2_sdkv1.Filter{
-			Name:   aws_sdkv1.String(k),
-			Values: aws_sdkv1.StringSlice(v),
-		})
+		filters = append(filters, newFilter(k, v))
 	}
 
 	return filters
@@ -345,13 +357,6 @@ func BuildAttributeFilterList(m map[string]string) []*ec2_sdkv1.Filter {
 	return filters
 }
 
-func NewFilter(name string, values []string) *ec2_sdkv1.Filter {
-	return &ec2_sdkv1.Filter{
-		Name:   aws_sdkv1.String(name),
-		Values: aws_sdkv1.StringSlice(values),
-	}
-}
-
 func buildAttributeFilterListV2(m map[string]string) []awstypes.Filter {
 	var filters []awstypes.Filter
 
@@ -373,11 +378,4 @@ func buildAttributeFilterListV2(m map[string]string) []awstypes.Filter {
 	}
 
 	return filters
-}
-
-func newFilterV2(name string, values []string) awstypes.Filter {
-	return awstypes.Filter{
-		Name:   aws_sdkv2.String(name),
-		Values: values,
-	}
 }
