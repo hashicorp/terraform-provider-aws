@@ -5,9 +5,11 @@ package cognitoidp
 
 // Exports for use in tests only.
 var (
+	ResourceIdentityProvider      = resourceIdentityProvider
+	ResourceManagedUserPoolClient = newResourceManagedUserPoolClient
 	ResourceUserGroup             = resourceUserGroup
 	ResourceUserPoolClient        = newResourceUserPoolClient
-	ResourceManagedUserPoolClient = newResourceManagedUserPoolClient
 
-	FindGroupByTwoPartKey = findGroupByTwoPartKey
+	FindGroupByTwoPartKey            = findGroupByTwoPartKey
+	FindIdentityProviderByTwoPartKey = findIdentityProviderByTwoPartKey
 )

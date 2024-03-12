@@ -8,7 +8,6 @@ import (
 )
 
 const (
-	ResNameIdentityProvider  = "Identity Provider"
 	ResNameResourceServer    = "Resource Server"
 	ResNameRiskConfiguration = "Risk Configuration"
 	ResNameUserPoolClient    = "User Pool Client"
