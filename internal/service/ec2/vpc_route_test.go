@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -2207,10 +2208,6 @@ func TestAccVPCRoute_prefixListToEgressOnlyInternetGateway(t *testing.T) {
 
 func TestAccVPCRoute_duplicate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var route ec2.Route
-	var routeTable ec2.RouteTable
-	resourceName := "aws_route.test1"
-	rtResourceName := "aws_route_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	destinationCidr := "10.3.0.0/16"
 
@@ -2221,12 +2218,8 @@ func TestAccVPCRoute_duplicate(t *testing.T) {
 		CheckDestroy:             testAccCheckRouteDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCRouteConfig_ipv4InternetGatewayDuplicate(rName, destinationCidr),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRouteTableExists(ctx, rtResourceName, &routeTable),
-					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
-					testAccCheckRouteExists(ctx, resourceName, &route),
-				),
+				Config:      testAccVPCRouteConfig_ipv4InternetGatewayDuplicate(rName, destinationCidr),
+				ExpectError: regexache.MustCompile(`RouteAlreadyExists: Route .* already exists`),
 			},
 		},
 	})
