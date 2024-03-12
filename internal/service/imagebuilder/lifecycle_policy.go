@@ -916,7 +916,7 @@ func flattenDetailExclusionRules(ctx context.Context, apiObject *awstypes.Lifecy
 	obj := map[string]attr.Value{}
 
 	if apiObject.Amis != nil {
-		amis, d := flattenExclusionRulesAmis(ctx, apiObject.Amis)
+		amis, d := flattenExclusionRulesAMIS(ctx, apiObject.Amis)
 		diags.Append(d...)
 
 		obj["amis"] = amis
@@ -936,7 +936,7 @@ func flattenDetailExclusionRules(ctx context.Context, apiObject *awstypes.Lifecy
 
 }
 
-func flattenExclusionRulesAmis(ctx context.Context, apiObject *awstypes.LifecyclePolicyDetailExclusionRulesAmis) (types.List, diag.Diagnostics) {
+func flattenExclusionRulesAMIS(ctx context.Context, apiObject *awstypes.LifecyclePolicyDetailExclusionRulesAmis) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: resourceAMISAttrTypes}
 
