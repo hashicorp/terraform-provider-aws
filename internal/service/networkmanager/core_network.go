@@ -6,6 +6,7 @@ package networkmanager
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -14,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go/private/protocol"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -607,14 +607,14 @@ func waitCoreNetworkPolicyCreated(ctx context.Context, conn *networkmanager.Netw
 	}
 
 	if output, ok := outputRaw.(*networkmanager.CoreNetworkPolicy); ok {
-		if state, errors := aws.StringValue(output.ChangeSetState), output.PolicyErrors; state == networkmanager.ChangeSetStateFailedGeneration && len(errors) > 0 {
-			var errs *multierror.Error
+		if state, v := aws.StringValue(output.ChangeSetState), output.PolicyErrors; state == networkmanager.ChangeSetStateFailedGeneration && len(v) > 0 {
+			var errs []error
 
-			for _, err := range errors {
-				errs = multierror.Append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.Message)))
+			for _, err := range v {
+				errs = append(errs, fmt.Errorf("%s: %s", aws.StringValue(err.ErrorCode), aws.StringValue(err.Message)))
 			}
 
-			tfresource.SetLastError(err, errs.ErrorOrNil())
+			tfresource.SetLastError(err, errors.Join(errs...))
 		}
 
 		return output, err

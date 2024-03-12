@@ -5,6 +5,7 @@ package transfer
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -13,7 +14,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -743,7 +743,7 @@ func resourceServerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		input := &transfer.ListUsersInput{
 			ServerId: aws.String(d.Id()),
 		}
-		var errs *multierror.Error
+		var errs []error
 
 		err := conn.ListUsersPagesWithContext(ctx, input, func(page *transfer.ListUsersOutput, lastPage bool) bool {
 			if page == nil {
@@ -754,7 +754,7 @@ func resourceServerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 				err := userDelete(ctx, conn, d.Id(), aws.StringValue(user.UserName), d.Timeout(schema.TimeoutDelete))
 
 				if err != nil {
-					errs = multierror.Append(errs, err)
+					errs = append(errs, err)
 
 					continue
 				}
@@ -764,10 +764,10 @@ func resourceServerDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		})
 
 		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("listing Transfer Server (%s) Users: %w", d.Id(), err))
+			errs = append(errs, fmt.Errorf("listing Transfer Server (%s) Users: %w", d.Id(), err))
 		}
 
-		err = errs.ErrorOrNil()
+		err = errors.Join(errs...)
 
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)

@@ -8,6 +8,7 @@ package main
 
 import (
 	_ "embed"
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/parser"
@@ -17,7 +18,6 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
@@ -65,7 +65,7 @@ func main() {
 
 	v.processDir(".")
 
-	if err := v.err.ErrorOrNil(); err != nil {
+	if err := errors.Join(v.errs...); err != nil {
 		g.Fatalf("%s", err.Error())
 	}
 
@@ -111,8 +111,8 @@ var (
 )
 
 type visitor struct {
-	err *multierror.Error
-	g   *common.Generator
+	errs []error
+	g    *common.Generator
 
 	fileName     string
 	functionName string
@@ -130,7 +130,7 @@ func (v *visitor) processDir(path string) {
 	}, parser.ParseComments)
 
 	if err != nil {
-		v.err = multierror.Append(v.err, fmt.Errorf("parsing (%s): %w", path, err))
+		v.errs = append(v.errs, fmt.Errorf("parsing (%s): %w", path, err))
 
 		return
 	}
@@ -174,7 +174,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "FrameworkResource":
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
-					v.err = multierror.Append(v.err, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
 				}
 				d.TypeName = args.Positional[0]
@@ -185,7 +185,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			case "SDKResource":
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
-					v.err = multierror.Append(v.err, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
 				}
 				d.TypeName = args.Positional[0]

@@ -75,7 +75,7 @@ func WaitStackSetOperationSucceeded(ctx context.Context, conn *cloudformation.Cl
 			})
 
 			if listErr == nil {
-				tfresource.SetLastError(waitErr, fmt.Errorf("Operation (%s) Results: %w", operationID, StackSetOperationError(summaries)))
+				tfresource.SetLastError(waitErr, fmt.Errorf("Operation (%s) Results: %w", operationID, stackSetOperationError(summaries)))
 			} else {
 				tfresource.SetLastError(waitErr, fmt.Errorf("listing CloudFormation Stack Set (%s) Operation (%s) results: %w", stackSetName, operationID, listErr))
 			}

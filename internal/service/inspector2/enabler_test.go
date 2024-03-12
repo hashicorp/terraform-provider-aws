@@ -11,7 +11,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/inspector2/types"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -517,14 +516,19 @@ func testAccCheckEnablerDestroy(ctx context.Context) resource.TestCheckFunc {
 				return create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameEnabler, rs.Primary.ID, err)
 			}
 
+			var errs []error
 			for k, v := range st {
 				if v.Status != types.StatusDisabled {
-					err = multierror.Append(err,
+					errs = append(errs,
 						create.Error(names.Inspector2, create.ErrActionCheckingDestroyed, tfinspector2.ResNameEnabler, rs.Primary.ID,
 							fmt.Errorf("after destroy, expected DISABLED for account %s, got: %s", k, v),
 						),
 					)
 				}
+			}
+
+			if err := errors.Join(errs...); err != nil {
+				return err
 			}
 		}
 
@@ -556,15 +560,17 @@ func testAccCheckEnablerExists(ctx context.Context, name string, t []types.Resou
 			return create.Error(names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameEnabler, name, err)
 		}
 
+		var errs []error
 		for k, s := range st {
 			if s.Status != types.StatusEnabled {
-				err = multierror.Append(err, create.Error(
+				errs = append(errs, create.Error(
 					names.Inspector2, create.ErrActionCheckingExistence, tfinspector2.ResNameEnabler, id,
 					fmt.Errorf("after create, expected ENABLED for account %s, got: %s", k, s.Status)),
 				)
 			}
 		}
-		return err
+
+		return errors.Join(errs...)
 	}
 }
 
