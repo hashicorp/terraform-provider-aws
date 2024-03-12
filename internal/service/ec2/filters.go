@@ -198,8 +198,8 @@ func CustomFiltersBlock() datasourceschema.Block {
 	}
 }
 
-// customFilterData represents a single configured filter.
-type customFilterData struct {
+// customFilterModel represents a single configured filter.
+type customFilterModel struct {
 	Name   types.String `tfsdk:"name"`
 	Values types.Set    `tfsdk:"values"`
 }
@@ -282,7 +282,7 @@ func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2.Filter 
 	var filters []*ec2.Filter
 
 	for _, v := range filterSet.Elements() {
-		var data customFilterData
+		var data customFilterModel
 
 		if tfsdk.ValueAs(ctx, v, &data).HasError() {
 			continue
@@ -311,7 +311,7 @@ func BuildCustomFiltersV2(ctx context.Context, filterSet types.Set) []awstypes.F
 	var filters []awstypes.Filter
 
 	for _, v := range filterSet.Elements() {
-		var data customFilterData
+		var data customFilterModel
 
 		if tfsdk.ValueAs(ctx, v, &data).HasError() {
 			continue
