@@ -139,6 +139,7 @@ func ResourceDashboard() *schema.Resource {
 
 const (
 	ResNameDashboard = "Dashboard"
+	DashboardLatestVersion int64 = -1
 )
 
 func resourceDashboardCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -203,7 +204,7 @@ func resourceDashboardRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.FromErr(err)
 	}
 
-	out, err := FindDashboardByID(ctx, conn, d.Id(), -1)
+	out, err := FindDashboardByID(ctx, conn, d.Id(), DashboardLatestVersion)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] QuickSight Dashboard (%s) not found, removing from state", d.Id())
@@ -298,14 +299,14 @@ func resourceDashboardUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		updatedVersionNumber := extractVersionFromARN(aws.StringValue(out.VersionArn))
-		if _, err := waitDashboardUpdated(ctx, conn, d.Id(), *updatedVersionNumber, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := waitDashboardUpdated(ctx, conn, d.Id(), updatedVersionNumber, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.DiagError(names.QuickSight, create.ErrActionWaitingForUpdate, ResNameDashboard, d.Id(), err)
 		}
 
 		publishVersion := &quicksight.UpdateDashboardPublishedVersionInput{
 			AwsAccountId:  aws.String(awsAccountId),
 			DashboardId:   aws.String(dashboardId),
-			VersionNumber: updatedVersionNumber,
+			VersionNumber: aws.Int64(updatedVersionNumber),
 		}
 		_, err = conn.UpdateDashboardPublishedVersionWithContext(ctx, publishVersion)
 		if err != nil {
@@ -368,26 +369,19 @@ func resourceDashboardDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return nil
 }
 
-// Pass version as -1 for latest published version, or specify a specific version if required
+// Pass version as DashboardLatestVersion for latest published version, or specify a specific version if required
 func FindDashboardByID(ctx context.Context, conn *quicksight.QuickSight, id string, version int64) (*quicksight.Dashboard, error) {
 	awsAccountId, dashboardId, err := ParseDashboardId(id)
 	if err != nil {
 		return nil, err
 	}
 
-	var descOpts *quicksight.DescribeDashboardInput
-
-	if version == -1 {
-		descOpts = &quicksight.DescribeDashboardInput{
-			AwsAccountId: aws.String(awsAccountId),
-			DashboardId:  aws.String(dashboardId),
-		}
-	} else {
-		descOpts = &quicksight.DescribeDashboardInput{
-			AwsAccountId:  aws.String(awsAccountId),
-			DashboardId:   aws.String(dashboardId),
-			VersionNumber: &version,
-		}
+	descOpts := &quicksight.DescribeDashboardInput{
+		AwsAccountId: aws.String(awsAccountId),
+		DashboardId:  aws.String(dashboardId),
+	}
+	if version != DashboardLatestVersion {
+		descOpts.VersionNumber = aws.Int64(version)
 	}
 
 	out, err := conn.DescribeDashboardWithContext(ctx, descOpts)
@@ -422,7 +416,7 @@ func createDashboardId(awsAccountID, dashboardId string) string {
 	return fmt.Sprintf("%s,%s", awsAccountID, dashboardId)
 }
 
-func extractVersionFromARN(arn string) *int64 {
+func extractVersionFromARN(arn string) int64 {
 	version, _ := strconv.Atoi(arn[strings.LastIndex(arn, "/")+1:])
-	return aws.Int64(int64(version))
+	return int64(version)
 }

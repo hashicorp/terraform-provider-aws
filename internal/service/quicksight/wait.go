@@ -133,7 +133,7 @@ func waitDashboardCreated(ctx context.Context, conn *quicksight.QuickSight, id s
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{quicksight.ResourceStatusCreationInProgress},
 		Target:                    []string{quicksight.ResourceStatusCreationSuccessful},
-		Refresh:                   statusDashboard(ctx, conn, id, -1),
+		Refresh:                   statusDashboard(ctx, conn, id, DashboardLatestVersion),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
