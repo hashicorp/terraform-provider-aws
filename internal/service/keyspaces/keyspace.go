@@ -59,6 +59,26 @@ func resourceKeyspace() *schema.Resource {
 					"The name can have up to 48 characters. It must begin with an alpha-numeric character and can only contain alpha-numeric characters and underscores.",
 				),
 			},
+			"replication_specification": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"region_list": {
+							Type:     schema.TypeList,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"replication_strategy": {
+							Type:     schema.TypeString,
+							Required: true,
+							ValidateFunc: validation.StringInSlice([]string{
+								string(types.RsSingleRegion),
+								string(types.RsMultiRegion)}, false),
+						},
+					},
+				},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -74,6 +94,14 @@ func resourceKeyspaceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &keyspaces.CreateKeyspaceInput{
 		KeyspaceName: aws.String(name),
 		Tags:         getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("replication_specification"); ok {
+		replicationSpecification := v.([]interface{})[0].(map[string]interface{})
+		input.ReplicationSpecification = &types.ReplicationSpecification{
+			RegionList:          replicationSpecification["region_list"].([]string),
+			ReplicationStrategy: types.Rs(replicationSpecification["replication_strategy"].(string)),
+		}
 	}
 
 	_, err := conn.CreateKeyspace(ctx, input)

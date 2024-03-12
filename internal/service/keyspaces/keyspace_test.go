@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/keyspaces/types"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -47,6 +48,42 @@ func TestAccKeyspacesKeyspace_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccKeyspacesKeyspace_replicationSpecification(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := "tf_acc_test_" + sdkacctest.RandString(20)
+	resourceName := "aws_keyspaces_keyspace.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { testAccPreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyspaceConfig_replicationSpecification(rName, string(types.RsSingleRegion)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckKeyspaceExists(ctx, resourceName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cassandra", "/keyspace/"+rName+"/"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "replication_specification.0.replication_strategy", string(types.RsMultiRegion)),
+					resource.TestCheckResourceAttr(resourceName, "replication_specification.0.region_list.#", "0"),
+				),
+			},
+			{
+				Config: testAccKeyspaceConfig_multiReplicationSpecification(rName, string(types.RsMultiRegion), string("[\"us-east-1\", \"us-west-2\"]")),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckKeyspaceExists(ctx, resourceName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "cassandra", "/keyspace/"+rName+"/"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "replication_specification.0.replication_strategy", string(types.RsMultiRegion)),
+					resource.TestCheckResourceAttr(resourceName, "replication_specification.0.region_list.#", "2"),
+				),
 			},
 		},
 	})
@@ -196,4 +233,27 @@ resource "aws_keyspaces_keyspace" "test" {
   }
 }
 `, rName, tag1Key, tag1Value, tag2Key, tag2Value)
+}
+
+func testAccKeyspaceConfig_replicationSpecification(rName, rSpecification string) string {
+	return fmt.Sprintf(`
+resource "aws_keyspaces_keyspace" "test" {
+  name = %[1]q
+  ReplicationSpecification {
+	ReplicationStrategy = %[2]q
+  }
+}
+`, rName, rSpecification)
+}
+
+func testAccKeyspaceConfig_multiReplicationSpecification(rName, rSpecification, regionList string) string {
+	return fmt.Sprintf(`
+resource "aws_keyspaces_keyspace" "test" {
+  name = %[1]q
+  ReplicationSpecification {
+	ReplicationStrategy = %[2]q
+	RegionList = %[3]q
+  }
+}
+`, rName, rSpecification, regionList)
 }
