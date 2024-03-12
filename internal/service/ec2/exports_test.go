@@ -5,11 +5,12 @@ package ec2
 
 // Exports for use in tests only.
 var (
-	ResourceEBSFastSnapshotRestore   = newResourceEBSFastSnapshotRestore
-	ResourceInstanceConnectEndpoint  = newResourceInstanceConnectEndpoint
-	ResourceSecurityGroupEgressRule  = newResourceSecurityGroupEgressRule
-	ResourceSecurityGroupIngressRule = newResourceSecurityGroupIngressRule
-	ResourceTag                      = resourceTag
+	ResourceEBSFastSnapshotRestore          = newResourceEBSFastSnapshotRestore
+	ResourceInstanceConnectEndpoint         = newResourceInstanceConnectEndpoint
+	ResourceSecurityGroupEgressRule         = newResourceSecurityGroupEgressRule
+	ResourceSecurityGroupIngressRule        = newResourceSecurityGroupIngressRule
+	ResourceTag                             = resourceTag
+	ResourceTransitGatewayPeeringAttachment = resourceTransitGatewayPeeringAttachment
 
 	FindEBSFastSnapshotRestoreByID = findEBSFastSnapshotRestoreByID
 

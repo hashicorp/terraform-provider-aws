@@ -22,7 +22,7 @@ import (
 
 // @SDKResource("aws_ec2_transit_gateway_peering_attachment", name="Transit Gateway Peering Attachment")
 // @Tags(identifierAttribute="id")
-func ResourceTransitGatewayPeeringAttachment() *schema.Resource {
+func resourceTransitGatewayPeeringAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayPeeringAttachmentCreate,
 		ReadWithoutTimeout:   resourceTransitGatewayPeeringAttachmentRead,
@@ -53,16 +53,16 @@ func ResourceTransitGatewayPeeringAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
+			"state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"transit_gateway_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
-			},
-			"state": {
-				Type:     schema.TypeString,
-				Computed: true,
 			},
 		},
 	}
@@ -119,10 +119,8 @@ func resourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schema.
 	d.Set("peer_account_id", transitGatewayPeeringAttachment.AccepterTgwInfo.OwnerId)
 	d.Set("peer_region", transitGatewayPeeringAttachment.AccepterTgwInfo.Region)
 	d.Set("peer_transit_gateway_id", transitGatewayPeeringAttachment.AccepterTgwInfo.TransitGatewayId)
+	d.Set("state", transitGatewayPeeringAttachment.State)
 	d.Set("transit_gateway_id", transitGatewayPeeringAttachment.RequesterTgwInfo.TransitGatewayId)
-	if transitGatewayPeeringAttachment.State != nil {
-		d.Set("state", *transitGatewayPeeringAttachment.State)
-	}
 
 	setTagsOut(ctx, transitGatewayPeeringAttachment.Tags)
 
