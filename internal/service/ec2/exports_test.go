@@ -9,6 +9,7 @@ var (
 	ResourceEBSFastSnapshotRestore   = newResourceEBSFastSnapshotRestore
 	ResourceInstanceConnectEndpoint  = newResourceInstanceConnectEndpoint
 	ResourceNetworkACL               = resourceNetworkACL
+	ResourceNetworkACLRule           = resourceNetworkACLRule
 	ResourceSecurityGroupEgressRule  = newResourceSecurityGroupEgressRule
 	ResourceSecurityGroupIngressRule = newResourceSecurityGroupIngressRule
 	ResourceTag                      = resourceTag

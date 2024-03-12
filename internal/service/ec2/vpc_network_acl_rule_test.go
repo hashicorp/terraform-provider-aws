@@ -340,8 +340,6 @@ func TestAccVPCNetworkACLRule_tcpProtocol(t *testing.T) {
 
 func TestAccVPCNetworkACLRule_duplicate(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource1Name := "aws_network_acl_rule.test1"
-	resource2Name := "aws_network_acl_rule.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -351,11 +349,8 @@ func TestAccVPCNetworkACLRule_duplicate(t *testing.T) {
 		CheckDestroy:             testAccCheckNetworkACLRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCNetworkACLRuleConfig_duplicate(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckNetworkACLRuleExists(ctx, resource1Name),
-					testAccCheckNetworkACLRuleExists(ctx, resource2Name),
-				),
+				Config:      testAccVPCNetworkACLRuleConfig_duplicate(rName),
+				ExpectError: regexache.MustCompile(`NetworkAclEntryAlreadyExists: EC2 Network ACL .* already exists`),
 			},
 		},
 	})
@@ -792,7 +787,7 @@ resource "aws_network_acl_rule" "test1" {
 }
 
 resource "aws_network_acl_rule" "test2" {
-  network_acl_id = aws_network_acl.test.id
+  network_acl_id = aws_network_acl_rule.test1.network_acl_id
   rule_number    = 200
   egress         = false
   protocol       = "tcp"

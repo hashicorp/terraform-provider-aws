@@ -870,8 +870,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_network_acl_association",
 		},
 		{
-			Factory:  ResourceNetworkACLRule,
+			Factory:  resourceNetworkACLRule,
 			TypeName: "aws_network_acl_rule",
+			Name:     "Network ACL Rule",
 		},
 		{
 			Factory:  ResourceNetworkInterface,

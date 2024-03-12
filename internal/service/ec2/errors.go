@@ -115,6 +115,7 @@ const (
 	errCodeInvalidVPNGatewayAttachmentNotFound               = "InvalidVpnGatewayAttachment.NotFound"
 	errCodeInvalidVPNGatewayIDNotFound                       = "InvalidVpnGatewayID.NotFound"
 	errCodeNatGatewayNotFound                                = "NatGatewayNotFound"
+	errCodeNetworkACLEntryAlreadyExists                      = "NetworkAclEntryAlreadyExists"
 	errCodeOperationNotPermitted                             = "OperationNotPermitted"
 	errCodePrefixListVersionMismatch                         = "PrefixListVersionMismatch"
 	errCodeResourceNotReady                                  = "ResourceNotReady"
@@ -187,4 +188,8 @@ func UnsuccessfulItemsError(apiObjects []*ec2.UnsuccessfulItem) error {
 	}
 
 	return errors.Join(errs...)
+}
+
+func networkACLEntryAlreadyExistsError(naclID string, egress bool, ruleNumber int) error {
+	return awserr.New(errCodeNetworkACLEntryAlreadyExists, fmt.Sprintf("EC2 Network ACL (%s) Rule (egress: %t)(%d) already exists", naclID, egress, ruleNumber), nil)
 }
