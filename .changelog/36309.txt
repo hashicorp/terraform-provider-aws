@@ -1,3 +1,7 @@
 ```release-note:bug
-resource/ecs_service : This fixes a bug introduced in [v5.37.0] causing an exception if service connect timeout block is empty or the aws_pca_authority_arn is set to null.
+resource/aws_ecs_service: Fix `panic: interface conversion: interface {} is nil, not map[string]interface {}` when `service_connect_configuration.service.timeout` is empty
+```
+
+```release-note:bug
+resource/aws_ecs_service: `service_connect_configuration.service.tls.issuer_cert_authority.aws_pca_authority_arn` is Required
 ```
