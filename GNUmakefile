@@ -7,7 +7,7 @@ TEST_COUNT          ?= 1
 ACCTEST_TIMEOUT     ?= 360m
 ACCTEST_PARALLELISM ?= 20
 P                   ?= 20
-GO_VER              ?= go
+GO_VER              ?= $(shell echo go`cat .go-version | xargs`)
 SWEEP_TIMEOUT       ?= 360m
 
 ifneq ($(origin PKG), undefined)
@@ -75,11 +75,11 @@ default: build
 
 # Please keep targets in alphabetical order
 
-build: fmtcheck ## Build provider
+build: prereq-go fmtcheck ## Build provider
 	$(GO_VER) install
 	@echo "make: build complete"
 
-cleango: ## Clean up Go cache
+cleango: prereq-go ## Clean up Go cache
 	@echo "make: cleaning Go..."
 	@echo "make: WARNING: This will kill gopls and clean Go caches"
 	@vscode=`ps -ef | grep Visual\ Studio\ Code | wc -l | xargs` ; \
@@ -91,10 +91,11 @@ cleango: ## Clean up Go cache
 		echo "make: killing gopls process $$proc" ; \
 		kill -9 $$proc ; \
 	done ; \
+	echo "make: cleaning Go caches..." ; \
 	$(GO_VER) clean -modcache -testcache -cache -i -r
 	@echo "make: Go caches cleaned"
 
-cleantidy: ## Clean up tidy
+cleantidy: prereq-go ## Clean up tidy
 	@echo "make: tidying Go mods..."
 	@gover="$(GO_VER)" ; \
 	if [ "$$gover" = "go" ] ; then \
@@ -155,14 +156,14 @@ fmt: ## Fix Go source formatting
 	gofmt -s -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
 # Currently required by tf-deploy compile
-fmtcheck: ## Verify Go source is formatted
+fmtcheck: prereq-go ## Verify Go source is formatted
 	@sh -c "'$(CURDIR)/.ci/scripts/gofmtcheck.sh'"
 
 fumpt: ## Run gofumpt
 	@echo "make: fixing source code with gofumpt..."
 	gofumpt -w ./$(PKG_NAME) ./names $(filter-out ./.ci/providerlint/go% ./.ci/providerlint/README.md ./.ci/providerlint/vendor, $(wildcard ./.ci/providerlint/*))
 
-gen: ## Run all Go generators
+gen: prereq-go ## Run all Go generators
 	rm -f .github/labeler-issue-triage.yml
 	rm -f .github/labeler-pr-triage.yml
 	rm -f infrastructure/repository/labels-service.tf
@@ -206,6 +207,8 @@ golangci-lint: ## Lint Go source (via golangci-lint)
 help:
 	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-23s\033[0m %s\n", $$1, $$2}'
 
+install: build
+
 importlint: ## Lint imports (via impi)
 	@echo "make: checking source code with importlint..."
 	@impi --local . --scheme stdThirdPartyLocal ./internal/...
@@ -213,6 +216,16 @@ importlint: ## Lint imports (via impi)
 lint: golangci-lint providerlint importlint ## Run all linters
 
 lint-fix: testacc-lint-fix website-lint-fix docs-lint-fix ## Fix all linter findings
+
+prereq-go: ## if $(GO_VER) is not installed, install it
+	@if ! type "$(GO_VER)" > /dev/null 2>&1 ; then \
+		echo "make: $(GO_VER) not found" ; \
+		echo "make: installing $(GO_VER)..." ; \
+		echo "make: if you get an error, see https://go.dev/doc/manage-install to locally install various Go versions" ; \
+		go install golang.org/dl/$(GO_VER)@latest ; \
+		$(GO_VER) download ; \
+		echo "make: $(GO_VER) ready" ;\
+	fi
 
 providerlint: ## Lint provider (via providerlint)
 	@echo "make: checking source code with providerlint..."
@@ -241,7 +254,7 @@ providerlint: ## Lint provider (via providerlint)
 		-XS002=false \
 		./internal/service/... ./internal/provider/...
 
-sane: ## Run sanity checks
+sane: prereq-go ## Run sanity checks
 	@echo "make: sane Check (48 tests of Top 30 resources)"
 	@echo "make: like 'sanity' except full output and stops soon after 1st error"
 	@echo "make: NOTE: NOT an exhaustive set of tests! Finds big problems only."
@@ -264,7 +277,7 @@ sane: ## Run sanity checks
 		./internal/service/sts/... \
 		-v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) -run='TestAccSTSCallerIdentityDataSource_basic|TestAccMetaRegionDataSource_basic|TestAccMetaRegionDataSource_endpoint|TestAccMetaPartitionDataSource_basic|TestAccS3Bucket_Basic_basic|TestAccS3Bucket_Security_corsUpdate|TestAccS3BucketPublicAccessBlock_basic|TestAccS3BucketPolicy_basic|TestAccS3BucketACL_updateACL|TestAccRoute53Record_basic|TestAccRoute53Record_Latency_basic|TestAccRoute53ZoneDataSource_name|TestAccLambdaFunction_basic|TestAccLambdaPermission_basic|TestAccSecretsManagerSecret_basic' -timeout $(ACCTEST_TIMEOUT)
 
-sanity: ## Run sanity checks with failures allowed
+sanity: prereq-go ## Run sanity checks with failures allowed
 	@echo "make: sanity Check (48 tests of Top 30 resources)"
 	@echo "make: like 'sane' but less output and runs all tests despite most errors"
 	@echo "make: NOTE: NOT an exhaustive set of tests! Finds big problems only."
@@ -336,26 +349,26 @@ semgrep: semgrep-validate ## Run semgrep
 	@echo "make: running Semgrep static analysis..."
 	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml
 
-skaff: ## Install skaff
+skaff: prereq-go ## Install skaff
 	cd skaff && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/skaff
 
-sweep: ## Run sweepers
+sweep: prereq-go ## Run sweepers
 	# make sweep SWEEPARGS=-sweep-run=aws_example_thing
 	# set SWEEPARGS=-sweep-allow-failures to continue after first failure
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	$(GO_VER) test $(SWEEP_DIR) -v -sweep=$(SWEEP) $(SWEEPARGS) -timeout $(SWEEP_TIMEOUT)
 
-sweeper: ## Run sweepers with failures allowed
+sweeper: prereq-go ## Run sweepers with failures allowed
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
 	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) -sweep-allow-failures -timeout $(SWEEP_TIMEOUT)
 
-t: fmtcheck
+t: prereq-go fmtcheck
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
-test: fmtcheck ## Run unit tests
+test: prereq-go fmtcheck ## Run unit tests
 	$(GO_VER) test $(TEST) $(TESTARGS) -timeout=5m
 
-test-compile: ## Test package compilation
+test-compile: prereq-go ## Test package compilation
 	@if [ "$(TEST)" = "./..." ]; then \
 		echo "ERROR: Set TEST to a specific package. For example,"; \
 		echo "  make test-compile TEST=./$(PKG_NAME)"; \
@@ -363,7 +376,7 @@ test-compile: ## Test package compilation
 	fi
 	$(GO_VER) test -c $(TEST) $(TESTARGS)
 
-testacc: fmtcheck ## Run acceptance tests
+testacc: prereq-go fmtcheck ## Run acceptance tests
 	@if [ "$(TESTARGS)" = "-run=TestAccXXX" ]; then \
 		echo ""; \
 		echo "Error: Skipping example acceptance testing pattern. Update PKG and TESTS for the relevant *_test.go file."; \
@@ -388,14 +401,14 @@ testacc-lint-fix: ## Fix acceptance test linter findings
 	| sort -u \
 	| xargs -I {} terrafmt fmt  --fmtcompat {}
 
-testacc-short: fmtcheck ## Run acceptace tests with the -short flag
+testacc-short: prereq-go fmtcheck ## Run acceptace tests with the -short flag
 	@echo "Running acceptance tests with -short flag"
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -short -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
 
-tfsdk2fw: ## Install tfsdk2fw
+tfsdk2fw: prereq-go ## Install tfsdk2fw
 	cd tools/tfsdk2fw && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/tfsdk2fw
 
-tools: ## Install tools
+tools: prereq-go ## Install tools
 	@echo "make: installing tools..."
 	cd .ci/providerlint && $(GO_VER) install .
 	cd .ci/tools && $(GO_VER) install github.com/YakDriver/tfproviderdocs
