@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.0
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.50.35
+	github.com/aws/aws-sdk-go v1.50.36
 	github.com/aws/aws-sdk-go-v2 v1.25.3
 	github.com/aws/aws-sdk-go-v2/config v1.27.7
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.3
@@ -45,7 +45,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codeguruprofiler v1.20.2
 	github.com/aws/aws-sdk-go-v2/service/codegurureviewer v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.26.2
-	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.24.2
+	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.25.0
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.22.2
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.31.2
@@ -55,6 +55,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.13.2
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.2
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.2
+	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.9.1
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.30.4
@@ -62,7 +63,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.2
 	github.com/aws/aws-sdk-go-v2/service/eks v1.41.1
-	github.com/aws/aws-sdk-go-v2/service/elasticache v1.37.2
+	github.com/aws/aws-sdk-go-v2/service/elasticache v1.37.3
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.23.2
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.30.2
 	github.com/aws/aws-sdk-go-v2/service/emr v1.39.2
@@ -93,7 +94,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.52.2
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.48.2
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.30.2
-	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.9.2
+	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.20.2
 	github.com/aws/aws-sdk-go-v2/service/mq v1.22.2
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.26.3

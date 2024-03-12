@@ -138,6 +138,7 @@ provider "aws" {
   <li><code>deploy</code> (or <code>codedeploy</code>)</li>
   <li><code>detective</code></li>
   <li><code>devicefarm</code></li>
+  <li><code>devopsguru</code></li>
   <li><code>directconnect</code></li>
   <li><code>dlm</code></li>
   <li><code>dms</code> (or <code>databasemigration</code> or <code>databasemigrationservice</code>)</li>

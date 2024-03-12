@@ -467,7 +467,6 @@ func ResourceInstance() *schema.Resource {
 			"ipv6_address_count": {
 				Type:          schema.TypeInt,
 				Optional:      true,
-				ForceNew:      true,
 				Computed:      true,
 				ConflictsWith: []string{"ipv6_addresses"},
 			},
@@ -1600,6 +1599,62 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) SourceDestCheck attribute: %s", d.Id(), err)
+			}
+		}
+	}
+
+	if d.HasChange("ipv6_address_count") && !d.IsNewResource() {
+		instance, err := FindInstanceByID(ctx, conn, d.Id())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
+		}
+
+		var primaryInterface *ec2.InstanceNetworkInterface
+		for _, ni := range instance.NetworkInterfaces {
+			if aws.Int64Value(ni.Attachment.DeviceIndex) == 0 {
+				primaryInterface = ni
+			}
+		}
+
+		if primaryInterface == nil {
+			return sdkdiag.AppendErrorf(diags, "Failed to update ipv6_address_count on %q, which does not contain a primary network interface", d.Id())
+		}
+
+		o, n := d.GetChange("ipv6_address_count")
+		os, ns := o.(int), n.(int)
+
+		if ns > os {
+			// Add more to the primary NIC.
+			input := &ec2.AssignIpv6AddressesInput{
+				NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
+				Ipv6AddressCount:   aws.Int64(int64(ns - os)),
+			}
+
+			_, err := conn.AssignIpv6AddressesWithContext(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "assigning EC2 Instance (%s) IPv6 addresses: %s", d.Id(), err)
+			}
+		} else if os > ns {
+			// Remove IP addresses.
+			if len(primaryInterface.Ipv6Addresses) != os {
+				return sdkdiag.AppendErrorf(diags, "IPv6 address count (%d) on the instance does not match state's count (%d), we're in a race with something else", len(primaryInterface.Ipv6Addresses), os)
+			}
+
+			toRemove := make([]*string, 0)
+			for _, addr := range primaryInterface.Ipv6Addresses[ns:] { // Can I assume this is strongly ordered?
+				toRemove = append(toRemove, addr.Ipv6Address)
+			}
+
+			input := &ec2.UnassignIpv6AddressesInput{
+				NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
+				Ipv6Addresses:      toRemove,
+			}
+
+			_, err := conn.UnassignIpv6AddressesWithContext(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "unassigning EC2 Instance (%s) IPv6 addresses: %s", d.Id(), err)
 			}
 		}
 	}

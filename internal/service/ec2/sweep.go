@@ -2156,7 +2156,7 @@ func sweepTransitGatewayPeeringAttachments(region string) error {
 				continue
 			}
 
-			r := ResourceTransitGatewayPeeringAttachment()
+			r := resourceTransitGatewayPeeringAttachment()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.TransitGatewayAttachmentId))
 

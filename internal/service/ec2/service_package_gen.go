@@ -225,8 +225,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_ec2_transit_gateway_multicast_domain",
 		},
 		{
-			Factory:  DataSourceTransitGatewayPeeringAttachment,
+			Factory:  dataSourceTransitGatewayPeeringAttachment,
 			TypeName: "aws_ec2_transit_gateway_peering_attachment",
+			Name:     "Transit Gateway Peering Attachment",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceTransitGatewayRouteTable,
@@ -714,7 +716,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ec2_transit_gateway_multicast_group_source",
 		},
 		{
-			Factory:  ResourceTransitGatewayPeeringAttachment,
+			Factory:  resourceTransitGatewayPeeringAttachment,
 			TypeName: "aws_ec2_transit_gateway_peering_attachment",
 			Name:     "Transit Gateway Peering Attachment",
 			Tags: &types.ServicePackageResourceTags{
