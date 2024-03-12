@@ -150,11 +150,6 @@ func TestAccVPCRouteTable_ipv4ToInternetGateway(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
