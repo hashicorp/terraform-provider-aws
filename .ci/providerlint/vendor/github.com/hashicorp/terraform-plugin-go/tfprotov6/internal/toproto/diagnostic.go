@@ -16,11 +16,10 @@ func Diagnostic(in *tfprotov6.Diagnostic) *tfplugin6.Diagnostic {
 	}
 
 	resp := &tfplugin6.Diagnostic{
-		Attribute:        AttributePath(in.Attribute),
-		Detail:           ForceValidUTF8(in.Detail),
-		FunctionArgument: in.FunctionArgument,
-		Severity:         Diagnostic_Severity(in.Severity),
-		Summary:          ForceValidUTF8(in.Summary),
+		Attribute: AttributePath(in.Attribute),
+		Detail:    ForceValidUTF8(in.Detail),
+		Severity:  Diagnostic_Severity(in.Severity),
+		Summary:   ForceValidUTF8(in.Summary),
 	}
 
 	return resp

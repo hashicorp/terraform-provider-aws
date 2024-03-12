@@ -136,6 +136,27 @@ func findVPCDefaultNetworkACLV2(ctx context.Context, conn *ec2.Client, id string
 	return findNetworkACLV2(ctx, conn, input)
 }
 
+func findNetworkACLByIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkAcl, error) {
+	input := &ec2.DescribeNetworkAclsInput{
+		NetworkAclIds: []string{id},
+	}
+
+	output, err := findNetworkACLV2(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.ToString(output.NetworkAclId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func findNetworkACLV2(ctx context.Context, conn *ec2.Client, input *ec2.DescribeNetworkAclsInput) (*awstypes.NetworkAcl, error) {
 	output, err := findNetworkACLsV2(ctx, conn, input)
 

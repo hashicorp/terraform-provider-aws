@@ -6,6 +6,7 @@ package dynamodb
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"reflect"
@@ -96,14 +97,14 @@ func ResourceTable() *schema.Resource {
 					return nil
 				}
 
-				var errs *multierror.Error
+				var errs []error
 				if err := validateProvisionedThroughputField(diff, "read_capacity"); err != nil {
-					errs = multierror.Append(errs, err)
+					errs = append(errs, err)
 				}
 				if err := validateProvisionedThroughputField(diff, "write_capacity"); err != nil {
-					errs = multierror.Append(errs, err)
+					errs = append(errs, err)
 				}
-				return errs.ErrorOrNil()
+				return errors.Join(errs...)
 			},
 			customdiff.ForceNewIfChange("restore_source_name", func(_ context.Context, old, new, meta interface{}) bool {
 				// If they differ force new unless new is cleared
@@ -2376,10 +2377,10 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 		}
 	}
 
-	var err *multierror.Error
+	var errs []error
 
 	if len(unindexedAttributes) > 0 {
-		err = multierror.Append(err, fmt.Errorf("all attributes must be indexed. Unused attributes: %q", unindexedAttributes))
+		errs = append(errs, fmt.Errorf("all attributes must be indexed. Unused attributes: %q", unindexedAttributes))
 	}
 
 	if len(indexedAttributes) > 0 {
@@ -2388,10 +2389,10 @@ func validateTableAttributes(d *schema.ResourceDiff) error {
 			missingIndexes = append(missingIndexes, index)
 		}
 
-		err = multierror.Append(err, fmt.Errorf("all indexes must match a defined attribute. Unmatched indexes: %q", missingIndexes))
+		errs = append(errs, fmt.Errorf("all indexes must match a defined attribute. Unmatched indexes: %q", missingIndexes))
 	}
 
-	return err.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 func validateGSIProvisionedThroughput(data map[string]interface{}, billingMode string) error {

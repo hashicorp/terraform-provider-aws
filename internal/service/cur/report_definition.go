@@ -189,7 +189,7 @@ func resourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 		Service:   "cur",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("definition/%s", reportName),
+		Resource:  "definition/" + reportName,
 	}.String()
 
 	d.Set("arn", arn)

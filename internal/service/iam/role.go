@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-framework-validators/helpers/validatordiag"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/mapvalidator"
@@ -438,7 +437,7 @@ func upgradeRoleResourceStateV0toV1(ctx context.Context, req resource.UpgradeSta
 	}
 
 	roleDataCurrent := resourceIamRoleData{
-		ARN:                 fwtypes.ARNValue(roleDataV0.ARN.ValueString()),
+		ARN:                 fwtypes.ARNValueMust(roleDataV0.ARN.ValueString()),
 		AssumeRolePolicy:    fwtypes.IAMPolicyValue(roleDataV0.AssumeRolePolicy.ValueString()),
 		CreateDate:          roleDataV0.CreateDate,
 		Description:         roleDataV0.Description,
@@ -457,7 +456,7 @@ func upgradeRoleResourceStateV0toV1(ctx context.Context, req resource.UpgradeSta
 	if roleDataV0.PermissionsBoundary.ValueString() == "" {
 		roleDataCurrent.PermissionsBoundary = fwtypes.ARNNull()
 	} else {
-		roleDataCurrent.PermissionsBoundary = fwtypes.ARNValue(roleDataV0.PermissionsBoundary.ValueString())
+		roleDataCurrent.PermissionsBoundary = fwtypes.ARNValueMust(roleDataV0.PermissionsBoundary.ValueString())
 	}
 
 	type inlinePolicyData struct {
@@ -586,7 +585,7 @@ func (r resourceIamRole) Create(ctx context.Context, req resource.CreateRequest,
 		}
 	}
 
-	plan.ARN = fwtypes.ARNValue(*output.Role.Arn)
+	plan.ARN = fwtypes.ARNValueMust(*output.Role.Arn)
 	plan.CreateDate = flex.StringValueToFramework(ctx, output.Role.CreateDate.Format(time.RFC3339))
 	plan.ID = flex.StringToFramework(ctx, output.Role.RoleName)
 	plan.Name = flex.StringToFramework(ctx, output.Role.RoleName)
@@ -701,7 +700,7 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	state.ARN = fwtypes.ARNValue(*role.Arn)
+	state.ARN = fwtypes.ARNValueMust(*role.Arn)
 	state.CreateDate = flex.StringValueToFramework(ctx, role.CreateDate.Format(time.RFC3339))
 	state.Path = flex.StringToFramework(ctx, role.Path)
 	state.Name = flex.StringToFramework(ctx, role.RoleName)
@@ -716,7 +715,7 @@ func (r resourceIamRole) Read(ctx context.Context, req resource.ReadRequest, res
 	}
 
 	if role.PermissionsBoundary != nil {
-		state.PermissionsBoundary = fwtypes.ARNValue(*role.PermissionsBoundary.PermissionsBoundaryArn)
+		state.PermissionsBoundary = fwtypes.ARNValueMust(*role.PermissionsBoundary.PermissionsBoundaryArn)
 	} else {
 		state.PermissionsBoundary = fwtypes.ARNNull()
 	}
@@ -1329,20 +1328,19 @@ func expandRoleInlinePolicy(roleName string, policyName string, policyDocument s
 
 func (r resourceIamRole) addRoleInlinePolicies(ctx context.Context, policies []*iam.PutRolePolicyInput) error {
 	conn := r.Meta().IAMConn(ctx)
+	var errs []error
 
-	var errs *multierror.Error
 	for _, policy := range policies {
 		if len(aws.StringValue(policy.PolicyName)) == 0 || len(aws.StringValue(policy.PolicyDocument)) == 0 {
 			continue
 		}
 
 		if _, err := conn.PutRolePolicyWithContext(ctx, policy); err != nil {
-			newErr := fmt.Errorf("adding inline policy (%s): %w", aws.StringValue(policy.PolicyName), err)
-			errs = multierror.Append(errs, newErr)
+			errs = append(errs, fmt.Errorf("adding inline policy (%s): %w", aws.StringValue(policy.PolicyName), err))
 		}
 	}
 
-	return errs.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 func inlinePoliciesActualDiff(ctx context.Context, plan *resourceIamRoleData, state *resourceIamRoleData) bool {
@@ -1399,6 +1397,7 @@ func (r resourceIamRole) readRoleInlinePolicies(ctx context.Context, roleName st
 	}
 
 	var apiObjects []*iam.PutRolePolicyInput
+
 	for _, policyName := range policyNames {
 		output, err := conn.GetRolePolicyWithContext(ctx, &iam.GetRolePolicyInput{
 			RoleName:   aws.String(roleName),

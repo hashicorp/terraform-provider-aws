@@ -28,7 +28,7 @@ func testAccCustomLogSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomLogSourceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -68,7 +68,7 @@ func testAccCustomLogSource_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
 			acctest.PreCheckOrganizationsAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCustomLogSourceDestroy(ctx),
 		Steps: []resource.TestStep{

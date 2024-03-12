@@ -177,8 +177,12 @@ This resource supports the following arguments:
 * `pipeline_type` - (Optional) Type of the pipeline. Possible values are: `V1` and `V2`. Default value is `V1`.
 * `role_arn` - (Required) A service role Amazon Resource Name (ARN) that grants AWS CodePipeline permission to make calls to AWS services on your behalf.
 * `artifact_store` (Required) One or more artifact_store blocks. Artifact stores are documented below.
+* `execution_mode` (Optional) The method that the pipeline will use to handle multiple executions. The default mode is `SUPERSEDED`. For value values, refer to the [AWS documentation](https://docs.aws.amazon.com/codepipeline/latest/APIReference/API_PipelineDeclaration.html#CodePipeline-Type-PipelineDeclaration-executionMode).
+
+  **Note:** `QUEUED` or `PARALLEL` mode can only be used with V2 pipelines.
 * `stage` (Minimum of at least two `stage` blocks is required) A stage block. Stages are documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `trigger` - (Optional) A trigger block. Valid only when `pipeline_type` is `V2`. Triggers are documented below.
 * `variable` - (Optional) A pipeline-level variable block. Valid only when `pipeline_type` is `V2`. Variable are documented below.
 
 An `artifact_store` block supports the following arguments:
@@ -212,6 +216,44 @@ An `action` block supports the following arguments:
 * `run_order` - (Optional) The order in which actions are run.
 * `region` - (Optional) The region in which to run the action.
 * `namespace` - (Optional) The namespace all output variables will be accessed from.
+
+A `trigger` block supports the following arguments:
+
+* `provider_type` - (Required) The source provider for the event. Possible value is `CodeStarSourceConnection`.
+* `git_configuration` - (Required) Provides the filter criteria and the source stage for the repository event that starts the pipeline. For more information, refer to the [AWS documentation](https://docs.aws.amazon.com/codepipeline/latest/userguide/pipelines-filter.html). A `git_configuration` block is documented below.
+
+A `git_configuration` block supports the following arguments:
+
+* `source_action_name` - (Required) The name of the pipeline source action where the trigger configuration.
+* `pull_request` - (Optional) The field where the repository event that will start the pipeline is specified as pull requests. A `pull_request` block is documented below.
+* `push` - (Optional) The field where the repository event that will start the pipeline, such as pushing Git tags, is specified with details. A `push` block is documented below.
+
+A `pull_request` block supports the following arguments:
+
+* `events` - (Optional) A list that specifies which pull request events to filter on (opened, updated, closed) for the trigger configuration. Possible values are `OPEN`, `UPDATED ` and `CLOSED`.
+* `branches` - (Optional) The field that specifies to filter on branches for the pull request trigger configuration. A `branches` block is documented below.
+* `file_paths` - (Optional) The field that specifies to filter on file paths for the pull request trigger configuration. A `file_paths` block is documented below.
+
+A `push` block supports the following arguments:
+
+* `branches` - (Optional) The field that specifies to filter on branches for the push trigger configuration. A `branches` block is documented below.
+* `file_paths` - (Optional) The field that specifies to filter on file paths for the push trigger configuration. A `file_paths` block is documented below.
+* `tags` - (Optional) The field that contains the details for the Git tags trigger configuration. A `tags` block is documented below.
+
+A `branches` block supports the following arguments:
+
+* `includes` - (Optional) A list of patterns of Git branches that, when a commit is pushed, are to be included as criteria that starts the pipeline.
+* `excludes` - (Optional) A list of patterns of Git branches that, when a commit is pushed, are to be excluded from starting the pipeline.
+
+A `file_paths` block supports the following arguments:
+
+* `includes` - (Optional) A list of patterns of Git repository file paths that, when a commit is pushed, are to be included as criteria that starts the pipeline.
+* `excludes` - (Optional) A list of patterns of Git repository file paths that, when a commit is pushed, are to be excluded from starting the pipeline.
+
+A `tags` block supports the following arguments:
+
+* `includes` - (Optional) A list of patterns of Git tags that, when pushed, are to be included as criteria that starts the pipeline.
+* `excludes` - (Optional) A list of patterns of Git tags that, when pushed, are to be excluded from starting the pipeline.
 
 A `variable` block supports the following arguments:
 

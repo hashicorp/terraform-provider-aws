@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWAFV2RuleGroup_basic(t *testing.T) {
@@ -30,7 +31,7 @@ func TestAccWAFV2RuleGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -68,7 +69,7 @@ func TestAccWAFV2RuleGroup_nameGenerated(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -97,7 +98,7 @@ func TestAccWAFV2RuleGroup_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -127,7 +128,7 @@ func TestAccWAFV2RuleGroup_updateRule(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -197,7 +198,7 @@ func TestAccWAFV2RuleGroup_updateRuleProperties(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -380,7 +381,7 @@ func TestAccWAFV2RuleGroup_byteMatchStatement(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -444,7 +445,7 @@ func TestAccWAFV2RuleGroup_ByteMatchStatement_fieldToMatch(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -822,7 +823,7 @@ func TestAccWAFV2RuleGroup_changeNameForceNew(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -870,7 +871,7 @@ func TestAccWAFV2RuleGroup_changeCapacityForceNew(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -918,7 +919,7 @@ func TestAccWAFV2RuleGroup_changeMetricNameForceNew(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -966,7 +967,7 @@ func TestAccWAFV2RuleGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -990,7 +991,7 @@ func TestAccWAFV2RuleGroup_RuleLabels(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1036,7 +1037,7 @@ func TestAccWAFV2RuleGroup_geoMatchStatement(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1091,7 +1092,7 @@ func TestAccWAFV2RuleGroup_GeoMatchStatement_forwardedIP(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1149,7 +1150,7 @@ func TestAccWAFV2RuleGroup_LabelMatchStatement(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1199,7 +1200,7 @@ func TestAccWAFV2RuleGroup_ipSetReferenceStatement(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1237,7 +1238,7 @@ func TestAccWAFV2RuleGroup_IPSetReferenceStatement_ipsetForwardedIP(t *testing.T
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1338,7 +1339,7 @@ func TestAccWAFV2RuleGroup_logicalRuleStatements(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1412,7 +1413,7 @@ func TestAccWAFV2RuleGroup_minimal(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1444,7 +1445,7 @@ func TestAccWAFV2RuleGroup_regexMatchStatement(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1481,7 +1482,7 @@ func TestAccWAFV2RuleGroup_regexPatternSetReferenceStatement(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1520,7 +1521,7 @@ func TestAccWAFV2RuleGroup_ruleAction(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1608,7 +1609,7 @@ func TestAccWAFV2RuleGroup_RuleAction_customRequestHandling(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1684,7 +1685,7 @@ func TestAccWAFV2RuleGroup_RuleAction_customResponse(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1803,7 +1804,7 @@ func TestAccWAFV2RuleGroup_sizeConstraintStatement(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1859,7 +1860,7 @@ func TestAccWAFV2RuleGroup_sqliMatchStatement(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1931,7 +1932,7 @@ func TestAccWAFV2RuleGroup_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1978,7 +1979,7 @@ func TestAccWAFV2RuleGroup_xssMatchStatement(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2038,7 +2039,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2052,6 +2053,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.#": "1",
 						"statement.0.rate_based_statement.0.custom_key.#":           "0",
 						"statement.0.rate_based_statement.0.aggregate_key_type":     "IP",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":  "600",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":  "0",
 						"statement.0.rate_based_statement.0.limit":                  "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#": "0",
@@ -2069,6 +2071,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                         "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                            "0",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                      "FORWARDED_IP",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                   "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                   "1",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.0.fallback_behavior": "MATCH",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.0.header_name":       "X-Forwarded-For",
@@ -2088,6 +2091,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                         "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                            "0",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                      "FORWARDED_IP",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                   "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                   "1",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.0.fallback_behavior": "NO_MATCH",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.0.header_name":       "Updated",
@@ -2107,6 +2111,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                             "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                                "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                          "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                       "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                       "0",
 						"statement.0.rate_based_statement.0.limit":                                       "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                      "0",
@@ -2134,6 +2139,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                   "2",
 						"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":          "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "1",
 						"statement.0.rate_based_statement.0.limit":                          "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
@@ -2161,6 +2167,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                   "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":          "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "0",
 						"statement.0.rate_based_statement.0.limit":                          "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
@@ -2187,6 +2194,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                             "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                                "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                          "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                       "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                       "0",
 						"statement.0.rate_based_statement.0.limit":                                       "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                      "0",
@@ -2214,6 +2222,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                   "2",
 						"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":          "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "0",
 						"statement.0.rate_based_statement.0.limit":                          "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
@@ -2241,6 +2250,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                                     "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                                        "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                                  "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                               "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                               "0",
 						"statement.0.rate_based_statement.0.limit":                                               "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                              "0",
@@ -2268,6 +2278,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                                   "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                                      "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                                "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                             "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                             "0",
 						"statement.0.rate_based_statement.0.limit":                                             "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                            "0",
@@ -2295,6 +2306,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                               "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                                  "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                            "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                         "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                         "0",
 						"statement.0.rate_based_statement.0.limit":                                         "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                        "0",
@@ -2322,6 +2334,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                        "1",
 						"statement.0.rate_based_statement.0.custom_key.#":           "5",
 						"statement.0.rate_based_statement.0.aggregate_key_type":     "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":  "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":  "0",
 						"statement.0.rate_based_statement.0.limit":                  "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#": "0",
@@ -2339,6 +2352,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                                              "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                                                 "0",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                                           "IP",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                                        "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                                        "0",
 						"statement.0.rate_based_statement.0.limit":                                                        "10000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                                       "1",
@@ -2367,7 +2381,7 @@ func TestAccWAFV2RuleGroup_RateBased_maxNested(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2412,7 +2426,7 @@ func TestAccWAFV2RuleGroup_Operators_maxNested(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -4718,7 +4732,8 @@ resource "aws_wafv2_rule_group" "test" {
 
     statement {
       rate_based_statement {
-        limit = 50000
+        evaluation_window_sec = 600
+        limit                 = 50000
       }
     }
 

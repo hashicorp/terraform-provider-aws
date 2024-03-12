@@ -43,7 +43,9 @@ func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceDa
 		QueueUrl:   aws.String(url),
 	}
 
-	_, err = conn.SetQueueAttributes(ctx, input)
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.SetQueueAttributes(ctx, input)
+	}, errCodeInvalidAttributeValue, "Invalid value for the parameter Policy")
 
 	if err != nil {
 		return diag.Errorf("setting SQS Queue (%s) attribute (%s): %s", url, h.AttributeName, err)

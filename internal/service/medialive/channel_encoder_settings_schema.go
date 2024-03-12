@@ -3063,7 +3063,7 @@ func expandChannelEncoderSettings(tfList []interface{}) *types.EncoderSettings {
 	m := tfList[0].(map[string]interface{})
 
 	var settings types.EncoderSettings
-	if v, ok := m["audio_descriptions"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m["audio_descriptions"].(*schema.Set); ok {
 		settings.AudioDescriptions = expandChannelEncoderSettingsAudioDescriptions(v.List())
 	}
 	if v, ok := m["output_groups"].([]interface{}); ok && len(v) > 0 {
@@ -3108,7 +3108,7 @@ func expandChannelEncoderSettingsAudioDescriptions(tfList []interface{}) []types
 		return nil
 	}
 
-	var audioDesc []types.AudioDescription
+	audioDesc := []types.AudioDescription{}
 	for _, tfItem := range tfList {
 		m, ok := tfItem.(map[string]interface{})
 		if !ok {
