@@ -25,7 +25,7 @@ func DataSourceSpotPrice() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"instance_type": {
 				Type:     schema.TypeString,
 				Optional: true,

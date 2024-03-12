@@ -38,7 +38,7 @@ func DataSourceLocalGateway() *schema.Resource {
 				Computed: true,
 			},
 
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 
 			"state": {
 				Type:     schema.TypeString,

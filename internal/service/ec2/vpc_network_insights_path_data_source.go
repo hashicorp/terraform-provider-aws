@@ -42,7 +42,7 @@ func DataSourceNetworkInsightsPath() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"network_insights_path_id": {
 				Type:     schema.TypeString,
 				Optional: true,

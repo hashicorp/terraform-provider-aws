@@ -31,7 +31,7 @@ func DataSourceEIPs() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"public_ips": {
 				Type:     schema.TypeList,
 				Computed: true,

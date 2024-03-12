@@ -47,7 +47,7 @@ func DataSourceVPCDHCPOptions() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"netbios_name_servers": {
 				Type:     schema.TypeList,
 				Computed: true,

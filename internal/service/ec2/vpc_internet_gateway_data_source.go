@@ -49,7 +49,7 @@ func DataSourceInternetGateway() *schema.Resource {
 					},
 				},
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"internet_gateway_id": {
 				Type:     schema.TypeString,
 				Optional: true,

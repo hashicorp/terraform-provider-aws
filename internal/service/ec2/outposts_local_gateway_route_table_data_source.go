@@ -53,7 +53,7 @@ func DataSourceLocalGatewayRouteTable() *schema.Resource {
 
 			"tags": tftags.TagsSchemaComputed(),
 
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 		},
 	}
 }

@@ -135,7 +135,7 @@ func DataSourceClientVPNEndpoint() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"security_group_ids": {
 				Type:     schema.TypeList,
 				Computed: true,

@@ -44,7 +44,7 @@ func DataSourceNetworkInsightsAnalysis() *schema.Resource {
 				Computed: true,
 			},
 			"explanations": networkInsightsAnalysisExplanationsSchema,
-			"filter":       CustomFiltersSchema(),
+			"filter":       customFiltersSchema(),
 			"filter_in_arns": {
 				Type:     schema.TypeList,
 				Computed: true,

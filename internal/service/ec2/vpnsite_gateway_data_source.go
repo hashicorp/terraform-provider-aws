@@ -49,7 +49,7 @@ func DataSourceVPNGateway() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,

@@ -27,7 +27,7 @@ func DataSourceTransitGatewayConnect() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"protocol": {
 				Type:     schema.TypeString,
 				Computed: true,

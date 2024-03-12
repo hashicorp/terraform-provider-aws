@@ -163,7 +163,7 @@ func DataSourceInstance() *schema.Resource {
 					},
 				},
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"get_password_data": {
 				Type:     schema.TypeBool,
 				Optional: true,

@@ -103,7 +103,7 @@ func tagFilters(ctx context.Context) []awstypes.Filter {
 	return filters
 }
 
-// CustomFiltersSchema returns a *schema.Schema that represents
+// customFiltersSchema returns a *schema.Schema that represents
 // a set of custom filtering criteria that a user can specify as input
 // to a data source that wraps one of the many "Describe..." API calls
 // in the EC2 API.
@@ -118,7 +118,7 @@ func tagFilters(ctx context.Context) []awstypes.Filter {
 //	  name   = "availabilityZone"
 //	  values = ["us-west-2a", "us-west-2b"]
 //	}
-func CustomFiltersSchema() *schema.Schema {
+func customFiltersSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeSet,
 		Optional: true,

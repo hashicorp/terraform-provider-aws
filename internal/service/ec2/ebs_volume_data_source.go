@@ -41,7 +41,7 @@ func DataSourceEBSVolume() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"iops": {
 				Type:     schema.TypeInt,
 				Computed: true,

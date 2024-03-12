@@ -31,7 +31,7 @@ func DataSourceAvailabilityZone() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"group_name": {
 				Type:     schema.TypeString,
 				Computed: true,

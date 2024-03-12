@@ -36,7 +36,7 @@ func DataSourceTransitGatewayAttachment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"resource_id": {
 				Type:     schema.TypeString,
 				Computed: true,

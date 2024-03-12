@@ -31,7 +31,7 @@ func DataSourcePrefixList() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
