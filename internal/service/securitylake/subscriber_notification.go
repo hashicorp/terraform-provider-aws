@@ -248,7 +248,6 @@ func (r *subscriberNotificationResource) Update(ctx context.Context, request res
 			)
 			return
 		}
-
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
