@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/securitylake"
@@ -36,10 +35,6 @@ import (
 func newSubscriberNotificationResource(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &subscriberNotificationResource{}
 
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
-
 	return r, nil
 }
 
@@ -49,7 +44,6 @@ const (
 
 type subscriberNotificationResource struct {
 	framework.ResourceWithConfigure
-	framework.WithTimeouts
 }
 
 func (r *subscriberNotificationResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {

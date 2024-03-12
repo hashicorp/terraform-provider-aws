@@ -10,8 +10,6 @@ description: |-
 
 Terraform resource for managing an AWS Security Lake Subscriber Notification.
 
-## Example Usage
-
 ### Basic Usage
 
 ```terraform
@@ -56,4 +54,3 @@ In addition to all arguments above, the following attributes are exported:
 * `create` - (Default `60m`)
 * `update` - (Default `180m`)
 * `delete` - (Default `90m`)
-
