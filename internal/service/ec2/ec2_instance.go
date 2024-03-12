@@ -1637,7 +1637,7 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			}
 		} else if os > ns {
 			// Remove IP addresses.
-			if len(primaryInterface.Ipv6Addresses) != int(os) {
+			if len(primaryInterface.Ipv6Addresses) != os {
 				return sdkdiag.AppendErrorf(diags, "IPv6 address count (%d) on the instance does not match state's count (%d), we're in a race with something else", len(primaryInterface.Ipv6Addresses), os)
 			}
 
