@@ -251,7 +251,7 @@ func resourceNetworkACLRuleDelete(ctx context.Context, d *schema.ResourceData, m
 		RuleNumber:   aws.Int64(int64(d.Get("rule_number").(int))),
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkACLEntryNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkACLIDNotFound, errCodeInvalidNetworkACLEntryNotFound) {
 		return diags
 	}
 
