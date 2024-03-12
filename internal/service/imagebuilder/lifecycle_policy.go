@@ -546,7 +546,7 @@ func expandPolicyDetails(ctx context.Context, tfList []resourcePolicyDetailsData
 				return nil, diags
 			}
 
-			filter, d := expandPolicyDetailFilter(ctx, tfList)
+			filter, d := expandPolicyDetailFilter(tfList)
 			diags.Append(d...)
 			if diags.HasError() {
 				return nil, diags
@@ -623,7 +623,7 @@ func expandPolicyDetailActionIncludeResources(tfList []resourceIncludeResourcesD
 	return &apiObject
 }
 
-func expandPolicyDetailFilter(ctx context.Context, tfList []resourceFilterData) (*awstypes.LifecyclePolicyDetailFilter, diag.Diagnostics) {
+func expandPolicyDetailFilter(tfList []resourceFilterData) (*awstypes.LifecyclePolicyDetailFilter, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
 	if len(tfList) == 0 {

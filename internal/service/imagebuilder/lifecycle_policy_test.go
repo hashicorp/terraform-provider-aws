@@ -115,10 +115,10 @@ resource "aws_iam_role" "test" {
 }
 
 resource "aws_iam_instance_profile" "test" {
-	name = aws_iam_role.test.name
-	role = aws_iam_role.test.name
-  }
-  
+  name = aws_iam_role.test.name
+  role = aws_iam_role.test.name
+}
+
 resource "aws_imagebuilder_lifecycle_policy" "test" {
   name           = %[1]q
   execution_role = aws_iam_role.test.arn

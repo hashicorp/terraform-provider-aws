@@ -16,14 +16,14 @@ import (
 // waitImageStatusAvailable waits for an Image to return Available
 func waitImageStatusAvailable(ctx context.Context, conn *imagebuilder.Client, imageBuildVersionArn string, timeout time.Duration) (*awstypes.Image, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			string(awstypes.ImageStatusBuilding),
-			string(awstypes.ImageStatusCreating),
-			string(awstypes.ImageStatusDistributing),
-			string(awstypes.ImageStatusIntegrating),
-			string(awstypes.ImageStatusPending),
-			string(awstypes.ImageStatusTesting),
-		},
+		Pending: enum.Slice(
+			awstypes.ImageStatusBuilding,
+			awstypes.ImageStatusCreating,
+			awstypes.ImageStatusDistributing,
+			awstypes.ImageStatusIntegrating,
+			awstypes.ImageStatusPending,
+			awstypes.ImageStatusTesting,
+		),
 		Target:  enum.Slice(awstypes.ImageStatusAvailable),
 		Refresh: statusImage(ctx, conn, imageBuildVersionArn),
 		Timeout: timeout,
