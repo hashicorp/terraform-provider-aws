@@ -64,17 +64,17 @@ func resourceKeyspace() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"region_list": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
 						"replication_strategy": {
 							Type:     schema.TypeString,
 							Required: true,
 							ValidateFunc: validation.StringInSlice([]string{
 								string(types.RsSingleRegion),
 								string(types.RsMultiRegion)}, false),
+						},
+						"region_list": {
+							Type:     schema.TypeList,
+							Required: false,
+							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 					},
 				},

@@ -57,8 +57,9 @@ func TestAccKeyspacesKeyspace_replicationSpecification(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := "tf_acc_test_" + sdkacctest.RandString(20)
 	resourceName := "aws_keyspaces_keyspace.test"
+
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx),
@@ -239,8 +240,8 @@ func testAccKeyspaceConfig_replicationSpecification(rName, rSpecification string
 	return fmt.Sprintf(`
 resource "aws_keyspaces_keyspace" "test" {
   name = %[1]q
-  ReplicationSpecification {
-	ReplicationStrategy = %[2]q
+  replication_specification  {
+	replication_strategy = %[2]q
   }
 }
 `, rName, rSpecification)
@@ -250,9 +251,9 @@ func testAccKeyspaceConfig_multiReplicationSpecification(rName, rSpecification, 
 	return fmt.Sprintf(`
 resource "aws_keyspaces_keyspace" "test" {
   name = %[1]q
-  ReplicationSpecification {
-	ReplicationStrategy = %[2]q
-	RegionList = %[3]q
+  replication_specification {
+	replication_strategy = %[2]q
+	region_list = %[3]q
   }
 }
 `, rName, rSpecification, regionList)
