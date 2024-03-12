@@ -230,9 +230,10 @@ func testAccCheckSubscriberNotificationExists(ctx context.Context, n string) res
 func testAccSubscriberNotification_config(rName string) string {
 	return acctest.ConfigCompose(testAccDataLakeConfig_basic(), fmt.Sprintf(`
 
+
 resource "aws_apigatewayv2_api" "test" {
-	name          = %[1]q
-	protocol_type = "HTTP"
+  name          = %[1]q
+  protocol_type = "HTTP"
 }
 
 resource "aws_iam_role" "test" {
@@ -280,10 +281,10 @@ resource "aws_iam_role_policy_attachment" "test" {
 }
 
 resource "aws_iam_role" "event_bridge" {
-	name = "AmazonSecurityLakeSubscriberEventBridge"
-	path = "/service-role/"
-  
-	assume_role_policy = <<POLICY
+  name = "AmazonSecurityLakeSubscriberEventBridge"
+  path = "/service-role/"
+
+  assume_role_policy = <<POLICY
 {
 "Version": "2012-10-17",
 "Statement": [{
@@ -298,10 +299,10 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "event_bridge" {
-	name = "AmazonSecurityLakeSubscriberEventBridgePolicy"
-	role = aws_iam_role.event_bridge.name
-  
-	policy = <<POLICY
+  name = "AmazonSecurityLakeSubscriberEventBridgePolicy"
+  role = aws_iam_role.event_bridge.name
+
+  policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [{
@@ -311,8 +312,8 @@ resource "aws_iam_role_policy" "event_bridge" {
 }]
 }
   POLICY
-  
-	depends_on = [aws_securitylake_data_lake.test]
+
+  depends_on = [aws_securitylake_data_lake.test]
 }
 
 resource "aws_securitylake_custom_log_source" "test" {
@@ -335,21 +336,22 @@ resource "aws_securitylake_custom_log_source" "test" {
 }
 
 resource "aws_securitylake_subscriber" "test" {
-	subscriber_name        = %[1]q
-	subscriber_description = "Example"
-	source {
-		custom_log_source_resource {
-		source_name    = aws_securitylake_custom_log_source.test.source_name
-		source_version = aws_securitylake_custom_log_source.test.source_version
-		}
-	}
-	subscriber_identity {
-		external_id = "example"
-		principal   = data.aws_caller_identity.current.account_id
-	}
-	
-	depends_on = [aws_securitylake_custom_log_source.test]
+  subscriber_name        = %[1]q
+  subscriber_description = "Example"
+  source {
+    custom_log_source_resource {
+      source_name    = aws_securitylake_custom_log_source.test.source_name
+      source_version = aws_securitylake_custom_log_source.test.source_version
+    }
+  }
+  subscriber_identity {
+    external_id = "example"
+    principal   = data.aws_caller_identity.current.account_id
+  }
+
+  depends_on = [aws_securitylake_custom_log_source.test]
 }
+
 
 `, rName))
 }
@@ -357,12 +359,12 @@ resource "aws_securitylake_subscriber" "test" {
 func testAccSubscriberNotificationConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccSubscriberNotification_config(rName), (`
 resource "aws_securitylake_subscriber_notification" "test" {
-	subscriber_id = aws_securitylake_subscriber.test.id
-	configuration {
-		sqs_notification_configuration {}
-	}
+  subscriber_id = aws_securitylake_subscriber.test.id
+  configuration {
+    sqs_notification_configuration {}
+  }
 
-	depends_on = [aws_securitylake_subscriber.test]
+  depends_on = [aws_securitylake_subscriber.test]
 }
 `))
 }
@@ -370,15 +372,15 @@ resource "aws_securitylake_subscriber_notification" "test" {
 func testAccSubscriberNotificationConfig_https(rName string) string {
 	return acctest.ConfigCompose(testAccSubscriberNotification_config(rName), (`
 resource "aws_securitylake_subscriber_notification" "test" {
-	subscriber_id = aws_securitylake_subscriber.test.id
-	configuration {
-		https_notification_configuration {
-			endpoint = aws_apigatewayv2_api.test.api_endpoint
-			target_role_arn = aws_iam_role.event_bridge.arn
-		}
-	}
+  subscriber_id = aws_securitylake_subscriber.test.id
+  configuration {
+    https_notification_configuration {
+      endpoint        = aws_apigatewayv2_api.test.api_endpoint
+      target_role_arn = aws_iam_role.event_bridge.arn
+    }
+  }
 
-	depends_on = [aws_securitylake_subscriber.test]
+  depends_on = [aws_securitylake_subscriber.test]
 }
 `))
 }
@@ -386,16 +388,16 @@ resource "aws_securitylake_subscriber_notification" "test" {
 func testAccSubscriberNotificationConfig_https_update(rName string) string {
 	return acctest.ConfigCompose(testAccSubscriberNotification_config(rName), (`
 resource "aws_securitylake_subscriber_notification" "test" {
-	subscriber_id = aws_securitylake_subscriber.test.id
-	configuration {
-		https_notification_configuration {
-			endpoint = aws_apigatewayv2_api.test.api_endpoint
-			target_role_arn = aws_iam_role.event_bridge.arn
-			http_method = "POST"
-		}
-	}
+  subscriber_id = aws_securitylake_subscriber.test.id
+  configuration {
+    https_notification_configuration {
+      endpoint        = aws_apigatewayv2_api.test.api_endpoint
+      target_role_arn = aws_iam_role.event_bridge.arn
+      http_method     = "POST"
+    }
+  }
 
-	depends_on = [aws_securitylake_subscriber.test]
+  depends_on = [aws_securitylake_subscriber.test]
 }
 `))
 }
