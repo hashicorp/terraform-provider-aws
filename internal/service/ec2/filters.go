@@ -8,9 +8,10 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
 	datasourceschema "github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -38,12 +39,12 @@ import (
 //	tags {
 //	  Name = "my-awesome-subnet"
 //	}
-func BuildTagFilterList(tags []*ec2.Tag) []*ec2.Filter {
-	filters := make([]*ec2.Filter, len(tags))
+func BuildTagFilterList(tags []*ec2_sdkv1.Tag) []*ec2_sdkv1.Filter {
+	filters := make([]*ec2_sdkv1.Filter, len(tags))
 
 	for i, tag := range tags {
-		filters[i] = &ec2.Filter{
-			Name:   aws.String(fmt.Sprintf("tag:%s", *tag.Key)),
+		filters[i] = &ec2_sdkv1.Filter{
+			Name:   aws_sdkv1.String(fmt.Sprintf("tag:%s", *tag.Key)),
 			Values: []*string{tag.Value},
 		}
 	}
@@ -76,7 +77,7 @@ func BuildTagFilterListV2(tags []*awstypes.Tag) []awstypes.Filter {
 
 	for i, tag := range tags {
 		filters[i] = awstypes.Filter{
-			Name:   aws.String(fmt.Sprintf("tag:%s", *tag.Key)),
+			Name:   aws_sdkv1.String(fmt.Sprintf("tag:%s", *tag.Key)),
 			Values: []string{*tag.Value},
 		}
 	}
@@ -92,16 +93,16 @@ func BuildTagFilterListV2(tags []*awstypes.Tag) []awstypes.Filter {
 // The values of the specified map are lists of resource attribute values used in the filter. The resource can
 // match any of the filter values to be included in the result.
 // See https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/Using_Filtering.html#Filtering_Resources_CLI for more details.
-func attributeFiltersFromMultimap(m map[string][]string) []*ec2.Filter {
+func attributeFiltersFromMultimap(m map[string][]string) []*ec2_sdkv1.Filter {
 	if len(m) == 0 {
 		return nil
 	}
 
-	filters := []*ec2.Filter{}
+	filters := []*ec2_sdkv1.Filter{}
 	for k, v := range m {
-		filters = append(filters, &ec2.Filter{
-			Name:   aws.String(k),
-			Values: aws.StringSlice(v),
+		filters = append(filters, &ec2_sdkv1.Filter{
+			Name:   aws_sdkv1.String(k),
+			Values: aws_sdkv1.StringSlice(v),
 		})
 	}
 
@@ -115,8 +116,8 @@ func tagFilters(ctx context.Context) []awstypes.Filter {
 
 	for i, tag := range tags {
 		filters[i] = awstypes.Filter{
-			Name:   aws.String(fmt.Sprintf("tag:%s", aws.ToString(tag.Key))),
-			Values: aws.ToStringSlice([]*string{tag.Value}),
+			Name:   aws_sdkv2.String(fmt.Sprintf("tag:%s", aws_sdkv2.ToString(tag.Key))),
+			Values: aws_sdkv2.ToStringSlice([]*string{tag.Value}),
 		}
 	}
 
@@ -214,13 +215,13 @@ type customFilterModel struct {
 // This function is intended only to be used in conjunction with
 // CustomFiltersSchema. See the docs on that function for more details
 // on the configuration pattern this is intended to support.
-func BuildCustomFilterList(filterSet *schema.Set) []*ec2.Filter {
+func BuildCustomFilterList(filterSet *schema.Set) []*ec2_sdkv1.Filter {
 	if filterSet == nil {
-		return []*ec2.Filter{}
+		return []*ec2_sdkv1.Filter{}
 	}
 
 	customFilters := filterSet.List()
-	filters := make([]*ec2.Filter, len(customFilters))
+	filters := make([]*ec2_sdkv1.Filter, len(customFilters))
 
 	for filterIdx, customFilterI := range customFilters {
 		customFilterMapI := customFilterI.(map[string]interface{})
@@ -228,10 +229,10 @@ func BuildCustomFilterList(filterSet *schema.Set) []*ec2.Filter {
 		valuesI := customFilterMapI["values"].(*schema.Set).List()
 		values := make([]*string, len(valuesI))
 		for valueIdx, valueI := range valuesI {
-			values[valueIdx] = aws.String(valueI.(string))
+			values[valueIdx] = aws_sdkv1.String(valueI.(string))
 		}
 
-		filters[filterIdx] = &ec2.Filter{
+		filters[filterIdx] = &ec2_sdkv1.Filter{
 			Name:   &name,
 			Values: values,
 		}
@@ -275,12 +276,12 @@ func BuildCustomFilterListV2(filterSet *schema.Set) []awstypes.Filter {
 	return filters
 }
 
-func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2.Filter {
+func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2_sdkv1.Filter {
 	if filterSet.IsNull() || filterSet.IsUnknown() {
 		return nil
 	}
 
-	var filters []*ec2.Filter
+	var filters []*ec2_sdkv1.Filter
 
 	for _, v := range filterSet.Elements() {
 		var data customFilterModel
@@ -294,7 +295,7 @@ func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2.Filter 
 		}
 
 		if v := flex.ExpandFrameworkStringSet(ctx, data.Values); v != nil {
-			filters = append(filters, &ec2.Filter{
+			filters = append(filters, &ec2_sdkv1.Filter{
 				Name:   flex.StringFromFramework(ctx, data.Name),
 				Values: v,
 			})
@@ -354,8 +355,8 @@ func BuildCustomFiltersV2(ctx context.Context, filterSet types.Set) []awstypes.F
 // for the "Filters" attribute on most of the "Describe..." API functions in
 // the EC2 API, to aid in the implementation of Terraform data sources that
 // retrieve data about EC2 objects.
-func BuildAttributeFilterList(m map[string]string) []*ec2.Filter {
-	var filters []*ec2.Filter
+func BuildAttributeFilterList(m map[string]string) []*ec2_sdkv1.Filter {
+	var filters []*ec2_sdkv1.Filter
 
 	// sort the filters by name to make the output deterministic
 	var names []string
@@ -377,10 +378,10 @@ func BuildAttributeFilterList(m map[string]string) []*ec2.Filter {
 	return filters
 }
 
-func NewFilter(name string, values []string) *ec2.Filter {
-	return &ec2.Filter{
-		Name:   aws.String(name),
-		Values: aws.StringSlice(values),
+func NewFilter(name string, values []string) *ec2_sdkv1.Filter {
+	return &ec2_sdkv1.Filter{
+		Name:   aws_sdkv1.String(name),
+		Values: aws_sdkv1.StringSlice(values),
 	}
 }
 
@@ -409,7 +410,7 @@ func buildAttributeFilterListV2(m map[string]string) []awstypes.Filter {
 
 func newFilterV2(name string, values []string) awstypes.Filter {
 	return awstypes.Filter{
-		Name:   aws.String(name),
+		Name:   aws_sdkv2.String(name),
 		Values: values,
 	}
 }
