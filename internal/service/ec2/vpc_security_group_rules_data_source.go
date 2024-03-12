@@ -40,7 +40,7 @@ func (d *dataSourceSecurityGroupRules) Schema(ctx context.Context, req datasourc
 			"tags": tftags.TagsAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			"filter": CustomFiltersBlock(),
+			"filter": customFiltersBlock(),
 		},
 	}
 }

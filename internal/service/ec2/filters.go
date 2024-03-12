@@ -162,8 +162,8 @@ func customRequiredFiltersSchema() *schema.Schema {
 	}
 }
 
-// CustomFiltersBlock is the Plugin Framework variant of CustomFiltersSchema.
-func CustomFiltersBlock() datasourceschema.Block {
+// customFiltersBlock is the Plugin Framework variant of customFiltersSchema.
+func customFiltersBlock() datasourceschema.Block {
 	return datasourceschema.SetNestedBlock{
 		NestedObject: datasourceschema.NestedBlockObject{
 			Attributes: map[string]datasourceschema.Attribute{
