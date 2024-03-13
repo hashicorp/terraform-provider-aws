@@ -14,6 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/account v1.16.2
 	github.com/aws/aws-sdk-go-v2/service/acm v1.25.2
+	github.com/aws/aws-sdk-go-v2/service/acmpca v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/amp v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.7.2
@@ -189,8 +190,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	syreclabs.com/go/faker v1.2.3
 )
-
-require github.com/aws/aws-sdk-go-v2/service/acmpca v1.29.2 // indirect
 
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
