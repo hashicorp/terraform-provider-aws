@@ -104,8 +104,8 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_imageFile(t *testing.T)
 	resourceName := "aws_cognito_user_pool_ui_customization.test"
 	userPoolResourceName := "aws_cognito_user_pool.test"
 
-	filename := "testdata/logo.png"
-	updatedFilename := "testdata/logo_modified.png"
+	filename := "test-fixtures/logo.png"
+	updatedFilename := "test-fixtures/logo_modified.png"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -158,8 +158,8 @@ func TestAccCognitoIDPUserPoolUICustomization_AllClients_CSSAndImageFile(t *test
 	userPoolResourceName := "aws_cognito_user_pool.test"
 
 	css := ".label-customizable {font-weight: 400;}"
-	filename := "testdata/logo.png"
-	updatedFilename := "testdata/logo_modified.png"
+	filename := "test-fixtures/logo.png"
+	updatedFilename := "test-fixtures/logo_modified.png"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -305,8 +305,8 @@ func TestAccCognitoIDPUserPoolUICustomization_Client_image(t *testing.T) {
 	clientResourceName := "aws_cognito_user_pool_client.test"
 	userPoolResourceName := "aws_cognito_user_pool.test"
 
-	filename := "testdata/logo.png"
-	updatedFilename := "testdata/logo_modified.png"
+	filename := "test-fixtures/logo.png"
+	updatedFilename := "test-fixtures/logo_modified.png"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
