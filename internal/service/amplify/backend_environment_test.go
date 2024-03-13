@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/amplify"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func testAccBackendEnvironment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var env amplify.BackendEnvironment
+	var env awstypes.BackendEnvironment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_backend_environment.test"
 
@@ -55,7 +55,7 @@ func testAccBackendEnvironment_basic(t *testing.T) {
 
 func testAccBackendEnvironment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var env amplify.BackendEnvironment
+	var env awstypes.BackendEnvironment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_backend_environment.test"
 
@@ -81,7 +81,7 @@ func testAccBackendEnvironment_disappears(t *testing.T) {
 
 func testAccBackendEnvironment_DeploymentArtifacts_StackName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var env amplify.BackendEnvironment
+	var env awstypes.BackendEnvironment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_backend_environment.test"
 
@@ -112,7 +112,7 @@ func testAccBackendEnvironment_DeploymentArtifacts_StackName(t *testing.T) {
 	})
 }
 
-func testAccCheckBackendEnvironmentExists(ctx context.Context, resourceName string, v *amplify.BackendEnvironment) resource.TestCheckFunc {
+func testAccCheckBackendEnvironmentExists(ctx context.Context, resourceName string, v *awstypes.BackendEnvironment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -129,7 +129,7 @@ func testAccCheckBackendEnvironmentExists(ctx context.Context, resourceName stri
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyClient(ctx)
 
 		backendEnvironment, err := tfamplify.FindBackendEnvironmentByAppIDAndEnvironmentName(ctx, conn, appID, environmentName)
 
@@ -145,7 +145,7 @@ func testAccCheckBackendEnvironmentExists(ctx context.Context, resourceName stri
 
 func testAccCheckBackendEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_amplify_backend_environment" {

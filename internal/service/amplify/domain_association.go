@@ -7,13 +7,14 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/amplify"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/amplify"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -92,7 +93,7 @@ func ResourceDomainAssociation() *schema.Resource {
 
 func resourceDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
+	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
 	appID := d.Get("app_id").(string)
 	domainName := d.Get("domain_name").(string)
@@ -104,7 +105,7 @@ func resourceDomainAssociationCreate(ctx context.Context, d *schema.ResourceData
 		SubDomainSettings:   expandSubDomainSettings(d.Get("sub_domain").(*schema.Set).List()),
 	}
 
-	_, err := conn.CreateDomainAssociationWithContext(ctx, input)
+	_, err := conn.CreateDomainAssociation(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Amplify Domain Association (%s): %s", id, err)
@@ -127,7 +128,7 @@ func resourceDomainAssociationCreate(ctx context.Context, d *schema.ResourceData
 
 func resourceDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
+	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
 	appID, domainName, err := DomainAssociationParseResourceID(d.Id())
 
@@ -161,7 +162,7 @@ func resourceDomainAssociationRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceDomainAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
+	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
 	appID, domainName, err := DomainAssociationParseResourceID(d.Id())
 
@@ -183,7 +184,7 @@ func resourceDomainAssociationUpdate(ctx context.Context, d *schema.ResourceData
 			input.SubDomainSettings = expandSubDomainSettings(d.Get("sub_domain").(*schema.Set).List())
 		}
 
-		_, err := conn.UpdateDomainAssociationWithContext(ctx, input)
+		_, err := conn.UpdateDomainAssociation(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Amplify Domain Association (%s): %s", d.Id(), err)
@@ -201,7 +202,7 @@ func resourceDomainAssociationUpdate(ctx context.Context, d *schema.ResourceData
 
 func resourceDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
+	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
 	appID, domainName, err := DomainAssociationParseResourceID(d.Id())
 
@@ -210,12 +211,12 @@ func resourceDomainAssociationDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	log.Printf("[DEBUG] Deleting Amplify Domain Association: %s", d.Id())
-	_, err = conn.DeleteDomainAssociationWithContext(ctx, &amplify.DeleteDomainAssociationInput{
+	_, err = conn.DeleteDomainAssociation(ctx, &amplify.DeleteDomainAssociationInput{
 		AppId:      aws.String(appID),
 		DomainName: aws.String(domainName),
 	})
 
-	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
@@ -226,12 +227,12 @@ func resourceDomainAssociationDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func expandSubDomainSetting(tfMap map[string]interface{}) *amplify.SubDomainSetting {
+func expandSubDomainSetting(tfMap map[string]interface{}) *awstypes.SubDomainSetting {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &amplify.SubDomainSetting{}
+	apiObject := &awstypes.SubDomainSetting{}
 
 	if v, ok := tfMap["branch_name"].(string); ok && v != "" {
 		apiObject.BranchName = aws.String(v)
@@ -245,12 +246,12 @@ func expandSubDomainSetting(tfMap map[string]interface{}) *amplify.SubDomainSett
 	return apiObject
 }
 
-func expandSubDomainSettings(tfList []interface{}) []*amplify.SubDomainSetting {
+func expandSubDomainSettings(tfList []interface{}) []awstypes.SubDomainSetting {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*amplify.SubDomainSetting
+	var apiObjects []awstypes.SubDomainSetting
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -265,43 +266,39 @@ func expandSubDomainSettings(tfList []interface{}) []*amplify.SubDomainSetting {
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
 }
 
-func flattenSubDomain(apiObject *amplify.SubDomain) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenSubDomain(apiObject awstypes.SubDomain) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DnsRecord; v != nil {
-		tfMap["dns_record"] = aws.StringValue(v)
+		tfMap["dns_record"] = aws.ToString(v)
 	}
 
 	if v := apiObject.SubDomainSetting; v != nil {
 		apiObject := v
 
 		if v := apiObject.BranchName; v != nil {
-			tfMap["branch_name"] = aws.StringValue(v)
+			tfMap["branch_name"] = aws.ToString(v)
 		}
 
 		if v := apiObject.Prefix; v != nil {
-			tfMap["prefix"] = aws.StringValue(v)
+			tfMap["prefix"] = aws.ToString(v)
 		}
 	}
 
 	if v := apiObject.Verified; v != nil {
-		tfMap["verified"] = aws.BoolValue(v)
+		tfMap["verified"] = aws.ToBool(v)
 	}
 
 	return tfMap
 }
 
-func flattenSubDomains(apiObjects []*amplify.SubDomain) []interface{} {
+func flattenSubDomains(apiObjects []awstypes.SubDomain) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -309,10 +306,6 @@ func flattenSubDomains(apiObjects []*amplify.SubDomain) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenSubDomain(apiObject))
 	}
 

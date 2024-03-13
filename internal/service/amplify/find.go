@@ -6,20 +6,21 @@ package amplify
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/amplify"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/amplify"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-func FindAppByID(ctx context.Context, conn *amplify.Amplify, id string) (*amplify.App, error) {
+func FindAppByID(ctx context.Context, conn *amplify.Client, id string) (*awstypes.App, error) {
 	input := &amplify.GetAppInput{
 		AppId: aws.String(id),
 	}
 
-	output, err := conn.GetAppWithContext(ctx, input)
+	output, err := conn.GetApp(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -40,15 +41,15 @@ func FindAppByID(ctx context.Context, conn *amplify.Amplify, id string) (*amplif
 	return output.App, nil
 }
 
-func FindBackendEnvironmentByAppIDAndEnvironmentName(ctx context.Context, conn *amplify.Amplify, appID, environmentName string) (*amplify.BackendEnvironment, error) {
+func FindBackendEnvironmentByAppIDAndEnvironmentName(ctx context.Context, conn *amplify.Client, appID, environmentName string) (*awstypes.BackendEnvironment, error) {
 	input := &amplify.GetBackendEnvironmentInput{
 		AppId:           aws.String(appID),
 		EnvironmentName: aws.String(environmentName),
 	}
 
-	output, err := conn.GetBackendEnvironmentWithContext(ctx, input)
+	output, err := conn.GetBackendEnvironment(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -69,15 +70,15 @@ func FindBackendEnvironmentByAppIDAndEnvironmentName(ctx context.Context, conn *
 	return output.BackendEnvironment, nil
 }
 
-func FindBranchByAppIDAndBranchName(ctx context.Context, conn *amplify.Amplify, appID, branchName string) (*amplify.Branch, error) {
+func FindBranchByAppIDAndBranchName(ctx context.Context, conn *amplify.Client, appID, branchName string) (*awstypes.Branch, error) {
 	input := &amplify.GetBranchInput{
 		AppId:      aws.String(appID),
 		BranchName: aws.String(branchName),
 	}
 
-	output, err := conn.GetBranchWithContext(ctx, input)
+	output, err := conn.GetBranch(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -98,15 +99,15 @@ func FindBranchByAppIDAndBranchName(ctx context.Context, conn *amplify.Amplify, 
 	return output.Branch, nil
 }
 
-func FindDomainAssociationByAppIDAndDomainName(ctx context.Context, conn *amplify.Amplify, appID, domainName string) (*amplify.DomainAssociation, error) {
+func FindDomainAssociationByAppIDAndDomainName(ctx context.Context, conn *amplify.Client, appID, domainName string) (*awstypes.DomainAssociation, error) {
 	input := &amplify.GetDomainAssociationInput{
 		AppId:      aws.String(appID),
 		DomainName: aws.String(domainName),
 	}
 
-	output, err := conn.GetDomainAssociationWithContext(ctx, input)
+	output, err := conn.GetDomainAssociation(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -127,14 +128,14 @@ func FindDomainAssociationByAppIDAndDomainName(ctx context.Context, conn *amplif
 	return output.DomainAssociation, nil
 }
 
-func FindWebhookByID(ctx context.Context, conn *amplify.Amplify, id string) (*amplify.Webhook, error) {
+func FindWebhookByID(ctx context.Context, conn *amplify.Client, id string) (*awstypes.Webhook, error) {
 	input := &amplify.GetWebhookInput{
 		WebhookId: aws.String(id),
 	}
 
-	output, err := conn.GetWebhookWithContext(ctx, input)
+	output, err := conn.GetWebhook(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

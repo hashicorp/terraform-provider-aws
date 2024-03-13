@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/amplify"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +23,7 @@ import (
 
 func testAccBranch_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var branch amplify.Branch
+	var branch awstypes.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_branch.test"
 
@@ -71,7 +71,7 @@ func testAccBranch_basic(t *testing.T) {
 
 func testAccBranch_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var branch amplify.Branch
+	var branch awstypes.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_branch.test"
 
@@ -95,7 +95,7 @@ func testAccBranch_disappears(t *testing.T) {
 
 func testAccBranch_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var branch amplify.Branch
+	var branch awstypes.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_branch.test"
 
@@ -141,7 +141,7 @@ func testAccBranch_tags(t *testing.T) {
 
 func testAccBranch_BasicAuthCredentials(t *testing.T) {
 	ctx := acctest.Context(t)
-	var branch amplify.Branch
+	var branch awstypes.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_branch.test"
 
@@ -190,7 +190,7 @@ func testAccBranch_BasicAuthCredentials(t *testing.T) {
 
 func testAccBranch_EnvironmentVariables(t *testing.T) {
 	ctx := acctest.Context(t)
-	var branch amplify.Branch
+	var branch awstypes.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_branch.test"
 
@@ -235,7 +235,7 @@ func testAccBranch_EnvironmentVariables(t *testing.T) {
 
 func testAccBranch_OptionalArguments(t *testing.T) {
 	ctx := acctest.Context(t)
-	var branch amplify.Branch
+	var branch awstypes.Branch
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	environmentName := sdkacctest.RandStringFromCharSet(9, sdkacctest.CharSetAlpha)
 	resourceName := "aws_amplify_branch.test"
@@ -291,7 +291,7 @@ func testAccBranch_OptionalArguments(t *testing.T) {
 	})
 }
 
-func testAccCheckBranchExists(ctx context.Context, resourceName string, v *amplify.Branch) resource.TestCheckFunc {
+func testAccCheckBranchExists(ctx context.Context, resourceName string, v *awstypes.Branch) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -308,7 +308,7 @@ func testAccCheckBranchExists(ctx context.Context, resourceName string, v *ampli
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyClient(ctx)
 
 		branch, err := tfamplify.FindBranchByAppIDAndBranchName(ctx, conn, appID, branchName)
 
@@ -324,7 +324,7 @@ func testAccCheckBranchExists(ctx context.Context, resourceName string, v *ampli
 
 func testAccCheckBranchDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_amplify_branch" {

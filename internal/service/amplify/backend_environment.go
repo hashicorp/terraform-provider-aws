@@ -8,13 +8,14 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/amplify"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/amplify"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -69,7 +70,7 @@ func ResourceBackendEnvironment() *schema.Resource {
 
 func resourceBackendEnvironmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
+	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
 	appID := d.Get("app_id").(string)
 	environmentName := d.Get("environment_name").(string)
@@ -88,8 +89,8 @@ func resourceBackendEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 		input.StackName = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Amplify Backend Environment: %s", input)
-	_, err := conn.CreateBackendEnvironmentWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating Amplify Backend Environment: %+v", input)
+	_, err := conn.CreateBackendEnvironment(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Amplify Backend Environment (%s): %s", id, err)
@@ -102,7 +103,7 @@ func resourceBackendEnvironmentCreate(ctx context.Context, d *schema.ResourceDat
 
 func resourceBackendEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
+	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
 	appID, environmentName, err := BackendEnvironmentParseResourceID(d.Id())
 
@@ -133,7 +134,7 @@ func resourceBackendEnvironmentRead(ctx context.Context, d *schema.ResourceData,
 
 func resourceBackendEnvironmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
+	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
 	appID, environmentName, err := BackendEnvironmentParseResourceID(d.Id())
 
@@ -142,12 +143,12 @@ func resourceBackendEnvironmentDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	log.Printf("[DEBUG] Deleting Amplify Backend Environment: %s", d.Id())
-	_, err = conn.DeleteBackendEnvironmentWithContext(ctx, &amplify.DeleteBackendEnvironmentInput{
+	_, err = conn.DeleteBackendEnvironment(ctx, &amplify.DeleteBackendEnvironmentInput{
 		AppId:           aws.String(appID),
 		EnvironmentName: aws.String(environmentName),
 	})
 
-	if tfawserr.ErrCodeEquals(err, amplify.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
