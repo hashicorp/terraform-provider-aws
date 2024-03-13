@@ -20,23 +20,6 @@ const (
 	PrincipalAssociationStatusNotFound = "NotFound"
 )
 
-// StatusResourceShareInvitation fetches the ResourceShareInvitation and its Status
-func StatusResourceShareInvitation(ctx context.Context, conn *ram.RAM, arn string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		invitation, err := FindResourceShareInvitationByARN(ctx, conn, arn)
-
-		if err != nil {
-			return nil, ResourceShareInvitationStatusUnknown, err
-		}
-
-		if invitation == nil {
-			return nil, ResourceShareInvitationStatusNotFound, nil
-		}
-
-		return invitation, aws.StringValue(invitation.Status), nil
-	}
-}
-
 func StatusResourceSharePrincipalAssociation(ctx context.Context, conn *ram.RAM, resourceShareArn, principal string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		association, err := FindResourceSharePrincipalAssociationByShareARNPrincipal(ctx, conn, resourceShareArn, principal)
