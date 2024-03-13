@@ -373,7 +373,6 @@ func flattenPermissions(apiObjects []awstypes.Permission) []string {
 	}
 
 	return out
-
 }
 
 func expandDataLakeSettingsAdmins(tfSet *schema.Set) []awstypes.DataLakePrincipal {

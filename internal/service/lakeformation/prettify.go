@@ -21,6 +21,8 @@ func prettify(i interface{}) string {
 	return buf.String()
 }
 
+const indentValue = 2
+
 // prettifyInternal will recursively walk value v to build a textual
 // representation of the value.
 func prettifyInternal(v reflect.Value, indent int, buf *bytes.Buffer) {
@@ -61,13 +63,13 @@ func prettifyInternal(v reflect.Value, indent int, buf *bytes.Buffer) {
 				log.Printf("expected to find field %v on type %v, but was not found", n, v.Type())
 			}
 
-			buf.WriteString(strings.Repeat(" ", indent+2))
+			buf.WriteString(strings.Repeat(" ", indent+indentValue))
 			buf.WriteString(n + ": ")
 
 			if tag := ft.Tag.Get("sensitive"); tag == "true" {
 				buf.WriteString("<sensitive>")
 			} else {
-				prettifyInternal(val, indent+2, buf)
+				prettifyInternal(val, indent+indentValue, buf)
 			}
 
 			if i < len(names)-1 {
@@ -85,12 +87,12 @@ func prettifyInternal(v reflect.Value, indent int, buf *bytes.Buffer) {
 
 		nl, id, id2 := "", "", ""
 		if v.Len() > 3 {
-			nl, id, id2 = "\n", strings.Repeat(" ", indent), strings.Repeat(" ", indent+2)
+			nl, id, id2 = "\n", strings.Repeat(" ", indent), strings.Repeat(" ", indent+indentValue)
 		}
 		buf.WriteString("[" + nl)
 		for i := 0; i < v.Len(); i++ {
 			buf.WriteString(id2)
-			prettifyInternal(v.Index(i), indent+2, buf)
+			prettifyInternal(v.Index(i), indent+indentValue, buf)
 
 			if i < v.Len()-1 {
 				buf.WriteString("," + nl)
@@ -102,9 +104,9 @@ func prettifyInternal(v reflect.Value, indent int, buf *bytes.Buffer) {
 		buf.WriteString("{\n")
 
 		for i, k := range v.MapKeys() {
-			buf.WriteString(strings.Repeat(" ", indent+2))
+			buf.WriteString(strings.Repeat(" ", indent+indentValue))
 			buf.WriteString(k.String() + ": ")
-			prettifyInternal(v.MapIndex(k), indent+2, buf)
+			prettifyInternal(v.MapIndex(k), indent+indentValue, buf)
 
 			if i < v.Len()-1 {
 				buf.WriteString(",\n")

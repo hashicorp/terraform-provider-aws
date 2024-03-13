@@ -6,7 +6,6 @@ package lakeformation
 import (
 	"bytes"
 	"context"
-	"errors"
 	"fmt"
 	"reflect"
 	"time"
@@ -281,7 +280,7 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 				create.ErrActionCreating,
 				ResNameLFTags,
 				fmt.Sprintf("catalog id:%s, tag key:%s, values:%+v", aws.ToString(v.LFTag.CatalogId), aws.ToString(v.LFTag.TagKey), v.LFTag.TagValues),
-				errors.New(fmt.Sprintf("%s: %s", aws.ToString(v.Error.ErrorCode), aws.ToString(v.Error.ErrorMessage))),
+				fmt.Errorf("%s: %s", aws.ToString(v.Error.ErrorCode), aws.ToString(v.Error.ErrorMessage)),
 			)
 		}
 	}
