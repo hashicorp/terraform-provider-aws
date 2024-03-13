@@ -12,7 +12,6 @@ const (
 	ResNameRiskConfiguration = "Risk Configuration"
 	ResNameUserPoolClient    = "User Pool Client"
 	ResNameUserPoolDomain    = "User Pool Domain"
-	ResNameUserPool          = "User Pool"
 	ResNameUser              = "User"
 )
 

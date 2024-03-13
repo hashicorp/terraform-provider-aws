@@ -18,5 +18,7 @@ var (
 
 	FindGroupByTwoPartKey                   = findGroupByTwoPartKey
 	FindIdentityProviderByTwoPartKey        = findIdentityProviderByTwoPartKey
+	FindUserByTwoPartKey                    = findUserByTwoPartKey
+	FindUserPoolByID                        = findUserPoolByID
 	FindUserPoolUICustomizationByTwoPartKey = findUserPoolUICustomizationByTwoPartKey
 )

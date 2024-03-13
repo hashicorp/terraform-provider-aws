@@ -231,7 +231,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	user, err := FindUserByTwoPartKey(ctx, conn, d.Get("user_pool_id").(string), d.Get("username").(string))
+	user, err := findUserByTwoPartKey(ctx, conn, d.Get("user_pool_id").(string), d.Get("username").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUser, d.Get("username").(string))
@@ -398,7 +398,7 @@ func resourceUserImport(ctx context.Context, d *schema.ResourceData, meta interf
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindUserByTwoPartKey(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolID, username string) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+func findUserByTwoPartKey(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolID, username string) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 	input := &cognitoidentityprovider.AdminGetUserInput{
 		Username:   aws.String(username),
 		UserPoolId: aws.String(userPoolID),
