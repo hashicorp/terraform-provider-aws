@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_cluster: Add nil checks for the `configuration`, `execute_command_configuration`, and `log_configuration` blocks to prevent provider crashes when empty blocks are supplied
+```
