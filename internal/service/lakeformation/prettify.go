@@ -7,6 +7,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"log"
 	"reflect"
 	"strings"
 )
@@ -57,7 +58,7 @@ func prettifyInternal(v reflect.Value, indent int, buf *bytes.Buffer) {
 			val := v.FieldByName(n)
 			ft, ok := v.Type().FieldByName(n)
 			if !ok {
-				panic(fmt.Sprintf("expected to find field %v on type %v, but was not found", n, v.Type()))
+				log.Printf("expected to find field %v on type %v, but was not found", n, v.Type())
 			}
 
 			buf.WriteString(strings.Repeat(" ", indent+2))
