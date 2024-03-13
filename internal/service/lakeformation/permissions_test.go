@@ -184,6 +184,32 @@ func testAccPermissions_databaseMultiple(t *testing.T) {
 	})
 }
 
+func testAccPermissions_dataCellsFilter(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_lakeformation_permissions.test"
+	roleName := "aws_iam_role.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPermissionsConfig_dataCellsFilter(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPermissionsExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionDescribe),
+					resource.TestCheckResourceAttr(resourceName, "data_cells_filter.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccPermissions_dataLocation(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -996,6 +1022,29 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.LakeFor
 		noResource = false
 	}
 
+	if v, ok := rs.Primary.Attributes["data_cells_filter.#"]; ok && v != "" && v != "0" {
+		tfMap := map[string]interface{}{}
+
+		if v := rs.Primary.Attributes["data_cells_filter.0.database_name"]; v != "" {
+			tfMap["database_name"] = v
+		}
+
+		if v := rs.Primary.Attributes["data_cells_filter.0.name"]; v != "" {
+			tfMap["name"] = v
+		}
+
+		if v := rs.Primary.Attributes["data_cells_filter.0.table_catalog_id"]; v != "" {
+			tfMap["table_catalog_id"] = v
+		}
+
+		if v := rs.Primary.Attributes["data_cells_filter.0.table_name"]; v != "" {
+			tfMap["table_name"] = v
+		}
+
+		input.Resource.DataCellsFilter = tflakeformation.ExpandDataCellsFilter([]interface{}{tfMap})
+		noResource = false
+	}
+
 	if noResource {
 		// if after read, there is no resource, it has been deleted
 		return 0, nil
@@ -1128,6 +1177,98 @@ resource "aws_lakeformation_permissions" "test" {
   principal        = aws_iam_role.test.arn
   permissions      = ["CREATE_DATABASE"]
   catalog_resource = true
+
+  # for consistency, ensure that admins are setup before testing
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+`, rName)
+}
+
+func testAccPermissionsConfig_dataCellsFilter(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = "glue.${data.aws_partition.current.dns_suffix}"
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+}
+
+resource "aws_glue_catalog_database" "test" {
+  name = %[1]q
+}
+
+resource "aws_glue_catalog_table" "test" {
+  name          = %[1]q
+  database_name = aws_glue_catalog_database.test.name
+
+  storage_descriptor {
+    columns {
+      name    = "my_column_12"
+      type    = "date"
+      comment = "my_column1_comment2"
+    }
+
+    columns {
+      name    = "my_column_22"
+      type    = "timestamp"
+      comment = "my_column2_comment2"
+    }
+
+    columns {
+      name    = "my_column_23"
+      type    = "string"
+      comment = "my_column23_comment2"
+    }
+  }
+}
+
+resource "aws_lakeformation_data_cells_filter" "test" {
+  table_data {
+    database_name    = aws_glue_catalog_database.test.name
+    name             = %[1]q
+    table_catalog_id = data.aws_caller_identity.current.account_id
+    table_name       = aws_glue_catalog_table.test.name
+
+    column_names = ["my_column_22"]
+
+    row_filter {
+      filter_expression = "my_column_23='testing'"
+    }
+  }
+
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+
+resource "aws_lakeformation_permissions" "test" {
+  principal   = aws_iam_role.test.arn
+  permissions = ["DESCRIBE"]
+
+  data_cells_filter {
+    database_name    = aws_lakeformation_data_cells_filter.test.table_data[0].database_name
+    name             = aws_lakeformation_data_cells_filter.test.table_data[0].name
+    table_catalog_id = aws_lakeformation_data_cells_filter.test.table_data[0].table_catalog_id
+    table_name       = aws_lakeformation_data_cells_filter.test.table_data[0].table_name
+  }
 
   # for consistency, ensure that admins are setup before testing
   depends_on = [aws_lakeformation_data_lake_settings.test]

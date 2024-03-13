@@ -117,9 +117,14 @@ resource "aws_cognito_user_pool" "pool" {
     post_confirmation              = aws_lambda_function.main.arn
     pre_authentication             = aws_lambda_function.main.arn
     pre_sign_up                    = aws_lambda_function.main.arn
-    pre_token_generation           = aws_lambda_function.main.arn
+    pre_token_generation           = aws_lambda_function.main.arn # Set this parameter for legacy purposes; for new instances of pre token generation triggers, set the LambdaArn of `pre_token_generation_config`
     user_migration                 = aws_lambda_function.main.arn
     verify_auth_challenge_response = aws_lambda_function.main.arn
+
+    pre_token_generation_config {
+      lambda_arn     = aws_lambda_function.main.arn # Should be a identical to the pre_token_generation lambda ARN if used
+      lambda_version = "V2_0"
+    }
   }
 
   schema {

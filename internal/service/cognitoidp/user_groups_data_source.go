@@ -18,24 +18,24 @@ import (
 )
 
 // @FrameworkDataSource(name="User Groups")
-func newDataSourceDataSourceUserGroups(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceDataSourceUserGroups{}, nil
+func newUserGroupsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &userGroupsDataSource{}, nil
 }
 
 const (
 	DSNameUserGroups = "User Groups Data Source"
 )
 
-type dataSourceDataSourceUserGroups struct {
+type userGroupsDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceDataSourceUserGroups) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+func (d *userGroupsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
 	response.TypeName = "aws_cognito_user_groups"
 }
 
 // Schema returns the schema for this data source.
-func (d *dataSourceDataSourceUserGroups) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *userGroupsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"id": framework.IDAttribute(),
@@ -67,7 +67,7 @@ func (d *dataSourceDataSourceUserGroups) Schema(ctx context.Context, request dat
 	}
 }
 
-func (d *dataSourceDataSourceUserGroups) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+func (d *userGroupsDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	// 🌱 For the person who migrates to sdkv2:
 	// this should work by just updating the client, and removing the WithContext method.
 	conn := d.Meta().CognitoIDPConn(ctx)

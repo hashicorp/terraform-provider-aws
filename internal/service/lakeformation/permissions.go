@@ -52,6 +52,33 @@ func ResourcePermissions() *schema.Resource {
 					"lf_tag_policy",
 					"table",
 					"table_with_columns",
+					"data_cells_filter",
+				},
+			},
+			"data_cells_filter": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"database_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"table_catalog_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"table_name": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+					},
 				},
 			},
 			"data_location": {
@@ -68,6 +95,7 @@ func ResourcePermissions() *schema.Resource {
 					"lf_tag_policy",
 					"table",
 					"table_with_columns",
+					"data_cells_filter",
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -101,6 +129,7 @@ func ResourcePermissions() *schema.Resource {
 					"lf_tag_policy",
 					"table",
 					"table_with_columns",
+					"data_cells_filter",
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -133,6 +162,7 @@ func ResourcePermissions() *schema.Resource {
 					"lf_tag_policy",
 					"table",
 					"table_with_columns",
+					"data_cells_filter",
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -175,6 +205,7 @@ func ResourcePermissions() *schema.Resource {
 					"lf_tag_policy",
 					"table",
 					"table_with_columns",
+					"data_cells_filter",
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -258,6 +289,7 @@ func ResourcePermissions() *schema.Resource {
 					"lf_tag_policy",
 					"table",
 					"table_with_columns",
+					"data_cells_filter",
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -310,6 +342,7 @@ func ResourcePermissions() *schema.Resource {
 					"lf_tag_policy",
 					"table",
 					"table_with_columns",
+					"data_cells_filter",
 				},
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
@@ -394,6 +427,10 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk("catalog_id"); ok {
 		input.CatalogId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("data_cells_filter"); ok {
+		input.Resource.DataCellsFilter = ExpandDataCellsFilter(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("permissions_with_grant_option"); ok {
@@ -488,6 +525,10 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	if _, ok := d.GetOk("catalog_resource"); ok {
 		input.Resource.Catalog = ExpandCatalogResource()
+	}
+
+	if _, ok := d.GetOk("data_cells_filter"); ok {
+		input.Resource.DataCellsFilter = ExpandDataCellsFilter(d.Get("data_cells_filter").([]interface{}))
 	}
 
 	if v, ok := d.GetOk("data_location"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -612,6 +653,14 @@ func resourcePermissionsRead(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	} else {
 		d.Set("database", nil)
+	}
+
+	if cleanPermissions[0].Resource.DataCellsFilter != nil {
+		if err := d.Set("data_cells_filter", flattenDataCellsFilter(cleanPermissions[0].Resource.DataCellsFilter)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting data_cells_filter: %s", err)
+		}
+	} else {
+		d.Set("data_cells_filter", nil)
 	}
 
 	if cleanPermissions[0].Resource.LFTag != nil {
@@ -805,6 +854,48 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 
 func ExpandCatalogResource() *lakeformation.CatalogResource {
 	return &lakeformation.CatalogResource{}
+}
+
+func ExpandDataCellsFilter(in []interface{}) *lakeformation.DataCellsFilterResource {
+	if len(in) == 0 {
+		return nil
+	}
+
+	m := in[0].(map[string]interface{})
+	var out lakeformation.DataCellsFilterResource
+
+	if v, ok := m["database_name"].(string); ok && v != "" {
+		out.DatabaseName = aws.String(v)
+	}
+
+	if v, ok := m["name"].(string); ok && v != "" {
+		out.Name = aws.String(v)
+	}
+
+	if v, ok := m["table_catalog_id"].(string); ok && v != "" {
+		out.TableCatalogId = aws.String(v)
+	}
+
+	if v, ok := m["table_name"].(string); ok && v != "" {
+		out.TableName = aws.String(v)
+	}
+
+	return &out
+}
+
+func flattenDataCellsFilter(in *lakeformation.DataCellsFilterResource) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"database_name":    aws.StringValue(in.DatabaseName),
+		"name":             aws.StringValue(in.Name),
+		"table_catalog_id": aws.StringValue(in.TableCatalogId),
+		"table_name":       aws.StringValue(in.TableName),
+	}
+
+	return []interface{}{m}
 }
 
 func ExpandDataLocationResource(tfMap map[string]interface{}) *lakeformation.DataLocationResource {

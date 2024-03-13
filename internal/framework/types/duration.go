@@ -18,18 +18,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
+var (
+	_ xattr.TypeWithValidate   = (*durationType)(nil)
+	_ basetypes.StringTypable  = (*durationType)(nil)
+	_ basetypes.StringValuable = (*Duration)(nil)
+)
+
 type durationType struct {
 	basetypes.StringType
 }
 
 var (
 	DurationType = durationType{}
-)
-
-var (
-	_ xattr.TypeWithValidate   = (*durationType)(nil)
-	_ basetypes.StringTypable  = (*durationType)(nil)
-	_ basetypes.StringValuable = (*Duration)(nil)
 )
 
 func (t durationType) Equal(o attr.Type) bool {
