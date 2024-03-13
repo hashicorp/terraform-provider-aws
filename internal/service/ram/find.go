@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	FindInvitationTimeout    = 2 * time.Minute
-	FindResourceShareTimeout = 1 * time.Minute
+	FindInvitationTimeout           = 2 * time.Minute
+	resourceSharePropagationTimeout = 1 * time.Minute
 )
 
 // FindResourceShareInvitationByResourceShareARNAndStatus returns the resource share invitation corresponding to the specified resource share ARN.

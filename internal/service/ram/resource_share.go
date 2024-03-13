@@ -98,7 +98,7 @@ func resourceResourceShareCreate(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(aws.StringValue(output.ResourceShare.ResourceShareArn))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, FindResourceShareTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, resourceSharePropagationTimeout, func() (interface{}, error) {
 		return findResourceShareOwnerSelfByARN(ctx, conn, d.Id())
 	})
 

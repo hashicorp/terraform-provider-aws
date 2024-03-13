@@ -85,7 +85,6 @@ func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
 	shareARN := d.Get("share_arn").(string)
-
 	invitation, err := FindResourceShareInvitationByResourceShareARNAndStatus(ctx, conn, shareARN, ram.ResourceShareInvitationStatusPending)
 
 	if err != nil {
@@ -121,7 +120,7 @@ func resourceResourceShareAccepterCreate(ctx context.Context, d *schema.Resource
 		return sdkdiag.AppendErrorf(diags, "waiting for RAM resource share invitation accepted (%s) state: %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryWhenNotFound(ctx, FindResourceShareTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, resourceSharePropagationTimeout, func() (interface{}, error) {
 		return findResourceShareOwnerOtherAccountsByARN(ctx, conn, d.Id())
 	})
 
