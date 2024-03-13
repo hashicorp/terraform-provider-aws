@@ -370,16 +370,15 @@ func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceD
 		if v, ok := diff.GetOk("secondary_allocation_ids"); ok && v.(*schema.Set).Len() > 0 {
 			return fmt.Errorf(`secondary_allocation_ids is not supported with connectivity_type = "%s"`, connectivityType)
 		}
-
-	case ec2.ConnectivityTypePublic:
-		if v := diff.GetRawConfig().GetAttr("secondary_private_ip_address_count"); v.IsKnown() && !v.IsNull() {
-			return fmt.Errorf(`secondary_private_ip_address_count is not supported with connectivity_type = "%s"`, connectivityType)
-		}
-
 		if diff.Id() != "" && diff.HasChange("secondary_private_ip_address_count") {
 			if err := diff.ForceNew("secondary_private_ip_address_count"); err != nil {
 				return fmt.Errorf("setting secondary_private_ip_address_count forcenew: %s", err)
 			}
+		}
+
+	case ec2.ConnectivityTypePublic:
+		if v := diff.GetRawConfig().GetAttr("secondary_private_ip_address_count"); v.IsKnown() && !v.IsNull() {
+			return fmt.Errorf(`secondary_private_ip_address_count is not supported with connectivity_type = "%s"`, connectivityType)
 		}
 
 		if diff.Id() != "" && diff.HasChange("secondary_allocation_ids") {
