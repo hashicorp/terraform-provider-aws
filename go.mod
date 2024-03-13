@@ -15,6 +15,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/account v1.16.2
 	github.com/aws/aws-sdk-go-v2/service/acm v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/amp v1.25.2
+	github.com/aws/aws-sdk-go-v2/service/amplify v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.7.2
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.41.2
@@ -189,8 +190,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	syreclabs.com/go/faker v1.2.3
 )
-
-require github.com/aws/aws-sdk-go-v2/service/amplify v1.21.2 // indirect
 
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
