@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cognito_identity_provider: Fix `InvalidParameterException: ActiveEncryptionCertificate is not a valid key for SAML identity provider details` errors on resource Update
+```

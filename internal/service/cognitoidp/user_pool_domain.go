@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cognito_user_pool_domain")
-func ResourceUserPoolDomain() *schema.Resource {
+// @SDKResource("aws_cognito_user_pool_domain", name="User Pool Domain")
+func resourceUserPoolDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserPoolDomainCreate,
 		ReadWithoutTimeout:   resourceUserPoolDomainRead,
