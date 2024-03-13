@@ -452,7 +452,7 @@ func resourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceDat
 		CertificateAuthorityArn: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate Signing Request: %s", getCertificateAuthorityCsrInput)
+	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate Signing Request: %+v", getCertificateAuthorityCsrInput)
 
 	getCertificateAuthorityCsrOutput, err := conn.GetCertificateAuthorityCsr(ctx, getCertificateAuthorityCsrInput)
 

@@ -86,7 +86,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.SourceAccount = aws.String(sourceAccount)
 	}
 
-	log.Printf("[DEBUG] Creating ACM PCA Permission: %s", input)
+	log.Printf("[DEBUG] Creating ACM PCA Permission: %+v", input)
 	_, err := conn.CreatePermission(ctx, input)
 
 	if err != nil {

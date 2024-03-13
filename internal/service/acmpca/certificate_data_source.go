@@ -54,7 +54,7 @@ func dataSourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta
 		CertificateAuthorityArn: aws.String(d.Get("certificate_authority_arn").(string)),
 	}
 
-	log.Printf("[DEBUG] Reading ACM PCA Certificate: %s", getCertificateInput)
+	log.Printf("[DEBUG] Reading ACM PCA Certificate: %+v", getCertificateInput)
 
 	certificateOutput, err := conn.GetCertificate(ctx, getCertificateInput)
 	if err != nil {

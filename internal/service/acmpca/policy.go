@@ -70,7 +70,7 @@ func resourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interfa
 		ResourceArn: aws.String(resourceARN),
 	}
 
-	log.Printf("[DEBUG] Putting ACM PCA Policy: %s", input)
+	log.Printf("[DEBUG] Putting ACM PCA Policy: %+v", input)
 	_, err = conn.PutPolicy(ctx, input)
 
 	if err != nil {

@@ -135,6 +135,7 @@ func ResourceCertificate() *schema.Resource {
 }
 
 func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	const certificateIssueTimeout = 5 * time.Minute
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
@@ -192,7 +193,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		CertificateArn:          aws.String(d.Get("certificate_authority_arn").(string)),
 	}
 
-	err = waiter.Wait(ctx, params, time.Duration(5*time.Minute))
+	err = waiter.Wait(ctx, params, certificateIssueTimeout)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ACM PCA Certificate Authority (%s) to issue Certificate (%s), error: %s", certificateAuthorityARN, d.Id(), err)
@@ -210,7 +211,7 @@ func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta i
 		CertificateAuthorityArn: aws.String(d.Get("certificate_authority_arn").(string)),
 	}
 
-	log.Printf("[DEBUG] Reading ACM PCA Certificate: %s", getCertificateInput)
+	log.Printf("[DEBUG] Reading ACM PCA Certificate: %+v", getCertificateInput)
 
 	certificateOutput, err := conn.GetCertificate(ctx, getCertificateInput)
 

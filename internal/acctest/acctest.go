@@ -82,6 +82,8 @@ const (
 	ProviderNameThird = "awsthird"
 
 	ResourcePrefix = "tf-acc-test"
+
+	CertificateIssueTimeout = 5 * time.Minute
 )
 
 const RFC3339RegexPattern = `^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?([Zz]|([+-]([01][0-9]|2[0-3]):[0-5][0-9]))$`
@@ -1974,7 +1976,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 			CertificateArn:          issueCertOutput.CertificateArn,
 		}
 
-		err = waiter.Wait(ctx, params, time.Duration(5*time.Minute))
+		err = waiter.Wait(ctx, params, CertificateIssueTimeout)
 
 		if err != nil {
 			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Root CA certificate to become ISSUED: %w", arn, err)
@@ -2045,7 +2047,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 			CertificateArn:          issueCertOutput.CertificateArn,
 		}
 
-		err = waiter.Wait(ctx, params, time.Duration(5*time.Minute))
+		err = waiter.Wait(ctx, params, CertificateIssueTimeout)
 
 		if err != nil {
 			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Subordinate CA certificate to become ISSUED: %w", arn, err)

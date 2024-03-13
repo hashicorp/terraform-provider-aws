@@ -139,7 +139,7 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	}
 
-	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority: %s", describeCertificateAuthorityInput)
+	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority: %+v", describeCertificateAuthorityInput)
 
 	describeCertificateAuthorityOutput, err := conn.DescribeCertificateAuthority(ctx, describeCertificateAuthorityInput)
 	if err != nil {
@@ -167,7 +167,7 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	}
 
-	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate: %s", getCertificateAuthorityCertificateInput)
+	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate: %+v", getCertificateAuthorityCertificateInput)
 
 	getCertificateAuthorityCertificateOutput, err := conn.GetCertificateAuthorityCertificate(ctx, getCertificateAuthorityCertificateInput)
 	if err != nil {
@@ -189,7 +189,7 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	}
 
-	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate Signing Request: %s", getCertificateAuthorityCsrInput)
+	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate Signing Request: %+v", getCertificateAuthorityCsrInput)
 
 	getCertificateAuthorityCsrOutput, err := conn.GetCertificateAuthorityCsr(ctx, getCertificateAuthorityCsrInput)
 	if err != nil {
