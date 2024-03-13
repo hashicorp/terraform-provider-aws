@@ -253,10 +253,7 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 		var err error
 		output, err = conn.AddLFTagsToResource(ctx, input)
 		if err != nil {
-			if errs.IsA[*awstypes.ConcurrentModificationException](err) {
-				return retry.RetryableError(err)
-			}
-			if errs.IsA[*awstypes.AccessDeniedException](err) {
+			if errs.IsA[*awstypes.ConcurrentModificationException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
 				return retry.RetryableError(err)
 			}
 

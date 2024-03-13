@@ -23,12 +23,8 @@ func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *l
 		for pages.HasMorePages() {
 			page, err := pages.NextPage(ctx)
 
-			if errs.IsA[*awstypes.EntityNotFoundException](err) {
+			if errs.IsA[*awstypes.EntityNotFoundException](err) || errs.IsA[*awstypes.InvalidInputException](err) {
 				return nil, statusNotFound, err
-			}
-
-			if errs.IsA[*awstypes.InvalidInputException](err) {
-				return nil, statusIAMDelay, nil
 			}
 
 			if err != nil {

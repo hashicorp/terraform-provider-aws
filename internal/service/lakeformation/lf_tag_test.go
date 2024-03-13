@@ -263,13 +263,10 @@ func testAccCheckLFTagsDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			if _, err := conn.GetLFTag(ctx, input); err != nil {
-				if errs.IsA[*awstypes.EntityNotFoundException](err) {
+				if errs.IsA[*awstypes.EntityNotFoundException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
 					continue
 				}
-				// If the lake formation admin has been revoked, there will be access denied instead of entity not found
-				if errs.IsA[*awstypes.AccessDeniedException](err) {
-					continue
-				}
+
 				return err
 			}
 			return fmt.Errorf("Lake Formation LF-Tag (%s) still exists", rs.Primary.ID)
