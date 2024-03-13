@@ -222,6 +222,11 @@ func resourceLFTagDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	_, err = conn.DeleteLFTag(ctx, input)
+
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Lake Formation LF-Tag (%s): %s", d.Id(), err)
 	}
@@ -244,23 +249,4 @@ func validateLFTagValues() schema.SchemaValidateFunc {
 		validation.StringLenBetween(1, 255),
 		validation.StringMatch(regexache.MustCompile(`^([\p{L}\p{Z}\p{N}_.:\*\/=+\-@%]*)$`), ""),
 	)
-}
-
-func splitLFTagValues(in []interface{}, size int) [][]interface{} {
-	var out [][]interface{}
-
-	for {
-		if len(in) == 0 {
-			break
-		}
-
-		if len(in) < size {
-			size = len(in)
-		}
-
-		out = append(out, in[0:size])
-		in = in[size:]
-	}
-
-	return out
 }
