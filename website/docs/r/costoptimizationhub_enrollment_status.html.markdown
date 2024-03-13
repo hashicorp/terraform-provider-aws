@@ -5,6 +5,7 @@ page_title: "AWS: aws_costoptimizationhub_enrollment_status"
 description: |-
   Terraform resource for managing an AWS Cost Optimization Hub Enrollment Status.
 ---
+
 # Resource: aws_costoptimizationhub_enrollment_status
 
 Terraform resource for managing an AWS Cost Optimization Hub Enrollment Status.
@@ -15,7 +16,7 @@ Terraform resource for managing an AWS Cost Optimization Hub Enrollment Status.
 
 ```terraform
 resource "aws_costoptimizationhub_enrollment_status" "example" {
-  status                             = "Active"
+  status = "Active"
 }
 ```
 
@@ -23,8 +24,8 @@ resource "aws_costoptimizationhub_enrollment_status" "example" {
 
 ```terraform
 resource "aws_costoptimizationhub_enrollment_status" "example" {
-  status                             = "Active"
-  include_member_accounts            = true
+  status                  = "Active"
+  include_member_accounts = true
 }
 ```
 
@@ -50,13 +51,13 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 
 ```terraform
 import {
-  to = aws_costoptimizationhub_enrollment.example
+  to = aws_costoptimizationhub_enrollment_status.example
   id = "111222333444"
 }
 ```
 
-Using `terraform import`, import Cost Optimization Hub Enrollment using the `id`. For example:
+Using `terraform import`, import Cost Optimization Hub Enrollment Status using the `id`. For example:
 
 ```console
-% terraform import aws_costoptimizationhub_enrollment.example 111222333444
+% terraform import aws_costoptimizationhub_enrollment_status.example 111222333444
 ```
