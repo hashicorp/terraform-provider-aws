@@ -87,7 +87,6 @@ func ResourceNATGateway() *schema.Resource {
 				Type:          schema.TypeInt,
 				Optional:      true,
 				Computed:      true,
-				ForceNew:      true,
 				ConflictsWith: []string{"secondary_private_ip_addresses"},
 			},
 			"secondary_private_ip_addresses": {
@@ -375,6 +374,12 @@ func resourceNATGatewayCustomizeDiff(ctx context.Context, diff *schema.ResourceD
 	case ec2.ConnectivityTypePublic:
 		if v := diff.GetRawConfig().GetAttr("secondary_private_ip_address_count"); v.IsKnown() && !v.IsNull() {
 			return fmt.Errorf(`secondary_private_ip_address_count is not supported with connectivity_type = "%s"`, connectivityType)
+		}
+
+		if diff.Id() != "" && diff.HasChange("secondary_private_ip_address_count") {
+			if err := diff.ForceNew("secondary_private_ip_address_count"); err != nil {
+				return fmt.Errorf("setting secondary_private_ip_address_count forcenew: %s", err)
+			}
 		}
 
 		if diff.Id() != "" && diff.HasChange("secondary_allocation_ids") {
