@@ -25,8 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cognito_user")
-func ResourceUser() *schema.Resource {
+// @SDKResource("aws_cognito_user", name="User")
+func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
 		ReadWithoutTimeout:   resourceUserRead,
@@ -378,6 +378,10 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		Username:   aws.String(d.Get("username").(string)),
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 	})
+
+	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Cognito User (%s): %s", d.Id(), err)

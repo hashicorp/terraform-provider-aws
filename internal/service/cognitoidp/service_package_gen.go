@@ -84,8 +84,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Risk Configuration",
 		},
 		{
-			Factory:  ResourceUser,
+			Factory:  resourceUser,
 			TypeName: "aws_cognito_user",
+			Name:     "User",
 		},
 		{
 			Factory:  resourceUserGroup,

@@ -9,6 +9,7 @@ var (
 	ResourceManagedUserPoolClient   = newManagedUserPoolClientResource
 	ResourceResourceServer          = resourceResourceServer
 	ResourceRiskConfiguration       = resourceRiskConfiguration
+	ResourceUser                    = resourceUser
 	ResourceUserGroup               = resourceUserGroup
 	ResourceUserInGroup             = resourceUserInGroup
 	ResourceUserPool                = resourceUserPool
