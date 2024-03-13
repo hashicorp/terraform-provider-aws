@@ -308,7 +308,7 @@ func expandDataLakeSettingsCreateDefaultPermissions(tfMaps []interface{}) []awst
 
 func expandDataLakeSettingsCreateDefaultPermission(tfMap map[string]interface{}) awstypes.PrincipalPermissions {
 	apiObject := awstypes.PrincipalPermissions{
-		Permissions: expandDataLakePermissions(tfMap["permissions"].(*schema.Set).List()),
+		Permissions: expandPermissions(tfMap["permissions"].(*schema.Set).List()),
 		Principal: &awstypes.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(tfMap["principal"].(string)),
 		},
@@ -338,7 +338,7 @@ func flattenDataLakeSettingsCreateDefaultPermission(apiObject awstypes.Principal
 	}
 
 	if apiObject.Permissions != nil {
-		tfMap["permissions"] = flex.FlattenStringValueSet(flattenDataLakePermissions(apiObject.Permissions))
+		tfMap["permissions"] = flex.FlattenStringValueSet(flattenPermissions(apiObject.Permissions))
 	}
 
 	if v := aws.ToString(apiObject.Principal.DataLakePrincipalIdentifier); v != "" {
@@ -348,7 +348,7 @@ func flattenDataLakeSettingsCreateDefaultPermission(apiObject awstypes.Principal
 	return tfMap
 }
 
-func expandDataLakePermissions(in []interface{}) []awstypes.Permission {
+func expandPermissions(in []interface{}) []awstypes.Permission {
 	if len(in) == 0 {
 		return nil
 	}
@@ -362,7 +362,7 @@ func expandDataLakePermissions(in []interface{}) []awstypes.Permission {
 	return out
 }
 
-func flattenDataLakePermissions(apiObjects []awstypes.Permission) []string {
+func flattenPermissions(apiObjects []awstypes.Permission) []string {
 	if len(apiObjects) == 0 {
 		return nil
 	}
