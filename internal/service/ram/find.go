@@ -15,8 +15,8 @@ import (
 )
 
 const (
-	FindInvitationTimeout           = 2 * time.Minute
-	resourceSharePropagationTimeout = 1 * time.Minute
+	resourceShareInvitationPropagationTimeout = 2 * time.Minute
+	resourceSharePropagationTimeout           = 1 * time.Minute
 )
 
 // FindResourceShareInvitationByResourceShareARNAndStatus returns the resource share invitation corresponding to the specified resource share ARN.
@@ -25,7 +25,7 @@ func FindResourceShareInvitationByResourceShareARNAndStatus(ctx context.Context,
 	var invitation *ram.ResourceShareInvitation
 
 	// Retry for Ram resource share invitation eventual consistency
-	err := retry.RetryContext(ctx, FindInvitationTimeout, func() *retry.RetryError {
+	err := retry.RetryContext(ctx, resourceShareInvitationPropagationTimeout, func() *retry.RetryError {
 		i, err := resourceShareInvitationByResourceShareARNAndStatus(ctx, conn, resourceShareArn, status)
 		invitation = i
 
@@ -61,7 +61,7 @@ func FindResourceShareInvitationByARN(ctx context.Context, conn *ram.RAM, arn st
 	var invitation *ram.ResourceShareInvitation
 
 	// Retry for Ram resource share invitation eventual consistency
-	err := retry.RetryContext(ctx, FindInvitationTimeout, func() *retry.RetryError {
+	err := retry.RetryContext(ctx, resourceShareInvitationPropagationTimeout, func() *retry.RetryError {
 		i, err := resourceShareInvitationByARN(ctx, conn, arn)
 		invitation = i
 
