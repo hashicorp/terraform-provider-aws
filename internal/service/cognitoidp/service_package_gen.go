@@ -18,11 +18,11 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceDataSourceUserGroup,
+			Factory: newUserGroupDataSource,
 			Name:    "User Group",
 		},
 		{
-			Factory: newDataSourceDataSourceUserGroups,
+			Factory: newUserGroupsDataSource,
 			Name:    "User Groups",
 		},
 	}
@@ -31,10 +31,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceManagedUserPoolClient,
+			Factory: newManagedUserPoolClientResource,
+			Name:    "Managed User Pool Client",
 		},
 		{
-			Factory: newResourceUserPoolClient,
+			Factory: newUserPoolClientResource,
+			Name:    "User Pool Client",
 		},
 	}
 }
@@ -42,20 +44,24 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceUserPoolClient,
+			Factory:  dataSourceUserPoolClient,
 			TypeName: "aws_cognito_user_pool_client",
+			Name:     "User Pool Client",
 		},
 		{
-			Factory:  DataSourceUserPoolClients,
+			Factory:  dataSourceUserPoolClients,
 			TypeName: "aws_cognito_user_pool_clients",
+			Name:     "User Pool Clients",
 		},
 		{
-			Factory:  DataSourceUserPoolSigningCertificate,
+			Factory:  dataSourceUserPoolSigningCertificate,
 			TypeName: "aws_cognito_user_pool_signing_certificate",
+			Name:     "User Pool Signing Certificate",
 		},
 		{
-			Factory:  DataSourceUserPools,
+			Factory:  dataSourceUserPools,
 			TypeName: "aws_cognito_user_pools",
+			Name:     "User Pools",
 		},
 	}
 }
@@ -68,12 +74,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Identity Provider",
 		},
 		{
-			Factory:  ResourceResourceServer,
+			Factory:  resourceResourceServer,
 			TypeName: "aws_cognito_resource_server",
+			Name:     "Resource Server",
 		},
 		{
-			Factory:  ResourceRiskConfiguration,
+			Factory:  resourceRiskConfiguration,
 			TypeName: "aws_cognito_risk_configuration",
+			Name:     "Risk Configuration",
 		},
 		{
 			Factory:  ResourceUser,
@@ -85,18 +93,20 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "User Group",
 		},
 		{
-			Factory:  ResourceUserInGroup,
+			Factory:  resourceUserInGroup,
 			TypeName: "aws_cognito_user_in_group",
+			Name:     "Group User",
 		},
 		{
-			Factory:  ResourceUserPool,
+			Factory:  resourceUserPool,
 			TypeName: "aws_cognito_user_pool",
 			Name:     "User Pool",
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  ResourceUserPoolDomain,
+			Factory:  resourceUserPoolDomain,
 			TypeName: "aws_cognito_user_pool_domain",
+			Name:     "User Pool Domain",
 		},
 		{
 			Factory:  resourceUserPoolUICustomization,

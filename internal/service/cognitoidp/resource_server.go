@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cognito_resource_server")
-func ResourceResourceServer() *schema.Resource {
+// @SDKResource("aws_cognito_resource_server", name="Resource Server")
+func resourceResourceServer() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceServerCreate,
 		ReadWithoutTimeout:   resourceResourceServerRead,

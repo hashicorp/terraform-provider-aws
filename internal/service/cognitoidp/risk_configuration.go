@@ -22,13 +22,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cognito_risk_configuration")
-func ResourceRiskConfiguration() *schema.Resource {
+// @SDKResource("aws_cognito_risk_configuration", name="Risk Configuration")
+func resourceRiskConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRiskConfigurationPut,
 		ReadWithoutTimeout:   resourceRiskConfigurationRead,
 		DeleteWithoutTimeout: resourceRiskConfigurationDelete,
 		UpdateWithoutTimeout: resourceRiskConfigurationPut,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},

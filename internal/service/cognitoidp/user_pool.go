@@ -31,7 +31,7 @@ import (
 
 // @SDKResource("aws_cognito_user_pool", name="User Pool")
 // @Tags
-func ResourceUserPool() *schema.Resource {
+func resourceUserPool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserPoolCreate,
 		ReadWithoutTimeout:   resourceUserPoolRead,
