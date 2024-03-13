@@ -292,6 +292,7 @@ func findMaybeResourceShareInvitationByARN(ctx context.Context, conn *ram.RAM, a
 
 func findMaybeResourceShareInvitationRetry(ctx context.Context, conn *ram.RAM, input *ram.GetResourceShareInvitationsInput, filter tfslices.Predicate[*ram.ResourceShareInvitation]) (option.Option[*ram.ResourceShareInvitation], error) {
 	// Retry for RAM resource share invitation eventual consistency.
+	errNotFound := errors.New("not found")
 	var output option.Option[*ram.ResourceShareInvitation]
 	err := tfresource.Retry(ctx, resourceShareInvitationPropagationTimeout, func() *retry.RetryError {
 		var err error
@@ -302,7 +303,7 @@ func findMaybeResourceShareInvitationRetry(ctx context.Context, conn *ram.RAM, i
 		}
 
 		if output.IsNone() {
-			return retry.RetryableError(tfresource.NewEmptyResultError(nil))
+			return retry.RetryableError(errNotFound)
 		}
 
 		return nil
@@ -310,6 +311,10 @@ func findMaybeResourceShareInvitationRetry(ctx context.Context, conn *ram.RAM, i
 
 	if tfresource.TimedOut(err) {
 		output, err = findMaybeResourceShareInvitation(ctx, conn, input, filter)
+	}
+
+	if errors.Is(err, errNotFound) {
+		output, err = option.None[*ram.ResourceShareInvitation](), nil
 	}
 
 	return output, err

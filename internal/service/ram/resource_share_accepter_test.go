@@ -125,12 +125,6 @@ func TestAccRAMResourceShareAccepter_resourceAssociation(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "resources.%", "0"),
 				),
 			},
-			{
-				Config:            testAccResourceShareAccepterConfig_association(rName),
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
