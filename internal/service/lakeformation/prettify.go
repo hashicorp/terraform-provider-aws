@@ -9,6 +9,8 @@ import (
 )
 
 // prettify returns the string representation of a value.
+// replaces the String() method that existed on structs in AWS SDK v1
+// https://github.com/aws/aws-sdk-go/blob/main/aws/awsutil/prettify.go
 func prettify(i interface{}) string {
 	var buf bytes.Buffer
 	prettifyInternal(reflect.ValueOf(i), 0, &buf)
