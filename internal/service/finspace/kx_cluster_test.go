@@ -781,7 +781,7 @@ resource "aws_finspace_kx_environment" "test" {
 data "aws_iam_policy_document" "key_policy" {
   statement {
     actions = [
-	  "kms:Encrypt",
+      "kms:Encrypt",
       "kms:Decrypt",
       "kms:GenerateDataKey"
     ]
