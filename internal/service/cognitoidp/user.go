@@ -379,7 +379,7 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeUserNotFoundException, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
 		return diags
 	}
 
