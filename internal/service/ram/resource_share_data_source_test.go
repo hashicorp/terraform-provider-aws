@@ -169,7 +169,7 @@ data "aws_ram_resource_share" "test" {
 
   filter {
     name   = "Name"
-    values = [%[1]q]
+    values = [aws_ram_resource_share.test.tags["Name"]]
   }
 }
 `, rName)
