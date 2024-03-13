@@ -99,8 +99,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_cognito_user_pool_domain",
 		},
 		{
-			Factory:  ResourceUserPoolUICustomization,
+			Factory:  resourceUserPoolUICustomization,
 			TypeName: "aws_cognito_user_pool_ui_customization",
+			Name:     "User Pool UI Customization",
 		},
 	}
 }
