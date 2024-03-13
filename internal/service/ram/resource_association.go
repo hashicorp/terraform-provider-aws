@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_ram_resource_association")
-func ResourceResourceAssociation() *schema.Resource {
+// @SDKResource("aws_ram_resource_association", name="Resource Association")
+func resourceResourceAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceAssociationCreate,
 		ReadWithoutTimeout:   resourceResourceAssociationRead,

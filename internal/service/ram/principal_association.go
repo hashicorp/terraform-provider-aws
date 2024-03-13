@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_ram_principal_association")
-func ResourcePrincipalAssociation() *schema.Resource {
+// @SDKResource("aws_ram_principal_association", name="Principal Association")
+func resourcePrincipalAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePrincipalAssociationCreate,
 		ReadWithoutTimeout:   resourcePrincipalAssociationRead,
@@ -34,13 +34,6 @@ func ResourcePrincipalAssociation() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"resource_share_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
-			},
-
 			"principal": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -49,6 +42,12 @@ func ResourcePrincipalAssociation() *schema.Resource {
 					verify.ValidAccountID,
 					verify.ValidARN,
 				),
+			},
+			"resource_share_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
 			},
 		},
 	}

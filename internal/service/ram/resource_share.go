@@ -26,7 +26,7 @@ import (
 
 // @SDKResource("aws_ram_resource_share", name="Resource Share")
 // @Tags(identifierAttribute="id")
-func ResourceResourceShare() *schema.Resource {
+func resourceResourceShare() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceShareCreate,
 		ReadWithoutTimeout:   resourceResourceShareRead,

@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKDataSource("aws_ram_resource_share")
+// @SDKDataSource("aws_ram_resource_share", name="Resource Shared")
 // @Tags
 func dataSourceResourceShare() *schema.Resource {
 	return &schema.Resource{

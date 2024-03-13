@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_ram_sharing_with_organization")
-func ResourceSharingWithOrganization() *schema.Resource {
+// @SDKResource("aws_ram_sharing_with_organization", name="Sharing With Organization")
+func resourceSharingWithOrganization() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSharingWithOrganizationCreate,
 		ReadWithoutTimeout:   resourceSharingWithOrganizationRead,
