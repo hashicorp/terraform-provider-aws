@@ -10,4 +10,6 @@ var (
 	ResourceResourceShare           = resourceResourceShare
 	ResourceResourceShareAccepter   = resourceResourceShareAccepter
 	ResourceSharingWithOrganization = resourceSharingWithOrganization
+
+	FindResourceShareOwnerSelfByARN = findResourceShareOwnerSelfByARN
 )

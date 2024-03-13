@@ -5,6 +5,7 @@ package ram
 
 import (
 	"context"
+	"errors"
 	"log"
 	"time"
 
@@ -98,7 +99,7 @@ func resourceResourceShareCreate(ctx context.Context, d *schema.ResourceData, me
 	d.SetId(aws.StringValue(output.ResourceShare.ResourceShareArn))
 
 	_, err = tfresource.RetryWhenNotFound(ctx, FindResourceShareTimeout, func() (interface{}, error) {
-		return FindResourceShareOwnerSelfByARN(ctx, conn, d.Id())
+		return findResourceShareOwnerSelfByARN(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -116,7 +117,7 @@ func resourceResourceShareRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
-	resourceShare, err := FindResourceShareOwnerSelfByARN(ctx, conn, d.Id())
+	resourceShare, err := findResourceShareOwnerSelfByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RAM Resource Share (%s) not found, removing from state", d.Id())
@@ -210,7 +211,7 @@ func resourceResourceShareDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func FindResourceShareOwnerSelfByARN(ctx context.Context, conn *ram.RAM, arn string) (*ram.ResourceShare, error) {
+func findResourceShareOwnerSelfByARN(ctx context.Context, conn *ram.RAM, arn string) (*ram.ResourceShare, error) {
 	input := &ram.GetResourceSharesInput{
 		ResourceOwner:     aws.String(ram.ResourceOwnerSelf),
 		ResourceShareArns: aws.StringSlice([]string{arn}),
@@ -274,7 +275,7 @@ func findResourceShares(ctx context.Context, conn *ram.RAM, input *ram.GetResour
 
 func statusResourceShareOwnerSelf(ctx context.Context, conn *ram.RAM, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindResourceShareOwnerSelfByARN(ctx, conn, arn)
+		output, err := findResourceShareOwnerSelfByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -298,8 +299,10 @@ func waitResourceShareOwnedBySelfActive(ctx context.Context, conn *ram.RAM, arn 
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*ram.ResourceShare); ok {
-		return v, err
+	if output, ok := outputRaw.(*ram.ResourceShare); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+
+		return output, err
 	}
 
 	return nil, err
@@ -315,8 +318,10 @@ func waitResourceShareOwnedBySelfDeleted(ctx context.Context, conn *ram.RAM, arn
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*ram.ResourceShare); ok {
-		return v, err
+	if output, ok := outputRaw.(*ram.ResourceShare); ok {
+		tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+
+		return output, err
 	}
 
 	return nil, err
