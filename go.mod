@@ -6,11 +6,11 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.0
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.50.37
+	github.com/aws/aws-sdk-go v1.50.38
 	github.com/aws/aws-sdk-go-v2 v1.25.3
 	github.com/aws/aws-sdk-go-v2/config v1.27.7
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.15.3
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.9
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.10
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/account v1.16.2
 	github.com/aws/aws-sdk-go-v2/service/acm v1.25.2
@@ -118,7 +118,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.8.3
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.23.2
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.51.4
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.2
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.2
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.2
