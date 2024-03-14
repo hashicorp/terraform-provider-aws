@@ -6,10 +6,8 @@ package ram_test
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ram"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -17,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfram "github.com/hashicorp/terraform-provider-aws/internal/service/ram"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -71,47 +70,22 @@ func TestAccRAMPrincipalAssociation_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckPrincipalAssociationExists(ctx context.Context, resourceName string, resourceShare *ram.ResourceShareAssociation) resource.TestCheckFunc {
+func testAccCheckPrincipalAssociationExists(ctx context.Context, n string, v *ram.ResourceShareAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
 
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		resourceShareARN, principal, err := tfram.PrincipalAssociationParseID(rs.Primary.ID)
+		output, err := tfram.FindPrincipalAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["resource_share_arn"], rs.Primary.Attributes["principal"])
 
 		if err != nil {
-			return fmt.Errorf("error parsing ID (%s): %w", rs.Primary.ID, err)
+			return err
 		}
 
-		var association *ram.ResourceShareAssociation
-
-		if ok, _ := regexp.MatchString(`^\d{12}$`, principal); ok {
-			// AWS Account ID Principals need to be accepted to become ASSOCIATED
-			association, err = tfram.FindResourceShareAssociationByShareARNAndPrincipal(ctx, conn, resourceShareARN, principal)
-		} else {
-			association, err = tfram.WaitResourceSharePrincipalAssociated(ctx, conn, resourceShareARN, principal)
-		}
-
-		if err != nil {
-			return fmt.Errorf("error reading RAM Resource Share (%s) Principal Association (%s): %s", resourceShareARN, principal, err)
-		}
-
-		if association == nil {
-			return fmt.Errorf("RAM Resource Share (%s) Principal Association (%s) not found", resourceShareARN, principal)
-		}
-
-		if aws.StringValue(association.Status) != ram.ResourceShareAssociationStatusAssociated && aws.StringValue(association.Status) != ram.ResourceShareAssociationStatusAssociating {
-			return fmt.Errorf("RAM Resource Share (%s) Principal Association (%s) status not associating or associated: %s", resourceShareARN, principal, aws.StringValue(association.Status))
-		}
-
-		*resourceShare = *association
+		*v = *output
 
 		return nil
 	}
@@ -126,15 +100,17 @@ func testAccCheckPrincipalAssociationDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			association, err := tfram.WaitResourceSharePrincipalDisassociated(ctx, conn, rs.Primary.Attributes["resource_share_arn"], rs.Primary.Attributes["principal"])
+			_, err := tfram.FindPrincipalAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["resource_share_arn"], rs.Primary.Attributes["principal"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
 				return err
 			}
 
-			if association != nil && aws.StringValue(association.Status) != ram.ResourceShareAssociationStatusDisassociated {
-				return fmt.Errorf("RAM Principal Association: %s", rs.Primary.ID)
-			}
+			return fmt.Errorf("RAM Resource Association %s still exists", rs.Primary.ID)
 		}
 
 		return nil

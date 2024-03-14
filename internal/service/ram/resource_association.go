@@ -93,7 +93,7 @@ func resourceResourceAssociationRead(ctx context.Context, d *schema.ResourceData
 	}
 	resourceShareARN, resourceARN := parts[0], parts[1]
 
-	resourceShareAssociation, err := findResourceAssociationByTwoPartKey(ctx, conn, resourceShareARN, resourceARN)
+	resourceAssociation, err := findResourceAssociationByTwoPartKey(ctx, conn, resourceShareARN, resourceARN)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] RAM Resource Association %s not found, removing from state", d.Id())
@@ -105,8 +105,8 @@ func resourceResourceAssociationRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Association (%s): %s", d.Id(), err)
 	}
 
-	d.Set("resource_arn", resourceShareAssociation.AssociatedEntity)
-	d.Set("resource_share_arn", resourceShareAssociation.ResourceShareArn)
+	d.Set("resource_arn", resourceAssociation.AssociatedEntity)
+	d.Set("resource_share_arn", resourceAssociation.ResourceShareArn)
 
 	return diags
 }
@@ -121,7 +121,7 @@ func resourceResourceAssociationDelete(ctx context.Context, d *schema.ResourceDa
 	}
 	resourceShareARN, resourceARN := parts[0], parts[1]
 
-	log.Printf("[DEBUG] Deleting RAM Resource Associating: %s", d.Id())
+	log.Printf("[DEBUG] Deleting RAM Resource Association: %s", d.Id())
 	_, err = conn.DisassociateResourceShareWithContext(ctx, &ram.DisassociateResourceShareInput{
 		ResourceArns:     aws.StringSlice([]string{resourceARN}),
 		ResourceShareArn: aws.String(resourceShareARN),
@@ -192,7 +192,7 @@ func findResourceShareAssociations(ctx context.Context, conn *ram.RAM, input *ra
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
+	if tfawserr.ErrCodeEquals(err, ram.ErrCodeResourceArnNotFoundException, ram.ErrCodeUnknownResourceException) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
