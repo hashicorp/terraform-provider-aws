@@ -21,9 +21,9 @@ func TestAccTimestreamWriteDatabaseDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_timestreamwrite_database.test"
 	resourceName := "aws_timestreamwrite_database.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -46,10 +46,11 @@ func TestAccTimestreamWriteDatabaseDataSource_basic(t *testing.T) {
 
 func TestAccTimestreamWriteDatabaseDataSource_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
-	resourceName := "aws_timestreamwrite_database.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
 	dataSourceName := "data.aws_timestreamwrite_database.test"
 	kmsResourceName := "aws_kms_key.test"
+	resourceName := "aws_timestreamwrite_database.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -62,6 +63,57 @@ func TestAccTimestreamWriteDatabaseDataSource_kmsKey(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "database_name", rName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "kms_key_id", kmsResourceName, "arn"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccTimestreamWriteDatabaseDataSource_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	dataSourceName := "data.aws_timestreamwrite_database.test"
+	resourceName := "aws_timestreamwrite_database.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDatabaseConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags_all.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccDatabaseConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags_all.%", "2"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags_all.key1", "value1updated"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags_all.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccDatabaseConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.key2", "value2"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags_all.%", "1"),
+					resource.TestCheckResourceAttr(dataSourceName, "tags_all.key2", "value2"),
 				),
 			},
 			{
@@ -116,4 +168,37 @@ data "aws_timestreamwrite_database" "test" {
   database_name = aws_timestreamwrite_database.test.database_name
 }
 `, rName)
+}
+
+func testAccDatabaseDataSourceConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_timestreamwrite_database" "test" {
+  database_name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+
+data "aws_timestreamwrite_database" "test" {
+	database_name = aws_timestreamwrite_database.test.database_name
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccDatabaseDataSourceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_timestreamwrite_database" "test" {
+  database_name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+
+data "aws_timestreamwrite_database" "test" {
+	database_name = aws_timestreamwrite_database.test.database_name
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

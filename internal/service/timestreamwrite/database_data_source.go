@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	// "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	// tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -50,6 +50,7 @@ func (d *dataSourceDatabase) Schema(ctx context.Context, req datasource.SchemaRe
 			"table_count": schema.Int64Attribute{
 				Computed: true,
 			},
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -76,7 +77,7 @@ func (d *dataSourceDatabase) Read(ctx context.Context, req datasource.ReadReques
 	data.DatabaseName = flex.StringToFramework(ctx, out.DatabaseName)
 	data.KmsKeyId = flex.StringToFramework(ctx, out.KmsKeyId)
 	data.TableCount = flex.Int64ToFramework(ctx, &out.TableCount)
-	
+
 	tags, err := listTags(ctx, conn, *out.DatabaseName)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -88,7 +89,7 @@ func (d *dataSourceDatabase) Read(ctx context.Context, req datasource.ReadReques
 
 	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
 	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
-	
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
@@ -97,5 +98,5 @@ type dataSourceDatabaseData struct {
 	DatabaseName types.String `tfsdk:"database_name"`
 	KmsKeyId     types.String `tfsdk:"kms_key_id"`
 	TableCount   types.Int64  `tfsdk:"table_count"`
-	Tags		 types.Map 	  `tfsdk:"tags"`
+	Tags         types.Map    `tfsdk:"tags"`
 }
