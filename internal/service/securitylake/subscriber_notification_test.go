@@ -24,7 +24,7 @@ func testAccSubscriberNotification_basic(t *testing.T) {
 	resourceName := "aws_securitylake_subscriber_notification.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
@@ -59,7 +59,7 @@ func testAccSubscriberNotification_https(t *testing.T) {
 	resourceName := "aws_securitylake_subscriber_notification.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
