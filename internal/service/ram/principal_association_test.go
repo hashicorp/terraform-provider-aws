@@ -26,13 +26,46 @@ func TestAccRAMPrincipalAssociation_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSharingWithOrganizationEnabled(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPrincipalAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPrincipalAssociationConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPrincipalAssociationExists(ctx, resourceName, &association),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRAMPrincipalAssociation_AccountID(t *testing.T) {
+	ctx := acctest.Context(t)
+	var association ram.ResourceShareAssociation
+	resourceName := "aws_ram_principal_association.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckAlternateAccount(t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckPrincipalAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPrincipalAssociationConfig_accountID(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPrincipalAssociationExists(ctx, resourceName, &association),
 				),
@@ -53,7 +86,10 @@ func TestAccRAMPrincipalAssociation_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckSharingWithOrganizationEnabled(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPrincipalAssociationDestroy(ctx),
@@ -68,6 +104,18 @@ func TestAccRAMPrincipalAssociation_disappears(t *testing.T) {
 			},
 		},
 	})
+}
+
+func testAccPreCheckSharingWithOrganizationEnabled(ctx context.Context, t *testing.T) {
+	err := tfram.FindSharingWithOrganization(ctx, acctest.Provider.Meta().(*conns.AWSClient))
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if tfresource.NotFound(err) {
+		t.Skipf("Sharing with AWS Organization not found, skipping acceptance test: %s", err)
+	}
 }
 
 func testAccCheckPrincipalAssociationExists(ctx context.Context, n string, v *ram.ResourceShareAssociation) resource.TestCheckFunc {
@@ -120,13 +168,48 @@ func testAccCheckPrincipalAssociationDestroy(ctx context.Context) resource.TestC
 func testAccPrincipalAssociationConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ram_resource_share" "test" {
+  allow_external_principals = false
+  name                      = %[1]q
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+    }]
+  })
+}
+
+resource "aws_ram_principal_association" "test" {
+  principal          = aws_iam_role.test.arn
+  resource_share_arn = aws_ram_resource_share.test.id
+}
+`, rName)
+}
+
+func testAccPrincipalAssociationConfig_accountID(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
+resource "aws_ram_resource_share" "test" {
   allow_external_principals = true
   name                      = %[1]q
 }
 
+data "aws_caller_identity" "receiver" {
+  provider = "awsalternate"
+}
+
 resource "aws_ram_principal_association" "test" {
-  principal          = "111111111111"
+  principal          = data.aws_caller_identity.receiver.account_id
   resource_share_arn = aws_ram_resource_share.test.id
 }
-`, rName)
+`, rName))
 }

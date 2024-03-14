@@ -15,4 +15,5 @@ var (
 	FindResourceAssociationByTwoPartKey      = findResourceAssociationByTwoPartKey
 	FindResourceShareOwnerOtherAccountsByARN = findResourceShareOwnerOtherAccountsByARN
 	FindResourceShareOwnerSelfByARN          = findResourceShareOwnerSelfByARN
+	FindSharingWithOrganization              = findSharingWithOrganization
 )
