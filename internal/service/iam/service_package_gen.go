@@ -121,8 +121,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Access Key",
 		},
 		{
-			Factory:  ResourceAccountAlias,
+			Factory:  resourceAccountAlias,
 			TypeName: "aws_iam_account_alias",
+			Name:     "Account Alias",
 		},
 		{
 			Factory:  resourceAccountPasswordPolicy,
@@ -135,12 +136,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Group",
 		},
 		{
-			Factory:  ResourceGroupMembership,
+			Factory:  resourceGroupMembership,
 			TypeName: "aws_iam_group_membership",
+			Name:     "Group Membership",
 		},
 		{
-			Factory:  ResourceGroupPolicy,
+			Factory:  resourceGroupPolicy,
 			TypeName: "aws_iam_group_policy",
+			Name:     "Group Policy",
 		},
 		{
 			Factory:  resourceGroupPolicyAttachment,
@@ -189,8 +192,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRolePolicy,
+			Factory:  resourceRolePolicy,
 			TypeName: "aws_iam_role_policy",
+			Name:     "Role Policy",
 		},
 		{
 			Factory:  resourceRolePolicyAttachment,
@@ -207,7 +211,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSecurityTokenServicePreferences,
+			Factory:  resourceSecurityTokenServicePreferences,
 			TypeName: "aws_iam_security_token_service_preferences",
 			Name:     "Security Token Service Preferences",
 		},
@@ -230,12 +234,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceServiceSpecificCredential,
+			Factory:  resourceServiceSpecificCredential,
 			TypeName: "aws_iam_service_specific_credential",
+			Name:     "Service Specific Credential",
 		},
 		{
-			Factory:  ResourceSigningCertificate,
+			Factory:  resourceSigningCertificate,
 			TypeName: "aws_iam_signing_certificate",
+			Name:     "Signing Certificate",
 		},
 		{
 			Factory:  resourceUser,
@@ -247,8 +253,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceUserGroupMembership,
+			Factory:  resourceUserGroupMembership,
 			TypeName: "aws_iam_user_group_membership",
+			Name:     "User Group Membership",
 		},
 		{
 			Factory:  resourceUserLoginProfile,
@@ -256,8 +263,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "User Login Profile",
 		},
 		{
-			Factory:  ResourceUserPolicy,
+			Factory:  resourceUserPolicy,
 			TypeName: "aws_iam_user_policy",
+			Name:     "User Policy",
 		},
 		{
 			Factory:  resourceUserPolicyAttachment,
