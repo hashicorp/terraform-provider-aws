@@ -185,7 +185,7 @@ require (
 	github.com/shopspring/decimal v1.3.1
 	golang.org/x/crypto v0.21.0
 	golang.org/x/tools v0.18.0
-	gopkg.in/dnaeon/go-vcr.v3 v3.1.2
+	gopkg.in/dnaeon/go-vcr.v3 v3.2.0
 	gopkg.in/yaml.v2 v2.4.0
 	syreclabs.com/go/faker v1.2.3
 )
