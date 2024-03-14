@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cognito_identity_pool_roles_attachment")
-func ResourcePoolRolesAttachment() *schema.Resource {
+// @SDKResource("aws_cognito_identity_pool_roles_attachment", name="Pool Roles Association")
+func resourcePoolRolesAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePoolRolesAttachmentCreate,
 		ReadWithoutTimeout:   resourcePoolRolesAttachmentRead,

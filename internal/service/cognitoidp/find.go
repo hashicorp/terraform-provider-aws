@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"reflect"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
@@ -15,33 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
-
-// FindCognitoUserPoolUICustomization returns the UI Customization corresponding to the UserPoolId and ClientId.
-// Returns nil if no UI Customization is found.
-func FindCognitoUserPoolUICustomization(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId, clientId string) (*cognitoidentityprovider.UICustomizationType, error) {
-	input := &cognitoidentityprovider.GetUICustomizationInput{
-		ClientId:   aws.String(clientId),
-		UserPoolId: aws.String(userPoolId),
-	}
-
-	output, err := conn.GetUICustomizationWithContext(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.UICustomization == nil {
-		return nil, nil
-	}
-
-	// The GetUICustomization API operation will return an empty struct
-	// if nothing is present rather than nil or an error, so we equate that with nil
-	if reflect.DeepEqual(output.UICustomization, &cognitoidentityprovider.UICustomizationType{}) {
-		return nil, nil
-	}
-
-	return output.UICustomization, nil
-}
 
 // FindCognitoUserInGroup checks whether the specified user is present in the specified group. Returns boolean value accordingly.
 func FindCognitoUserInGroup(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, groupName, userPoolId, username string) (bool, error) {

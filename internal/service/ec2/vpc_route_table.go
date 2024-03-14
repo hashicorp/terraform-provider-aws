@@ -49,12 +49,13 @@ var routeTableValidTargets = []string{
 
 // @SDKResource("aws_route_table", name="Route Table")
 // @Tags(identifierAttribute="id")
-func ResourceRouteTable() *schema.Resource {
+func resourceRouteTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteTableCreate,
 		ReadWithoutTimeout:   resourceRouteTableRead,
 		UpdateWithoutTimeout: resourceRouteTableUpdate,
 		DeleteWithoutTimeout: resourceRouteTableDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -352,6 +353,10 @@ func resourceRouteTableDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	routeTable, err := FindRouteTableByID(ctx, conn, d.Id())
+
+	if tfresource.NotFound(err) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Route Table (%s): %s", d.Id(), err)
