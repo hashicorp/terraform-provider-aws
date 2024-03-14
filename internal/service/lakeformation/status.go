@@ -28,12 +28,13 @@ func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *l
 			}
 
 			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Invalid principal") {
-				return nil, statusIAMDelay, err
+				return nil, statusIAMDelay, nil
 			}
 
 			if err != nil {
 				return nil, statusFailed, fmt.Errorf("listing permissions: %w", err)
 			}
+
 			for _, permission := range page.PrincipalResourcePermissions {
 				if reflect.ValueOf(permission).IsZero() {
 					continue

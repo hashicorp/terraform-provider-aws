@@ -6,6 +6,7 @@ package lakeformation_test
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"testing"
@@ -20,7 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
-	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	providerslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -200,7 +201,8 @@ func testAccLFTag_Values_overFifty(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	generatedValues := generateLFTagValueList(1, 52)
-	generatedValues2 := append(generatedValues, generateLFTagValueList(53, 120)...)
+	generatedValues2 := slices.Clone(generatedValues)
+	generatedValues2 = append(generatedValues2, generateLFTagValueList(53, 120)...)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
@@ -230,7 +232,7 @@ func testAccLFTag_Values_overFifty(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLFTagConfig_values(rName, slices.RemoveAll(generatedValues, "value36")),
+				Config: testAccLFTagConfig_values(rName, providerslices.RemoveAll(generatedValues, "value36")),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLFTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", rName),
