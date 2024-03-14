@@ -48,6 +48,7 @@ updates:
     ignore:
       - dependency-name: "golang.org/x/tools"
       - dependency-name: "google.golang.org/grpc"
+      - dependency-name: "google.golang.org/protobuf"
     schedule:
       interval: "daily"
 
