@@ -200,7 +200,7 @@ func testAccLFTag_Values_overFifty(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	generatedValues := generateLFTagValueList(1, 52)
-	generatedValues = append(generatedValues, generateLFTagValueList(53, 60)...)
+	generatedValues2 := append(generatedValues, generateLFTagValueList(53, 120)...)
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
@@ -219,12 +219,12 @@ func testAccLFTag_Values_overFifty(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLFTagConfig_values(rName, generatedValues),
+				Config: testAccLFTagConfig_values(rName, generatedValues2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLFTagExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "key", rName),
 					resource.TestCheckResourceAttr(resourceName, "values.0", "value1"),
-					testAccCheckLFTagValuesLen(ctx, resourceName, len(generatedValues)),
+					testAccCheckLFTagValuesLen(ctx, resourceName, len(generatedValues2)),
 					resource.TestCheckTypeSetElemAttr(resourceName, "values.*", "value59"),
 					acctest.CheckResourceAttrAccountID(resourceName, "catalog_id"),
 				),

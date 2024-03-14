@@ -187,11 +187,11 @@ func resourceLFTagUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		toAddEnd, toDeleteEnd := len(toAddChunks), len(toDeleteChunks)
 		var indexAdd, indexDelete int
 		if indexAdd < toAddEnd {
-			input.TagValuesToAdd = flex.ExpandStringValueList(toAddChunks[indexAdd])
+			input.TagValuesToAdd = flex.ExpandStringValueList(toAddChunks[0])
 			indexAdd++
 		}
 		if indexDelete < toDeleteEnd {
-			input.TagValuesToDelete = flex.ExpandStringValueList(toDeleteChunks[indexDelete])
+			input.TagValuesToDelete = flex.ExpandStringValueList(toDeleteChunks[0])
 			indexDelete++
 		}
 
