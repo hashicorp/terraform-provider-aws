@@ -9,8 +9,8 @@ github.com/Masterminds/sprig/v3 v3.2.3 h1:eL2fZNezLomi0uOLqjQoN6BfsDD+fyLtgbJMAj
 github.com/Masterminds/sprig/v3 v3.2.3/go.mod h1:rXcFaZ2zZbLRJv/xSysmlgIM1u11eBaRMhvYXJNkGuM=
 github.com/Microsoft/go-winio v0.6.1 h1:9/kr64B9VUZrLm5YYwbGtUJnMgqWVOdUAXu6Migciow=
 github.com/Microsoft/go-winio v0.6.1/go.mod h1:LRdKpFKfdobln8UmuiYcKPot9D2v6svN5+sAH+4kjUM=
-github.com/ProtonMail/go-crypto v1.1.0-alpha.0 h1:nHGfwXmFvJrSR9xu8qL7BkO4DqTHXE9N5vPhgY2I+j0=
-github.com/ProtonMail/go-crypto v1.1.0-alpha.0/go.mod h1:rA3QumHc/FZ8pAHreoekgiAbzpNsfQAosU5td4SnOrE=
+github.com/ProtonMail/go-crypto v1.1.0-alpha.1 h1:iKLDnKGL+3u4Q5OjYgixAxWdkkGBPidCQumqVryUgtY=
+github.com/ProtonMail/go-crypto v1.1.0-alpha.1/go.mod h1:rA3QumHc/FZ8pAHreoekgiAbzpNsfQAosU5td4SnOrE=
 github.com/YakDriver/go-version v0.1.0 h1:/x+Xg2+l89Mjtxl0VRf2+ue8cnHkw6jfYv49j6f7gZw=
 github.com/YakDriver/go-version v0.1.0/go.mod h1:LXwFAp1E3KBhS7FHO/FE8r3XCmvKizs/VXXXFWfoSYY=
 github.com/YakDriver/regexache v0.23.0 h1:kv3j4XKhbx/vqUilSBgizXDUXHvvH1KdYekdmGwz4C4=
