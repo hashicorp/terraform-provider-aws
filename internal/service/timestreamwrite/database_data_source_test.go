@@ -113,7 +113,7 @@ resource "aws_timestreamwrite_database" "test" {
 }
 
 data "aws_timestreamwrite_database" "test" {
-	database_name = aws_timestreamwrite_database.test.database_name
+  database_name = aws_timestreamwrite_database.test.database_name
 }
 `, rName)
 }
