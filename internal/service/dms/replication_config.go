@@ -114,14 +114,11 @@ func ResourceReplicationConfig() *schema.Resource {
 				ForceNew: true,
 			},
 			"replication_settings": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: suppressEquivalentTaskSettings,
-				// StateFunc: func(i interface{}) string {
-				// 	return normalizeTaskSettings(i.(string))
-				// },
+				Type:                  schema.TypeString,
+				Optional:              true,
+				Computed:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      suppressEquivalentTaskSettings,
 				DiffSuppressOnRefresh: true,
 			},
 			"replication_type": {
@@ -238,7 +235,7 @@ func resourceReplicationConfigRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "setting compute_config: %s", err)
 	}
 	d.Set("replication_config_identifier", replicationConfig.ReplicationConfigIdentifier)
-	d.Set("replication_settings", replicationConfig.ReplicationSettings)
+	d.Set("replication_settings", normalizeTaskSettings(*replicationConfig.ReplicationSettings))
 	d.Set("replication_type", replicationConfig.ReplicationType)
 	d.Set("source_endpoint_arn", replicationConfig.SourceEndpointArn)
 	d.Set("supplemental_settings", replicationConfig.SupplementalSettings)

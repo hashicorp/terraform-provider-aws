@@ -6,6 +6,7 @@ package dms
 import (
 	"encoding/json"
 	"log"
+	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
@@ -51,7 +52,7 @@ type taskSettings struct {
 		HistoryTableEnabled           bool   `json:"HistoryTableEnabled,omitempty"`
 		SuspendedTablesTableEnabled   bool   `json:"SuspendedTablesTableEnabled,omitempty"`
 		StatusTableEnabled            bool   `json:"StatusTableEnabled,omitempty"`
-		historyTimeslotInMinutes      int    `json:"historyTimeslotInMinutes,omitempty"`
+		// historyTimeslotInMinutes      int    `json:"historyTimeslotInMinutes,omitempty"`
 	} `json:"ControlTablesSettings,omitempty"`
 	ErrorBehavior struct {
 		DataErrorPolicy                             string `json:"DataErrorPolicy,omitempty"`
@@ -167,15 +168,117 @@ type taskSettings struct {
 // Read-only (non-configurable) fields are removed by using the published "schema".
 // Empty fields are then removed.
 func normalizeTaskSettings(apiObject string) string {
-	var taskSettings taskSettings
+	// var taskSettings taskSettings
 
-	log.Printf("[WARN] BEFORE MARSHALS: %v", taskSettings)
-	if err := json.Unmarshal([]byte(apiObject), &taskSettings); err != nil {
+	defaultValues := map[string]interface{}{
+		"ChangeProcessingTuning": map[string]interface{}{
+			"BatchApplyMemoryLimit":         500,
+			"BatchApplyTimeoutMax":          30,
+			"BatchApplyTimeoutMin":          1,
+			"BatchSplitSize":                0,
+			"CommitTimeout":                 1,
+			"MemoryKeepTime":                60,
+			"MemoryLimitTotal":              1024,
+			"MinTransactionSize":            1000,
+			"StatementCacheSize":            50,
+			"BatchApplyPreserveTransaction": true,
+		},
+		"ControlTablesSettings": map[string]interface{}{
+			"historyTimeslotInMinutes":      5,
+			"CommitPositionTableEnabled":    false,
+			"HistoryTimeslotInMinutes":      5,
+			"StatusTableEnabled":            false,
+			"SuspendedTablesTableEnabled":   false,
+			"HistoryTableEnabled":           false,
+			"ControlSchema":                 "",
+			"FullLoadExceptionTableEnabled": false,
+		},
+		// "BeforeImageSettings": nil,
+		"FailTaskWhenCleanTaskResourceFailed": false,
+		"ErrorBehavior": map[string]interface{}{
+			"DataErrorPolicy":                             "LOG_ERROR",
+			"DataTruncationErrorPolicy":                   "LOG_ERROR",
+			"DataErrorEscalationPolicy":                   "SUSPEND_TABLE",
+			"EventErrorPolicy":                            "IGNORE",
+			"FailOnNoTablesCaptured":                      true,
+			"TableErrorPolicy":                            "SUSPEND_TABLE",
+			"TableErrorEscalationPolicy":                  "STOP_TASK",
+			"RecoverableErrorCount":                       -1,
+			"RecoverableErrorInterval":                    5,
+			"RecoverableErrorThrottling":                  true,
+			"RecoverableErrorThrottlingMax":               1800,
+			"RecoverableErrorStopRetryAfterThrottlingMax": true,
+			"ApplyErrorDeletePolicy":                      "IGNORE_RECORD",
+			"ApplyErrorInsertPolicy":                      "LOG_ERROR",
+			"ApplyErrorUpdatePolicy":                      "LOG_ERROR",
+			"ApplyErrorEscalationPolicy":                  "LOG_ERROR",
+			"FullLoadIgnoreConflicts":                     true,
+			"ApplyErrorEscalationCount":                   0,
+			"ApplyErrorFailOnTruncationDdl":               false,
+			"DataErrorEscalationCount":                    0,
+			"FailOnTransactionConsistencyBreached":        false,
+			"TableErrorEscalationCount":                   0,
+		},
+		"TTSettings": map[string]interface{}{
+			"TTS3Settings":        nil,
+			"TTRecordSettings":    nil,
+			"FailTaskOnTTFailure": false,
+			"EnableTT":            false,
+		},
+		"FullLoadSettings": map[string]interface{}{
+			"CommitRate":                      10000,
+			"StopTaskCachedChangesApplied":    false,
+			"StopTaskCachedChangesNotApplied": false,
+			"MaxFullLoadSubTasks":             8,
+			"TransactionConsistencyTimeout":   600,
+			"CreatePkAfterFullLoad":           false,
+			"TargetTablePrepMode":             "DO_NOTHING",
+		},
+		"Logging": map[string]interface{}{
+			"EnableLogging":       true,
+			"CloudWatchLogGroup":  nil,
+			"CloudWatchLogStream": nil,
+			"EnableLogContext":    false,
+		},
+		"StreamBufferSettings": map[string]interface{}{
+			"CtrlStreamBufferSizeInMB": 5,
+			"StreamBufferCount":        3,
+			"StreamBufferSizeInMB":     8,
+		},
+		"TargetMetadata": map[string]interface{}{
+			"ParallelApplyBufferSize":      0,
+			"ParallelApplyQueuesPerThread": 0,
+			"ParallelApplyThreads":         0,
+			"TargetSchema":                 "",
+			"InlineLobMaxSize":             0,
+			"ParallelLoadQueuesPerThread":  0,
+			"SupportLobs":                  true,
+			"LobChunkSize":                 64,
+			"TaskRecoveryTableEnabled":     false,
+			"ParallelLoadThreads":          0,
+			"LobMaxSize":                   32,
+			"BatchApplyEnabled":            false,
+			"FullLobMode":                  false,
+			"LimitedSizeLobMode":           true,
+			"LoadMaxFileSize":              0,
+			"ParallelLoadBufferSize":       0,
+		},
+		"ChangeProcessingDdlHandlingPolicy": map[string]interface{}{
+			"HandleSourceTableDropped":   true,
+			"HandleSourceTableTruncated": true,
+			"HandleSourceTableAltered":   true,
+		},
+	}
+
+	var jsonMap map[string]interface{}
+
+	if err := json.Unmarshal([]byte(apiObject), &jsonMap); err != nil {
 		log.Printf("[WARN] failed to unmarshal task settings JSON: %v", err)
 		return apiObject
 	}
 
-	if b, err := json.Marshal(&taskSettings); err != nil {
+	jsonMap = checkdefaultvalues(defaultValues, jsonMap)
+	if b, err := json.Marshal(&jsonMap); err != nil {
 		log.Printf("[WARN] failed to marshal task settings JSON: %v", err)
 		return apiObject
 	} else {
@@ -189,9 +292,65 @@ func suppressEquivalentTaskSettings(k, old, new string, d *schema.ResourceData) 
 		return old == new
 	}
 
-	log.Printf("[WARN] before suppressEquivalentTaskSettings: old=%s, new=%s", old, new)
 	old, new = normalizeTaskSettings(old), normalizeTaskSettings(new)
 	log.Printf("[WARN] suppressEquivalentTaskSettings: old=%s, new=%s", old, new)
 
 	return verify.JSONStringsEqual(old, new)
 }
+
+func checkdefaultvalues(defaultMap, oldMap map[string]interface{}) map[string]interface{} {
+	for k, v := range oldMap {
+		log.Printf("[WARN] checking key: %s, type: %T", k, v)
+		if value, ok := defaultMap[k]; ok { //if key exists in the default struct
+			switch t := reflect.TypeOf(value); t.Kind() { //check the type ; value is off the default map
+			case reflect.Bool, reflect.String, reflect.Float64, reflect.Int:
+				if value == v {
+					delete(oldMap, k)
+				}
+			case reflect.Map:
+				log.Printf("[WARN] DID WE GET HERE")
+				kMap := value.(map[string]interface{}) //map of defaults
+				vMap := v.(map[string]interface{})     //map of the inner map of the oldMap/user
+
+				for kInner, vInner := range vMap {
+					log.Printf("[WARN] default value type: %T, vinner type: %T", kMap[kInner], vInner)
+
+					if kMap[kInner] != nil || vInner != nil {
+						if reflect.TypeOf(vInner).Kind() == reflect.Float64 {
+							if kMap[kInner] != nil {
+								kMap[kInner] = float64(kMap[kInner].(int))
+							}
+						}
+						// check if it's a slice; if it is, want to do something similar; how we cast like 346, cast it to a slice also;
+						// checking if two slices are equal will be diff;  like line 348; look up comparing two slices; you can reflect
+						// the values;
+					}
+					if kMap[kInner] == vInner {
+						log.Printf("[WARN] deleting %s", kInner)
+						delete(vMap, kInner)
+					}
+				}
+				if len(vMap) == 0 {
+					log.Printf("[WARN] DID WE GET TO DELETING OUTTER KEY: deleting %s", k)
+					delete(oldMap, k)
+				}
+			default:
+				return oldMap
+			}
+		}
+	}
+	return oldMap
+}
+
+// case map[string]interface{}:
+// 	if oldValMap, ok := oldVal.(map[string]interface{}); !ok {
+// 		for k, v := range defaultVal.(map[string]interface{}) {
+// 			if !checkdefaultvalues(v, oldValMap[k]) {
+// 				return false
+// 			}
+// 		}
+// 		return true
+// 	}
+// case bool, string, float64, int:
+// 	return defaultVal == oldVal
+// }
