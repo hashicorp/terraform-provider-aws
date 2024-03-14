@@ -250,7 +250,7 @@ func waitResourceAssociationDeleted(ctx context.Context, conn *ram.RAM, resource
 	)
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ram.ResourceShareAssociationStatusAssociated, ram.ResourceShareAssociationStatusDisassociating},
-		Target:  []string{ram.ResourceShareAssociationStatusDisassociated},
+		Target:  []string{},
 		Refresh: statusResourceAssociation(ctx, conn, resourceShareARN, resourceARN),
 		Timeout: timeout,
 	}
