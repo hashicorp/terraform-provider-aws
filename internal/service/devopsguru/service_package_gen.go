@@ -24,6 +24,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceEventSourcesConfig,
 			Name:    "Event Sources Config",
 		},
+		{
+			Factory: newResourceResourceCollection,
+			Name:    "Resource Collection",
+		},
 	}
 }
 
