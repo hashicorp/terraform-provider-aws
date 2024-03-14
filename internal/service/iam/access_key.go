@@ -245,14 +245,20 @@ func resourceAccessKeyDelete(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	request := &iam.DeleteAccessKeyInput{
+	log.Printf("[DEBUG] Deleting IAM Access Key: %s", d.Id())
+	_, err := conn.DeleteAccessKeyWithContext(ctx, &iam.DeleteAccessKeyInput{
 		AccessKeyId: aws.String(d.Id()),
 		UserName:    aws.String(d.Get("user").(string)),
+	})
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return diags
 	}
 
-	if _, err := conn.DeleteAccessKeyWithContext(ctx, request); err != nil {
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting IAM Access Key (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }
 
