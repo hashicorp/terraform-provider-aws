@@ -7,12 +7,14 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lakeformation"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -20,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -33,7 +36,7 @@ func testAccPermissions_basic(t *testing.T) {
 	roleName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -44,7 +47,7 @@ func testAccPermissions_basic(t *testing.T) {
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionCreateDatabase),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionCreateDatabase)),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "true"),
 				),
 			},
@@ -58,7 +61,7 @@ func testAccPermissions_disappears(t *testing.T) {
 	resourceName := "aws_lakeformation_permissions.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -83,7 +86,7 @@ func testAccPermissions_database(t *testing.T) {
 	dbName := "aws_glue_catalog_database.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -98,11 +101,11 @@ func testAccPermissions_database(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "database.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "database.0.name", dbName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionAlter),
-					resource.TestCheckResourceAttr(resourceName, "permissions.1", lakeformation.PermissionCreateTable),
-					resource.TestCheckResourceAttr(resourceName, "permissions.2", lakeformation.PermissionDrop),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAlter)),
+					resource.TestCheckResourceAttr(resourceName, "permissions.1", string(awstypes.PermissionCreateTable)),
+					resource.TestCheckResourceAttr(resourceName, "permissions.2", string(awstypes.PermissionDrop)),
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.0", lakeformation.PermissionCreateTable),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.0", string(awstypes.PermissionCreateTable)),
 				),
 			},
 		},
@@ -116,7 +119,7 @@ func testAccPermissions_databaseIAMAllowed(t *testing.T) {
 	dbName := "aws_glue_catalog_database.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -130,7 +133,7 @@ func testAccPermissions_databaseIAMAllowed(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "database.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "database.0.name", dbName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionAll),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAll)),
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "0"),
 				),
 			},
@@ -148,7 +151,7 @@ func testAccPermissions_databaseMultiple(t *testing.T) {
 	dbName := "aws_glue_catalog_database.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -163,11 +166,11 @@ func testAccPermissions_databaseMultiple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "database.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "database.0.name", dbName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionAlter),
-					resource.TestCheckResourceAttr(resourceName, "permissions.1", lakeformation.PermissionCreateTable),
-					resource.TestCheckResourceAttr(resourceName, "permissions.2", lakeformation.PermissionDrop),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAlter)),
+					resource.TestCheckResourceAttr(resourceName, "permissions.1", string(awstypes.PermissionCreateTable)),
+					resource.TestCheckResourceAttr(resourceName, "permissions.2", string(awstypes.PermissionDrop)),
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.0", lakeformation.PermissionCreateTable),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.0", string(awstypes.PermissionCreateTable)),
 					testAccCheckPermissionsExists(ctx, resourceName2),
 					resource.TestCheckResourceAttrPair(resourceName2, "principal", roleName2, "arn"),
 					resource.TestCheckResourceAttr(resourceName2, "catalog_resource", "false"),
@@ -175,8 +178,8 @@ func testAccPermissions_databaseMultiple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName2, "database.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName2, "database.0.name", dbName, "name"),
 					resource.TestCheckResourceAttr(resourceName2, "permissions.#", "2"),
-					resource.TestCheckResourceAttr(resourceName2, "permissions.0", lakeformation.PermissionAlter),
-					resource.TestCheckResourceAttr(resourceName2, "permissions.1", lakeformation.PermissionDrop),
+					resource.TestCheckResourceAttr(resourceName2, "permissions.0", string(awstypes.PermissionAlter)),
+					resource.TestCheckResourceAttr(resourceName2, "permissions.1", string(awstypes.PermissionDrop)),
 					resource.TestCheckResourceAttr(resourceName2, "permissions_with_grant_option.#", "0"),
 				),
 			},
@@ -191,7 +194,7 @@ func testAccPermissions_dataCellsFilter(t *testing.T) {
 	roleName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -202,7 +205,7 @@ func testAccPermissions_dataCellsFilter(t *testing.T) {
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionDescribe),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionDescribe)),
 					resource.TestCheckResourceAttr(resourceName, "data_cells_filter.#", "1"),
 				),
 			},
@@ -218,7 +221,7 @@ func testAccPermissions_dataLocation(t *testing.T) {
 	bucketName := "aws_s3_bucket.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -229,7 +232,7 @@ func testAccPermissions_dataLocation(t *testing.T) {
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionDataLocationAccess),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionDataLocationAccess)),
 					resource.TestCheckResourceAttr(resourceName, "catalog_resource", "false"),
 					resource.TestCheckResourceAttr(resourceName, "data_location.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "data_location.0.arn", bucketName, "arn"),
@@ -247,7 +250,7 @@ func testAccPermissions_lfTag(t *testing.T) {
 	tagName := "aws_lakeformation_lf_tag.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -282,7 +285,7 @@ func testAccPermissions_lfTagPolicy(t *testing.T) {
 	tagName := "aws_lakeformation_lf_tag.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -300,11 +303,11 @@ func testAccPermissions_lfTagPolicy(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.expression.0.key", tagName, "key"),
 					resource.TestCheckResourceAttrPair(resourceName, "lf_tag_policy.0.expression.0.values", tagName, "values"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionAlter),
-					resource.TestCheckResourceAttr(resourceName, "permissions.1", lakeformation.PermissionCreateTable),
-					resource.TestCheckResourceAttr(resourceName, "permissions.2", lakeformation.PermissionDrop),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAlter)),
+					resource.TestCheckResourceAttr(resourceName, "permissions.1", string(awstypes.PermissionCreateTable)),
+					resource.TestCheckResourceAttr(resourceName, "permissions.2", string(awstypes.PermissionDrop)),
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.0", lakeformation.PermissionCreateTable),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.0", string(awstypes.PermissionCreateTable)),
 				),
 			},
 		},
@@ -319,7 +322,7 @@ func testAccPermissions_lfTagPolicyMultiple(t *testing.T) {
 	// tagName := "aws_lakeformation_lf_tag.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -347,11 +350,11 @@ func testAccPermissions_lfTagPolicyMultiple(t *testing.T) {
 						"values.#": "2",
 					}),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionAlter),
-					resource.TestCheckResourceAttr(resourceName, "permissions.1", lakeformation.PermissionCreateTable),
-					resource.TestCheckResourceAttr(resourceName, "permissions.2", lakeformation.PermissionDrop),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAlter)),
+					resource.TestCheckResourceAttr(resourceName, "permissions.1", string(awstypes.PermissionCreateTable)),
+					resource.TestCheckResourceAttr(resourceName, "permissions.2", string(awstypes.PermissionDrop)),
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.0", lakeformation.PermissionCreateTable),
+					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.0", string(awstypes.PermissionCreateTable)),
 				),
 			},
 		},
@@ -366,7 +369,7 @@ func testAccPermissions_tableBasic(t *testing.T) {
 	tableName := "aws_glue_catalog_table.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -380,9 +383,9 @@ func testAccPermissions_tableBasic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", tableName, "database_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.name", tableName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionAlter),
-					resource.TestCheckResourceAttr(resourceName, "permissions.1", lakeformation.PermissionDelete),
-					resource.TestCheckResourceAttr(resourceName, "permissions.2", lakeformation.PermissionDescribe),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAlter)),
+					resource.TestCheckResourceAttr(resourceName, "permissions.1", string(awstypes.PermissionDelete)),
+					resource.TestCheckResourceAttr(resourceName, "permissions.2", string(awstypes.PermissionDescribe)),
 				),
 			},
 		},
@@ -396,7 +399,7 @@ func testAccPermissions_tableIAMAllowed(t *testing.T) {
 	dbName := "aws_glue_catalog_table.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -411,7 +414,7 @@ func testAccPermissions_tableIAMAllowed(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", dbName, "database_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.name", dbName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionAll),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAll)),
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "0"),
 				),
 			},
@@ -427,7 +430,7 @@ func testAccPermissions_tableImplicit(t *testing.T) {
 	tableName := "aws_glue_catalog_table.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -458,7 +461,7 @@ func testAccPermissions_tableMultipleRoles(t *testing.T) {
 	tableName := "aws_glue_catalog_table.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -472,16 +475,16 @@ func testAccPermissions_tableMultipleRoles(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", tableName, "database_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.name", tableName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionAlter),
-					resource.TestCheckResourceAttr(resourceName, "permissions.1", lakeformation.PermissionDelete),
-					resource.TestCheckResourceAttr(resourceName, "permissions.2", lakeformation.PermissionDescribe),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAlter)),
+					resource.TestCheckResourceAttr(resourceName, "permissions.1", string(awstypes.PermissionDelete)),
+					resource.TestCheckResourceAttr(resourceName, "permissions.2", string(awstypes.PermissionDescribe)),
 					testAccCheckPermissionsExists(ctx, resourceName2),
 					resource.TestCheckResourceAttrPair(roleName2, "arn", resourceName2, "principal"),
 					resource.TestCheckResourceAttr(resourceName2, "table.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName2, "table.0.database_name", tableName, "database_name"),
 					resource.TestCheckResourceAttrPair(resourceName2, "table.0.name", tableName, "name"),
 					resource.TestCheckResourceAttr(resourceName2, "permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName2, "permissions.0", lakeformation.PermissionSelect),
+					resource.TestCheckResourceAttr(resourceName2, "permissions.0", string(awstypes.PermissionSelect)),
 				),
 			},
 		},
@@ -496,7 +499,7 @@ func testAccPermissions_tableSelectOnly(t *testing.T) {
 	tableName := "aws_glue_catalog_table.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -510,7 +513,7 @@ func testAccPermissions_tableSelectOnly(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", tableName, "database_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.name", tableName, "name"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionSelect),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionSelect)),
 				),
 			},
 		},
@@ -524,7 +527,7 @@ func testAccPermissions_tableSelectPlus(t *testing.T) {
 	roleName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -549,7 +552,7 @@ func testAccPermissions_tableWildcardNoSelect(t *testing.T) {
 	databaseResourceName := "aws_glue_catalog_database.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -574,7 +577,7 @@ func testAccPermissions_tableWildcardSelectOnly(t *testing.T) {
 	roleName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -585,7 +588,7 @@ func testAccPermissions_tableWildcardSelectOnly(t *testing.T) {
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttrPair(resourceName, "principal", roleName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionSelect),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionSelect)),
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "0"),
 				),
 			},
@@ -600,7 +603,7 @@ func testAccPermissions_tableWildcardSelectPlus(t *testing.T) {
 	roleName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -626,7 +629,7 @@ func testAccPermissions_twcBasic(t *testing.T) {
 	tableName := "aws_glue_catalog_table.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -643,7 +646,7 @@ func testAccPermissions_twcBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.0", "event"),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.1", "timestamp"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionSelect),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionSelect)),
 				),
 			},
 			{
@@ -658,7 +661,7 @@ func testAccPermissions_twcBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.0", "event"),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.1", "timestamp"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionSelect),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionSelect)),
 				),
 			},
 			{
@@ -674,7 +677,7 @@ func testAccPermissions_twcBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.1", "timestamp"),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.2", "transactionamount"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionSelect),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionSelect)),
 				),
 			},
 			{
@@ -688,7 +691,7 @@ func testAccPermissions_twcBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.0", "event"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionSelect),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionSelect)),
 				),
 			},
 		},
@@ -703,7 +706,7 @@ func testAccPermissions_twcImplicit(t *testing.T) {
 	tableName := "aws_glue_catalog_table.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -732,7 +735,7 @@ func testAccPermissions_twcWildcardExcludedColumns(t *testing.T) {
 	roleName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -758,7 +761,7 @@ func testAccPermissions_twcWildcardSelectOnly(t *testing.T) {
 	tableName := "aws_glue_catalog_table.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -774,7 +777,7 @@ func testAccPermissions_twcWildcardSelectOnly(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.column_names.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "table_with_columns.0.wildcard", "true"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "permissions.0", lakeformation.PermissionSelect),
+					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionSelect)),
 				),
 			},
 		},
@@ -788,7 +791,7 @@ func testAccPermissions_twcWildcardSelectPlus(t *testing.T) {
 	roleName := "aws_iam_role.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPermissionsDestroy(ctx),
@@ -808,7 +811,7 @@ func testAccPermissions_twcWildcardSelectPlus(t *testing.T) {
 
 func testAccCheckPermissionsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lakeformation_permissions" {
@@ -840,7 +843,7 @@ func testAccCheckPermissionsExists(ctx context.Context, resourceName string) res
 			return fmt.Errorf("acceptance test: resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
 
 		permCount, err := permissionCountForResource(ctx, conn, rs)
 
@@ -856,12 +859,12 @@ func testAccCheckPermissionsExists(ctx context.Context, resourceName string) res
 	}
 }
 
-func permissionCountForResource(ctx context.Context, conn *lakeformation.LakeFormation, rs *terraform.ResourceState) (int, error) {
+func permissionCountForResource(ctx context.Context, conn *lakeformation.Client, rs *terraform.ResourceState) (int, error) {
 	input := &lakeformation.ListPermissionsInput{
-		Principal: &lakeformation.DataLakePrincipal{
+		Principal: &awstypes.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(rs.Primary.Attributes["principal"]),
 		},
-		Resource: &lakeformation.Resource{},
+		Resource: &awstypes.Resource{},
 	}
 
 	noResource := true
@@ -1051,47 +1054,51 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.LakeFor
 	}
 
 	log.Printf("[DEBUG] Reading Lake Formation permissions: %v", input)
-	var allPermissions []*lakeformation.PrincipalResourcePermissions
+	var allPermissions []awstypes.PrincipalResourcePermissions
 
 	err := retry.RetryContext(ctx, tflakeformation.IAMPropagationTimeout, func() *retry.RetryError {
-		err := conn.ListPermissionsPagesWithContext(ctx, input, func(resp *lakeformation.ListPermissionsOutput, lastPage bool) bool {
-			for _, permission := range resp.PrincipalResourcePermissions {
-				if permission == nil {
+		pages := lakeformation.NewListPermissionsPaginator(conn, input)
+
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+
+			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "Resource does not exist") {
+				return nil
+			}
+
+			if errs.IsA[*awstypes.EntityNotFoundException](err) {
+				return nil
+			}
+
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Invalid principal") {
+				return retry.RetryableError(err)
+			}
+
+			if err != nil {
+				return retry.NonRetryableError(fmt.Errorf("acceptance test: error listing Lake Formation Permissions getting permission count: %w", err))
+			}
+
+			for _, permission := range page.PrincipalResourcePermissions {
+				if reflect.ValueOf(permission).IsZero() {
 					continue
 				}
 
 				allPermissions = append(allPermissions, permission)
 			}
-			return !lastPage
-		})
-
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, lakeformation.ErrCodeInvalidInputException, "Invalid principal") {
-				return retry.RetryableError(err)
-			}
-
-			return retry.NonRetryableError(fmt.Errorf("acceptance test: error listing Lake Formation Permissions getting permission count: %w", err))
 		}
+
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		err = conn.ListPermissionsPagesWithContext(ctx, input, func(resp *lakeformation.ListPermissionsOutput, lastPage bool) bool {
-			for _, permission := range resp.PrincipalResourcePermissions {
-				if permission == nil {
-					continue
-				}
-
-				allPermissions = append(allPermissions, permission)
-			}
-			return !lastPage
-		})
+		_, err = conn.ListPermissions(ctx, input)
 	}
 
-	if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return 0, nil
 	}
 
+	// used to find error in retryable error
 	if tfawserr.ErrMessageContains(err, "AccessDeniedException", "Resource does not exist") {
 		return 0, nil
 	}
@@ -1100,8 +1107,8 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.LakeFor
 		return 0, fmt.Errorf("acceptance test: error listing Lake Formation permissions after retry %v: %w", input, err)
 	}
 
-	columnNames := make([]*string, 0)
-	excludedColumnNames := make([]*string, 0)
+	columnNames := make([]string, 0)
+	excludedColumnNames := make([]string, 0)
 	columnWildcard := false
 
 	if tableType == tflakeformation.TableTypeTableWithColumns {
@@ -1120,7 +1127,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.LakeFor
 		}
 
 		for i := 0; i < colCount; i++ {
-			columnNames = append(columnNames, aws.String(rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.column_names.%d", i)]))
+			columnNames = append(columnNames, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.column_names.%d", i)])
 		}
 
 		colCount = 0
@@ -1134,7 +1141,7 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.LakeFor
 		}
 
 		for i := 0; i < colCount; i++ {
-			excludedColumnNames = append(excludedColumnNames, aws.String(rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.excluded_column_names.%d", i)]))
+			excludedColumnNames = append(excludedColumnNames, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.excluded_column_names.%d", i)])
 		}
 	}
 

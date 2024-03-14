@@ -8,13 +8,14 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lakeformation"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -68,7 +69,7 @@ func ResourceResource() *schema.Resource {
 
 func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	resourceARN := d.Get("arn").(string)
 	input := &lakeformation.RegisterResourceInput{
@@ -93,9 +94,9 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.WithFederation = aws.Bool(v.(bool))
 	}
 
-	_, err := conn.RegisterResourceWithContext(ctx, input)
+	_, err := conn.RegisterResource(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeAlreadyExistsException) {
+	if errs.IsA[*awstypes.AlreadyExistsException](err) {
 		log.Printf("[WARN] Lake Formation Resource (%s) already exists", resourceARN)
 	} else if err != nil {
 		return sdkdiag.AppendErrorf(diags, "registering Lake Formation Resource (%s): %s", resourceARN, err)
@@ -108,7 +109,7 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	resource, err := FindResourceByARN(ctx, conn, d.Id())
 
@@ -135,14 +136,14 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	log.Printf("[INFO] Deleting Lake Formation Resource: %s", d.Id())
-	_, err := conn.DeregisterResourceWithContext(ctx, &lakeformation.DeregisterResourceInput{
+	_, err := conn.DeregisterResource(ctx, &lakeformation.DeregisterResourceInput{
 		ResourceArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return diags
 	}
 
@@ -153,14 +154,14 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func FindResourceByARN(ctx context.Context, conn *lakeformation.LakeFormation, arn string) (*lakeformation.ResourceInfo, error) {
+func FindResourceByARN(ctx context.Context, conn *lakeformation.Client, arn string) (*awstypes.ResourceInfo, error) {
 	input := &lakeformation.DescribeResourceInput{
 		ResourceArn: aws.String(arn),
 	}
 
-	output, err := conn.DescribeResourceWithContext(ctx, input)
+	output, err := conn.DescribeResource(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
+	if errs.IsA[*awstypes.EntityNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
