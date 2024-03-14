@@ -22,7 +22,7 @@ const (
 
 func StatusResourceSharePrincipalAssociation(ctx context.Context, conn *ram.RAM, resourceShareArn, principal string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		association, err := FindResourceSharePrincipalAssociationByShareARNPrincipal(ctx, conn, resourceShareArn, principal)
+		association, err := findResourceShareAssociationByShareARNAndPrincipal(ctx, conn, resourceShareArn, principal)
 
 		if tfawserr.ErrCodeEquals(err, ram.ErrCodeUnknownResourceException) {
 			return nil, PrincipalAssociationStatusNotFound, err

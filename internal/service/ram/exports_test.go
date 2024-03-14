@@ -11,6 +11,8 @@ var (
 	ResourceResourceShareAccepter   = resourceResourceShareAccepter
 	ResourceSharingWithOrganization = resourceSharingWithOrganization
 
-	FindResourceShareOwnerOtherAccountsByARN = findResourceShareOwnerOtherAccountsByARN
-	FindResourceShareOwnerSelfByARN          = findResourceShareOwnerSelfByARN
+	FindResourceAssociationByTwoPartKey                = findResourceAssociationByTwoPartKey
+	FindResourceShareAssociationByShareARNAndPrincipal = findResourceShareAssociationByShareARNAndPrincipal
+	FindResourceShareOwnerOtherAccountsByARN           = findResourceShareOwnerOtherAccountsByARN
+	FindResourceShareOwnerSelfByARN                    = findResourceShareOwnerSelfByARN
 )

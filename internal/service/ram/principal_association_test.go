@@ -94,7 +94,7 @@ func testAccCheckPrincipalAssociationExists(ctx context.Context, resourceName st
 
 		if ok, _ := regexp.MatchString(`^\d{12}$`, principal); ok {
 			// AWS Account ID Principals need to be accepted to become ASSOCIATED
-			association, err = tfram.FindResourceSharePrincipalAssociationByShareARNPrincipal(ctx, conn, resourceShareARN, principal)
+			association, err = tfram.FindResourceShareAssociationByShareARNAndPrincipal(ctx, conn, resourceShareARN, principal)
 		} else {
 			association, err = tfram.WaitResourceSharePrincipalAssociated(ctx, conn, resourceShareARN, principal)
 		}
@@ -126,20 +126,14 @@ func testAccCheckPrincipalAssociationDestroy(ctx context.Context) resource.TestC
 				continue
 			}
 
-			resourceShareARN, principal, err := tfram.DecodeResourceAssociationID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			association, err := tfram.WaitResourceSharePrincipalDisassociated(ctx, conn, resourceShareARN, principal)
+			association, err := tfram.WaitResourceSharePrincipalDisassociated(ctx, conn, rs.Primary.Attributes["resource_share_arn"], rs.Primary.Attributes["principal"])
 
 			if err != nil {
 				return err
 			}
 
 			if association != nil && aws.StringValue(association.Status) != ram.ResourceShareAssociationStatusDisassociated {
-				return fmt.Errorf("RAM Resource Share (%s) Principal Association (%s) not disassociated: %s", resourceShareARN, principal, aws.StringValue(association.Status))
+				return fmt.Errorf("RAM Principal Association: %s", rs.Primary.ID)
 			}
 		}
 

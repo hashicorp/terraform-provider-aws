@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -99,7 +100,7 @@ func resourcePrincipalAssociationRead(ctx context.Context, d *schema.ResourceDat
 
 	if ok, _ := regexp.MatchString(`^\d{12}$`, principal); ok {
 		// AWS Account ID Principals need to be accepted to become ASSOCIATED
-		association, err = FindResourceSharePrincipalAssociationByShareARNPrincipal(ctx, conn, resourceShareArn, principal)
+		association, err = findResourceShareAssociationByShareARNAndPrincipal(ctx, conn, resourceShareArn, principal)
 	} else {
 		association, err = WaitResourceSharePrincipalAssociated(ctx, conn, resourceShareArn, principal)
 	}
@@ -171,4 +172,27 @@ func PrincipalAssociationParseID(id string) (string, string, error) {
 	}
 
 	return parts[0], parts[1], nil
+}
+
+func findResourceShareAssociationByShareARNAndPrincipal(ctx context.Context, conn *ram.RAM, resourceShareARN, principal string) (*ram.ResourceShareAssociation, error) {
+	input := &ram.GetResourceShareAssociationsInput{
+		AssociationType:   aws.String(ram.ResourceShareAssociationTypePrincipal),
+		Principal:         aws.String(principal),
+		ResourceShareArns: aws.StringSlice([]string{resourceShareARN}),
+	}
+
+	output, err := findResourceShareAssociation(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if status := aws.StringValue(output.Status); status == ram.ResourceShareAssociationStatusDisassociated {
+		return nil, &retry.NotFoundError{
+			Message:     status,
+			LastRequest: input,
+		}
+	}
+
+	return output, err
 }
