@@ -26,8 +26,8 @@ func statusPermissions(ctx context.Context, conn *lakeformation.Client, input *l
 			if errs.IsA[*awstypes.EntityNotFoundException](err) {
 				return nil, statusNotFound, err
 			}
-			
-			if errs.IsAContains[*awstypes.InvalidInputException](err, "Invalid principal") {
+
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "Invalid principal") {
 				return nil, statusIAMDelay, err
 			}
 
