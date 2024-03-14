@@ -106,6 +106,36 @@ func TestAccRAMPrincipalAssociation_disappears(t *testing.T) {
 	})
 }
 
+func TestAccRAMPrincipalAssociation_duplicate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var association ram.ResourceShareAssociation
+	resourceName := "aws_ram_principal_association.test1"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			// testAccPreCheckSharingWithOrganizationEnabled(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPrincipalAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPrincipalAssociationConfig_duplicate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPrincipalAssociationExists(ctx, resourceName, &association),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccPreCheckSharingWithOrganizationEnabled(ctx context.Context, t *testing.T) {
 	err := tfram.FindSharingWithOrganization(ctx, acctest.Provider.Meta().(*conns.AWSClient))
 
@@ -212,4 +242,40 @@ resource "aws_ram_principal_association" "test" {
   resource_share_arn = aws_ram_resource_share.test.id
 }
 `, rName))
+}
+
+func testAccPrincipalAssociationConfig_duplicate(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ram_resource_share" "test" {
+  allow_external_principals = false
+  name                      = %[1]q
+}
+
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+    }]
+  })
+}
+
+resource "aws_ram_principal_association" "test1" {
+  principal          = aws_iam_role.test.arn
+  resource_share_arn = aws_ram_resource_share.test.id
+}
+
+resource "aws_ram_principal_association" "test2" {
+  principal          = aws_iam_role.test.arn
+  resource_share_arn = aws_ram_principal_association.test1.resource_share_arn
+}
+`, rName)
 }
