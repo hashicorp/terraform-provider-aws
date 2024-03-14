@@ -70,6 +70,28 @@ func TestAccRAMResourceAssociation_disappears(t *testing.T) {
 	})
 }
 
+func TestAccRAMResourceAssociation_duplicate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var resourceShareAssociation ram.ResourceShareAssociation
+	resourceName := "aws_ram_resource_association.test1"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceAssociationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccResourceAssociationConfig_duplicate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceAssociationExists(ctx, resourceName, &resourceShareAssociation),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckResourceAssociationExists(ctx context.Context, n string, v *ram.ResourceShareAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -118,31 +140,32 @@ func testAccCheckResourceAssociationDestroy(ctx context.Context) resource.TestCh
 }
 
 func testAccResourceAssociationConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = "tf-acc-test-ram-resource-association"
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "10.0.0.0/24"
-  vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = "tf-acc-test-ram-resource-association"
-  }
-}
-
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_ram_resource_share" "test" {
-  name = %q
+  name = %[1]q
 }
 
 resource "aws_ram_resource_association" "test" {
-  resource_arn       = aws_subnet.test.arn
+  resource_arn       = aws_subnet.test[0].arn
   resource_share_arn = aws_ram_resource_share.test.id
 }
-`, rName)
+`, rName))
+}
+
+func testAccResourceAssociationConfig_duplicate(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
+resource "aws_ram_resource_share" "test" {
+  name = %[1]q
+}
+
+resource "aws_ram_resource_association" "test1" {
+  resource_arn       = aws_subnet.test[0].arn
+  resource_share_arn = aws_ram_resource_share.test.id
+}
+
+resource "aws_ram_resource_association" "test2" {
+  resource_arn       = aws_subnet.test[0].arn
+  resource_share_arn = aws_ram_resource_share.test.id
+}
+`, rName))
 }
