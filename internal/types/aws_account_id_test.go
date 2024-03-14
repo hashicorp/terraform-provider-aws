@@ -5,7 +5,7 @@ package types
 
 import "testing"
 
-func TestIsAWSAccountID(t *testing.T) {
+func TestIsAWSAccountID(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 	t.Parallel()
 
 	for _, tc := range []struct {
