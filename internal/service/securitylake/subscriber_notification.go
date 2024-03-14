@@ -76,16 +76,6 @@ func (r *subscriberNotificationResource) Schema(ctx context.Context, req resourc
 				},
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
-						"sqs_notification_configuration": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[sqsNotificationConfigurationModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							PlanModifiers: []planmodifier.List{
-								listplanmodifier.UseStateForUnknown(),
-								listplanmodifier.RequiresReplace(),
-							},
-						},
 						"https_notification_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[httpsNotificationConfigurationModel](ctx),
 							Validators: []validator.List{
@@ -97,22 +87,34 @@ func (r *subscriberNotificationResource) Schema(ctx context.Context, req resourc
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
-									"endpoint": schema.StringAttribute{
-										Optional: true,
-									},
-									"target_role_arn": schema.StringAttribute{
-										Optional: true,
-									},
 									"authorization_api_key_name": schema.StringAttribute{
 										Optional: true,
 									},
 									"authorization_api_key_value": schema.StringAttribute{
 										Optional: true,
 									},
-									"http_method": schema.StringAttribute{
+									"endpoint": schema.StringAttribute{
 										Optional: true,
 									},
+									"http_method": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.HttpMethod](),
+										Optional:   true,
+									},
+									"target_role_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Optional:   true,
+									},
 								},
+							},
+						},
+						"sqs_notification_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[sqsNotificationConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.UseStateForUnknown(),
+								listplanmodifier.RequiresReplace(),
 							},
 						},
 					},
@@ -323,19 +325,18 @@ func expandSubscriberNotificationResourceConfiguration(ctx context.Context, subs
 	return configuration[0], diags
 }
 
-func expandHTTPSNotificationConfigurationModel(ctx context.Context, HTTPSNotifications []httpsNotificationConfigurationModel) *awstypes.NotificationConfigurationMemberHttpsNotificationConfiguration {
-	if len(HTTPSNotifications) == 0 {
+func expandHTTPSNotificationConfigurationModel(ctx context.Context, httpsNotifications []httpsNotificationConfigurationModel) *awstypes.NotificationConfigurationMemberHttpsNotificationConfiguration {
+	if len(httpsNotifications) == 0 {
 		return nil
 	}
 
-	httpMethod := aws.ToString(fwflex.StringFromFramework(ctx, HTTPSNotifications[0].HTTPMethod))
 	return &awstypes.NotificationConfigurationMemberHttpsNotificationConfiguration{
 		Value: awstypes.HttpsNotificationConfiguration{
-			Endpoint:                 fwflex.StringFromFramework(ctx, HTTPSNotifications[0].Endpoint),
-			TargetRoleArn:            fwflex.StringFromFramework(ctx, HTTPSNotifications[0].TargetRoleArn),
-			AuthorizationApiKeyName:  fwflex.StringFromFramework(ctx, HTTPSNotifications[0].AuthorizationApiKeyName),
-			AuthorizationApiKeyValue: fwflex.StringFromFramework(ctx, HTTPSNotifications[0].AuthorizationApiKeyValue),
-			HttpMethod:               awstypes.HttpMethod(httpMethod),
+			AuthorizationApiKeyName:  fwflex.StringFromFramework(ctx, httpsNotifications[0].AuthorizationAPIKeyName),
+			AuthorizationApiKeyValue: fwflex.StringFromFramework(ctx, httpsNotifications[0].AuthorizationAPIKeyValue),
+			Endpoint:                 fwflex.StringFromFramework(ctx, httpsNotifications[0].Endpoint),
+			HttpMethod:               httpsNotifications[0].HTTPMethod.ValueEnum(),
+			TargetRoleArn:            fwflex.StringFromFramework(ctx, httpsNotifications[0].TargetRoleARN),
 		},
 	}
 }
@@ -353,8 +354,8 @@ func expandSQSNotificationConfigurationModel(SQSNotifications []sqsNotificationC
 type subscriberNotificationResourceModel struct {
 	Configuration fwtypes.ListNestedObjectValueOf[subscriberNotificationResourceConfigurationModel] `tfsdk:"configuration"`
 	EndpointID    types.String                                                                      `tfsdk:"endpoint_id"`
-	SubscriberID  types.String                                                                      `tfsdk:"subscriber_id"`
 	ID            types.String                                                                      `tfsdk:"id"`
+	SubscriberID  types.String                                                                      `tfsdk:"subscriber_id"`
 }
 
 const (
@@ -379,16 +380,16 @@ func (data *subscriberNotificationResourceModel) setID() {
 }
 
 type subscriberNotificationResourceConfigurationModel struct {
-	SqsNotificationConfiguration   fwtypes.ListNestedObjectValueOf[sqsNotificationConfigurationModel]   `tfsdk:"sqs_notification_configuration"`
 	HTTPSNotificationConfiguration fwtypes.ListNestedObjectValueOf[httpsNotificationConfigurationModel] `tfsdk:"https_notification_configuration"`
+	SqsNotificationConfiguration   fwtypes.ListNestedObjectValueOf[sqsNotificationConfigurationModel]   `tfsdk:"sqs_notification_configuration"`
 }
 
 type sqsNotificationConfigurationModel struct{}
 
 type httpsNotificationConfigurationModel struct {
-	Endpoint                 types.String `tfsdk:"endpoint"`
-	TargetRoleArn            types.String `tfsdk:"target_role_arn"`
-	AuthorizationApiKeyName  types.String `tfsdk:"authorization_api_key_name"`
-	AuthorizationApiKeyValue types.String `tfsdk:"authorization_api_key_value"`
-	HTTPMethod               types.String `tfsdk:"http_method"`
+	AuthorizationAPIKeyName  types.String                            `tfsdk:"authorization_api_key_name"`
+	AuthorizationAPIKeyValue types.String                            `tfsdk:"authorization_api_key_value"`
+	Endpoint                 types.String                            `tfsdk:"endpoint"`
+	HTTPMethod               fwtypes.StringEnum[awstypes.HttpMethod] `tfsdk:"http_method"`
+	TargetRoleARN            fwtypes.ARN                             `tfsdk:"target_role_arn"`
 }
