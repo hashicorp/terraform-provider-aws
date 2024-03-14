@@ -5,3 +5,7 @@ data-source/aws_ram_resource_share: `name` is Optional
 ```release-note:enhancement
 resource/aws_ram_resource_association: Add plan-time validation of `resource_arn` and `resource_share_arn`
 ```
+
+```release-note:bug
+resource/aws_ram_principal_association: Remove from state on resource Read if `principal` is disassociated outside of Terraform 
+```
