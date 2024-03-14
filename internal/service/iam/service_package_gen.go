@@ -116,8 +116,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAccessKey,
+			Factory:  resourceAccessKey,
 			TypeName: "aws_iam_access_key",
+			Name:     "Access Key",
 		},
 		{
 			Factory:  ResourceAccountAlias,
