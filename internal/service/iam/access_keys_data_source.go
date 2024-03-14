@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_iam_access_keys")
-func DataSourceAccessKeys() *schema.Resource {
+// @SDKDataSource("aws_iam_access_keys", name="Access Keys")
+func dataSourceAccessKeys() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAccessKeysRead,
 		Schema: map[string]*schema.Schema{

@@ -26,32 +26,39 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceAccessKeys,
+			Factory:  dataSourceAccessKeys,
 			TypeName: "aws_iam_access_keys",
+			Name:     "Access Keys",
 		},
 		{
-			Factory:  DataSourceAccountAlias,
+			Factory:  dataSourceAccountAlias,
 			TypeName: "aws_iam_account_alias",
+			Name:     "Account Alias",
 		},
 		{
-			Factory:  DataSourceGroup,
+			Factory:  dataSourceGroup,
 			TypeName: "aws_iam_group",
+			Name:     "Group",
 		},
 		{
-			Factory:  DataSourceInstanceProfile,
+			Factory:  dataSourceInstanceProfile,
 			TypeName: "aws_iam_instance_profile",
+			Name:     "Instance Profile",
 		},
 		{
-			Factory:  DataSourceInstanceProfiles,
+			Factory:  dataSourceInstanceProfiles,
 			TypeName: "aws_iam_instance_profiles",
+			Name:     "Instance Profiles",
 		},
 		{
-			Factory:  DataSourceOpenIDConnectProvider,
+			Factory:  dataSourceOpenIDConnectProvider,
 			TypeName: "aws_iam_openid_connect_provider",
+			Name:     "OIDC Provider",
 		},
 		{
-			Factory:  DataSourcePolicy,
+			Factory:  dataSourcePolicy,
 			TypeName: "aws_iam_policy",
+			Name:     "Policy",
 		},
 		{
 			Factory:  dataSourcePolicyDocument,
@@ -59,40 +66,49 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Policy Document",
 		},
 		{
-			Factory:  DataSourcePrincipalPolicySimulation,
+			Factory:  dataSourcePrincipalPolicySimulation,
 			TypeName: "aws_iam_principal_policy_simulation",
+			Name:     "Principal Policy Simulation",
 		},
 		{
-			Factory:  DataSourceRole,
+			Factory:  dataSourceRole,
 			TypeName: "aws_iam_role",
+			Name:     "Role",
 		},
 		{
-			Factory:  DataSourceRoles,
+			Factory:  dataSourceRoles,
 			TypeName: "aws_iam_roles",
+			Name:     "Roles",
 		},
 		{
-			Factory:  DataSourceSAMLProvider,
+			Factory:  dataSourceSAMLProvider,
 			TypeName: "aws_iam_saml_provider",
+			Name:     "SAML Provider",
 		},
 		{
-			Factory:  DataSourceServerCertificate,
+			Factory:  dataSourceServerCertificate,
 			TypeName: "aws_iam_server_certificate",
+			Name:     "Server Certificate",
 		},
 		{
-			Factory:  DataSourceSessionContext,
+			Factory:  dataSourceSessionContext,
 			TypeName: "aws_iam_session_context",
+			Name:     "Session Context",
 		},
 		{
-			Factory:  DataSourceUser,
+			Factory:  dataSourceUser,
 			TypeName: "aws_iam_user",
+			Name:     "User",
 		},
 		{
-			Factory:  DataSourceUserSSHKey,
+			Factory:  dataSourceUserSSHKey,
 			TypeName: "aws_iam_user_ssh_key",
+			Name:     "User SSH Key",
 		},
 		{
-			Factory:  DataSourceUsers,
+			Factory:  dataSourceUsers,
 			TypeName: "aws_iam_users",
+			Name:     "Users",
 		},
 	}
 }
