@@ -9,3 +9,7 @@ resource/aws_ram_resource_association: Add plan-time validation of `resource_arn
 ```release-note:bug
 resource/aws_ram_principal_association: Remove from state on resource Read if `principal` is disassociated outside of Terraform 
 ```
+
+```release-note:bug
+resource/aws_ram_principal_association: Prevent creation of duplicate Terraform resources
+```

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ram"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -108,29 +109,20 @@ func TestAccRAMPrincipalAssociation_disappears(t *testing.T) {
 
 func TestAccRAMPrincipalAssociation_duplicate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var association ram.ResourceShareAssociation
-	resourceName := "aws_ram_principal_association.test1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// testAccPreCheckSharingWithOrganizationEnabled(ctx, t)
+			testAccPreCheckSharingWithOrganizationEnabled(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.RAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPrincipalAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPrincipalAssociationConfig_duplicate(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPrincipalAssociationExists(ctx, resourceName, &association),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config:      testAccPrincipalAssociationConfig_duplicate(rName),
+				ExpectError: regexache.MustCompile(`RAM Principal Association .* already exists`),
 			},
 		},
 	})
