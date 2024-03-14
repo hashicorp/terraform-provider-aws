@@ -63,6 +63,13 @@ func dataSourcePolicyDocument() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				// https://github.com/hashicorp/terraform-provider-aws/issues/31637.
+				"override_json": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringIsEmpty,
+					Deprecated:   "Not used",
+				},
 				"override_policy_documents": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -74,6 +81,13 @@ func dataSourcePolicyDocument() *schema.Resource {
 				"policy_id": {
 					Type:     schema.TypeString,
 					Optional: true,
+				},
+				// https://github.com/hashicorp/terraform-provider-aws/issues/31637.
+				"source_json": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringIsEmpty,
+					Deprecated:   "Not used",
 				},
 				"source_policy_documents": {
 					Type:     schema.TypeList,
