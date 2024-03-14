@@ -6,6 +6,7 @@ package ram
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"time"
 
@@ -62,13 +63,24 @@ func resourceResourceAssociationCreate(ctx context.Context, d *schema.ResourceDa
 
 	resourceShareARN, resourceARN := d.Get("resource_share_arn").(string), d.Get("resource_arn").(string)
 	id := errs.Must(flex.FlattenResourceId([]string{resourceShareARN, resourceARN}, resourceAssociationResourceIDPartCount, false))
+	_, err := findResourceAssociationByTwoPartKey(ctx, conn, resourceShareARN, resourceARN)
+
+	switch {
+	case err == nil:
+		return sdkdiag.AppendFromErr(diags, fmt.Errorf("RAM Resource Association (%s) already exists", id))
+	case tfresource.NotFound(err):
+		break
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Association: %s", err)
+	}
+
 	input := &ram.AssociateResourceShareInput{
 		ClientToken:      aws.String(sdkid.UniqueId()),
 		ResourceArns:     aws.StringSlice([]string{resourceARN}),
 		ResourceShareArn: aws.String(resourceShareARN),
 	}
 
-	_, err := conn.AssociateResourceShareWithContext(ctx, input)
+	_, err = conn.AssociateResourceShareWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating RAM Resource Association (%s): %s", id, err)

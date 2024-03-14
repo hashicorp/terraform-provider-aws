@@ -13,3 +13,7 @@ resource/aws_ram_principal_association: Remove from state on resource Read if `p
 ```release-note:bug
 resource/aws_ram_principal_association: Prevent creation of duplicate Terraform resources
 ```
+
+```release-note:bug
+resource/aws_ram_resource_association: Prevent creation of duplicate Terraform resources
+```

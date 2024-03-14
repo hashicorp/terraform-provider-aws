@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/ram"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -72,8 +73,6 @@ func TestAccRAMResourceAssociation_disappears(t *testing.T) {
 
 func TestAccRAMResourceAssociation_duplicate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var resourceShareAssociation ram.ResourceShareAssociation
-	resourceName := "aws_ram_resource_association.test1"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -83,10 +82,8 @@ func TestAccRAMResourceAssociation_duplicate(t *testing.T) {
 		CheckDestroy:             testAccCheckResourceAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceAssociationConfig_duplicate(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckResourceAssociationExists(ctx, resourceName, &resourceShareAssociation),
-				),
+				Config:      testAccResourceAssociationConfig_duplicate(rName),
+				ExpectError: regexache.MustCompile(`RAM Resource Association .* already exists`),
 			},
 		},
 	})
@@ -165,7 +162,7 @@ resource "aws_ram_resource_association" "test1" {
 
 resource "aws_ram_resource_association" "test2" {
   resource_arn       = aws_subnet.test[0].arn
-  resource_share_arn = aws_ram_resource_share.test.id
+  resource_share_arn = aws_ram_resource_association.test1.resource_share_arn
 }
 `, rName))
 }
