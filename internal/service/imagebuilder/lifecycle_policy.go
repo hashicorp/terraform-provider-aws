@@ -396,7 +396,6 @@ func (r *resourceLifecyclePolicy) Update(ctx context.Context, req resource.Updat
 		!plan.ResourceSelection.Equal(state.ResourceSelection) ||
 		!plan.ResourceType.Equal(state.ResourceType) ||
 		!plan.Status.Equal(state.Status) {
-
 		in := &imagebuilder.UpdateLifecyclePolicyInput{
 			ExecutionRole: aws.String(plan.ExecutionRole.ValueString()),
 			ResourceType:  awstypes.LifecyclePolicyResourceType(plan.ResourceType.ValueString()),
@@ -546,12 +545,7 @@ func expandPolicyDetails(ctx context.Context, tfList []resourcePolicyDetailsData
 				return nil, diags
 			}
 
-			filter, d := expandPolicyDetailFilter(tfList)
-			diags.Append(d...)
-			if diags.HasError() {
-				return nil, diags
-			}
-			apiObject.Filter = filter
+			apiObject.Filter = expandPolicyDetailFilter(tfList)
 		}
 
 		if !policyDetail.ExclusionRules.IsNull() {
@@ -623,11 +617,9 @@ func expandPolicyDetailActionIncludeResources(tfList []resourceIncludeResourcesD
 	return &apiObject
 }
 
-func expandPolicyDetailFilter(tfList []resourceFilterData) (*awstypes.LifecyclePolicyDetailFilter, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
+func expandPolicyDetailFilter(tfList []resourceFilterData) *awstypes.LifecyclePolicyDetailFilter {
 	if len(tfList) == 0 {
-		return nil, diags
+		return nil
 	}
 
 	tfObj := tfList[0]
@@ -650,7 +642,7 @@ func expandPolicyDetailFilter(tfList []resourceFilterData) (*awstypes.LifecycleP
 		apiObject.Unit = awstypes.LifecyclePolicyTimeUnit(tfObj.Type.ValueString())
 	}
 
-	return &apiObject, diags
+	return &apiObject
 }
 
 func expandPolicyDetailExclusionRules(ctx context.Context, tfList []resourceExclusionRulesData) (*awstypes.LifecyclePolicyDetailExclusionRules, diag.Diagnostics) {
@@ -784,7 +776,6 @@ func expandResourceSelectionRecipes(tfList []resourceRecipesData) []awstypes.Lif
 		}
 
 		apiResult = append(apiResult, apiObject)
-
 	}
 	return apiResult
 }
@@ -853,7 +844,6 @@ func flattenDetailAction(ctx context.Context, apiObject *awstypes.LifecyclePolic
 	diags.Append(d...)
 
 	return listVal, diags
-
 }
 
 func flattenIncludeResources(ctx context.Context, apiObject *awstypes.LifecyclePolicyDetailActionIncludeResources) (types.List, diag.Diagnostics) {
@@ -877,7 +867,6 @@ func flattenIncludeResources(ctx context.Context, apiObject *awstypes.LifecycleP
 	diags.Append(d...)
 
 	return listVal, diags
-
 }
 
 func flattenDetailFilter(ctx context.Context, apiObject *awstypes.LifecyclePolicyDetailFilter) (types.List, diag.Diagnostics) {
@@ -902,7 +891,6 @@ func flattenDetailFilter(ctx context.Context, apiObject *awstypes.LifecyclePolic
 	diags.Append(d...)
 
 	return listVal, diags
-
 }
 
 func flattenDetailExclusionRules(ctx context.Context, apiObject *awstypes.LifecyclePolicyDetailExclusionRules) (types.List, diag.Diagnostics) {
@@ -933,7 +921,6 @@ func flattenDetailExclusionRules(ctx context.Context, apiObject *awstypes.Lifecy
 	diags.Append(d...)
 
 	return listVal, diags
-
 }
 
 func flattenExclusionRulesAMIS(ctx context.Context, apiObject *awstypes.LifecyclePolicyDetailExclusionRulesAmis) (types.List, diag.Diagnostics) {
@@ -974,7 +961,6 @@ func flattenExclusionRulesAMIS(ctx context.Context, apiObject *awstypes.Lifecycl
 	diags.Append(d...)
 
 	return listVal, diags
-
 }
 
 func flattenExclusionRulesAMISLastLaunched(ctx context.Context, apiObject *awstypes.LifecyclePolicyDetailExclusionRulesAmisLastLaunched) (types.List, diag.Diagnostics) {
@@ -997,7 +983,6 @@ func flattenExclusionRulesAMISLastLaunched(ctx context.Context, apiObject *awsty
 	diags.Append(d...)
 
 	return listVal, diags
-
 }
 
 func flattenResourceSelection(ctx context.Context, apiObject *awstypes.LifecyclePolicyResourceSelection) (types.List, diag.Diagnostics) {
@@ -1028,7 +1013,6 @@ func flattenResourceSelection(ctx context.Context, apiObject *awstypes.Lifecycle
 	diags.Append(d...)
 
 	return listVal, diags
-
 }
 
 func flattenResourceSelectionRecipes(ctx context.Context, apiObject []awstypes.LifecyclePolicyResourceSelectionRecipe) (types.Set, diag.Diagnostics) {
@@ -1058,7 +1042,6 @@ func flattenResourceSelectionRecipes(ctx context.Context, apiObject []awstypes.L
 	diags.Append(d...)
 
 	return listVal, diags
-
 }
 
 type resourceLifecyclePolicyData struct {

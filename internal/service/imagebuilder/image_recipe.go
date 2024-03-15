@@ -526,12 +526,8 @@ func expandEBSInstanceBlockDeviceSpecification(tfMap map[string]interface{}) *aw
 	return apiObject
 }
 
-func expandInstanceBlockDeviceMapping(tfMap map[string]interface{}) *awstypes.InstanceBlockDeviceMapping {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &awstypes.InstanceBlockDeviceMapping{}
+func expandInstanceBlockDeviceMapping(tfMap map[string]interface{}) awstypes.InstanceBlockDeviceMapping {
+	apiObject := awstypes.InstanceBlockDeviceMapping{}
 
 	if v, ok := tfMap["device_name"].(string); ok && v != "" {
 		apiObject.DeviceName = aws.String(v)
@@ -566,13 +562,7 @@ func expandInstanceBlockDeviceMappings(tfList []interface{}) []awstypes.Instance
 			continue
 		}
 
-		apiObject := expandInstanceBlockDeviceMapping(tfMap)
-
-		if apiObject == nil {
-			continue
-		}
-
-		apiObjects = append(apiObjects, *apiObject)
+		apiObjects = append(apiObjects, expandInstanceBlockDeviceMapping(tfMap))
 	}
 
 	return apiObjects
@@ -685,7 +675,7 @@ func flattenEBSInstanceBlockDeviceSpecification(apiObject *awstypes.EbsInstanceB
 		tfMap["volume_size"] = aws.ToInt32(v)
 	}
 
-	tfMap["volume_type"] = awstypes.EbsVolumeType(apiObject.VolumeType)
+	tfMap["volume_type"] = apiObject.VolumeType
 
 	return tfMap
 }
