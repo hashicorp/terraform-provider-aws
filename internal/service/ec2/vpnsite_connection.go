@@ -83,7 +83,6 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IsCIDRNetwork(0, 128),
-				RequiredWith: []string{"transit_gateway_id"},
 			},
 			"outside_ip_address_type": {
 				Type:         schema.TypeString,
@@ -102,7 +101,6 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IsCIDRNetwork(0, 128),
-				RequiredWith: []string{"transit_gateway_id"},
 			},
 			"routes": {
 				Type:     schema.TypeSet,
@@ -215,7 +213,6 @@ func ResourceVPNConnection() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validVPNConnectionTunnelInsideIPv6CIDR(),
-				RequiredWith: []string{"transit_gateway_id"},
 			},
 			"tunnel1_log_options": {
 				Type:     schema.TypeList,
@@ -432,7 +429,6 @@ func ResourceVPNConnection() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validVPNConnectionTunnelInsideIPv6CIDR(),
-				RequiredWith: []string{"transit_gateway_id"},
 			},
 			"tunnel2_log_options": {
 				Type:     schema.TypeList,
