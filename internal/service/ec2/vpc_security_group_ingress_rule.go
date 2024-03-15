@@ -35,9 +35,7 @@ import (
 // @Tags(identifierAttribute="id")
 func newSecurityGroupIngressRuleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &securityGroupIngressRuleResource{}
-	r.create = r.createSecurityGroupRule
-	r.delete = r.deleteSecurityGroupRule
-	r.findByID = r.findSecurityGroupRuleByID
+	r.securityGroupRule = r
 
 	return r, nil
 }
@@ -50,7 +48,7 @@ func (*securityGroupIngressRuleResource) Metadata(_ context.Context, request res
 	response.TypeName = "aws_vpc_security_group_ingress_rule"
 }
 
-func (r *securityGroupIngressRuleResource) createSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) (string, error) {
+func (r *securityGroupIngressRuleResource) create(ctx context.Context, data *securityGroupRuleResourceModel) (string, error) {
 	conn := r.Meta().EC2Conn(ctx)
 
 	input := &ec2.AuthorizeSecurityGroupIngressInput{
@@ -67,7 +65,7 @@ func (r *securityGroupIngressRuleResource) createSecurityGroupRule(ctx context.C
 	return aws.StringValue(output.SecurityGroupRules[0].SecurityGroupRuleId), nil
 }
 
-func (r *securityGroupIngressRuleResource) deleteSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) error {
+func (r *securityGroupIngressRuleResource) delete(ctx context.Context, data *securityGroupRuleResourceModel) error {
 	conn := r.Meta().EC2Conn(ctx)
 
 	_, err := conn.RevokeSecurityGroupIngressWithContext(ctx, &ec2.RevokeSecurityGroupIngressInput{
@@ -78,7 +76,7 @@ func (r *securityGroupIngressRuleResource) deleteSecurityGroupRule(ctx context.C
 	return err
 }
 
-func (r *securityGroupIngressRuleResource) findSecurityGroupRuleByID(ctx context.Context, id string) (*ec2.SecurityGroupRule, error) {
+func (r *securityGroupIngressRuleResource) findByID(ctx context.Context, id string) (*ec2.SecurityGroupRule, error) {
 	conn := r.Meta().EC2Conn(ctx)
 
 	return FindSecurityGroupIngressRuleByID(ctx, conn, id)
@@ -86,13 +84,16 @@ func (r *securityGroupIngressRuleResource) findSecurityGroupRuleByID(ctx context
 
 // Base structure and methods for VPC security group rules.
 
+type securityGroupRule interface {
+	create(context.Context, *securityGroupRuleResourceModel) (string, error)
+	delete(context.Context, *securityGroupRuleResourceModel) error
+	findByID(context.Context, string) (*ec2.SecurityGroupRule, error)
+}
+
 type securityGroupRuleResource struct {
+	securityGroupRule
 	framework.ResourceWithConfigure
 	framework.WithImportByID
-
-	create   func(context.Context, *resourceSecurityGroupRuleData) (string, error)
-	delete   func(context.Context, *resourceSecurityGroupRuleData) error
-	findByID func(context.Context, string) (*ec2.SecurityGroupRule, error)
 }
 
 func (r *securityGroupRuleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -163,13 +164,13 @@ func (r *securityGroupRuleResource) Schema(ctx context.Context, request resource
 }
 
 func (r *securityGroupRuleResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data resourceSecurityGroupRuleData
+	var data securityGroupRuleResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	securityGroupRuleID, err := r.create(ctx, &data)
+	securityGroupRuleID, err := r.securityGroupRule.create(ctx, &data)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating VPC Security Group Rule", err.Error())
@@ -194,13 +195,13 @@ func (r *securityGroupRuleResource) Create(ctx context.Context, request resource
 }
 
 func (r *securityGroupRuleResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceSecurityGroupRuleData
+	var data securityGroupRuleResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	output, err := r.findByID(ctx, data.ID.ValueString())
+	output, err := r.securityGroupRule.findByID(ctx, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -243,7 +244,7 @@ func (r *securityGroupRuleResource) Read(ctx context.Context, request resource.R
 }
 
 func (r *securityGroupRuleResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new resourceSecurityGroupRuleData
+	var old, new securityGroupRuleResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -284,7 +285,7 @@ func (r *securityGroupRuleResource) Update(ctx context.Context, request resource
 }
 
 func (r *securityGroupRuleResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data resourceSecurityGroupRuleData
+	var data securityGroupRuleResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -293,7 +294,7 @@ func (r *securityGroupRuleResource) Delete(ctx context.Context, request resource
 	tflog.Debug(ctx, "deleting VPC Security Group Rule", map[string]interface{}{
 		"id": data.ID.ValueString(),
 	})
-	err := r.delete(ctx, &data)
+	err := r.securityGroupRule.delete(ctx, &data)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidGroupNotFound, errCodeInvalidSecurityGroupRuleIdNotFound) {
 		return
@@ -308,7 +309,7 @@ func (r *securityGroupRuleResource) Delete(ctx context.Context, request resource
 
 func (r *securityGroupRuleResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	if !request.State.Raw.IsNull() && !request.Plan.Raw.IsNull() {
-		var old, new resourceSecurityGroupRuleData
+		var old, new securityGroupRuleResourceModel
 		response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 		if response.Diagnostics.HasError() {
 			return
@@ -363,7 +364,7 @@ func (r *securityGroupRuleResource) flattenReferencedSecurityGroup(ctx context.C
 	return types.StringValue(strings.Join([]string{aws.StringValue(apiObject.UserId), aws.StringValue(apiObject.GroupId)}, "/"))
 }
 
-type resourceSecurityGroupRuleData struct {
+type securityGroupRuleResourceModel struct {
 	ARN                       types.String `tfsdk:"arn"`
 	CIDRIPv4                  types.String `tfsdk:"cidr_ipv4"`
 	CIDRIPv6                  types.String `tfsdk:"cidr_ipv6"`
@@ -380,7 +381,7 @@ type resourceSecurityGroupRuleData struct {
 	ToPort                    types.Int64  `tfsdk:"to_port"`
 }
 
-func (d *resourceSecurityGroupRuleData) expandIPPermission(ctx context.Context) *ec2.IpPermission {
+func (d *securityGroupRuleResourceModel) expandIPPermission(ctx context.Context) *ec2.IpPermission {
 	apiObject := &ec2.IpPermission{
 		FromPort:   flex.Int64FromFramework(ctx, d.FromPort),
 		IpProtocol: flex.StringFromFramework(ctx, d.IPProtocol),
@@ -425,7 +426,7 @@ func (d *resourceSecurityGroupRuleData) expandIPPermission(ctx context.Context) 
 	return apiObject
 }
 
-func (d *resourceSecurityGroupRuleData) expandSecurityGroupRuleRequest(ctx context.Context) *ec2.SecurityGroupRuleRequest {
+func (d *securityGroupRuleResourceModel) expandSecurityGroupRuleRequest(ctx context.Context) *ec2.SecurityGroupRuleRequest {
 	apiObject := &ec2.SecurityGroupRuleRequest{
 		CidrIpv4:          flex.StringFromFramework(ctx, d.CIDRIPv4),
 		CidrIpv6:          flex.StringFromFramework(ctx, d.CIDRIPv6),
@@ -440,7 +441,7 @@ func (d *resourceSecurityGroupRuleData) expandSecurityGroupRuleRequest(ctx conte
 	return apiObject
 }
 
-func (d *resourceSecurityGroupRuleData) sourceAttributeName() string {
+func (d *securityGroupRuleResourceModel) sourceAttributeName() string {
 	switch {
 	case !d.CIDRIPv4.IsNull():
 		return "cidr_ipv4"

@@ -16,9 +16,7 @@ import (
 // @Tags(identifierAttribute="id")
 func newSecurityGroupEgressRuleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &securityGroupEgressRuleResource{}
-	r.create = r.createSecurityGroupRule
-	r.delete = r.deleteSecurityGroupRule
-	r.findByID = r.findSecurityGroupRuleByID
+	r.securityGroupRule = r
 
 	return r, nil
 }
@@ -31,7 +29,7 @@ func (*securityGroupEgressRuleResource) Metadata(_ context.Context, request reso
 	response.TypeName = "aws_vpc_security_group_egress_rule"
 }
 
-func (r *securityGroupEgressRuleResource) createSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) (string, error) {
+func (r *securityGroupEgressRuleResource) create(ctx context.Context, data *securityGroupRuleResourceModel) (string, error) {
 	conn := r.Meta().EC2Conn(ctx)
 
 	input := &ec2.AuthorizeSecurityGroupEgressInput{
@@ -48,7 +46,7 @@ func (r *securityGroupEgressRuleResource) createSecurityGroupRule(ctx context.Co
 	return aws.StringValue(output.SecurityGroupRules[0].SecurityGroupRuleId), nil
 }
 
-func (r *securityGroupEgressRuleResource) deleteSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) error {
+func (r *securityGroupEgressRuleResource) delete(ctx context.Context, data *securityGroupRuleResourceModel) error {
 	conn := r.Meta().EC2Conn(ctx)
 
 	_, err := conn.RevokeSecurityGroupEgressWithContext(ctx, &ec2.RevokeSecurityGroupEgressInput{
@@ -59,7 +57,7 @@ func (r *securityGroupEgressRuleResource) deleteSecurityGroupRule(ctx context.Co
 	return err
 }
 
-func (r *securityGroupEgressRuleResource) findSecurityGroupRuleByID(ctx context.Context, id string) (*ec2.SecurityGroupRule, error) {
+func (r *securityGroupEgressRuleResource) findByID(ctx context.Context, id string) (*ec2.SecurityGroupRule, error) {
 	conn := r.Meta().EC2Conn(ctx)
 
 	return FindSecurityGroupEgressRuleByID(ctx, conn, id)
