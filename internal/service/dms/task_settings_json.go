@@ -239,6 +239,84 @@ func normalizeTaskSettings(apiObject string) string {
 			"CloudWatchLogGroup":  nil,
 			"CloudWatchLogStream": nil,
 			"EnableLogContext":    false,
+			"LogComponents": []interface{}{
+				map[string]interface{}{
+					"Severity": "LOGGER_SEVERITY_DEFAULT",
+					"Id":       "TRANSFORMATION",
+				},
+				map[string]interface{}{
+					"Severity": "LOGGER_SEVERITY_DEFAULT",
+					"Id":       "SOURCE_UNLOAD",
+				},
+				map[string]interface{}{
+					"Severity": "LOGGER_SEVERITY_DEFAULT",
+					"Id":       "IO",
+				},
+				map[string]interface{}{
+					"Severity": "LOGGER_SEVERITY_DEFAULT",
+					"Id":       "TARGET_LOAD",
+				},
+				map[string]interface{}{
+					"Severity": "LOGGER_SEVERITY_DEFAULT",
+					"Id":       "PERFORMANCE",
+				},
+				map[string]interface{}{
+					"Severity": "LOGGER_SEVERITY_DEFAULT",
+					"Id":       "SOURCE_CAPTURE",
+				},
+				map[string]interface{}{
+					"Severity": "LOGGER_SEVERITY_DEFAULT",
+					"Id":       "SORTER",
+				},
+				map[string]interface{}{
+					"Severity": "LOGGER_SEVERITY_DEFAULT",
+					"Id":       "REST_SERVER",
+				},
+				map[string]interface{}{
+					"Severity": "LOGGER_SEVERITY_DEFAULT",
+					"Id":       "VALIDATOR_EXT",
+				},
+				map[string]interface{}{
+					"Severity": "LOGGER_SEVERITY_DEFAULT",
+					"Id":       "TARGET_APPLY",
+				},
+				map[string]interface{}{
+					"Severity": "LOGGER_SEVERITY_DEFAULT",
+					"Id":       "TASK_MANAGER",
+				},
+				map[string]interface{}{
+					"Severity": "LOGGER_SEVERITY_DEFAULT",
+					"Id":       "TABLES_MANAGER",
+				},
+				map[string]interface{}{
+					"Severity": "LOGGER_SEVERITY_DEFAULT",
+					"Id":       "METADATA_MANAGER",
+				},
+				map[string]interface{}{
+					"Severity": "LOGGER_SEVERITY_DEFAULT",
+					"Id":       "FILE_FACTORY",
+				},
+				map[string]interface{}{
+					"Severity": "LOGGER_SEVERITY_DEFAULT",
+					"Id":       "COMMON",
+				},
+				map[string]interface{}{
+					"Severity": "LOGGER_SEVERITY_DEFAULT",
+					"Id":       "ADDONS",
+				},
+				map[string]interface{}{
+					"Severity": "LOGGER_SEVERITY_DEFAULT",
+					"Id":       "DATA_STRUCTURE",
+				},
+				map[string]interface{}{
+					"Severity": "LOGGER_SEVERITY_DEFAULT",
+					"Id":       "COMMUNICATION",
+				},
+				map[string]interface{}{
+					"Severity": "LOGGER_SEVERITY_DEFAULT",
+					"Id":       "FILE_TRANSFER",
+				},
+			},
 		},
 		"StreamBufferSettings": map[string]interface{}{
 			"CtrlStreamBufferSizeInMB": 5,
@@ -303,35 +381,53 @@ func checkdefaultvalues(defaultMap, oldMap map[string]interface{}) map[string]in
 		log.Printf("[WARN] checking key: %s, type: %T", k, v)
 		if value, ok := defaultMap[k]; ok { //if key exists in the default struct
 			switch t := reflect.TypeOf(value); t.Kind() { //check the type ; value is off the default map
+			//top level
 			case reflect.Bool, reflect.String, reflect.Float64, reflect.Int:
 				if value == v {
 					delete(oldMap, k)
 				}
 			case reflect.Map:
-				log.Printf("[WARN] DID WE GET HERE")
-				kMap := value.(map[string]interface{}) //map of defaults
-				vMap := v.(map[string]interface{})     //map of the inner map of the oldMap/user
+				// Map of defaults
+				kMap := value.(map[string]interface{})
+				// Map of inner map of oldMap/user
+				vMap := v.(map[string]interface{})
 
 				for kInner, vInner := range vMap {
 					log.Printf("[WARN] default value type: %T, vinner type: %T", kMap[kInner], vInner)
-
 					if kMap[kInner] != nil || vInner != nil {
 						if reflect.TypeOf(vInner).Kind() == reflect.Float64 {
 							if kMap[kInner] != nil {
 								kMap[kInner] = float64(kMap[kInner].(int))
 							}
 						}
-						// check if it's a slice; if it is, want to do something similar; how we cast like 346, cast it to a slice also;
-						// checking if two slices are equal will be diff;  like line 348; look up comparing two slices; you can reflect
-						// the values;
+						// if reflect.TypeOf(vInner).Kind() == reflect.Slice {
+						// 	//kMap[kInner] map of default; kInner is the key from the map from the user
+						// 	// vSlice := v.([]interface{})
+						// 	if kMap[kInner] != nil {
+						// 		log.Printf("[WARN] vinner value: %s", vInner)
+						// 		if reflect.DeepEqual(kMap[kInner], vInner) {
+						// 			compareLogComponent := true
+						// 		}
+						// 		// log.Printf("[WARN]  kMap[kInner] value: %s", kMap[kInner])
+						// 	}
+						// 	// kMap[kInner] = []interface{}{kMap[kInner]}
+						// 	// kMap[kInner] = v.([]interface{kMap[kInner]})
+						// 	// 	if reflect.DeepEqual(kMap[kInner], vInner) {
+						// 	// 		delete(vMap, kInner)
+						// 	// 	}
+						// 	// }
+						// 	// check if it's a slice; if it is, want to do something similar; how we cast like 346, cast it to a slice also;
+						// 	// checking if two slices are equal will be diff;  like line 348; look up comparing two slices; you can reflect
+						// 	// the values;
+						// }
+						//if kMap[kInner] == vInner {
+						if reflect.DeepEqual(kMap[kInner], vInner) {
+							delete(vMap, kInner)
+						}
 					}
-					if kMap[kInner] == vInner {
-						log.Printf("[WARN] deleting %s", kInner)
-						delete(vMap, kInner)
-					}
+
 				}
 				if len(vMap) == 0 {
-					log.Printf("[WARN] DID WE GET TO DELETING OUTTER KEY: deleting %s", k)
 					delete(oldMap, k)
 				}
 			default:
@@ -341,16 +437,3 @@ func checkdefaultvalues(defaultMap, oldMap map[string]interface{}) map[string]in
 	}
 	return oldMap
 }
-
-// case map[string]interface{}:
-// 	if oldValMap, ok := oldVal.(map[string]interface{}); !ok {
-// 		for k, v := range defaultVal.(map[string]interface{}) {
-// 			if !checkdefaultvalues(v, oldValMap[k]) {
-// 				return false
-// 			}
-// 		}
-// 		return true
-// 	}
-// case bool, string, float64, int:
-// 	return defaultVal == oldVal
-// }
