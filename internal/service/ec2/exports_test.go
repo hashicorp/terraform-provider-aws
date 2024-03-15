@@ -30,4 +30,6 @@ var (
 	UpdateTagsV2                   = updateTagsV2
 )
 
-type NormalizeIPProtocol = normalizeIPProtocol
+type (
+	IPProtocol = ipProtocol
+)

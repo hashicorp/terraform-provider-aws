@@ -14,6 +14,8 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -21,6 +23,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -128,10 +132,8 @@ func (r *securityGroupRuleResource) Schema(ctx context.Context, request resource
 			},
 			"id": framework.IDAttribute(),
 			"ip_protocol": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					normalizeIPProtocol{},
-				},
+				CustomType: ipProtocolType{},
+				Required:   true,
 			},
 			"prefix_list_id": schema.StringAttribute{
 				Optional: true,
@@ -220,7 +222,7 @@ func (r *securityGroupRuleResource) Read(ctx context.Context, request resource.R
 	data.CIDRIPv4 = flex.StringToFramework(ctx, output.CidrIpv4)
 	data.CIDRIPv6 = flex.StringToFramework(ctx, output.CidrIpv6)
 	data.Description = flex.StringToFramework(ctx, output.Description)
-	data.IPProtocol = flex.StringToFramework(ctx, output.IpProtocol)
+	data.IPProtocol = flex.StringToFrameworkValuable[ipProtocol](ctx, output.IpProtocol)
 	data.PrefixListID = flex.StringToFramework(ctx, output.PrefixListId)
 	data.ReferencedSecurityGroupID = flattenReferencedSecurityGroup(ctx, r, output.ReferencedGroupInfo)
 	data.SecurityGroupID = flex.StringToFramework(ctx, output.GroupId)
@@ -372,7 +374,7 @@ type securityGroupRuleResourceModel struct {
 	Description               types.String `tfsdk:"description"`
 	FromPort                  types.Int64  `tfsdk:"from_port"`
 	ID                        types.String `tfsdk:"id"`
-	IPProtocol                types.String `tfsdk:"ip_protocol"`
+	IPProtocol                ipProtocol   `tfsdk:"ip_protocol"`
 	PrefixListID              types.String `tfsdk:"prefix_list_id"`
 	ReferencedSecurityGroupID types.String `tfsdk:"referenced_security_group_id"`
 	SecurityGroupID           types.String `tfsdk:"security_group_id"`
@@ -457,28 +459,100 @@ func (d *securityGroupRuleResourceModel) sourceAttributeName() string {
 	return ""
 }
 
-type normalizeIPProtocol struct{}
+var (
+	_ basetypes.StringTypable                    = (*ipProtocolType)(nil)
+	_ basetypes.StringValuableWithSemanticEquals = (*ipProtocol)(nil)
+)
 
-func (normalizeIPProtocol) Description(context.Context) string {
-	return "Resolve differences between IP protocol names and numbers"
+type ipProtocolType struct {
+	basetypes.StringType
 }
 
-func (m normalizeIPProtocol) MarkdownDescription(ctx context.Context) string {
-	return m.Description(ctx)
+func (t ipProtocolType) Equal(o attr.Type) bool {
+	other, ok := o.(ipProtocolType)
+	if !ok {
+		return false
+	}
+
+	return t.StringType.Equal(other.StringType)
 }
 
-func (normalizeIPProtocol) PlanModifyString(_ context.Context, request planmodifier.StringRequest, response *planmodifier.StringResponse) {
-	if request.StateValue.IsNull() {
-		response.PlanValue = request.PlanValue
-		return
+func (ipProtocolType) String() string {
+	return "IPProtocolType"
+}
+
+func (t ipProtocolType) ValueFromString(_ context.Context, in types.String) (basetypes.StringValuable, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	if in.IsNull() {
+		return ipProtocolNull(), diags
+	}
+	if in.IsUnknown() {
+		return ipProtocolUnknown(), diags
 	}
 
-	// If the state value is semantically equivalent to the planned value
-	// then return the state value, else return the planned value.
-	if protocolForValue(request.StateValue.ValueString()) == protocolForValue(request.PlanValue.ValueString()) {
-		response.PlanValue = request.StateValue
-		return
+	return ipProtocolValue(in.ValueString()), diags
+}
+
+func (t ipProtocolType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
+	attrValue, err := t.StringType.ValueFromTerraform(ctx, in)
+	if err != nil {
+		return nil, err
 	}
 
-	response.PlanValue = request.PlanValue
+	stringValue, ok := attrValue.(basetypes.StringValue)
+	if !ok {
+		return nil, fmt.Errorf("unexpected value type of %T", attrValue)
+	}
+
+	stringValuable, diags := t.ValueFromString(ctx, stringValue)
+	if diags.HasError() {
+		return nil, fmt.Errorf("unexpected error converting StringValue to StringValuable: %v", diags)
+	}
+
+	return stringValuable, nil
+}
+
+func (ipProtocolType) ValueType(context.Context) attr.Value {
+	return ipProtocol{}
+}
+
+type ipProtocol struct {
+	basetypes.StringValue
+}
+
+func (v ipProtocol) Equal(o attr.Value) bool {
+	other, ok := o.(ipProtocol)
+	if !ok {
+		return false
+	}
+
+	return v.StringValue.Equal(other.StringValue)
+}
+
+func (ipProtocol) Type(context.Context) attr.Type {
+	return ipProtocolType{}
+}
+
+func (v ipProtocol) StringSemanticEquals(ctx context.Context, newValuable basetypes.StringValuable) (bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	newValue, ok := newValuable.(ipProtocol)
+	if !ok {
+		return false, diags
+	}
+
+	return protocolForValue(newValue.ValueString()) == protocolForValue(v.ValueString()), diags
+}
+
+func ipProtocolNull() ipProtocol {
+	return ipProtocol{StringValue: basetypes.NewStringNull()}
+}
+
+func ipProtocolUnknown() ipProtocol {
+	return ipProtocol{StringValue: basetypes.NewStringUnknown()}
+}
+
+func ipProtocolValue(value string) ipProtocol {
+	return ipProtocol{StringValue: basetypes.NewStringValue(value)}
 }
