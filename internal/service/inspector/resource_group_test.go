@@ -38,6 +38,11 @@ func TestAccInspectorResourceGroup_basic(t *testing.T) {
 				),
 			},
 			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
 				Config: testAccResourceGroupConfig_modified,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceGroupExists(ctx, resourceName, &v2),
