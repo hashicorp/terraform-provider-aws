@@ -32,3 +32,20 @@ This resource supports the following arguments:
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The resource group ARN.
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Inspector Classic Resource Groups using their Amazon Resource Name (ARN). For example:
+
+```terraform
+import {
+  to = aws_inspector_resource_group.example
+  id = "arn:aws:inspector:us-east-1:123456789012:resourcegroup/0-xxxxxxx"
+}
+```
+
+Using `terraform import`, import Inspector Classic Resource Groups using their Amazon Resource Name (ARN). For example:
+
+```console
+% terraform import aws_inspector_resource_group.example arn:aws:inspector:us-east-1:123456789012:resourcegroup/0-xxxxxxx
+```
