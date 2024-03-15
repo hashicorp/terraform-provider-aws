@@ -710,7 +710,7 @@ func testAccCheckContainerRecipeDestroy(ctx context.Context) resource.TestCheckF
 
 			output, err := conn.GetContainerRecipe(ctx, input)
 
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			if errs.MessageContains(err, tfimagebuilder.ResourceNotFoundException, "cannot be found") {
 				continue
 			}
 

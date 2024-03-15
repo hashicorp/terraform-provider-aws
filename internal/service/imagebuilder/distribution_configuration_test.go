@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
-	"github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -928,7 +927,7 @@ func testAccCheckDistributionConfigurationDestroy(ctx context.Context) resource.
 
 			output, err := conn.GetDistributionConfiguration(ctx, input)
 
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if errs.MessageContains(err, tfimagebuilder.ResourceNotFoundException, "cannot be found") {
 				continue
 			}
 

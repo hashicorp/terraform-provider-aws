@@ -660,7 +660,7 @@ func testAccCheckImagePipelineDestroy(ctx context.Context) resource.TestCheckFun
 
 			output, err := conn.GetImagePipeline(ctx, input)
 
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if errs.MessageContains(err, tfimagebuilder.ResourceNotFoundException, "cannot be found") {
 				continue
 			}
 

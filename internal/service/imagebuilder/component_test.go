@@ -315,9 +315,11 @@ func testAccCheckComponentDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 
 			output, err := conn.GetComponent(ctx, input)
-			if errs.IsA[*types.ResourceNotFoundException](err) {
-				return nil
+
+			if errs.MessageContains(err, tfimagebuilder.ResourceNotFoundException, "cannot be found") {
+				continue
 			}
+
 			if err != nil {
 				return create.Error(names.ImageBuilder, create.ErrActionCheckingDestroyed, "tfimagebuilder", rs.Primary.ID, err)
 			}

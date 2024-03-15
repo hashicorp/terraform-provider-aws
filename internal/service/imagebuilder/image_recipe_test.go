@@ -756,7 +756,7 @@ func testAccCheckImageRecipeDestroy(ctx context.Context) resource.TestCheckFunc 
 
 			output, err := conn.GetImageRecipe(ctx, input)
 
-			if errs.MessageContains(err, "ResourceNotFoundException", "cannot be found") {
+			if errs.MessageContains(err, tfimagebuilder.ResourceNotFoundException, "cannot be found") {
 				continue
 			}
 

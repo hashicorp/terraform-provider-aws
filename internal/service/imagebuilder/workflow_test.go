@@ -253,7 +253,7 @@ func testAccCheckWorkflowDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			output, err := conn.GetWorkflow(ctx, input)
 
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if errs.MessageContains(err, tfimagebuilder.ResourceNotFoundException, "cannot be found") {
 				continue
 			}
 
