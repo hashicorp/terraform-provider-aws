@@ -191,7 +191,7 @@ data "aws_vpc_peering_connection" "test" {
 func testAccVPCPeeringConnectionDataSourceConfig_id(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "requester" {
-  cidr_block = "10.1.0.0/16"
+  cidr_block                       = "10.1.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
   tags = {
@@ -200,7 +200,7 @@ resource "aws_vpc" "requester" {
 }
 
 resource "aws_vpc" "accepter" {
-  cidr_block = "10.2.0.0/16"
+  cidr_block                       = "10.2.0.0/16"
   assign_generated_ipv6_cidr_block = true
 
   tags = {
