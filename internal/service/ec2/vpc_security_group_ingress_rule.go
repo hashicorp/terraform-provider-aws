@@ -188,7 +188,7 @@ func (r *securityGroupRuleResource) Create(ctx context.Context, request resource
 	}
 
 	// Set values for unknowns.
-	data.ARN = r.arn(ctx, securityGroupRuleID)
+	data.ARN = securityGroupRuleARN(ctx, r, securityGroupRuleID)
 	data.SecurityGroupRuleID = types.StringValue(securityGroupRuleID)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -216,13 +216,13 @@ func (r *securityGroupRuleResource) Read(ctx context.Context, request resource.R
 		return
 	}
 
-	data.ARN = r.arn(ctx, data.ID.ValueString())
+	data.ARN = securityGroupRuleARN(ctx, r, data.ID.ValueString())
 	data.CIDRIPv4 = flex.StringToFramework(ctx, output.CidrIpv4)
 	data.CIDRIPv6 = flex.StringToFramework(ctx, output.CidrIpv6)
 	data.Description = flex.StringToFramework(ctx, output.Description)
 	data.IPProtocol = flex.StringToFramework(ctx, output.IpProtocol)
 	data.PrefixListID = flex.StringToFramework(ctx, output.PrefixListId)
-	data.ReferencedSecurityGroupID = r.flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo)
+	data.ReferencedSecurityGroupID = flattenReferencedSecurityGroup(ctx, r, output.ReferencedGroupInfo)
 	data.SecurityGroupID = flex.StringToFramework(ctx, output.GroupId)
 	data.SecurityGroupRuleID = flex.StringToFramework(ctx, output.SecurityGroupRuleId)
 
@@ -339,24 +339,25 @@ func (r *securityGroupRuleResource) ConfigValidators(context.Context) []resource
 	}
 }
 
-func (r *securityGroupRuleResource) arn(_ context.Context, id string) types.String {
+func securityGroupRuleARN(_ context.Context, withMeta framework.WithMeta, id string) types.String {
+	meta := withMeta.Meta()
 	arn := arn.ARN{
-		Partition: r.Meta().Partition,
+		Partition: meta.Partition,
 		Service:   names.EC2,
-		Region:    r.Meta().Region,
-		AccountID: r.Meta().AccountID,
+		Region:    meta.Region,
+		AccountID: meta.AccountID,
 		Resource:  fmt.Sprintf("security-group-rule/%s", id),
 	}.String()
 
 	return types.StringValue(arn)
 }
 
-func (r *securityGroupRuleResource) flattenReferencedSecurityGroup(ctx context.Context, apiObject *ec2.ReferencedSecurityGroup) types.String {
+func flattenReferencedSecurityGroup(ctx context.Context, withMeta framework.WithMeta, apiObject *ec2.ReferencedSecurityGroup) types.String {
 	if apiObject == nil {
 		return types.StringNull()
 	}
 
-	if apiObject.UserId == nil || aws.StringValue(apiObject.UserId) == r.Meta().AccountID {
+	if apiObject.UserId == nil || aws.StringValue(apiObject.UserId) == withMeta.Meta().AccountID {
 		return flex.StringToFramework(ctx, apiObject.GroupId)
 	}
 
