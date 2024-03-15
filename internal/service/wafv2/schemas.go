@@ -761,7 +761,7 @@ func customResponseBodySchema() *schema.Schema {
 					Required: true,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(1, 128),
-						validation.StringMatch(regexache.MustCompile(`^[\w\-]+$`), "must contain only alphanumeric, hyphen, and underscore characters"),
+						validation.StringMatch(regexache.MustCompile(`^[\w\-_]+$`), "must contain only alphanumeric, hyphen, and underscore characters"),
 					),
 				},
 				"content": {
