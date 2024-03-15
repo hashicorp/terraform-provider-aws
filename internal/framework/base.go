@@ -21,6 +21,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+var (
+	_ WithMeta = (*withMeta)(nil)
+)
+
+type WithMeta interface {
+	Meta() *conns.AWSClient
+}
+
 type withMeta struct {
 	meta *conns.AWSClient
 }
