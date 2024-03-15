@@ -13,8 +13,8 @@ var (
 	ResourceNetworkACLRule                  = resourceNetworkACLRule
 	ResourceRoute                           = resourceRoute
 	ResourceRouteTable                      = resourceRouteTable
-	ResourceSecurityGroupEgressRule         = newResourceSecurityGroupEgressRule
-	ResourceSecurityGroupIngressRule        = newResourceSecurityGroupIngressRule
+	ResourceSecurityGroupEgressRule         = newSecurityGroupEgressRuleResource
+	ResourceSecurityGroupIngressRule        = newSecurityGroupIngressRuleResource
 	ResourceTag                             = resourceTag
 	ResourceTransitGatewayPeeringAttachment = resourceTransitGatewayPeeringAttachment
 

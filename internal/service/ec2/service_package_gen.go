@@ -42,14 +42,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
-			Factory: newResourceSecurityGroupEgressRule,
+			Factory: newSecurityGroupEgressRuleResource,
 			Name:    "Security Group Egress Rule",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
 			},
 		},
 		{
-			Factory: newResourceSecurityGroupIngressRule,
+			Factory: newSecurityGroupIngressRuleResource,
 			Name:    "Security Group Ingress Rule",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",

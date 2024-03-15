@@ -33,8 +33,8 @@ import (
 
 // @FrameworkResource(name="Security Group Ingress Rule")
 // @Tags(identifierAttribute="id")
-func newResourceSecurityGroupIngressRule(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceSecurityGroupIngressRule{}
+func newSecurityGroupIngressRuleResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &securityGroupIngressRuleResource{}
 	r.create = r.createSecurityGroupRule
 	r.delete = r.deleteSecurityGroupRule
 	r.findByID = r.findSecurityGroupRuleByID
@@ -42,20 +42,20 @@ func newResourceSecurityGroupIngressRule(context.Context) (resource.ResourceWith
 	return r, nil
 }
 
-type resourceSecurityGroupIngressRule struct {
+type securityGroupIngressRuleResource struct {
 	securityGroupRuleResource
 }
 
-func (*resourceSecurityGroupIngressRule) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (*securityGroupIngressRuleResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_vpc_security_group_ingress_rule"
 }
 
-func (r *resourceSecurityGroupIngressRule) createSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) (string, error) {
+func (r *securityGroupIngressRuleResource) createSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) (string, error) {
 	conn := r.Meta().EC2Conn(ctx)
 
 	input := &ec2.AuthorizeSecurityGroupIngressInput{
 		GroupId:       flex.StringFromFramework(ctx, data.SecurityGroupID),
-		IpPermissions: []*ec2.IpPermission{r.expandIPPermission(ctx, data)},
+		IpPermissions: []*ec2.IpPermission{data.expandIPPermission(ctx)},
 	}
 
 	output, err := conn.AuthorizeSecurityGroupIngressWithContext(ctx, input)
@@ -67,7 +67,7 @@ func (r *resourceSecurityGroupIngressRule) createSecurityGroupRule(ctx context.C
 	return aws.StringValue(output.SecurityGroupRules[0].SecurityGroupRuleId), nil
 }
 
-func (r *resourceSecurityGroupIngressRule) deleteSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) error {
+func (r *securityGroupIngressRuleResource) deleteSecurityGroupRule(ctx context.Context, data *resourceSecurityGroupRuleData) error {
 	conn := r.Meta().EC2Conn(ctx)
 
 	_, err := conn.RevokeSecurityGroupIngressWithContext(ctx, &ec2.RevokeSecurityGroupIngressInput{
@@ -78,7 +78,7 @@ func (r *resourceSecurityGroupIngressRule) deleteSecurityGroupRule(ctx context.C
 	return err
 }
 
-func (r *resourceSecurityGroupIngressRule) findSecurityGroupRuleByID(ctx context.Context, id string) (*ec2.SecurityGroupRule, error) {
+func (r *securityGroupIngressRuleResource) findSecurityGroupRuleByID(ctx context.Context, id string) (*ec2.SecurityGroupRule, error) {
 	conn := r.Meta().EC2Conn(ctx)
 
 	return FindSecurityGroupIngressRuleByID(ctx, conn, id)
@@ -266,7 +266,7 @@ func (r *securityGroupRuleResource) Update(ctx context.Context, request resource
 		input := &ec2.ModifySecurityGroupRulesInput{
 			GroupId: flex.StringFromFramework(ctx, new.SecurityGroupID),
 			SecurityGroupRules: []*ec2.SecurityGroupRuleUpdate{{
-				SecurityGroupRule:   r.expandSecurityGroupRuleRequest(ctx, &new),
+				SecurityGroupRule:   new.expandSecurityGroupRuleRequest(ctx),
 				SecurityGroupRuleId: flex.StringFromFramework(ctx, new.ID),
 			}},
 		}
@@ -346,67 +346,8 @@ func (r *securityGroupRuleResource) arn(_ context.Context, id string) types.Stri
 		AccountID: r.Meta().AccountID,
 		Resource:  fmt.Sprintf("security-group-rule/%s", id),
 	}.String()
+
 	return types.StringValue(arn)
-}
-
-func (r *securityGroupRuleResource) expandIPPermission(ctx context.Context, data *resourceSecurityGroupRuleData) *ec2.IpPermission {
-	apiObject := &ec2.IpPermission{
-		FromPort:   flex.Int64FromFramework(ctx, data.FromPort),
-		IpProtocol: flex.StringFromFramework(ctx, data.IPProtocol),
-		ToPort:     flex.Int64FromFramework(ctx, data.ToPort),
-	}
-
-	if !data.CIDRIPv4.IsNull() {
-		apiObject.IpRanges = []*ec2.IpRange{{
-			CidrIp:      flex.StringFromFramework(ctx, data.CIDRIPv4),
-			Description: flex.StringFromFramework(ctx, data.Description),
-		}}
-	}
-
-	if !data.CIDRIPv6.IsNull() {
-		apiObject.Ipv6Ranges = []*ec2.Ipv6Range{{
-			CidrIpv6:    flex.StringFromFramework(ctx, data.CIDRIPv6),
-			Description: flex.StringFromFramework(ctx, data.Description),
-		}}
-	}
-
-	if !data.PrefixListID.IsNull() {
-		apiObject.PrefixListIds = []*ec2.PrefixListId{{
-			PrefixListId: flex.StringFromFramework(ctx, data.PrefixListID),
-			Description:  flex.StringFromFramework(ctx, data.Description),
-		}}
-	}
-
-	if !data.ReferencedSecurityGroupID.IsNull() {
-		apiObject.UserIdGroupPairs = []*ec2.UserIdGroupPair{{
-			Description: flex.StringFromFramework(ctx, data.Description),
-		}}
-
-		// [UserID/]GroupID.
-		if parts := strings.Split(data.ReferencedSecurityGroupID.ValueString(), "/"); len(parts) == 2 {
-			apiObject.UserIdGroupPairs[0].GroupId = aws.String(parts[1])
-			apiObject.UserIdGroupPairs[0].UserId = aws.String(parts[0])
-		} else {
-			apiObject.UserIdGroupPairs[0].GroupId = flex.StringFromFramework(ctx, data.ReferencedSecurityGroupID)
-		}
-	}
-
-	return apiObject
-}
-
-func (r *securityGroupRuleResource) expandSecurityGroupRuleRequest(ctx context.Context, data *resourceSecurityGroupRuleData) *ec2.SecurityGroupRuleRequest {
-	apiObject := &ec2.SecurityGroupRuleRequest{
-		CidrIpv4:          flex.StringFromFramework(ctx, data.CIDRIPv4),
-		CidrIpv6:          flex.StringFromFramework(ctx, data.CIDRIPv6),
-		Description:       flex.StringFromFramework(ctx, data.Description),
-		FromPort:          flex.Int64FromFramework(ctx, data.FromPort),
-		IpProtocol:        flex.StringFromFramework(ctx, data.IPProtocol),
-		PrefixListId:      flex.StringFromFramework(ctx, data.PrefixListID),
-		ReferencedGroupId: flex.StringFromFramework(ctx, data.ReferencedSecurityGroupID),
-		ToPort:            flex.Int64FromFramework(ctx, data.ToPort),
-	}
-
-	return apiObject
 }
 
 func (r *securityGroupRuleResource) flattenReferencedSecurityGroup(ctx context.Context, apiObject *ec2.ReferencedSecurityGroup) types.String {
@@ -437,6 +378,66 @@ type resourceSecurityGroupRuleData struct {
 	Tags                      types.Map    `tfsdk:"tags"`
 	TagsAll                   types.Map    `tfsdk:"tags_all"`
 	ToPort                    types.Int64  `tfsdk:"to_port"`
+}
+
+func (d *resourceSecurityGroupRuleData) expandIPPermission(ctx context.Context) *ec2.IpPermission {
+	apiObject := &ec2.IpPermission{
+		FromPort:   flex.Int64FromFramework(ctx, d.FromPort),
+		IpProtocol: flex.StringFromFramework(ctx, d.IPProtocol),
+		ToPort:     flex.Int64FromFramework(ctx, d.ToPort),
+	}
+
+	if !d.CIDRIPv4.IsNull() {
+		apiObject.IpRanges = []*ec2.IpRange{{
+			CidrIp:      flex.StringFromFramework(ctx, d.CIDRIPv4),
+			Description: flex.StringFromFramework(ctx, d.Description),
+		}}
+	}
+
+	if !d.CIDRIPv6.IsNull() {
+		apiObject.Ipv6Ranges = []*ec2.Ipv6Range{{
+			CidrIpv6:    flex.StringFromFramework(ctx, d.CIDRIPv6),
+			Description: flex.StringFromFramework(ctx, d.Description),
+		}}
+	}
+
+	if !d.PrefixListID.IsNull() {
+		apiObject.PrefixListIds = []*ec2.PrefixListId{{
+			PrefixListId: flex.StringFromFramework(ctx, d.PrefixListID),
+			Description:  flex.StringFromFramework(ctx, d.Description),
+		}}
+	}
+
+	if !d.ReferencedSecurityGroupID.IsNull() {
+		apiObject.UserIdGroupPairs = []*ec2.UserIdGroupPair{{
+			Description: flex.StringFromFramework(ctx, d.Description),
+		}}
+
+		// [UserID/]GroupID.
+		if parts := strings.Split(d.ReferencedSecurityGroupID.ValueString(), "/"); len(parts) == 2 {
+			apiObject.UserIdGroupPairs[0].GroupId = aws.String(parts[1])
+			apiObject.UserIdGroupPairs[0].UserId = aws.String(parts[0])
+		} else {
+			apiObject.UserIdGroupPairs[0].GroupId = flex.StringFromFramework(ctx, d.ReferencedSecurityGroupID)
+		}
+	}
+
+	return apiObject
+}
+
+func (d *resourceSecurityGroupRuleData) expandSecurityGroupRuleRequest(ctx context.Context) *ec2.SecurityGroupRuleRequest {
+	apiObject := &ec2.SecurityGroupRuleRequest{
+		CidrIpv4:          flex.StringFromFramework(ctx, d.CIDRIPv4),
+		CidrIpv6:          flex.StringFromFramework(ctx, d.CIDRIPv6),
+		Description:       flex.StringFromFramework(ctx, d.Description),
+		FromPort:          flex.Int64FromFramework(ctx, d.FromPort),
+		IpProtocol:        flex.StringFromFramework(ctx, d.IPProtocol),
+		PrefixListId:      flex.StringFromFramework(ctx, d.PrefixListID),
+		ReferencedGroupId: flex.StringFromFramework(ctx, d.ReferencedSecurityGroupID),
+		ToPort:            flex.Int64FromFramework(ctx, d.ToPort),
+	}
+
+	return apiObject
 }
 
 func (d *resourceSecurityGroupRuleData) sourceAttributeName() string {
