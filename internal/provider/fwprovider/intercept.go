@@ -340,8 +340,6 @@ func (w *wrappedResource) ModifyPlan(ctx context.Context, request resource.Modif
 	if v, ok := w.inner.(resource.ResourceWithModifyPlan); ok {
 		ctx = w.bootstrapContext(ctx, w.meta)
 		v.ModifyPlan(ctx, request, response)
-
-		return
 	}
 }
 
@@ -366,6 +364,16 @@ func (w *wrappedResource) UpgradeState(ctx context.Context) map[int64]resource.S
 		ctx = w.bootstrapContext(ctx, w.meta)
 
 		return v.UpgradeState(ctx)
+	}
+
+	return nil
+}
+
+func (w *wrappedResource) MoveState(ctx context.Context) []resource.StateMover {
+	if v, ok := w.inner.(resource.ResourceWithMoveState); ok {
+		ctx = w.bootstrapContext(ctx, w.meta)
+
+		return v.MoveState(ctx)
 	}
 
 	return nil
