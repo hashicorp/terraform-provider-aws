@@ -20,12 +20,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newSecurityGroupRulesDataSource,
-		},
-		{
 			Factory: newSecurityGroupRuleDataSource,
 			Name:    "Security Group Rule",
-			Tags:    &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory: newSecurityGroupRulesDataSource,
+			Name:    "Security Group Rules",
 		},
 	}
 }

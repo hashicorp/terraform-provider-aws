@@ -18,7 +18,6 @@ import (
 )
 
 // @FrameworkDataSource(name="Security Group Rule")
-// @Tags
 func newSecurityGroupRuleDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &securityGroupRuleDataSource{}, nil
 }
@@ -88,6 +87,7 @@ func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasour
 	}
 
 	conn := d.Meta().EC2Conn(ctx)
+	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
 
 	input := &ec2.DescribeSecurityGroupRulesInput{
 		Filters: newCustomFilterListFramework(ctx, data.Filters),
@@ -122,9 +122,8 @@ func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasour
 	data.ReferencedSecurityGroupID = flattenReferencedSecurityGroup(ctx, d, output.ReferencedGroupInfo)
 	data.SecurityGroupID = flex.StringToFramework(ctx, output.GroupId)
 	data.SecurityGroupRuleID = flex.StringToFramework(ctx, output.SecurityGroupRuleId)
+	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 	data.ToPort = flex.Int64ToFramework(ctx, output.ToPort)
-
-	setTagsOutV2(ctx, output.Tags)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
