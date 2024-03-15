@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
@@ -42,10 +43,10 @@ func newResourceSecurityGroupIngressRule(context.Context) (resource.ResourceWith
 }
 
 type resourceSecurityGroupIngressRule struct {
-	resourceSecurityGroupRule
+	securityGroupRuleResource
 }
 
-func (r *resourceSecurityGroupIngressRule) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (*resourceSecurityGroupIngressRule) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_vpc_security_group_ingress_rule"
 }
 
@@ -85,16 +86,17 @@ func (r *resourceSecurityGroupIngressRule) findSecurityGroupRuleByID(ctx context
 
 // Base structure and methods for VPC security group rules.
 
-type resourceSecurityGroupRule struct {
+type securityGroupRuleResource struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 
 	create   func(context.Context, *resourceSecurityGroupRuleData) (string, error)
 	delete   func(context.Context, *resourceSecurityGroupRuleData) error
 	findByID func(context.Context, string) (*ec2.SecurityGroupRule, error)
 }
 
-func (r *resourceSecurityGroupRule) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *securityGroupRuleResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arn": schema.StringAttribute{
 				Computed: true,
@@ -127,7 +129,7 @@ func (r *resourceSecurityGroupRule) Schema(ctx context.Context, req resource.Sch
 			"ip_protocol": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
-					NormalizeIPProtocol(),
+					normalizeIPProtocol{},
 				},
 			},
 			"prefix_list_id": schema.StringAttribute{
@@ -160,11 +162,9 @@ func (r *resourceSecurityGroupRule) Schema(ctx context.Context, req resource.Sch
 	}
 }
 
-func (r *resourceSecurityGroupRule) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *securityGroupRuleResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data resourceSecurityGroupRuleData
-
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -193,11 +193,9 @@ func (r *resourceSecurityGroupRule) Create(ctx context.Context, request resource
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceSecurityGroupRule) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *securityGroupRuleResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data resourceSecurityGroupRuleData
-
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -205,9 +203,7 @@ func (r *resourceSecurityGroupRule) Read(ctx context.Context, request resource.R
 	output, err := r.findByID(ctx, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
-		tflog.Warn(ctx, "VPC Security Group Rule not found, removing from state", map[string]interface{}{
-			"id": data.ID.ValueString(),
-		})
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
 		return
@@ -246,17 +242,13 @@ func (r *resourceSecurityGroupRule) Read(ctx context.Context, request resource.R
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceSecurityGroupRule) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *securityGroupRuleResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new resourceSecurityGroupRuleData
-
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
-
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -291,11 +283,9 @@ func (r *resourceSecurityGroupRule) Update(ctx context.Context, request resource
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceSecurityGroupRule) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *securityGroupRuleResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data resourceSecurityGroupRuleData
-
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -316,22 +306,14 @@ func (r *resourceSecurityGroupRule) Delete(ctx context.Context, request resource
 	}
 }
 
-func (r *resourceSecurityGroupRule) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
-}
-
-func (r *resourceSecurityGroupRule) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+func (r *securityGroupRuleResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	if !request.State.Raw.IsNull() && !request.Plan.Raw.IsNull() {
 		var old, new resourceSecurityGroupRuleData
-
 		response.Diagnostics.Append(request.State.Get(ctx, &old)...)
-
 		if response.Diagnostics.HasError() {
 			return
 		}
-
 		response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
-
 		if response.Diagnostics.HasError() {
 			return
 		}
@@ -345,7 +327,7 @@ func (r *resourceSecurityGroupRule) ModifyPlan(ctx context.Context, request reso
 	r.SetTagsAll(ctx, request, response)
 }
 
-func (r *resourceSecurityGroupRule) ConfigValidators(_ context.Context) []resource.ConfigValidator {
+func (r *securityGroupRuleResource) ConfigValidators(context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourcevalidator.ExactlyOneOf(
 			path.MatchRoot("cidr_ipv4"),
@@ -356,10 +338,10 @@ func (r *resourceSecurityGroupRule) ConfigValidators(_ context.Context) []resour
 	}
 }
 
-func (r *resourceSecurityGroupRule) arn(_ context.Context, id string) types.String {
+func (r *securityGroupRuleResource) arn(_ context.Context, id string) types.String {
 	arn := arn.ARN{
 		Partition: r.Meta().Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    r.Meta().Region,
 		AccountID: r.Meta().AccountID,
 		Resource:  fmt.Sprintf("security-group-rule/%s", id),
@@ -367,7 +349,7 @@ func (r *resourceSecurityGroupRule) arn(_ context.Context, id string) types.Stri
 	return types.StringValue(arn)
 }
 
-func (r *resourceSecurityGroupRule) expandIPPermission(ctx context.Context, data *resourceSecurityGroupRuleData) *ec2.IpPermission {
+func (r *securityGroupRuleResource) expandIPPermission(ctx context.Context, data *resourceSecurityGroupRuleData) *ec2.IpPermission {
 	apiObject := &ec2.IpPermission{
 		FromPort:   flex.Int64FromFramework(ctx, data.FromPort),
 		IpProtocol: flex.StringFromFramework(ctx, data.IPProtocol),
@@ -412,7 +394,7 @@ func (r *resourceSecurityGroupRule) expandIPPermission(ctx context.Context, data
 	return apiObject
 }
 
-func (r *resourceSecurityGroupRule) expandSecurityGroupRuleRequest(ctx context.Context, data *resourceSecurityGroupRuleData) *ec2.SecurityGroupRuleRequest {
+func (r *securityGroupRuleResource) expandSecurityGroupRuleRequest(ctx context.Context, data *resourceSecurityGroupRuleData) *ec2.SecurityGroupRuleRequest {
 	apiObject := &ec2.SecurityGroupRuleRequest{
 		CidrIpv4:          flex.StringFromFramework(ctx, data.CIDRIPv4),
 		CidrIpv6:          flex.StringFromFramework(ctx, data.CIDRIPv6),
@@ -427,7 +409,7 @@ func (r *resourceSecurityGroupRule) expandSecurityGroupRuleRequest(ctx context.C
 	return apiObject
 }
 
-func (r *resourceSecurityGroupRule) flattenReferencedSecurityGroup(ctx context.Context, apiObject *ec2.ReferencedSecurityGroup) types.String {
+func (r *securityGroupRuleResource) flattenReferencedSecurityGroup(ctx context.Context, apiObject *ec2.ReferencedSecurityGroup) types.String {
 	if apiObject == nil {
 		return types.StringNull()
 	}
@@ -474,11 +456,7 @@ func (d *resourceSecurityGroupRuleData) sourceAttributeName() string {
 
 type normalizeIPProtocol struct{}
 
-func NormalizeIPProtocol() planmodifier.String {
-	return normalizeIPProtocol{}
-}
-
-func (m normalizeIPProtocol) Description(context.Context) string {
+func (normalizeIPProtocol) Description(context.Context) string {
 	return "Resolve differences between IP protocol names and numbers"
 }
 
@@ -486,7 +464,7 @@ func (m normalizeIPProtocol) MarkdownDescription(ctx context.Context) string {
 	return m.Description(ctx)
 }
 
-func (m normalizeIPProtocol) PlanModifyString(ctx context.Context, request planmodifier.StringRequest, response *planmodifier.StringResponse) {
+func (normalizeIPProtocol) PlanModifyString(_ context.Context, request planmodifier.StringRequest, response *planmodifier.StringResponse) {
 	if request.StateValue.IsNull() {
 		response.PlanValue = request.PlanValue
 		return
@@ -494,9 +472,10 @@ func (m normalizeIPProtocol) PlanModifyString(ctx context.Context, request planm
 
 	// If the state value is semantically equivalent to the planned value
 	// then return the state value, else return the planned value.
-	if ProtocolForValue(request.StateValue.ValueString()) == ProtocolForValue(request.PlanValue.ValueString()) {
+	if protocolForValue(request.StateValue.ValueString()) == protocolForValue(request.PlanValue.ValueString()) {
 		response.PlanValue = request.StateValue
 		return
 	}
+
 	response.PlanValue = request.PlanValue
 }

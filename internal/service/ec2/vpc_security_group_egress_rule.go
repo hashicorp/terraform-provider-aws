@@ -24,7 +24,7 @@ func newResourceSecurityGroupEgressRule(context.Context) (resource.ResourceWithC
 }
 
 type resourceSecurityGroupEgressRule struct {
-	resourceSecurityGroupRule
+	securityGroupRuleResource
 }
 
 func (r *resourceSecurityGroupEgressRule) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {

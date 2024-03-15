@@ -583,7 +583,7 @@ func SecurityGroupRuleHash(v interface{}) int {
 	m := v.(map[string]interface{})
 	buf.WriteString(fmt.Sprintf("%d-", m["from_port"].(int)))
 	buf.WriteString(fmt.Sprintf("%d-", m["to_port"].(int)))
-	p := ProtocolForValue(m["protocol"].(string))
+	p := protocolForValue(m["protocol"].(string))
 	buf.WriteString(fmt.Sprintf("%s-", p))
 	buf.WriteString(fmt.Sprintf("%t-", m["self"].(bool)))
 
@@ -825,7 +825,7 @@ func ExpandIPPerms(group *ec2.SecurityGroup, configured []interface{}) ([]*ec2.I
 		var perm ec2.IpPermission
 		m := mRaw.(map[string]interface{})
 
-		perm.IpProtocol = aws.String(ProtocolForValue(m["protocol"].(string)))
+		perm.IpProtocol = aws.String(protocolForValue(m["protocol"].(string)))
 
 		if protocol, fromPort, toPort := aws.StringValue(perm.IpProtocol), m["from_port"].(int), m["to_port"].(int); protocol != "-1" {
 			perm.FromPort = aws.Int64(int64(fromPort))
@@ -1455,7 +1455,7 @@ func idHash(rType, protocol string, toPort, fromPort int64, self bool) string {
 func ProtocolStateFunc(v interface{}) string {
 	switch v := v.(type) {
 	case string:
-		p := ProtocolForValue(v)
+		p := protocolForValue(v)
 		return p
 	default:
 		log.Printf("[WARN] Non String value given for Protocol: %#v", v)
@@ -1463,11 +1463,11 @@ func ProtocolStateFunc(v interface{}) string {
 	}
 }
 
-// ProtocolForValue converts a valid Internet Protocol number into it's name
+// protocolForValue converts a valid Internet Protocol number into it's name
 // representation. If a name is given, it validates that it's a proper protocol
 // name. Names/numbers are as defined at
 // https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
-func ProtocolForValue(v string) string {
+func protocolForValue(v string) string {
 	// special case -1
 	protocol := strings.ToLower(v)
 	if protocol == "-1" || protocol == "all" {

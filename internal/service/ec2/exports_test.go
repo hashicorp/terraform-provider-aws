@@ -24,7 +24,10 @@ var (
 	NewAttributeFilterList         = newAttributeFilterList
 	NewCustomFilterList            = newCustomFilterList
 	NewTagFilterList               = newTagFilterList
+	ProtocolForValue               = protocolForValue
 	StopInstance                   = stopInstance
 	UpdateTags                     = updateTags
 	UpdateTagsV2                   = updateTagsV2
 )
+
+type NormalizeIPProtocol = normalizeIPProtocol

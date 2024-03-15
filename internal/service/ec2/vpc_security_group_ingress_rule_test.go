@@ -67,7 +67,7 @@ func TestNormalizeIPProtocol(t *testing.T) {
 			response := planmodifier.StringResponse{
 				PlanValue: request.PlanValue,
 			}
-			tfec2.NormalizeIPProtocol().PlanModifyString(ctx, request, &response)
+			tfec2.NormalizeIPProtocol{}.PlanModifyString(ctx, request, &response)
 
 			if !response.Diagnostics.HasError() && test.expectError {
 				t.Fatal("expected error, got no error")

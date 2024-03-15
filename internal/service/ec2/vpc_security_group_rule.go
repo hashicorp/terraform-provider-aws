@@ -70,7 +70,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				ForceNew: true,
 				// Support existing configurations that have non-zero from_port and to_port defined with all protocols
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					protocol := ProtocolForValue(d.Get("protocol").(string))
+					protocol := protocolForValue(d.Get("protocol").(string))
 					if protocol == "-1" && old == "0" {
 						return true
 					}
@@ -135,7 +135,7 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				ForceNew: true,
 				// Support existing configurations that have non-zero from_port and to_port defined with all protocols
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					protocol := ProtocolForValue(d.Get("protocol").(string))
+					protocol := protocolForValue(d.Get("protocol").(string))
 					if protocol == "-1" && old == "0" {
 						return true
 					}
@@ -452,7 +452,7 @@ func resourceSecurityGroupRuleImport(_ context.Context, d *schema.ResourceData, 
 		}
 	}
 
-	protocolName := ProtocolForValue(protocol)
+	protocolName := protocolForValue(protocol)
 	if protocolName == "icmp" || protocolName == "icmpv6" {
 		if v, err := strconv.Atoi(fromPort); err != nil || v < -1 || v > 255 {
 			return nil, invalidIDError("invalid icmp type")
@@ -757,7 +757,7 @@ func SecurityGroupRuleCreateID(securityGroupID, ruleType string, ip *ec2.IpPermi
 
 func expandIPPermission(d *schema.ResourceData, sg *ec2.SecurityGroup) *ec2.IpPermission { // nosemgrep:ci.caps5-in-func-name
 	apiObject := &ec2.IpPermission{
-		IpProtocol: aws.String(ProtocolForValue(d.Get("protocol").(string))),
+		IpProtocol: aws.String(protocolForValue(d.Get("protocol").(string))),
 	}
 
 	// InvalidParameterValue: When protocol is ALL, you cannot specify from-port.
