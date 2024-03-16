@@ -26,6 +26,7 @@ import (
 // Endpoint constants defined by the AWS SDK v1 but not defined in the AWS SDK v2.
 const (
 	AccessAnalyzerEndpointID             = "access-analyzer"
+	ACMPCAEndpointID                     = "acm-pca"
 	AMPEndpointID                        = "aps"
 	AthenaEndpointID                     = "athena"
 	AuditManagerEndpointID               = "auditmanager"

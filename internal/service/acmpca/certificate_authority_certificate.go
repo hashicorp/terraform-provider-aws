@@ -7,8 +7,8 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/acmpca"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -54,7 +54,7 @@ func ResourceCertificateAuthorityCertificate() *schema.Resource {
 
 func resourceCertificateAuthorityCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
+	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	certificateAuthorityARN := d.Get("certificate_authority_arn").(string)
 
@@ -66,7 +66,7 @@ func resourceCertificateAuthorityCertificateCreate(ctx context.Context, d *schem
 		input.CertificateChain = []byte(v)
 	}
 
-	_, err := conn.ImportCertificateAuthorityCertificateWithContext(ctx, input)
+	_, err := conn.ImportCertificateAuthorityCertificate(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "associating ACM PCA Certificate with Certificate Authority (%s): %s", certificateAuthorityARN, err)
 	}
@@ -78,7 +78,7 @@ func resourceCertificateAuthorityCertificateCreate(ctx context.Context, d *schem
 
 func resourceCertificateAuthorityCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ACMPCAConn(ctx)
+	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	output, err := FindCertificateAuthorityCertificateByARN(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {

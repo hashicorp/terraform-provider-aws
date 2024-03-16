@@ -13,13 +13,14 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/acmpca"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -295,7 +296,7 @@ func TestAccACMPCACertificate_Validity_absolute(t *testing.T) {
 
 func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_acmpca_certificate" {
@@ -307,11 +308,11 @@ func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc 
 				CertificateAuthorityArn: aws.String(rs.Primary.Attributes["certificate_authority_arn"]),
 			}
 
-			output, err := conn.GetCertificateWithContext(ctx, input)
-			if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+			output, err := conn.GetCertificate(ctx, input)
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				return nil
 			}
-			if tfawserr.ErrMessageContains(err, acmpca.ErrCodeInvalidStateException, "not in the correct state to have issued certificates") {
+			if errs.IsAErrorMessageContains[*awstypes.InvalidStateException](err, "not in the correct state to have issued certificates") {
 				// This is returned when checking root certificates and the certificate has not been associated with the certificate authority
 				return nil
 			}
@@ -335,13 +336,13 @@ func testAccCheckCertificateExists(ctx context.Context, resourceName string) res
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
 		input := &acmpca.GetCertificateInput{
 			CertificateArn:          aws.String(rs.Primary.ID),
 			CertificateAuthorityArn: aws.String(rs.Primary.Attributes["certificate_authority_arn"]),
 		}
 
-		output, err := conn.GetCertificateWithContext(ctx, input)
+		output, err := conn.GetCertificate(ctx, input)
 
 		if err != nil {
 			return err
@@ -629,22 +630,22 @@ func TestExpandValidityValue(t *testing.T) {
 		Expected int64
 	}{
 		{
-			Type:     acmpca.ValidityPeriodTypeEndDate,
+			Type:     string(awstypes.ValidityPeriodTypeEndDate),
 			Value:    "2021-02-26T16:04:00Z",
 			Expected: 20210226160400,
 		},
 		{
-			Type:     acmpca.ValidityPeriodTypeEndDate,
+			Type:     string(awstypes.ValidityPeriodTypeEndDate),
 			Value:    "2021-02-26T16:04:00-08:00",
 			Expected: 20210227000400,
 		},
 		{
-			Type:     acmpca.ValidityPeriodTypeAbsolute,
+			Type:     string(awstypes.ValidityPeriodTypeAbsolute),
 			Value:    "1614385420",
 			Expected: 1614385420,
 		},
 		{
-			Type:     acmpca.ValidityPeriodTypeYears,
+			Type:     string(awstypes.ValidityPeriodTypeYears),
 			Value:    "2",
 			Expected: 2,
 		},

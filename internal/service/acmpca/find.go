@@ -6,22 +6,23 @@ package acmpca
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/acmpca"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // FindCertificateAuthorityCertificateByARN returns the certificate for the certificate authority corresponding to the specified ARN.
 // Returns a retry.NotFoundError if no certificate authority is found or the certificate authority does not have a certificate assigned.
-func FindCertificateAuthorityCertificateByARN(ctx context.Context, conn *acmpca.ACMPCA, arn string) (*acmpca.GetCertificateAuthorityCertificateOutput, error) {
+func FindCertificateAuthorityCertificateByARN(ctx context.Context, conn *acmpca.Client, arn string) (*acmpca.GetCertificateAuthorityCertificateOutput, error) {
 	input := &acmpca.GetCertificateAuthorityCertificateInput{
 		CertificateAuthorityArn: aws.String(arn),
 	}
 
-	output, err := conn.GetCertificateAuthorityCertificateWithContext(ctx, input)
-	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+	output, err := conn.GetCertificateAuthorityCertificate(ctx, input)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -41,14 +42,14 @@ func FindCertificateAuthorityCertificateByARN(ctx context.Context, conn *acmpca.
 	return output, nil
 }
 
-func FindPolicyByARN(ctx context.Context, conn *acmpca.ACMPCA, arn string) (string, error) {
+func FindPolicyByARN(ctx context.Context, conn *acmpca.Client, arn string) (string, error) {
 	input := &acmpca.GetPolicyInput{
 		ResourceArn: aws.String(arn),
 	}
 
-	output, err := conn.GetPolicyWithContext(ctx, input)
+	output, err := conn.GetPolicy(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return "", &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -63,46 +64,32 @@ func FindPolicyByARN(ctx context.Context, conn *acmpca.ACMPCA, arn string) (stri
 		return "", tfresource.NewEmptyResultError(input)
 	}
 
-	return aws.StringValue(output.Policy), nil
+	return aws.ToString(output.Policy), nil
 }
 
-func FindPermission(ctx context.Context, conn *acmpca.ACMPCA, certificateAuthorityARN, principal, sourceAccount string) (*acmpca.Permission, error) {
+func FindPermission(ctx context.Context, conn *acmpca.Client, certificateAuthorityARN, principal, sourceAccount string) (*awstypes.Permission, error) {
 	input := &acmpca.ListPermissionsInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	}
-	var output []*acmpca.Permission
 
-	err := conn.ListPermissionsPagesWithContext(ctx, input, func(page *acmpca.ListPermissionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	var results []awstypes.Permission
+	paginator := acmpca.NewListPermissionsPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
 		}
 
-		for _, v := range page.Permissions {
-			if v != nil {
-				output = append(output, v)
+		for _, permission := range page.Permissions {
+			if aws.ToString(permission.Principal) == principal && (sourceAccount == "" || aws.ToString(permission.SourceAccount) == sourceAccount) {
+				results = append(results, permission)
 			}
-		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) ||
-		tfawserr.ErrMessageContains(err, acmpca.ErrCodeInvalidStateException, "The certificate authority is in the DELETED state") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
 		}
 	}
 
+	permission, err := tfresource.AssertSingleValueResult(results)
 	if err != nil {
 		return nil, err
 	}
-
-	for _, v := range output {
-		if aws.StringValue(v.Principal) == principal && (sourceAccount == "" || aws.StringValue(v.SourceAccount) == sourceAccount) {
-			return v, nil
-		}
-	}
-
-	return nil, &retry.NotFoundError{LastRequest: input}
+	return permission, nil
 }
