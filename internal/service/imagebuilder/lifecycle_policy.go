@@ -279,7 +279,7 @@ func (r *resourceLifecyclePolicy) Create(ctx context.Context, req resource.Creat
 		Name:          aws.String(plan.Name.ValueString()),
 		ResourceType:  awstypes.LifecyclePolicyResourceType(plan.ResourceType.ValueString()),
 		Status:        awstypes.LifecyclePolicyStatus(plan.Status.ValueString()),
-		//Tags:          getTagsIn(ctx),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if !plan.Description.IsNull() {
@@ -1054,6 +1054,8 @@ type resourceLifecyclePolicyData struct {
 	Status            types.String `tfsdk:"status"`
 	PolicyDetails     types.Set    `tfsdk:"policy_details"`
 	ResourceSelection types.List   `tfsdk:"resource_selection"`
+	Tags              types.Map    `tfsdk:"tags"`
+	TagsAll           types.Map    `tfsdk:"tags_all"`
 }
 
 type resourcePolicyDetailsData struct {
