@@ -122,15 +122,15 @@ resource "aws_iam_instance_profile" "test" {
 resource "aws_imagebuilder_lifecycle_policy" "test" {
   name           = %[1]q
   execution_role = aws_iam_role.test.arn
-  resource_type = "AMI_IMAGE"
+  resource_type  = "AMI_IMAGE"
   policy_details {
-	action {
-	  type = "DELETE"
-	}
-	filter {
-	  ype = "AGE"
-	  value = 6
-	}
+    action {
+      type = "DELETE"
+    }
+    filter {
+      ype   = "AGE"
+      value = 6
+    }
   }
 }
 `, rName)
