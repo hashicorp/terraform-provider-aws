@@ -128,7 +128,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
       type = "DELETE"
     }
     filter {
-      ype   = "AGE"
+      type  = "AGE"
       value = 6
     }
   }
