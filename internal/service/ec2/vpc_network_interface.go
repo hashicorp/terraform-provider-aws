@@ -73,6 +73,12 @@ func ResourceNetworkInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
+			"enable_primary_ipv6": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				ForceNew: true,
+			},
 			"interface_type": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -348,6 +354,10 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 		input.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("enable_primary_ipv6"); ok {
+		input.EnablePrimaryIpv6 = aws.Bool(v.(bool))
+	}
+
 	if v, ok := d.GetOk("interface_type"); ok {
 		input.InterfaceType = aws.String(v.(string))
 	}
@@ -529,6 +539,11 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.Set("ipv4_prefix_count", len(eni.Ipv4Prefixes))
 	d.Set("ipv6_address_count", len(eni.Ipv6Addresses))
+	if len(eni.Ipv6Addresses) > 0 {
+		if err := d.Set("enable_primary_ipv6", eni.Ipv6Addresses[0].IsPrimaryIpv6); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting enable_primary_ipv6: %s", err)
+		}
+	}
 	if err := d.Set("ipv6_address_list", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ipv6 address list: %s", err)
 	}
@@ -804,6 +819,18 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
+	if d.HasChange("enable_primary_ipv6") {
+		input := &ec2.ModifyNetworkInterfaceAttributeInput{
+			NetworkInterfaceId: aws.String(d.Id()),
+			EnablePrimaryIpv6:  aws.Bool(d.Get("source_dest_check").(bool)),
+		}
+
+		_, err := conn.ModifyNetworkInterfaceAttributeWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) EnablePrimaryIpv6: %s", d.Id(), err)
+		}
+	}
 	if d.HasChange("ipv6_addresses") && !d.Get("ipv6_address_list_enabled").(bool) {
 		o, n := d.GetChange("ipv6_addresses")
 		if o == nil {
