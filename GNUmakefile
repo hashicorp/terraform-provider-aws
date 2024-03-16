@@ -386,7 +386,7 @@ testacc-lint-fix: ## Fix acceptance test linter findings
 	@echo "Fixing acceptance tests with terrafmt"
 	find $(SVC_DIR) -type f -name '*_test.go' \
 	| sort -u \
-	| xargs -I {} ~/go/bin/terrafmt fmt  --fmtcompat {}
+	| xargs -I {} terrafmt fmt  --fmtcompat {}
 
 testacc-short: fmtcheck ## Run acceptace tests with the -short flag
 	@echo "Running acceptance tests with -short flag"
