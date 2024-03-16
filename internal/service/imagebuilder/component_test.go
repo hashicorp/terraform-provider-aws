@@ -9,14 +9,16 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -45,10 +47,10 @@ func TestAccImageBuilderComponent_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner"),
-					resource.TestCheckResourceAttr(resourceName, "platform", imagebuilder.PlatformLinux),
+					resource.TestCheckResourceAttr(resourceName, "platform", string(types.PlatformLinux)),
 					resource.TestCheckResourceAttr(resourceName, "supported_os_versions.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "type", imagebuilder.ComponentTypeBuild),
+					resource.TestCheckResourceAttr(resourceName, "type", string(types.ComponentTypeBuild)),
 					resource.TestCheckResourceAttr(resourceName, "version", "1.0.0"),
 				),
 			},
@@ -185,7 +187,7 @@ func TestAccImageBuilderComponent_Platform_windows(t *testing.T) {
 				Config: testAccComponentConfig_platformWindows(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckComponentExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "platform", imagebuilder.PlatformWindows),
+					resource.TestCheckResourceAttr(resourceName, "platform", string(types.PlatformWindows)),
 				),
 			},
 			{
@@ -301,7 +303,7 @@ func TestAccImageBuilderComponent_uri(t *testing.T) {
 
 func testAccCheckComponentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_imagebuilder_component" {
@@ -312,14 +314,14 @@ func testAccCheckComponentDestroy(ctx context.Context) resource.TestCheckFunc {
 				ComponentBuildVersionArn: aws.String(rs.Primary.ID),
 			}
 
-			output, err := conn.GetComponentWithContext(ctx, input)
+			output, err := conn.GetComponent(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+			if errs.MessageContains(err, tfimagebuilder.ResourceNotFoundException, "cannot be found") {
 				continue
 			}
 
 			if err != nil {
-				return fmt.Errorf("error getting Image Builder Component (%s): %w", rs.Primary.ID, err)
+				return create.Error(names.ImageBuilder, create.ErrActionCheckingDestroyed, "tfimagebuilder", rs.Primary.ID, err)
 			}
 
 			if output != nil {
@@ -338,13 +340,13 @@ func testAccCheckComponentExists(ctx context.Context, resourceName string) resou
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ImageBuilderClient(ctx)
 
 		input := &imagebuilder.GetComponentInput{
 			ComponentBuildVersionArn: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.GetComponentWithContext(ctx, input)
+		_, err := conn.GetComponent(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error getting Image Builder Component (%s): %w", rs.Primary.ID, err)

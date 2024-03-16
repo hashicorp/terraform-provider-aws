@@ -6,8 +6,8 @@ package imagebuilder
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -83,8 +83,7 @@ func DataSourceComponent() *schema.Resource {
 
 func dataSourceComponentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.GetComponentInput{}
 
@@ -92,7 +91,7 @@ func dataSourceComponentRead(ctx context.Context, d *schema.ResourceData, meta i
 		input.ComponentBuildVersionArn = aws.String(v.(string))
 	}
 
-	output, err := conn.GetComponentWithContext(ctx, input)
+	output, err := conn.GetComponent(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Image Builder Component: %s", err)
@@ -104,7 +103,7 @@ func dataSourceComponentRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	component := output.Component
 
-	d.SetId(aws.StringValue(component.Arn))
+	d.SetId(aws.ToString(component.Arn))
 
 	d.Set("arn", component.Arn)
 	d.Set("change_description", component.ChangeDescription)
@@ -116,11 +115,9 @@ func dataSourceComponentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("name", component.Name)
 	d.Set("owner", component.Owner)
 	d.Set("platform", component.Platform)
-	d.Set("supported_os_versions", aws.StringValueSlice(component.SupportedOsVersions))
+	d.Set("supported_os_versions", component.SupportedOsVersions)
 
-	if err := d.Set("tags", KeyValueTags(ctx, component.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, component.Tags)
 
 	d.Set("type", component.Type)
 	d.Set("version", component.Version)

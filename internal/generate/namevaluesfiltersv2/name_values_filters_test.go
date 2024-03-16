@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfiltersv2"
 )
 
 func TestNameValuesFiltersMap(t *testing.T) {
@@ -17,17 +18,17 @@ func TestNameValuesFiltersMap(t *testing.T) {
 
 	testCases := []struct {
 		name    string
-		filters namevaluesfilters.NameValuesFilters
+		filters namevaluesfiltersv2.NameValuesFilters
 		want    map[string][]string
 	}{
 		{
 			name:    "empty",
-			filters: namevaluesfilters.New(map[string][]string{}),
+			filters: namevaluesfiltersv2.New(map[string][]string{}),
 			want:    map[string][]string{},
 		},
 		{
 			name: "empty_strings",
-			filters: namevaluesfilters.New(map[string][]string{
+			filters: namevaluesfiltersv2.New(map[string][]string{
 				"name1": {""},
 				"name2": {"", ""},
 			}),
@@ -35,7 +36,7 @@ func TestNameValuesFiltersMap(t *testing.T) {
 		},
 		{
 			name: "duplicates",
-			filters: namevaluesfilters.New(map[string][]string{
+			filters: namevaluesfiltersv2.New(map[string][]string{
 				"name1": {"value1"},
 				"name2": {"value2a", "value2b", "", "value2a", "value2c", "value2c"},
 			}),

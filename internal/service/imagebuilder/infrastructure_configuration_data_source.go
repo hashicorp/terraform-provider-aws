@@ -6,8 +6,8 @@ package imagebuilder
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -121,7 +121,7 @@ func DataSourceInfrastructureConfiguration() *schema.Resource {
 
 func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &imagebuilder.GetInfrastructureConfigurationInput{}
@@ -130,7 +130,7 @@ func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Re
 		input.InfrastructureConfigurationArn = aws.String(v.(string))
 	}
 
-	output, err := conn.GetInfrastructureConfigurationWithContext(ctx, input)
+	output, err := conn.GetInfrastructureConfiguration(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Image Builder Infrastructure Configuration (%s): %s", d.Id(), err)
@@ -142,7 +142,7 @@ func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Re
 
 	infrastructureConfiguration := output.InfrastructureConfiguration
 
-	d.SetId(aws.StringValue(infrastructureConfiguration.Arn))
+	d.SetId(aws.ToString(infrastructureConfiguration.Arn))
 	d.Set("arn", infrastructureConfiguration.Arn)
 	d.Set("date_created", infrastructureConfiguration.DateCreated)
 	d.Set("date_updated", infrastructureConfiguration.DateUpdated)
@@ -155,7 +155,7 @@ func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Re
 	}
 
 	d.Set("instance_profile_name", infrastructureConfiguration.InstanceProfileName)
-	d.Set("instance_types", aws.StringValueSlice(infrastructureConfiguration.InstanceTypes))
+	d.Set("instance_types", infrastructureConfiguration.InstanceTypes)
 	d.Set("key_pair", infrastructureConfiguration.KeyPair)
 	if infrastructureConfiguration.Logging != nil {
 		d.Set("logging", []interface{}{flattenLogging(infrastructureConfiguration.Logging)})
@@ -164,7 +164,7 @@ func dataSourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Re
 	}
 	d.Set("name", infrastructureConfiguration.Name)
 	d.Set("resource_tags", KeyValueTags(ctx, infrastructureConfiguration.ResourceTags).Map())
-	d.Set("security_group_ids", aws.StringValueSlice(infrastructureConfiguration.SecurityGroupIds))
+	d.Set("security_group_ids", infrastructureConfiguration.SecurityGroupIds)
 	d.Set("sns_topic_arn", infrastructureConfiguration.SnsTopicArn)
 	d.Set("subnet_id", infrastructureConfiguration.SubnetId)
 	d.Set("tags", KeyValueTags(ctx, infrastructureConfiguration.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())

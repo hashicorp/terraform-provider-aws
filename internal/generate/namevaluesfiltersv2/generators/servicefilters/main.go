@@ -20,6 +20,7 @@ const filename = `service_filters_v2_gen.go`
 // Representing types such as []*ec2.Filter, []*rds.Filter, ...
 var sliceServiceNames = []string{
 	"secretsmanager",
+	"imagebuilder",
 }
 
 type TemplateData struct {
@@ -82,10 +83,9 @@ var templateBody = `
 package namevaluesfiltersv2
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
+	"github.com/aws/aws-sdk-go-v2/aws"
 {{- range .SliceServiceNames }}
-{{- if eq . (. | FilterPackage) }}
-	{{ . }}
-{{- end }}
+	{{ . | FilterPackage }}
 {{- end }}
 )
 
@@ -93,7 +93,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 {{- range .SliceServiceNames }}
 
 // {{ . | Title }}Filters returns {{ . }} service filters.
-func (filters NameValuesFilters) {{ . | Title }}Filters() []*{{ . | FilterPackagePrefix }}.{{ . | FilterType }} {
+func (filters NameValuesFilters) {{ . | Title }}Filters() []{{ . | FilterPackagePrefix }}.{{ . | FilterType }} {
 	m := filters.Map()
 
 	if len(m) == 0 {
@@ -104,7 +104,7 @@ func (filters NameValuesFilters) {{ . | Title }}Filters() []*{{ . | FilterPackag
 
 	for k, v := range m {
 		filter := {{ . | FilterPackagePrefix }}.{{ . | FilterType }}{
-			{{ . | FilterTypeNameField }}:   { . | FilterPackagePrefix }}.FilterNameStringType(k),
+			{{ . | FilterTypeNameField }}:   {{ . | FilterPackagePrefix }}.FilterNameStringType(k),
 			{{ . | FilterTypeValuesField }}: v,
 		}
 

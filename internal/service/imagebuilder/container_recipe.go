@@ -8,14 +8,17 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
+	"github.com/aws/aws-sdk-go-v2/service/m2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
@@ -179,10 +182,10 @@ func ResourceContainerRecipe() *schema.Resource {
 													ValidateFunc: validation.IntBetween(1, 16000),
 												},
 												"volume_type": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ForceNew:     true,
-													ValidateFunc: validation.StringInSlice(imagebuilder.EbsVolumeType_Values(), false),
+													Type:             schema.TypeString,
+													Optional:         true,
+													ForceNew:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.EbsVolumeType](),
 												},
 											},
 										},
@@ -285,7 +288,7 @@ func ResourceContainerRecipe() *schema.Resource {
 
 func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.CreateContainerRecipeInput{
 		ClientToken: aws.String(id.UniqueId()),
@@ -297,7 +300,7 @@ func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("container_type"); ok {
-		input.ContainerType = aws.String(v.(string))
+		input.ContainerType = awstypes.ContainerType(v.(string))
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -329,7 +332,7 @@ func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if v, ok := d.GetOk("platform_override"); ok {
-		input.PlatformOverride = aws.String(v.(string))
+		input.PlatformOverride = awstypes.Platform(v.(string))
 	}
 
 	if v, ok := d.GetOk("target_repository"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -344,7 +347,7 @@ func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, 
 		input.WorkingDirectory = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateContainerRecipeWithContext(ctx, input)
+	output, err := conn.CreateContainerRecipe(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Image Builder Container Recipe: %s", err)
@@ -354,22 +357,22 @@ func resourceContainerRecipeCreate(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "creating Image Builder Container Recipe: empty response")
 	}
 
-	d.SetId(aws.StringValue(output.ContainerRecipeArn))
+	d.SetId(aws.ToString(output.ContainerRecipeArn))
 
 	return append(diags, resourceContainerRecipeRead(ctx, d, meta)...)
 }
 
 func resourceContainerRecipeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.GetContainerRecipeInput{
 		ContainerRecipeArn: aws.String(d.Id()),
 	}
 
-	output, err := conn.GetContainerRecipeWithContext(ctx, input)
+	output, err := conn.GetContainerRecipe(ctx, input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && errs.IsA[*types.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Image Builder Container Recipe (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -424,15 +427,15 @@ func resourceContainerRecipeUpdate(ctx context.Context, d *schema.ResourceData, 
 
 func resourceContainerRecipeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
+	conn := meta.(*conns.AWSClient).ImageBuilderClient(ctx)
 
 	input := &imagebuilder.DeleteContainerRecipeInput{
 		ContainerRecipeArn: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteContainerRecipeWithContext(ctx, input)
+	_, err := conn.DeleteContainerRecipe(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, imagebuilder.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -443,12 +446,12 @@ func resourceContainerRecipeDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func expandInstanceConfiguration(tfMap map[string]interface{}) *imagebuilder.InstanceConfiguration {
+func expandInstanceConfiguration(tfMap map[string]interface{}) *awstypes.InstanceConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &imagebuilder.InstanceConfiguration{}
+	apiObject := &awstypes.InstanceConfiguration{}
 
 	if v, ok := tfMap["block_device_mapping"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.BlockDeviceMappings = expandInstanceBlockDeviceMappings(v.List())
@@ -461,7 +464,7 @@ func expandInstanceConfiguration(tfMap map[string]interface{}) *imagebuilder.Ins
 	return apiObject
 }
 
-func flattenInstanceConfiguration(apiObject *imagebuilder.InstanceConfiguration) map[string]interface{} {
+func flattenInstanceConfiguration(apiObject *awstypes.InstanceConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -473,7 +476,7 @@ func flattenInstanceConfiguration(apiObject *imagebuilder.InstanceConfiguration)
 	}
 
 	if v := apiObject.Image; v != nil {
-		tfMap["image"] = aws.StringValue(v)
+		tfMap["image"] = aws.ToString(v)
 	}
 
 	return tfMap

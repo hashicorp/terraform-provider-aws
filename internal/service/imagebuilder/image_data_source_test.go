@@ -8,7 +8,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -40,7 +40,7 @@ func TestAccImageBuilderImageDataSource_ARN_aws(t *testing.T) { // nosemgrep:ci.
 					resource.TestCheckResourceAttr(dataSourceName, "name", "Amazon Linux 2 x86"),
 					resource.TestCheckResourceAttr(dataSourceName, "os_version", "Amazon Linux 2"),
 					resource.TestCheckResourceAttr(dataSourceName, "output_resources.#", "1"),
-					resource.TestCheckResourceAttr(dataSourceName, "platform", imagebuilder.PlatformLinux),
+					resource.TestCheckResourceAttr(dataSourceName, "platform", string(awstypes.PlatformLinux)),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(dataSourceName, "version", regexache.MustCompile(`\d+\.\d+\.\d+/\d+`)),
 				),
