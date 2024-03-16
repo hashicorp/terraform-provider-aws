@@ -28,7 +28,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -333,7 +332,7 @@ func (r *resourceLifecyclePolicy) Create(ctx context.Context, req resource.Creat
 	}
 
 	plan.ID = flex.StringToFramework(ctx, out.LifecyclePolicyArn)
-	plan.ARN = flex.StringToFrameworkARN(ctx, out.LifecyclePolicyArn)
+	plan.ARN = flex.StringToFramework(ctx, out.LifecyclePolicyArn)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -360,7 +359,7 @@ func (r *resourceLifecyclePolicy) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	state.ARN = flex.StringToFrameworkARN(ctx, out.Arn)
+	state.ARN = flex.StringToFramework(ctx, out.Arn)
 	state.ID = flex.StringToFramework(ctx, out.Arn)
 	state.Description = flex.StringToFramework(ctx, out.Description)
 	state.ExecutionRole = flex.StringToFramework(ctx, out.ExecutionRole)
@@ -1046,7 +1045,7 @@ func flattenResourceSelectionRecipes(ctx context.Context, apiObject []awstypes.L
 
 type resourceLifecyclePolicyData struct {
 	ID                types.String `tfsdk:"id"`
-	ARN               fwtypes.ARN  `tfsdk:"arn"`
+	ARN               types.String `tfsdk:"arn"`
 	Description       types.String `tfsdk:"description"`
 	Name              types.String `tfsdk:"name"`
 	ExecutionRole     types.String `tfsdk:"execution_role"`
