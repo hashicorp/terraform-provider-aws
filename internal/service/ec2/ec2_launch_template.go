@@ -1995,7 +1995,7 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 		apiObject.DeviceIndex = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["enable_primary_ipv6"].(bool); ok {
+	if v, null, _ := nullable.Bool(tfMap["enable_primary_ipv6"].(string)).Value(); !null {
 		apiObject.PrimaryIpv6 = aws.Bool(v)
 	}
 
@@ -2991,7 +2991,7 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject *ec2.L
 	}
 
 	if v := apiObject.PrimaryIpv6; v != nil {
-		tfMap["enable_primary_ipv6"] = aws.BoolValue(v)
+		tfMap["enable_primary_ipv6"] = strconv.FormatBool(aws.BoolValue(v))
 	}
 
 	if v := apiObject.InterfaceType; v != nil {
