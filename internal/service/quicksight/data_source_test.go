@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
@@ -233,7 +232,7 @@ func TestAccQuickSightDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.bucket", rName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.0.s3.0.manifest_file_location.0.key", rName),
-					resource.TestCheckResourceAttr(resourceName, "type", enum.Slice(types.DataSourceTypeS3)[0]),
+					resource.TestCheckResourceAttr(resourceName, "type", flex.StringValueToFramework(ctx, types.DataSourceTypeS3).String()),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
