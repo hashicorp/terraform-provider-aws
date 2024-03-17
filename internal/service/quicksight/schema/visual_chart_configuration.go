@@ -5,10 +5,11 @@ package schema
 
 import (
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 func axisDisplayOptionsSchema() *schema.Schema {
@@ -19,7 +20,7 @@ func axisDisplayOptionsSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"axis_line_visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+				"axis_line_visibility": stringSchema(false, enum.Validate[types.Visibility]()),
 				"axis_offset": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -38,7 +39,7 @@ func axisDisplayOptionsSchema() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"missing_date_visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+										"missing_date_visibility": stringSchema(false, enum.Validate[types.Visibility]()),
 									},
 								},
 							},
@@ -134,7 +135,7 @@ func axisDisplayOptionsSchema() *schema.Schema {
 						},
 					},
 				},
-				"grid_line_visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+				"grid_line_visibility": stringSchema(false, enum.Validate[types.Visibility]()),
 				"scrollbar_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ScrollBarOptions.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -142,7 +143,7 @@ func axisDisplayOptionsSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+							"visibility": stringSchema(false, enum.Validate[types.Visibility]()),
 							"visible_range": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisibleRangeOptions.html
 								Type:     schema.TypeList,
 								MinItems: 1,
@@ -211,7 +212,7 @@ func chartAxisLabelOptionsSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"column":   columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-										"field_id": stringSchema(true, validation.StringLenBetween(1, 512)),
+										"field_id": stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 512))),
 									},
 								},
 							},
@@ -223,8 +224,8 @@ func chartAxisLabelOptionsSchema() *schema.Schema {
 						},
 					},
 				},
-				"sort_icon_visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
-				"visibility":           stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+				"sort_icon_visibility": stringSchema(false, enum.Validate[types.Visibility]()),
+				"visibility":           stringSchema(false, enum.Validate[types.Visibility]()),
 			},
 		},
 	}
@@ -242,7 +243,7 @@ func itemsLimitConfigurationSchema() *schema.Schema {
 					Type:     schema.TypeInt,
 					Optional: true,
 				},
-				"other_categories": stringSchema(true, validation.StringInSlice(quicksight.OtherCategories_Values(), false)),
+				"other_categories": stringSchema(true, enum.Validate[types.OtherCategories]()),
 			},
 		},
 	}
@@ -263,12 +264,12 @@ func contributionAnalysisDefaultsSchema() *schema.Schema {
 					Required: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-							"column_name":         stringSchema(true, validation.StringLenBetween(1, 128)),
-							"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
+							"column_name":         stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 128))),
+							"data_set_identifier": stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 2048))),
 						},
 					},
 				},
-				"measure_field_id": stringSchema(true, validation.StringLenBetween(1, 512)),
+				"measure_field_id": stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 512))),
 			},
 		},
 	}
@@ -289,7 +290,7 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"axis_binding": stringSchema(false, validation.StringInSlice(quicksight.AxisBinding_Values(), false)),
+							"axis_binding": stringSchema(false, enum.Validate[types.AxisBinding]()),
 							"dynamic_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLineDynamicDataConfiguration.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -334,13 +335,13 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"custom_label": stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
+										"custom_label": stringSchema(true, validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`.*\S.*`), ""))),
 									},
 								},
 							},
-							"font_color":          stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+							"font_color":          stringSchema(false, validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""))),
 							"font_configuration":  fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-							"horizontal_position": stringSchema(false, validation.StringInSlice(quicksight.ReferenceLineLabelHorizontalPosition_Values(), false)),
+							"horizontal_position": stringSchema(false, enum.Validate[types.ReferenceLineLabelHorizontalPosition]()),
 							"value_label_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLineValueLabelConfiguration.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -349,15 +350,15 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"format_configuration": numericFormatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericFormatConfiguration.html
-										"relative_position":    stringSchema(false, validation.StringInSlice(quicksight.ReferenceLineValueLabelRelativePosition_Values(), false)),
+										"relative_position":    stringSchema(false, enum.Validate[types.ReferenceLineValueLabelRelativePosition]()),
 									},
 								},
 							},
-							"vertical_position": stringSchema(false, validation.StringInSlice(quicksight.ReferenceLineLabelVerticalPosition_Values(), false)),
+							"vertical_position": stringSchema(false, enum.Validate[types.ReferenceLineLabelVerticalPosition]()),
 						},
 					},
 				},
-				"status": stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
+				"status": stringSchema(false, enum.Validate[types.WidgetStatus]()),
 				"style_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLineStyleConfiguration.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -365,8 +366,8 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":   stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
-							"pattern": stringSchema(false, validation.StringInSlice(quicksight.ReferenceLinePatternType_Values(), false)),
+							"color":   stringSchema(false, validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""))),
+							"pattern": stringSchema(false, enum.Validate[types.ReferenceLinePatternType]()),
 						},
 					},
 				},
@@ -384,14 +385,14 @@ func smallMultiplesOptionsSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"max_visible_columns": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					ValidateFunc: validation.IntBetween(1, 10),
+					Type:             schema.TypeInt,
+					Optional:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10)),
 				},
 				"max_visible_rows": {
-					Type:         schema.TypeInt,
-					Optional:     true,
-					ValidateFunc: validation.IntBetween(1, 10),
+					Type:             schema.TypeInt,
+					Optional:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 10)),
 				},
 				"panel_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PanelConfiguration.html
 					Type:     schema.TypeList,
@@ -400,20 +401,20 @@ func smallMultiplesOptionsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"background_color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
-							"background_visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
-							"border_color":          stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
-							"border_style":          stringSchema(false, validation.StringInSlice(quicksight.PanelBorderStyle_Values(), false)),
+							"background_color":      stringSchema(false, validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), ""))),
+							"background_visibility": stringSchema(false, enum.Validate[types.Visibility]()),
+							"border_color":          stringSchema(false, validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), ""))),
+							"border_style":          stringSchema(false, enum.Validate[types.PanelBorderStyle]()),
 							"border_thickness": {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
-							"border_visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+							"border_visibility": stringSchema(false, enum.Validate[types.Visibility]()),
 							"gutter_spacing": {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
-							"gutter_visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+							"gutter_visibility": stringSchema(false, enum.Validate[types.Visibility]()),
 							"title": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_PanelTitleOptions.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -422,8 +423,8 @@ func smallMultiplesOptionsSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"font_configuration":        fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-										"horizontal_text_alignment": stringSchema(false, validation.StringInSlice(quicksight.HorizontalTextAlignment_Values(), false)),
-										"visibility":                stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+										"horizontal_text_alignment": stringSchema(false, enum.Validate[types.HorizontalTextAlignment]()),
+										"visibility":                stringSchema(false, enum.Validate[types.Visibility]()),
 									},
 								},
 							},
@@ -435,7 +436,7 @@ func smallMultiplesOptionsSchema() *schema.Schema {
 	}
 }
 
-func expandAxisDisplayOptions(tfList []interface{}) *quicksight.AxisDisplayOptions {
+func expandAxisDisplayOptions(tfList []interface{}) *types.AxisDisplayOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -445,16 +446,16 @@ func expandAxisDisplayOptions(tfList []interface{}) *quicksight.AxisDisplayOptio
 		return nil
 	}
 
-	options := &quicksight.AxisDisplayOptions{}
+	options := &types.AxisDisplayOptions{}
 
 	if v, ok := tfMap["axis_line_visibility"].(string); ok && v != "" {
-		options.AxisLineVisibility = aws.String(v)
+		options.AxisLineVisibility = types.Visibility(v)
 	}
 	if v, ok := tfMap["axis_offset"].(string); ok && v != "" {
 		options.AxisOffset = aws.String(v)
 	}
 	if v, ok := tfMap["grid_line_visibility"].(string); ok && v != "" {
-		options.GridLineVisibility = aws.String(v)
+		options.GridLineVisibility = types.Visibility(v)
 	}
 	if v, ok := tfMap["data_options"].([]interface{}); ok && len(v) > 0 {
 		options.DataOptions = expandAxisDataOptions(v)
@@ -469,7 +470,7 @@ func expandAxisDisplayOptions(tfList []interface{}) *quicksight.AxisDisplayOptio
 	return options
 }
 
-func expandAxisDataOptions(tfList []interface{}) *quicksight.AxisDataOptions {
+func expandAxisDataOptions(tfList []interface{}) *types.AxisDataOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -479,7 +480,7 @@ func expandAxisDataOptions(tfList []interface{}) *quicksight.AxisDataOptions {
 		return nil
 	}
 
-	options := &quicksight.AxisDataOptions{}
+	options := &types.AxisDataOptions{}
 
 	if v, ok := tfMap["date_axis_options"].([]interface{}); ok && len(v) > 0 {
 		options.DateAxisOptions = expandDateAxisOptions(v)
@@ -491,7 +492,7 @@ func expandAxisDataOptions(tfList []interface{}) *quicksight.AxisDataOptions {
 	return options
 }
 
-func expandDateAxisOptions(tfList []interface{}) *quicksight.DateAxisOptions {
+func expandDateAxisOptions(tfList []interface{}) *types.DateAxisOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -501,16 +502,16 @@ func expandDateAxisOptions(tfList []interface{}) *quicksight.DateAxisOptions {
 		return nil
 	}
 
-	options := &quicksight.DateAxisOptions{}
+	options := &types.DateAxisOptions{}
 
 	if v, ok := tfMap["missing_date_visibility"].(string); ok && v != "" {
-		options.MissingDateVisibility = aws.String(v)
+		options.MissingDateVisibility = types.Visibility(v)
 	}
 
 	return options
 }
 
-func expandNumericAxisOptions(tfList []interface{}) *quicksight.NumericAxisOptions {
+func expandNumericAxisOptions(tfList []interface{}) *types.NumericAxisOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -520,7 +521,7 @@ func expandNumericAxisOptions(tfList []interface{}) *quicksight.NumericAxisOptio
 		return nil
 	}
 
-	options := &quicksight.NumericAxisOptions{}
+	options := &types.NumericAxisOptions{}
 
 	if v, ok := tfMap["range"].([]interface{}); ok && len(v) > 0 {
 		options.Range = expandAxisDisplayRange(v)
@@ -532,7 +533,7 @@ func expandNumericAxisOptions(tfList []interface{}) *quicksight.NumericAxisOptio
 	return options
 }
 
-func expandAxisDisplayRange(tfList []interface{}) *quicksight.AxisDisplayRange {
+func expandAxisDisplayRange(tfList []interface{}) *types.AxisDisplayRange {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -542,7 +543,7 @@ func expandAxisDisplayRange(tfList []interface{}) *quicksight.AxisDisplayRange {
 		return nil
 	}
 
-	options := &quicksight.AxisDisplayRange{}
+	options := &types.AxisDisplayRange{}
 
 	if v, ok := tfMap["data_driven"].([]interface{}); ok && len(v) > 0 {
 		options.DataDriven = expandAxisDisplayDataDrivenRange(v)
@@ -554,7 +555,7 @@ func expandAxisDisplayRange(tfList []interface{}) *quicksight.AxisDisplayRange {
 	return options
 }
 
-func expandAxisDisplayDataDrivenRange(tfList []interface{}) *quicksight.AxisDisplayDataDrivenRange {
+func expandAxisDisplayDataDrivenRange(tfList []interface{}) *types.AxisDisplayDataDrivenRange {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -564,12 +565,12 @@ func expandAxisDisplayDataDrivenRange(tfList []interface{}) *quicksight.AxisDisp
 	//	return nil
 	//}
 
-	options := &quicksight.AxisDisplayDataDrivenRange{}
+	options := &types.AxisDisplayDataDrivenRange{}
 
 	return options
 }
 
-func expandAxisDisplayMinMaxRange(tfList []interface{}) *quicksight.AxisDisplayMinMaxRange {
+func expandAxisDisplayMinMaxRange(tfList []interface{}) *types.AxisDisplayMinMaxRange {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -579,7 +580,7 @@ func expandAxisDisplayMinMaxRange(tfList []interface{}) *quicksight.AxisDisplayM
 		return nil
 	}
 
-	options := &quicksight.AxisDisplayMinMaxRange{}
+	options := &types.AxisDisplayMinMaxRange{}
 
 	if v, ok := tfMap["maximum"].(float64); ok {
 		options.Maximum = aws.Float64(v)
@@ -591,7 +592,7 @@ func expandAxisDisplayMinMaxRange(tfList []interface{}) *quicksight.AxisDisplayM
 	return options
 }
 
-func expandAxisScale(tfList []interface{}) *quicksight.AxisScale {
+func expandAxisScale(tfList []interface{}) *types.AxisScale {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -601,7 +602,7 @@ func expandAxisScale(tfList []interface{}) *quicksight.AxisScale {
 		return nil
 	}
 
-	options := &quicksight.AxisScale{}
+	options := &types.AxisScale{}
 
 	if v, ok := tfMap["linear"].([]interface{}); ok && len(v) > 0 {
 		options.Linear = expandAxisLinearScale(v)
@@ -613,7 +614,7 @@ func expandAxisScale(tfList []interface{}) *quicksight.AxisScale {
 	return options
 }
 
-func expandAxisLinearScale(tfList []interface{}) *quicksight.AxisLinearScale {
+func expandAxisLinearScale(tfList []interface{}) *types.AxisLinearScale {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -623,10 +624,10 @@ func expandAxisLinearScale(tfList []interface{}) *quicksight.AxisLinearScale {
 		return nil
 	}
 
-	options := &quicksight.AxisLinearScale{}
+	options := &types.AxisLinearScale{}
 
 	if v, ok := tfMap["step_count"].(int); ok {
-		options.StepCount = aws.Int64(int64(v))
+		options.StepCount = aws.Int32(int32(v))
 	}
 	if v, ok := tfMap["step_size"].(float64); ok {
 		options.StepSize = aws.Float64(v)
@@ -635,7 +636,7 @@ func expandAxisLinearScale(tfList []interface{}) *quicksight.AxisLinearScale {
 	return options
 }
 
-func expandAxisLogarithmicScale(tfList []interface{}) *quicksight.AxisLogarithmicScale {
+func expandAxisLogarithmicScale(tfList []interface{}) *types.AxisLogarithmicScale {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -645,7 +646,7 @@ func expandAxisLogarithmicScale(tfList []interface{}) *quicksight.AxisLogarithmi
 		return nil
 	}
 
-	options := &quicksight.AxisLogarithmicScale{}
+	options := &types.AxisLogarithmicScale{}
 
 	if v, ok := tfMap["base"].(float64); ok {
 		options.Base = aws.Float64(v)
@@ -654,7 +655,7 @@ func expandAxisLogarithmicScale(tfList []interface{}) *quicksight.AxisLogarithmi
 	return options
 }
 
-func expandScrollBarOptions(tfList []interface{}) *quicksight.ScrollBarOptions {
+func expandScrollBarOptions(tfList []interface{}) *types.ScrollBarOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -664,10 +665,10 @@ func expandScrollBarOptions(tfList []interface{}) *quicksight.ScrollBarOptions {
 		return nil
 	}
 
-	options := &quicksight.ScrollBarOptions{}
+	options := &types.ScrollBarOptions{}
 
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		options.Visibility = aws.String(v)
+		options.Visibility = types.Visibility(v)
 	}
 	if v, ok := tfMap["visible_range"].([]interface{}); ok && len(v) > 0 {
 		options.VisibleRange = expandVisibleRangeOptions(v)
@@ -676,7 +677,7 @@ func expandScrollBarOptions(tfList []interface{}) *quicksight.ScrollBarOptions {
 	return options
 }
 
-func expandVisibleRangeOptions(tfList []interface{}) *quicksight.VisibleRangeOptions {
+func expandVisibleRangeOptions(tfList []interface{}) *types.VisibleRangeOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -686,7 +687,7 @@ func expandVisibleRangeOptions(tfList []interface{}) *quicksight.VisibleRangeOpt
 		return nil
 	}
 
-	options := &quicksight.VisibleRangeOptions{}
+	options := &types.VisibleRangeOptions{}
 
 	if v, ok := tfMap["percent_range"].([]interface{}); ok && len(v) > 0 {
 		options.PercentRange = expandPercentVisibleRange(v)
@@ -695,7 +696,7 @@ func expandVisibleRangeOptions(tfList []interface{}) *quicksight.VisibleRangeOpt
 	return options
 }
 
-func expandPercentVisibleRange(tfList []interface{}) *quicksight.PercentVisibleRange {
+func expandPercentVisibleRange(tfList []interface{}) *types.PercentVisibleRange {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -705,7 +706,7 @@ func expandPercentVisibleRange(tfList []interface{}) *quicksight.PercentVisibleR
 		return nil
 	}
 
-	options := &quicksight.PercentVisibleRange{}
+	options := &types.PercentVisibleRange{}
 
 	if v, ok := tfMap["from"].(float64); ok {
 		options.From = aws.Float64(v)
@@ -717,7 +718,7 @@ func expandPercentVisibleRange(tfList []interface{}) *quicksight.PercentVisibleR
 	return options
 }
 
-func expandAxisTickLabelOptions(tfList []interface{}) *quicksight.AxisTickLabelOptions {
+func expandAxisTickLabelOptions(tfList []interface{}) *types.AxisTickLabelOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -727,7 +728,7 @@ func expandAxisTickLabelOptions(tfList []interface{}) *quicksight.AxisTickLabelO
 		return nil
 	}
 
-	options := &quicksight.AxisTickLabelOptions{}
+	options := &types.AxisTickLabelOptions{}
 
 	if v, ok := tfMap["rotation_angle"].(float64); ok {
 		options.RotationAngle = aws.Float64(v)
@@ -739,7 +740,7 @@ func expandAxisTickLabelOptions(tfList []interface{}) *quicksight.AxisTickLabelO
 	return options
 }
 
-func expandChartAxisLabelOptions(tfList []interface{}) *quicksight.ChartAxisLabelOptions {
+func expandChartAxisLabelOptions(tfList []interface{}) *types.ChartAxisLabelOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -749,13 +750,13 @@ func expandChartAxisLabelOptions(tfList []interface{}) *quicksight.ChartAxisLabe
 		return nil
 	}
 
-	options := &quicksight.ChartAxisLabelOptions{}
+	options := &types.ChartAxisLabelOptions{}
 
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		options.Visibility = aws.String(v)
+		options.Visibility = types.Visibility(v)
 	}
 	if v, ok := tfMap["sort_icon_visibility"].(string); ok && v != "" {
-		options.SortIconVisibility = aws.String(v)
+		options.SortIconVisibility = types.Visibility(v)
 	}
 	if v, ok := tfMap["axis_label_options"].([]interface{}); ok && len(v) > 0 {
 		options.AxisLabelOptions = expandAxisLabelOptionsList(v)
@@ -764,12 +765,12 @@ func expandChartAxisLabelOptions(tfList []interface{}) *quicksight.ChartAxisLabe
 	return options
 }
 
-func expandAxisLabelOptionsList(tfList []interface{}) []*quicksight.AxisLabelOptions {
+func expandAxisLabelOptionsList(tfList []interface{}) []types.AxisLabelOptions {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var options []*quicksight.AxisLabelOptions
+	var options []types.AxisLabelOptions
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -781,18 +782,18 @@ func expandAxisLabelOptionsList(tfList []interface{}) []*quicksight.AxisLabelOpt
 			continue
 		}
 
-		options = append(options, opts)
+		options = append(options, *opts)
 	}
 
 	return options
 }
 
-func expandAxisLabelOptions(tfMap map[string]interface{}) *quicksight.AxisLabelOptions {
+func expandAxisLabelOptions(tfMap map[string]interface{}) *types.AxisLabelOptions {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &quicksight.AxisLabelOptions{}
+	options := &types.AxisLabelOptions{}
 
 	if v, ok := tfMap["custom_label"].(string); ok && v != "" {
 		options.CustomLabel = aws.String(v)
@@ -807,7 +808,7 @@ func expandAxisLabelOptions(tfMap map[string]interface{}) *quicksight.AxisLabelO
 	return options
 }
 
-func expandAxisLabelReferenceOptions(tfList []interface{}) *quicksight.AxisLabelReferenceOptions {
+func expandAxisLabelReferenceOptions(tfList []interface{}) *types.AxisLabelReferenceOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -817,7 +818,7 @@ func expandAxisLabelReferenceOptions(tfList []interface{}) *quicksight.AxisLabel
 		return nil
 	}
 
-	options := &quicksight.AxisLabelReferenceOptions{}
+	options := &types.AxisLabelReferenceOptions{}
 
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
 		options.FieldId = aws.String(v)
@@ -829,12 +830,12 @@ func expandAxisLabelReferenceOptions(tfList []interface{}) *quicksight.AxisLabel
 	return options
 }
 
-func expandContributionAnalysisDefaults(tfList []interface{}) []*quicksight.ContributionAnalysisDefault {
+func expandContributionAnalysisDefaults(tfList []interface{}) []types.ContributionAnalysisDefault {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var options []*quicksight.ContributionAnalysisDefault
+	var options []types.ContributionAnalysisDefault
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -846,18 +847,18 @@ func expandContributionAnalysisDefaults(tfList []interface{}) []*quicksight.Cont
 			continue
 		}
 
-		options = append(options, opts)
+		options = append(options, *opts)
 	}
 
 	return options
 }
 
-func expandContributionAnalysisDefault(tfMap map[string]interface{}) *quicksight.ContributionAnalysisDefault {
+func expandContributionAnalysisDefault(tfMap map[string]interface{}) *types.ContributionAnalysisDefault {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &quicksight.ContributionAnalysisDefault{}
+	options := &types.ContributionAnalysisDefault{}
 
 	if v, ok := tfMap["measure_field_id"].(string); ok && v != "" {
 		options.MeasureFieldId = aws.String(v)
@@ -869,12 +870,12 @@ func expandContributionAnalysisDefault(tfMap map[string]interface{}) *quicksight
 	return options
 }
 
-func expandReferenceLines(tfList []interface{}) []*quicksight.ReferenceLine {
+func expandReferenceLines(tfList []interface{}) []types.ReferenceLine {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var lines []*quicksight.ReferenceLine
+	var lines []types.ReferenceLine
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -886,21 +887,21 @@ func expandReferenceLines(tfList []interface{}) []*quicksight.ReferenceLine {
 			continue
 		}
 
-		lines = append(lines, line)
+		lines = append(lines, *line)
 	}
 
 	return lines
 }
 
-func expandReferenceLine(tfMap map[string]interface{}) *quicksight.ReferenceLine {
+func expandReferenceLine(tfMap map[string]interface{}) *types.ReferenceLine {
 	if tfMap == nil {
 		return nil
 	}
 
-	line := &quicksight.ReferenceLine{}
+	line := &types.ReferenceLine{}
 
 	if v, ok := tfMap["status"].(string); ok && v != "" {
-		line.Status = aws.String(v)
+		line.Status = types.WidgetStatus(v)
 	}
 	if v, ok := tfMap["data_configuration"].([]interface{}); ok && len(v) > 0 {
 		line.DataConfiguration = expandReferenceLineDataConfiguration(v)
@@ -915,7 +916,7 @@ func expandReferenceLine(tfMap map[string]interface{}) *quicksight.ReferenceLine
 	return line
 }
 
-func expandReferenceLineDataConfiguration(tfList []interface{}) *quicksight.ReferenceLineDataConfiguration {
+func expandReferenceLineDataConfiguration(tfList []interface{}) *types.ReferenceLineDataConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -925,10 +926,10 @@ func expandReferenceLineDataConfiguration(tfList []interface{}) *quicksight.Refe
 		return nil
 	}
 
-	config := &quicksight.ReferenceLineDataConfiguration{}
+	config := &types.ReferenceLineDataConfiguration{}
 
 	if v, ok := tfMap["axis_binding"].(string); ok && v != "" {
-		config.AxisBinding = aws.String(v)
+		config.AxisBinding = types.AxisBinding(v)
 	}
 	if v, ok := tfMap["dynamic_configuration"].([]interface{}); ok && len(v) > 0 {
 		config.DynamicConfiguration = expandReferenceLineDynamicDataConfiguration(v)
@@ -940,7 +941,7 @@ func expandReferenceLineDataConfiguration(tfList []interface{}) *quicksight.Refe
 	return config
 }
 
-func expandReferenceLineDynamicDataConfiguration(tfList []interface{}) *quicksight.ReferenceLineDynamicDataConfiguration {
+func expandReferenceLineDynamicDataConfiguration(tfList []interface{}) *types.ReferenceLineDynamicDataConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -950,7 +951,7 @@ func expandReferenceLineDynamicDataConfiguration(tfList []interface{}) *quicksig
 		return nil
 	}
 
-	config := &quicksight.ReferenceLineDynamicDataConfiguration{}
+	config := &types.ReferenceLineDynamicDataConfiguration{}
 
 	if v, ok := tfMap["calculation"].([]interface{}); ok && len(v) > 0 {
 		config.Calculation = expandNumericalAggregationFunction(v)
@@ -965,7 +966,7 @@ func expandReferenceLineDynamicDataConfiguration(tfList []interface{}) *quicksig
 	return config
 }
 
-func expandReferenceLineStaticDataConfiguration(tfList []interface{}) *quicksight.ReferenceLineStaticDataConfiguration {
+func expandReferenceLineStaticDataConfiguration(tfList []interface{}) *types.ReferenceLineStaticDataConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -975,16 +976,16 @@ func expandReferenceLineStaticDataConfiguration(tfList []interface{}) *quicksigh
 		return nil
 	}
 
-	config := &quicksight.ReferenceLineStaticDataConfiguration{}
+	config := &types.ReferenceLineStaticDataConfiguration{}
 
 	if v, ok := tfMap["value"].(float64); ok {
-		config.Value = aws.Float64(v)
+		config.Value = v
 	}
 
 	return config
 }
 
-func expandReferenceLineLabelConfiguration(tfList []interface{}) *quicksight.ReferenceLineLabelConfiguration {
+func expandReferenceLineLabelConfiguration(tfList []interface{}) *types.ReferenceLineLabelConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -994,16 +995,16 @@ func expandReferenceLineLabelConfiguration(tfList []interface{}) *quicksight.Ref
 		return nil
 	}
 
-	config := &quicksight.ReferenceLineLabelConfiguration{}
+	config := &types.ReferenceLineLabelConfiguration{}
 
 	if v, ok := tfMap["font_color"].(string); ok && v != "" {
 		config.FontColor = aws.String(v)
 	}
 	if v, ok := tfMap["horizontal_position"].(string); ok && v != "" {
-		config.HorizontalPosition = aws.String(v)
+		config.HorizontalPosition = types.ReferenceLineLabelHorizontalPosition(v)
 	}
 	if v, ok := tfMap["vertical_position"].(string); ok && v != "" {
-		config.VerticalPosition = aws.String(v)
+		config.VerticalPosition = types.ReferenceLineLabelVerticalPosition(v)
 	}
 	if v, ok := tfMap["custom_label_configuration"].([]interface{}); ok && len(v) > 0 {
 		config.CustomLabelConfiguration = expandReferenceLineCustomLabelConfiguration(v)
@@ -1018,7 +1019,7 @@ func expandReferenceLineLabelConfiguration(tfList []interface{}) *quicksight.Ref
 	return config
 }
 
-func expandReferenceLineCustomLabelConfiguration(tfList []interface{}) *quicksight.ReferenceLineCustomLabelConfiguration {
+func expandReferenceLineCustomLabelConfiguration(tfList []interface{}) *types.ReferenceLineCustomLabelConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1028,7 +1029,7 @@ func expandReferenceLineCustomLabelConfiguration(tfList []interface{}) *quicksig
 		return nil
 	}
 
-	config := &quicksight.ReferenceLineCustomLabelConfiguration{}
+	config := &types.ReferenceLineCustomLabelConfiguration{}
 
 	if v, ok := tfMap["custom_label"].(string); ok && v != "" {
 		config.CustomLabel = aws.String(v)
@@ -1037,7 +1038,7 @@ func expandReferenceLineCustomLabelConfiguration(tfList []interface{}) *quicksig
 	return config
 }
 
-func expandReferenceLineValueLabelConfiguration(tfList []interface{}) *quicksight.ReferenceLineValueLabelConfiguration {
+func expandReferenceLineValueLabelConfiguration(tfList []interface{}) *types.ReferenceLineValueLabelConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1047,10 +1048,10 @@ func expandReferenceLineValueLabelConfiguration(tfList []interface{}) *quicksigh
 		return nil
 	}
 
-	config := &quicksight.ReferenceLineValueLabelConfiguration{}
+	config := &types.ReferenceLineValueLabelConfiguration{}
 
 	if v, ok := tfMap["relative_position"].(string); ok && v != "" {
-		config.RelativePosition = aws.String(v)
+		config.RelativePosition = types.ReferenceLineValueLabelRelativePosition(v)
 	}
 	if v, ok := tfMap["format_configuration"].([]interface{}); ok && len(v) > 0 {
 		config.FormatConfiguration = expandNumericFormatConfiguration(v)
@@ -1059,7 +1060,7 @@ func expandReferenceLineValueLabelConfiguration(tfList []interface{}) *quicksigh
 	return config
 }
 
-func expandReferenceLineStyleConfiguration(tfList []interface{}) *quicksight.ReferenceLineStyleConfiguration {
+func expandReferenceLineStyleConfiguration(tfList []interface{}) *types.ReferenceLineStyleConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1069,19 +1070,19 @@ func expandReferenceLineStyleConfiguration(tfList []interface{}) *quicksight.Ref
 		return nil
 	}
 
-	config := &quicksight.ReferenceLineStyleConfiguration{}
+	config := &types.ReferenceLineStyleConfiguration{}
 
 	if v, ok := tfMap["color"].(string); ok && v != "" {
 		config.Color = aws.String(v)
 	}
 	if v, ok := tfMap["pattern"].(string); ok && v != "" {
-		config.Pattern = aws.String(v)
+		config.Pattern = types.ReferenceLinePatternType(v)
 	}
 
 	return config
 }
 
-func expandSmallMultiplesOptions(tfList []interface{}) *quicksight.SmallMultiplesOptions {
+func expandSmallMultiplesOptions(tfList []interface{}) *types.SmallMultiplesOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1091,7 +1092,7 @@ func expandSmallMultiplesOptions(tfList []interface{}) *quicksight.SmallMultiple
 		return nil
 	}
 
-	options := &quicksight.SmallMultiplesOptions{}
+	options := &types.SmallMultiplesOptions{}
 
 	if v, ok := tfMap["max_visible_columns"].(int); ok {
 		options.MaxVisibleColumns = aws.Int64(int64(v))
@@ -1106,7 +1107,7 @@ func expandSmallMultiplesOptions(tfList []interface{}) *quicksight.SmallMultiple
 	return options
 }
 
-func expandPanelConfiguration(tfList []interface{}) *quicksight.PanelConfiguration {
+func expandPanelConfiguration(tfList []interface{}) *types.PanelConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1116,31 +1117,31 @@ func expandPanelConfiguration(tfList []interface{}) *quicksight.PanelConfigurati
 		return nil
 	}
 
-	config := &quicksight.PanelConfiguration{}
+	config := &types.PanelConfiguration{}
 
 	if v, ok := tfMap["background_color"].(string); ok && v != "" {
 		config.BackgroundColor = aws.String(v)
 	}
 	if v, ok := tfMap["background_visibility"].(string); ok && v != "" {
-		config.BackgroundVisibility = aws.String(v)
+		config.BackgroundVisibility = types.Visibility(v)
 	}
 	if v, ok := tfMap["border_color"].(string); ok && v != "" {
 		config.BorderColor = aws.String(v)
 	}
 	if v, ok := tfMap["border_style"].(string); ok && v != "" {
-		config.BorderStyle = aws.String(v)
+		config.BorderStyle = types.PanelBorderStyle(v)
 	}
 	if v, ok := tfMap["border_thickness"].(string); ok && v != "" {
 		config.BorderThickness = aws.String(v)
 	}
 	if v, ok := tfMap["border_visibility"].(string); ok && v != "" {
-		config.BorderVisibility = aws.String(v)
+		config.BorderVisibility = types.Visibility(v)
 	}
 	if v, ok := tfMap["gutter_spacing"].(string); ok && v != "" {
 		config.GutterSpacing = aws.String(v)
 	}
 	if v, ok := tfMap["gutter_visibility"].(string); ok && v != "" {
-		config.GutterVisibility = aws.String(v)
+		config.GutterVisibility = types.Visibility(v)
 	}
 	if v, ok := tfMap["title"].([]interface{}); ok && len(v) > 0 {
 		config.Title = expandPanelTitleOptions(v)
@@ -1149,7 +1150,7 @@ func expandPanelConfiguration(tfList []interface{}) *quicksight.PanelConfigurati
 	return config
 }
 
-func expandPanelTitleOptions(tfList []interface{}) *quicksight.PanelTitleOptions {
+func expandPanelTitleOptions(tfList []interface{}) *types.PanelTitleOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1159,13 +1160,13 @@ func expandPanelTitleOptions(tfList []interface{}) *quicksight.PanelTitleOptions
 		return nil
 	}
 
-	options := &quicksight.PanelTitleOptions{}
+	options := &types.PanelTitleOptions{}
 
 	if v, ok := tfMap["horizontal_text_alignment"].(string); ok && v != "" {
-		options.HorizontalTextAlignment = aws.String(v)
+		options.HorizontalTextAlignment = types.HorizontalTextAlignment(v)
 	}
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		options.Visibility = aws.String(v)
+		options.Visibility = types.Visibility(v)
 	}
 	if v, ok := tfMap["font_configuration"].([]interface{}); ok && len(v) > 0 {
 		options.FontConfiguration = expandFontConfiguration(v)
@@ -1174,7 +1175,7 @@ func expandPanelTitleOptions(tfList []interface{}) *quicksight.PanelTitleOptions
 	return options
 }
 
-func expandItemsLimitConfiguration(tfList []interface{}) *quicksight.ItemsLimitConfiguration {
+func expandItemsLimitConfiguration(tfList []interface{}) *types.ItemsLimitConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1184,36 +1185,36 @@ func expandItemsLimitConfiguration(tfList []interface{}) *quicksight.ItemsLimitC
 		return nil
 	}
 
-	config := &quicksight.ItemsLimitConfiguration{}
+	config := &types.ItemsLimitConfiguration{}
 
 	if v, ok := tfMap["items_limit"].(int); ok {
 		config.ItemsLimit = aws.Int64(int64(v))
 	}
 	if v, ok := tfMap["other_categories"].(string); ok && v != "" {
-		config.OtherCategories = aws.String(v)
+		config.OtherCategories = types.OtherCategories(v)
 	}
 
 	return config
 }
 
-func flattenAxisDisplayOptions(apiObject *quicksight.AxisDisplayOptions) []interface{} {
+func flattenAxisDisplayOptions(apiObject *types.AxisDisplayOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.AxisLineVisibility != nil {
-		tfMap["axis_line_visibility"] = aws.StringValue(apiObject.AxisLineVisibility)
-	}
+
+	tfMap["axis_line_visibility"] = types.Visibility(apiObject.AxisLineVisibility)
+
 	if apiObject.AxisOffset != nil {
-		tfMap["axis_offset"] = aws.StringValue(apiObject.AxisOffset)
+		tfMap["axis_offset"] = aws.ToString(apiObject.AxisOffset)
 	}
 	if apiObject.DataOptions != nil {
 		tfMap["data_options"] = flattenAxisDataOptions(apiObject.DataOptions)
 	}
-	if apiObject.GridLineVisibility != nil {
-		tfMap["grid_line_visibility"] = aws.StringValue(apiObject.GridLineVisibility)
-	}
+
+	tfMap["grid_line_visibility"] = types.Visibility(apiObject.GridLineVisibility)
+
 	if apiObject.ScrollbarOptions != nil {
 		tfMap["scrollbar_options"] = flattenScrollBarOptions(apiObject.ScrollbarOptions)
 	}
@@ -1224,7 +1225,7 @@ func flattenAxisDisplayOptions(apiObject *quicksight.AxisDisplayOptions) []inter
 	return []interface{}{tfMap}
 }
 
-func flattenAxisDataOptions(apiObject *quicksight.AxisDataOptions) []interface{} {
+func flattenAxisDataOptions(apiObject *types.AxisDataOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1240,20 +1241,19 @@ func flattenAxisDataOptions(apiObject *quicksight.AxisDataOptions) []interface{}
 	return []interface{}{tfMap}
 }
 
-func flattenDateAxisOptions(apiObject *quicksight.DateAxisOptions) []interface{} {
+func flattenDateAxisOptions(apiObject *types.DateAxisOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.MissingDateVisibility != nil {
-		tfMap["missing_date_visibility"] = aws.StringValue(apiObject.MissingDateVisibility)
-	}
+
+	tfMap["missing_date_visibility"] = types.Visibility(apiObject.MissingDateVisibility)
 
 	return []interface{}{tfMap}
 }
 
-func flattenNumericAxisOptions(apiObject *quicksight.NumericAxisOptions) []interface{} {
+func flattenNumericAxisOptions(apiObject *types.NumericAxisOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1269,7 +1269,7 @@ func flattenNumericAxisOptions(apiObject *quicksight.NumericAxisOptions) []inter
 	return []interface{}{tfMap}
 }
 
-func flattenAxisDisplayRange(apiObject *quicksight.AxisDisplayRange) []interface{} {
+func flattenAxisDisplayRange(apiObject *types.AxisDisplayRange) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1285,7 +1285,7 @@ func flattenAxisDisplayRange(apiObject *quicksight.AxisDisplayRange) []interface
 	return []interface{}{tfMap}
 }
 
-func flattenAxisDisplayDataDrivenRange(apiObject *quicksight.AxisDisplayDataDrivenRange) []interface{} {
+func flattenAxisDisplayDataDrivenRange(apiObject *types.AxisDisplayDataDrivenRange) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1296,23 +1296,23 @@ func flattenAxisDisplayDataDrivenRange(apiObject *quicksight.AxisDisplayDataDriv
 	return []interface{}{tfMap}
 }
 
-func flattenAxisDisplayMinMaxRange(apiObject *quicksight.AxisDisplayMinMaxRange) []interface{} {
+func flattenAxisDisplayMinMaxRange(apiObject *types.AxisDisplayMinMaxRange) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Maximum != nil {
-		tfMap["maximum"] = aws.Float64Value(apiObject.Maximum)
+		tfMap["maximum"] = aws.ToFloat64(apiObject.Maximum)
 	}
 	if apiObject.Minimum != nil {
-		tfMap["minimum"] = aws.Float64Value(apiObject.Minimum)
+		tfMap["minimum"] = aws.ToFloat64(apiObject.Minimum)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenAxisScale(apiObject *quicksight.AxisScale) []interface{} {
+func flattenAxisScale(apiObject *types.AxisScale) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1328,44 +1328,44 @@ func flattenAxisScale(apiObject *quicksight.AxisScale) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenAxisLinearScale(apiObject *quicksight.AxisLinearScale) []interface{} {
+func flattenAxisLinearScale(apiObject *types.AxisLinearScale) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.StepCount != nil {
-		tfMap["step_count"] = aws.Int64Value(apiObject.StepCount)
+		tfMap["step_count"] = aws.ToInt32(apiObject.StepCount)
 	}
 	if apiObject.StepSize != nil {
-		tfMap["step_size"] = aws.Float64Value(apiObject.StepSize)
+		tfMap["step_size"] = aws.ToFloat64(apiObject.StepSize)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenAxisLogarithmicScale(apiObject *quicksight.AxisLogarithmicScale) []interface{} {
+func flattenAxisLogarithmicScale(apiObject *types.AxisLogarithmicScale) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Base != nil {
-		tfMap["base"] = aws.Float64Value(apiObject.Base)
+		tfMap["base"] = aws.ToFloat64(apiObject.Base)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenScrollBarOptions(apiObject *quicksight.ScrollBarOptions) []interface{} {
+func flattenScrollBarOptions(apiObject *types.ScrollBarOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.Visibility != nil {
-		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
-	}
+
+	tfMap["visibility"] = types.Visibility(apiObject.Visibility)
+
 	if apiObject.VisibleRange != nil {
 		tfMap["visible_range"] = flattenVisibleRangeOptions(apiObject.VisibleRange)
 	}
@@ -1373,7 +1373,7 @@ func flattenScrollBarOptions(apiObject *quicksight.ScrollBarOptions) []interface
 	return []interface{}{tfMap}
 }
 
-func flattenVisibleRangeOptions(apiObject *quicksight.VisibleRangeOptions) []interface{} {
+func flattenVisibleRangeOptions(apiObject *types.VisibleRangeOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1386,23 +1386,23 @@ func flattenVisibleRangeOptions(apiObject *quicksight.VisibleRangeOptions) []int
 	return []interface{}{tfMap}
 }
 
-func flattenPercentVisibleRange(apiObject *quicksight.PercentVisibleRange) []interface{} {
+func flattenPercentVisibleRange(apiObject *types.PercentVisibleRange) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.From != nil {
-		tfMap["from"] = aws.Float64Value(apiObject.From)
+		tfMap["from"] = aws.ToFloat64(apiObject.From)
 	}
 	if apiObject.To != nil {
-		tfMap["to"] = aws.Float64Value(apiObject.To)
+		tfMap["to"] = aws.ToFloat64(apiObject.To)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenAxisTickLabelOptions(apiObject *quicksight.AxisTickLabelOptions) []interface{} {
+func flattenAxisTickLabelOptions(apiObject *types.AxisTickLabelOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1412,13 +1412,13 @@ func flattenAxisTickLabelOptions(apiObject *quicksight.AxisTickLabelOptions) []i
 		tfMap["label_options"] = flattenLabelOptions(apiObject.LabelOptions)
 	}
 	if apiObject.RotationAngle != nil {
-		tfMap["rotation_angle"] = aws.Float64Value(apiObject.RotationAngle)
+		tfMap["rotation_angle"] = aws.ToFloat64(apiObject.RotationAngle)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenChartAxisLabelOptions(apiObject *quicksight.ChartAxisLabelOptions) []interface{} {
+func flattenChartAxisLabelOptions(apiObject *types.ChartAxisLabelOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1427,33 +1427,28 @@ func flattenChartAxisLabelOptions(apiObject *quicksight.ChartAxisLabelOptions) [
 	if apiObject.AxisLabelOptions != nil {
 		tfMap["axis_label_options"] = flattenAxisLabelOptions(apiObject.AxisLabelOptions)
 	}
-	if apiObject.SortIconVisibility != nil {
-		tfMap["sort_icon_visibility"] = aws.StringValue(apiObject.SortIconVisibility)
-	}
-	if apiObject.Visibility != nil {
-		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
-	}
+
+	tfMap["sort_icon_visibility"] = types.Visibility(apiObject.SortIconVisibility)
+
+	tfMap["visibility"] = types.Visibility(apiObject.Visibility)
 
 	return []interface{}{tfMap}
 }
 
-func flattenAxisLabelOptions(apiObject []*quicksight.AxisLabelOptions) []interface{} {
+func flattenAxisLabelOptions(apiObject []types.AxisLabelOptions) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
 
 		tfMap := map[string]interface{}{}
 		if config.ApplyTo != nil {
 			tfMap["apply_to"] = flattenAxisLabelReferenceOptions(config.ApplyTo)
 		}
 		if config.CustomLabel != nil {
-			tfMap["custom_label"] = aws.StringValue(config.CustomLabel)
+			tfMap["custom_label"] = aws.ToString(config.CustomLabel)
 		}
 		if config.FontConfiguration != nil {
 			tfMap["font_configuration"] = flattenFontConfiguration(config.FontConfiguration)
@@ -1465,14 +1460,14 @@ func flattenAxisLabelOptions(apiObject []*quicksight.AxisLabelOptions) []interfa
 	return tfList
 }
 
-func flattenAxisLabelReferenceOptions(apiObject *quicksight.AxisLabelReferenceOptions) []interface{} {
+func flattenAxisLabelReferenceOptions(apiObject *types.AxisLabelReferenceOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.Column != nil {
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
@@ -1481,19 +1476,16 @@ func flattenAxisLabelReferenceOptions(apiObject *quicksight.AxisLabelReferenceOp
 	return []interface{}{tfMap}
 }
 
-func flattenContributionAnalysisDefault(apiObject []*quicksight.ContributionAnalysisDefault) []interface{} {
+func flattenContributionAnalysisDefault(apiObject []types.ContributionAnalysisDefault) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
 
 		tfMap := map[string]interface{}{
-			"measure_field_id": aws.StringValue(config.MeasureFieldId),
+			"measure_field_id": aws.ToString(config.MeasureFieldId),
 		}
 		if config.ContributorDimensions != nil {
 			tfMap["contribution_dimensions"] = flattenColumnIdentifiers(config.ContributorDimensions)
@@ -1505,20 +1497,17 @@ func flattenContributionAnalysisDefault(apiObject []*quicksight.ContributionAnal
 	return tfList
 }
 
-func flattenColumnIdentifiers(apiObject []*quicksight.ColumnIdentifier) []interface{} {
+func flattenColumnIdentifiers(apiObject []types.ColumnIdentifier) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
 
 		tfMap := map[string]interface{}{
-			"column_name":         aws.StringValue(config.ColumnName),
-			"data_set_identifier": aws.StringValue(config.DataSetIdentifier),
+			"column_name":         aws.ToString(config.ColumnName),
+			"data_set_identifier": aws.ToString(config.DataSetIdentifier),
 		}
 
 		tfList = append(tfList, tfMap)
@@ -1527,16 +1516,13 @@ func flattenColumnIdentifiers(apiObject []*quicksight.ColumnIdentifier) []interf
 	return tfList
 }
 
-func flattenReferenceLine(apiObject []*quicksight.ReferenceLine) []interface{} {
+func flattenReferenceLine(apiObject []types.ReferenceLine) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
 
 		tfMap := map[string]interface{}{}
 		if config.DataConfiguration != nil {
@@ -1545,9 +1531,9 @@ func flattenReferenceLine(apiObject []*quicksight.ReferenceLine) []interface{} {
 		if config.LabelConfiguration != nil {
 			tfMap["label_configuration"] = flattenReferenceLineLabelConfiguration(config.LabelConfiguration)
 		}
-		if config.Status != nil {
-			tfMap["status"] = aws.StringValue(config.Status)
-		}
+
+		tfMap["status"] = types.WidgetStatus(config.Status)
+
 		if config.StyleConfiguration != nil {
 			tfMap["style_configuration"] = flattenReferenceLineStyleConfiguration(config.StyleConfiguration)
 		}
@@ -1558,15 +1544,15 @@ func flattenReferenceLine(apiObject []*quicksight.ReferenceLine) []interface{} {
 	return tfList
 }
 
-func flattenReferenceLineDataConfiguration(apiObject *quicksight.ReferenceLineDataConfiguration) []interface{} {
+func flattenReferenceLineDataConfiguration(apiObject *types.ReferenceLineDataConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.AxisBinding != nil {
-		tfMap["axis_binding"] = aws.StringValue(apiObject.AxisBinding)
-	}
+
+	tfMap["axis_binding"] = types.AxisBinding(apiObject.AxisBinding)
+
 	if apiObject.DynamicConfiguration != nil {
 		tfMap["dynamic_configuration"] = flattenReferenceLineDynamicDataConfiguration(apiObject.DynamicConfiguration)
 	}
@@ -1577,7 +1563,7 @@ func flattenReferenceLineDataConfiguration(apiObject *quicksight.ReferenceLineDa
 	return []interface{}{tfMap}
 }
 
-func flattenReferenceLineDynamicDataConfiguration(apiObject *quicksight.ReferenceLineDynamicDataConfiguration) []interface{} {
+func flattenReferenceLineDynamicDataConfiguration(apiObject *types.ReferenceLineDynamicDataConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1596,19 +1582,19 @@ func flattenReferenceLineDynamicDataConfiguration(apiObject *quicksight.Referenc
 	return []interface{}{tfMap}
 }
 
-func flattenReferenceLineStaticDataConfiguration(apiObject *quicksight.ReferenceLineStaticDataConfiguration) []interface{} {
+func flattenReferenceLineStaticDataConfiguration(apiObject *types.ReferenceLineStaticDataConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"value": aws.Float64Value(apiObject.Value),
+		"value": apiObject.Value,
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenReferenceLineLabelConfiguration(apiObject *quicksight.ReferenceLineLabelConfiguration) []interface{} {
+func flattenReferenceLineLabelConfiguration(apiObject *types.ReferenceLineLabelConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1618,36 +1604,35 @@ func flattenReferenceLineLabelConfiguration(apiObject *quicksight.ReferenceLineL
 		tfMap["custom_label_configuration"] = flattenReferenceLineCustomLabelConfiguration(apiObject.CustomLabelConfiguration)
 	}
 	if apiObject.FontColor != nil {
-		tfMap["font_color"] = aws.StringValue(apiObject.FontColor)
+		tfMap["font_color"] = aws.ToString(apiObject.FontColor)
 	}
 	if apiObject.FontConfiguration != nil {
 		tfMap["font_configuration"] = flattenFontConfiguration(apiObject.FontConfiguration)
 	}
-	if apiObject.HorizontalPosition != nil {
-		tfMap["horizontal_position"] = aws.StringValue(apiObject.HorizontalPosition)
-	}
+
+	tfMap["horizontal_position"] = types.ReferenceLineLabelHorizontalPosition(apiObject.HorizontalPosition)
+
 	if apiObject.ValueLabelConfiguration != nil {
 		tfMap["value_label_configuration"] = flattenReferenceLineValueLabelConfiguration(apiObject.ValueLabelConfiguration)
 	}
-	if apiObject.VerticalPosition != nil {
-		tfMap["vertical_position"] = aws.StringValue(apiObject.VerticalPosition)
-	}
+
+	tfMap["vertical_position"] = types.ReferenceLineLabelVerticalPosition(apiObject.VerticalPosition)
 
 	return []interface{}{tfMap}
 }
-func flattenReferenceLineCustomLabelConfiguration(apiObject *quicksight.ReferenceLineCustomLabelConfiguration) []interface{} {
+func flattenReferenceLineCustomLabelConfiguration(apiObject *types.ReferenceLineCustomLabelConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"custom_label": aws.StringValue(apiObject.CustomLabel),
+		"custom_label": aws.ToString(apiObject.CustomLabel),
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenReferenceLineValueLabelConfiguration(apiObject *quicksight.ReferenceLineValueLabelConfiguration) []interface{} {
+func flattenReferenceLineValueLabelConfiguration(apiObject *types.ReferenceLineValueLabelConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1656,40 +1641,38 @@ func flattenReferenceLineValueLabelConfiguration(apiObject *quicksight.Reference
 	if apiObject.FormatConfiguration != nil {
 		tfMap["format_configuration"] = flattenNumericFormatConfiguration(apiObject.FormatConfiguration)
 	}
-	if apiObject.RelativePosition != nil {
-		tfMap["relative_position"] = aws.StringValue(apiObject.RelativePosition)
-	}
+
+	tfMap["relative_position"] = types.ReferenceLineValueLabelRelativePosition(apiObject.RelativePosition)
 
 	return []interface{}{tfMap}
 }
 
-func flattenReferenceLineStyleConfiguration(apiObject *quicksight.ReferenceLineStyleConfiguration) []interface{} {
+func flattenReferenceLineStyleConfiguration(apiObject *types.ReferenceLineStyleConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Color != nil {
-		tfMap["color"] = aws.StringValue(apiObject.Color)
+		tfMap["color"] = aws.ToString(apiObject.Color)
 	}
-	if apiObject.Pattern != nil {
-		tfMap["pattern"] = aws.StringValue(apiObject.Pattern)
-	}
+
+	tfMap["pattern"] = types.ReferenceLinePatternType(apiObject.Pattern)
 
 	return []interface{}{tfMap}
 }
 
-func flattenSmallMultiplesOptions(apiObject *quicksight.SmallMultiplesOptions) []interface{} {
+func flattenSmallMultiplesOptions(apiObject *types.SmallMultiplesOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.MaxVisibleColumns != nil {
-		tfMap["max_visible_columns"] = aws.Int64Value(apiObject.MaxVisibleColumns)
+		tfMap["max_visible_columns"] = aws.ToInt64(apiObject.MaxVisibleColumns)
 	}
 	if apiObject.MaxVisibleRows != nil {
-		tfMap["max_visible_rows"] = aws.Int64Value(apiObject.MaxVisibleRows)
+		tfMap["max_visible_rows"] = aws.ToInt64(apiObject.MaxVisibleRows)
 	}
 	if apiObject.PanelConfiguration != nil {
 		tfMap["panel_configuration"] = flattenPanelConfiguration(apiObject.PanelConfiguration)
@@ -1698,32 +1681,32 @@ func flattenSmallMultiplesOptions(apiObject *quicksight.SmallMultiplesOptions) [
 	return []interface{}{tfMap}
 }
 
-func flattenPanelConfiguration(apiObject *quicksight.PanelConfiguration) []interface{} {
+func flattenPanelConfiguration(apiObject *types.PanelConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.BackgroundColor != nil {
-		tfMap["background_color"] = aws.StringValue(apiObject.BackgroundColor)
+		tfMap["background_color"] = aws.ToString(apiObject.BackgroundColor)
 	}
-	if apiObject.BackgroundVisibility != nil {
-		tfMap["background_visibility"] = aws.StringValue(apiObject.BackgroundVisibility)
-	}
+
+	tfMap["background_visibility"] = types.Visibility(apiObject.BackgroundVisibility)
+
 	if apiObject.BorderColor != nil {
-		tfMap["border_color"] = aws.StringValue(apiObject.BorderColor)
+		tfMap["border_color"] = aws.ToString(apiObject.BorderColor)
 	}
-	if apiObject.BorderStyle != nil {
-		tfMap["border_style"] = aws.StringValue(apiObject.BorderStyle)
-	}
+
+	tfMap["border_style"] = types.PanelBorderStyle(apiObject.BorderStyle)
+
 	if apiObject.BorderThickness != nil {
-		tfMap["border_thickness"] = aws.StringValue(apiObject.BorderThickness)
+		tfMap["border_thickness"] = aws.ToString(apiObject.BorderThickness)
 	}
-	if apiObject.BorderVisibility != nil {
-		tfMap["border_visibility"] = aws.StringValue(apiObject.BorderVisibility)
-	}
+
+	tfMap["border_visibility"] = types.Visibility(apiObject.BorderVisibility)
+
 	if apiObject.GutterSpacing != nil {
-		tfMap["gutter_spacing"] = aws.StringValue(apiObject.GutterSpacing)
+		tfMap["gutter_spacing"] = aws.ToString(apiObject.GutterSpacing)
 	}
 	if apiObject.Title != nil {
 		tfMap["title"] = flattenPanelTitleOptions(apiObject.Title)
@@ -1732,7 +1715,7 @@ func flattenPanelConfiguration(apiObject *quicksight.PanelConfiguration) []inter
 	return []interface{}{tfMap}
 }
 
-func flattenPanelTitleOptions(apiObject *quicksight.PanelTitleOptions) []interface{} {
+func flattenPanelTitleOptions(apiObject *types.PanelTitleOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1741,12 +1724,10 @@ func flattenPanelTitleOptions(apiObject *quicksight.PanelTitleOptions) []interfa
 	if apiObject.FontConfiguration != nil {
 		tfMap["font_configuration"] = flattenFontConfiguration(apiObject.FontConfiguration)
 	}
-	if apiObject.HorizontalTextAlignment != nil {
-		tfMap["horizontal_text_alignment"] = aws.StringValue(apiObject.HorizontalTextAlignment)
-	}
-	if apiObject.Visibility != nil {
-		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
-	}
+
+	tfMap["horizontal_text_alignment"] = types.HorizontalTextAlignment(apiObject.HorizontalTextAlignment)
+
+	tfMap["visibility"] = types.Visibility(apiObject.Visibility)
 
 	return []interface{}{tfMap}
 }

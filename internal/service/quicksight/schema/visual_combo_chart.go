@@ -4,10 +4,11 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -29,7 +30,7 @@ func comboChartVisualSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"bar_data_labels":        dataLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelOptions.html
-							"bars_arrangement":       stringSchema(false, validation.StringInSlice(quicksight.BarsArrangement_Values(), false)),
+							"bars_arrangement":       stringSchema(false, enum.Validate[types.BarsArrangement]()),
 							"category_axis":          axisDisplayOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"category_label_options": chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
 							"color_label_options":    chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
@@ -92,7 +93,7 @@ func comboChartVisualSchema() *schema.Schema {
 	}
 }
 
-func expandComboChartVisual(tfList []interface{}) *quicksight.ComboChartVisual {
+func expandComboChartVisual(tfList []interface{}) *types.ComboChartVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -102,7 +103,7 @@ func expandComboChartVisual(tfList []interface{}) *quicksight.ComboChartVisual {
 		return nil
 	}
 
-	visual := &quicksight.ComboChartVisual{}
+	visual := &types.ComboChartVisual{}
 
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		visual.VisualId = aws.String(v)
@@ -126,7 +127,7 @@ func expandComboChartVisual(tfList []interface{}) *quicksight.ComboChartVisual {
 	return visual
 }
 
-func expandComboChartConfiguration(tfList []interface{}) *quicksight.ComboChartConfiguration {
+func expandComboChartConfiguration(tfList []interface{}) *types.ComboChartConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -136,10 +137,10 @@ func expandComboChartConfiguration(tfList []interface{}) *quicksight.ComboChartC
 		return nil
 	}
 
-	config := &quicksight.ComboChartConfiguration{}
+	config := &types.ComboChartConfiguration{}
 
 	if v, ok := tfMap["bars_arrangement"].(string); ok && v != "" {
-		config.BarsArrangement = aws.String(v)
+		config.BarsArrangement = types.BarsArrangement(v)
 	}
 	if v, ok := tfMap["bar_data_labels"].([]interface{}); ok && len(v) > 0 {
 		config.BarDataLabels = expandDataLabelOptions(v)
@@ -190,7 +191,7 @@ func expandComboChartConfiguration(tfList []interface{}) *quicksight.ComboChartC
 	return config
 }
 
-func expandComboChartFieldWells(tfList []interface{}) *quicksight.ComboChartFieldWells {
+func expandComboChartFieldWells(tfList []interface{}) *types.ComboChartFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -200,7 +201,7 @@ func expandComboChartFieldWells(tfList []interface{}) *quicksight.ComboChartFiel
 		return nil
 	}
 
-	config := &quicksight.ComboChartFieldWells{}
+	config := &types.ComboChartFieldWells{}
 
 	if v, ok := tfMap["combo_chart_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
 		config.ComboChartAggregatedFieldWells = expandComboChartAggregatedFieldWells(v)
@@ -209,7 +210,7 @@ func expandComboChartFieldWells(tfList []interface{}) *quicksight.ComboChartFiel
 	return config
 }
 
-func expandComboChartAggregatedFieldWells(tfList []interface{}) *quicksight.ComboChartAggregatedFieldWells {
+func expandComboChartAggregatedFieldWells(tfList []interface{}) *types.ComboChartAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -219,7 +220,7 @@ func expandComboChartAggregatedFieldWells(tfList []interface{}) *quicksight.Comb
 		return nil
 	}
 
-	config := &quicksight.ComboChartAggregatedFieldWells{}
+	config := &types.ComboChartAggregatedFieldWells{}
 
 	if v, ok := tfMap["bar_values"].([]interface{}); ok && len(v) > 0 {
 		config.BarValues = expandMeasureFields(v)
@@ -237,7 +238,7 @@ func expandComboChartAggregatedFieldWells(tfList []interface{}) *quicksight.Comb
 	return config
 }
 
-func expandComboChartSortConfiguration(tfList []interface{}) *quicksight.ComboChartSortConfiguration {
+func expandComboChartSortConfiguration(tfList []interface{}) *types.ComboChartSortConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -247,7 +248,7 @@ func expandComboChartSortConfiguration(tfList []interface{}) *quicksight.ComboCh
 		return nil
 	}
 
-	config := &quicksight.ComboChartSortConfiguration{}
+	config := &types.ComboChartSortConfiguration{}
 
 	if v, ok := tfMap["category_items_limit"].([]interface{}); ok && len(v) > 0 {
 		config.CategoryItemsLimit = expandItemsLimitConfiguration(v)
@@ -265,13 +266,13 @@ func expandComboChartSortConfiguration(tfList []interface{}) *quicksight.ComboCh
 	return config
 }
 
-func flattenComboChartVisual(apiObject *quicksight.ComboChartVisual) []interface{} {
+func flattenComboChartVisual(apiObject *types.ComboChartVisual) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"visual_id": aws.StringValue(apiObject.VisualId),
+		"visual_id": aws.ToString(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
 		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
@@ -292,7 +293,7 @@ func flattenComboChartVisual(apiObject *quicksight.ComboChartVisual) []interface
 	return []interface{}{tfMap}
 }
 
-func flattenComboChartConfiguration(apiObject *quicksight.ComboChartConfiguration) []interface{} {
+func flattenComboChartConfiguration(apiObject *types.ComboChartConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -301,9 +302,8 @@ func flattenComboChartConfiguration(apiObject *quicksight.ComboChartConfiguratio
 	if apiObject.BarDataLabels != nil {
 		tfMap["bar_data_labels"] = flattenDataLabelOptions(apiObject.BarDataLabels)
 	}
-	if apiObject.BarsArrangement != nil {
-		tfMap["bars_arrangement"] = aws.StringValue(apiObject.BarsArrangement)
-	}
+	tfMap["bars_arrangement"] = types.BarsArrangement(apiObject.BarsArrangement)
+
 	if apiObject.CategoryAxis != nil {
 		tfMap["category_axis"] = flattenAxisDisplayOptions(apiObject.CategoryAxis)
 	}
@@ -350,7 +350,7 @@ func flattenComboChartConfiguration(apiObject *quicksight.ComboChartConfiguratio
 	return []interface{}{tfMap}
 }
 
-func flattenComboChartFieldWells(apiObject *quicksight.ComboChartFieldWells) []interface{} {
+func flattenComboChartFieldWells(apiObject *types.ComboChartFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -363,7 +363,7 @@ func flattenComboChartFieldWells(apiObject *quicksight.ComboChartFieldWells) []i
 	return []interface{}{tfMap}
 }
 
-func flattenComboChartAggregatedFieldWells(apiObject *quicksight.ComboChartAggregatedFieldWells) []interface{} {
+func flattenComboChartAggregatedFieldWells(apiObject *types.ComboChartAggregatedFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -385,7 +385,7 @@ func flattenComboChartAggregatedFieldWells(apiObject *quicksight.ComboChartAggre
 	return []interface{}{tfMap}
 }
 
-func flattenComboChartSortConfiguration(apiObject *quicksight.ComboChartSortConfiguration) []interface{} {
+func flattenComboChartSortConfiguration(apiObject *types.ComboChartSortConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

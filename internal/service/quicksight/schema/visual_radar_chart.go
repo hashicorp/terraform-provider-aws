@@ -5,10 +5,12 @@ package schema
 
 import (
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -29,9 +31,9 @@ func radarChartVisualSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"alternate_band_colors_visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
-							"alternate_band_even_color":        stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
-							"alternate_band_odd_color":         stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+							"alternate_band_colors_visibility": stringSchema(false, enum.Validate[types.Visibility]()),
+							"alternate_band_even_color":        stringSchema(false, validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""))),
+							"alternate_band_odd_color":         stringSchema(false, validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""))),
 							"base_series_settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartSeriesSettings.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -46,7 +48,7 @@ func radarChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+													"visibility": stringSchema(false, enum.Validate[types.Visibility]()),
 												},
 											},
 										},
@@ -81,7 +83,7 @@ func radarChartVisualSchema() *schema.Schema {
 								},
 							},
 							"legend": legendOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LegendOptions.html
-							"shape":  stringSchema(false, validation.StringInSlice(quicksight.RadarChartShape_Values(), false)),
+							"shape":  stringSchema(false, enum.Validate[types.RadarChartShape]()),
 							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_RadarChartSortConfiguration.html
 								Type:             schema.TypeList,
 								Optional:         true,
@@ -110,7 +112,7 @@ func radarChartVisualSchema() *schema.Schema {
 	}
 }
 
-func expandRadarChartVisual(tfList []interface{}) *quicksight.RadarChartVisual {
+func expandRadarChartVisual(tfList []interface{}) *types.RadarChartVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -120,7 +122,7 @@ func expandRadarChartVisual(tfList []interface{}) *quicksight.RadarChartVisual {
 		return nil
 	}
 
-	visual := &quicksight.RadarChartVisual{}
+	visual := &types.RadarChartVisual{}
 
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		visual.VisualId = aws.String(v)
@@ -144,7 +146,7 @@ func expandRadarChartVisual(tfList []interface{}) *quicksight.RadarChartVisual {
 	return visual
 }
 
-func expandRadarChartConfiguration(tfList []interface{}) *quicksight.RadarChartConfiguration {
+func expandRadarChartConfiguration(tfList []interface{}) *types.RadarChartConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -154,10 +156,10 @@ func expandRadarChartConfiguration(tfList []interface{}) *quicksight.RadarChartC
 		return nil
 	}
 
-	config := &quicksight.RadarChartConfiguration{}
+	config := &types.RadarChartConfiguration{}
 
 	if v, ok := tfMap["alternate_band_colors_visibility"].(string); ok && v != "" {
-		config.AlternateBandColorsVisibility = aws.String(v)
+		config.AlternateBandColorsVisibility = types.Visibility(v)
 	}
 	if v, ok := tfMap["alternate_band_even_color"].(string); ok && v != "" {
 		config.AlternateBandEvenColor = aws.String(v)
@@ -166,7 +168,7 @@ func expandRadarChartConfiguration(tfList []interface{}) *quicksight.RadarChartC
 		config.AlternateBandOddColor = aws.String(v)
 	}
 	if v, ok := tfMap["shape"].(string); ok && v != "" {
-		config.Shape = aws.String(v)
+		config.Shape = types.RadarChartShape(v)
 	}
 	if v, ok := tfMap["start_angle"].(float64); ok {
 		config.StartAngle = aws.Float64(v)
@@ -202,7 +204,7 @@ func expandRadarChartConfiguration(tfList []interface{}) *quicksight.RadarChartC
 	return config
 }
 
-func expandRadarChartFieldWells(tfList []interface{}) *quicksight.RadarChartFieldWells {
+func expandRadarChartFieldWells(tfList []interface{}) *types.RadarChartFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -212,7 +214,7 @@ func expandRadarChartFieldWells(tfList []interface{}) *quicksight.RadarChartFiel
 		return nil
 	}
 
-	config := &quicksight.RadarChartFieldWells{}
+	config := &types.RadarChartFieldWells{}
 
 	if v, ok := tfMap["radar_chart_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
 		config.RadarChartAggregatedFieldWells = expandRadarChartAggregatedFieldWells(v)
@@ -221,7 +223,7 @@ func expandRadarChartFieldWells(tfList []interface{}) *quicksight.RadarChartFiel
 	return config
 }
 
-func expandRadarChartAggregatedFieldWells(tfList []interface{}) *quicksight.RadarChartAggregatedFieldWells {
+func expandRadarChartAggregatedFieldWells(tfList []interface{}) *types.RadarChartAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -231,7 +233,7 @@ func expandRadarChartAggregatedFieldWells(tfList []interface{}) *quicksight.Rada
 		return nil
 	}
 
-	config := &quicksight.RadarChartAggregatedFieldWells{}
+	config := &types.RadarChartAggregatedFieldWells{}
 
 	if v, ok := tfMap["category"].([]interface{}); ok && len(v) > 0 {
 		config.Category = expandDimensionFields(v)
@@ -246,7 +248,7 @@ func expandRadarChartAggregatedFieldWells(tfList []interface{}) *quicksight.Rada
 	return config
 }
 
-func expandRadarChartSortConfiguration(tfList []interface{}) *quicksight.RadarChartSortConfiguration {
+func expandRadarChartSortConfiguration(tfList []interface{}) *types.RadarChartSortConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -256,7 +258,7 @@ func expandRadarChartSortConfiguration(tfList []interface{}) *quicksight.RadarCh
 		return nil
 	}
 
-	config := &quicksight.RadarChartSortConfiguration{}
+	config := &types.RadarChartSortConfiguration{}
 
 	if v, ok := tfMap["category_items_limit"].([]interface{}); ok && len(v) > 0 {
 		config.CategoryItemsLimit = expandItemsLimitConfiguration(v)
@@ -274,7 +276,7 @@ func expandRadarChartSortConfiguration(tfList []interface{}) *quicksight.RadarCh
 	return config
 }
 
-func expandRadarChartSeriesSettings(tfList []interface{}) *quicksight.RadarChartSeriesSettings {
+func expandRadarChartSeriesSettings(tfList []interface{}) *types.RadarChartSeriesSettings {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -284,7 +286,7 @@ func expandRadarChartSeriesSettings(tfList []interface{}) *quicksight.RadarChart
 		return nil
 	}
 
-	config := &quicksight.RadarChartSeriesSettings{}
+	config := &types.RadarChartSeriesSettings{}
 
 	if v, ok := tfMap["area_style_settings"].([]interface{}); ok && len(v) > 0 {
 		config.AreaStyleSettings = expandRadarChartAreaStyleSettings(v)
@@ -293,7 +295,7 @@ func expandRadarChartSeriesSettings(tfList []interface{}) *quicksight.RadarChart
 	return config
 }
 
-func expandRadarChartAreaStyleSettings(tfList []interface{}) *quicksight.RadarChartAreaStyleSettings {
+func expandRadarChartAreaStyleSettings(tfList []interface{}) *types.RadarChartAreaStyleSettings {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -303,22 +305,22 @@ func expandRadarChartAreaStyleSettings(tfList []interface{}) *quicksight.RadarCh
 		return nil
 	}
 
-	config := &quicksight.RadarChartAreaStyleSettings{}
+	config := &types.RadarChartAreaStyleSettings{}
 
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		config.Visibility = aws.String(v)
+		config.Visibility = types.Visibility(v)
 	}
 
 	return config
 }
 
-func flattenRadarChartVisual(apiObject *quicksight.RadarChartVisual) []interface{} {
+func flattenRadarChartVisual(apiObject *types.RadarChartVisual) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"visual_id": aws.StringValue(apiObject.VisualId),
+		"visual_id": aws.ToString(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
 		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
@@ -339,20 +341,20 @@ func flattenRadarChartVisual(apiObject *quicksight.RadarChartVisual) []interface
 	return []interface{}{tfMap}
 }
 
-func flattenRadarChartConfiguration(apiObject *quicksight.RadarChartConfiguration) []interface{} {
+func flattenRadarChartConfiguration(apiObject *types.RadarChartConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.AlternateBandColorsVisibility != nil {
-		tfMap["alternate_band_colors_visibility"] = aws.StringValue(apiObject.AlternateBandColorsVisibility)
-	}
+
+	tfMap["alternate_band_colors_visibility"] = types.Visibility(apiObject.AlternateBandColorsVisibility)
+
 	if apiObject.AlternateBandEvenColor != nil {
-		tfMap["alternate_band_even_color"] = aws.StringValue(apiObject.AlternateBandEvenColor)
+		tfMap["alternate_band_even_color"] = aws.ToString(apiObject.AlternateBandEvenColor)
 	}
 	if apiObject.AlternateBandOddColor != nil {
-		tfMap["alternate_band_odd_color"] = aws.StringValue(apiObject.AlternateBandOddColor)
+		tfMap["alternate_band_odd_color"] = aws.ToString(apiObject.AlternateBandOddColor)
 	}
 	if apiObject.BaseSeriesSettings != nil {
 		tfMap["base_series_settings"] = flattenRadarChartSeriesSettings(apiObject.BaseSeriesSettings)
@@ -375,14 +377,14 @@ func flattenRadarChartConfiguration(apiObject *quicksight.RadarChartConfiguratio
 	if apiObject.Legend != nil {
 		tfMap["legend"] = flattenLegendOptions(apiObject.Legend)
 	}
-	if apiObject.Shape != nil {
-		tfMap["shape"] = aws.StringValue(apiObject.Shape)
-	}
+
+	tfMap["shape"] = types.RadarChartShape(apiObject.Shape)
+
 	if apiObject.SortConfiguration != nil {
 		tfMap["sort_configuration"] = flattenRadarChartSortConfiguration(apiObject.SortConfiguration)
 	}
 	if apiObject.StartAngle != nil {
-		tfMap["start_angle"] = aws.Float64Value(apiObject.StartAngle)
+		tfMap["start_angle"] = aws.ToFloat64(apiObject.StartAngle)
 	}
 	if apiObject.VisualPalette != nil {
 		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
@@ -391,7 +393,7 @@ func flattenRadarChartConfiguration(apiObject *quicksight.RadarChartConfiguratio
 	return []interface{}{tfMap}
 }
 
-func flattenRadarChartSeriesSettings(apiObject *quicksight.RadarChartSeriesSettings) []interface{} {
+func flattenRadarChartSeriesSettings(apiObject *types.RadarChartSeriesSettings) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -404,20 +406,19 @@ func flattenRadarChartSeriesSettings(apiObject *quicksight.RadarChartSeriesSetti
 	return []interface{}{tfMap}
 }
 
-func flattenRadarChartAreaStyleSettings(apiObject *quicksight.RadarChartAreaStyleSettings) []interface{} {
+func flattenRadarChartAreaStyleSettings(apiObject *types.RadarChartAreaStyleSettings) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.Visibility != nil {
-		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
-	}
+
+	tfMap["visibility"] = types.Visibility(apiObject.Visibility)
 
 	return []interface{}{tfMap}
 }
 
-func flattenRadarChartFieldWells(apiObject *quicksight.RadarChartFieldWells) []interface{} {
+func flattenRadarChartFieldWells(apiObject *types.RadarChartFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -430,7 +431,7 @@ func flattenRadarChartFieldWells(apiObject *quicksight.RadarChartFieldWells) []i
 	return []interface{}{tfMap}
 }
 
-func flattenRadarChartAggregatedFieldWells(apiObject *quicksight.RadarChartAggregatedFieldWells) []interface{} {
+func flattenRadarChartAggregatedFieldWells(apiObject *types.RadarChartAggregatedFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -449,7 +450,7 @@ func flattenRadarChartAggregatedFieldWells(apiObject *quicksight.RadarChartAggre
 	return []interface{}{tfMap}
 }
 
-func flattenRadarChartSortConfiguration(apiObject *quicksight.RadarChartSortConfiguration) []interface{} {
+func flattenRadarChartSortConfiguration(apiObject *types.RadarChartSortConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

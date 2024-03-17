@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -30,14 +30,14 @@ func ParametersSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"name": stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
+							"name": stringSchema(true, validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`.*\S.*`), ""))),
 							"values": {
 								Type:     schema.TypeList,
 								MinItems: 1,
 								Required: true,
 								Elem: &schema.Schema{
-									Type:         schema.TypeString,
-									ValidateFunc: verify.ValidUTCTimestamp,
+									Type:             schema.TypeString,
+									ValidateDiagFunc: validation.ToDiagFunc(verify.ValidUTCTimestamp),
 								},
 							},
 						},
@@ -50,7 +50,7 @@ func ParametersSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"name": stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
+							"name": stringSchema(true, validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`.*\S.*`), ""))),
 							"values": {
 								Type:     schema.TypeList,
 								MinItems: 1,
@@ -69,7 +69,7 @@ func ParametersSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"name": stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
+							"name": stringSchema(true, validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`.*\S.*`), ""))),
 							"values": {
 								Type:     schema.TypeList,
 								MinItems: 1,
@@ -88,7 +88,7 @@ func ParametersSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"name": stringSchema(true, validation.StringMatch(regexache.MustCompile(`.*\S.*`), "")),
+							"name": stringSchema(true, validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`.*\S.*`), ""))),
 							"values": {
 								Type:     schema.TypeList,
 								MinItems: 1,
@@ -105,7 +105,7 @@ func ParametersSchema() *schema.Schema {
 	}
 }
 
-func ExpandParameters(tfList []interface{}) *quicksight.Parameters {
+func ExpandParameters(tfList []interface{}) *types.Parameters {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -115,7 +115,7 @@ func ExpandParameters(tfList []interface{}) *quicksight.Parameters {
 		return nil
 	}
 
-	parameters := &quicksight.Parameters{}
+	parameters := &types.Parameters{}
 
 	if v, ok := tfMap["date_time_parameters"].([]interface{}); ok && len(v) > 0 {
 		parameters.DateTimeParameters = expandDateTimeParameters(v)
@@ -133,12 +133,12 @@ func ExpandParameters(tfList []interface{}) *quicksight.Parameters {
 	return parameters
 }
 
-func expandDateTimeParameters(tfList []interface{}) []*quicksight.DateTimeParameter {
+func expandDateTimeParameters(tfList []interface{}) []types.DateTimeParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var parameters []*quicksight.DateTimeParameter
+	var parameters []types.DateTimeParameter
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -150,35 +150,35 @@ func expandDateTimeParameters(tfList []interface{}) []*quicksight.DateTimeParame
 			continue
 		}
 
-		parameters = append(parameters, parameter)
+		parameters = append(parameters, *parameter)
 	}
 
 	return parameters
 }
 
-func expandDateTimeParameter(tfMap map[string]interface{}) *quicksight.DateTimeParameter {
+func expandDateTimeParameter(tfMap map[string]interface{}) *types.DateTimeParameter {
 	if tfMap == nil {
 		return nil
 	}
 
-	parameter := &quicksight.DateTimeParameter{}
+	parameter := &types.DateTimeParameter{}
 
 	if v, ok := tfMap["name"].(string); ok && v != "" {
 		parameter.Name = aws.String(v)
 	}
 	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
-		parameter.Values = flex.ExpandStringTimeList(v, time.RFC3339)
+		parameter.Values = flex.ExpandStringTimeValueList(v, time.RFC3339)
 	}
 
 	return parameter
 }
 
-func expandDecimalParameters(tfList []interface{}) []*quicksight.DecimalParameter {
+func expandDecimalParameters(tfList []interface{}) []types.DecimalParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var parameters []*quicksight.DecimalParameter
+	var parameters []types.DecimalParameter
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -190,35 +190,35 @@ func expandDecimalParameters(tfList []interface{}) []*quicksight.DecimalParamete
 			continue
 		}
 
-		parameters = append(parameters, parameter)
+		parameters = append(parameters, *parameter)
 	}
 
 	return parameters
 }
 
-func expandDecimalParameter(tfMap map[string]interface{}) *quicksight.DecimalParameter {
+func expandDecimalParameter(tfMap map[string]interface{}) *types.DecimalParameter {
 	if tfMap == nil {
 		return nil
 	}
 
-	parameter := &quicksight.DecimalParameter{}
+	parameter := &types.DecimalParameter{}
 
 	if v, ok := tfMap["name"].(string); ok && v != "" {
 		parameter.Name = aws.String(v)
 	}
 	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
-		parameter.Values = flex.ExpandFloat64List(v)
+		parameter.Values = flex.ExpandFloat64ValueList(v)
 	}
 
 	return parameter
 }
 
-func expandIntegerParameters(tfList []interface{}) []*quicksight.IntegerParameter {
+func expandIntegerParameters(tfList []interface{}) []types.IntegerParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var parameters []*quicksight.IntegerParameter
+	var parameters []types.IntegerParameter
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -230,35 +230,35 @@ func expandIntegerParameters(tfList []interface{}) []*quicksight.IntegerParamete
 			continue
 		}
 
-		parameters = append(parameters, parameter)
+		parameters = append(parameters, *parameter)
 	}
 
 	return parameters
 }
 
-func expandIntegerParameter(tfMap map[string]interface{}) *quicksight.IntegerParameter {
+func expandIntegerParameter(tfMap map[string]interface{}) *types.IntegerParameter {
 	if tfMap == nil {
 		return nil
 	}
 
-	parameter := &quicksight.IntegerParameter{}
+	parameter := &types.IntegerParameter{}
 
 	if v, ok := tfMap["name"].(string); ok && v != "" {
 		parameter.Name = aws.String(v)
 	}
 	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
-		parameter.Values = flex.ExpandInt64List(v)
+		parameter.Values = flex.ExpandInt64ValueList(v)
 	}
 
 	return parameter
 }
 
-func expandStringParameters(tfList []interface{}) []*quicksight.StringParameter {
+func expandStringParameters(tfList []interface{}) []types.StringParameter {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var parameters []*quicksight.StringParameter
+	var parameters []types.StringParameter
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -270,24 +270,24 @@ func expandStringParameters(tfList []interface{}) []*quicksight.StringParameter 
 			continue
 		}
 
-		parameters = append(parameters, parameter)
+		parameters = append(parameters, *parameter)
 	}
 
 	return parameters
 }
 
-func expandStringParameter(tfMap map[string]interface{}) *quicksight.StringParameter {
+func expandStringParameter(tfMap map[string]interface{}) *types.StringParameter {
 	if tfMap == nil {
 		return nil
 	}
 
-	parameter := &quicksight.StringParameter{}
+	parameter := &types.StringParameter{}
 
 	if v, ok := tfMap["name"].(string); ok && v != "" {
 		parameter.Name = aws.String(v)
 	}
 	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
-		parameter.Values = flex.ExpandStringList(v)
+		parameter.Values = flex.ExpandStringValueList(v)
 	}
 
 	return parameter

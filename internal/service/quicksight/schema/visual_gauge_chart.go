@@ -4,10 +4,12 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 func gaugeChartVisualSchema() *schema.Schema {
@@ -58,7 +60,7 @@ func gaugeChartVisualSchema() *schema.Schema {
 														Type:     schema.TypeFloat,
 														Optional: true,
 													},
-													"arc_thickness": stringSchema(false, validation.StringInSlice(quicksight.ArcThicknessOptions_Values(), false)),
+													"arc_thickness": stringSchema(false, enum.Validate[types.ArcThicknessOptions]()),
 												},
 											},
 										},
@@ -95,7 +97,7 @@ func gaugeChartVisualSchema() *schema.Schema {
 											},
 										},
 										"comparison":                       comparisonConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ComparisonConfiguration.html
-										"primary_value_display_type":       stringSchema(false, validation.StringInSlice(quicksight.PrimaryValueDisplayType_Values(), false)),
+										"primary_value_display_type":       stringSchema(false, validation.ToDiagFunc(validation.StringInSlice(quicksight.PrimaryValueDisplayType_Values(), false))),
 										"primary_value_font_configuration": fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
 									},
 								},
@@ -155,7 +157,7 @@ func gaugeChartVisualSchema() *schema.Schema {
 	}
 }
 
-func expandGaugeChartVisual(tfList []interface{}) *quicksight.GaugeChartVisual {
+func expandGaugeChartVisual(tfList []interface{}) *types.GaugeChartVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -165,7 +167,7 @@ func expandGaugeChartVisual(tfList []interface{}) *quicksight.GaugeChartVisual {
 		return nil
 	}
 
-	visual := &quicksight.GaugeChartVisual{}
+	visual := &types.GaugeChartVisual{}
 
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		visual.VisualId = aws.String(v)
@@ -189,7 +191,7 @@ func expandGaugeChartVisual(tfList []interface{}) *quicksight.GaugeChartVisual {
 	return visual
 }
 
-func expandGaugeChartConfiguration(tfList []interface{}) *quicksight.GaugeChartConfiguration {
+func expandGaugeChartConfiguration(tfList []interface{}) *types.GaugeChartConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -199,7 +201,7 @@ func expandGaugeChartConfiguration(tfList []interface{}) *quicksight.GaugeChartC
 		return nil
 	}
 
-	config := &quicksight.GaugeChartConfiguration{}
+	config := &types.GaugeChartConfiguration{}
 
 	if v, ok := tfMap["data_labels"].([]interface{}); ok && len(v) > 0 {
 		config.DataLabels = expandDataLabelOptions(v)
@@ -220,7 +222,7 @@ func expandGaugeChartConfiguration(tfList []interface{}) *quicksight.GaugeChartC
 	return config
 }
 
-func expandGaugeChartFieldWells(tfList []interface{}) *quicksight.GaugeChartFieldWells {
+func expandGaugeChartFieldWells(tfList []interface{}) *types.GaugeChartFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -230,7 +232,7 @@ func expandGaugeChartFieldWells(tfList []interface{}) *quicksight.GaugeChartFiel
 		return nil
 	}
 
-	config := &quicksight.GaugeChartFieldWells{}
+	config := &types.GaugeChartFieldWells{}
 
 	if v, ok := tfMap["target_values"].([]interface{}); ok && len(v) > 0 {
 		config.TargetValues = expandMeasureFields(v)
@@ -242,7 +244,7 @@ func expandGaugeChartFieldWells(tfList []interface{}) *quicksight.GaugeChartFiel
 	return config
 }
 
-func expandGaugeChartOptions(tfList []interface{}) *quicksight.GaugeChartOptions {
+func expandGaugeChartOptions(tfList []interface{}) *types.GaugeChartOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -252,10 +254,10 @@ func expandGaugeChartOptions(tfList []interface{}) *quicksight.GaugeChartOptions
 		return nil
 	}
 
-	options := &quicksight.GaugeChartOptions{}
+	options := &types.GaugeChartOptions{}
 
 	if v, ok := tfMap["primary_value_display_type"].(string); ok && v != "" {
-		options.PrimaryValueDisplayType = aws.String(v)
+		options.PrimaryValueDisplayType = types.PrimaryValueDisplayType(v)
 	}
 	if v, ok := tfMap["primary_value_font_configuration"].([]interface{}); ok && len(v) > 0 {
 		options.PrimaryValueFontConfiguration = expandFontConfiguration(v)
@@ -273,7 +275,7 @@ func expandGaugeChartOptions(tfList []interface{}) *quicksight.GaugeChartOptions
 	return options
 }
 
-func expandGaugeChartConditionalFormatting(tfList []interface{}) *quicksight.GaugeChartConditionalFormatting {
+func expandGaugeChartConditionalFormatting(tfList []interface{}) *types.GaugeChartConditionalFormatting {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -283,7 +285,7 @@ func expandGaugeChartConditionalFormatting(tfList []interface{}) *quicksight.Gau
 		return nil
 	}
 
-	config := &quicksight.GaugeChartConditionalFormatting{}
+	config := &types.GaugeChartConditionalFormatting{}
 
 	if v, ok := tfMap["conditional_formatting_options"].([]interface{}); ok && len(v) > 0 {
 		config.ConditionalFormattingOptions = expandGaugeChartConditionalFormattingOptions(v)
@@ -292,12 +294,12 @@ func expandGaugeChartConditionalFormatting(tfList []interface{}) *quicksight.Gau
 	return config
 }
 
-func expandGaugeChartConditionalFormattingOptions(tfList []interface{}) []*quicksight.GaugeChartConditionalFormattingOption {
+func expandGaugeChartConditionalFormattingOptions(tfList []interface{}) []types.GaugeChartConditionalFormattingOption {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var options []*quicksight.GaugeChartConditionalFormattingOption
+	var options []types.GaugeChartConditionalFormattingOption
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -309,18 +311,18 @@ func expandGaugeChartConditionalFormattingOptions(tfList []interface{}) []*quick
 			continue
 		}
 
-		options = append(options, opts)
+		options = append(options, *opts)
 	}
 
 	return options
 }
 
-func expandGaugeChartConditionalFormattingOption(tfMap map[string]interface{}) *quicksight.GaugeChartConditionalFormattingOption {
+func expandGaugeChartConditionalFormattingOption(tfMap map[string]interface{}) *types.GaugeChartConditionalFormattingOption {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &quicksight.GaugeChartConditionalFormattingOption{}
+	options := &types.GaugeChartConditionalFormattingOption{}
 
 	if v, ok := tfMap["arc"].([]interface{}); ok && len(v) > 0 {
 		options.Arc = expandGaugeChartArcConditionalFormatting(v)
@@ -332,7 +334,7 @@ func expandGaugeChartConditionalFormattingOption(tfMap map[string]interface{}) *
 	return options
 }
 
-func expandGaugeChartArcConditionalFormatting(tfList []interface{}) *quicksight.GaugeChartArcConditionalFormatting {
+func expandGaugeChartArcConditionalFormatting(tfList []interface{}) *types.GaugeChartArcConditionalFormatting {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -342,7 +344,7 @@ func expandGaugeChartArcConditionalFormatting(tfList []interface{}) *quicksight.
 		return nil
 	}
 
-	config := &quicksight.GaugeChartArcConditionalFormatting{}
+	config := &types.GaugeChartArcConditionalFormatting{}
 
 	if v, ok := tfMap["foreground_color"].([]interface{}); ok && len(v) > 0 {
 		config.ForegroundColor = expandConditionalFormattingColor(v)
@@ -351,7 +353,7 @@ func expandGaugeChartArcConditionalFormatting(tfList []interface{}) *quicksight.
 	return config
 }
 
-func expandGaugeChartPrimaryValueConditionalFormatting(tfList []interface{}) *quicksight.GaugeChartPrimaryValueConditionalFormatting {
+func expandGaugeChartPrimaryValueConditionalFormatting(tfList []interface{}) *types.GaugeChartPrimaryValueConditionalFormatting {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -361,7 +363,7 @@ func expandGaugeChartPrimaryValueConditionalFormatting(tfList []interface{}) *qu
 		return nil
 	}
 
-	config := &quicksight.GaugeChartPrimaryValueConditionalFormatting{}
+	config := &types.GaugeChartPrimaryValueConditionalFormatting{}
 
 	if v, ok := tfMap["icon"].([]interface{}); ok && len(v) > 0 {
 		config.Icon = expandConditionalFormattingIcon(v)
@@ -373,7 +375,7 @@ func expandGaugeChartPrimaryValueConditionalFormatting(tfList []interface{}) *qu
 	return config
 }
 
-func expandArcConfiguration(tfList []interface{}) *quicksight.ArcConfiguration {
+func expandArcConfiguration(tfList []interface{}) *types.ArcConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -383,19 +385,19 @@ func expandArcConfiguration(tfList []interface{}) *quicksight.ArcConfiguration {
 		return nil
 	}
 
-	config := &quicksight.ArcConfiguration{}
+	config := &types.ArcConfiguration{}
 
 	if v, ok := tfMap["arc_angle"].(float64); ok {
 		config.ArcAngle = aws.Float64(v)
 	}
 	if v, ok := tfMap["arc_thickness"].(string); ok && v != "" {
-		config.ArcThickness = aws.String(v)
+		config.ArcThickness = types.ArcThicknessOptions(v)
 	}
 
 	return config
 }
 
-func expandArcAxisConfiguration(tfList []interface{}) *quicksight.ArcAxisConfiguration {
+func expandArcAxisConfiguration(tfList []interface{}) *types.ArcAxisConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -405,19 +407,19 @@ func expandArcAxisConfiguration(tfList []interface{}) *quicksight.ArcAxisConfigu
 		return nil
 	}
 
-	config := &quicksight.ArcAxisConfiguration{}
+	config := &types.ArcAxisConfiguration{}
 
 	if v, ok := tfMap["range"].([]interface{}); ok && len(v) > 0 {
 		config.Range = expandArcAxisDisplayRange(v)
 	}
 	if v, ok := tfMap["reserve_range"].(int); ok {
-		config.ReserveRange = aws.Int64(int64(v))
+		config.ReserveRange = int32(v)
 	}
 
 	return config
 }
 
-func expandArcAxisDisplayRange(tfList []interface{}) *quicksight.ArcAxisDisplayRange {
+func expandArcAxisDisplayRange(tfList []interface{}) *types.ArcAxisDisplayRange {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -427,7 +429,7 @@ func expandArcAxisDisplayRange(tfList []interface{}) *quicksight.ArcAxisDisplayR
 		return nil
 	}
 
-	config := &quicksight.ArcAxisDisplayRange{}
+	config := &types.ArcAxisDisplayRange{}
 
 	if v, ok := tfMap["max"].(float64); ok {
 		config.Max = aws.Float64(v)
@@ -439,13 +441,13 @@ func expandArcAxisDisplayRange(tfList []interface{}) *quicksight.ArcAxisDisplayR
 	return config
 }
 
-func flattenGaugeChartVisual(apiObject *quicksight.GaugeChartVisual) []interface{} {
+func flattenGaugeChartVisual(apiObject *types.GaugeChartVisual) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"visual_id": aws.StringValue(apiObject.VisualId),
+		"visual_id": aws.ToString(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
 		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
@@ -466,7 +468,7 @@ func flattenGaugeChartVisual(apiObject *quicksight.GaugeChartVisual) []interface
 	return []interface{}{tfMap}
 }
 
-func flattenGaugeChartConfiguration(apiObject *quicksight.GaugeChartConfiguration) []interface{} {
+func flattenGaugeChartConfiguration(apiObject *types.GaugeChartConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -491,7 +493,7 @@ func flattenGaugeChartConfiguration(apiObject *quicksight.GaugeChartConfiguratio
 	return []interface{}{tfMap}
 }
 
-func flattenGaugeChartFieldWells(apiObject *quicksight.GaugeChartFieldWells) []interface{} {
+func flattenGaugeChartFieldWells(apiObject *types.GaugeChartFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -507,7 +509,7 @@ func flattenGaugeChartFieldWells(apiObject *quicksight.GaugeChartFieldWells) []i
 	return []interface{}{tfMap}
 }
 
-func flattenGaugeChartOptions(apiObject *quicksight.GaugeChartOptions) []interface{} {
+func flattenGaugeChartOptions(apiObject *types.GaugeChartOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -522,9 +524,9 @@ func flattenGaugeChartOptions(apiObject *quicksight.GaugeChartOptions) []interfa
 	if apiObject.Comparison != nil {
 		tfMap["comparison"] = flattenComparisonConfiguration(apiObject.Comparison)
 	}
-	if apiObject.PrimaryValueDisplayType != nil {
-		tfMap["primary_value_display_type"] = aws.StringValue(apiObject.PrimaryValueDisplayType)
-	}
+
+	tfMap["primary_value_display_type"] = types.PrimaryValueDisplayType(apiObject.PrimaryValueDisplayType)
+
 	if apiObject.PrimaryValueFontConfiguration != nil {
 		tfMap["primary_value_font_configuration"] = flattenFontConfiguration(apiObject.PrimaryValueFontConfiguration)
 	}
@@ -532,23 +534,22 @@ func flattenGaugeChartOptions(apiObject *quicksight.GaugeChartOptions) []interfa
 	return []interface{}{tfMap}
 }
 
-func flattenArcConfiguration(apiObject *quicksight.ArcConfiguration) []interface{} {
+func flattenArcConfiguration(apiObject *types.ArcConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ArcAngle != nil {
-		tfMap["arc_angle"] = aws.Float64Value(apiObject.ArcAngle)
+		tfMap["arc_angle"] = aws.ToFloat64(apiObject.ArcAngle)
 	}
-	if apiObject.ArcThickness != nil {
-		tfMap["arc_thickness"] = aws.StringValue(apiObject.ArcThickness)
-	}
+
+	tfMap["arc_thickness"] = types.ArcThicknessOptions(apiObject.ArcThickness)
 
 	return []interface{}{tfMap}
 }
 
-func flattenArcAxisConfiguration(apiObject *quicksight.ArcAxisConfiguration) []interface{} {
+func flattenArcAxisConfiguration(apiObject *types.ArcAxisConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -557,30 +558,29 @@ func flattenArcAxisConfiguration(apiObject *quicksight.ArcAxisConfiguration) []i
 	if apiObject.Range != nil {
 		tfMap["range"] = flattenArcAxisDisplayRange(apiObject.Range)
 	}
-	if apiObject.ReserveRange != nil {
-		tfMap["reserve_range"] = aws.Int64Value(apiObject.ReserveRange)
-	}
+
+	tfMap["reserve_range"] = int32(apiObject.ReserveRange)
 
 	return []interface{}{tfMap}
 }
 
-func flattenArcAxisDisplayRange(apiObject *quicksight.ArcAxisDisplayRange) []interface{} {
+func flattenArcAxisDisplayRange(apiObject *types.ArcAxisDisplayRange) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Max != nil {
-		tfMap["max"] = aws.Float64Value(apiObject.Max)
+		tfMap["max"] = aws.ToFloat64(apiObject.Max)
 	}
 	if apiObject.Min != nil {
-		tfMap["min"] = aws.Float64Value(apiObject.Min)
+		tfMap["min"] = aws.ToFloat64(apiObject.Min)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenComparisonConfiguration(apiObject *quicksight.ComparisonConfiguration) []interface{} {
+func flattenComparisonConfiguration(apiObject *types.ComparisonConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -589,14 +589,13 @@ func flattenComparisonConfiguration(apiObject *quicksight.ComparisonConfiguratio
 	if apiObject.ComparisonFormat != nil {
 		tfMap["comparison_format"] = flattenComparisonFormatConfiguration(apiObject.ComparisonFormat)
 	}
-	if apiObject.ComparisonMethod != nil {
-		tfMap["comparison_method"] = aws.StringValue(apiObject.ComparisonMethod)
-	}
+
+	tfMap["comparison_method"] = types.ComparisonMethod(apiObject.ComparisonMethod)
 
 	return []interface{}{tfMap}
 }
 
-func flattenComparisonFormatConfiguration(apiObject *quicksight.ComparisonFormatConfiguration) []interface{} {
+func flattenComparisonFormatConfiguration(apiObject *types.ComparisonFormatConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -612,7 +611,7 @@ func flattenComparisonFormatConfiguration(apiObject *quicksight.ComparisonFormat
 	return []interface{}{tfMap}
 }
 
-func flattenGaugeChartConditionalFormatting(apiObject *quicksight.GaugeChartConditionalFormatting) []interface{} {
+func flattenGaugeChartConditionalFormatting(apiObject *types.GaugeChartConditionalFormatting) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -625,17 +624,13 @@ func flattenGaugeChartConditionalFormatting(apiObject *quicksight.GaugeChartCond
 	return []interface{}{tfMap}
 }
 
-func flattenGaugeChartConditionalFormattingOption(apiObject []*quicksight.GaugeChartConditionalFormattingOption) []interface{} {
+func flattenGaugeChartConditionalFormattingOption(apiObject []types.GaugeChartConditionalFormattingOption) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
-
 		tfMap := map[string]interface{}{}
 		if config.Arc != nil {
 			tfMap["arc"] = flattenGaugeChartArcConditionalFormatting(config.Arc)
@@ -650,7 +645,7 @@ func flattenGaugeChartConditionalFormattingOption(apiObject []*quicksight.GaugeC
 	return tfList
 }
 
-func flattenGaugeChartArcConditionalFormatting(apiObject *quicksight.GaugeChartArcConditionalFormatting) []interface{} {
+func flattenGaugeChartArcConditionalFormatting(apiObject *types.GaugeChartArcConditionalFormatting) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -663,7 +658,7 @@ func flattenGaugeChartArcConditionalFormatting(apiObject *quicksight.GaugeChartA
 	return []interface{}{tfMap}
 }
 
-func flattenGaugeChartPrimaryValueConditionalFormatting(apiObject *quicksight.GaugeChartPrimaryValueConditionalFormatting) []interface{} {
+func flattenGaugeChartPrimaryValueConditionalFormatting(apiObject *types.GaugeChartPrimaryValueConditionalFormatting) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

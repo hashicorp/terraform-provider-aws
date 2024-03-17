@@ -7,10 +7,12 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -40,7 +42,7 @@ func lineChartVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"axis_binding":          stringSchema(false, validation.StringInSlice(quicksight.AxisBinding_Values(), false)),
+										"axis_binding":          stringSchema(false, enum.Validate[types.AxisBinding]()),
 										"line_style_settings":   lineChartLineStyleSettingsSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartLineStyleSettings.html
 										"marker_style_settings": lineChartMarkerStyleSettingsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartMarkerStyleSettings.html
 									},
@@ -113,7 +115,7 @@ func lineChartVisualSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"date": stringSchema(true, verify.ValidUTCTimestamp),
+																"date": stringSchema(true, validation.ToDiagFunc(verify.ValidUTCTimestamp)),
 																"value": {
 																	Type:     schema.TypeFloat,
 																	Required: true,
@@ -128,8 +130,8 @@ func lineChartVisualSchema() *schema.Schema {
 														MaxItems: 1,
 														Elem: &schema.Resource{
 															Schema: map[string]*schema.Schema{
-																"end_date":   stringSchema(true, verify.ValidUTCTimestamp),
-																"start_date": stringSchema(true, verify.ValidUTCTimestamp),
+																"end_date":   stringSchema(true, validation.ToDiagFunc(verify.ValidUTCTimestamp)),
+																"start_date": stringSchema(true, validation.ToDiagFunc(verify.ValidUTCTimestamp)),
 																"value": {
 																	Type:     schema.TypeFloat,
 																	Required: true,
@@ -159,7 +161,7 @@ func lineChartVisualSchema() *schema.Schema {
 											MaxItems: 100,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"treatment_option": stringSchema(false, validation.StringInSlice(quicksight.MissingDataTreatmentOption_Values(), false)),
+													"treatment_option": stringSchema(false, enum.Validate[types.MissingDataTreatmentOption]()),
 												},
 											},
 										},
@@ -183,7 +185,7 @@ func lineChartVisualSchema() *schema.Schema {
 											MaxItems: 100,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"treatment_option": stringSchema(false, validation.StringInSlice(quicksight.MissingDataTreatmentOption_Values(), false)),
+													"treatment_option": stringSchema(false, enum.Validate[types.MissingDataTreatmentOption]()),
 												},
 											},
 										},
@@ -205,8 +207,8 @@ func lineChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"axis_binding": stringSchema(true, validation.StringInSlice(quicksight.AxisBinding_Values(), false)),
-													"field_id":     stringSchema(true, validation.StringLenBetween(1, 512)),
+													"axis_binding": stringSchema(false, enum.Validate[types.AxisBinding]()),
+													"field_id":     stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 512))),
 													"field_value": {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -233,8 +235,8 @@ func lineChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"axis_binding": stringSchema(true, validation.StringInSlice(quicksight.AxisBinding_Values(), false)),
-													"field_id":     stringSchema(true, validation.StringLenBetween(1, 512)),
+													"axis_binding": stringSchema(true, enum.Validate[types.AxisBinding]()),
+													"field_id":     stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 512))),
 													"settings": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartSeriesSettings.html
 														Type:     schema.TypeList,
 														Optional: true,
@@ -271,7 +273,7 @@ func lineChartVisualSchema() *schema.Schema {
 								},
 							},
 							"tooltip":                tooltipOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipOptions.html
-							"type":                   stringOptionalComputedSchema(validation.StringInSlice(quicksight.LineChartType_Values(), false)),
+							"type":                   stringOptionalComputedSchema(enum.Validate[types.LineChartType]()),
 							"visual_palette":         visualPaletteSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualPalette.html
 							"x_axis_display_options": axisDisplayOptionsSchema(),    // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AxisDisplayOptions.html
 							"x_axis_label_options":   chartAxisLabelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ChartAxisLabelOptions.html
@@ -294,9 +296,9 @@ func lineChartLineStyleSettingsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"line_interpolation": stringSchema(false, validation.StringInSlice(quicksight.LineInterpolation_Values(), false)),
-				"line_style":         stringSchema(false, validation.StringInSlice(quicksight.LineChartLineStyle_Values(), false)),
-				"line_visibility":    stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+				"line_interpolation": stringSchema(false, enum.Validate[types.LineInterpolation]()),
+				"line_style":         stringSchema(false, enum.Validate[types.LineChartLineStyle]()),
+				"line_visibility":    stringSchema(false, enum.Validate[types.Visibility]()),
 				"line_width": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -314,19 +316,19 @@ func lineChartMarkerStyleSettingsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"marker_color": stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
-				"marker_shape": stringSchema(false, validation.StringInSlice(quicksight.LineChartMarkerShape_Values(), false)),
+				"marker_color": stringSchema(false, validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""))),
+				"marker_shape": stringSchema(false, enum.Validate[types.LineChartMarkerShape]()),
 				"marker_size": {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
-				"marker_visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+				"marker_visibility": stringSchema(false, enum.Validate[types.Visibility]()),
 			},
 		},
 	}
 }
 
-func expandLineChartVisual(tfList []interface{}) *quicksight.LineChartVisual {
+func expandLineChartVisual(tfList []interface{}) *types.LineChartVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -336,7 +338,7 @@ func expandLineChartVisual(tfList []interface{}) *quicksight.LineChartVisual {
 		return nil
 	}
 
-	visual := &quicksight.LineChartVisual{}
+	visual := &types.LineChartVisual{}
 
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		visual.VisualId = aws.String(v)
@@ -360,7 +362,7 @@ func expandLineChartVisual(tfList []interface{}) *quicksight.LineChartVisual {
 	return visual
 }
 
-func expandLineChartConfiguration(tfList []interface{}) *quicksight.LineChartConfiguration {
+func expandLineChartConfiguration(tfList []interface{}) *types.LineChartConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -370,10 +372,10 @@ func expandLineChartConfiguration(tfList []interface{}) *quicksight.LineChartCon
 		return nil
 	}
 
-	config := &quicksight.LineChartConfiguration{}
+	config := &types.LineChartConfiguration{}
 
 	if v, ok := tfMap["type"].(string); ok && v != "" {
-		config.Type = aws.String(v)
+		config.Type = types.LineChartType(v)
 	}
 	if v, ok := tfMap["contribution_analysis_defaults"].([]interface{}); ok && len(v) > 0 {
 		config.ContributionAnalysisDefaults = expandContributionAnalysisDefaults(v)
@@ -433,7 +435,7 @@ func expandLineChartConfiguration(tfList []interface{}) *quicksight.LineChartCon
 	return config
 }
 
-func expandLineChartFieldWells(tfList []interface{}) *quicksight.LineChartFieldWells {
+func expandLineChartFieldWells(tfList []interface{}) *types.LineChartFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -443,7 +445,7 @@ func expandLineChartFieldWells(tfList []interface{}) *quicksight.LineChartFieldW
 		return nil
 	}
 
-	config := &quicksight.LineChartFieldWells{}
+	config := &types.LineChartFieldWells{}
 
 	if v, ok := tfMap["line_chart_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
 		config.LineChartAggregatedFieldWells = expandLineChartAggregatedFieldWells(v)
@@ -452,7 +454,7 @@ func expandLineChartFieldWells(tfList []interface{}) *quicksight.LineChartFieldW
 	return config
 }
 
-func expandLineChartAggregatedFieldWells(tfList []interface{}) *quicksight.LineChartAggregatedFieldWells {
+func expandLineChartAggregatedFieldWells(tfList []interface{}) *types.LineChartAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -462,7 +464,7 @@ func expandLineChartAggregatedFieldWells(tfList []interface{}) *quicksight.LineC
 		return nil
 	}
 
-	config := &quicksight.LineChartAggregatedFieldWells{}
+	config := &types.LineChartAggregatedFieldWells{}
 
 	if v, ok := tfMap["category"].([]interface{}); ok && len(v) > 0 {
 		config.Category = expandDimensionFields(v)
@@ -480,7 +482,7 @@ func expandLineChartAggregatedFieldWells(tfList []interface{}) *quicksight.LineC
 	return config
 }
 
-func expandLineChartSortConfiguration(tfList []interface{}) *quicksight.LineChartSortConfiguration {
+func expandLineChartSortConfiguration(tfList []interface{}) *types.LineChartSortConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -490,7 +492,7 @@ func expandLineChartSortConfiguration(tfList []interface{}) *quicksight.LineChar
 		return nil
 	}
 
-	config := &quicksight.LineChartSortConfiguration{}
+	config := &types.LineChartSortConfiguration{}
 
 	if v, ok := tfMap["category_items_limit"].([]interface{}); ok && len(v) > 0 {
 		config.CategoryItemsLimitConfiguration = expandItemsLimitConfiguration(v)
@@ -511,7 +513,7 @@ func expandLineChartSortConfiguration(tfList []interface{}) *quicksight.LineChar
 	return config
 }
 
-func expandLineChartDefaultSeriesSettings(tfList []interface{}) *quicksight.LineChartDefaultSeriesSettings {
+func expandLineChartDefaultSeriesSettings(tfList []interface{}) *types.LineChartDefaultSeriesSettings {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -521,10 +523,10 @@ func expandLineChartDefaultSeriesSettings(tfList []interface{}) *quicksight.Line
 		return nil
 	}
 
-	options := &quicksight.LineChartDefaultSeriesSettings{}
+	options := &types.LineChartDefaultSeriesSettings{}
 
 	if v, ok := tfMap["axis_binding"].(string); ok && v != "" {
-		options.AxisBinding = aws.String(v)
+		options.AxisBinding = types.AxisBinding(v)
 	}
 	if v, ok := tfMap["line_style_settings"].([]interface{}); ok && len(v) > 0 {
 		options.LineStyleSettings = expandLineChartLineStyleSettings(v)
@@ -536,7 +538,7 @@ func expandLineChartDefaultSeriesSettings(tfList []interface{}) *quicksight.Line
 	return options
 }
 
-func expandLineChartLineStyleSettings(tfList []interface{}) *quicksight.LineChartLineStyleSettings {
+func expandLineChartLineStyleSettings(tfList []interface{}) *types.LineChartLineStyleSettings {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -546,16 +548,16 @@ func expandLineChartLineStyleSettings(tfList []interface{}) *quicksight.LineChar
 		return nil
 	}
 
-	options := &quicksight.LineChartLineStyleSettings{}
+	options := &types.LineChartLineStyleSettings{}
 
 	if v, ok := tfMap["line_interpolation"].(string); ok && v != "" {
-		options.LineInterpolation = aws.String(v)
+		options.LineInterpolation = types.LineInterpolation(v)
 	}
 	if v, ok := tfMap["line_style"].(string); ok && v != "" {
-		options.LineStyle = aws.String(v)
+		options.LineStyle = types.LineChartLineStyle(v)
 	}
 	if v, ok := tfMap["line_visibility"].(string); ok && v != "" {
-		options.LineVisibility = aws.String(v)
+		options.LineVisibility = types.Visibility(v)
 	}
 	if v, ok := tfMap["line_width"].(string); ok && v != "" {
 		options.LineWidth = aws.String(v)
@@ -564,7 +566,7 @@ func expandLineChartLineStyleSettings(tfList []interface{}) *quicksight.LineChar
 	return options
 }
 
-func expandLineChartMarkerStyleSettings(tfList []interface{}) *quicksight.LineChartMarkerStyleSettings {
+func expandLineChartMarkerStyleSettings(tfList []interface{}) *types.LineChartMarkerStyleSettings {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -574,30 +576,30 @@ func expandLineChartMarkerStyleSettings(tfList []interface{}) *quicksight.LineCh
 		return nil
 	}
 
-	options := &quicksight.LineChartMarkerStyleSettings{}
+	options := &types.LineChartMarkerStyleSettings{}
 
 	if v, ok := tfMap["marker_color"].(string); ok && v != "" {
 		options.MarkerColor = aws.String(v)
 	}
 	if v, ok := tfMap["marker_shape"].(string); ok && v != "" {
-		options.MarkerShape = aws.String(v)
+		options.MarkerShape = types.LineChartMarkerShape(v)
 	}
 	if v, ok := tfMap["marker_size"].(string); ok && v != "" {
 		options.MarkerSize = aws.String(v)
 	}
 	if v, ok := tfMap["marker_visibility"].(string); ok && v != "" {
-		options.MarkerVisibility = aws.String(v)
+		options.MarkerVisibility = types.Visibility(v)
 	}
 
 	return options
 }
 
-func expandForecastConfigurations(tfList []interface{}) []*quicksight.ForecastConfiguration {
+func expandForecastConfigurations(tfList []interface{}) []types.ForecastConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var configs []*quicksight.ForecastConfiguration
+	var configs []types.ForecastConfiguration
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -609,18 +611,18 @@ func expandForecastConfigurations(tfList []interface{}) []*quicksight.ForecastCo
 			continue
 		}
 
-		configs = append(configs, config)
+		configs = append(configs, *config)
 	}
 
 	return configs
 }
 
-func expandForecastConfiguration(tfMap map[string]interface{}) *quicksight.ForecastConfiguration {
+func expandForecastConfiguration(tfMap map[string]interface{}) *types.ForecastConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	config := &quicksight.ForecastConfiguration{}
+	config := &types.ForecastConfiguration{}
 
 	if v, ok := tfMap["forecast_properties"].([]interface{}); ok && len(v) > 0 {
 		config.ForecastProperties = expandTimeBasedForecastProperties(v)
@@ -632,7 +634,7 @@ func expandForecastConfiguration(tfMap map[string]interface{}) *quicksight.Forec
 	return config
 }
 
-func expandTimeBasedForecastProperties(tfList []interface{}) *quicksight.TimeBasedForecastProperties {
+func expandTimeBasedForecastProperties(tfList []interface{}) *types.TimeBasedForecastProperties {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -642,22 +644,22 @@ func expandTimeBasedForecastProperties(tfList []interface{}) *quicksight.TimeBas
 		return nil
 	}
 
-	options := &quicksight.TimeBasedForecastProperties{}
+	options := &types.TimeBasedForecastProperties{}
 
 	if v, ok := tfMap["lower_boundary"].(float64); ok {
 		options.LowerBoundary = aws.Float64(v)
 	}
 	if v, ok := tfMap["periods_backward"].(int); ok {
-		options.PeriodsBackward = aws.Int64(int64(v))
+		options.PeriodsBackward = aws.Int32(int32(v))
 	}
 	if v, ok := tfMap["periods_forward"].(int); ok {
-		options.PeriodsForward = aws.Int64(int64(v))
+		options.PeriodsForward = aws.Int32(int32(v))
 	}
 	if v, ok := tfMap["prediction_interval"].(int); ok {
-		options.PredictionInterval = aws.Int64(int64(v))
+		options.PredictionInterval = aws.Int32(int32(v))
 	}
 	if v, ok := tfMap["seasonality"].(int); ok {
-		options.Seasonality = aws.Int64(int64(v))
+		options.Seasonality = aws.Int32(int32(v))
 	}
 	if v, ok := tfMap["upper_boundary"].(float64); ok {
 		options.UpperBoundary = aws.Float64(v)
@@ -665,7 +667,7 @@ func expandTimeBasedForecastProperties(tfList []interface{}) *quicksight.TimeBas
 	return options
 }
 
-func expandForecastScenario(tfList []interface{}) *quicksight.ForecastScenario {
+func expandForecastScenario(tfList []interface{}) *types.ForecastScenario {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -675,7 +677,7 @@ func expandForecastScenario(tfList []interface{}) *quicksight.ForecastScenario {
 		return nil
 	}
 
-	scenario := &quicksight.ForecastScenario{}
+	scenario := &types.ForecastScenario{}
 
 	if v, ok := tfMap["what_if_point_scenario"].([]interface{}); ok && len(v) > 0 {
 		scenario.WhatIfPointScenario = expandWhatIfPointScenario(v)
@@ -687,7 +689,7 @@ func expandForecastScenario(tfList []interface{}) *quicksight.ForecastScenario {
 	return scenario
 }
 
-func expandWhatIfPointScenario(tfList []interface{}) *quicksight.WhatIfPointScenario {
+func expandWhatIfPointScenario(tfList []interface{}) *types.WhatIfPointScenario {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -697,7 +699,7 @@ func expandWhatIfPointScenario(tfList []interface{}) *quicksight.WhatIfPointScen
 		return nil
 	}
 
-	scenario := &quicksight.WhatIfPointScenario{}
+	scenario := &types.WhatIfPointScenario{}
 
 	if v, ok := tfMap["date"].(string); ok && v != "" {
 		t, _ := time.Parse(time.RFC3339, v) // Format validated with validateFunc
@@ -705,13 +707,13 @@ func expandWhatIfPointScenario(tfList []interface{}) *quicksight.WhatIfPointScen
 	}
 
 	if v, ok := tfMap["value"].(float64); ok {
-		scenario.Value = aws.Float64(v)
+		scenario.Value = v
 	}
 
 	return scenario
 }
 
-func expandWhatIfRangeScenario(tfList []interface{}) *quicksight.WhatIfRangeScenario {
+func expandWhatIfRangeScenario(tfList []interface{}) *types.WhatIfRangeScenario {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -721,7 +723,7 @@ func expandWhatIfRangeScenario(tfList []interface{}) *quicksight.WhatIfRangeScen
 		return nil
 	}
 
-	scenario := &quicksight.WhatIfRangeScenario{}
+	scenario := &types.WhatIfRangeScenario{}
 
 	if v, ok := tfMap["end_date"].(string); ok && v != "" {
 		t, _ := time.Parse(time.RFC3339, v) // Format validated with validateFunc
@@ -732,13 +734,13 @@ func expandWhatIfRangeScenario(tfList []interface{}) *quicksight.WhatIfRangeScen
 		scenario.StartDate = aws.Time(t)
 	}
 	if v, ok := tfMap["value"].(float64); ok {
-		scenario.Value = aws.Float64(v)
+		scenario.Value = v
 	}
 
 	return scenario
 }
 
-func expandLineSeriesAxisDisplayOptions(tfList []interface{}) *quicksight.LineSeriesAxisDisplayOptions {
+func expandLineSeriesAxisDisplayOptions(tfList []interface{}) *types.LineSeriesAxisDisplayOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -748,7 +750,7 @@ func expandLineSeriesAxisDisplayOptions(tfList []interface{}) *quicksight.LineSe
 		return nil
 	}
 
-	options := &quicksight.LineSeriesAxisDisplayOptions{}
+	options := &types.LineSeriesAxisDisplayOptions{}
 
 	if v, ok := tfMap["axis_options"].([]interface{}); ok && len(v) > 0 {
 		options.AxisOptions = expandAxisDisplayOptions(v)
@@ -760,12 +762,12 @@ func expandLineSeriesAxisDisplayOptions(tfList []interface{}) *quicksight.LineSe
 	return options
 }
 
-func expandMissingDataConfigurations(tfList []interface{}) []*quicksight.MissingDataConfiguration {
+func expandMissingDataConfigurations(tfList []interface{}) []types.MissingDataConfiguration {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var options []*quicksight.MissingDataConfiguration
+	var options []types.MissingDataConfiguration
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -777,32 +779,32 @@ func expandMissingDataConfigurations(tfList []interface{}) []*quicksight.Missing
 			continue
 		}
 
-		options = append(options, opts)
+		options = append(options, *opts)
 	}
 
 	return options
 }
 
-func expandMissingDataConfiguration(tfMap map[string]interface{}) *quicksight.MissingDataConfiguration {
+func expandMissingDataConfiguration(tfMap map[string]interface{}) *types.MissingDataConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &quicksight.MissingDataConfiguration{}
+	options := &types.MissingDataConfiguration{}
 
 	if v, ok := tfMap["treatment_option"].(string); ok && v != "" {
-		options.TreatmentOption = aws.String(v)
+		options.TreatmentOption = types.MissingDataTreatmentOption(v)
 	}
 
 	return options
 }
 
-func expandSeriesItems(tfList []interface{}) []*quicksight.SeriesItem {
+func expandSeriesItems(tfList []interface{}) []types.SeriesItem {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var options []*quicksight.SeriesItem
+	var options []types.SeriesItem
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -814,18 +816,18 @@ func expandSeriesItems(tfList []interface{}) []*quicksight.SeriesItem {
 			continue
 		}
 
-		options = append(options, opts)
+		options = append(options, *opts)
 	}
 
 	return options
 }
 
-func expandSeriesItem(tfMap map[string]interface{}) *quicksight.SeriesItem {
+func expandSeriesItem(tfMap map[string]interface{}) *types.SeriesItem {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &quicksight.SeriesItem{}
+	options := &types.SeriesItem{}
 
 	if v, ok := tfMap["data_field_series_item"].([]interface{}); ok && len(v) > 0 {
 		options.DataFieldSeriesItem = expandDataFieldSeriesItem(v)
@@ -837,7 +839,7 @@ func expandSeriesItem(tfMap map[string]interface{}) *quicksight.SeriesItem {
 	return options
 }
 
-func expandDataFieldSeriesItem(tfList []interface{}) *quicksight.DataFieldSeriesItem {
+func expandDataFieldSeriesItem(tfList []interface{}) *types.DataFieldSeriesItem {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -847,10 +849,10 @@ func expandDataFieldSeriesItem(tfList []interface{}) *quicksight.DataFieldSeries
 		return nil
 	}
 
-	options := &quicksight.DataFieldSeriesItem{}
+	options := &types.DataFieldSeriesItem{}
 
 	if v, ok := tfMap["axis_binding"].(string); ok && v != "" {
-		options.AxisBinding = aws.String(v)
+		options.AxisBinding = types.AxisBinding(v)
 	}
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
 		options.FieldId = aws.String(v)
@@ -866,7 +868,7 @@ func expandDataFieldSeriesItem(tfList []interface{}) *quicksight.DataFieldSeries
 	return options
 }
 
-func expandFieldSeriesItem(tfList []interface{}) *quicksight.FieldSeriesItem {
+func expandFieldSeriesItem(tfList []interface{}) *types.FieldSeriesItem {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -876,10 +878,10 @@ func expandFieldSeriesItem(tfList []interface{}) *quicksight.FieldSeriesItem {
 		return nil
 	}
 
-	options := &quicksight.FieldSeriesItem{}
+	options := &types.FieldSeriesItem{}
 
 	if v, ok := tfMap["axis_binding"].(string); ok && v != "" {
-		options.AxisBinding = aws.String(v)
+		options.AxisBinding = types.AxisBinding(v)
 	}
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
 		options.FieldId = aws.String(v)
@@ -891,7 +893,7 @@ func expandFieldSeriesItem(tfList []interface{}) *quicksight.FieldSeriesItem {
 	return options
 }
 
-func expandLineChartSeriesSettings(tfList []interface{}) *quicksight.LineChartSeriesSettings {
+func expandLineChartSeriesSettings(tfList []interface{}) *types.LineChartSeriesSettings {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -901,7 +903,7 @@ func expandLineChartSeriesSettings(tfList []interface{}) *quicksight.LineChartSe
 		return nil
 	}
 
-	options := &quicksight.LineChartSeriesSettings{}
+	options := &types.LineChartSeriesSettings{}
 
 	if v, ok := tfMap["line_style_settings"].([]interface{}); ok && len(v) > 0 {
 		options.LineStyleSettings = expandLineChartLineStyleSettings(v)
@@ -913,13 +915,13 @@ func expandLineChartSeriesSettings(tfList []interface{}) *quicksight.LineChartSe
 	return options
 }
 
-func flattenLineChartVisual(apiObject *quicksight.LineChartVisual) []interface{} {
+func flattenLineChartVisual(apiObject *types.LineChartVisual) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"visual_id": aws.StringValue(apiObject.VisualId),
+		"visual_id": aws.ToString(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
 		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
@@ -940,7 +942,7 @@ func flattenLineChartVisual(apiObject *quicksight.LineChartVisual) []interface{}
 	return []interface{}{tfMap}
 }
 
-func flattenLineChartConfiguration(apiObject *quicksight.LineChartConfiguration) []interface{} {
+func flattenLineChartConfiguration(apiObject *types.LineChartConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -991,9 +993,9 @@ func flattenLineChartConfiguration(apiObject *quicksight.LineChartConfiguration)
 	if apiObject.Tooltip != nil {
 		tfMap["tooltip"] = flattenTooltipOptions(apiObject.Tooltip)
 	}
-	if apiObject.Type != nil {
-		tfMap["type"] = aws.StringValue(apiObject.Type)
-	}
+
+	tfMap["type"] = types.LineChartType(apiObject.Type)
+
 	if apiObject.VisualPalette != nil {
 		tfMap["visual_palette"] = flattenVisualPalette(apiObject.VisualPalette)
 	}
@@ -1007,15 +1009,15 @@ func flattenLineChartConfiguration(apiObject *quicksight.LineChartConfiguration)
 	return []interface{}{tfMap}
 }
 
-func flattenLineChartDefaultSeriesSettings(apiObject *quicksight.LineChartDefaultSeriesSettings) []interface{} {
+func flattenLineChartDefaultSeriesSettings(apiObject *types.LineChartDefaultSeriesSettings) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.AxisBinding != nil {
-		tfMap["axis_binding"] = aws.StringValue(apiObject.AxisBinding)
-	}
+
+	tfMap["axis_binding"] = types.AxisBinding(apiObject.AxisBinding)
+
 	if apiObject.LineStyleSettings != nil {
 		tfMap["line_style_settings"] = flattenLineChartLineStyleSettings(apiObject.LineStyleSettings)
 	}
@@ -1026,51 +1028,46 @@ func flattenLineChartDefaultSeriesSettings(apiObject *quicksight.LineChartDefaul
 	return []interface{}{tfMap}
 }
 
-func flattenLineChartLineStyleSettings(apiObject *quicksight.LineChartLineStyleSettings) []interface{} {
+func flattenLineChartLineStyleSettings(apiObject *types.LineChartLineStyleSettings) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.LineInterpolation != nil {
-		tfMap["line_interpolation"] = aws.StringValue(apiObject.LineInterpolation)
-	}
-	if apiObject.LineStyle != nil {
-		tfMap["line_style"] = aws.StringValue(apiObject.LineStyle)
-	}
-	if apiObject.LineVisibility != nil {
-		tfMap["line_visibility"] = aws.StringValue(apiObject.LineVisibility)
-	}
-	if apiObject.LineWidth != nil {
-		tfMap["line_width"] = aws.StringValue(apiObject.LineWidth)
-	}
+
+	tfMap["line_interpolation"] = types.LineInterpolation(apiObject.LineInterpolation)
+
+	tfMap["line_style"] = types.LineChartLineStyle(apiObject.LineStyle)
+
+	tfMap["line_visibility"] = types.Visibility(apiObject.LineVisibility)
+
+	tfMap["line_width"] = aws.ToString(apiObject.LineWidth)
 
 	return []interface{}{tfMap}
 }
 
-func flattenLineChartMarkerStyleSettings(apiObject *quicksight.LineChartMarkerStyleSettings) []interface{} {
+func flattenLineChartMarkerStyleSettings(apiObject *types.LineChartMarkerStyleSettings) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.MarkerColor != nil {
-		tfMap["marker_color"] = aws.StringValue(apiObject.MarkerColor)
+		tfMap["marker_color"] = aws.ToString(apiObject.MarkerColor)
 	}
-	if apiObject.MarkerShape != nil {
-		tfMap["marker_shape"] = aws.StringValue(apiObject.MarkerShape)
-	}
+
+	tfMap["marker_shape"] = types.LineChartMarkerShape(apiObject.MarkerShape)
+
 	if apiObject.MarkerSize != nil {
-		tfMap["marker_size"] = aws.StringValue(apiObject.MarkerSize)
+		tfMap["marker_size"] = aws.ToString(apiObject.MarkerSize)
 	}
-	if apiObject.MarkerVisibility != nil {
-		tfMap["marker_visibility"] = aws.StringValue(apiObject.MarkerVisibility)
-	}
+
+	tfMap["marker_visibility"] = types.Visibility(apiObject.MarkerVisibility)
 
 	return []interface{}{tfMap}
 }
 
-func flattenLineChartFieldWells(apiObject *quicksight.LineChartFieldWells) []interface{} {
+func flattenLineChartFieldWells(apiObject *types.LineChartFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1083,7 +1080,7 @@ func flattenLineChartFieldWells(apiObject *quicksight.LineChartFieldWells) []int
 	return []interface{}{tfMap}
 }
 
-func flattenLineChartAggregatedFieldWells(apiObject *quicksight.LineChartAggregatedFieldWells) []interface{} {
+func flattenLineChartAggregatedFieldWells(apiObject *types.LineChartAggregatedFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1105,17 +1102,13 @@ func flattenLineChartAggregatedFieldWells(apiObject *quicksight.LineChartAggrega
 	return []interface{}{tfMap}
 }
 
-func flattenForecastConfiguration(apiObject []*quicksight.ForecastConfiguration) []interface{} {
+func flattenForecastConfiguration(apiObject []types.ForecastConfiguration) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
-
 		tfMap := map[string]interface{}{}
 		if config.ForecastProperties != nil {
 			tfMap["forecast_properties"] = flattenTimeBasedForecastProperties(config.ForecastProperties)
@@ -1130,35 +1123,35 @@ func flattenForecastConfiguration(apiObject []*quicksight.ForecastConfiguration)
 	return tfList
 }
 
-func flattenTimeBasedForecastProperties(apiObject *quicksight.TimeBasedForecastProperties) []interface{} {
+func flattenTimeBasedForecastProperties(apiObject *types.TimeBasedForecastProperties) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.LowerBoundary != nil {
-		tfMap["lower_boundary"] = aws.Float64Value(apiObject.LowerBoundary)
+		tfMap["lower_boundary"] = aws.ToFloat64(apiObject.LowerBoundary)
 	}
 	if apiObject.PeriodsBackward != nil {
-		tfMap["periods_backward"] = aws.Int64Value(apiObject.PeriodsBackward)
+		tfMap["periods_backward"] = aws.ToInt32(apiObject.PeriodsBackward)
 	}
 	if apiObject.PeriodsForward != nil {
-		tfMap["periods_forward"] = aws.Int64Value(apiObject.PeriodsForward)
+		tfMap["periods_forward"] = aws.ToInt32(apiObject.PeriodsForward)
 	}
 	if apiObject.PredictionInterval != nil {
-		tfMap["prediction_interval"] = aws.Int64Value(apiObject.PredictionInterval)
+		tfMap["prediction_interval"] = aws.ToInt32(apiObject.PredictionInterval)
 	}
 	if apiObject.Seasonality != nil {
-		tfMap["seasonality"] = aws.Int64Value(apiObject.Seasonality)
+		tfMap["seasonality"] = aws.ToInt32(apiObject.Seasonality)
 	}
 	if apiObject.UpperBoundary != nil {
-		tfMap["upper_boundary"] = aws.Float64Value(apiObject.UpperBoundary)
+		tfMap["upper_boundary"] = aws.ToFloat64(apiObject.UpperBoundary)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenForecastScenario(apiObject *quicksight.ForecastScenario) []interface{} {
+func flattenForecastScenario(apiObject *types.ForecastScenario) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1174,42 +1167,40 @@ func flattenForecastScenario(apiObject *quicksight.ForecastScenario) []interface
 	return []interface{}{tfMap}
 }
 
-func flattenWhatIfPointScenario(apiObject *quicksight.WhatIfPointScenario) []interface{} {
+func flattenWhatIfPointScenario(apiObject *types.WhatIfPointScenario) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Date != nil {
-		tfMap["date"] = aws.TimeValue(apiObject.Date).Format(time.RFC3339)
+		tfMap["date"] = apiObject.Date.Format(time.RFC3339)
 	}
-	if apiObject.Value != nil {
-		tfMap["value"] = aws.Float64Value(apiObject.Value)
-	}
+
+	tfMap["value"] = float64(apiObject.Value)
 
 	return []interface{}{tfMap}
 }
 
-func flattenWhatIfRangeScenario(apiObject *quicksight.WhatIfRangeScenario) []interface{} {
+func flattenWhatIfRangeScenario(apiObject *types.WhatIfRangeScenario) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.EndDate != nil {
-		tfMap["end_date"] = aws.TimeValue(apiObject.EndDate).Format(time.RFC3339)
+		tfMap["end_date"] = apiObject.EndDate.Format(time.RFC3339)
 	}
 	if apiObject.StartDate != nil {
-		tfMap["start_date"] = aws.TimeValue(apiObject.StartDate).Format(time.RFC3339)
+		tfMap["start_date"] = apiObject.StartDate.Format(time.RFC3339)
 	}
-	if apiObject.Value != nil {
-		tfMap["value"] = aws.Float64Value(apiObject.Value)
-	}
+
+	tfMap["value"] = apiObject.Value
 
 	return []interface{}{tfMap}
 }
 
-func flattenLineSeriesAxisDisplayOptions(apiObject *quicksight.LineSeriesAxisDisplayOptions) []interface{} {
+func flattenLineSeriesAxisDisplayOptions(apiObject *types.LineSeriesAxisDisplayOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1225,21 +1216,16 @@ func flattenLineSeriesAxisDisplayOptions(apiObject *quicksight.LineSeriesAxisDis
 	return []interface{}{tfMap}
 }
 
-func flattenMissingDataConfiguration(apiObject []*quicksight.MissingDataConfiguration) []interface{} {
+func flattenMissingDataConfiguration(apiObject []types.MissingDataConfiguration) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
-
 		tfMap := map[string]interface{}{}
-		if config.TreatmentOption != nil {
-			tfMap["treatment_option"] = aws.StringValue(config.TreatmentOption)
-		}
+
+		tfMap["treatment_option"] = types.MissingDataTreatmentOption(config.TreatmentOption)
 
 		tfList = append(tfList, tfMap)
 	}
@@ -1247,17 +1233,13 @@ func flattenMissingDataConfiguration(apiObject []*quicksight.MissingDataConfigur
 	return tfList
 }
 
-func flattenSeriesItem(apiObject []*quicksight.SeriesItem) []interface{} {
+func flattenSeriesItem(apiObject []types.SeriesItem) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
-
 		tfMap := map[string]interface{}{}
 		if config.DataFieldSeriesItem != nil {
 			tfMap["data_field_series_item"] = flattenDataFieldSeriesItem(config.DataFieldSeriesItem)
@@ -1272,20 +1254,20 @@ func flattenSeriesItem(apiObject []*quicksight.SeriesItem) []interface{} {
 	return tfList
 }
 
-func flattenDataFieldSeriesItem(apiObject *quicksight.DataFieldSeriesItem) []interface{} {
+func flattenDataFieldSeriesItem(apiObject *types.DataFieldSeriesItem) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.AxisBinding != nil {
-		tfMap["axis_binding"] = aws.StringValue(apiObject.AxisBinding)
-	}
+
+	tfMap["axis_binding"] = types.AxisBinding(apiObject.AxisBinding)
+
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.FieldValue != nil {
-		tfMap["field_value"] = aws.StringValue(apiObject.FieldValue)
+		tfMap["field_value"] = aws.ToString(apiObject.FieldValue)
 	}
 	if apiObject.Settings != nil {
 		tfMap["settings"] = flattenLineChartSeriesSettings(apiObject.Settings)
@@ -1294,7 +1276,7 @@ func flattenDataFieldSeriesItem(apiObject *quicksight.DataFieldSeriesItem) []int
 	return []interface{}{tfMap}
 }
 
-func flattenLineChartSeriesSettings(apiObject *quicksight.LineChartSeriesSettings) []interface{} {
+func flattenLineChartSeriesSettings(apiObject *types.LineChartSeriesSettings) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1310,17 +1292,16 @@ func flattenLineChartSeriesSettings(apiObject *quicksight.LineChartSeriesSetting
 	return []interface{}{tfMap}
 }
 
-func flattenFieldSeriesItem(apiObject *quicksight.FieldSeriesItem) []interface{} {
+func flattenFieldSeriesItem(apiObject *types.FieldSeriesItem) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.AxisBinding != nil {
-		tfMap["axis_binding"] = aws.StringValue(apiObject.AxisBinding)
-	}
+
+	tfMap["axis_binding"] = types.AxisBinding(apiObject.AxisBinding)
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.Settings != nil {
 		tfMap["settings"] = flattenLineChartSeriesSettings(apiObject.Settings)
@@ -1329,7 +1310,7 @@ func flattenFieldSeriesItem(apiObject *quicksight.FieldSeriesItem) []interface{}
 	return []interface{}{tfMap}
 }
 
-func flattenLineChartSortConfiguration(apiObject *quicksight.LineChartSortConfiguration) []interface{} {
+func flattenLineChartSortConfiguration(apiObject *types.LineChartSortConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

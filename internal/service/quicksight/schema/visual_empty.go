@@ -4,8 +4,8 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
@@ -18,7 +18,7 @@ func emptyVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
+				"data_set_identifier": stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 2048))),
 				"visual_id":           idSchema(),
 				"actions":             visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 			},
@@ -26,7 +26,7 @@ func emptyVisualSchema() *schema.Schema {
 	}
 }
 
-func expandEmptyVisual(tfList []interface{}) *quicksight.EmptyVisual {
+func expandEmptyVisual(tfList []interface{}) *types.EmptyVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -36,7 +36,7 @@ func expandEmptyVisual(tfList []interface{}) *quicksight.EmptyVisual {
 		return nil
 	}
 
-	visual := &quicksight.EmptyVisual{}
+	visual := &types.EmptyVisual{}
 
 	if v, ok := tfMap["data_set_identifier"].(string); ok && v != "" {
 		visual.DataSetIdentifier = aws.String(v)
@@ -51,14 +51,14 @@ func expandEmptyVisual(tfList []interface{}) *quicksight.EmptyVisual {
 	return visual
 }
 
-func flattenEmptyVisual(apiObject *quicksight.EmptyVisual) []interface{} {
+func flattenEmptyVisual(apiObject *types.EmptyVisual) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"data_set_identifier": aws.StringValue(apiObject.DataSetIdentifier),
-		"visual_id":           aws.StringValue(apiObject.VisualId),
+		"data_set_identifier": aws.ToString(apiObject.DataSetIdentifier),
+		"visual_id":           aws.ToString(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
 		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)

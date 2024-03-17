@@ -4,10 +4,11 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 func insightVisualSchema() *schema.Schema {
@@ -18,7 +19,7 @@ func insightVisualSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
+				"data_set_identifier": stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 2048))),
 				"visual_id":           idSchema(),
 				"actions":             visualCustomActionsSchema(customActionsMaxItems), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_VisualCustomAction.html
 				"insight_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_InsightConfiguration.html
@@ -56,7 +57,7 @@ func insightVisualSchema() *schema.Schema {
 													"periods_backward":    intSchema(false, validation.IntBetween(0, 1000)),
 													"periods_forward":     intSchema(false, validation.IntBetween(1, 1000)),
 													"prediction_interval": intSchema(false, validation.IntBetween(50, 95)),
-													"seasonality":         stringSchema(true, validation.StringInSlice(quicksight.ForecastComputationSeasonality_Values(), false)),
+													"seasonality":         stringSchema(true, enum.Validate[types.ForecastComputationSeasonality]()),
 													"upper_boundary": {
 														Type:     schema.TypeFloat,
 														Optional: true,
@@ -92,7 +93,7 @@ func insightVisualSchema() *schema.Schema {
 												Schema: map[string]*schema.Schema{
 													"computation_id": idSchema(),
 													"time":           dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"type":           stringSchema(true, validation.StringInSlice(quicksight.MaximumMinimumComputationType_Values(), false)),
+													"type":           stringSchema(true, enum.Validate[types.MaximumMinimumComputationType]()),
 													"name": {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -149,7 +150,7 @@ func insightVisualSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"period_time_granularity": stringSchema(true, validation.StringInSlice(quicksight.TimeGranularity_Values(), false)),
+													"period_time_granularity": stringSchema(true, enum.Validate[types.TimeGranularity]()),
 													"value":                   measureFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
@@ -164,9 +165,9 @@ func insightVisualSchema() *schema.Schema {
 													"computation_id": idSchema(),
 													"category":       dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
 													"time":           dimensionFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DimensionField.html
-													"type":           stringSchema(true, validation.StringInSlice(quicksight.TopBottomComputationType_Values(), false)),
+													"type":           stringSchema(true, enum.Validate[types.TopBottomComputationType]()),
 													"mover_size":     intSchema(false, validation.IntBetween(1, 20)),
-													"sort_order":     stringSchema(true, validation.StringInSlice(quicksight.TopBottomSortOrder_Values(), false)),
+													"sort_order":     stringSchema(true, enum.Validate[types.TopBottomSortOrder]()),
 													"name": {
 														Type:     schema.TypeString,
 														Optional: true,
@@ -189,7 +190,7 @@ func insightVisualSchema() *schema.Schema {
 														Optional: true,
 													},
 													"result_size": intSchema(false, validation.IntBetween(1, 20)),
-													"type":        stringSchema(true, validation.StringInSlice(quicksight.TopBottomComputationType_Values(), false)),
+													"type":        stringSchema(true, enum.Validate[types.TopBottomComputationType]()),
 													"value":       measureFieldSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_MeasureField.html
 												},
 											},
@@ -236,7 +237,7 @@ func insightVisualSchema() *schema.Schema {
 								MaxItems: 1,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"narrative": stringSchema(true, validation.StringLenBetween(1, 150000)),
+										"narrative": stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 150000))),
 									},
 								},
 							},
@@ -250,7 +251,7 @@ func insightVisualSchema() *schema.Schema {
 	}
 }
 
-func expandInsightVisual(tfList []interface{}) *quicksight.InsightVisual {
+func expandInsightVisual(tfList []interface{}) *types.InsightVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -260,7 +261,7 @@ func expandInsightVisual(tfList []interface{}) *quicksight.InsightVisual {
 		return nil
 	}
 
-	visual := &quicksight.InsightVisual{}
+	visual := &types.InsightVisual{}
 
 	if v, ok := tfMap["data_set_identifier"].(string); ok && v != "" {
 		visual.DataSetIdentifier = aws.String(v)
@@ -284,7 +285,7 @@ func expandInsightVisual(tfList []interface{}) *quicksight.InsightVisual {
 	return visual
 }
 
-func expandInsightConfiguration(tfList []interface{}) *quicksight.InsightConfiguration {
+func expandInsightConfiguration(tfList []interface{}) *types.InsightConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -294,7 +295,7 @@ func expandInsightConfiguration(tfList []interface{}) *quicksight.InsightConfigu
 		return nil
 	}
 
-	config := &quicksight.InsightConfiguration{}
+	config := &types.InsightConfiguration{}
 
 	if v, ok := tfMap["computation"].([]interface{}); ok && len(v) > 0 {
 		config.Computations = expandComputations(v)
@@ -306,12 +307,12 @@ func expandInsightConfiguration(tfList []interface{}) *quicksight.InsightConfigu
 	return config
 }
 
-func expandComputations(tfList []interface{}) []*quicksight.Computation {
+func expandComputations(tfList []interface{}) []types.Computation {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var computations []*quicksight.Computation
+	var computations []types.Computation
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -323,18 +324,18 @@ func expandComputations(tfList []interface{}) []*quicksight.Computation {
 			continue
 		}
 
-		computations = append(computations, computation)
+		computations = append(computations, *computation)
 	}
 
 	return computations
 }
 
-func expandComputation(tfMap map[string]interface{}) *quicksight.Computation {
+func expandComputation(tfMap map[string]interface{}) *types.Computation {
 	if tfMap == nil {
 		return nil
 	}
 
-	computation := &quicksight.Computation{}
+	computation := &types.Computation{}
 
 	if v, ok := tfMap["forecast"].([]interface{}); ok && len(v) > 0 {
 		computation.Forecast = expandForecastComputation(v)
@@ -370,7 +371,7 @@ func expandComputation(tfMap map[string]interface{}) *quicksight.Computation {
 	return computation
 }
 
-func expandForecastComputation(tfList []interface{}) *quicksight.ForecastComputation {
+func expandForecastComputation(tfList []interface{}) *types.ForecastComputation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -380,13 +381,13 @@ func expandForecastComputation(tfList []interface{}) *quicksight.ForecastComputa
 		return nil
 	}
 
-	computation := &quicksight.ForecastComputation{}
+	computation := &types.ForecastComputation{}
 
 	if v, ok := tfMap["computation_id"].(string); ok && v != "" {
 		computation.ComputationId = aws.String(v)
 	}
 	if v, ok := tfMap["custom_seasonality_value"].(int); ok {
-		computation.CustomSeasonalityValue = aws.Int64(int64(v))
+		computation.CustomSeasonalityValue = aws.Int32(int32(v))
 	}
 	if v, ok := tfMap["lower_boundary"].(float64); ok {
 		computation.LowerBoundary = aws.Float64(v)
@@ -395,16 +396,16 @@ func expandForecastComputation(tfList []interface{}) *quicksight.ForecastComputa
 		computation.Name = aws.String(v)
 	}
 	if v, ok := tfMap["periods_backward"].(int); ok {
-		computation.PeriodsBackward = aws.Int64(int64(v))
+		computation.PeriodsBackward = aws.Int32(int32(v))
 	}
 	if v, ok := tfMap["periods_forward"].(int); ok {
-		computation.PeriodsForward = aws.Int64(int64(v))
+		computation.PeriodsForward = aws.Int32(int32(v))
 	}
 	if v, ok := tfMap["prediction_interval"].(int); ok {
-		computation.PredictionInterval = aws.Int64(int64(v))
+		computation.PredictionInterval = aws.Int32(int32(v))
 	}
 	if v, ok := tfMap["seasonality"].(string); ok && v != "" {
-		computation.Seasonality = aws.String(v)
+		computation.Seasonality = types.ForecastComputationSeasonality(v)
 	}
 	if v, ok := tfMap["upper_boundary"].(float64); ok {
 		computation.UpperBoundary = aws.Float64(v)
@@ -419,7 +420,7 @@ func expandForecastComputation(tfList []interface{}) *quicksight.ForecastComputa
 	return computation
 }
 
-func expandGrowthRateComputation(tfList []interface{}) *quicksight.GrowthRateComputation {
+func expandGrowthRateComputation(tfList []interface{}) *types.GrowthRateComputation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -429,7 +430,7 @@ func expandGrowthRateComputation(tfList []interface{}) *quicksight.GrowthRateCom
 		return nil
 	}
 
-	computation := &quicksight.GrowthRateComputation{}
+	computation := &types.GrowthRateComputation{}
 
 	if v, ok := tfMap["computation_id"].(string); ok && v != "" {
 		computation.ComputationId = aws.String(v)
@@ -438,7 +439,7 @@ func expandGrowthRateComputation(tfList []interface{}) *quicksight.GrowthRateCom
 		computation.Name = aws.String(v)
 	}
 	if v, ok := tfMap["period_size"].(int); ok {
-		computation.PeriodSize = aws.Int64(int64(v))
+		computation.PeriodSize = aws.Int32(int32(v))
 	}
 	if v, ok := tfMap["time"].([]interface{}); ok && len(v) > 0 {
 		computation.Time = expandDimensionField(v)
@@ -450,7 +451,7 @@ func expandGrowthRateComputation(tfList []interface{}) *quicksight.GrowthRateCom
 	return computation
 }
 
-func expandMaximumMinimumComputation(tfList []interface{}) *quicksight.MaximumMinimumComputation {
+func expandMaximumMinimumComputation(tfList []interface{}) *types.MaximumMinimumComputation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -460,7 +461,7 @@ func expandMaximumMinimumComputation(tfList []interface{}) *quicksight.MaximumMi
 		return nil
 	}
 
-	computation := &quicksight.MaximumMinimumComputation{}
+	computation := &types.MaximumMinimumComputation{}
 
 	if v, ok := tfMap["computation_id"].(string); ok && v != "" {
 		computation.ComputationId = aws.String(v)
@@ -469,7 +470,7 @@ func expandMaximumMinimumComputation(tfList []interface{}) *quicksight.MaximumMi
 		computation.Name = aws.String(v)
 	}
 	if v, ok := tfMap["type"].(string); ok && v != "" {
-		computation.Type = aws.String(v)
+		computation.Type = types.MaximumMinimumComputationType(v)
 	}
 	if v, ok := tfMap["time"].([]interface{}); ok && len(v) > 0 {
 		computation.Time = expandDimensionField(v)
@@ -481,7 +482,7 @@ func expandMaximumMinimumComputation(tfList []interface{}) *quicksight.MaximumMi
 	return computation
 }
 
-func expandMetricComparisonComputation(tfList []interface{}) *quicksight.MetricComparisonComputation {
+func expandMetricComparisonComputation(tfList []interface{}) *types.MetricComparisonComputation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -491,7 +492,7 @@ func expandMetricComparisonComputation(tfList []interface{}) *quicksight.MetricC
 		return nil
 	}
 
-	computation := &quicksight.MetricComparisonComputation{}
+	computation := &types.MetricComparisonComputation{}
 
 	if v, ok := tfMap["computation_id"].(string); ok && v != "" {
 		computation.ComputationId = aws.String(v)
@@ -512,7 +513,7 @@ func expandMetricComparisonComputation(tfList []interface{}) *quicksight.MetricC
 	return computation
 }
 
-func expandPeriodOverPeriodComputation(tfList []interface{}) *quicksight.PeriodOverPeriodComputation {
+func expandPeriodOverPeriodComputation(tfList []interface{}) *types.PeriodOverPeriodComputation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -522,7 +523,7 @@ func expandPeriodOverPeriodComputation(tfList []interface{}) *quicksight.PeriodO
 		return nil
 	}
 
-	computation := &quicksight.PeriodOverPeriodComputation{}
+	computation := &types.PeriodOverPeriodComputation{}
 
 	if v, ok := tfMap["computation_id"].(string); ok && v != "" {
 		computation.ComputationId = aws.String(v)
@@ -540,7 +541,7 @@ func expandPeriodOverPeriodComputation(tfList []interface{}) *quicksight.PeriodO
 	return computation
 }
 
-func expandPeriodToDateComputation(tfList []interface{}) *quicksight.PeriodToDateComputation {
+func expandPeriodToDateComputation(tfList []interface{}) *types.PeriodToDateComputation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -550,7 +551,7 @@ func expandPeriodToDateComputation(tfList []interface{}) *quicksight.PeriodToDat
 		return nil
 	}
 
-	computation := &quicksight.PeriodToDateComputation{}
+	computation := &types.PeriodToDateComputation{}
 
 	if v, ok := tfMap["computation_id"].(string); ok && v != "" {
 		computation.ComputationId = aws.String(v)
@@ -559,7 +560,7 @@ func expandPeriodToDateComputation(tfList []interface{}) *quicksight.PeriodToDat
 		computation.Name = aws.String(v)
 	}
 	if v, ok := tfMap["period_time_granularity"].(string); ok && v != "" {
-		computation.PeriodTimeGranularity = aws.String(v)
+		computation.PeriodTimeGranularity = types.TimeGranularity(v)
 	}
 	if v, ok := tfMap["time"].([]interface{}); ok && len(v) > 0 {
 		computation.Time = expandDimensionField(v)
@@ -571,7 +572,7 @@ func expandPeriodToDateComputation(tfList []interface{}) *quicksight.PeriodToDat
 	return computation
 }
 
-func expandTopBottomMoversComputation(tfList []interface{}) *quicksight.TopBottomMoversComputation {
+func expandTopBottomMoversComputation(tfList []interface{}) *types.TopBottomMoversComputation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -581,7 +582,7 @@ func expandTopBottomMoversComputation(tfList []interface{}) *quicksight.TopBotto
 		return nil
 	}
 
-	computation := &quicksight.TopBottomMoversComputation{}
+	computation := &types.TopBottomMoversComputation{}
 
 	if v, ok := tfMap["computation_id"].(string); ok && v != "" {
 		computation.ComputationId = aws.String(v)
@@ -590,13 +591,13 @@ func expandTopBottomMoversComputation(tfList []interface{}) *quicksight.TopBotto
 		computation.Name = aws.String(v)
 	}
 	if v, ok := tfMap["sort_order"].(string); ok && v != "" {
-		computation.SortOrder = aws.String(v)
+		computation.SortOrder = types.TopBottomSortOrder(v)
 	}
 	if v, ok := tfMap["type"].(string); ok && v != "" {
-		computation.Type = aws.String(v)
+		computation.Type = types.TopBottomComputationType(v)
 	}
 	if v, ok := tfMap["mover_size"].(int); ok {
-		computation.MoverSize = aws.Int64(int64(v))
+		computation.MoverSize = aws.Int32(int32(v))
 	}
 	if v, ok := tfMap["category"].([]interface{}); ok && len(v) > 0 {
 		computation.Category = expandDimensionField(v)
@@ -611,7 +612,7 @@ func expandTopBottomMoversComputation(tfList []interface{}) *quicksight.TopBotto
 	return computation
 }
 
-func expandTopBottomRankedComputation(tfList []interface{}) *quicksight.TopBottomRankedComputation {
+func expandTopBottomRankedComputation(tfList []interface{}) *types.TopBottomRankedComputation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -621,7 +622,7 @@ func expandTopBottomRankedComputation(tfList []interface{}) *quicksight.TopBotto
 		return nil
 	}
 
-	computation := &quicksight.TopBottomRankedComputation{}
+	computation := &types.TopBottomRankedComputation{}
 
 	if v, ok := tfMap["computation_id"].(string); ok && v != "" {
 		computation.ComputationId = aws.String(v)
@@ -630,10 +631,10 @@ func expandTopBottomRankedComputation(tfList []interface{}) *quicksight.TopBotto
 		computation.Name = aws.String(v)
 	}
 	if v, ok := tfMap["type"].(string); ok && v != "" {
-		computation.Type = aws.String(v)
+		computation.Type = types.TopBottomComputationType(v)
 	}
 	if v, ok := tfMap["result_size"].(int); ok {
-		computation.ResultSize = aws.Int64(int64(v))
+		computation.ResultSize = aws.Int32(int32(v))
 	}
 	if v, ok := tfMap["category"].([]interface{}); ok && len(v) > 0 {
 		computation.Category = expandDimensionField(v)
@@ -645,7 +646,7 @@ func expandTopBottomRankedComputation(tfList []interface{}) *quicksight.TopBotto
 	return computation
 }
 
-func expandTotalAggregationComputation(tfList []interface{}) *quicksight.TotalAggregationComputation {
+func expandTotalAggregationComputation(tfList []interface{}) *types.TotalAggregationComputation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -655,7 +656,7 @@ func expandTotalAggregationComputation(tfList []interface{}) *quicksight.TotalAg
 		return nil
 	}
 
-	computation := &quicksight.TotalAggregationComputation{}
+	computation := &types.TotalAggregationComputation{}
 
 	if v, ok := tfMap["computation_id"].(string); ok && v != "" {
 		computation.ComputationId = aws.String(v)
@@ -670,7 +671,7 @@ func expandTotalAggregationComputation(tfList []interface{}) *quicksight.TotalAg
 	return computation
 }
 
-func expandUniqueValuesComputation(tfList []interface{}) *quicksight.UniqueValuesComputation {
+func expandUniqueValuesComputation(tfList []interface{}) *types.UniqueValuesComputation {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -680,7 +681,7 @@ func expandUniqueValuesComputation(tfList []interface{}) *quicksight.UniqueValue
 		return nil
 	}
 
-	computation := &quicksight.UniqueValuesComputation{}
+	computation := &types.UniqueValuesComputation{}
 
 	if v, ok := tfMap["computation_id"].(string); ok && v != "" {
 		computation.ComputationId = aws.String(v)
@@ -695,7 +696,7 @@ func expandUniqueValuesComputation(tfList []interface{}) *quicksight.UniqueValue
 	return computation
 }
 
-func expandCustomNarrativeOptions(tfList []interface{}) *quicksight.CustomNarrativeOptions {
+func expandCustomNarrativeOptions(tfList []interface{}) *types.CustomNarrativeOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -705,7 +706,7 @@ func expandCustomNarrativeOptions(tfList []interface{}) *quicksight.CustomNarrat
 		return nil
 	}
 
-	options := &quicksight.CustomNarrativeOptions{}
+	options := &types.CustomNarrativeOptions{}
 
 	if v, ok := tfMap["narrative"].(string); ok && v != "" {
 		options.Narrative = aws.String(v)
@@ -714,14 +715,14 @@ func expandCustomNarrativeOptions(tfList []interface{}) *quicksight.CustomNarrat
 	return options
 }
 
-func flattenInsightVisual(apiObject *quicksight.InsightVisual) []interface{} {
+func flattenInsightVisual(apiObject *types.InsightVisual) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"visual_id":           aws.StringValue(apiObject.VisualId),
-		"data_set_identifier": aws.StringValue(apiObject.DataSetIdentifier),
+		"visual_id":           aws.ToString(apiObject.VisualId),
+		"data_set_identifier": aws.ToString(apiObject.DataSetIdentifier),
 	}
 	if apiObject.Actions != nil {
 		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
@@ -739,7 +740,7 @@ func flattenInsightVisual(apiObject *quicksight.InsightVisual) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenInsightConfiguration(apiObject *quicksight.InsightConfiguration) []interface{} {
+func flattenInsightConfiguration(apiObject *types.InsightConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -755,17 +756,13 @@ func flattenInsightConfiguration(apiObject *quicksight.InsightConfiguration) []i
 	return []interface{}{tfMap}
 }
 
-func flattenComputation(apiObject []*quicksight.Computation) []interface{} {
+func flattenComputation(apiObject []types.Computation) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
-
 		tfMap := map[string]interface{}{}
 		if config.Forecast != nil {
 			tfMap["forecast"] = flattenForecastComputation(config.Forecast)
@@ -804,41 +801,41 @@ func flattenComputation(apiObject []*quicksight.Computation) []interface{} {
 	return tfList
 }
 
-func flattenForecastComputation(apiObject *quicksight.ForecastComputation) []interface{} {
+func flattenForecastComputation(apiObject *types.ForecastComputation) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ComputationId != nil {
-		tfMap["computation_id"] = aws.StringValue(apiObject.ComputationId)
+		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
 	}
 	if apiObject.Time != nil {
 		tfMap["time"] = flattenDimensionField(apiObject.Time)
 	}
 	if apiObject.CustomSeasonalityValue != nil {
-		tfMap["custom_seasonality_value"] = aws.Int64Value(apiObject.CustomSeasonalityValue)
+		tfMap["custom_seasonality_value"] = aws.ToInt32(apiObject.CustomSeasonalityValue)
 	}
 	if apiObject.LowerBoundary != nil {
-		tfMap["lower_boundary"] = aws.Float64Value(apiObject.LowerBoundary)
+		tfMap["lower_boundary"] = aws.ToFloat64(apiObject.LowerBoundary)
 	}
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.StringValue(apiObject.Name)
+		tfMap["name"] = aws.ToString(apiObject.Name)
 	}
 	if apiObject.PeriodsBackward != nil {
-		tfMap["periods_backward"] = aws.Int64Value(apiObject.PeriodsBackward)
+		tfMap["periods_backward"] = aws.ToInt32(apiObject.PeriodsBackward)
 	}
 	if apiObject.PeriodsForward != nil {
-		tfMap["periods_forward"] = aws.Int64Value(apiObject.PeriodsForward)
+		tfMap["periods_forward"] = aws.ToInt32(apiObject.PeriodsForward)
 	}
 	if apiObject.PredictionInterval != nil {
-		tfMap["prediction_interval"] = aws.Int64Value(apiObject.PredictionInterval)
+		tfMap["prediction_interval"] = aws.ToInt32(apiObject.PredictionInterval)
 	}
-	if apiObject.Seasonality != nil {
-		tfMap["seasonality"] = aws.StringValue(apiObject.Seasonality)
-	}
+
+	tfMap["seasonality"] = types.ForecastComputationSeasonality(apiObject.Seasonality)
+
 	if apiObject.UpperBoundary != nil {
-		tfMap["upper_boundary"] = aws.Float64Value(apiObject.UpperBoundary)
+		tfMap["upper_boundary"] = aws.ToFloat64(apiObject.UpperBoundary)
 	}
 	if apiObject.Value != nil {
 		tfMap["value"] = flattenMeasureField(apiObject.Value)
@@ -847,23 +844,23 @@ func flattenForecastComputation(apiObject *quicksight.ForecastComputation) []int
 	return []interface{}{tfMap}
 }
 
-func flattenGrowthRateComputation(apiObject *quicksight.GrowthRateComputation) []interface{} {
+func flattenGrowthRateComputation(apiObject *types.GrowthRateComputation) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ComputationId != nil {
-		tfMap["computation_id"] = aws.StringValue(apiObject.ComputationId)
+		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
 	}
 	if apiObject.Time != nil {
 		tfMap["time"] = flattenDimensionField(apiObject.Time)
 	}
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.StringValue(apiObject.Name)
+		tfMap["name"] = aws.ToString(apiObject.Name)
 	}
 	if apiObject.PeriodSize != nil {
-		tfMap["period_size"] = aws.Int64Value(apiObject.PeriodSize)
+		tfMap["period_size"] = aws.ToInt32(apiObject.PeriodSize)
 	}
 	if apiObject.Value != nil {
 		tfMap["value"] = flattenMeasureField(apiObject.Value)
@@ -872,23 +869,23 @@ func flattenGrowthRateComputation(apiObject *quicksight.GrowthRateComputation) [
 	return []interface{}{tfMap}
 }
 
-func flattenMaximumMinimumComputation(apiObject *quicksight.MaximumMinimumComputation) []interface{} {
+func flattenMaximumMinimumComputation(apiObject *types.MaximumMinimumComputation) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ComputationId != nil {
-		tfMap["computation_id"] = aws.StringValue(apiObject.ComputationId)
+		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
 	}
 	if apiObject.Time != nil {
 		tfMap["time"] = flattenDimensionField(apiObject.Time)
 	}
-	if apiObject.Type != nil {
-		tfMap["type"] = aws.StringValue(apiObject.Type)
-	}
+
+	tfMap["type"] = types.MaximumMinimumComputationType(apiObject.Type)
+
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.StringValue(apiObject.Name)
+		tfMap["name"] = aws.ToString(apiObject.Name)
 	}
 	if apiObject.Value != nil {
 		tfMap["value"] = flattenMeasureField(apiObject.Value)
@@ -897,14 +894,14 @@ func flattenMaximumMinimumComputation(apiObject *quicksight.MaximumMinimumComput
 	return []interface{}{tfMap}
 }
 
-func flattenMetricComparisonComputation(apiObject *quicksight.MetricComparisonComputation) []interface{} {
+func flattenMetricComparisonComputation(apiObject *types.MetricComparisonComputation) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ComputationId != nil {
-		tfMap["computation_id"] = aws.StringValue(apiObject.ComputationId)
+		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
 	}
 	if apiObject.Time != nil {
 		tfMap["time"] = flattenDimensionField(apiObject.Time)
@@ -916,26 +913,26 @@ func flattenMetricComparisonComputation(apiObject *quicksight.MetricComparisonCo
 		tfMap["target_value"] = flattenMeasureField(apiObject.TargetValue)
 	}
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.StringValue(apiObject.Name)
+		tfMap["name"] = aws.ToString(apiObject.Name)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenPeriodOverPeriodComputation(apiObject *quicksight.PeriodOverPeriodComputation) []interface{} {
+func flattenPeriodOverPeriodComputation(apiObject *types.PeriodOverPeriodComputation) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ComputationId != nil {
-		tfMap["computation_id"] = aws.StringValue(apiObject.ComputationId)
+		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
 	}
 	if apiObject.Time != nil {
 		tfMap["time"] = flattenDimensionField(apiObject.Time)
 	}
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.StringValue(apiObject.Name)
+		tfMap["name"] = aws.ToString(apiObject.Name)
 	}
 	if apiObject.Value != nil {
 		tfMap["value"] = flattenMeasureField(apiObject.Value)
@@ -944,24 +941,24 @@ func flattenPeriodOverPeriodComputation(apiObject *quicksight.PeriodOverPeriodCo
 	return []interface{}{tfMap}
 }
 
-func flattenPeriodToDateComputation(apiObject *quicksight.PeriodToDateComputation) []interface{} {
+func flattenPeriodToDateComputation(apiObject *types.PeriodToDateComputation) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ComputationId != nil {
-		tfMap["computation_id"] = aws.StringValue(apiObject.ComputationId)
+		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
 	}
 	if apiObject.Time != nil {
 		tfMap["time"] = flattenDimensionField(apiObject.Time)
 	}
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.StringValue(apiObject.Name)
+		tfMap["name"] = aws.ToString(apiObject.Name)
 	}
-	if apiObject.PeriodTimeGranularity != nil {
-		tfMap["period_time_granularity"] = aws.StringValue(apiObject.PeriodTimeGranularity)
-	}
+
+	tfMap["period_time_granularity"] = types.TimeGranularity(apiObject.PeriodTimeGranularity)
+
 	if apiObject.Value != nil {
 		tfMap["value"] = flattenMeasureField(apiObject.Value)
 	}
@@ -969,33 +966,33 @@ func flattenPeriodToDateComputation(apiObject *quicksight.PeriodToDateComputatio
 	return []interface{}{tfMap}
 }
 
-func flattenTopBottomMoversComputation(apiObject *quicksight.TopBottomMoversComputation) []interface{} {
+func flattenTopBottomMoversComputation(apiObject *types.TopBottomMoversComputation) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ComputationId != nil {
-		tfMap["computation_id"] = aws.StringValue(apiObject.ComputationId)
+		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
 	}
 	if apiObject.Category != nil {
 		tfMap["category"] = flattenDimensionField(apiObject.Category)
 	}
 	if apiObject.MoverSize != nil {
-		tfMap["mover_size"] = aws.Int64Value(apiObject.MoverSize)
+		tfMap["mover_size"] = aws.ToInt32(apiObject.MoverSize)
 	}
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.StringValue(apiObject.Name)
+		tfMap["name"] = aws.ToString(apiObject.Name)
 	}
-	if apiObject.SortOrder != nil {
-		tfMap["sort_order"] = aws.StringValue(apiObject.SortOrder)
-	}
+
+	tfMap["sort_order"] = types.TopBottomSortOrder(apiObject.SortOrder)
+
 	if apiObject.Time != nil {
 		tfMap["time"] = flattenDimensionField(apiObject.Time)
 	}
-	if apiObject.Type != nil {
-		tfMap["type"] = aws.StringValue(apiObject.Type)
-	}
+
+	tfMap["type"] = types.TopBottomComputationType(apiObject.Type)
+
 	if apiObject.Value != nil {
 		tfMap["value"] = flattenMeasureField(apiObject.Value)
 	}
@@ -1003,27 +1000,27 @@ func flattenTopBottomMoversComputation(apiObject *quicksight.TopBottomMoversComp
 	return []interface{}{tfMap}
 }
 
-func flattenTopBottomRankedComputation(apiObject *quicksight.TopBottomRankedComputation) []interface{} {
+func flattenTopBottomRankedComputation(apiObject *types.TopBottomRankedComputation) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ComputationId != nil {
-		tfMap["computation_id"] = aws.StringValue(apiObject.ComputationId)
+		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
 	}
 	if apiObject.Category != nil {
 		tfMap["category"] = flattenDimensionField(apiObject.Category)
 	}
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.StringValue(apiObject.Name)
+		tfMap["name"] = aws.ToString(apiObject.Name)
 	}
 	if apiObject.ResultSize != nil {
-		tfMap["result_size"] = aws.Int64Value(apiObject.ResultSize)
+		tfMap["result_size"] = aws.ToInt32(apiObject.ResultSize)
 	}
-	if apiObject.Type != nil {
-		tfMap["type"] = aws.StringValue(apiObject.Type)
-	}
+
+	tfMap["type"] = types.TopBottomComputationType(apiObject.Type)
+
 	if apiObject.Value != nil {
 		tfMap["value"] = flattenMeasureField(apiObject.Value)
 	}
@@ -1031,17 +1028,17 @@ func flattenTopBottomRankedComputation(apiObject *quicksight.TopBottomRankedComp
 	return []interface{}{tfMap}
 }
 
-func flattenTotalAggregationComputation(apiObject *quicksight.TotalAggregationComputation) []interface{} {
+func flattenTotalAggregationComputation(apiObject *types.TotalAggregationComputation) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ComputationId != nil {
-		tfMap["computation_id"] = aws.StringValue(apiObject.ComputationId)
+		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
 	}
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.StringValue(apiObject.Name)
+		tfMap["name"] = aws.ToString(apiObject.Name)
 	}
 	if apiObject.Value != nil {
 		tfMap["value"] = flattenMeasureField(apiObject.Value)
@@ -1050,33 +1047,33 @@ func flattenTotalAggregationComputation(apiObject *quicksight.TotalAggregationCo
 	return []interface{}{tfMap}
 }
 
-func flattenUniqueValuesComputation(apiObject *quicksight.UniqueValuesComputation) []interface{} {
+func flattenUniqueValuesComputation(apiObject *types.UniqueValuesComputation) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ComputationId != nil {
-		tfMap["computation_id"] = aws.StringValue(apiObject.ComputationId)
+		tfMap["computation_id"] = aws.ToString(apiObject.ComputationId)
 	}
 	if apiObject.Category != nil {
 		tfMap["category"] = flattenDimensionField(apiObject.Category)
 	}
 	if apiObject.Name != nil {
-		tfMap["name"] = aws.StringValue(apiObject.Name)
+		tfMap["name"] = aws.ToString(apiObject.Name)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenCustomNarrativeOptions(apiObject *quicksight.CustomNarrativeOptions) []interface{} {
+func flattenCustomNarrativeOptions(apiObject *types.CustomNarrativeOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Narrative != nil {
-		tfMap["narrative"] = aws.StringValue(apiObject.Narrative)
+		tfMap["narrative"] = aws.ToString(apiObject.Narrative)
 	}
 
 	return []interface{}{tfMap}

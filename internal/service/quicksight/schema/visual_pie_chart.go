@@ -4,10 +4,10 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -45,7 +45,7 @@ func pieChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"arc_thickness": stringSchema(false, validation.StringInSlice(quicksight.ArcThicknessOptions_Values(), false)),
+													"arc_thickness": stringSchema(false, enum.Validate[types.ArcThicknessOptions]()),
 												},
 											},
 										},
@@ -56,7 +56,7 @@ func pieChartVisualSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"label_visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+													"label_visibility": stringSchema(false, enum.Validate[types.Visibility]()),
 												},
 											},
 										},
@@ -117,7 +117,7 @@ func pieChartVisualSchema() *schema.Schema {
 	}
 }
 
-func expandPieChartVisual(tfList []interface{}) *quicksight.PieChartVisual {
+func expandPieChartVisual(tfList []interface{}) *types.PieChartVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -127,7 +127,7 @@ func expandPieChartVisual(tfList []interface{}) *quicksight.PieChartVisual {
 		return nil
 	}
 
-	visual := &quicksight.PieChartVisual{}
+	visual := &types.PieChartVisual{}
 
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		visual.VisualId = aws.String(v)
@@ -151,7 +151,7 @@ func expandPieChartVisual(tfList []interface{}) *quicksight.PieChartVisual {
 	return visual
 }
 
-func expandPieChartConfiguration(tfList []interface{}) *quicksight.PieChartConfiguration {
+func expandPieChartConfiguration(tfList []interface{}) *types.PieChartConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -161,7 +161,7 @@ func expandPieChartConfiguration(tfList []interface{}) *quicksight.PieChartConfi
 		return nil
 	}
 
-	config := &quicksight.PieChartConfiguration{}
+	config := &types.PieChartConfiguration{}
 
 	if v, ok := tfMap["category_label_options"].([]interface{}); ok && len(v) > 0 {
 		config.CategoryLabelOptions = expandChartAxisLabelOptions(v)
@@ -200,7 +200,7 @@ func expandPieChartConfiguration(tfList []interface{}) *quicksight.PieChartConfi
 	return config
 }
 
-func expandPieChartFieldWells(tfList []interface{}) *quicksight.PieChartFieldWells {
+func expandPieChartFieldWells(tfList []interface{}) *types.PieChartFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -210,7 +210,7 @@ func expandPieChartFieldWells(tfList []interface{}) *quicksight.PieChartFieldWel
 		return nil
 	}
 
-	config := &quicksight.PieChartFieldWells{}
+	config := &types.PieChartFieldWells{}
 
 	if v, ok := tfMap["pie_chart_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
 		config.PieChartAggregatedFieldWells = expandPieChartAggregatedFieldWells(v)
@@ -219,7 +219,7 @@ func expandPieChartFieldWells(tfList []interface{}) *quicksight.PieChartFieldWel
 	return config
 }
 
-func expandPieChartAggregatedFieldWells(tfList []interface{}) *quicksight.PieChartAggregatedFieldWells {
+func expandPieChartAggregatedFieldWells(tfList []interface{}) *types.PieChartAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -229,7 +229,7 @@ func expandPieChartAggregatedFieldWells(tfList []interface{}) *quicksight.PieCha
 		return nil
 	}
 
-	config := &quicksight.PieChartAggregatedFieldWells{}
+	config := &types.PieChartAggregatedFieldWells{}
 
 	if v, ok := tfMap["category"].([]interface{}); ok && len(v) > 0 {
 		config.Category = expandDimensionFields(v)
@@ -244,7 +244,7 @@ func expandPieChartAggregatedFieldWells(tfList []interface{}) *quicksight.PieCha
 	return config
 }
 
-func expandPieChartSortConfiguration(tfList []interface{}) *quicksight.PieChartSortConfiguration {
+func expandPieChartSortConfiguration(tfList []interface{}) *types.PieChartSortConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -254,7 +254,7 @@ func expandPieChartSortConfiguration(tfList []interface{}) *quicksight.PieChartS
 		return nil
 	}
 
-	config := &quicksight.PieChartSortConfiguration{}
+	config := &types.PieChartSortConfiguration{}
 
 	if v, ok := tfMap["category_items_limit"].([]interface{}); ok && len(v) > 0 {
 		config.CategoryItemsLimit = expandItemsLimitConfiguration(v)
@@ -272,7 +272,7 @@ func expandPieChartSortConfiguration(tfList []interface{}) *quicksight.PieChartS
 	return config
 }
 
-func expandDonutOptions(tfList []interface{}) *quicksight.DonutOptions {
+func expandDonutOptions(tfList []interface{}) *types.DonutOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -282,7 +282,7 @@ func expandDonutOptions(tfList []interface{}) *quicksight.DonutOptions {
 		return nil
 	}
 
-	options := &quicksight.DonutOptions{}
+	options := &types.DonutOptions{}
 
 	if v, ok := tfMap["arc_options"].([]interface{}); ok && len(v) > 0 {
 		options.ArcOptions = expandArcOptions(v)
@@ -294,7 +294,7 @@ func expandDonutOptions(tfList []interface{}) *quicksight.DonutOptions {
 	return options
 }
 
-func expandArcOptions(tfList []interface{}) *quicksight.ArcOptions {
+func expandArcOptions(tfList []interface{}) *types.ArcOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -304,16 +304,16 @@ func expandArcOptions(tfList []interface{}) *quicksight.ArcOptions {
 		return nil
 	}
 
-	options := &quicksight.ArcOptions{}
+	options := &types.ArcOptions{}
 
 	if v, ok := tfMap["arc_thickness"].(string); ok && v != "" {
-		options.ArcThickness = aws.String(v)
+		options.ArcThickness = types.ArcThickness(v)
 	}
 
 	return options
 }
 
-func expandDonutCenterOptions(tfList []interface{}) *quicksight.DonutCenterOptions {
+func expandDonutCenterOptions(tfList []interface{}) *types.DonutCenterOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -323,22 +323,22 @@ func expandDonutCenterOptions(tfList []interface{}) *quicksight.DonutCenterOptio
 		return nil
 	}
 
-	options := &quicksight.DonutCenterOptions{}
+	options := &types.DonutCenterOptions{}
 
 	if v, ok := tfMap["label_visibility"].(string); ok && v != "" {
-		options.LabelVisibility = aws.String(v)
+		options.LabelVisibility = types.Visibility(v)
 	}
 
 	return options
 }
 
-func flattenPieChartVisual(apiObject *quicksight.PieChartVisual) []interface{} {
+func flattenPieChartVisual(apiObject *types.PieChartVisual) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"visual_id": aws.StringValue(apiObject.VisualId),
+		"visual_id": aws.ToString(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
 		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
@@ -359,7 +359,7 @@ func flattenPieChartVisual(apiObject *quicksight.PieChartVisual) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenPieChartConfiguration(apiObject *quicksight.PieChartConfiguration) []interface{} {
+func flattenPieChartConfiguration(apiObject *types.PieChartConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -402,7 +402,7 @@ func flattenPieChartConfiguration(apiObject *quicksight.PieChartConfiguration) [
 	return []interface{}{tfMap}
 }
 
-func flattenDonutOptions(apiObject *quicksight.DonutOptions) []interface{} {
+func flattenDonutOptions(apiObject *types.DonutOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -418,33 +418,31 @@ func flattenDonutOptions(apiObject *quicksight.DonutOptions) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenArcOptions(apiObject *quicksight.ArcOptions) []interface{} {
+func flattenArcOptions(apiObject *types.ArcOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.ArcThickness != nil {
-		tfMap["arc_thickness"] = aws.StringValue(apiObject.ArcThickness)
-	}
+
+	tfMap["arc_thickness"] = types.ArcThickness(apiObject.ArcThickness)
 
 	return []interface{}{tfMap}
 }
 
-func flattenDonutCenterOptions(apiObject *quicksight.DonutCenterOptions) []interface{} {
+func flattenDonutCenterOptions(apiObject *types.DonutCenterOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.LabelVisibility != nil {
-		tfMap["label_visibility"] = aws.StringValue(apiObject.LabelVisibility)
-	}
+
+	tfMap["label_visibility"] = types.Visibility(apiObject.LabelVisibility)
 
 	return []interface{}{tfMap}
 }
 
-func flattenPieChartFieldWells(apiObject *quicksight.PieChartFieldWells) []interface{} {
+func flattenPieChartFieldWells(apiObject *types.PieChartFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -457,7 +455,7 @@ func flattenPieChartFieldWells(apiObject *quicksight.PieChartFieldWells) []inter
 	return []interface{}{tfMap}
 }
 
-func flattenPieChartAggregatedFieldWells(apiObject *quicksight.PieChartAggregatedFieldWells) []interface{} {
+func flattenPieChartAggregatedFieldWells(apiObject *types.PieChartAggregatedFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -476,7 +474,7 @@ func flattenPieChartAggregatedFieldWells(apiObject *quicksight.PieChartAggregate
 	return []interface{}{tfMap}
 }
 
-func flattenPieChartSortConfiguration(apiObject *quicksight.PieChartSortConfiguration) []interface{} {
+func flattenPieChartSortConfiguration(apiObject *types.PieChartSortConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

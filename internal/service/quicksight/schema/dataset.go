@@ -4,8 +4,8 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -19,8 +19,8 @@ func dataSetIdentifierDeclarationsSchema() *schema.Schema {
 		Required: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"data_set_arn": stringSchema(false, verify.ValidARN),
-				"identifier":   stringSchema(false, validation.StringLenBetween(1, 2048)),
+				"data_set_arn": stringSchema(false, validation.ToDiagFunc(verify.ValidARN)),
+				"identifier":   stringSchema(false, validation.ToDiagFunc(validation.StringLenBetween(1, 2048))),
 			},
 		},
 	}
@@ -34,9 +34,9 @@ func dataSetReferencesSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"data_set_arn": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: verify.ValidARN,
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
 				},
 				"data_set_placeholder": {
 					Type:     schema.TypeString,
@@ -47,12 +47,12 @@ func dataSetReferencesSchema() *schema.Schema {
 	}
 }
 
-func expandDataSetIdentifierDeclarations(tfList []interface{}) []*quicksight.DataSetIdentifierDeclaration {
+func expandDataSetIdentifierDeclarations(tfList []interface{}) []types.DataSetIdentifierDeclaration {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var identifiers []*quicksight.DataSetIdentifierDeclaration
+	var identifiers []types.DataSetIdentifierDeclaration
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -64,18 +64,18 @@ func expandDataSetIdentifierDeclarations(tfList []interface{}) []*quicksight.Dat
 			continue
 		}
 
-		identifiers = append(identifiers, identifier)
+		identifiers = append(identifiers, *identifier)
 	}
 
 	return identifiers
 }
 
-func expandDataSetIdentifierDeclaration(tfMap map[string]interface{}) *quicksight.DataSetIdentifierDeclaration {
+func expandDataSetIdentifierDeclaration(tfMap map[string]interface{}) *types.DataSetIdentifierDeclaration {
 	if tfMap == nil {
 		return nil
 	}
 
-	identifier := &quicksight.DataSetIdentifierDeclaration{}
+	identifier := &types.DataSetIdentifierDeclaration{}
 
 	if v, ok := tfMap["data_set_arn"].(string); ok && v != "" {
 		identifier.DataSetArn = aws.String(v)
@@ -87,23 +87,20 @@ func expandDataSetIdentifierDeclaration(tfMap map[string]interface{}) *quicksigh
 	return identifier
 }
 
-func flattenDataSetIdentifierDeclarations(apiObject []*quicksight.DataSetIdentifierDeclaration) []interface{} {
+func flattenDataSetIdentifierDeclarations(apiObject []types.DataSetIdentifierDeclaration) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, identifier := range apiObject {
-		if identifier == nil {
-			continue
-		}
 
 		tfMap := map[string]interface{}{}
 		if identifier.DataSetArn != nil {
-			tfMap["data_set_arn"] = aws.StringValue(identifier.DataSetArn)
+			tfMap["data_set_arn"] = aws.ToString(identifier.DataSetArn)
 		}
 		if identifier.Identifier != nil {
-			tfMap["identifier"] = aws.StringValue(identifier.Identifier)
+			tfMap["identifier"] = aws.ToString(identifier.Identifier)
 		}
 		tfList = append(tfList, tfMap)
 	}

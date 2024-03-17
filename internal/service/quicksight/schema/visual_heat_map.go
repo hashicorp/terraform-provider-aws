@@ -4,8 +4,8 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -82,7 +82,7 @@ func heatMapVisualSchema() *schema.Schema {
 	}
 }
 
-func expandHeatMapVisual(tfList []interface{}) *quicksight.HeatMapVisual {
+func expandHeatMapVisual(tfList []interface{}) *types.HeatMapVisual {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -92,7 +92,7 @@ func expandHeatMapVisual(tfList []interface{}) *quicksight.HeatMapVisual {
 		return nil
 	}
 
-	visual := &quicksight.HeatMapVisual{}
+	visual := &types.HeatMapVisual{}
 
 	if v, ok := tfMap["visual_id"].(string); ok && v != "" {
 		visual.VisualId = aws.String(v)
@@ -116,7 +116,7 @@ func expandHeatMapVisual(tfList []interface{}) *quicksight.HeatMapVisual {
 	return visual
 }
 
-func expandHeatMapConfiguration(tfList []interface{}) *quicksight.HeatMapConfiguration {
+func expandHeatMapConfiguration(tfList []interface{}) *types.HeatMapConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -126,7 +126,7 @@ func expandHeatMapConfiguration(tfList []interface{}) *quicksight.HeatMapConfigu
 		return nil
 	}
 
-	config := &quicksight.HeatMapConfiguration{}
+	config := &types.HeatMapConfiguration{}
 
 	if v, ok := tfMap["color_scale"].([]interface{}); ok && len(v) > 0 {
 		config.ColorScale = expandColorScale(v)
@@ -156,7 +156,7 @@ func expandHeatMapConfiguration(tfList []interface{}) *quicksight.HeatMapConfigu
 	return config
 }
 
-func expandHeatMapFieldWells(tfList []interface{}) *quicksight.HeatMapFieldWells {
+func expandHeatMapFieldWells(tfList []interface{}) *types.HeatMapFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -166,7 +166,7 @@ func expandHeatMapFieldWells(tfList []interface{}) *quicksight.HeatMapFieldWells
 		return nil
 	}
 
-	config := &quicksight.HeatMapFieldWells{}
+	config := &types.HeatMapFieldWells{}
 
 	if v, ok := tfMap["heat_map_aggregated_field_wells"].([]interface{}); ok && len(v) > 0 {
 		config.HeatMapAggregatedFieldWells = expandHeatMapAggregatedFieldWells(v)
@@ -175,7 +175,7 @@ func expandHeatMapFieldWells(tfList []interface{}) *quicksight.HeatMapFieldWells
 	return config
 }
 
-func expandHeatMapAggregatedFieldWells(tfList []interface{}) *quicksight.HeatMapAggregatedFieldWells {
+func expandHeatMapAggregatedFieldWells(tfList []interface{}) *types.HeatMapAggregatedFieldWells {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -185,7 +185,7 @@ func expandHeatMapAggregatedFieldWells(tfList []interface{}) *quicksight.HeatMap
 		return nil
 	}
 
-	config := &quicksight.HeatMapAggregatedFieldWells{}
+	config := &types.HeatMapAggregatedFieldWells{}
 
 	if v, ok := tfMap["columns"].([]interface{}); ok && len(v) > 0 {
 		config.Columns = expandDimensionFields(v)
@@ -200,7 +200,7 @@ func expandHeatMapAggregatedFieldWells(tfList []interface{}) *quicksight.HeatMap
 	return config
 }
 
-func expandHeatMapSortConfiguration(tfList []interface{}) *quicksight.HeatMapSortConfiguration {
+func expandHeatMapSortConfiguration(tfList []interface{}) *types.HeatMapSortConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -210,7 +210,7 @@ func expandHeatMapSortConfiguration(tfList []interface{}) *quicksight.HeatMapSor
 		return nil
 	}
 
-	config := &quicksight.HeatMapSortConfiguration{}
+	config := &types.HeatMapSortConfiguration{}
 
 	if v, ok := tfMap["heat_map_column_items_limit_configuration"].([]interface{}); ok && len(v) > 0 {
 		config.HeatMapColumnItemsLimitConfiguration = expandItemsLimitConfiguration(v)
@@ -228,13 +228,13 @@ func expandHeatMapSortConfiguration(tfList []interface{}) *quicksight.HeatMapSor
 	return config
 }
 
-func flattenHeatMapVisual(apiObject *quicksight.HeatMapVisual) []interface{} {
+func flattenHeatMapVisual(apiObject *types.HeatMapVisual) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"visual_id": aws.StringValue(apiObject.VisualId),
+		"visual_id": aws.ToString(apiObject.VisualId),
 	}
 	if apiObject.Actions != nil {
 		tfMap["actions"] = flattenVisualCustomAction(apiObject.Actions)
@@ -255,7 +255,7 @@ func flattenHeatMapVisual(apiObject *quicksight.HeatMapVisual) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenHeatMapConfiguration(apiObject *quicksight.HeatMapConfiguration) []interface{} {
+func flattenHeatMapConfiguration(apiObject *types.HeatMapConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -289,7 +289,7 @@ func flattenHeatMapConfiguration(apiObject *quicksight.HeatMapConfiguration) []i
 	return []interface{}{tfMap}
 }
 
-func flattenHeatMapFieldWells(apiObject *quicksight.HeatMapFieldWells) []interface{} {
+func flattenHeatMapFieldWells(apiObject *types.HeatMapFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -302,7 +302,7 @@ func flattenHeatMapFieldWells(apiObject *quicksight.HeatMapFieldWells) []interfa
 	return []interface{}{tfMap}
 }
 
-func flattenHeatMapAggregatedFieldWells(apiObject *quicksight.HeatMapAggregatedFieldWells) []interface{} {
+func flattenHeatMapAggregatedFieldWells(apiObject *types.HeatMapAggregatedFieldWells) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -321,7 +321,7 @@ func flattenHeatMapAggregatedFieldWells(apiObject *quicksight.HeatMapAggregatedF
 	return []interface{}{tfMap}
 }
 
-func flattenHeatMapSortConfiguration(apiObject *quicksight.HeatMapSortConfiguration) []interface{} {
+func flattenHeatMapSortConfiguration(apiObject *types.HeatMapSortConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
 	}

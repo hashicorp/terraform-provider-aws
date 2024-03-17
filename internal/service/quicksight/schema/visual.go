@@ -7,11 +7,11 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 const customActionsMaxItems = 10
@@ -66,9 +66,9 @@ func legendOptionsSchema() *schema.Schema {
 					Type:     schema.TypeString,
 					Optional: true,
 				},
-				"position":   stringSchema(false, validation.StringInSlice(quicksight.LegendPosition_Values(), false)),
+				"position":   stringSchema(false, enum.Validate[types.LegendPosition]()),
 				"title":      labelOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LabelOptions.html
-				"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+				"visibility": stringSchema(false, enum.Validate[types.Visibility]()),
 				"width": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -93,7 +93,7 @@ func tooltipOptionsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"aggregation_visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+							"aggregation_visibility": stringSchema(false, enum.Validate[types.Visibility]()),
 							"tooltip_fields": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TooltipItem.html
 								Type:     schema.TypeList,
 								Optional: true,
@@ -114,7 +114,7 @@ func tooltipOptionsSchema() *schema.Schema {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+													"visibility": stringSchema(false, enum.Validate[types.Visibility]()),
 												},
 											},
 										},
@@ -125,24 +125,24 @@ func tooltipOptionsSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"field_id": stringSchema(true, validation.StringLenBetween(1, 512)),
+													"field_id": stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 512))),
 													"label": {
 														Type:     schema.TypeString,
 														Optional: true,
 													},
-													"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+													"visibility": stringSchema(false, enum.Validate[types.Visibility]()),
 												},
 											},
 										},
 									},
 								},
 							},
-							"tooltip_title_type": stringSchema(false, validation.StringInSlice(quicksight.TooltipTitleType_Values(), false)),
+							"tooltip_title_type": stringSchema(false, enum.Validate[types.TooltipTitleType]()),
 						},
 					},
 				},
-				"selected_tooltip_type": stringSchema(false, validation.StringInSlice(quicksight.SelectedTooltipType_Values(), false)),
-				"tooltip_visibility":    stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+				"selected_tooltip_type": stringSchema(false, enum.Validate[types.SelectedTooltipType]()),
+				"tooltip_visibility":    stringSchema(false, enum.Validate[types.Visibility]()),
 			},
 		},
 	}
@@ -156,7 +156,7 @@ func visualPaletteSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"chart_color": stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+				"chart_color": stringSchema(false, validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""))),
 				"color_map": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataPathColor.html
 					Type:     schema.TypeList,
 					Optional: true,
@@ -164,9 +164,9 @@ func visualPaletteSchema() *schema.Schema {
 					MaxItems: 5000,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":            stringSchema(true, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+							"color":            stringSchema(true, validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""))),
 							"element":          dataPathValueSchema(1), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataPathValue.html
-							"time_granularity": stringSchema(false, validation.StringInSlice(quicksight.TimeGranularity_Values(), false)),
+							"time_granularity": stringSchema(false, enum.Validate[types.TimeGranularity]()),
 						},
 					},
 				},
@@ -183,8 +183,8 @@ func dataPathValueSchema(maxItems int) *schema.Schema {
 		MaxItems: maxItems,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"field_id":    stringSchema(true, validation.StringLenBetween(1, 512)),
-				"field_value": stringSchema(true, validation.StringLenBetween(1, 2048)),
+				"field_id":    stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 512))),
+				"field_value": stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 2048))),
 			},
 		},
 	}
@@ -205,7 +205,7 @@ func columnHierarchiesSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"hierarchy_id":       stringSchema(true, validation.StringLenBetween(1, 512)),
+							"hierarchy_id":       stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 512))),
 							"drill_down_filters": drillDownFilterSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DrillDownFilter.html
 						},
 					},
@@ -224,12 +224,12 @@ func columnHierarchiesSchema() *schema.Schema {
 								MaxItems: 10,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-										"column_name":         stringSchema(true, validation.StringLenBetween(1, 128)),
-										"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
+										"column_name":         stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 128))),
+										"data_set_identifier": stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 2048))),
 									},
 								},
 							},
-							"hierarchy_id":       stringSchema(true, validation.StringLenBetween(1, 512)),
+							"hierarchy_id":       stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 512))),
 							"drill_down_filters": drillDownFilterSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DrillDownFilter.html
 						},
 					},
@@ -248,12 +248,12 @@ func columnHierarchiesSchema() *schema.Schema {
 								MaxItems: 10,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
-										"column_name":         stringSchema(true, validation.StringLenBetween(1, 128)),
-										"data_set_identifier": stringSchema(true, validation.StringLenBetween(1, 2048)),
+										"column_name":         stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 128))),
+										"data_set_identifier": stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 2048))),
 									},
 								},
 							},
-							"hierarchy_id":       stringSchema(true, validation.StringLenBetween(1, 512)),
+							"hierarchy_id":       stringSchema(true, validation.ToDiagFunc(validation.StringLenBetween(1, 512))),
 							"drill_down_filters": drillDownFilterSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DrillDownFilter.html
 						},
 					},
@@ -273,7 +273,7 @@ func visualSubtitleLabelOptionsSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"format_text": longFormatTextSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LongFormatText.html
-				"visibility":  stringOptionalComputedSchema(validation.StringInSlice(quicksight.Visibility_Values(), false)),
+				"visibility":  stringOptionalComputedSchema(enum.Validate[types.Visibility]()),
 			},
 		},
 	}
@@ -288,14 +288,14 @@ func longFormatTextSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"plain_text": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(1, 1024),
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
 				},
 				"rich_text": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(1, 2048),
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 2048)),
 				},
 			},
 		},
@@ -311,14 +311,14 @@ func shortFormatTextSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"plain_text": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(1, 512),
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 512)),
 				},
 				"rich_text": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.StringLenBetween(1, 1024),
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 1024)),
 				},
 			},
 		},
@@ -335,7 +335,7 @@ func visualTitleLabelOptionsSchema() *schema.Schema {
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"format_text": shortFormatTextSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ShortFormatText.html
-				"visibility":  stringOptionalComputedSchema(validation.StringInSlice(quicksight.Visibility_Values(), false)),
+				"visibility":  stringOptionalComputedSchema(enum.Validate[types.Visibility]()),
 			},
 		},
 	}
@@ -361,7 +361,7 @@ func comparisonConfigurationSchema() *schema.Schema {
 						},
 					},
 				},
-				"comparison_method": stringSchema(false, validation.StringInSlice(quicksight.ComparisonMethod_Values(), false)),
+				"comparison_method": stringSchema(false, enum.Validate[types.ComparisonMethod]()),
 			},
 		},
 	}
@@ -375,7 +375,7 @@ func colorScaleSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"color_fill_type": stringSchema(true, validation.StringInSlice(quicksight.ColorFillType_Values(), false)),
+				"color_fill_type": stringSchema(false, enum.Validate[types.ColorFillType]()),
 				"colors": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataColor.html
 					Type:     schema.TypeList,
 					Required: true,
@@ -383,7 +383,7 @@ func colorScaleSchema() *schema.Schema {
 					MaxItems: 3,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color": stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+							"color": stringSchema(false, validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""))),
 							"data_value": {
 								Type:     schema.TypeFloat,
 								Optional: true,
@@ -398,7 +398,7 @@ func colorScaleSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color": stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+							"color": stringSchema(false, validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""))),
 							"data_value": {
 								Type:     schema.TypeFloat,
 								Optional: true,
@@ -419,7 +419,7 @@ func dataLabelOptionsSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"category_label_visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+				"category_label_visibility": stringSchema(false, enum.Validate[types.Visibility]()),
 				"data_label_types": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataLabelType.html
 					Type:     schema.TypeList,
 					MinItems: 1,
@@ -434,9 +434,9 @@ func dataLabelOptionsSchema() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"field_id":    stringSchema(false, validation.StringLenBetween(1, 512)),
-										"field_value": stringSchema(false, validation.StringLenBetween(1, 2048)),
-										"visibility":  stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+										"field_id":    stringSchema(false, validation.ToDiagFunc(validation.StringLenBetween(1, 512))),
+										"field_value": stringSchema(false, validation.ToDiagFunc(validation.StringLenBetween(1, 2048))),
+										"visibility":  stringSchema(false, enum.Validate[types.Visibility]()),
 									},
 								},
 							},
@@ -447,8 +447,8 @@ func dataLabelOptionsSchema() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"field_id":   stringSchema(false, validation.StringLenBetween(1, 512)),
-										"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+										"field_id":   stringSchema(false, validation.ToDiagFunc(validation.StringLenBetween(1, 512))),
+										"visibility": stringSchema(false, enum.Validate[types.Visibility]()),
 									},
 								},
 							},
@@ -459,7 +459,7 @@ func dataLabelOptionsSchema() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+										"visibility": stringSchema(false, enum.Validate[types.Visibility]()),
 									},
 								},
 							},
@@ -470,7 +470,7 @@ func dataLabelOptionsSchema() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+										"visibility": stringSchema(false, enum.Validate[types.Visibility]()),
 									},
 								},
 							},
@@ -481,31 +481,31 @@ func dataLabelOptionsSchema() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+										"visibility": stringSchema(false, enum.Validate[types.Visibility]()),
 									},
 								},
 							},
 						},
 					},
 				},
-				"label_color":              stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
-				"label_content":            stringSchema(false, validation.StringInSlice(quicksight.DataLabelContent_Values(), false)),
+				"label_color":              stringSchema(false, validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), ""))),
+				"label_content":            stringSchema(false, enum.Validate[types.DataLabelContent]()),
 				"label_font_configuration": fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
-				"measure_label_visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
-				"overlap":                  stringSchema(false, validation.StringInSlice(quicksight.DataLabelOverlap_Values(), false)),
-				"position":                 stringSchema(false, validation.StringInSlice(quicksight.DataLabelPosition_Values(), false)),
-				"visibility":               stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+				"measure_label_visibility": stringSchema(false, enum.Validate[types.Visibility]()),
+				"overlap":                  stringSchema(false, enum.Validate[types.DataLabelOverlap]()),
+				"position":                 stringSchema(false, enum.Validate[types.DataLabelPosition]()),
+				"visibility":               stringSchema(false, enum.Validate[types.Visibility]()),
 			},
 		},
 	}
 }
 
-func expandVisual(tfMap map[string]interface{}) *quicksight.Visual {
+func expandVisual(tfMap map[string]interface{}) *types.Visual {
 	if tfMap == nil {
 		return nil
 	}
 
-	visual := &quicksight.Visual{}
+	visual := &types.Visual{}
 
 	if v, ok := tfMap["bar_chart_visual"].([]interface{}); ok && len(v) > 0 {
 		visual.BarChartVisual = expandBarChartVisual(v)
@@ -580,7 +580,7 @@ func expandVisual(tfMap map[string]interface{}) *quicksight.Visual {
 	return visual
 }
 
-func expandDataLabelOptions(tfList []interface{}) *quicksight.DataLabelOptions {
+func expandDataLabelOptions(tfList []interface{}) *types.DataLabelOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -590,28 +590,28 @@ func expandDataLabelOptions(tfList []interface{}) *quicksight.DataLabelOptions {
 		return nil
 	}
 
-	options := &quicksight.DataLabelOptions{}
+	options := &types.DataLabelOptions{}
 
 	if v, ok := tfMap["category_label_visibility"].(string); ok && v != "" {
-		options.CategoryLabelVisibility = aws.String(v)
+		options.CategoryLabelVisibility = types.Visibility(v)
 	}
 	if v, ok := tfMap["label_color"].(string); ok && v != "" {
 		options.LabelColor = aws.String(v)
 	}
 	if v, ok := tfMap["label_content"].(string); ok && v != "" {
-		options.LabelContent = aws.String(v)
+		options.LabelContent = types.DataLabelContent(v)
 	}
 	if v, ok := tfMap["measure_label_visibility"].(string); ok && v != "" {
-		options.MeasureLabelVisibility = aws.String(v)
+		options.MeasureLabelVisibility = types.Visibility(v)
 	}
 	if v, ok := tfMap["overlap"].(string); ok && v != "" {
-		options.Overlap = aws.String(v)
+		options.Overlap = types.DataLabelOverlap(v)
 	}
 	if v, ok := tfMap["position"].(string); ok && v != "" {
-		options.Position = aws.String(v)
+		options.Position = types.DataLabelPosition(v)
 	}
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		options.Visibility = aws.String(v)
+		options.Visibility = types.Visibility(v)
 	}
 
 	if v, ok := tfMap["data_label_types"].([]interface{}); ok && len(v) > 0 {
@@ -624,12 +624,12 @@ func expandDataLabelOptions(tfList []interface{}) *quicksight.DataLabelOptions {
 	return options
 }
 
-func expandDataLabelTypes(tfList []interface{}) []*quicksight.DataLabelType {
+func expandDataLabelTypes(tfList []interface{}) []types.DataLabelType {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var options []*quicksight.DataLabelType
+	var options []types.DataLabelType
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -641,18 +641,18 @@ func expandDataLabelTypes(tfList []interface{}) []*quicksight.DataLabelType {
 			continue
 		}
 
-		options = append(options, opts)
+		options = append(options, *opts)
 	}
 
 	return options
 }
 
-func expandDataLabelType(tfMap map[string]interface{}) *quicksight.DataLabelType {
+func expandDataLabelType(tfMap map[string]interface{}) *types.DataLabelType {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &quicksight.DataLabelType{}
+	options := &types.DataLabelType{}
 
 	if v, ok := tfMap["data_path_label_type"].([]interface{}); ok && len(v) > 0 {
 		options.DataPathLabelType = expandDataPathLabelType(v)
@@ -673,7 +673,7 @@ func expandDataLabelType(tfMap map[string]interface{}) *quicksight.DataLabelType
 	return options
 }
 
-func expandDataPathLabelType(tfList []interface{}) *quicksight.DataPathLabelType {
+func expandDataPathLabelType(tfList []interface{}) *types.DataPathLabelType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -683,7 +683,7 @@ func expandDataPathLabelType(tfList []interface{}) *quicksight.DataPathLabelType
 		return nil
 	}
 
-	options := &quicksight.DataPathLabelType{}
+	options := &types.DataPathLabelType{}
 
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
 		options.FieldId = aws.String(v)
@@ -692,13 +692,13 @@ func expandDataPathLabelType(tfList []interface{}) *quicksight.DataPathLabelType
 		options.FieldValue = aws.String(v)
 	}
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		options.Visibility = aws.String(v)
+		options.Visibility = types.Visibility(v)
 	}
 
 	return options
 }
 
-func expandFieldLabelType(tfList []interface{}) *quicksight.FieldLabelType {
+func expandFieldLabelType(tfList []interface{}) *types.FieldLabelType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -708,19 +708,19 @@ func expandFieldLabelType(tfList []interface{}) *quicksight.FieldLabelType {
 		return nil
 	}
 
-	options := &quicksight.FieldLabelType{}
+	options := &types.FieldLabelType{}
 
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
 		options.FieldId = aws.String(v)
 	}
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		options.Visibility = aws.String(v)
+		options.Visibility = types.Visibility(v)
 	}
 
 	return options
 }
 
-func expandMaximumLabelType(tfList []interface{}) *quicksight.MaximumLabelType {
+func expandMaximumLabelType(tfList []interface{}) *types.MaximumLabelType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -730,16 +730,16 @@ func expandMaximumLabelType(tfList []interface{}) *quicksight.MaximumLabelType {
 		return nil
 	}
 
-	options := &quicksight.MaximumLabelType{}
+	options := &types.MaximumLabelType{}
 
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		options.Visibility = aws.String(v)
+		options.Visibility = types.Visibility(v)
 	}
 
 	return options
 }
 
-func expandMinimumLabelType(tfList []interface{}) *quicksight.MinimumLabelType {
+func expandMinimumLabelType(tfList []interface{}) *types.MinimumLabelType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -749,16 +749,16 @@ func expandMinimumLabelType(tfList []interface{}) *quicksight.MinimumLabelType {
 		return nil
 	}
 
-	options := &quicksight.MinimumLabelType{}
+	options := &types.MinimumLabelType{}
 
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		options.Visibility = aws.String(v)
+		options.Visibility = types.Visibility(v)
 	}
 
 	return options
 }
 
-func expandRangeEndsLabelType(tfList []interface{}) *quicksight.RangeEndsLabelType {
+func expandRangeEndsLabelType(tfList []interface{}) *types.RangeEndsLabelType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -768,16 +768,16 @@ func expandRangeEndsLabelType(tfList []interface{}) *quicksight.RangeEndsLabelTy
 		return nil
 	}
 
-	options := &quicksight.RangeEndsLabelType{}
+	options := &types.RangeEndsLabelType{}
 
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		options.Visibility = aws.String(v)
+		options.Visibility = types.Visibility(v)
 	}
 
 	return options
 }
 
-func expandLegendOptions(tfList []interface{}) *quicksight.LegendOptions {
+func expandLegendOptions(tfList []interface{}) *types.LegendOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -787,16 +787,16 @@ func expandLegendOptions(tfList []interface{}) *quicksight.LegendOptions {
 		return nil
 	}
 
-	options := &quicksight.LegendOptions{}
+	options := &types.LegendOptions{}
 
 	if v, ok := tfMap["height"].(string); ok && v != "" {
 		options.Height = aws.String(v)
 	}
 	if v, ok := tfMap["position"].(string); ok && v != "" {
-		options.Position = aws.String(v)
+		options.Position = types.LegendPosition(v)
 	}
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		options.Visibility = aws.String(v)
+		options.Visibility = types.Visibility(v)
 	}
 	if v, ok := tfMap["width"].(string); ok && v != "" {
 		options.Width = aws.String(v)
@@ -808,7 +808,7 @@ func expandLegendOptions(tfList []interface{}) *quicksight.LegendOptions {
 	return options
 }
 
-func expandTooltipOptions(tfList []interface{}) *quicksight.TooltipOptions {
+func expandTooltipOptions(tfList []interface{}) *types.TooltipOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -818,13 +818,13 @@ func expandTooltipOptions(tfList []interface{}) *quicksight.TooltipOptions {
 		return nil
 	}
 
-	options := &quicksight.TooltipOptions{}
+	options := &types.TooltipOptions{}
 
 	if v, ok := tfMap["selected_tooltip_type"].(string); ok && v != "" {
-		options.SelectedTooltipType = aws.String(v)
+		options.SelectedTooltipType = types.SelectedTooltipType(v)
 	}
 	if v, ok := tfMap["tooltip_visibility"].(string); ok && v != "" {
-		options.TooltipVisibility = aws.String(v)
+		options.TooltipVisibility = types.Visibility(v)
 	}
 	if v, ok := tfMap["field_base_tooltip"].([]interface{}); ok && len(v) > 0 {
 		options.FieldBasedTooltip = expandFieldBasedTooltip(v)
@@ -833,7 +833,7 @@ func expandTooltipOptions(tfList []interface{}) *quicksight.TooltipOptions {
 	return options
 }
 
-func expandFieldBasedTooltip(tfList []interface{}) *quicksight.FieldBasedTooltip {
+func expandFieldBasedTooltip(tfList []interface{}) *types.FieldBasedTooltip {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -843,13 +843,13 @@ func expandFieldBasedTooltip(tfList []interface{}) *quicksight.FieldBasedTooltip
 		return nil
 	}
 
-	options := &quicksight.FieldBasedTooltip{}
+	options := &types.FieldBasedTooltip{}
 
 	if v, ok := tfMap["aggregation_visibility"].(string); ok && v != "" {
-		options.AggregationVisibility = aws.String(v)
+		options.AggregationVisibility = types.Visibility(v)
 	}
 	if v, ok := tfMap["tooltip_title_type"].(string); ok && v != "" {
-		options.TooltipTitleType = aws.String(v)
+		options.TooltipTitleType = types.TooltipTitleType(v)
 	}
 	if v, ok := tfMap["tooltip_fields"].([]interface{}); ok && len(v) > 0 {
 		options.TooltipFields = expandTooltipItems(v)
@@ -858,12 +858,12 @@ func expandFieldBasedTooltip(tfList []interface{}) *quicksight.FieldBasedTooltip
 	return options
 }
 
-func expandTooltipItems(tfList []interface{}) []*quicksight.TooltipItem {
+func expandTooltipItems(tfList []interface{}) []types.TooltipItem {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var items []*quicksight.TooltipItem
+	var items []types.TooltipItem
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -875,18 +875,18 @@ func expandTooltipItems(tfList []interface{}) []*quicksight.TooltipItem {
 			continue
 		}
 
-		items = append(items, item)
+		items = append(items, *item)
 	}
 
 	return items
 }
 
-func expandTooltipItem(tfMap map[string]interface{}) *quicksight.TooltipItem {
+func expandTooltipItem(tfMap map[string]interface{}) *types.TooltipItem {
 	if tfMap == nil {
 		return nil
 	}
 
-	item := &quicksight.TooltipItem{}
+	item := &types.TooltipItem{}
 
 	if v, ok := tfMap["column_tooltip_item"].([]interface{}); ok && len(v) > 0 {
 		item.ColumnTooltipItem = expandColumnTooltipItem(v)
@@ -898,7 +898,7 @@ func expandTooltipItem(tfMap map[string]interface{}) *quicksight.TooltipItem {
 	return item
 }
 
-func expandColumnTooltipItem(tfList []interface{}) *quicksight.ColumnTooltipItem {
+func expandColumnTooltipItem(tfList []interface{}) *types.ColumnTooltipItem {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -908,13 +908,13 @@ func expandColumnTooltipItem(tfList []interface{}) *quicksight.ColumnTooltipItem
 		return nil
 	}
 
-	item := &quicksight.ColumnTooltipItem{}
+	item := &types.ColumnTooltipItem{}
 
 	if v, ok := tfMap["label"].(string); ok && v != "" {
 		item.Label = aws.String(v)
 	}
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		item.Visibility = aws.String(v)
+		item.Visibility = types.Visibility(v)
 	}
 	if v, ok := tfMap["column"].([]interface{}); ok && len(v) > 0 {
 		item.Column = expandColumnIdentifier(v)
@@ -926,7 +926,7 @@ func expandColumnTooltipItem(tfList []interface{}) *quicksight.ColumnTooltipItem
 	return item
 }
 
-func expandFieldTooltipItem(tfList []interface{}) *quicksight.FieldTooltipItem {
+func expandFieldTooltipItem(tfList []interface{}) *types.FieldTooltipItem {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -936,7 +936,7 @@ func expandFieldTooltipItem(tfList []interface{}) *quicksight.FieldTooltipItem {
 		return nil
 	}
 
-	item := &quicksight.FieldTooltipItem{}
+	item := &types.FieldTooltipItem{}
 
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
 		item.FieldId = aws.String(v)
@@ -945,13 +945,13 @@ func expandFieldTooltipItem(tfList []interface{}) *quicksight.FieldTooltipItem {
 		item.Label = aws.String(v)
 	}
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		item.Visibility = aws.String(v)
+		item.Visibility = types.Visibility(v)
 	}
 
 	return item
 }
 
-func expandVisualPalette(tfList []interface{}) *quicksight.VisualPalette {
+func expandVisualPalette(tfList []interface{}) *types.VisualPalette {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -961,7 +961,7 @@ func expandVisualPalette(tfList []interface{}) *quicksight.VisualPalette {
 		return nil
 	}
 
-	config := &quicksight.VisualPalette{}
+	config := &types.VisualPalette{}
 
 	if v, ok := tfMap["chart_color"].(string); ok && v != "" {
 		config.ChartColor = aws.String(v)
@@ -973,12 +973,12 @@ func expandVisualPalette(tfList []interface{}) *quicksight.VisualPalette {
 	return config
 }
 
-func expandDataPathColors(tfList []interface{}) []*quicksight.DataPathColor {
+func expandDataPathColors(tfList []interface{}) []types.DataPathColor {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var colors []*quicksight.DataPathColor
+	var colors []types.DataPathColor
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -990,24 +990,24 @@ func expandDataPathColors(tfList []interface{}) []*quicksight.DataPathColor {
 			continue
 		}
 
-		colors = append(colors, color)
+		colors = append(colors, *color)
 	}
 
 	return colors
 }
 
-func expandDataPathColor(tfMap map[string]interface{}) *quicksight.DataPathColor {
+func expandDataPathColor(tfMap map[string]interface{}) *types.DataPathColor {
 	if tfMap == nil {
 		return nil
 	}
 
-	color := &quicksight.DataPathColor{}
+	color := &types.DataPathColor{}
 
 	if v, ok := tfMap["color"].(string); ok && v != "" {
 		color.Color = aws.String(v)
 	}
 	if v, ok := tfMap["time_granularity"].(string); ok && v != "" {
-		color.TimeGranularity = aws.String(v)
+		color.TimeGranularity = types.TimeGranularity(v)
 	}
 	if v, ok := tfMap["element"].([]interface{}); ok && len(v) > 0 {
 		color.Element = expandDataPathValue(v)
@@ -1016,12 +1016,12 @@ func expandDataPathColor(tfMap map[string]interface{}) *quicksight.DataPathColor
 	return color
 }
 
-func expandDataPathValues(tfList []interface{}) []*quicksight.DataPathValue {
+func expandDataPathValues(tfList []interface{}) []types.DataPathValue {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var values []*quicksight.DataPathValue
+	var values []types.DataPathValue
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -1033,18 +1033,18 @@ func expandDataPathValues(tfList []interface{}) []*quicksight.DataPathValue {
 			continue
 		}
 
-		values = append(values, value)
+		values = append(values, *value)
 	}
 
 	return values
 }
 
-func expandDataPathValueInternal(tfMap map[string]interface{}) *quicksight.DataPathValue {
+func expandDataPathValueInternal(tfMap map[string]interface{}) *types.DataPathValue {
 	if tfMap == nil {
 		return nil
 	}
 
-	value := &quicksight.DataPathValue{}
+	value := &types.DataPathValue{}
 
 	if v, ok := tfMap["field_id"].(string); ok && v != "" {
 		value.FieldId = aws.String(v)
@@ -1056,7 +1056,7 @@ func expandDataPathValueInternal(tfMap map[string]interface{}) *quicksight.DataP
 	return value
 }
 
-func expandDataPathValue(tfList []interface{}) *quicksight.DataPathValue {
+func expandDataPathValue(tfList []interface{}) *types.DataPathValue {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1069,12 +1069,12 @@ func expandDataPathValue(tfList []interface{}) *quicksight.DataPathValue {
 	return expandDataPathValueInternal(tfMap)
 }
 
-func expandColumnHierarchies(tfList []interface{}) []*quicksight.ColumnHierarchy {
+func expandColumnHierarchies(tfList []interface{}) []types.ColumnHierarchy {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var options []*quicksight.ColumnHierarchy
+	var options []types.ColumnHierarchy
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -1086,18 +1086,18 @@ func expandColumnHierarchies(tfList []interface{}) []*quicksight.ColumnHierarchy
 			continue
 		}
 
-		options = append(options, opts)
+		options = append(options, *opts)
 	}
 
 	return options
 }
 
-func expandColumnHierarchy(tfMap map[string]interface{}) *quicksight.ColumnHierarchy {
+func expandColumnHierarchy(tfMap map[string]interface{}) *types.ColumnHierarchy {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &quicksight.ColumnHierarchy{}
+	options := &types.ColumnHierarchy{}
 
 	if v, ok := tfMap["date_time_hierarchy"].([]interface{}); ok && len(v) > 0 {
 		options.DateTimeHierarchy = expandDateTimeHierarchy(v)
@@ -1112,7 +1112,7 @@ func expandColumnHierarchy(tfMap map[string]interface{}) *quicksight.ColumnHiera
 	return options
 }
 
-func expandDateTimeHierarchy(tfList []interface{}) *quicksight.DateTimeHierarchy {
+func expandDateTimeHierarchy(tfList []interface{}) *types.DateTimeHierarchy {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1122,7 +1122,7 @@ func expandDateTimeHierarchy(tfList []interface{}) *quicksight.DateTimeHierarchy
 		return nil
 	}
 
-	config := &quicksight.DateTimeHierarchy{}
+	config := &types.DateTimeHierarchy{}
 
 	if v, ok := tfMap["hierarchy_id"].(string); ok && v != "" {
 		config.HierarchyId = aws.String(v)
@@ -1134,7 +1134,7 @@ func expandDateTimeHierarchy(tfList []interface{}) *quicksight.DateTimeHierarchy
 	return config
 }
 
-func expandExplicitHierarchy(tfList []interface{}) *quicksight.ExplicitHierarchy {
+func expandExplicitHierarchy(tfList []interface{}) *types.ExplicitHierarchy {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1144,31 +1144,7 @@ func expandExplicitHierarchy(tfList []interface{}) *quicksight.ExplicitHierarchy
 		return nil
 	}
 
-	config := &quicksight.ExplicitHierarchy{}
-
-	if v, ok := tfMap["hierarchy_id"].(string); ok && v != "" {
-		config.HierarchyId = aws.String(v)
-	}
-	if v, ok := tfMap["columns"].([]interface{}); ok && len(v) > 0 {
-		config.Columns = expandColumnIdentifiers(v)
-	}
-	if v, ok := tfMap["drill_down_filters"].([]interface{}); ok && len(v) > 0 {
-		config.DrillDownFilters = expandDrillDownFilters(v)
-	}
-
-	return config
-}
-func expandPredefinedHierarchy(tfList []interface{}) *quicksight.PredefinedHierarchy {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
-	}
-
-	tfMap, ok := tfList[0].(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
-	config := &quicksight.PredefinedHierarchy{}
+	config := &types.ExplicitHierarchy{}
 
 	if v, ok := tfMap["hierarchy_id"].(string); ok && v != "" {
 		config.HierarchyId = aws.String(v)
@@ -1182,8 +1158,7 @@ func expandPredefinedHierarchy(tfList []interface{}) *quicksight.PredefinedHiera
 
 	return config
 }
-
-func expandVisualSubtitleLabelOptions(tfList []interface{}) *quicksight.VisualSubtitleLabelOptions {
+func expandPredefinedHierarchy(tfList []interface{}) *types.PredefinedHierarchy {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1193,10 +1168,35 @@ func expandVisualSubtitleLabelOptions(tfList []interface{}) *quicksight.VisualSu
 		return nil
 	}
 
-	options := &quicksight.VisualSubtitleLabelOptions{}
+	config := &types.PredefinedHierarchy{}
+
+	if v, ok := tfMap["hierarchy_id"].(string); ok && v != "" {
+		config.HierarchyId = aws.String(v)
+	}
+	if v, ok := tfMap["columns"].([]interface{}); ok && len(v) > 0 {
+		config.Columns = expandColumnIdentifiers(v)
+	}
+	if v, ok := tfMap["drill_down_filters"].([]interface{}); ok && len(v) > 0 {
+		config.DrillDownFilters = expandDrillDownFilters(v)
+	}
+
+	return config
+}
+
+func expandVisualSubtitleLabelOptions(tfList []interface{}) *types.VisualSubtitleLabelOptions {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	options := &types.VisualSubtitleLabelOptions{}
 
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		options.Visibility = aws.String(v)
+		options.Visibility = types.Visibility(v)
 	}
 	if v, ok := tfMap["format_text"].([]interface{}); ok && len(v) > 0 {
 		options.FormatText = expandLongFormatText(v)
@@ -1205,7 +1205,7 @@ func expandVisualSubtitleLabelOptions(tfList []interface{}) *quicksight.VisualSu
 	return options
 }
 
-func expandLongFormatText(tfList []interface{}) *quicksight.LongFormatText {
+func expandLongFormatText(tfList []interface{}) *types.LongFormatText {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1215,7 +1215,7 @@ func expandLongFormatText(tfList []interface{}) *quicksight.LongFormatText {
 		return nil
 	}
 
-	format := &quicksight.LongFormatText{}
+	format := &types.LongFormatText{}
 
 	if v, ok := tfMap["plain_text"].(string); ok && v != "" {
 		format.PlainText = aws.String(v)
@@ -1227,7 +1227,7 @@ func expandLongFormatText(tfList []interface{}) *quicksight.LongFormatText {
 	return format
 }
 
-func expandVisualTitleLabelOptions(tfList []interface{}) *quicksight.VisualTitleLabelOptions {
+func expandVisualTitleLabelOptions(tfList []interface{}) *types.VisualTitleLabelOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1237,10 +1237,10 @@ func expandVisualTitleLabelOptions(tfList []interface{}) *quicksight.VisualTitle
 		return nil
 	}
 
-	options := &quicksight.VisualTitleLabelOptions{}
+	options := &types.VisualTitleLabelOptions{}
 
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
-		options.Visibility = aws.String(v)
+		options.Visibility = types.Visibility(v)
 	}
 	if v, ok := tfMap["format_text"].([]interface{}); ok && len(v) > 0 {
 		options.FormatText = expandShortFormatText(v)
@@ -1249,7 +1249,7 @@ func expandVisualTitleLabelOptions(tfList []interface{}) *quicksight.VisualTitle
 	return options
 }
 
-func expandShortFormatText(tfList []interface{}) *quicksight.ShortFormatText {
+func expandShortFormatText(tfList []interface{}) *types.ShortFormatText {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1259,7 +1259,7 @@ func expandShortFormatText(tfList []interface{}) *quicksight.ShortFormatText {
 		return nil
 	}
 
-	format := &quicksight.ShortFormatText{}
+	format := &types.ShortFormatText{}
 
 	if v, ok := tfMap["plain_text"].(string); ok && v != "" {
 		format.PlainText = aws.String(v)
@@ -1271,7 +1271,7 @@ func expandShortFormatText(tfList []interface{}) *quicksight.ShortFormatText {
 	return format
 }
 
-func expandComparisonConfiguration(tfList []interface{}) *quicksight.ComparisonConfiguration {
+func expandComparisonConfiguration(tfList []interface{}) *types.ComparisonConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1281,10 +1281,10 @@ func expandComparisonConfiguration(tfList []interface{}) *quicksight.ComparisonC
 		return nil
 	}
 
-	config := &quicksight.ComparisonConfiguration{}
+	config := &types.ComparisonConfiguration{}
 
 	if v, ok := tfMap["comparison_method"].(string); ok && v != "" {
-		config.ComparisonMethod = aws.String(v)
+		config.ComparisonMethod = types.ComparisonMethod(v)
 	}
 	if v, ok := tfMap["comparison_format"].([]interface{}); ok && len(v) > 0 {
 		config.ComparisonFormat = expandComparisonFormatConfiguration(v)
@@ -1293,7 +1293,7 @@ func expandComparisonConfiguration(tfList []interface{}) *quicksight.ComparisonC
 	return config
 }
 
-func expandColorScale(tfList []interface{}) *quicksight.ColorScale {
+func expandColorScale(tfList []interface{}) *types.ColorScale {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1303,10 +1303,10 @@ func expandColorScale(tfList []interface{}) *quicksight.ColorScale {
 		return nil
 	}
 
-	config := &quicksight.ColorScale{}
+	config := &types.ColorScale{}
 
 	if v, ok := tfMap["color_fill_type"].(string); ok && v != "" {
-		config.ColorFillType = aws.String(v)
+		config.ColorFillType = types.ColorFillType(v)
 	}
 	if v, ok := tfMap["colors"].([]interface{}); ok && len(v) > 0 {
 		config.Colors = expandDataColors(v)
@@ -1318,7 +1318,7 @@ func expandColorScale(tfList []interface{}) *quicksight.ColorScale {
 	return config
 }
 
-func expandDataColor(tfList []interface{}) *quicksight.DataColor {
+func expandDataColor(tfList []interface{}) *types.DataColor {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -1331,8 +1331,8 @@ func expandDataColor(tfList []interface{}) *quicksight.DataColor {
 	return expandDataColorInternal(tfMap)
 }
 
-func expandDataColorInternal(tfMap map[string]interface{}) *quicksight.DataColor {
-	color := &quicksight.DataColor{}
+func expandDataColorInternal(tfMap map[string]interface{}) *types.DataColor {
+	color := &types.DataColor{}
 
 	if v, ok := tfMap["color"].(string); ok && v != "" {
 		color.Color = aws.String(v)
@@ -1344,12 +1344,12 @@ func expandDataColorInternal(tfMap map[string]interface{}) *quicksight.DataColor
 	return color
 }
 
-func expandDataColors(tfList []interface{}) []*quicksight.DataColor {
+func expandDataColors(tfList []interface{}) []types.DataColor {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var colors []*quicksight.DataColor
+	var colors []types.DataColor
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
 		if !ok {
@@ -1361,22 +1361,19 @@ func expandDataColors(tfList []interface{}) []*quicksight.DataColor {
 			continue
 		}
 
-		colors = append(colors, color)
+		colors = append(colors, *color)
 	}
 
 	return colors
 }
 
-func flattenVisuals(apiObject []*quicksight.Visual) []interface{} {
+func flattenVisuals(apiObject []types.Visual) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
 
 		tfMap := map[string]interface{}{}
 		if config.BarChartVisual != nil {
@@ -1454,53 +1451,38 @@ func flattenVisuals(apiObject []*quicksight.Visual) []interface{} {
 	return tfList
 }
 
-func flattenDataLabelOptions(apiObject *quicksight.DataLabelOptions) []interface{} {
+func flattenDataLabelOptions(apiObject *types.DataLabelOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.CategoryLabelVisibility != nil {
-		tfMap["category_label_visibility"] = aws.StringValue(apiObject.CategoryLabelVisibility)
-	}
+	tfMap["category_label_visibility"] = apiObject.CategoryLabelVisibility
 	if apiObject.DataLabelTypes != nil {
 		tfMap["data_label_types"] = flattenDataLabelType(apiObject.DataLabelTypes)
 	}
 	if apiObject.LabelColor != nil {
-		tfMap["label_color"] = aws.StringValue(apiObject.LabelColor)
+		tfMap["label_color"] = aws.ToString(apiObject.LabelColor)
 	}
-	if apiObject.LabelContent != nil {
-		tfMap["label_content"] = aws.StringValue(apiObject.LabelContent)
-	}
+	tfMap["label_content"] = types.DataLabelContent(apiObject.LabelContent)
 	if apiObject.LabelFontConfiguration != nil {
 		tfMap["label_font_configuration"] = flattenFontConfiguration(apiObject.LabelFontConfiguration)
 	}
-	if apiObject.MeasureLabelVisibility != nil {
-		tfMap["measure_label_visibility"] = aws.StringValue(apiObject.MeasureLabelVisibility)
-	}
-	if apiObject.Overlap != nil {
-		tfMap["overlap"] = aws.StringValue(apiObject.Overlap)
-	}
-	if apiObject.Position != nil {
-		tfMap["position"] = aws.StringValue(apiObject.Position)
-	}
-	if apiObject.Visibility != nil {
-		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
-	}
+	tfMap["measure_label_visibility"] = types.Visibility(apiObject.MeasureLabelVisibility)
+	tfMap["overlap"] = types.DataLabelOverlap(apiObject.Overlap)
+	tfMap["position"] = types.DataLabelPosition(apiObject.Position)
+	tfMap["visibility"] = types.Visibility(apiObject.Visibility)
 
 	return []interface{}{tfMap}
 }
 
-func flattenDataLabelType(apiObject []*quicksight.DataLabelType) []interface{} {
+func flattenDataLabelType(apiObject []types.DataLabelType) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
 
 		tfMap := map[string]interface{}{}
 		if config.DataPathLabelType != nil {
@@ -1525,106 +1507,93 @@ func flattenDataLabelType(apiObject []*quicksight.DataLabelType) []interface{} {
 	return tfList
 }
 
-func flattenDataPathLabelType(apiObject *quicksight.DataPathLabelType) []interface{} {
+func flattenDataPathLabelType(apiObject *types.DataPathLabelType) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.FieldValue != nil {
-		tfMap["field_value"] = aws.StringValue(apiObject.FieldValue)
+		tfMap["field_value"] = aws.ToString(apiObject.FieldValue)
 	}
-	if apiObject.Visibility != nil {
-		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
-	}
+	tfMap["visibility"] = types.Visibility(apiObject.Visibility)
 
 	return []interface{}{tfMap}
 }
 
-func flattenFieldLabelType(apiObject *quicksight.FieldLabelType) []interface{} {
+func flattenFieldLabelType(apiObject *types.FieldLabelType) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
 	}
-	if apiObject.Visibility != nil {
-		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
-	}
+	tfMap["visibility"] = types.Visibility(apiObject.Visibility)
 
 	return []interface{}{tfMap}
 }
 
-func flattenMaximumLabelType(apiObject *quicksight.MaximumLabelType) []interface{} {
+func flattenMaximumLabelType(apiObject *types.MaximumLabelType) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.Visibility != nil {
-		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
-	}
+	tfMap["visibility"] = types.Visibility(apiObject.Visibility)
 
 	return []interface{}{tfMap}
 }
 
-func flattenMinimumLabelType(apiObject *quicksight.MinimumLabelType) []interface{} {
+func flattenMinimumLabelType(apiObject *types.MinimumLabelType) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.Visibility != nil {
-		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
-	}
+	tfMap["visibility"] = types.Visibility(apiObject.Visibility)
 
 	return []interface{}{tfMap}
 }
 
-func flattenRangeEndsLabelType(apiObject *quicksight.RangeEndsLabelType) []interface{} {
+func flattenRangeEndsLabelType(apiObject *types.RangeEndsLabelType) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.Visibility != nil {
-		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
-	}
+	tfMap["visibility"] = types.Visibility(apiObject.Visibility)
 
 	return []interface{}{tfMap}
 }
 
-func flattenLegendOptions(apiObject *quicksight.LegendOptions) []interface{} {
+func flattenLegendOptions(apiObject *types.LegendOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Height != nil {
-		tfMap["height"] = aws.StringValue(apiObject.Height)
+		tfMap["height"] = aws.ToString(apiObject.Height)
 	}
-	if apiObject.Position != nil {
-		tfMap["position"] = aws.StringValue(apiObject.Position)
-	}
+	tfMap["position"] = types.LegendPosition(apiObject.Position)
 	if apiObject.Title != nil {
 		tfMap["title"] = flattenLabelOptions(apiObject.Title)
 	}
-	if apiObject.Visibility != nil {
-		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
-	}
+	tfMap["visibility"] = types.Visibility(apiObject.Visibility)
+
 	if apiObject.Width != nil {
-		tfMap["width"] = aws.StringValue(apiObject.Width)
+		tfMap["width"] = aws.ToString(apiObject.Width)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenTooltipOptions(apiObject *quicksight.TooltipOptions) []interface{} {
+func flattenTooltipOptions(apiObject *types.TooltipOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1633,45 +1602,34 @@ func flattenTooltipOptions(apiObject *quicksight.TooltipOptions) []interface{} {
 	if apiObject.FieldBasedTooltip != nil {
 		tfMap["field_base_tooltip"] = flattenFieldBasedTooltip(apiObject.FieldBasedTooltip)
 	}
-	if apiObject.SelectedTooltipType != nil {
-		tfMap["selected_tooltip_type"] = aws.StringValue(apiObject.SelectedTooltipType)
-	}
-	if apiObject.TooltipVisibility != nil {
-		tfMap["tooltip_visibility"] = aws.StringValue(apiObject.TooltipVisibility)
-	}
+	tfMap["selected_tooltip_type"] = types.SelectedTooltipType(apiObject.SelectedTooltipType)
+	tfMap["tooltip_visibility"] = types.Visibility(apiObject.TooltipVisibility)
 
 	return []interface{}{tfMap}
 }
 
-func flattenFieldBasedTooltip(apiObject *quicksight.FieldBasedTooltip) []interface{} {
+func flattenFieldBasedTooltip(apiObject *types.FieldBasedTooltip) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.AggregationVisibility != nil {
-		tfMap["aggregation_visibility"] = aws.StringValue(apiObject.AggregationVisibility)
-	}
+	tfMap["aggregation_visibility"] = types.Visibility(apiObject.AggregationVisibility)
 	if apiObject.TooltipFields != nil {
 		tfMap["tooltip_fields"] = flattenTooltipItem(apiObject.TooltipFields)
 	}
-	if apiObject.TooltipTitleType != nil {
-		tfMap["tooltip_title_type"] = aws.StringValue(apiObject.TooltipTitleType)
-	}
+	tfMap["tooltip_title_type"] = types.TooltipTitleType(apiObject.TooltipTitleType)
 
 	return []interface{}{tfMap}
 }
 
-func flattenTooltipItem(apiObject []*quicksight.TooltipItem) []interface{} {
+func flattenTooltipItem(apiObject []types.TooltipItem) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
 
 		tfMap := map[string]interface{}{}
 		if config.ColumnTooltipItem != nil {
@@ -1687,7 +1645,7 @@ func flattenTooltipItem(apiObject []*quicksight.TooltipItem) []interface{} {
 	return tfList
 }
 
-func flattenColumnTooltipItem(apiObject *quicksight.ColumnTooltipItem) []interface{} {
+func flattenColumnTooltipItem(apiObject *types.ColumnTooltipItem) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1700,42 +1658,38 @@ func flattenColumnTooltipItem(apiObject *quicksight.ColumnTooltipItem) []interfa
 		tfMap["aggregation"] = flattenAggregationFunction(apiObject.Aggregation)
 	}
 	if apiObject.Label != nil {
-		tfMap["label"] = aws.StringValue(apiObject.Label)
+		tfMap["label"] = aws.ToString(apiObject.Label)
 	}
-	if apiObject.Visibility != nil {
-		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
-	}
+	tfMap["visibility"] = types.Visibility(apiObject.Visibility)
 
 	return []interface{}{tfMap}
 }
 
-func flattenFieldTooltipItem(apiObject *quicksight.FieldTooltipItem) []interface{} {
+func flattenFieldTooltipItem(apiObject *types.FieldTooltipItem) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.Label != nil {
-		tfMap["label"] = aws.StringValue(apiObject.Label)
+		tfMap["label"] = aws.ToString(apiObject.Label)
 	}
-	if apiObject.Visibility != nil {
-		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
-	}
+	tfMap["visibility"] = types.Visibility(apiObject.Visibility)
 
 	return []interface{}{tfMap}
 }
 
-func flattenVisualPalette(apiObject *quicksight.VisualPalette) []interface{} {
+func flattenVisualPalette(apiObject *types.VisualPalette) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ChartColor != nil {
-		tfMap["chart_color"] = aws.StringValue(apiObject.ChartColor)
+		tfMap["chart_color"] = aws.ToString(apiObject.ChartColor)
 	}
 	if apiObject.ColorMap != nil {
 		tfMap["color_map"] = flattenDataPathColor(apiObject.ColorMap)
@@ -1744,27 +1698,22 @@ func flattenVisualPalette(apiObject *quicksight.VisualPalette) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenDataPathColor(apiObject []*quicksight.DataPathColor) []interface{} {
+func flattenDataPathColor(apiObject []types.DataPathColor) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
 
 		tfMap := map[string]interface{}{}
 		if config.Color != nil {
-			tfMap["color"] = aws.StringValue(config.Color)
+			tfMap["color"] = aws.ToString(config.Color)
 		}
 		if config.Element != nil {
 			tfMap["element"] = flattenDataPathValue(config.Element)
 		}
-		if config.TimeGranularity != nil {
-			tfMap["time_granularity"] = aws.StringValue(config.TimeGranularity)
-		}
+		tfMap["time_granularity"] = types.TimeGranularity(config.TimeGranularity)
 
 		tfList = append(tfList, tfMap)
 	}
@@ -1772,39 +1721,36 @@ func flattenDataPathColor(apiObject []*quicksight.DataPathColor) []interface{} {
 	return tfList
 }
 
-func flattenDataPathValue(apiObject *quicksight.DataPathValue) []interface{} {
+func flattenDataPathValue(apiObject *types.DataPathValue) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.FieldId != nil {
-		tfMap["field_id"] = aws.StringValue(apiObject.FieldId)
+		tfMap["field_id"] = aws.ToString(apiObject.FieldId)
 	}
 	if apiObject.FieldValue != nil {
-		tfMap["field_value"] = aws.StringValue(apiObject.FieldValue)
+		tfMap["field_value"] = aws.ToString(apiObject.FieldValue)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenDataPathValues(apiObject []*quicksight.DataPathValue) []interface{} {
+func flattenDataPathValues(apiObject []types.DataPathValue) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
 
 		tfMap := map[string]interface{}{}
 		if config.FieldId != nil {
-			tfMap["field_id"] = aws.StringValue(config.FieldId)
+			tfMap["field_id"] = aws.ToString(config.FieldId)
 		}
 		if config.FieldValue != nil {
-			tfMap["field_value"] = aws.StringValue(config.FieldValue)
+			tfMap["field_value"] = aws.ToString(config.FieldValue)
 		}
 
 		tfList = append(tfList, tfMap)
@@ -1813,16 +1759,13 @@ func flattenDataPathValues(apiObject []*quicksight.DataPathValue) []interface{} 
 	return tfList
 }
 
-func flattenColumnHierarchy(apiObject []*quicksight.ColumnHierarchy) []interface{} {
+func flattenColumnHierarchy(apiObject []types.ColumnHierarchy) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
 
 		tfMap := map[string]interface{}{}
 		if config.DateTimeHierarchy != nil {
@@ -1841,14 +1784,14 @@ func flattenColumnHierarchy(apiObject []*quicksight.ColumnHierarchy) []interface
 	return tfList
 }
 
-func flattenDateTimeHierarchy(apiObject *quicksight.DateTimeHierarchy) []interface{} {
+func flattenDateTimeHierarchy(apiObject *types.DateTimeHierarchy) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.HierarchyId != nil {
-		tfMap["hierarchy_id"] = aws.StringValue(apiObject.HierarchyId)
+		tfMap["hierarchy_id"] = aws.ToString(apiObject.HierarchyId)
 	}
 	if apiObject.DrillDownFilters != nil {
 		tfMap["drill_down_filters"] = flattenDrillDownFilter(apiObject.DrillDownFilters)
@@ -1857,16 +1800,13 @@ func flattenDateTimeHierarchy(apiObject *quicksight.DateTimeHierarchy) []interfa
 	return []interface{}{tfMap}
 }
 
-func flattenDrillDownFilter(apiObject []*quicksight.DrillDownFilter) []interface{} {
+func flattenDrillDownFilter(apiObject []types.DrillDownFilter) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
 
 		tfMap := map[string]interface{}{}
 		if config.CategoryFilter != nil {
@@ -1885,14 +1825,14 @@ func flattenDrillDownFilter(apiObject []*quicksight.DrillDownFilter) []interface
 	return tfList
 }
 
-func flattenCategoryDrillDownFilter(apiObject *quicksight.CategoryDrillDownFilter) []interface{} {
+func flattenCategoryDrillDownFilter(apiObject *types.CategoryDrillDownFilter) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.CategoryValues != nil {
-		tfMap["category_values"] = flex.FlattenStringList(apiObject.CategoryValues)
+		tfMap["category_values"] = apiObject.CategoryValues
 	}
 	if apiObject.Column != nil {
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
@@ -1901,7 +1841,7 @@ func flattenCategoryDrillDownFilter(apiObject *quicksight.CategoryDrillDownFilte
 	return []interface{}{tfMap}
 }
 
-func flattenNumericEqualityDrillDownFilter(apiObject *quicksight.NumericEqualityDrillDownFilter) []interface{} {
+func flattenNumericEqualityDrillDownFilter(apiObject *types.NumericEqualityDrillDownFilter) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1910,14 +1850,12 @@ func flattenNumericEqualityDrillDownFilter(apiObject *quicksight.NumericEquality
 	if apiObject.Column != nil {
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
 	}
-	if apiObject.Value != nil {
-		tfMap["value"] = aws.Float64Value(apiObject.Value)
-	}
+	tfMap["value"] = float64(apiObject.Value)
 
 	return []interface{}{tfMap}
 }
 
-func flattenTimeRangeDrillDownFilter(apiObject *quicksight.TimeRangeDrillDownFilter) []interface{} {
+func flattenTimeRangeDrillDownFilter(apiObject *types.TimeRangeDrillDownFilter) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1927,19 +1865,17 @@ func flattenTimeRangeDrillDownFilter(apiObject *quicksight.TimeRangeDrillDownFil
 		tfMap["column"] = flattenColumnIdentifier(apiObject.Column)
 	}
 	if apiObject.RangeMaximum != nil {
-		tfMap["range_maximum"] = aws.TimeValue(apiObject.RangeMaximum).Format(time.RFC3339)
+		tfMap["range_maximum"] = apiObject.RangeMaximum.Format(time.RFC3339)
 	}
 	if apiObject.RangeMinimum != nil {
-		tfMap["range_minimum"] = aws.TimeValue(apiObject.RangeMinimum).Format(time.RFC3339)
+		tfMap["range_minimum"] = apiObject.RangeMinimum.Format(time.RFC3339)
 	}
-	if apiObject.TimeGranularity != nil {
-		tfMap["time_granularity"] = aws.StringValue(apiObject.TimeGranularity)
-	}
+	tfMap["time_granularity"] = types.TimeGranularity(apiObject.TimeGranularity)
 
 	return []interface{}{tfMap}
 }
 
-func flattenExplicitHierarchy(apiObject *quicksight.ExplicitHierarchy) []interface{} {
+func flattenExplicitHierarchy(apiObject *types.ExplicitHierarchy) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1949,7 +1885,7 @@ func flattenExplicitHierarchy(apiObject *quicksight.ExplicitHierarchy) []interfa
 		tfMap["columns"] = flattenColumnIdentifiers(apiObject.Columns)
 	}
 	if apiObject.HierarchyId != nil {
-		tfMap["hierarchy_id"] = aws.StringValue(apiObject.HierarchyId)
+		tfMap["hierarchy_id"] = aws.ToString(apiObject.HierarchyId)
 	}
 	if apiObject.DrillDownFilters != nil {
 		tfMap["drill_down_filters"] = flattenDrillDownFilter(apiObject.DrillDownFilters)
@@ -1958,7 +1894,7 @@ func flattenExplicitHierarchy(apiObject *quicksight.ExplicitHierarchy) []interfa
 	return []interface{}{tfMap}
 }
 
-func flattenPredefinedHierarchy(apiObject *quicksight.PredefinedHierarchy) []interface{} {
+func flattenPredefinedHierarchy(apiObject *types.PredefinedHierarchy) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1968,7 +1904,7 @@ func flattenPredefinedHierarchy(apiObject *quicksight.PredefinedHierarchy) []int
 		tfMap["columns"] = flattenColumnIdentifiers(apiObject.Columns)
 	}
 	if apiObject.HierarchyId != nil {
-		tfMap["hierarchy_id"] = aws.StringValue(apiObject.HierarchyId)
+		tfMap["hierarchy_id"] = aws.ToString(apiObject.HierarchyId)
 	}
 	if apiObject.DrillDownFilters != nil {
 		tfMap["drill_down_filters"] = flattenDrillDownFilter(apiObject.DrillDownFilters)
@@ -1977,7 +1913,7 @@ func flattenPredefinedHierarchy(apiObject *quicksight.PredefinedHierarchy) []int
 	return []interface{}{tfMap}
 }
 
-func flattenVisualSubtitleLabelOptions(apiObject *quicksight.VisualSubtitleLabelOptions) []interface{} {
+func flattenVisualSubtitleLabelOptions(apiObject *types.VisualSubtitleLabelOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1986,30 +1922,28 @@ func flattenVisualSubtitleLabelOptions(apiObject *quicksight.VisualSubtitleLabel
 	if apiObject.FormatText != nil {
 		tfMap["format_text"] = flattenLongFormatText(apiObject.FormatText)
 	}
-	if apiObject.Visibility != nil {
-		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
-	}
+	tfMap["visibility"] = types.Visibility(apiObject.Visibility)
 
 	return []interface{}{tfMap}
 }
 
-func flattenLongFormatText(apiObject *quicksight.LongFormatText) []interface{} {
+func flattenLongFormatText(apiObject *types.LongFormatText) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.PlainText != nil {
-		tfMap["plain_text"] = aws.StringValue(apiObject.PlainText)
+		tfMap["plain_text"] = aws.ToString(apiObject.PlainText)
 	}
 	if apiObject.RichText != nil {
-		tfMap["rich_text"] = aws.StringValue(apiObject.RichText)
+		tfMap["rich_text"] = aws.ToString(apiObject.RichText)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenVisualTitleLabelOptions(apiObject *quicksight.VisualTitleLabelOptions) []interface{} {
+func flattenVisualTitleLabelOptions(apiObject *types.VisualTitleLabelOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -2018,38 +1952,34 @@ func flattenVisualTitleLabelOptions(apiObject *quicksight.VisualTitleLabelOption
 	if apiObject.FormatText != nil {
 		tfMap["format_text"] = flattenShortFormatText(apiObject.FormatText)
 	}
-	if apiObject.Visibility != nil {
-		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
-	}
+	tfMap["visibility"] = types.Visibility(apiObject.Visibility)
 
 	return []interface{}{tfMap}
 }
 
-func flattenShortFormatText(apiObject *quicksight.ShortFormatText) []interface{} {
+func flattenShortFormatText(apiObject *types.ShortFormatText) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.PlainText != nil {
-		tfMap["plain_text"] = aws.StringValue(apiObject.PlainText)
+		tfMap["plain_text"] = aws.ToString(apiObject.PlainText)
 	}
 	if apiObject.RichText != nil {
-		tfMap["rich_text"] = aws.StringValue(apiObject.RichText)
+		tfMap["rich_text"] = aws.ToString(apiObject.RichText)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenColorScale(apiObject *quicksight.ColorScale) []interface{} {
+func flattenColorScale(apiObject *types.ColorScale) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.ColorFillType != nil {
-		tfMap["color_fill_type"] = aws.StringValue(apiObject.ColorFillType)
-	}
+	tfMap["color_fill_type"] = types.ColorFillType(apiObject.ColorFillType)
 	if apiObject.Colors != nil {
 		tfMap["colors"] = flattenDataColors(apiObject.Colors)
 	}
@@ -2060,39 +1990,36 @@ func flattenColorScale(apiObject *quicksight.ColorScale) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenDataColor(apiObject *quicksight.DataColor) []interface{} {
+func flattenDataColor(apiObject *types.DataColor) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 	if apiObject.Color != nil {
-		tfMap["color"] = aws.StringValue(apiObject.Color)
+		tfMap["color"] = aws.ToString(apiObject.Color)
 	}
 	if apiObject.DataValue != nil {
-		tfMap["data_value"] = aws.Float64Value(apiObject.DataValue)
+		tfMap["data_value"] = aws.ToFloat64(apiObject.DataValue)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenDataColors(apiObject []*quicksight.DataColor) []interface{} {
+func flattenDataColors(apiObject []types.DataColor) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}
 
 	var tfList []interface{}
 	for _, config := range apiObject {
-		if config == nil {
-			continue
-		}
 
 		tfMap := map[string]interface{}{}
 		if config.Color != nil {
-			tfMap["color"] = aws.StringValue(config.Color)
+			tfMap["color"] = aws.ToString(config.Color)
 		}
 		if config.DataValue != nil {
-			tfMap["data_value"] = aws.Float64Value(config.DataValue)
+			tfMap["data_value"] = aws.ToFloat64(config.DataValue)
 		}
 
 		tfList = append(tfList, tfMap)
