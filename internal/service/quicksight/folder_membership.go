@@ -9,10 +9,10 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -25,7 +25,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 )
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
@@ -47,6 +49,8 @@ func (r *resourceFolderMembership) Metadata(_ context.Context, req resource.Meta
 }
 
 func (r *resourceFolderMembership) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	memberTypeType := fwtypes.StringEnumType[awstypes.MemberType]()
+
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"aws_account_id": schema.StringAttribute{
@@ -71,12 +75,13 @@ func (r *resourceFolderMembership) Schema(ctx context.Context, req resource.Sche
 				},
 			},
 			"member_type": schema.StringAttribute{
+				CustomType: memberTypeType,
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 				Validators: []validator.String{
-					stringvalidator.OneOf(quicksight.MemberType_Values()...),
+					enum.FrameworkValidate[awstypes.MemberType](),
 				},
 			},
 		},
@@ -84,7 +89,7 @@ func (r *resourceFolderMembership) Schema(ctx context.Context, req resource.Sche
 }
 
 func (r *resourceFolderMembership) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightConn(ctx)
+	conn := r.Meta().QuickSightClient(ctx)
 
 	var plan resourceFolderMembershipData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -104,10 +109,10 @@ func (r *resourceFolderMembership) Create(ctx context.Context, req resource.Crea
 		AwsAccountId: aws.String(plan.AWSAccountID.ValueString()),
 		FolderId:     aws.String(plan.FolderID.ValueString()),
 		MemberId:     aws.String(plan.MemberID.ValueString()),
-		MemberType:   aws.String(plan.MemberType.ValueString()),
+		MemberType:   awstypes.MemberType(plan.MemberType.ValueString()),
 	}
 
-	out, err := conn.CreateFolderMembershipWithContext(ctx, in)
+	out, err := conn.CreateFolderMembership(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, ResNameFolderMembership, plan.MemberID.String(), err),
@@ -127,7 +132,7 @@ func (r *resourceFolderMembership) Create(ctx context.Context, req resource.Crea
 }
 
 func (r *resourceFolderMembership) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().QuickSightConn(ctx)
+	conn := r.Meta().QuickSightClient(ctx)
 
 	var state resourceFolderMembershipData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -162,7 +167,7 @@ func (r *resourceFolderMembership) Read(ctx context.Context, req resource.ReadRe
 	}
 	state.AWSAccountID = flex.StringValueToFramework(ctx, awsAccountID)
 	state.FolderID = flex.StringValueToFramework(ctx, folderID)
-	state.MemberType = flex.StringValueToFramework(ctx, memberType)
+	state.MemberType = fwtypes.StringEnumValue(awstypes.MemberType(memberType))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -172,7 +177,7 @@ func (r *resourceFolderMembership) Update(ctx context.Context, req resource.Upda
 }
 
 func (r *resourceFolderMembership) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().QuickSightConn(ctx)
+	conn := r.Meta().QuickSightClient(ctx)
 
 	var state resourceFolderMembershipData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -184,12 +189,12 @@ func (r *resourceFolderMembership) Delete(ctx context.Context, req resource.Dele
 		AwsAccountId: aws.String(state.AWSAccountID.ValueString()),
 		FolderId:     aws.String(state.FolderID.ValueString()),
 		MemberId:     aws.String(state.MemberID.ValueString()),
-		MemberType:   aws.String(state.MemberType.ValueString()),
+		MemberType:   awstypes.MemberType(state.MemberType.ValueString()),
 	}
 
-	_, err := conn.DeleteFolderMembershipWithContext(ctx, in)
+	_, err := conn.DeleteFolderMembership(ctx, in)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err)  {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -204,7 +209,7 @@ func (r *resourceFolderMembership) ImportState(ctx context.Context, req resource
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func FindFolderMembershipByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.MemberIdArnPair, error) {
+func FindFolderMembershipByID(ctx context.Context, conn *quicksight.Client, id string) (*awstypes.MemberIdArnPair, error) {
 	awsAccountID, folderID, _, memberID, err := ParseFolderMembershipID(id)
 	if err != nil {
 		return nil, err
@@ -218,8 +223,8 @@ func FindFolderMembershipByID(ctx context.Context, conn *quicksight.QuickSight, 
 	// There is no Get/Describe API for a single folder member, so utilize the
 	// ListFolderMembers API to get all members and check for the presence of the
 	// configured member ID
-	out, err := conn.ListFolderMembersWithContext(ctx, in)
-	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+	out, err := conn.ListFolderMembers(ctx, in)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
@@ -234,8 +239,8 @@ func FindFolderMembershipByID(ctx context.Context, conn *quicksight.QuickSight, 
 	}
 
 	for _, member := range out.FolderMemberList {
-		if aws.StringValue(member.MemberId) == memberID {
-			return member, nil
+		if aws.ToString(member.MemberId) == memberID {
+			return &member, nil
 		}
 	}
 
@@ -262,5 +267,5 @@ type resourceFolderMembershipData struct {
 	FolderID     types.String `tfsdk:"folder_id"`
 	ID           types.String `tfsdk:"id"`
 	MemberID     types.String `tfsdk:"member_id"`
-	MemberType   types.String `tfsdk:"member_type"`
+	MemberType   fwtypes.StringEnum[awstypes.MemberType] `tfsdk:"member_type"`
 }

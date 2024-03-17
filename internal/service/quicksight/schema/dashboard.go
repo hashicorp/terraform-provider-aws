@@ -4,10 +4,11 @@
 package schema
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -35,7 +36,7 @@ func DashboardDefinitionSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
-							"role":                 stringSchema(false, validation.StringInSlice(quicksight.ColumnRole_Values(), false)),
+							"role":                 stringSchema(false, enum.Validate[types.ColumnRole]()),
 						},
 					},
 				},
@@ -46,11 +47,11 @@ func DashboardDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"cross_dataset":       stringSchema(true, validation.StringInSlice(quicksight.CrossDatasetTypes_Values(), false)),
+							"cross_dataset":       stringSchema(true, enum.Validate[types.CrossDatasetTypes]()),
 							"filter_group_id":     idSchema(),
 							"filters":             filtersSchema(),                  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Filter.html
 							"scope_configuration": filterScopeConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterScopeConfiguration.html
-							"status":              stringSchema(false, validation.StringInSlice(quicksight.Status_Values(), false)),
+							"status":              stringSchema(false, enum.Validate[types.WidgetStatus]()),
 						},
 					},
 				},
@@ -77,15 +78,15 @@ func DashboardDefinitionSchema() *schema.Schema {
 						Schema: map[string]*schema.Schema{
 							"sheet_id": idSchema(),
 							"content_type": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Computed:     true,
-								ValidateFunc: validation.StringInSlice(quicksight.SheetContentType_Values(), false),
+								Type:             schema.TypeString,
+								Optional:         true,
+								Computed:         true,
+								ValidateDiagFunc: enum.Validate[types.SheetContentType](),
 							},
-							"description":           stringSchema(false, validation.StringLenBetween(1, 1024)),
+							"description":           stringSchema(false, validation.ToDiagFunc(validation.StringLenBetween(1, 1024))),
 							"filter_controls":       filterControlsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FilterControl.html
 							"layouts":               layoutSchema(),         // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Layout.html
-							"name":                  stringSchema(false, validation.StringLenBetween(1, 2048)),
+							"name":                  stringSchema(false, validation.ToDiagFunc(validation.StringLenBetween(1, 2048))),
 							"parameter_controls":    parameterControlsSchema(),   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterControl.html
 							"sheet_control_layouts": sheetControlLayoutsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetControlLayout.html
 							"text_boxes": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetTextBox.html
@@ -96,11 +97,11 @@ func DashboardDefinitionSchema() *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"sheet_text_box_id": idSchema(),
-										"content":           stringSchema(false, validation.StringLenBetween(1, 150000)),
+										"content":           stringSchema(false, validation.ToDiagFunc(validation.StringLenBetween(1, 150000))),
 									},
 								},
 							},
-							"title":   stringSchema(false, validation.StringLenBetween(1, 1024)),
+							"title":   stringSchema(false, validation.ToDiagFunc(validation.StringLenBetween(1, 1024))),
 							"visuals": visualsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_Visual.html
 						},
 					},
@@ -125,10 +126,10 @@ func DashboardPublishOptionsSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"availability_status": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Default:      quicksight.StatusEnabled,
-								ValidateFunc: validation.StringInSlice(quicksight.Status_Values(), false),
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.DashboardBehaviorEnabled,
+								ValidateDiagFunc: enum.Validate[types.DashboardBehavior](),
 							},
 						},
 					},
@@ -140,10 +141,10 @@ func DashboardPublishOptionsSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"availability_status": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Default:      quicksight.StatusEnabled,
-								ValidateFunc: validation.StringInSlice(quicksight.Status_Values(), false),
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.DashboardBehaviorEnabled,
+								ValidateDiagFunc: enum.Validate[types.DashboardBehavior](),
 							}},
 					},
 				},
@@ -154,10 +155,10 @@ func DashboardPublishOptionsSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"availability_status": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Default:      quicksight.StatusEnabled,
-								ValidateFunc: validation.StringInSlice(quicksight.Status_Values(), false),
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.DashboardBehaviorEnabled,
+								ValidateDiagFunc: enum.Validate[types.DashboardBehavior](),
 							}},
 					},
 				},
@@ -168,10 +169,10 @@ func DashboardPublishOptionsSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"availability_status": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Default:      quicksight.StatusEnabled,
-								ValidateFunc: validation.StringInSlice(quicksight.Status_Values(), false),
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.DashboardBehaviorEnabled,
+								ValidateDiagFunc: enum.Validate[types.DashboardBehavior](),
 							}},
 					},
 				},
@@ -182,10 +183,10 @@ func DashboardPublishOptionsSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"availability_status": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Default:      quicksight.StatusEnabled,
-								ValidateFunc: validation.StringInSlice(quicksight.Status_Values(), false),
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.DashboardBehaviorEnabled,
+								ValidateDiagFunc: enum.Validate[types.DashboardBehavior](),
 							}},
 					},
 				},
@@ -196,10 +197,10 @@ func DashboardPublishOptionsSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"availability_status": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Default:      quicksight.StatusDisabled,
-								ValidateFunc: validation.StringInSlice(quicksight.Status_Values(), false),
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.DashboardBehaviorEnabled,
+								ValidateDiagFunc: enum.Validate[types.DashboardBehavior](),
 							}},
 					},
 				},
@@ -210,10 +211,10 @@ func DashboardPublishOptionsSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"visibility_state": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Default:      quicksight.DashboardUIStateCollapsed,
-								ValidateFunc: validation.StringInSlice(quicksight.DashboardUIState_Values(), false),
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.DashboardUIStateCollapsed,
+								ValidateDiagFunc: enum.Validate[types.DashboardUIState](),
 							},
 						},
 					},
@@ -225,10 +226,10 @@ func DashboardPublishOptionsSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"availability_status": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Default:      quicksight.StatusEnabled,
-								ValidateFunc: validation.StringInSlice(quicksight.Status_Values(), false),
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.DashboardBehaviorEnabled,
+								ValidateDiagFunc: enum.Validate[types.DashboardBehavior](),
 							}},
 					},
 				},
@@ -239,10 +240,10 @@ func DashboardPublishOptionsSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"availability_status": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Default:      quicksight.StatusEnabled,
-								ValidateFunc: validation.StringInSlice(quicksight.Status_Values(), false),
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.DashboardBehaviorEnabled,
+								ValidateDiagFunc: enum.Validate[types.DashboardBehavior](),
 							}},
 					},
 				},
@@ -253,10 +254,10 @@ func DashboardPublishOptionsSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"availability_status": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								Default:      quicksight.StatusEnabled,
-								ValidateFunc: validation.StringInSlice(quicksight.Status_Values(), false),
+								Type:             schema.TypeString,
+								Optional:         true,
+								Default:          types.DashboardBehaviorEnabled,
+								ValidateDiagFunc: enum.Validate[types.DashboardBehavior](),
 							}},
 					},
 				},
@@ -283,9 +284,9 @@ func DashboardSourceEntitySchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"arn": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: verify.ValidARN,
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
 							},
 							"data_set_references": dataSetReferencesSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_DataSetReference.html
 						},
@@ -296,7 +297,7 @@ func DashboardSourceEntitySchema() *schema.Schema {
 	}
 }
 
-func ExpandDashboardSourceEntity(tfList []interface{}) *quicksight.DashboardSourceEntity {
+func ExpandDashboardSourceEntity(tfList []interface{}) *types.DashboardSourceEntity {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -306,7 +307,7 @@ func ExpandDashboardSourceEntity(tfList []interface{}) *quicksight.DashboardSour
 		return nil
 	}
 
-	sourceEntity := &quicksight.DashboardSourceEntity{}
+	sourceEntity := &types.DashboardSourceEntity{}
 
 	if v, ok := tfMap["source_template"].([]interface{}); ok && len(v) > 0 {
 		sourceEntity.SourceTemplate = expandDashboardSourceTemplate(v[0].(map[string]interface{}))
@@ -315,12 +316,12 @@ func ExpandDashboardSourceEntity(tfList []interface{}) *quicksight.DashboardSour
 	return sourceEntity
 }
 
-func expandDashboardSourceTemplate(tfMap map[string]interface{}) *quicksight.DashboardSourceTemplate {
+func expandDashboardSourceTemplate(tfMap map[string]interface{}) *types.DashboardSourceTemplate {
 	if tfMap == nil {
 		return nil
 	}
 
-	sourceTemplate := &quicksight.DashboardSourceTemplate{}
+	sourceTemplate := &types.DashboardSourceTemplate{}
 	if v, ok := tfMap["arn"].(string); ok && v != "" {
 		sourceTemplate.Arn = aws.String(v)
 	}
@@ -331,7 +332,7 @@ func expandDashboardSourceTemplate(tfMap map[string]interface{}) *quicksight.Das
 	return sourceTemplate
 }
 
-func ExpandDashboardDefinition(tfList []interface{}) *quicksight.DashboardVersionDefinition {
+func ExpandDashboardDefinition(tfList []interface{}) *types.DashboardVersionDefinition {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -341,7 +342,7 @@ func ExpandDashboardDefinition(tfList []interface{}) *quicksight.DashboardVersio
 		return nil
 	}
 
-	definition := &quicksight.DashboardVersionDefinition{}
+	definition := &types.DashboardVersionDefinition{}
 
 	if v, ok := tfMap["analysis_defaults"].([]interface{}); ok && len(v) > 0 {
 		definition.AnalysisDefaults = expandAnalysisDefaults(v)
@@ -368,7 +369,7 @@ func ExpandDashboardDefinition(tfList []interface{}) *quicksight.DashboardVersio
 	return definition
 }
 
-func ExpandDashboardPublishOptions(tfList []interface{}) *quicksight.DashboardPublishOptions {
+func ExpandDashboardPublishOptions(tfList []interface{}) *types.DashboardPublishOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -378,7 +379,7 @@ func ExpandDashboardPublishOptions(tfList []interface{}) *quicksight.DashboardPu
 		return nil
 	}
 
-	options := &quicksight.DashboardPublishOptions{}
+	options := &types.DashboardPublishOptions{}
 
 	if v, ok := tfMap["ad_hoc_filtering_option"].([]interface{}); ok && len(v) > 0 {
 		options.AdHocFilteringOption = expandAdHocFilteringOption(v[0].(map[string]interface{}))
@@ -414,137 +415,137 @@ func ExpandDashboardPublishOptions(tfList []interface{}) *quicksight.DashboardPu
 	return options
 }
 
-func expandAdHocFilteringOption(tfMap map[string]interface{}) *quicksight.AdHocFilteringOption {
+func expandAdHocFilteringOption(tfMap map[string]interface{}) *types.AdHocFilteringOption {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &quicksight.AdHocFilteringOption{}
+	options := &types.AdHocFilteringOption{}
 	if v, ok := tfMap["availability_status"].(string); ok && v != "" {
-		options.AvailabilityStatus = aws.String(v)
+		options.AvailabilityStatus = types.DashboardBehavior(v)
 	}
 
 	return options
 }
 
-func expandDataPointDrillUpDownOption(tfMap map[string]interface{}) *quicksight.DataPointDrillUpDownOption {
+func expandDataPointDrillUpDownOption(tfMap map[string]interface{}) *types.DataPointDrillUpDownOption {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &quicksight.DataPointDrillUpDownOption{}
+	options := &types.DataPointDrillUpDownOption{}
 	if v, ok := tfMap["availability_status"].(string); ok && v != "" {
-		options.AvailabilityStatus = aws.String(v)
+		options.AvailabilityStatus = types.DashboardBehavior(v)
 	}
 
 	return options
 }
 
-func expandDataPointMenuLabelOption(tfMap map[string]interface{}) *quicksight.DataPointMenuLabelOption {
+func expandDataPointMenuLabelOption(tfMap map[string]interface{}) *types.DataPointMenuLabelOption {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &quicksight.DataPointMenuLabelOption{}
+	options := &types.DataPointMenuLabelOption{}
 	if v, ok := tfMap["availability_status"].(string); ok && v != "" {
-		options.AvailabilityStatus = aws.String(v)
+		options.AvailabilityStatus = types.DashboardBehavior(v)
 	}
 
 	return options
 }
 
-func expandDataPointTooltipOption(tfMap map[string]interface{}) *quicksight.DataPointTooltipOption {
+func expandDataPointTooltipOption(tfMap map[string]interface{}) *types.DataPointTooltipOption {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &quicksight.DataPointTooltipOption{}
+	options := &types.DataPointTooltipOption{}
 	if v, ok := tfMap["availability_status"].(string); ok && v != "" {
-		options.AvailabilityStatus = aws.String(v)
+		options.AvailabilityStatus = types.DashboardBehavior(v)
 	}
 
 	return options
 }
 
-func expandExportToCSVOption(tfMap map[string]interface{}) *quicksight.ExportToCSVOption {
+func expandExportToCSVOption(tfMap map[string]interface{}) *types.ExportToCSVOption {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &quicksight.ExportToCSVOption{}
+	options := &types.ExportToCSVOption{}
 	if v, ok := tfMap["availability_status"].(string); ok && v != "" {
-		options.AvailabilityStatus = aws.String(v)
+		options.AvailabilityStatus = types.DashboardBehavior(v)
 	}
 
 	return options
 }
 
-func expandExportWithHiddenFieldsOption(tfMap map[string]interface{}) *quicksight.ExportWithHiddenFieldsOption {
+func expandExportWithHiddenFieldsOption(tfMap map[string]interface{}) *types.ExportWithHiddenFieldsOption {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &quicksight.ExportWithHiddenFieldsOption{}
+	options := &types.ExportWithHiddenFieldsOption{}
 	if v, ok := tfMap["availability_status"].(string); ok && v != "" {
-		options.AvailabilityStatus = aws.String(v)
+		options.AvailabilityStatus = types.DashboardBehavior(v)
 	}
 
 	return options
 }
 
-func expandSheetLayoutElementMaximizationOption(tfMap map[string]interface{}) *quicksight.SheetLayoutElementMaximizationOption {
+func expandSheetLayoutElementMaximizationOption(tfMap map[string]interface{}) *types.SheetLayoutElementMaximizationOption {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &quicksight.SheetLayoutElementMaximizationOption{}
+	options := &types.SheetLayoutElementMaximizationOption{}
 	if v, ok := tfMap["availability_status"].(string); ok && v != "" {
-		options.AvailabilityStatus = aws.String(v)
+		options.AvailabilityStatus = types.DashboardBehavior(v)
 	}
 
 	return options
 }
 
-func expandSheetControlsOption(tfMap map[string]interface{}) *quicksight.SheetControlsOption {
+func expandSheetControlsOption(tfMap map[string]interface{}) *types.SheetControlsOption {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &quicksight.SheetControlsOption{}
+	options := &types.SheetControlsOption{}
 	if v, ok := tfMap["visibility_state"].(string); ok && v != "" {
-		options.VisibilityState = aws.String(v)
+		options.VisibilityState = types.DashboardUIState(v)
 	}
 
 	return options
 }
 
-func expandVisualAxisSortOption(tfMap map[string]interface{}) *quicksight.VisualAxisSortOption {
+func expandVisualAxisSortOption(tfMap map[string]interface{}) *types.VisualAxisSortOption {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &quicksight.VisualAxisSortOption{}
+	options := &types.VisualAxisSortOption{}
 	if v, ok := tfMap["availability_status"].(string); ok && v != "" {
-		options.AvailabilityStatus = aws.String(v)
+		options.AvailabilityStatus = types.DashboardBehavior(v)
 	}
 
 	return options
 }
 
-func expandVisualMenuOption(tfMap map[string]interface{}) *quicksight.VisualMenuOption {
+func expandVisualMenuOption(tfMap map[string]interface{}) *types.VisualMenuOption {
 	if tfMap == nil {
 		return nil
 	}
 
-	options := &quicksight.VisualMenuOption{}
+	options := &types.VisualMenuOption{}
 	if v, ok := tfMap["availability_status"].(string); ok && v != "" {
-		options.AvailabilityStatus = aws.String(v)
+		options.AvailabilityStatus = types.DashboardBehavior(v)
 	}
 
 	return options
 }
 
-func FlattenDashboardDefinition(apiObject *quicksight.DashboardVersionDefinition) []interface{} {
+func FlattenDashboardDefinition(apiObject *types.DashboardVersionDefinition) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -575,7 +576,7 @@ func FlattenDashboardDefinition(apiObject *quicksight.DashboardVersionDefinition
 	return []interface{}{tfMap}
 }
 
-func FlattenDashboardPublishOptions(apiObject *quicksight.DashboardPublishOptions) []interface{} {
+func FlattenDashboardPublishOptions(apiObject *types.DashboardPublishOptions) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -615,132 +616,114 @@ func FlattenDashboardPublishOptions(apiObject *quicksight.DashboardPublishOption
 	return []interface{}{tfMap}
 }
 
-func flattenAdHocFilteringOption(apiObject *quicksight.AdHocFilteringOption) []interface{} {
+func flattenAdHocFilteringOption(apiObject *types.AdHocFilteringOption) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.AvailabilityStatus != nil {
-		tfMap["availability_status"] = aws.StringValue(apiObject.AvailabilityStatus)
-	}
+	tfMap["availability_status"] = types.DashboardBehavior(apiObject.AvailabilityStatus)
 
 	return []interface{}{tfMap}
 }
 
-func flattenDataPointDrillUpDownOption(apiObject *quicksight.DataPointDrillUpDownOption) []interface{} {
+func flattenDataPointDrillUpDownOption(apiObject *types.DataPointDrillUpDownOption) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.AvailabilityStatus != nil {
-		tfMap["availability_status"] = aws.StringValue(apiObject.AvailabilityStatus)
-	}
+	tfMap["availability_status"] = types.DashboardBehavior(apiObject.AvailabilityStatus)
 
 	return []interface{}{tfMap}
 }
 
-func flattenDataPointMenuLabelOption(apiObject *quicksight.DataPointMenuLabelOption) []interface{} {
+func flattenDataPointMenuLabelOption(apiObject *types.DataPointMenuLabelOption) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.AvailabilityStatus != nil {
-		tfMap["availability_status"] = aws.StringValue(apiObject.AvailabilityStatus)
-	}
+	tfMap["availability_status"] = types.DashboardBehavior(apiObject.AvailabilityStatus)
 
 	return []interface{}{tfMap}
 }
 
-func flattenDataPointTooltipOption(apiObject *quicksight.DataPointTooltipOption) []interface{} {
+func flattenDataPointTooltipOption(apiObject *types.DataPointTooltipOption) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.AvailabilityStatus != nil {
-		tfMap["availability_status"] = aws.StringValue(apiObject.AvailabilityStatus)
-	}
+	tfMap["availability_status"] = types.DashboardBehavior(apiObject.AvailabilityStatus)
 
 	return []interface{}{tfMap}
 }
 
-func flattenExportToCSVOption(apiObject *quicksight.ExportToCSVOption) []interface{} {
+func flattenExportToCSVOption(apiObject *types.ExportToCSVOption) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.AvailabilityStatus != nil {
-		tfMap["availability_status"] = aws.StringValue(apiObject.AvailabilityStatus)
-	}
+	tfMap["availability_status"] = types.DashboardBehavior(apiObject.AvailabilityStatus)
 
 	return []interface{}{tfMap}
 }
 
-func flattenExportWithHiddenFieldsOption(apiObject *quicksight.ExportWithHiddenFieldsOption) []interface{} {
+func flattenExportWithHiddenFieldsOption(apiObject *types.ExportWithHiddenFieldsOption) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.AvailabilityStatus != nil {
-		tfMap["availability_status"] = aws.StringValue(apiObject.AvailabilityStatus)
-	}
+	tfMap["availability_status"] = types.DashboardBehavior(apiObject.AvailabilityStatus)
 
 	return []interface{}{tfMap}
 }
 
-func flattenSheetControlsOption(apiObject *quicksight.SheetControlsOption) []interface{} {
+func flattenSheetControlsOption(apiObject *types.SheetControlsOption) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.VisibilityState != nil {
-		tfMap["visibility_state"] = aws.StringValue(apiObject.VisibilityState)
-	}
+	tfMap["visibility_state"] = types.DashboardUIState(apiObject.VisibilityState)
 
 	return []interface{}{tfMap}
 }
 
-func flattenSheetLayoutElementMaximizationOption(apiObject *quicksight.SheetLayoutElementMaximizationOption) []interface{} {
+func flattenSheetLayoutElementMaximizationOption(apiObject *types.SheetLayoutElementMaximizationOption) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.AvailabilityStatus != nil {
-		tfMap["availability_status"] = aws.StringValue(apiObject.AvailabilityStatus)
-	}
+
+	tfMap["availability_status"] = types.DashboardBehavior(apiObject.AvailabilityStatus)
 
 	return []interface{}{tfMap}
 }
 
-func flattenVisualAxisSortOption(apiObject *quicksight.VisualAxisSortOption) []interface{} {
+func flattenVisualAxisSortOption(apiObject *types.VisualAxisSortOption) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.AvailabilityStatus != nil {
-		tfMap["availability_status"] = aws.StringValue(apiObject.AvailabilityStatus)
-	}
+
+	tfMap["availability_status"] = types.DashboardBehavior(apiObject.AvailabilityStatus)
 
 	return []interface{}{tfMap}
 }
 
-func flattenVisualMenuOption(apiObject *quicksight.VisualMenuOption) []interface{} {
+func flattenVisualMenuOption(apiObject *types.VisualMenuOption) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
-	if apiObject.AvailabilityStatus != nil {
-		tfMap["availability_status"] = aws.StringValue(apiObject.AvailabilityStatus)
-	}
+	tfMap["availability_status"] = types.DashboardBehavior(apiObject.AvailabilityStatus)
 
 	return []interface{}{tfMap}
 }

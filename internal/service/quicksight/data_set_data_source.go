@@ -6,10 +6,11 @@ package quicksight
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -29,10 +30,10 @@ func DataSourceDataSet() *schema.Resource {
 					Computed: true,
 				},
 				"aws_account_id": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ValidateFunc: verify.ValidAccountID,
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(verify.ValidAccountID),
 				},
 				"column_groups": {
 					Type:     schema.TypeList,
@@ -615,7 +616,7 @@ const (
 )
 
 func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -630,7 +631,7 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 		DataSetId:    aws.String(dataSetId),
 	}
 
-	output, err := conn.DescribeDataSetWithContext(ctx, descOpts)
+	output, err := conn.DescribeDataSet(ctx, descOpts)
 	if err != nil {
 		return create.DiagError(names.QuickSight, create.ErrActionReading, DSNameDataSet, dataSetId, err)
 	}
@@ -694,7 +695,7 @@ func dataSourceDataSetRead(ctx context.Context, d *schema.ResourceData, meta int
 		return diag.Errorf("setting tags_all: %s", err)
 	}
 
-	permsResp, err := conn.DescribeDataSetPermissionsWithContext(ctx, &quicksight.DescribeDataSetPermissionsInput{
+	permsResp, err := conn.DescribeDataSetPermissions(ctx, &quicksight.DescribeDataSetPermissionsInput{
 		AwsAccountId: aws.String(awsAccountId),
 		DataSetId:    aws.String(dataSetId),
 	})

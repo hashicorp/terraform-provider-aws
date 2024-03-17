@@ -9,29 +9,30 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccAccountSubscription_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var accountsubscription quicksight.AccountInfo
+	var accountsubscription types.AccountInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_quicksight_account_subscription.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, quicksight.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.QuickSightServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -56,14 +57,14 @@ func testAccAccountSubscription_basic(t *testing.T) {
 
 func testAccAccountSubscription_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var accountsubscription quicksight.AccountInfo
+	var accountsubscription types.AccountInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_quicksight_account_subscription.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, quicksight.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.QuickSightServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.QuickSightServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -84,7 +85,7 @@ func testAccAccountSubscription_disappears(t *testing.T) {
 
 func testAccCheckAccountSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_account_subscription" {
@@ -93,13 +94,13 @@ func testAccCheckAccountSubscriptionDestroy(ctx context.Context) resource.TestCh
 
 			output, err := tfquicksight.FindAccountSubscriptionByID(ctx, conn, rs.Primary.ID)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+				if errs.IsA[*types.ResourceNotFoundException](err) {
 					return nil
 				}
 				return err
 			}
 
-			if output != nil && aws.StringValue(output.AccountSubscriptionStatus) != "UNSUBSCRIBED" {
+			if output != nil && aws.ToString(output.AccountSubscriptionStatus) != "UNSUBSCRIBED" {
 				return fmt.Errorf("QuickSight Account Subscription (%s) still exists", rs.Primary.ID)
 			}
 		}
@@ -121,12 +122,12 @@ func testAccCheckAccountSubscriptionDisableTerminationProtection(ctx context.Con
 			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameAccountSubscription, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
 		defaultNs := "default"
-		_, err := conn.UpdateAccountSettingsWithContext(ctx, &quicksight.UpdateAccountSettingsInput{
+		_, err := conn.UpdateAccountSettings(ctx, &quicksight.UpdateAccountSettingsInput{
 			AwsAccountId:                 aws.String(rs.Primary.ID),
 			DefaultNamespace:             aws.String(defaultNs),
-			TerminationProtectionEnabled: aws.Bool(false),
+			TerminationProtectionEnabled: false,
 		})
 
 		if err != nil {
@@ -137,7 +138,7 @@ func testAccCheckAccountSubscriptionDisableTerminationProtection(ctx context.Con
 	}
 }
 
-func testAccCheckAccountSubscriptionExists(ctx context.Context, name string, accountsubscription *quicksight.AccountInfo) resource.TestCheckFunc {
+func testAccCheckAccountSubscriptionExists(ctx context.Context, name string, accountsubscription *types.AccountInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -148,7 +149,7 @@ func testAccCheckAccountSubscriptionExists(ctx context.Context, name string, acc
 			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameAccountSubscription, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
 		resp, err := tfquicksight.FindAccountSubscriptionByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameAccountSubscription, rs.Primary.ID, err)

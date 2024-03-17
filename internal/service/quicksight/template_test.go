@@ -9,15 +9,16 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -25,7 +26,7 @@ import (
 func TestAccQuickSightTemplate_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var template quicksight.Template
+	var template types.Template
 	resourceName := "aws_quicksight_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -44,7 +45,7 @@ func TestAccQuickSightTemplate_basic(t *testing.T) {
 					testAccCheckTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "template_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "status", flex.StringValueToFramework(ctx, types.ResourceStatusCreationSuccessful).String()),
 				),
 			},
 			{
@@ -59,7 +60,7 @@ func TestAccQuickSightTemplate_basic(t *testing.T) {
 func TestAccQuickSightTemplate_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var template quicksight.Template
+	var template types.Template
 	resourceName := "aws_quicksight_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -87,7 +88,7 @@ func TestAccQuickSightTemplate_disappears(t *testing.T) {
 func TestAccQuickSightTemplate_barChart(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var template quicksight.Template
+	var template types.Template
 	resourceName := "aws_quicksight_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -106,7 +107,7 @@ func TestAccQuickSightTemplate_barChart(t *testing.T) {
 					testAccCheckTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "template_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "status", flex.StringValueToFramework(ctx, types.ResourceStatusCreationSuccessful).String()),
 				),
 			},
 			{
@@ -121,7 +122,7 @@ func TestAccQuickSightTemplate_barChart(t *testing.T) {
 func TestAccQuickSightTemplate_table(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var v1, v2 quicksight.Template
+	var v1, v2 types.Template
 	resourceName := "aws_quicksight_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -140,7 +141,7 @@ func TestAccQuickSightTemplate_table(t *testing.T) {
 					testAccCheckTemplateExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "template_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "status", flex.StringValueToFramework(ctx, types.ResourceStatusCreationSuccessful).String()),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.sheets.0.visuals.0.table_visual.0.chart_configuration.0.sort_configuration.0.row_sort.0.field_sort.0.direction", "ASC"),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.sheets.0.visuals.0.table_visual.0.chart_configuration.0.total_options.0.placement", "START"),
 				),
@@ -152,7 +153,7 @@ func TestAccQuickSightTemplate_table(t *testing.T) {
 					testAccCheckTemplateNotRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "template_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "status", flex.StringValueToFramework(ctx, types.ResourceStatusCreationSuccessful).String()),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.sheets.0.visuals.0.table_visual.0.chart_configuration.0.sort_configuration.0.row_sort.0.field_sort.0.direction", "DESC"),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.sheets.0.visuals.0.table_visual.0.chart_configuration.0.total_options.0.placement", "END"),
 				),
@@ -169,7 +170,7 @@ func TestAccQuickSightTemplate_table(t *testing.T) {
 func TestAccQuickSightTemplate_sourceEntity(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var template quicksight.Template
+	var template types.Template
 	resourceName := "aws_quicksight_template.copy"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -190,7 +191,7 @@ func TestAccQuickSightTemplate_sourceEntity(t *testing.T) {
 					testAccCheckTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "template_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "status", flex.StringValueToFramework(ctx, types.ResourceStatusCreationSuccessful).String()),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
 				),
 			},
@@ -207,7 +208,7 @@ func TestAccQuickSightTemplate_sourceEntity(t *testing.T) {
 func TestAccQuickSightTemplate_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var template quicksight.Template
+	var template types.Template
 	resourceName := "aws_quicksight_template.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -226,7 +227,7 @@ func TestAccQuickSightTemplate_tags(t *testing.T) {
 					testAccCheckTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "template_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "status", flex.StringValueToFramework(ctx, types.ResourceStatusCreationSuccessful).String()),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -242,7 +243,7 @@ func TestAccQuickSightTemplate_tags(t *testing.T) {
 					testAccCheckTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "template_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "status", flex.StringValueToFramework(ctx, types.ResourceStatusCreationSuccessful).String()),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -254,7 +255,7 @@ func TestAccQuickSightTemplate_tags(t *testing.T) {
 					testAccCheckTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "template_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "status", flex.StringValueToFramework(ctx, types.ResourceStatusCreationSuccessful).String()),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -266,7 +267,7 @@ func TestAccQuickSightTemplate_tags(t *testing.T) {
 func TestAccQuickSightTemplate_update(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var template quicksight.Template
+	var template types.Template
 	resourceName := "aws_quicksight_template.copy"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -288,7 +289,7 @@ func TestAccQuickSightTemplate_update(t *testing.T) {
 					testAccCheckTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "template_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "status", flex.StringValueToFramework(ctx, types.ResourceStatusCreationSuccessful).String()),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
 					resource.TestCheckResourceAttr(resourceName, "version_number", "1"),
 				),
@@ -306,7 +307,7 @@ func TestAccQuickSightTemplate_update(t *testing.T) {
 					testAccCheckTemplateExists(ctx, resourceName, &template),
 					resource.TestCheckResourceAttr(resourceName, "template_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "status", flex.StringValueToFramework(ctx, types.ResourceStatusCreationSuccessful).String()),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
 					resource.TestCheckResourceAttr(resourceName, "version_number", "2"),
 				),
@@ -317,7 +318,7 @@ func TestAccQuickSightTemplate_update(t *testing.T) {
 
 func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_template" {
@@ -326,7 +327,7 @@ func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 
 			output, err := tfquicksight.FindTemplateByID(ctx, conn, rs.Primary.ID)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+				if errs.IsA[*types.ResourceNotFoundException](err) {
 					return nil
 				}
 				return err
@@ -341,7 +342,7 @@ func testAccCheckTemplateDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckTemplateExists(ctx context.Context, name string, template *quicksight.Template) resource.TestCheckFunc {
+func testAccCheckTemplateExists(ctx context.Context, name string, template *types.Template) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -352,7 +353,7 @@ func testAccCheckTemplateExists(ctx context.Context, name string, template *quic
 			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameTemplate, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
 		output, err := tfquicksight.FindTemplateByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -365,10 +366,10 @@ func testAccCheckTemplateExists(ctx context.Context, name string, template *quic
 	}
 }
 
-func testAccCheckTemplateNotRecreated(before, after *quicksight.Template) resource.TestCheckFunc {
+func testAccCheckTemplateNotRecreated(before, after *types.Template) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if creationTimeBefore, creationTimeAfter := aws.TimeValue(before.CreatedTime), aws.TimeValue(after.CreatedTime); creationTimeBefore != creationTimeAfter {
-			return create.Error(names.QuickSight, create.ErrActionCheckingNotRecreated, tfquicksight.ResNameTemplate, aws.StringValue(before.TemplateId), errors.New("recreated"))
+		if creationTimeBefore, creationTimeAfter := before.CreatedTime, after.CreatedTime; creationTimeBefore != creationTimeAfter {
+			return create.Error(names.QuickSight, create.ErrActionCheckingNotRecreated, tfquicksight.ResNameTemplate, aws.ToString(before.TemplateId), errors.New("recreated"))
 		}
 
 		return nil

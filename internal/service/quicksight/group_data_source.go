@@ -8,8 +8,8 @@ import (
 	"fmt"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -46,9 +46,9 @@ func DataSourceGroup() *schema.Resource {
 					Type:     schema.TypeString,
 					Optional: true,
 					Default:  DefaultGroupNamespace,
-					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 63),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
+					ValidateDiagFunc: validation.AllDiag(
+						validation.ToDiagFunc(validation.StringLenBetween(1, 63)),
+						validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods")),
 					),
 				},
 				"principal_id": {
@@ -62,7 +62,7 @@ func DataSourceGroup() *schema.Resource {
 
 func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -76,7 +76,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 		Namespace:    aws.String(namespace),
 	}
 
-	out, err := conn.DescribeGroupWithContext(ctx, in)
+	out, err := conn.DescribeGroup(ctx, in)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading QuickSight Group (%s): %s", groupName, err)
 	}
@@ -85,7 +85,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	group := out.Group
-	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(group.GroupName)))
+	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.ToString(group.GroupName)))
 	d.Set("arn", group.Arn)
 	d.Set("aws_account_id", awsAccountID)
 	d.Set("description", group.Description)

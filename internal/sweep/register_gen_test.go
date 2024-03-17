@@ -110,7 +110,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/qldb"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/ram"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
@@ -262,7 +261,6 @@ func registerSweepers() {
 	pinpoint.RegisterSweepers()
 	pipes.RegisterSweepers()
 	qldb.RegisterSweepers()
-	quicksight.RegisterSweepers()
 	ram.RegisterSweepers()
 	rds.RegisterSweepers()
 	redshift.RegisterSweepers()

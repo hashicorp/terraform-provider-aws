@@ -6,21 +6,22 @@ package quicksight
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // status fetches the DataSource and its Status
-func status(ctx context.Context, conn *quicksight.QuickSight, accountId, datasourceId string) retry.StateRefreshFunc {
+func status(ctx context.Context, conn *quicksight.Client, accountId, datasourceId string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &quicksight.DescribeDataSourceInput{
 			AwsAccountId: aws.String(accountId),
 			DataSourceId: aws.String(datasourceId),
 		}
 
-		output, err := conn.DescribeDataSourceWithContext(ctx, input)
+		output, err := conn.DescribeDataSource(ctx, input)
 
 		if err != nil {
 			return nil, "", err
@@ -29,13 +30,12 @@ func status(ctx context.Context, conn *quicksight.QuickSight, accountId, datasou
 		if output == nil || output.DataSource == nil {
 			return nil, "", nil
 		}
-
-		return output.DataSource, aws.StringValue(output.DataSource.Status), nil
+		return output.DataSource, flex.StringValueToFramework(ctx, output.DataSource.Status).String(), nil
 	}
 }
 
 // Fetch Template status
-func statusTemplate(ctx context.Context, conn *quicksight.QuickSight, id string) retry.StateRefreshFunc {
+func statusTemplate(ctx context.Context, conn *quicksight.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindTemplateByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -46,12 +46,12 @@ func statusTemplate(ctx context.Context, conn *quicksight.QuickSight, id string)
 			return nil, "", err
 		}
 
-		return out, *out.Version.Status, nil
+		return out, flex.StringValueToFramework(ctx, out.Version.Status).String(), nil
 	}
 }
 
 // Fetch Dashboard status
-func statusDashboard(ctx context.Context, conn *quicksight.QuickSight, id string) retry.StateRefreshFunc {
+func statusDashboard(ctx context.Context, conn *quicksight.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindDashboardByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -62,12 +62,12 @@ func statusDashboard(ctx context.Context, conn *quicksight.QuickSight, id string
 			return nil, "", err
 		}
 
-		return out, *out.Version.Status, nil
+		return out, flex.StringValueToFramework(ctx, out.Version.Status).String(), nil
 	}
 }
 
 // Fetch Analysis status
-func statusAnalysis(ctx context.Context, conn *quicksight.QuickSight, id string) retry.StateRefreshFunc {
+func statusAnalysis(ctx context.Context, conn *quicksight.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindAnalysisByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -78,12 +78,12 @@ func statusAnalysis(ctx context.Context, conn *quicksight.QuickSight, id string)
 			return nil, "", err
 		}
 
-		return out, *out.Status, nil
+		return out, flex.StringValueToFramework(ctx, out.Status).String(), nil
 	}
 }
 
 // Fetch Theme status
-func statusTheme(ctx context.Context, conn *quicksight.QuickSight, id string) retry.StateRefreshFunc {
+func statusTheme(ctx context.Context, conn *quicksight.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindThemeByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -94,6 +94,6 @@ func statusTheme(ctx context.Context, conn *quicksight.QuickSight, id string) re
 			return nil, "", err
 		}
 
-		return out, *out.Version.Status, nil
+		return out, flex.StringValueToFramework(ctx, out.Version.Status).String(), nil
 	}
 }

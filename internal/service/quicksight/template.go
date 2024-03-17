@@ -10,15 +10,16 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	quicksightschema "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight/schema"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -52,11 +53,11 @@ func ResourceTemplate() *schema.Resource {
 					Computed: true,
 				},
 				"aws_account_id": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					Computed:     true,
-					ForceNew:     true,
-					ValidateFunc: verify.ValidAccountID,
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(verify.ValidAccountID),
 				},
 				"created_time": {
 					Type:     schema.TypeString,
@@ -68,9 +69,9 @@ func ResourceTemplate() *schema.Resource {
 					Computed: true,
 				},
 				"name": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringLenBetween(1, 2048),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 2048)),
 				},
 				"permissions": {
 					Type:     schema.TypeSet,
@@ -87,9 +88,9 @@ func ResourceTemplate() *schema.Resource {
 								Elem:     &schema.Schema{Type: schema.TypeString},
 							},
 							"principal": {
-								Type:         schema.TypeString,
-								Required:     true,
-								ValidateFunc: validation.StringLenBetween(1, 256),
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 256)),
 							},
 						},
 					},
@@ -111,9 +112,9 @@ func ResourceTemplate() *schema.Resource {
 					ForceNew: true,
 				},
 				"version_description": {
-					Type:         schema.TypeString,
-					Required:     true,
-					ValidateFunc: validation.StringLenBetween(1, 512),
+					Type:             schema.TypeString,
+					Required:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringLenBetween(1, 512)),
 				},
 				"version_number": {
 					Type:     schema.TypeInt,
@@ -131,7 +132,7 @@ const (
 )
 
 func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
 	awsAccountId := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -164,7 +165,7 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Permissions = expandResourcePermissions(v.List())
 	}
 
-	_, err := conn.CreateTemplateWithContext(ctx, input)
+	_, err := conn.CreateTemplate(ctx, input)
 	if err != nil {
 		return create.DiagError(names.QuickSight, create.ErrActionCreating, ResNameTemplate, d.Get("name").(string), err)
 	}
@@ -177,7 +178,7 @@ func resourceTemplateCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
 	awsAccountId, templateId, err := ParseTemplateId(d.Id())
 	if err != nil {
@@ -207,7 +208,7 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("version_description", out.Version.Description)
 	d.Set("version_number", out.Version.VersionNumber)
 
-	descResp, err := conn.DescribeTemplateDefinitionWithContext(ctx, &quicksight.DescribeTemplateDefinitionInput{
+	descResp, err := conn.DescribeTemplateDefinition(ctx, &quicksight.DescribeTemplateDefinitionInput{
 		AwsAccountId:  aws.String(awsAccountId),
 		TemplateId:    aws.String(templateId),
 		VersionNumber: out.Version.VersionNumber,
@@ -221,7 +222,7 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag.Errorf("setting definition: %s", err)
 	}
 
-	permsResp, err := conn.DescribeTemplatePermissionsWithContext(ctx, &quicksight.DescribeTemplatePermissionsInput{
+	permsResp, err := conn.DescribeTemplatePermissions(ctx, &quicksight.DescribeTemplatePermissionsInput{
 		AwsAccountId: aws.String(awsAccountId),
 		TemplateId:   aws.String(templateId),
 	})
@@ -238,7 +239,7 @@ func resourceTemplateRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
 	awsAccountId, templateId, err := ParseTemplateId(d.Id())
 	if err != nil {
@@ -261,7 +262,7 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		log.Printf("[DEBUG] Updating QuickSight Template (%s): %#v", d.Id(), in)
-		_, err := conn.UpdateTemplateWithContext(ctx, in)
+		_, err := conn.UpdateTemplate(ctx, in)
 		if err != nil {
 			return create.DiagError(names.QuickSight, create.ErrActionUpdating, ResNameTemplate, d.Id(), err)
 		}
@@ -291,7 +292,7 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			params.RevokePermissions = toRevoke
 		}
 
-		_, err = conn.UpdateTemplatePermissionsWithContext(ctx, params)
+		_, err = conn.UpdateTemplatePermissions(ctx, params)
 
 		if err != nil {
 			return diag.Errorf("updating QuickSight Template (%s) permissions: %s", templateId, err)
@@ -302,7 +303,7 @@ func resourceTemplateUpdate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceTemplateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
 	awsAccountId, templateId, err := ParseTemplateId(d.Id())
 	if err != nil {
@@ -310,12 +311,12 @@ func resourceTemplateDelete(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	log.Printf("[INFO] Deleting QuickSight Template %s", d.Id())
-	_, err = conn.DeleteTemplateWithContext(ctx, &quicksight.DeleteTemplateInput{
+	_, err = conn.DeleteTemplate(ctx, &quicksight.DeleteTemplateInput{
 		AwsAccountId: aws.String(awsAccountId),
 		TemplateId:   aws.String(templateId),
 	})
 
-	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil
 	}
 
@@ -326,7 +327,7 @@ func resourceTemplateDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return nil
 }
 
-func FindTemplateByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.Template, error) {
+func FindTemplateByID(ctx context.Context, conn *quicksight.Client, id string) (*types.Template, error) {
 	awsAccountId, templateId, err := ParseTemplateId(id)
 	if err != nil {
 		return nil, err
@@ -337,9 +338,9 @@ func FindTemplateByID(ctx context.Context, conn *quicksight.QuickSight, id strin
 		TemplateId:   aws.String(templateId),
 	}
 
-	out, err := conn.DescribeTemplateWithContext(ctx, descOpts)
+	out, err := conn.DescribeTemplate(ctx, descOpts)
 
-	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: descOpts,

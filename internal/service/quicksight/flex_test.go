@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 )
@@ -20,8 +20,8 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 		name            string
 		oldPermissions  []interface{}
 		newPermissions  []interface{}
-		expectedGrants  []*quicksight.ResourcePermission
-		expectedRevokes []*quicksight.ResourcePermission
+		expectedGrants  []*types.ResourcePermission
+		expectedRevokes []*types.ResourcePermission
 	}{
 		{
 			name:            "no changes;empty",
@@ -65,9 +65,9 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 					}),
 				},
 			},
-			expectedGrants: []*quicksight.ResourcePermission{
+			expectedGrants: []*types.ResourcePermission{
 				{
-					Actions:   aws.StringSlice([]string{"action1", "action2"}),
+					Actions:   []string{"action1", "action2"},
 					Principal: aws.String("principal1"),
 				},
 			},
@@ -86,9 +86,9 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 			},
 			newPermissions: []interface{}{},
 			expectedGrants: nil,
-			expectedRevokes: []*quicksight.ResourcePermission{
+			expectedRevokes: []*types.ResourcePermission{
 				{
-					Actions:   aws.StringSlice([]string{"action1", "action2"}),
+					Actions:   []string{"action1", "action2"},
 					Principal: aws.String("principal1"),
 				},
 			},
@@ -112,9 +112,9 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 					}),
 				},
 			},
-			expectedGrants: []*quicksight.ResourcePermission{
+			expectedGrants: []*types.ResourcePermission{
 				{
-					Actions:   aws.StringSlice([]string{"action1", "action2"}),
+					Actions:   []string{"action1", "action2"},
 					Principal: aws.String("principal1"),
 				},
 			},
@@ -139,15 +139,15 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 					}),
 				},
 			},
-			expectedGrants: []*quicksight.ResourcePermission{
+			expectedGrants: []*types.ResourcePermission{
 				{
-					Actions:   aws.StringSlice([]string{"oldAction"}),
+					Actions:   []string{"oldAction"},
 					Principal: aws.String("principal1"),
 				},
 			},
-			expectedRevokes: []*quicksight.ResourcePermission{
+			expectedRevokes: []*types.ResourcePermission{
 				{
-					Actions:   aws.StringSlice([]string{"onlyOldAction"}),
+					Actions:   []string{"onlyOldAction"},
 					Principal: aws.String("principal1"),
 				},
 			},
@@ -193,19 +193,19 @@ func TestDataSourcePermissionsDiff(t *testing.T) {
 					}),
 				},
 			},
-			expectedGrants: []*quicksight.ResourcePermission{
+			expectedGrants: []*types.ResourcePermission{
 				{
-					Actions:   aws.StringSlice([]string{"action3", "action5"}),
+					Actions:   []string{"action3", "action5"},
 					Principal: aws.String("principal2"),
 				},
 			},
-			expectedRevokes: []*quicksight.ResourcePermission{
+			expectedRevokes: []*types.ResourcePermission{
 				{
-					Actions:   aws.StringSlice([]string{"action1", "action4"}),
+					Actions:   []string{"action1", "action4"},
 					Principal: aws.String("principal2"),
 				},
 				{
-					Actions:   aws.StringSlice([]string{"action5"}),
+					Actions:   []string{"action5"},
 					Principal: aws.String("principal3"),
 				},
 			},

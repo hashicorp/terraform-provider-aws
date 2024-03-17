@@ -60,6 +60,20 @@ func ExpandStringTimeList(configured []interface{}, format string) []*time.Time 
 	return vs
 }
 
+// Takes the result of flatmap.Expand for an array of strings
+// and returns a []time.Time
+func ExpandStringTimeValueList(configured []interface{}, format string) []time.Time {
+	vs := make([]time.Time, 0, len(configured))
+	for _, v := range configured {
+		val, ok := v.(string)
+		if ok && val != "" {
+			t, _ := time.Parse(format, v.(string))
+			vs = append(vs, *aws.Time(t))
+		}
+	}
+	return vs
+}
+
 // ExpandStringValueList takes the result of flatmap.Expand for an array of strings
 // and returns a []string
 func ExpandStringValueList(configured []interface{}) []string {
@@ -126,6 +140,16 @@ func FlattenStringValueList(list []string) []interface{} {
 	return vs
 }
 
+// Takes list of pointers to time.Time. Expand to an array
+// of strings and returns a []interface{}
+func FlattenTimeStringValueList(list []time.Time, format string) []interface{} {
+	vs := make([]interface{}, 0, len(list))
+	for _, v := range list {
+		vs = append(vs, v.Format(format))
+	}
+	return vs
+}
+
 // Expands a map of string to interface to a map of string to int32
 func ExpandInt32Map(m map[string]interface{}) map[string]int32 {
 	return tfmaps.ApplyToAllValues(m, func(v any) int32 {
@@ -144,6 +168,22 @@ func ExpandInt64Map(m map[string]interface{}) map[string]*int64 {
 func ExpandInt64ValueMap(m map[string]interface{}) map[string]int64 {
 	return tfmaps.ApplyToAllValues(m, func(v any) int64 {
 		return int64(v.(int))
+	})
+}
+
+// Takes the result of flatmap.Expand for an array of int64
+// and returns a []int64
+func ExpandInt64ValueList(configured []interface{}) []int64 {
+	return tfslices.ApplyToAll(configured, func(v any) int64 {
+		return int64(v.(int))
+	})
+}
+
+// Takes the result of flatmap.Expand for an array of float64
+// and returns a []float64
+func ExpandFloat64ValueList(configured []interface{}) []float64 {
+	return tfslices.ApplyToAll(configured, func(v any) float64 {
+		return v.(float64)
 	})
 }
 

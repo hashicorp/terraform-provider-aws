@@ -250,6 +250,8 @@ github.com/aws/aws-sdk-go-v2/service/qbusiness v1.4.2 h1:4iQHFjo3szICJ3wuKoWBSOj
 github.com/aws/aws-sdk-go-v2/service/qbusiness v1.4.2/go.mod h1:fVNWYM4CHOY3EIh9O3GL/tjy3tAH7UMs1ZanjSzvxTI=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.21.2 h1:v2wX0t87V8RfUW91XkbY090Xadbumh9m4GGad0U4o2s=
 github.com/aws/aws-sdk-go-v2/service/qldb v1.21.2/go.mod h1:xLtE8ivlW02HMosnvL9Q8LvOL/5/aPXO9eT9T2pl2Us=
+github.com/aws/aws-sdk-go-v2/service/quicksight v1.59.1 h1:qaQEyPNvwyoaPPSJvM565o059Q7Bhyc/K3tIX4348aI=
+github.com/aws/aws-sdk-go-v2/service/quicksight v1.59.1/go.mod h1:UjZGZtZJXiAQPSxoCWPFkh8WM3xWlwm064Ph50qVnng=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.16.2 h1:nx24XDNB9xVwt5yVkZ1oSkgBfQYv12X0w0hkisccUrE=
 github.com/aws/aws-sdk-go-v2/service/rbin v1.16.2/go.mod h1:JyPvkCWiRHxUe5hdclCCrn7ACqbyxpVLnxrNOQqxyFg=
 github.com/aws/aws-sdk-go-v2/service/rds v1.75.1 h1:2G+KvaPQpIHy2kn51WcqQ4mg9/Fa001GH2gJ/D4Rtlc=

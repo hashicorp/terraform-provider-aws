@@ -10,13 +10,15 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
@@ -59,23 +61,19 @@ func ResourceUser() *schema.Resource {
 				},
 
 				"identity_type": {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
-					ValidateFunc: validation.StringInSlice([]string{
-						quicksight.IdentityTypeIam,
-						quicksight.IdentityTypeQuicksight,
-					}, false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(enum.Slice(types.IdentityTypeIam, types.IdentityTypeQuicksight), false)),
 				},
-
 				"namespace": {
 					Type:     schema.TypeString,
 					Optional: true,
 					ForceNew: true,
 					Default:  DefaultUserNamespace,
-					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 63),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
+					ValidateDiagFunc: validation.AllDiag(
+						validation.ToDiagFunc(validation.StringLenBetween(1, 63)),
+						validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods")),
 					),
 				},
 
@@ -86,20 +84,16 @@ func ResourceUser() *schema.Resource {
 				},
 
 				"user_name": {
-					Type:         schema.TypeString,
-					Optional:     true,
-					ValidateFunc: validation.NoZeroValues,
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.NoZeroValues),
 				},
 
 				"user_role": {
-					Type:     schema.TypeString,
-					Required: true,
-					ForceNew: true,
-					ValidateFunc: validation.StringInSlice([]string{
-						quicksight.UserRoleReader,
-						quicksight.UserRoleAuthor,
-						quicksight.UserRoleAdmin,
-					}, false),
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(validation.StringInSlice(enum.Slice(types.UserRoleReader, types.UserRoleAuthor, types.UserRoleAdmin), false)),
 				},
 			}
 		},
@@ -108,7 +102,7 @@ func ResourceUser() *schema.Resource {
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
 
@@ -121,9 +115,9 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	createOpts := &quicksight.RegisterUserInput{
 		AwsAccountId: aws.String(awsAccountID),
 		Email:        aws.String(d.Get("email").(string)),
-		IdentityType: aws.String(d.Get("identity_type").(string)),
+		IdentityType: types.IdentityType(d.Get("identity_type").(string)),
 		Namespace:    aws.String(namespace),
-		UserRole:     aws.String(d.Get("user_role").(string)),
+		UserRole:     types.UserRole(d.Get("user_role").(string)),
 	}
 
 	if v, ok := d.GetOk("iam_arn"); ok {
@@ -138,19 +132,19 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		createOpts.UserName = aws.String(v.(string))
 	}
 
-	resp, err := conn.RegisterUserWithContext(ctx, createOpts)
+	resp, err := conn.RegisterUser(ctx, createOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "registering QuickSight user: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(resp.User.UserName)))
+	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.ToString(resp.User.UserName)))
 
 	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
 	awsAccountID, namespace, userName, err := UserParseID(d.Id())
 	if err != nil {
@@ -163,8 +157,8 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		UserName:     aws.String(userName),
 	}
 
-	resp, err := conn.DescribeUserWithContext(ctx, descOpts)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+	resp, err := conn.DescribeUser(ctx, descOpts)
+	if !d.IsNewResource() && errs.IsA[*types.ResourceNotFoundException](err) {
 		log.Printf("[WARN] QuickSight User %s is not found", d.Id())
 		d.SetId("")
 		return diags
@@ -185,7 +179,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
 	awsAccountID, namespace, userName, err := UserParseID(d.Id())
 	if err != nil {
@@ -196,11 +190,11 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		AwsAccountId: aws.String(awsAccountID),
 		Email:        aws.String(d.Get("email").(string)),
 		Namespace:    aws.String(namespace),
-		Role:         aws.String(d.Get("user_role").(string)),
+		Role:         types.UserRole(d.Get("user_role").(string)),
 		UserName:     aws.String(userName),
 	}
 
-	_, err = conn.UpdateUserWithContext(ctx, updateOpts)
+	_, err = conn.UpdateUser(ctx, updateOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating QuickSight User (%s): %s", d.Id(), err)
 	}
@@ -210,7 +204,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
 	awsAccountID, namespace, userName, err := UserParseID(d.Id())
 	if err != nil {
@@ -223,8 +217,8 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		UserName:     aws.String(userName),
 	}
 
-	if _, err := conn.DeleteUserWithContext(ctx, deleteOpts); err != nil {
-		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+	if _, err := conn.DeleteUser(ctx, deleteOpts); err != nil {
+		if errs.IsA[*types.ResourceNotFoundException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting QuickSight User (%s): %s", d.Id(), err)

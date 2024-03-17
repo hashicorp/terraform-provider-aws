@@ -7,10 +7,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -35,9 +36,9 @@ func TestAccQuickSightUserDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "email", acctest.DefaultEmailAddress),
 					resource.TestCheckResourceAttr(dataSourceName, "namespace", tfquicksight.DefaultUserNamespace),
-					resource.TestCheckResourceAttr(dataSourceName, "identity_type", quicksight.IdentityTypeQuicksight),
+					resource.TestCheckResourceAttr(dataSourceName, "identity_type", flex.StringValueToFramework(ctx, types.IdentityTypeQuicksight).String()),
 					resource.TestCheckResourceAttrSet(dataSourceName, "principal_id"),
-					resource.TestCheckResourceAttr(dataSourceName, "user_role", quicksight.UserRoleReader),
+					resource.TestCheckResourceAttr(dataSourceName, "user_role", flex.StringValueToFramework(ctx, types.UserRoleReader).String()),
 				),
 			},
 		},

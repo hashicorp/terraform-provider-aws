@@ -8,8 +8,8 @@ import (
 	"fmt"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -50,9 +50,9 @@ func DataSourceUser() *schema.Resource {
 					Type:     schema.TypeString,
 					Optional: true,
 					Default:  DefaultUserNamespace,
-					ValidateFunc: validation.All(
-						validation.StringLenBetween(1, 63),
-						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
+					ValidateDiagFunc: validation.AllDiag(
+						validation.ToDiagFunc(validation.StringLenBetween(1, 63)),
+						validation.ToDiagFunc(validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods")),
 					),
 				},
 				"principal_id": {
@@ -74,7 +74,7 @@ func DataSourceUser() *schema.Resource {
 
 func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
+	conn := meta.(*conns.AWSClient).QuickSightClient(ctx)
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("aws_account_id"); ok {
@@ -87,7 +87,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		Namespace:    aws.String(namespace),
 	}
 
-	out, err := conn.DescribeUserWithContext(ctx, in)
+	out, err := conn.DescribeUser(ctx, in)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading QuickSight User (%s): %s", d.Id(), err)
 	}
@@ -95,7 +95,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading QuickSight User (%s): %s", d.Id(), tfresource.NewEmptyResultError(in))
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(out.User.UserName)))
+	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.ToString(out.User.UserName)))
 	d.Set("active", out.User.Active)
 	d.Set("arn", out.User.Arn)
 	d.Set("aws_account_id", awsAccountID)

@@ -9,9 +9,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -76,7 +77,7 @@ func (r *resourceTemplateAlias) Schema(ctx context.Context, req resource.SchemaR
 }
 
 func (r *resourceTemplateAlias) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightConn(ctx)
+	conn := r.Meta().QuickSightClient(ctx)
 
 	var plan resourceTemplateAliasData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -97,7 +98,7 @@ func (r *resourceTemplateAlias) Create(ctx context.Context, req resource.CreateR
 		TemplateVersionNumber: aws.Int64(plan.TemplateVersionNumber.ValueInt64()),
 	}
 
-	out, err := conn.CreateTemplateAliasWithContext(ctx, in)
+	out, err := conn.CreateTemplateAlias(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, ResNameTemplateAlias, plan.AliasName.String(), err),
@@ -119,7 +120,7 @@ func (r *resourceTemplateAlias) Create(ctx context.Context, req resource.CreateR
 }
 
 func (r *resourceTemplateAlias) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().QuickSightConn(ctx)
+	conn := r.Meta().QuickSightClient(ctx)
 
 	var state resourceTemplateAliasData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -162,7 +163,7 @@ func (r *resourceTemplateAlias) Read(ctx context.Context, req resource.ReadReque
 }
 
 func (r *resourceTemplateAlias) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().QuickSightConn(ctx)
+	conn := r.Meta().QuickSightClient(ctx)
 
 	var plan, state resourceTemplateAliasData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -179,7 +180,7 @@ func (r *resourceTemplateAlias) Update(ctx context.Context, req resource.UpdateR
 			TemplateVersionNumber: aws.Int64(plan.TemplateVersionNumber.ValueInt64()),
 		}
 
-		out, err := conn.UpdateTemplateAliasWithContext(ctx, in)
+		out, err := conn.UpdateTemplateAlias(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.QuickSight, create.ErrActionUpdating, ResNameTemplateAlias, plan.ID.String(), err),
@@ -202,7 +203,7 @@ func (r *resourceTemplateAlias) Update(ctx context.Context, req resource.UpdateR
 }
 
 func (r *resourceTemplateAlias) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().QuickSightConn(ctx)
+	conn := r.Meta().QuickSightClient(ctx)
 
 	var state resourceTemplateAliasData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -216,9 +217,9 @@ func (r *resourceTemplateAlias) Delete(ctx context.Context, req resource.DeleteR
 		TemplateId:   aws.String(state.TemplateID.ValueString()),
 	}
 
-	_, err := conn.DeleteTemplateAliasWithContext(ctx, in)
+	_, err := conn.DeleteTemplateAlias(ctx, in)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -233,7 +234,7 @@ func (r *resourceTemplateAlias) ImportState(ctx context.Context, req resource.Im
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func FindTemplateAliasByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.TemplateAlias, error) {
+func FindTemplateAliasByID(ctx context.Context, conn *quicksight.Client, id string) (*awstypes.TemplateAlias, error) {
 	awsAccountID, templateID, aliasName, err := ParseTemplateAliasID(id)
 	if err != nil {
 		return nil, err
@@ -245,8 +246,8 @@ func FindTemplateAliasByID(ctx context.Context, conn *quicksight.QuickSight, id 
 		TemplateId:   aws.String(templateID),
 	}
 
-	out, err := conn.DescribeTemplateAliasWithContext(ctx, in)
-	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+	out, err := conn.DescribeTemplateAlias(ctx, in)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,

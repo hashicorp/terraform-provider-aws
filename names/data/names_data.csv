@@ -288,7 +288,7 @@ proton,proton,proton,proton,,proton,,,Proton,Proton,,1,,,aws_proton_,,proton_,Pr
 qbusiness,qbusiness,qbusiness,qbusiness,,qbusiness,,,QBusiness,QBusiness,,,2,,aws_qbusiness_,,qbusiness_,Amazon Q Business,Amazon,,,,,,,QBusiness,ListApplications,,
 qldb,qldb,qldb,qldb,,qldb,,,QLDB,QLDB,,,2,,aws_qldb_,,qldb_,QLDB (Quantum Ledger Database),Amazon,,,,,,,QLDB,ListLedgers,,
 qldb-session,qldbsession,qldbsession,qldbsession,,qldbsession,,,QLDBSession,QLDBSession,,1,,,aws_qldbsession_,,qldbsession_,QLDB Session,Amazon,,x,,,,,QLDB Session,,,
-quicksight,quicksight,quicksight,quicksight,,quicksight,,,QuickSight,QuickSight,,1,,,aws_quicksight_,,quicksight_,QuickSight,Amazon,,,,,,,QuickSight,ListDashboards,"AwsAccountId: aws_sdkv1.String(""123456789012"")",
+quicksight,quicksight,quicksight,quicksight,,quicksight,,,QuickSight,QuickSight,,1,2,,aws_quicksight_,,quicksight_,QuickSight,Amazon,,,,,,,QuickSight,ListDashboards,"AwsAccountId: aws_sdkv1.String(""123456789012"")",
 ram,ram,ram,ram,,ram,,,RAM,RAM,,1,,,aws_ram_,,ram_,RAM (Resource Access Manager),AWS,,,,,,,RAM,ListPermissions,,
 rds,rds,rds,rds,,rds,,,RDS,RDS,,1,2,aws_(db_|rds_),aws_rds_,,rds_;db_,RDS (Relational Database),Amazon,,,,,,,RDS,DescribeDBInstances,,
 rds-data,rdsdata,rdsdataservice,rdsdata,,rdsdata,,rdsdataservice,RDSData,RDSDataService,,1,,,aws_rdsdata_,,rdsdata_,RDS Data,Amazon,,x,,,,,RDS Data,,,

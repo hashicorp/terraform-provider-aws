@@ -10,21 +10,23 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -54,6 +56,10 @@ func (r *resourceNamespace) Metadata(_ context.Context, request resource.Metadat
 }
 
 func (r *resourceNamespace) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	creationStatusType := fwtypes.StringEnumType[awstypes.NamespaceStatus]()
+	identityStoreType := fwtypes.StringEnumType[awstypes.IdentityStore]()
+	namespaceType := fwtypes.StringEnumType[awstypes.IngestionStatus]()
+
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
@@ -72,22 +78,25 @@ func (r *resourceNamespace) Schema(ctx context.Context, req resource.SchemaReque
 				},
 			},
 			"creation_status": schema.StringAttribute{
-				Computed: true,
+				CustomType: creationStatusType,
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"id": framework.IDAttribute(),
 			"identity_store": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  stringdefault.StaticString(quicksight.IdentityStoreQuicksight),
+				CustomType: identityStoreType,
+				Optional:   true,
+				Computed:   true,
+				Default:    identityStoreType.AttributeDefault(awstypes.IdentityStoreQuicksight),
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"namespace": schema.StringAttribute{
-				Required: true,
+				CustomType: namespaceType,
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -105,7 +114,7 @@ func (r *resourceNamespace) Schema(ctx context.Context, req resource.SchemaReque
 }
 
 func (r *resourceNamespace) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightConn(ctx)
+	conn := r.Meta().QuickSightClient(ctx)
 
 	var plan resourceNamespaceData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -114,18 +123,18 @@ func (r *resourceNamespace) Create(ctx context.Context, req resource.CreateReque
 	}
 
 	if plan.AWSAccountID.IsUnknown() || plan.AWSAccountID.IsNull() {
-		plan.AWSAccountID = types.StringValue(r.Meta().AccountID)
+		plan.AWSAccountID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
 	}
-	plan.ID = types.StringValue(createNamespaceID(plan.AWSAccountID.ValueString(), plan.Namespace.ValueString()))
+	plan.ID = flex.StringValueToFramework(ctx, createNamespaceID(plan.AWSAccountID.ValueString(), plan.Namespace.ValueString()))
 
 	in := quicksight.CreateNamespaceInput{
 		AwsAccountId:  aws.String(plan.AWSAccountID.ValueString()),
 		Namespace:     aws.String(plan.Namespace.ValueString()),
-		IdentityStore: aws.String(plan.IdentityStore.ValueString()),
+		IdentityStore: plan.IdentityStore.ValueEnum(),
 		Tags:          getTagsIn(ctx),
 	}
 
-	out, err := conn.CreateNamespaceWithContext(ctx, &in)
+	out, err := conn.CreateNamespace(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, ResNameNamespace, plan.Namespace.String(), err),
@@ -152,14 +161,14 @@ func (r *resourceNamespace) Create(ctx context.Context, req resource.CreateReque
 	}
 	plan.ARN = flex.StringToFramework(ctx, waitOut.Arn)
 	plan.CapacityRegion = flex.StringToFramework(ctx, waitOut.CapacityRegion)
-	plan.CreationStatus = flex.StringToFramework(ctx, waitOut.CreationStatus)
-	plan.IdentityStore = flex.StringToFramework(ctx, waitOut.IdentityStore)
+	plan.CreationStatus = fwtypes.StringEnumValue(waitOut.CreationStatus)
+	plan.IdentityStore = fwtypes.StringEnumValue(waitOut.IdentityStore)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
 func (r *resourceNamespace) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().QuickSightConn(ctx)
+	conn := r.Meta().QuickSightClient(ctx)
 
 	var state resourceNamespaceData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -182,8 +191,8 @@ func (r *resourceNamespace) Read(ctx context.Context, req resource.ReadRequest, 
 
 	state.ARN = flex.StringToFramework(ctx, out.Arn)
 	state.CapacityRegion = flex.StringToFramework(ctx, out.CapacityRegion)
-	state.CreationStatus = flex.StringToFramework(ctx, out.CreationStatus)
-	state.IdentityStore = flex.StringToFramework(ctx, out.IdentityStore)
+	state.CreationStatus = fwtypes.StringEnumValue(out.CreationStatus)
+	state.IdentityStore = fwtypes.StringEnumValue(out.IdentityStore)
 
 	// To support import, parse the ID for the component keys and set
 	// individual values in state
@@ -196,7 +205,7 @@ func (r *resourceNamespace) Read(ctx context.Context, req resource.ReadRequest, 
 		return
 	}
 	state.AWSAccountID = flex.StringValueToFramework(ctx, awsAccountID)
-	state.Namespace = flex.StringValueToFramework(ctx, namespace)
+	state.Namespace = fwtypes.StringEnumValue(awstypes.IngestionStatus(namespace))
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -215,7 +224,7 @@ func (r *resourceNamespace) Update(ctx context.Context, req resource.UpdateReque
 }
 
 func (r *resourceNamespace) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().QuickSightConn(ctx)
+	conn := r.Meta().QuickSightClient(ctx)
 
 	var state resourceNamespaceData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -223,12 +232,12 @@ func (r *resourceNamespace) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	_, err := conn.DeleteNamespaceWithContext(ctx, &quicksight.DeleteNamespaceInput{
+	_, err := conn.DeleteNamespace(ctx, &quicksight.DeleteNamespaceInput{
 		AwsAccountId: aws.String(state.AWSAccountID.ValueString()),
 		Namespace:    aws.String(state.Namespace.ValueString()),
 	})
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -256,7 +265,7 @@ func (r *resourceNamespace) ModifyPlan(ctx context.Context, req resource.ModifyP
 	r.SetTagsAll(ctx, req, resp)
 }
 
-func FindNamespaceByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.NamespaceInfoV2, error) {
+func FindNamespaceByID(ctx context.Context, conn *quicksight.Client, id string) (*awstypes.NamespaceInfoV2, error) {
 	awsAccountID, namespace, err := ParseNamespaceID(id)
 	if err != nil {
 		return nil, err
@@ -267,9 +276,9 @@ func FindNamespaceByID(ctx context.Context, conn *quicksight.QuickSight, id stri
 		Namespace:    aws.String(namespace),
 	}
 
-	out, err := conn.DescribeNamespaceWithContext(ctx, in)
+	out, err := conn.DescribeNamespace(ctx, in)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
@@ -299,44 +308,38 @@ func createNamespaceID(awsAccountID, namespace string) string {
 }
 
 type resourceNamespaceData struct {
-	ARN            types.String   `tfsdk:"arn"`
-	AWSAccountID   types.String   `tfsdk:"aws_account_id"`
-	CapacityRegion types.String   `tfsdk:"capacity_region"`
-	CreationStatus types.String   `tfsdk:"creation_status"`
-	ID             types.String   `tfsdk:"id"`
-	IdentityStore  types.String   `tfsdk:"identity_store"`
-	Namespace      types.String   `tfsdk:"namespace"`
-	Tags           types.Map      `tfsdk:"tags"`
-	TagsAll        types.Map      `tfsdk:"tags_all"`
-	Timeouts       timeouts.Value `tfsdk:"timeouts"`
+	ARN            types.String                                 `tfsdk:"arn"`
+	AWSAccountID   types.String                                 `tfsdk:"aws_account_id"`
+	CapacityRegion types.String                                 `tfsdk:"capacity_region"`
+	CreationStatus fwtypes.StringEnum[awstypes.NamespaceStatus] `tfsdk:"creation_status"`
+	ID             types.String                                 `tfsdk:"id"`
+	IdentityStore  fwtypes.StringEnum[awstypes.IdentityStore]   `tfsdk:"identity_store"`
+	Namespace      fwtypes.StringEnum[awstypes.IngestionStatus] `tfsdk:"namespace"`
+	Tags           types.Map                                    `tfsdk:"tags"`
+	TagsAll        types.Map                                    `tfsdk:"tags_all"`
+	Timeouts       timeouts.Value                               `tfsdk:"timeouts"`
 }
 
-func waitNamespaceCreated(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.NamespaceInfoV2, error) {
+func waitNamespaceCreated(ctx context.Context, conn *quicksight.Client, id string, timeout time.Duration) (*awstypes.NamespaceInfoV2, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			quicksight.NamespaceStatusCreating,
-		},
-		Target: []string{
-			quicksight.NamespaceStatusCreated,
-		},
+		Pending:    enum.Slice(awstypes.NamespaceStatusCreating),
+		Target:     enum.Slice(awstypes.NamespaceStatusCreated),
 		Refresh:    statusNamespace(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if output, ok := outputRaw.(*quicksight.NamespaceInfoV2); ok {
+	if output, ok := outputRaw.(*awstypes.NamespaceInfoV2); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitNamespaceDeleted(ctx context.Context, conn *quicksight.QuickSight, id string, timeout time.Duration) (*quicksight.NamespaceInfoV2, error) {
+func waitNamespaceDeleted(ctx context.Context, conn *quicksight.Client, id string, timeout time.Duration) (*awstypes.NamespaceInfoV2, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
-			quicksight.NamespaceStatusDeleting,
-		},
+		Pending:    enum.Slice(awstypes.NamespaceStatusDeleting),
 		Target:     []string{},
 		Refresh:    statusNamespace(ctx, conn, id),
 		Timeout:    timeout,
@@ -344,14 +347,14 @@ func waitNamespaceDeleted(ctx context.Context, conn *quicksight.QuickSight, id s
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if output, ok := outputRaw.(*quicksight.NamespaceInfoV2); ok {
+	if output, ok := outputRaw.(*awstypes.NamespaceInfoV2); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func statusNamespace(ctx context.Context, conn *quicksight.QuickSight, id string) retry.StateRefreshFunc {
+func statusNamespace(ctx context.Context, conn *quicksight.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindNamespaceByID(ctx, conn, id)
 
@@ -363,6 +366,6 @@ func statusNamespace(ctx context.Context, conn *quicksight.QuickSight, id string
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.CreationStatus), nil
+		return output, flex.StringValueToFramework(ctx, output.CreationStatus).String(), nil
 	}
 }

@@ -101,6 +101,7 @@ import (
 	pricing_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pricing"
 	qbusiness_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qbusiness"
 	qldb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/qldb"
+	quicksight_sdkv2 "github.com/aws/aws-sdk-go-v2/service/quicksight"
 	rbin_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rbin"
 	rds_sdkv2 "github.com/aws/aws-sdk-go-v2/service/rds"
 	redshift_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshift"
@@ -962,6 +963,10 @@ func (c *AWSClient) QLDBClient(ctx context.Context) *qldb_sdkv2.Client {
 
 func (c *AWSClient) QuickSightConn(ctx context.Context) *quicksight_sdkv1.QuickSight {
 	return errs.Must(conn[*quicksight_sdkv1.QuickSight](ctx, c, names.QuickSight, make(map[string]any)))
+}
+
+func (c *AWSClient) QuickSightClient(ctx context.Context) *quicksight_sdkv2.Client {
+	return errs.Must(client[*quicksight_sdkv2.Client](ctx, c, names.QuickSight, make(map[string]any)))
 }
 
 func (c *AWSClient) RAMConn(ctx context.Context) *ram_sdkv1.RAM {

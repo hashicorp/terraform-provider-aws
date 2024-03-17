@@ -9,15 +9,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -25,7 +25,7 @@ import (
 func TestAccQuickSightAnalysis_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var analysis quicksight.Analysis
+	var analysis types.Analysis
 	resourceName := "aws_quicksight_analysis.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -44,7 +44,7 @@ func TestAccQuickSightAnalysis_basic(t *testing.T) {
 					testAccCheckAnalysisExists(ctx, resourceName, &analysis),
 					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "status", flex.StringValueToFramework(ctx, types.ResourceStatusCreationSuccessful).String()),
 				),
 			},
 			{
@@ -59,7 +59,7 @@ func TestAccQuickSightAnalysis_basic(t *testing.T) {
 func TestAccQuickSightAnalysis_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var analysis quicksight.Analysis
+	var analysis types.Analysis
 	resourceName := "aws_quicksight_analysis.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -87,7 +87,7 @@ func TestAccQuickSightAnalysis_disappears(t *testing.T) {
 func TestAccQuickSightAnalysis_sourceEntity(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var analysis quicksight.Analysis
+	var analysis types.Analysis
 	resourceName := "aws_quicksight_analysis.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -108,7 +108,7 @@ func TestAccQuickSightAnalysis_sourceEntity(t *testing.T) {
 					testAccCheckAnalysisExists(ctx, resourceName, &analysis),
 					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "status", flex.StringValueToFramework(ctx, types.ResourceStatusCreationSuccessful).String()),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "source_entity.0.source_template.0.arn", "quicksight", fmt.Sprintf("template/%s", sourceId)),
 				),
 			},
@@ -125,7 +125,7 @@ func TestAccQuickSightAnalysis_sourceEntity(t *testing.T) {
 func TestAccQuickSightAnalysis_update(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var analysis quicksight.Analysis
+	var analysis types.Analysis
 	resourceName := "aws_quicksight_analysis.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -145,7 +145,7 @@ func TestAccQuickSightAnalysis_update(t *testing.T) {
 					testAccCheckAnalysisExists(ctx, resourceName, &analysis),
 					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "status", flex.StringValueToFramework(ctx, types.ResourceStatusCreationSuccessful).String()),
 				),
 			},
 			{
@@ -154,7 +154,7 @@ func TestAccQuickSightAnalysis_update(t *testing.T) {
 					testAccCheckAnalysisExists(ctx, resourceName, &analysis),
 					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusUpdateSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "status", flex.StringValueToFramework(ctx, types.ResourceStatusUpdateSuccessful).String()),
 				),
 			},
 		},
@@ -164,7 +164,7 @@ func TestAccQuickSightAnalysis_update(t *testing.T) {
 func TestAccQuickSightAnalysis_parametersConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var analysis quicksight.Analysis
+	var analysis types.Analysis
 	resourceName := "aws_quicksight_analysis.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -183,7 +183,7 @@ func TestAccQuickSightAnalysis_parametersConfig(t *testing.T) {
 					testAccCheckAnalysisExists(ctx, resourceName, &analysis),
 					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "status", flex.StringValueToFramework(ctx, types.ResourceStatusCreationSuccessful).String()),
 				),
 			},
 			{
@@ -199,7 +199,7 @@ func TestAccQuickSightAnalysis_parametersConfig(t *testing.T) {
 func TestAccQuickSightAnalysis_forceDelete(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var analysis quicksight.Analysis
+	var analysis types.Analysis
 	resourceName := "aws_quicksight_analysis.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -218,7 +218,7 @@ func TestAccQuickSightAnalysis_forceDelete(t *testing.T) {
 					testAccCheckAnalysisExists(ctx, resourceName, &analysis),
 					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "status", flex.StringValueToFramework(ctx, types.ResourceStatusCreationSuccessful).String()),
 				),
 			},
 		},
@@ -228,7 +228,7 @@ func TestAccQuickSightAnalysis_forceDelete(t *testing.T) {
 func TestAccQuickSightAnalysis_Definition_calculatedFields(t *testing.T) {
 	ctx := acctest.Context(t)
 
-	var analysis quicksight.Analysis
+	var analysis types.Analysis
 	resourceName := "aws_quicksight_analysis.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -247,7 +247,7 @@ func TestAccQuickSightAnalysis_Definition_calculatedFields(t *testing.T) {
 					testAccCheckAnalysisExists(ctx, resourceName, &analysis),
 					resource.TestCheckResourceAttr(resourceName, "analysis_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
+					resource.TestCheckResourceAttr(resourceName, "status", flex.StringValueToFramework(ctx, types.ResourceStatusCreationSuccessful).String()),
 					resource.TestCheckResourceAttr(resourceName, "definition.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "definition.0.calculated_fields.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "definition.0.calculated_fields.*", map[string]string{
@@ -273,7 +273,7 @@ func TestAccQuickSightAnalysis_Definition_calculatedFields(t *testing.T) {
 
 func testAccCheckAnalysisDestroy(ctx context.Context, forceDelete bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_quicksight_analysis" {
@@ -282,13 +282,13 @@ func testAccCheckAnalysisDestroy(ctx context.Context, forceDelete bool) resource
 
 			output, err := tfquicksight.FindAnalysisByID(ctx, conn, rs.Primary.ID)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+				if errs.IsA[*types.ResourceNotFoundException](err) {
 					return nil
 				}
 				return err
 			}
 
-			if output != nil && (forceDelete || aws.StringValue(output.Status) != quicksight.ResourceStatusDeleted) {
+			if output != nil && (forceDelete || (output.Status != types.ResourceStatusDeleted)) {
 				return fmt.Errorf("QuickSight Analysis (%s) still exists", rs.Primary.ID)
 			}
 		}
@@ -297,7 +297,7 @@ func testAccCheckAnalysisDestroy(ctx context.Context, forceDelete bool) resource
 	}
 }
 
-func testAccCheckAnalysisExists(ctx context.Context, name string, analysis *quicksight.Analysis) resource.TestCheckFunc {
+func testAccCheckAnalysisExists(ctx context.Context, name string, analysis *types.Analysis) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -308,7 +308,7 @@ func testAccCheckAnalysisExists(ctx context.Context, name string, analysis *quic
 			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameAnalysis, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightClient(ctx)
 		output, err := tfquicksight.FindAnalysisByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {

@@ -6,21 +6,21 @@ package quicksight
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight"
 )
 
-func FindGroupMembership(ctx context.Context, conn *quicksight.QuickSight, listInput *quicksight.ListGroupMembershipsInput, userName string) (bool, error) {
+func FindGroupMembership(ctx context.Context, conn *quicksight.Client, listInput *quicksight.ListGroupMembershipsInput, userName string) (bool, error) {
 	found := false
 
 	for {
-		resp, err := conn.ListGroupMembershipsWithContext(ctx, listInput)
+		resp, err := conn.ListGroupMemberships(ctx, listInput)
 		if err != nil {
 			return false, err
 		}
 
 		for _, member := range resp.GroupMemberList {
-			if aws.StringValue(member.MemberName) == userName {
+			if aws.ToString(member.MemberName) == userName {
 				found = true
 				break
 			}

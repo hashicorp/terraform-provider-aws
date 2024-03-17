@@ -9,10 +9,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/quicksight"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/quicksight/types"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -22,8 +21,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -46,6 +48,9 @@ func (r *resourceIngestion) Metadata(_ context.Context, request resource.Metadat
 }
 
 func (r *resourceIngestion) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+	ingestionStatusType := fwtypes.StringEnumType[awstypes.IngestionStatus]()
+	ingestionTypeType := fwtypes.StringEnumType[awstypes.IngestionType]()
+
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arn": schema.StringAttribute{
@@ -73,12 +78,17 @@ func (r *resourceIngestion) Schema(ctx context.Context, req resource.SchemaReque
 				},
 			},
 			"ingestion_status": schema.StringAttribute{
-				Computed: true,
+				CustomType: ingestionStatusType,
+				Computed:   true,
+				Validators: []validator.String{
+					enum.FrameworkValidate[awstypes.IngestionStatus](),
+				},
 			},
 			"ingestion_type": schema.StringAttribute{
-				Required: true,
+				CustomType: ingestionTypeType,
+				Required:   true,
 				Validators: []validator.String{
-					stringvalidator.OneOf(quicksight.IngestionType_Values()...),
+					enum.FrameworkValidate[awstypes.IngestionType](),
 				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -89,7 +99,7 @@ func (r *resourceIngestion) Schema(ctx context.Context, req resource.SchemaReque
 }
 
 func (r *resourceIngestion) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().QuickSightConn(ctx)
+	conn := r.Meta().QuickSightClient(ctx)
 
 	var plan resourceIngestionData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -106,10 +116,10 @@ func (r *resourceIngestion) Create(ctx context.Context, req resource.CreateReque
 		AwsAccountId:  aws.String(plan.AWSAccountID.ValueString()),
 		DataSetId:     aws.String(plan.DataSetID.ValueString()),
 		IngestionId:   aws.String(plan.IngestionID.ValueString()),
-		IngestionType: aws.String(plan.IngestionType.ValueString()),
+		IngestionType: plan.IngestionType.ValueEnum(),
 	}
 
-	out, err := conn.CreateIngestionWithContext(ctx, &in)
+	out, err := conn.CreateIngestion(ctx, &in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.QuickSight, create.ErrActionCreating, ResNameIngestion, plan.IngestionID.String(), nil),
@@ -125,13 +135,13 @@ func (r *resourceIngestion) Create(ctx context.Context, req resource.CreateReque
 		return
 	}
 	plan.ARN = flex.StringToFramework(ctx, out.Arn)
-	plan.IngestionStatus = flex.StringToFramework(ctx, out.IngestionStatus)
+	plan.IngestionStatus = fwtypes.StringEnumValue[awstypes.IngestionStatus](out.IngestionStatus)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
 func (r *resourceIngestion) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().QuickSightConn(ctx)
+	conn := r.Meta().QuickSightClient(ctx)
 
 	var state resourceIngestionData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -154,7 +164,7 @@ func (r *resourceIngestion) Read(ctx context.Context, req resource.ReadRequest, 
 
 	state.ARN = flex.StringToFramework(ctx, out.Arn)
 	state.IngestionID = flex.StringToFramework(ctx, out.IngestionId)
-	state.IngestionStatus = flex.StringToFramework(ctx, out.IngestionStatus)
+	state.IngestionStatus = fwtypes.StringEnumValue[awstypes.IngestionStatus](out.IngestionStatus)
 
 	// To support import, parse the ID for the component keys and set
 	// individual values in state
@@ -177,7 +187,7 @@ func (r *resourceIngestion) Update(ctx context.Context, req resource.UpdateReque
 }
 
 func (r *resourceIngestion) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().QuickSightConn(ctx)
+	conn := r.Meta().QuickSightClient(ctx)
 
 	var state resourceIngestionData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -185,13 +195,13 @@ func (r *resourceIngestion) Delete(ctx context.Context, req resource.DeleteReque
 		return
 	}
 
-	_, err := conn.CancelIngestionWithContext(ctx, &quicksight.CancelIngestionInput{
+	_, err := conn.CancelIngestion(ctx, &quicksight.CancelIngestionInput{
 		AwsAccountId: aws.String(state.AWSAccountID.ValueString()),
 		DataSetId:    aws.String(state.DataSetID.ValueString()),
 		IngestionId:  aws.String(state.IngestionID.ValueString()),
 	})
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
 		resp.Diagnostics.AddError(
@@ -205,7 +215,7 @@ func (r *resourceIngestion) ImportState(ctx context.Context, req resource.Import
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func FindIngestionByID(ctx context.Context, conn *quicksight.QuickSight, id string) (*quicksight.Ingestion, error) {
+func FindIngestionByID(ctx context.Context, conn *quicksight.Client, id string) (*awstypes.Ingestion, error) {
 	awsAccountID, dataSetID, ingestionID, err := ParseIngestionID(id)
 	if err != nil {
 		return nil, err
@@ -217,9 +227,9 @@ func FindIngestionByID(ctx context.Context, conn *quicksight.QuickSight, id stri
 		IngestionId:  aws.String(ingestionID),
 	}
 
-	out, err := conn.DescribeIngestionWithContext(ctx, in)
+	out, err := conn.DescribeIngestion(ctx, in)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
@@ -249,11 +259,11 @@ func createIngestionID(awsAccountID, dataSetID, ingestionID string) string {
 }
 
 type resourceIngestionData struct {
-	ARN             types.String `tfsdk:"arn"`
-	AWSAccountID    types.String `tfsdk:"aws_account_id"`
-	DataSetID       types.String `tfsdk:"data_set_id"`
-	ID              types.String `tfsdk:"id"`
-	IngestionID     types.String `tfsdk:"ingestion_id"`
-	IngestionStatus types.String `tfsdk:"ingestion_status"`
-	IngestionType   types.String `tfsdk:"ingestion_type"`
+	ARN             types.String                                 `tfsdk:"arn"`
+	AWSAccountID    types.String                                 `tfsdk:"aws_account_id"`
+	DataSetID       types.String                                 `tfsdk:"data_set_id"`
+	ID              types.String                                 `tfsdk:"id"`
+	IngestionID     types.String                                 `tfsdk:"ingestion_id"`
+	IngestionStatus fwtypes.StringEnum[awstypes.IngestionStatus] `tfsdk:"ingestion_status"`
+	IngestionType   fwtypes.StringEnum[awstypes.IngestionType]   `tfsdk:"ingestion_type"`
 }
