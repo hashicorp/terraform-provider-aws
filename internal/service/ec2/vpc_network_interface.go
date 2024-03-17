@@ -77,7 +77,6 @@ func ResourceNetworkInterface() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
-				ForceNew: true,
 			},
 			"interface_type": {
 				Type:         schema.TypeString,
