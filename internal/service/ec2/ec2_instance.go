@@ -328,6 +328,7 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
+				ForceNew: true, // TODO: this can be set on an existing instance but not unset after. don't know how to model that?
 			},
 			"ephemeral_block_device": {
 				Type:     schema.TypeSet,

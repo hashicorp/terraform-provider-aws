@@ -77,6 +77,7 @@ func ResourceNetworkInterface() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
+				ForceNew: true, // TODO: this can be set on an existing instance but not unset after. don't know how to model that?
 			},
 			"interface_type": {
 				Type:         schema.TypeString,
