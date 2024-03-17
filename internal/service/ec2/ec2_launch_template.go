@@ -2991,7 +2991,7 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject *ec2.L
 	}
 
 	if v := apiObject.PrimaryIpv6; v != nil {
-		tfMap["enable_priamry_ipv6"] = aws.BoolValue(v)
+		tfMap["enable_primary_ipv6"] = aws.BoolValue(v)
 	}
 
 	if v := apiObject.InterfaceType; v != nil {
