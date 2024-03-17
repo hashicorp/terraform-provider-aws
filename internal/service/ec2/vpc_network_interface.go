@@ -78,6 +78,11 @@ func ResourceNetworkInterface() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true, // TODO: this can be set on an existing instance but not unset after. don't know how to model that?
+				AtLeastOneOf: []string{
+					"ipv6_address_count",
+					"ipv6_addresses",
+					"ipv6_address_list",
+				},
 			},
 			"interface_type": {
 				Type:         schema.TypeString,

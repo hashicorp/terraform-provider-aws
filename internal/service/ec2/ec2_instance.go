@@ -329,6 +329,10 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true, // TODO: this can be set on an existing instance but not unset after. don't know how to model that?
+				AtLeastOneOf: []string{
+					"ipv6_address_count",
+					"ipv6_addresses",
+				},
 			},
 			"ephemeral_block_device": {
 				Type:     schema.TypeSet,
