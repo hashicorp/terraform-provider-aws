@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	tfquicksight "github.com/hashicorp/terraform-provider-aws/internal/service/quicksight"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -42,7 +42,7 @@ func TestAccQuickSightFolderMembership_basic(t *testing.T) {
 					testAccCheckFolderMembershipExists(ctx, resourceName, &folderMember),
 					resource.TestCheckResourceAttrPair(resourceName, "folder_id", folderResourceName, "folder_id"),
 					resource.TestCheckResourceAttrPair(resourceName, "member_id", dataSetResourceName, "data_set_id"),
-					resource.TestCheckResourceAttr(resourceName, "member_type", enum.Slice(types.MemberTypeDataset)[0]),
+					resource.TestCheckResourceAttr(resourceName, "member_type", flex.StringValueToFramework(ctx, types.MemberTypeDataset).String()),
 				),
 			},
 			{
