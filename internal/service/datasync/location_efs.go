@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_datasync_location_efs", name="Location EFS")
 // @Tags(identifierAttribute="id")
-func ResourceLocationEFS() *schema.Resource {
+func resourceLocationEFS() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationEFSCreate,
 		ReadWithoutTimeout:   resourceLocationEFSRead,

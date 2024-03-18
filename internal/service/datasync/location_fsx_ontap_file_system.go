@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_datasync_location_fsx_ontap_file_system", name="Location FSx for NetApp ONTAP File System")
 // @Tags(identifierAttribute="id")
-func ResourceLocationFSxONTAPFileSystem() *schema.Resource {
+func resourceLocationFSxONTAPFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationFSxONTAPFileSystemCreate,
 		ReadWithoutTimeout:   resourceLocationFSxONTAPFileSystemRead,

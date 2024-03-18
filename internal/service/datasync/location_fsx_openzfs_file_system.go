@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_datasync_location_fsx_openzfs_file_system", name="Location FSx for OpenZFS File System")
 // @Tags(identifierAttribute="id")
-func ResourceLocationFSxOpenZFSFileSystem() *schema.Resource {
+func resourceLocationFSxOpenZFSFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationFSxOpenZFSFileSystemCreate,
 		ReadWithoutTimeout:   resourceLocationFSxOpenZFSFileSystemRead,

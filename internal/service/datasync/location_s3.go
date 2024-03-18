@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_datasync_location_s3", name="Location S3")
 // @Tags(identifierAttribute="id")
-func ResourceLocationS3() *schema.Resource {
+func resourceLocationS3() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationS3Create,
 		ReadWithoutTimeout:   resourceLocationS3Read,

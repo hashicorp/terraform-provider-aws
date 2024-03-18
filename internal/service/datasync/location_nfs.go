@@ -26,7 +26,7 @@ import (
 
 // @SDKResource("aws_datasync_location_nfs", name="Location NFS")
 // @Tags(identifierAttribute="id")
-func ResourceLocationNFS() *schema.Resource {
+func resourceLocationNFS() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationNFSCreate,
 		ReadWithoutTimeout:   resourceLocationNFSRead,

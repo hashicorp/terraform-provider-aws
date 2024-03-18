@@ -26,7 +26,7 @@ import (
 
 // @SDKResource("aws_datasync_location_hdfs", name="Location HDFS")
 // @Tags(identifierAttribute="id")
-func ResourceLocationHDFS() *schema.Resource {
+func resourceLocationHDFS() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationHDFSCreate,
 		ReadWithoutTimeout:   resourceLocationHDFSRead,

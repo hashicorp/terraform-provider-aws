@@ -27,7 +27,7 @@ import (
 
 // @SDKResource("aws_datasync_task", name="Task")
 // @Tags(identifierAttribute="id")
-func ResourceTask() *schema.Resource {
+func resourceTask() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTaskCreate,
 		ReadWithoutTimeout:   resourceTaskRead,

@@ -27,7 +27,7 @@ import (
 
 // @SDKResource("aws_datasync_location_azure_blob", name="Location Microsoft Azure Blob Storage")
 // @Tags(identifierAttribute="id")
-func ResourceLocationAzureBlob() *schema.Resource {
+func resourceLocationAzureBlob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationAzureBlobCreate,
 		ReadWithoutTimeout:   resourceLocationAzureBlobRead,

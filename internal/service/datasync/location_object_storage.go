@@ -27,7 +27,7 @@ import (
 
 // @SDKResource("aws_datasync_location_object_storage", name="Location Object Storage")
 // @Tags(identifierAttribute="id")
-func ResourceLocationObjectStorage() *schema.Resource {
+func resourceLocationObjectStorage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationObjectStorageCreate,
 		ReadWithoutTimeout:   resourceLocationObjectStorageRead,

@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_datasync_location_fsx_lustre_file_system", name="Location FSx for Lustre File System")
 // @Tags(identifierAttribute="id")
-func ResourceLocationFSxLustreFileSystem() *schema.Resource {
+func resourceLocationFSxLustreFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationFSxLustreFileSystemCreate,
 		ReadWithoutTimeout:   resourceLocationFSxLustreFileSystemRead,

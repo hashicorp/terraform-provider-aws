@@ -25,7 +25,7 @@ import (
 
 // @SDKResource("aws_datasync_location_smb", name="Location SMB")
 // @Tags(identifierAttribute="id")
-func ResourceLocationSMB() *schema.Resource {
+func resourceLocationSMB() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationSMBCreate,
 		ReadWithoutTimeout:   resourceLocationSMBRead,

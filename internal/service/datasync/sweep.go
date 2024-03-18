@@ -169,7 +169,7 @@ func sweepTasks(region string) error {
 		}
 
 		for _, v := range page.Tasks {
-			r := ResourceTask()
+			r := resourceTask()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.TaskArn))
 

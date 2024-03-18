@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_datasync_location_fsx_windows_file_system", name="Location FSx for Windows File Server File System")
 // @Tags(identifierAttribute="id")
-func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
+func resourceLocationFSxWindowsFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationFSxWindowsFileSystemCreate,
 		ReadWithoutTimeout:   resourceLocationFSxWindowsFileSystemRead,
