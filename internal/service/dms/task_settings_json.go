@@ -223,14 +223,11 @@ func suppressEquivalentTaskSettings(k, old, new string, d *schema.ResourceData) 
 	}
 
 	old, new = normalizeTaskSettings(old), normalizeTaskSettings(new)
-	log.Printf("[WARN] suppressEquivalentTaskSettings: old=%s, new=%s", old, new)
-
 	return verify.JSONStringsEqual(old, new)
 }
 
 func checkdefaultvalues(defaultMap, oldMap map[string]interface{}) map[string]interface{} {
 	for k, v := range oldMap {
-		log.Printf("[WARN] checking key: %s, type: %T", k, v)
 		if value, ok := defaultMap[k]; ok && v != nil {
 			// Check the type of the value
 			switch t := reflect.TypeOf(value); t.Kind() {
@@ -246,7 +243,6 @@ func checkdefaultvalues(defaultMap, oldMap map[string]interface{}) map[string]in
 				vMap := v.(map[string]interface{})
 
 				for kInner, vInner := range vMap {
-					log.Printf("[WARN] default value type: %T, vinner type: %T", kMap[kInner], vInner)
 					if kMap[kInner] != nil || vInner != nil {
 						if reflect.TypeOf(vInner).Kind() == reflect.Float64 {
 							if kMap[kInner] != nil {
