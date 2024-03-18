@@ -136,11 +136,9 @@ func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, met
 		}
 		input.Timezone = aws.String(d.Get("timezone").(string))
 	} else {
-		if d.HasChange("end_time") {
-			if v, ok := d.GetOk("end_time"); ok {
-				t, _ := time.Parse(time.RFC3339, v.(string))
-				input.EndTime = aws.Time(t)
-			}
+		if v, ok := d.GetOk("end_time"); ok {
+			t, _ := time.Parse(time.RFC3339, v.(string))
+			input.EndTime = aws.Time(t)
 		}
 		if d.HasChange("scalable_target_action") {
 			input.ScalableTargetAction = expandScalableTargetAction(d.Get("scalable_target_action").([]interface{}))
@@ -148,11 +146,9 @@ func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, met
 		if d.HasChange("schedule") {
 			input.Schedule = aws.String(d.Get("schedule").(string))
 		}
-		if d.HasChange("start_time") {
-			if v, ok := d.GetOk("start_time"); ok {
-				t, _ := time.Parse(time.RFC3339, v.(string))
-				input.StartTime = aws.Time(t)
-			}
+		if v, ok := d.GetOk("start_time"); ok {
+			t, _ := time.Parse(time.RFC3339, v.(string))
+			input.StartTime = aws.Time(t)
 		}
 		if d.HasChange("timezone") {
 			input.Timezone = aws.String(d.Get("timezone").(string))
