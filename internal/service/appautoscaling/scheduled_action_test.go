@@ -97,7 +97,7 @@ func TestAccAppAutoScalingScheduledAction_disappears(t *testing.T) {
 				Config: testAccScheduledActionConfig_dynamoDB(rName, schedule),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckScheduledActionExists(ctx, resourceName, &sa),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappautoscaling.ResourceTarget(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappautoscaling.ResourceScheduledAction(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -848,7 +848,7 @@ resource "aws_emr_cluster" "test" {
 
   configurations = "test-fixtures/emr_configurations.json"
 
-  depends_on = [aws_main_route_table_association.test]
+  depends_on = [aws_route_table_association.test]
 
   service_role     = aws_iam_role.emr_role.arn
   autoscaling_role = aws_iam_role.autoscale_role.arn
